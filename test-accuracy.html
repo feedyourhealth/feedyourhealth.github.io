@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>🔬 Dietologist Accuracy Test Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #025857; margin-bottom: 30px; text-align: center; }
+        .test-block { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; border-left: 5px solid #025857; }
+        .test-title { font-size: 18px; font-weight: 700; color: #025857; margin-bottom: 15px; }
+        .test-section { margin-bottom: 20px; }
+        .test-section h3 { font-size: 14px; color: #555; margin-bottom: 10px; font-weight: 600; }
+        .calc-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .calc-row:last-child { border-bottom: none; }
+        .calc-label { font-size: 12px; color: #666; flex: 1; }
+        .calc-formula { font-size: 11px; color: #999; font-family: 'Courier New', monospace; flex: 1; }
+        .calc-result { font-size: 13px; font-weight: 700; color: #025857; text-align: right; flex: 0.5; }
+        .check { font-size: 14px; }
+        .check.pass { color: #2e7d32; }
+        .check.fail { color: #c62828; }
+        .warn { color: #e65100; }
+        .summary { padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .summary.good { background: #e8f5e9; border-left: 5px solid #2e7d32; }
+        .summary.warning { background: #fff3e0; border-left: 5px solid #e65100; }
+        .summary.error { background: #ffebee; border-left: 5px solid #c62828; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; font-size: 12px; }
+        th { background: #f5f5f5; font-weight: 700; color: #555; }
+        .kcal-cell { font-weight: 700; color: #025857; }
+        .error-cell { color: #c62828; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔬 Dietologist Accuracy Verification Suite</h1>
+
+    <div class="test-block">
+        <div class="test-title">TEST #1: Maria - Activity Factor Case (Non-MET)</div>
+        <div class="test-section">
+            <h3>Client Data</h3>
+            <div class="calc-row">
+                <div class="calc-label">Name</div>
+                <div class="calc-result">Maria</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Sex / Age / Weight / Height</div>
+                <div class="calc-result">F / 32 / 65kg / 168cm</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Body Fat / LBM</div>
+                <div class="calc-result">22% / 50.7kg</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Activity / Goal / Macros</div>
+                <div class="calc-result">Active(1.725) / Loss(-500) / 35/30/35</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 1: BMR (Mifflin-St Jeor for Females)</h3>
+            <div class="calc-row">
+                <div class="calc-label">Formula</div>
+                <div class="calc-formula">BMR = 10W + 6.25H - 5A - 161</div>
+                <div class="calc-result"></div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Calculation</div>
+                <div class="calc-formula">10(65) + 6.25(168) - 5(32) - 161</div>
+                <div class="calc-result"></div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Result</div>
+                <div class="calc-formula">650 + 1050 - 160 - 161 = 1379</div>
+                <div class="calc-result" id="test1-bmr">1379 kcal</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 2: NEAT &amp; Exercise Estimation</h3>
+            <div class="calc-row">
+                <div class="calc-label">NEAT = BMR × 1.2</div>
+                <div class="calc-formula">1379 × 1.2 = 1654.8</div>
+                <div class="calc-result" id="test1-neat">1655 kcal</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Exercise = (Factor - 1.2) × BMR</div>
+                <div class="calc-formula">(1.725 - 1.2) × 1379 = 0.525 × 1379</div>
+                <div class="calc-result" id="test1-exercise">724 kcal</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 3: TDEE &amp; Target</h3>
+            <div class="calc-row">
+                <div class="calc-label">TDEE = NEAT + Exercise</div>
+                <div class="calc-formula">1655 + 724 = 2379</div>
+                <div class="calc-result" id="test1-tdee">2379 kcal</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Target = TDEE + Goal Delta</div>
+                <div class="calc-formula">2379 - 500 = 1879</div>
+                <div class="calc-result" id="test1-target">1879 kcal</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 4: Macros (35/30/35)</h3>
+            <table>
+                <tr>
+                    <th>Macro</th>
+                    <th>Formula</th>
+                    <th>Calculation</th>
+                    <th class="kcal-cell">Grams</th>
+                    <th class="kcal-cell">kcal</th>
+                </tr>
+                <tr>
+                    <td>Protein</td>
+                    <td>1879 × 0.35 / 4</td>
+                    <td>164.425</td>
+                    <td class="kcal-cell" id="test1-p">164g</td>
+                    <td class="kcal-cell">656 kcal</td>
+                </tr>
+                <tr>
+                    <td>Fat</td>
+                    <td>1879 × 0.30 / 9</td>
+                    <td>62.633</td>
+                    <td class="kcal-cell" id="test1-f">63g</td>
+                    <td class="kcal-cell">567 kcal</td>
+                </tr>
+                <tr>
+                    <td>Carbs (diff)</td>
+                    <td>(1879 - 656 - 567) / 4</td>
+                    <td>164</td>
+                    <td class="kcal-cell" id="test1-c">164g</td>
+                    <td class="kcal-cell">656 kcal</td>
+                </tr>
+                <tr style="font-weight: 700; background: #f5f5f5;">
+                    <td colspan="3">TOTAL</td>
+                    <td class="kcal-cell" id="test1-sum">391g</td>
+                    <td class="kcal-cell" id="test1-total">1879 kcal</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 5: Energy Availability</h3>
+            <div class="calc-row">
+                <div class="calc-label">Formula: EA = (Target - Exercise) / LBM</div>
+                <div class="calc-formula">(1879 - 724) / 50.7 = 22.78</div>
+                <div class="calc-result" id="test1-ea">22.78 kcal/kgLBM</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Status</div>
+                <div class="calc-result"><span class="check fail">🔴 RED-S RISK (< 30)</span></div>
+            </div>
+        </div>
+
+        <div class="summary error">
+            <strong>✓ Test 1 Expectations:</strong><br>
+            ✓ BMR = 1379 kcal<br>
+            ✓ TDEE = 2379 kcal<br>
+            ✓ Target = 1879 kcal (with -500 loss)<br>
+            ✓ Macros: 164/63/164 = 1879 kcal (exact)<br>
+            ✓ EA = 22.78 kcal/kgLBM → RED-S warning displayed
+        </div>
+    </div>
+
+    <div class="test-block">
+        <div class="test-title">TEST #2: John - MET-Based Case (Athlete)</div>
+        <div class="test-section">
+            <h3>Client Data &amp; MET Activities</h3>
+            <div class="calc-row">
+                <div class="calc-label">Name / Sex / Age / Weight / LBM</div>
+                <div class="calc-result">John / M / 28 / 82kg / 75kg</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Formula / Goal</div>
+                <div class="calc-result">Cunningham / Maintain</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">MET Activity #1</div>
+                <div class="calc-result">Weight Training: MET=5, 60min, 4x/week</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">MET Activity #2</div>
+                <div class="calc-result">Running: MET=9, 30min, 3x/week</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 1: BMR (Cunningham)</h3>
+            <div class="calc-row">
+                <div class="calc-label">Formula</div>
+                <div class="calc-formula">BMR = 500 + 22 × LBM</div>
+                <div class="calc-result"></div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Calculation</div>
+                <div class="calc-formula">500 + 22(75) = 500 + 1650</div>
+                <div class="calc-result" id="test2-bmr">2150 kcal</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 2: MET Exercise Calculation</h3>
+            <table>
+                <tr>
+                    <th>Activity</th>
+                    <th>Formula</th>
+                    <th>kcal/session</th>
+                    <th>×/week</th>
+                    <th>Total/week</th>
+                </tr>
+                <tr>
+                    <td>Weight Training</td>
+                    <td>5×3.5×82/200×60</td>
+                    <td>428.5</td>
+                    <td>4</td>
+                    <td class="kcal-cell">1714 kcal</td>
+                </tr>
+                <tr>
+                    <td>Running</td>
+                    <td>9×3.5×82/200×30</td>
+                    <td>385.65</td>
+                    <td>3</td>
+                    <td class="kcal-cell">1157 kcal</td>
+                </tr>
+                <tr style="font-weight: 700; background: #f5f5f5;">
+                    <td colspan="4">Daily Average Exercise</td>
+                    <td class="kcal-cell" id="test2-exercise">412 kcal/day</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 3: TDEE &amp; Target</h3>
+            <div class="calc-row">
+                <div class="calc-label">NEAT = BMR × 1.2</div>
+                <div class="calc-formula">2150 × 1.2 = 2580</div>
+                <div class="calc-result" id="test2-neat">2580 kcal</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">TDEE = NEAT + Exercise</div>
+                <div class="calc-formula">2580 + 412 = 2992</div>
+                <div class="calc-result" id="test2-tdee">2992 kcal</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Target = TDEE + Goal Delta</div>
+                <div class="calc-formula">2992 + 0 (maintain) = 2992</div>
+                <div class="calc-result" id="test2-target">2992 kcal</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 4: Macros (30/25/45 - Strength)</h3>
+            <table>
+                <tr>
+                    <th>Macro</th>
+                    <th>Formula</th>
+                    <th>Calculation</th>
+                    <th class="kcal-cell">Grams</th>
+                    <th class="kcal-cell">kcal</th>
+                </tr>
+                <tr>
+                    <td>Protein</td>
+                    <td>2992 × 0.30 / 4</td>
+                    <td>224.4</td>
+                    <td class="kcal-cell" id="test2-p">224g</td>
+                    <td class="kcal-cell">896 kcal</td>
+                </tr>
+                <tr>
+                    <td>Fat</td>
+                    <td>2992 × 0.25 / 9</td>
+                    <td>83.1</td>
+                    <td class="kcal-cell" id="test2-f">83g</td>
+                    <td class="kcal-cell">747 kcal</td>
+                </tr>
+                <tr>
+                    <td>Carbs (diff)</td>
+                    <td>(2992 - 896 - 747) / 4</td>
+                    <td>337.25</td>
+                    <td class="kcal-cell" id="test2-c">337g</td>
+                    <td class="kcal-cell">1348 kcal</td>
+                </tr>
+                <tr style="font-weight: 700; background: #f5f5f5;">
+                    <td colspan="3">TOTAL</td>
+                    <td class="kcal-cell" id="test2-sum">644g</td>
+                    <td class="kcal-cell" id="test2-total">2991 kcal</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="test-section">
+            <h3>Step 5: Energy Availability</h3>
+            <div class="calc-row">
+                <div class="calc-label">Formula: EA = (Target - Exercise) / LBM</div>
+                <div class="calc-formula">(2992 - 412) / 75 = 34.4</div>
+                <div class="calc-result" id="test2-ea">34.4 kcal/kgLBM</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">Status</div>
+                <div class="calc-result"><span class="check pass">🟢 SAFE (≥ 30)</span></div>
+            </div>
+        </div>
+
+        <div class="summary good">
+            <strong>✓ Test 2 Expectations:</strong><br>
+            ✓ BMR = 2150 kcal (Cunningham)<br>
+            ✓ Exercise = ~412 kcal/day (from MET)<br>
+            ✓ TDEE = 2992 kcal<br>
+            ✓ Target = 2992 kcal (maintain)<br>
+            ✓ Macros: 224/83/337 = 2991 kcal (±1 acceptable)<br>
+            ✓ EA = 34.4 kcal/kgLBM → Safe (no RED-S warning)
+        </div>
+    </div>
+
+    <div class="test-block">
+        <div class="test-title">CRITICAL VALIDATION CHECKLIST</div>
+        <div class="test-section">
+            <div class="calc-row">
+                <div class="calc-label">✓ Macro sum = Target kcal (max ±1 acceptable)</div>
+                <div class="calc-result" id="check-macro-sum">PENDING</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">✓ Carbs calculated as difference (not independent)</div>
+                <div class="calc-result" id="check-carb-diff">PENDING</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">✓ EA calculated for activity factor case</div>
+                <div class="calc-result" id="check-ea-activity">PENDING</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">✓ EA calculated for MET case</div>
+                <div class="calc-result" id="check-ea-met">PENDING</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">✓ RED-S warning (< 30) displayed correctly</div>
+                <div class="calc-result" id="check-reds-warn">PENDING</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">✓ Goal delta applied (-250, -500, 0, +300)</div>
+                <div class="calc-result" id="check-goal-delta">PENDING</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">✓ Carb boost = 0% works (doesn't revert to 20%)</div>
+                <div class="calc-result" id="check-carb-boost">PENDING</div>
+            </div>
+            <div class="calc-row">
+                <div class="calc-label">✓ Protein/kg calculated (1.6-2.2g/kg range)</div>
+                <div class="calc-result" id="check-protein-kg">PENDING</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-block" style="background: #f0f7ff; border-left-color: #1976d2;">
+        <h3 style="color: #1976d2;">📝 Instructions for Manual Testing</h3>
+        <ol style="margin-left: 20px; font-size: 12px; line-height: 1.8; color: #555;">
+            <li><strong>Test Maria scenario:</strong>
+                <ol style="margin-left: 20px; margin-top: 5px;">
+                    <li>Create new client: Female, 32, 65kg, 168cm, BF=22%</li>
+                    <li>Set Activity: Active (should show 1.725)</li>
+                    <li>Set Goal: Loss (-500 kcal)</li>
+                    <li>Set Macros: 35/30/35 (Loss preset)</li>
+                    <li><strong>Verify in UI:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>TDEE shows: 2379 kcal</li>
+                            <li>Target shows: 1879 kcal</li>
+                            <li>Protein shows: 164g (35%)</li>
+                            <li>Fat shows: 63g (30%)</li>
+                            <li>Carbs shows: 164g (35%)</li>
+                            <li><strong>Red EA warning appears: 22.78 kcal/kgLBM</strong></li>
+                        </ul>
+                    </li>
+                </ol>
+            </li>
+            <li style="margin-top: 15px;"><strong>Test John scenario:</strong>
+                <ol style="margin-left: 20px; margin-top: 5px;">
+                    <li>Create new client: Male, 28, 82kg, 180cm, LBM=75kg</li>
+                    <li>Set Formula: Cunningham</li>
+                    <li>Set Goal: Maintain</li>
+                    <li>Add MET Activity #1: Weight Training (MET=5, 60min, 4 days/week)</li>
+                    <li>Add MET Activity #2: Running (MET=9, 30min, 3 days/week)</li>
+                    <li>Set Macros: 30/25/45 (Strength preset)</li>
+                    <li><strong>Verify in UI:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>TDEE shows: ~2992 kcal</li>
+                            <li>Exercise chip shows: +412 kcal</li>
+                            <li>Target shows: 2992 kcal</li>
+                            <li>Protein shows: 224g (30%)</li>
+                            <li>Fat shows: 83g (25%)</li>
+                            <li>Carbs shows: 337g (45%)</li>
+                            <li><strong>Green EA indicator shows: 34.4 kcal/kgLBM (Safe)</strong></li>
+                        </ul>
+                    </li>
+                </ol>
+            </li>
+            <li style="margin-top: 15px;"><strong>Test Carb Boost = 0%:</strong>
+                <ol style="margin-left: 20px; margin-top: 5px;">
+                    <li>Go to day targets section</li>
+                    <li>Change carb boost from 20% → 0%</li>
+                    <li>Reload the page</li>
+                    <li><strong>Verify:</strong> Carb boost stays at 0% (doesn't revert to 20%)</li>
+                </ol>
+            </li>
+        </ol>
+    </div>
+
+</div>
+
+<script>
+// Simple verification - display expected vs actual would require importing the calcTDEE function
+console.log("🔬 Accuracy Test Suite Loaded");
+console.log("Manual verification steps ready above.");
+</script>
+
+</body>
+</html>
