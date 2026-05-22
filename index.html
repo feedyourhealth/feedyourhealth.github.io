@@ -2424,7 +2424,7 @@ function setTrainHours(d,v){
 }
 function setCarbBoost(v){
   var c=getC();if(!c)return;
-  c.carbBoost=Math.max(0,Math.min(60,parseInt(v)||20));
+  var val=parseInt(v);c.carbBoost=Math.max(0,Math.min(60,isNaN(val)?20:val));
   // If no custom targets, let defaults recompute on next render
   if(c.dayTargets)c.dayTargets=null;
   renderMain();
