@@ -1654,7 +1654,7 @@ function renderMain(){
 }
 
 function makeDayTgtDefaults(c,t){
-  var boost=(c.carbBoost||20)/100;
+  var boost=(c.carbBoost!=null?c.carbBoost:20)/100;
   var baseHrs=c.trainHoursPerDay||1;
   var r=[];
   for(var i=0;i<7;i++){
@@ -1741,7 +1741,7 @@ function buildDayTgtHtml(c,t){
     }
     tbody+='</tr>';
   });
-  var carbBoostVal=c.carbBoost||20;
+  var carbBoostVal=c.carbBoost!=null?c.carbBoost:20;
   return '<div class="day-tgt-wrap">'
     +'<div class="day-tgt-head"><span class="day-tgt-title">Θερμίδες &amp; μακροθρεπτικά ανά ημέρα</span>'
     +'<button class="day-tgt-reset" onclick="resetDayTargets()">&#8635; Επαναφορά TDEE</button></div>'
@@ -2387,7 +2387,7 @@ function setTrainDay(d,isT){
   var baseHrs=c.trainHoursPerDay||1;
   var dayHrs=c.trainHoursByDay[d];
   var hScale=(isT&&baseHrs>0)?(dayHrs/baseHrs):0;
-  var boost=(c.carbBoost||20)/100;
+  var boost=(c.carbBoost!=null?c.carbBoost:20)/100;
   var extraC=isT?Math.round(t.carb*boost*hScale):0;
   var dayKcal=t.usedMET?Math.round(t.restTarget+(t.trainTarget-t.restTarget)*hScale):t.target;
   c.dayTargets[d].c=t.carb+extraC;
@@ -2412,7 +2412,7 @@ function setTrainHours(d,v){
   var isT=c.trainDays&&c.trainDays[d];
   var baseHrs=c.trainHoursPerDay||1;
   var hScale=(isT&&baseHrs>0)?(hrs/baseHrs):0;
-  var boost=(c.carbBoost||20)/100;
+  var boost=(c.carbBoost!=null?c.carbBoost:20)/100;
   var extraC=isT?Math.round(t.carb*boost*hScale):0;
   var dayKcal=t.usedMET?Math.round(t.restTarget+(t.trainTarget-t.restTarget)*hScale):t.target;
   c.dayTargets[d].c=t.carb+extraC;
