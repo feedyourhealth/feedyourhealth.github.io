@@ -1162,18 +1162,25 @@ function calcTDEE(c){
   var tdee;
   var metKcal=calcMETkcal(c);
   var usedMET=c.metActivities&&c.metActivities.length>0;
+  var neat=Math.round(bmr*1.2);// NEAT = BMR × 1.2 (basic daily movement)
+  var exerciseKcal=metKcal.daily;// Exercise from MET or estimated
   if(usedMET){
-    // MET-based: TDEE = BMR × 1.2 (NEAT/daily movement) + daily average exercise kcal
-    tdee=Math.round(bmr*1.2+metKcal.daily);
+    // MET-based: TDEE = NEAT + daily average exercise kcal
+    tdee=neat+metKcal.daily;
   } else {
+    // Activity factor method: factor includes both NEAT and exercise estimates
     var act={sed:1.2,light:1.375,mod:1.55,active:1.725};
-    tdee=Math.round(bmr*(act[c.activity]||1.2));
+    var totalMultiplier=act[c.activity]||1.2;
+    tdee=Math.round(bmr*totalMultiplier);
+    // Estimate exercise kcal from activity factor: exercise ≈ (multiplier - 1.2) × BMR
+    exerciseKcal=Math.round(Math.max(0,(totalMultiplier-1.2)*bmr));
   }
+  tdee=Math.round(tdee);
   var def={mild:-250,loss:-500,maintain:0,gain:300};
   var goalDelta=def[c.goal]||0;
   var target=tdee+goalDelta+growthAdd;
   // Per-day MET targets: each day gets its own exercise kcal based on assigned activities
-  var baseTDEE=Math.round(bmr*1.2);
+  var baseTDEE=neat;
   var restTarget=usedMET?baseTDEE+goalDelta+growthAdd:target;
   var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta+growthAdd:target;
   var trainTargetByDay=[];
@@ -1198,7 +1205,7 @@ function calcTDEE(c){
   // Calculate carbs as difference to maintain exact calorie matching
   var carbG=Math.round((target-protG*4-fatG*9)/4);
   var protGperKg=c.weight>0?+(protG/c.weight).toFixed(2):0;
-  // Energy Availability = (intake - exercise kcal) / LBM — RED-S screening
+  // Energy Availability = (target intake - exercise kcal) / LBM — RED-S screening
   var lbmForEA=c.lbm>0?c.lbm:0;
   if(!lbmForEA&&c.weightLog&&c.weightLog.length){
     var lastWL=c.weightLog.slice().sort(function(a,b){return b.date>a.date?1:-1;})[0];
@@ -1207,15 +1214,16 @@ function calcTDEE(c){
   // Fallback: use BF% from client profile if still no LBM
   if(!lbmForEA&&(c.bf||0)>0)lbmForEA=+((c.weight||80)*(1-(c.bf/100))).toFixed(1);
   var ea=null;
-  if(lbmForEA>0&&metKcal.daily>0)ea=+((target-metKcal.daily)/lbmForEA).toFixed(1);
+  // Calculate EA using actual exercise (now works with or without MET)
+  if(lbmForEA>0)ea=+((target-exerciseKcal)/lbmForEA).toFixed(1);
   return{bmr:Math.round(bmr),tdee:tdee,target:target,
     restTarget:restTarget,trainTarget:trainTarget,trainTargetByDay:trainTargetByDay,
     p:protG,f:fatG,carb:carbG,
     pPct:Math.round(pPct*100),fPct:Math.round(fPct*100),cPct:Math.round(cPct*100),
     hydBase:baseHydration,hydTrain:trainHydration,
-    exerciseDaily:metKcal.daily,exerciseWeekly:metKcal.weekly,
+    exerciseDaily:exerciseKcal,exerciseWeekly:metKcal.weekly,
     perTrainDay:metKcal.perTrainDay,byDay:metKcal.byDay,usedMET:usedMET,
-    isMinor:isMinor,growthAdd:growthAdd,
+    isMinor:isMinor,growthAdd:growthAdd,neat:neat,
     protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA};
 }
 
