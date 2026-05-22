@@ -1194,6 +1194,9 @@ function calcTDEE(c){
   var fPct=(c.macroF!=null?c.macroF:25)/100;
   var cPct=(c.macroC!=null?c.macroC:50)/100;
   var protG=Math.round(target*pPct/4);
+  var fatG=Math.round(target*fPct/9);
+  // Calculate carbs as difference to maintain exact calorie matching
+  var carbG=Math.round((target-protG*4-fatG*9)/4);
   var protGperKg=c.weight>0?+(protG/c.weight).toFixed(2):0;
   // Energy Availability = (intake - exercise kcal) / LBM — RED-S screening
   var lbmForEA=c.lbm>0?c.lbm:0;
@@ -1207,7 +1210,7 @@ function calcTDEE(c){
   if(lbmForEA>0&&metKcal.daily>0)ea=+((target-metKcal.daily)/lbmForEA).toFixed(1);
   return{bmr:Math.round(bmr),tdee:tdee,target:target,
     restTarget:restTarget,trainTarget:trainTarget,trainTargetByDay:trainTargetByDay,
-    p:protG,f:Math.round(target*fPct/9),carb:Math.round(target*cPct/4),
+    p:protG,f:fatG,carb:carbG,
     pPct:Math.round(pPct*100),fPct:Math.round(fPct*100),cPct:Math.round(cPct*100),
     hydBase:baseHydration,hydTrain:trainHydration,
     exerciseDaily:metKcal.daily,exerciseWeekly:metKcal.weekly,
@@ -1744,7 +1747,7 @@ function buildDayTgtHtml(c,t){
     +'<button class="day-tgt-reset" onclick="resetDayTargets()">&#8635; Επαναφορά TDEE</button></div>'
     +'<div class="carb-boost-row">'
     +'<label>&#127947; Carb boost ημέρας προπόνησης:</label>'
-    +'<input class="carb-boost-inp" type="number" min="5" max="60" value="'+carbBoostVal+'" onchange="setCarbBoost(this.value)">%'
+    +'<input class="carb-boost-inp" type="number" min="0" max="60" value="'+carbBoostVal+'" onchange="setCarbBoost(this.value)">%'
     +'</div>'
     +'<div style="font-size:10px;color:#999;margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
     +'<table class="day-tgt-table"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></div>';
@@ -2421,7 +2424,7 @@ function setTrainHours(d,v){
 }
 function setCarbBoost(v){
   var c=getC();if(!c)return;
-  c.carbBoost=Math.max(5,Math.min(60,parseInt(v)||20));
+  c.carbBoost=Math.max(0,Math.min(60,parseInt(v)||20));
   // If no custom targets, let defaults recompute on next render
   if(c.dayTargets)c.dayTargets=null;
   renderMain();
