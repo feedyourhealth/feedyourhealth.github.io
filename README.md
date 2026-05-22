@@ -57,6 +57,30 @@
 - ✅ Εμφάνιση συστατικών στο PDF
 - ✅ Δομημένη λίστα συστατικών για chef recipes
 
+## 🔄 Ενημερώσεις
+
+**Για να ενημερώσεις την εφαρμογή μετά από αλλαγές:**
+
+### ⚡ Αυτόματη ενημέρωση (easy way):
+```bash
+# Windows:
+C:\Users\steph\feedyourhealth.github.io\update.bat
+
+# Linux/Mac:
+~/feedyourhealth.github.io/update.sh
+```
+
+### 📝 Χειροκίνητα:
+```bash
+cd ~/feedyourhealth.github.io
+cp "/c/Users/steph/OneDrive/Desktop/Dietologist.html" index.html
+git add index.html
+git commit -m "Update Dietologist - [description]"
+git push origin main
+```
+
+Δες το αρχείο `HOW_TO_UPDATE.md` για λεπτομέρειες.
+
 ---
 
-**Δημιουργήθηκε με ❤️ για υγιή διατροφή**
+**Δημιουργήθηκε με ❤️ για υγιή διατροφή****
