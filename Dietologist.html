@@ -2028,7 +2028,6 @@ function calcTDEE(c){
   var def={mild:-250,loss:-500,maintain:0,gain:300};
   // Support for custom clientgoalDelta override (set in client object if needed)
   var goalDelta=(c.customGoalDelta!=null)?c.customGoalDelta:def[c.goal]||0;
-  var target=tdee+goalDelta+growthAdd;
   // Per-day MET targets: each day gets its own exercise kcal based on assigned activities
   // CRITICAL: Growth allowance applies ONLY on rest days (when no training occurs)
   // - Rest days (R): baseTDEE + goalDelta + growthAdd (for development)
@@ -2038,15 +2037,22 @@ function calcTDEE(c){
   var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta:tdee+goalDelta;  // NO growthAdd on training days
   var trainTargetByDay=[];
   for(var tdi=0;tdi<7;tdi++){
-    var isTrainDay=(c.trainDays&&c.trainDays[tdi])?true:false;
     if(usedMET){
-      // MET-based: use per-day exercise kcal
-      trainTargetByDay.push(Math.round(baseTDEE+metKcal.byDay[tdi]+goalDelta+(isTrainDay?0:growthAdd)));
+      // MET-based: NEAT + per-day exercise + goal + growth (every day)
+      trainTargetByDay.push(Math.round(baseTDEE+metKcal.byDay[tdi]+goalDelta+growthAdd));
     } else {
-      // Activity factor-based: differentiate training vs rest days
-      trainTargetByDay.push(isTrainDay?Math.round(tdee+goalDelta):Math.round(tdee+goalDelta+growthAdd));
+      // Activity factor-based: same for all days (TDEE already has avg activity)
+      trainTargetByDay.push(Math.round(tdee+goalDelta+growthAdd));
     }
   }
+  // ✅ CORRECTED: Single target = average of daily targets
+  // This is scientifically correct because:
+  // - Growth allowance is applied every day (DRI requirement)
+  // - Exercise varies per day (MET or constant activity)
+  // - Average gives the weekly balance
+  var totalKcal=0;
+  for(var tti=0;tti<7;tti++){totalKcal+=trainTargetByDay[tti];}
+  var target=Math.round(totalKcal/7);
   // Hydration: weight×35ml base; +500ml per training hour on training days
   var baseHydration=Math.round(c.weight*35);
   // Use max hours across training days for the "training day" hydration guide
@@ -2484,7 +2490,7 @@ function renderMain(){
     +(t.isMinor?'<div class="minor-banner">👶 Ανήλικος αθλητής — Φόρμουλα Schofield (1985) &nbsp;|&nbsp; Growth Allowance: +'+t.growthAdd+' kcal &nbsp;|&nbsp; Ηλικία: '+c.age+' ετών</div>':'')
     +'<div class="tdee-row"><div class="ti"><div class="tl">BMR'+(t.isMinor?' <span class="formula-tag cunningham" style="font-size:8px">Schofield</span>':'')+'</div><div class="tv" id="v-bmr">'+t.bmr+' kcal</div></div>'
     +'<div class="ti"><div class="tl">TDEE'+(t.usedMET?' (MET)':'')+'</div><div class="tv" id="v-tdee">'+t.tdee+' kcal'+(t.usedMET?'<span class="v-ex-chip" id="v-exday">+'+t.exerciseDaily+'</span>':'')+'</div></div>'
-    +'<div class="ti"><div class="tl">Στόχος'+(t.usedMET?'<span style="font-size:9px;color:#666;margin-left:4px" title="Μέσος στόχος. Δείτε τον πίνακα για MET-προσαρμοσμένες ημερήσιες τιμές">ℹ️</span>':'')+'</div><div class="tv" id="v-target">'+avgTarget+' kcal'+(t.usedMET?'<span style="font-size:10px;color:#666;font-weight:400"> (μέσο)</span>':'')+'</div></div>'
+    +'<div class="ti"><div class="tl">Στόχος'+'<span style="font-size:9px;color:#666;margin-left:4px" title="Μέσο ημερήσιο στόχο (NEAT + άσκηση + ανάπτυξη + στόχος)">ℹ️</span>'+'</div><div class="tv" id="v-target">'+t.target+' kcal</div></div>'
     +'<div class="ti"><div class="tl">Πρωτεΐνη</div><div class="tv b" id="v-macros">'+t.p+'g <span style="font-size:10px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span></div></div></div>'
     +(t.ea!==null?'<div class="ea-row'+(t.ea<30?' ea-danger':t.ea<45?' ea-warn':' ea-ok')+'" id="ea-row">⚡ Energy Availability: <b>'+t.ea+' kcal/kgLBM</b> &nbsp;'+(t.ea<30?'🔴 Κίνδυνος RED-S — ανεπαρκής ενεργειακή διαθεσιμότητα':t.ea<45?'🟡 Οριακή EA — παρακολούθηση απαραίτητη':'🟢 Φυσιολογική EA')+'</div>':'')+
     (function(){
