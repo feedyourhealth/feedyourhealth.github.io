@@ -3108,6 +3108,7 @@ function removeMetActivity(idx){
 /* ── Macro Preset UI ─────────────────────────────────────────────────────── */
 function buildMacroPresetHtml(c,t){
   var preset=c.macroPreset||'balanced';
+  var dietType=c.dietType||'normal';
   var html='<div class="macro-preset-wrap">'
     +'<div class="macro-preset-head">🎯 Κατανομή μακροθρεπτικών</div>'
     +'<div class="macro-preset-btns">';
@@ -3115,7 +3116,13 @@ function buildMacroPresetHtml(c,t){
     var pr=MACRO_PRESETS[k];
     html+='<button class="macro-preset-btn'+(preset===k?' active':'')+'" onclick="setMacroPreset(\''+k+'\')" title="Π:'+pr.p+'% Λ:'+pr.f+'% Υ:'+pr.c+'%">'+pr.icon+' '+pr.label+'</button>';
   });
-  html+='</div>';
+  html+='</div>'
+    +'<div class="macro-preset-head" style="margin-top:12px">🍽️ Τύπος Διατροφής</div>'
+    +'<div class="macro-preset-btns">'
+    +'<button class="macro-preset-btn'+(dietType==='normal'?' active':'')+'" onclick="setDietType(\'normal\')" title="Κανονική διατροφή">🍗 Κανονική</button>'
+    +'<button class="macro-preset-btn'+(dietType==='vegetarian'?' active':'')+'" onclick="setDietType(\'vegetarian\')" title="Χορτοφαγική διατροφή">🥬 Χορτοφαγική</button>'
+    +'<button class="macro-preset-btn'+(dietType==='vegan'?' active':'')+'" onclick="setDietType(\'vegan\')" title="Веганική διατροφή">🌱 Веганι</button>'
+    +'</div>';
   if(preset==='custom'){
     html+='<div class="macro-custom-row">'
       +'<label>Πρωτεΐνη %</label><input class="macro-custom-inp" type="number" min="10" max="60" value="'+(c.macroP||25)+'" onchange="setMacroCustom(\'p\',this.value)">'
@@ -3137,6 +3144,12 @@ function buildMacroPresetHtml(c,t){
   return html;
 }
 
+function setDietType(dtype){
+  var c=getC();if(!c)return;
+  c.dietType=dtype;
+  save();
+  onClientChange();
+}
 function setMacroPreset(k){
   var c=getC();if(!c)return;
   var pr=MACRO_PRESETS[k];if(!pr)return;

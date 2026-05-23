@@ -2618,7 +2618,7 @@ function renderMain(){
     +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+c.height+'"></div>'
     +'<div class="fgrp"><label>Λίπος σώματος % <span style="font-size:9px;color:#888;font-weight:400">(τελευταία μέτρηση)</span></label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div></div>'
     +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' <span style="font-size:10px;color:#888">(NEAT baseline)</span>':'')+'</label><select id="inp-activity">'+aOpts+'</select></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div><div class="fgrp"><label>Τύπος διατροφής</label><select id="inp-diettype">'+dOpts+'</select></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
     +'<div class="fg"><div class="fgrp"><label>🏅 Άθλημα</label><select id="inp-sport">'
     +'<option value="">-- Επιλέξτε άθλημα --</option>'
     +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
@@ -2697,7 +2697,6 @@ function renderMain(){
   if(bfProfInp)bfProfInp.onblur=function(){upd('bf',+this.value||0);};
   document.getElementById('inp-activity').onchange=function(){upd('activity',this.value);};
   document.getElementById('inp-goal').onchange=function(){upd('goal',this.value);};
-  document.getElementById('inp-diettype').onchange=function(){upd('dietType',this.value);};
   // Sport selector — auto-update macros & show sport-specific notes & toggle conditional visibility
   var sportSel=document.getElementById('inp-sport');
   if(sportSel){
@@ -3155,6 +3154,7 @@ function removeMetActivity(idx){
 /* ── Macro Preset UI ─────────────────────────────────────────────────────── */
 function buildMacroPresetHtml(c,t){
   var preset=c.macroPreset||'balanced';
+  var dietType=c.dietType||'normal';
   var html='<div class="macro-preset-wrap">'
     +'<div class="macro-preset-head">🎯 Κατανομή μακροθρεπτικών</div>'
     +'<div class="macro-preset-btns">';
@@ -3162,7 +3162,13 @@ function buildMacroPresetHtml(c,t){
     var pr=MACRO_PRESETS[k];
     html+='<button class="macro-preset-btn'+(preset===k?' active':'')+'" onclick="setMacroPreset(\''+k+'\')" title="Π:'+pr.p+'% Λ:'+pr.f+'% Υ:'+pr.c+'%">'+pr.icon+' '+pr.label+'</button>';
   });
-  html+='</div>';
+  html+='</div>'
+    +'<div class="macro-preset-head" style="margin-top:12px">🍽️ Τύπος Διατροφής</div>'
+    +'<div class="macro-preset-btns">'
+    +'<button class="macro-preset-btn'+(dietType==='normal'?' active':'')+'" onclick="setDietType(\'normal\')" title="Κανονική διατροφή">🍗 Κανονική</button>'
+    +'<button class="macro-preset-btn'+(dietType==='vegetarian'?' active':'')+'" onclick="setDietType(\'vegetarian\')" title="Χορτοφαγική διατροφή">🥬 Χορτοφαγική</button>'
+    +'<button class="macro-preset-btn'+(dietType==='vegan'?' active':'')+'" onclick="setDietType(\'vegan\')" title="Веганική διατροφή">🌱 Веганι</button>'
+    +'</div>';
   if(preset==='custom'){
     html+='<div class="macro-custom-row">'
       +'<label>Πρωτεΐνη %</label><input class="macro-custom-inp" type="number" min="10" max="60" value="'+(c.macroP||25)+'" onchange="setMacroCustom(\'p\',this.value)">'
@@ -3184,6 +3190,12 @@ function buildMacroPresetHtml(c,t){
   return html;
 }
 
+function setDietType(dtype){
+  var c=getC();if(!c)return;
+  c.dietType=dtype;
+  save();
+  onClientChange();
+}
 function setMacroPreset(k){
   var c=getC();if(!c)return;
   var pr=MACRO_PRESETS[k];if(!pr)return;
