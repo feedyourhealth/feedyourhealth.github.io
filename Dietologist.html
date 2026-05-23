@@ -2636,11 +2636,13 @@ function makeDayTgtDefaults(c,t){
   return r;
 }
 function getDayTgtEff(c,t){
-  var eff=c.dayTargets;
-  if(!eff)return makeDayTgtDefaults(c,t);
-  // migrate old format (array of numbers)
-  if(typeof eff[0]==='number')return eff.map(function(k){return{k:k,p:Math.round(k*.25/4),f:Math.round(k*.25/9),c:Math.round(k*.5/4)};});
+  // CRITICAL FIX: Always recalculate daily targets to ensure growthAdd is included
+  // Don't rely on cached c.dayTargets as it may be stale
+  var eff=makeDayTgtDefaults(c,t);
+  // Store freshly calculated values for persistence
+  c.dayTargets=eff;
   return eff;
+
 }
 
 // ✅ HYBRID SYSTEM: Allocate daily targets across individual meals
