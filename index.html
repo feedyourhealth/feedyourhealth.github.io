@@ -5190,6 +5190,55 @@ function genPlan(){
 }
 
 /* ======== WEEKLY TABLE ======== */
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPPLEMENT RECOMMENDATIONS — SCIENTIFICALLY-BACKED
+// ══════════════════════════════════════════════════════════════════════════════
+function getSupplementRecommendations(c){
+  if(!c||c.dietType==='normal')return'';
+  var isVegan=(c.dietType==='vegan');
+  var rec='<div style="background:#f5f5f5;border-left:4px solid #ff9800;padding:12px 14px;margin:12px 0;border-radius:4px;font-size:12px;line-height:1.6">'
+    +'<b style="color:#e65100">💊 Προτάσεις Συμπληρωμάτων (AND 2025)</b><br/><br/>';
+
+  // B12 — MANDATORY for vegan, recommended for vegetarian
+  if(isVegan){
+    rec+='<b>Vitamin B12</b> (υποχρεωτικό για веγάν):<br/>'
+      +'&nbsp;&nbsp;💉 Ημερήσια: 10 mcg supplement OR 25-100 mcg fortified foods (3+ times)<br/>'
+      +'&nbsp;&nbsp;💉 Εβδομαδιαία: 2000 mcg supplement (κάθε 7 ημέρες)<br/>'
+      +'&nbsp;&nbsp;🔗 Πηγές: Fortified plant milks, nutritional yeast, cereals<br/><br/>';
+  } else {
+    rec+='<b>Vitamin B12</b> (χορτοφαγική):<br/>'
+      +'&nbsp;&nbsp;💉 Ημερήσια: 10 mcg supplement (ή fortified foods)<br/>'
+      +'&nbsp;&nbsp;🔗 Πηγές: Γιαούρτι, αυγά (περιορισμένα) + fortified foods<br/><br/>';
+  }
+
+  // Iron + Vitamin C strategy
+  rec+='<b>Σίδηρος (Iron)</b> + Vitamin C (enhanced absorption):<br/>'
+    +'&nbsp;&nbsp;🥬 Strategy: Φακές/ρεβίθια ΜΕ τομάτες/κιτρικά (6x absorption)<br/>'
+    +'&nbsp;&nbsp;⚠️ Αποφυγή: Καφές/τσάι με σιδηρούχα γεύματα (ταννίνες)<br/>'
+    +'&nbsp;&nbsp;🔄 Ενίσχυση: Soaking/sprouting legumes (↓ phytates)<br/><br/>';
+
+  // Vitamin D + Calcium
+  if(isVegan){
+    rec+='<b>Vitamin D3 + Calcium</b> (веγάν sources):<br/>'
+      +'&nbsp;&nbsp;☀️ Vitamin D3: 10-25 μg/day algae supplement<br/>'
+      +'&nbsp;&nbsp;🥛 Calcium: 1000-1200 mg/day από fortified plant milks + tofu<br/><br/>';
+  } else {
+    rec+='<b>Vitamin D3 + Calcium</b> (χορτοφαγική):<br/>'
+      +'&nbsp;&nbsp;☀️ Vitamin D3: 10-25 μg/day supplement (ή fortified)<br/>'
+      +'&nbsp;&nbsp;🥛 Calcium: Γιαούρτι (200mg), τυρί + fortified plant milks<br/><br/>';
+  }
+
+  // Omega-3
+  rec+='<b>Omega-3 (ALA → EPA/DHA)</b>:<br/>'
+    +'&nbsp;&nbsp;🌱 ALA: Σπόροι (flaxseed 1tbsp, chia 1tbsp, walnuts 1oz)<br/>'
+    +'&nbsp;&nbsp;🍃 EPA/DHA: '+(isVegan?'Algae supplement 200-300mg/day':'Consider algae supplement (limited conversion)')+'<br/><br/>';
+
+  // Other micronutrients
+  rec+='<b>Άλλα:</b> Ιωδίνη (iodized salt), Ψευδάργυρος (legumes/seeds), Σελήνιο (brazil nuts)<br/>';
+  rec+='</div>';
+  return rec;
+}
+
 function renderWeekTable(){
   var c=getC();var con=document.getElementById('week-con');if(!con)return;
   if(!c||!Object.keys(c.weekPlan).length){con.innerHTML='<div style="padding:20px;color:#bbb;font-size:12px">Δεν υπάρχει πλάνο — πάτα «Δημιουργία πλάνου»</div>';return;}
@@ -5212,8 +5261,11 @@ function renderWeekTable(){
       +'</div>';
   }
 
+  // Add supplement recommendations for vegetarian/vegan
+  var suppHtml=getSupplementRecommendations(c);
+
   // Build table HTML — show T/R badge in header + training time
-  var html=metExplainerHtml+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
+  var html=metExplainerHtml+suppHtml+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
     var badge=trainD[di]?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">T</span>':'<span style="background:#eee;color:#aaa;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">R</span>';
     var timeStr='';
