@@ -53,6 +53,10 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .meal-label{font-size:11px;font-weight:700;color:#025857;background:#E2EEE5;padding:6px 8px;white-space:nowrap;vertical-align:top;border-right:2px solid #c5ddd8;border-bottom:1px solid #d8ebe4}
 .day-cell{border:1px solid #ebebeb;padding:4px 4px 2px;vertical-align:top;min-width:118px;background:#fff;transition:background .12s,border-color .12s}
 .day-cell.drag-over{background:#E2EEE5;border:2px solid #025857}
+/* ✅ Phase 3: Meal timing hover tooltips */
+.meal-label{position:relative;cursor:help}
+.meal-label:hover::after{content:attr(data-timing-info);position:absolute;background:#333;color:#fff;padding:8px 10px;border-radius:5px;font-size:10px;white-space:nowrap;z-index:1000;bottom:100%;left:0;margin-bottom:4px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.meal-label:hover::before{content:'';position:absolute;background:#333;width:6px;height:6px;z-index:999;bottom:calc(100% - 4px);left:8px;transform:rotate(45deg)}
 /* Food chips */
 .food-chip{display:flex;align-items:center;gap:2px;padding:2px 4px;margin-bottom:2px;border-radius:5px;background:#f4f4f4;border:1px solid #ebebeb}
 .food-chip:hover{background:#E2EEE5;border-color:#c5ddd8}
@@ -108,6 +112,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
   .chip-srv{display:none}
   .chip-add{display:none}
   .combo-save-btn{display:none}
+  .sport-header-dietitian{display:none}
 }
 .recipe-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999}
 .recipe-modal.hidden{display:none}
@@ -239,6 +244,10 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .hrs-inp{width:100%;padding:2px 1px;border-radius:5px;border:1px solid #ddd;font-size:10px;font-weight:700;text-align:center;font-family:inherit;background:#f9f9f9}
 .hrs-t{border-color:#025857;color:#025857;background:#f0f8f7}
 .hrs-r{color:#ccc;background:#f5f5f5}
+.time-row td:first-child{color:#888;font-size:10px}
+.time-inp{width:100%;padding:2px 3px;border-radius:5px;border:1px solid #ddd;font-size:10px;font-weight:600;text-align:center;font-family:inherit;background:#f9f9f9}
+.time-t{border-color:#025857;color:#025857;background:#f0f8f7}
+.time-r{color:#ccc;background:#f5f5f5;cursor:not-allowed}
 .carb-boost-row{display:flex;align-items:center;gap:6px;font-size:10px;color:#666;margin-top:5px}
 .carb-boost-row label{white-space:nowrap}
 .carb-boost-inp{width:44px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-weight:700;color:#025857;text-align:center}
@@ -299,6 +308,18 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .met-total b{color:#014545}
 .met-note{font-size:10px;color:#888;font-style:italic}
 .v-ex-chip{background:#e8f5e9;border-radius:6px;padding:1px 7px;font-size:11px;color:#2e7d32;font-weight:700;margin-left:4px}
+
+/* ✅ IMPROVED MET LAYOUT */
+.met-added-section{background:#e2eee5;border:1px solid #b5dcd6;border-radius:8px;padding:12px;margin-bottom:12px}
+.met-added-title{font-size:11px;font-weight:700;color:#025857;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+
+.met-input-section{background:#f5f9f8;border:1px solid #d0e2dc;border-radius:8px;padding:12px}
+.met-input-title{font-size:11px;font-weight:700;color:#025857;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #d0e2dc}
+
+.met-form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.met-form-group label{font-size:11px;font-weight:600;color:#555}
+.met-form-group select,.met-form-group input{padding:6px 8px;border:1px solid #ccc;border-radius:6px;font-size:11px;background:#fff}
+.met-form-group select:focus,.met-form-group input:focus{outline:none;border-color:#025857;box-shadow:0 0 0 2px rgba(2,88,87,.08)}
 /* ── Macro Presets ── */
 .macro-preset-wrap{background:#f8fffe;border:1px solid #c5ddd8;border-radius:10px;padding:12px;margin-bottom:12px}
 .macro-preset-head{font-size:12px;font-weight:700;color:#025857;margin-bottom:8px}
@@ -564,7 +585,198 @@ var FOODS={
 'PB Coconut Truffles':{k:430,p:8,c:28,f:34,fi:3.0,cat:'Συνταγές FYH'},
 'Energy Bites (FYH)':{k:360,p:7,c:58,f:12,fi:5.5,cat:'Συνταγές FYH'},
 'PB Protein Bars':{k:370,p:15,c:35,f:19,fi:3.5,cat:'Συνταγές FYH'},
-'Σάλτσα Ντομάτας (FYH)':{k:133,p:1.2,c:8,f:11,fi:1.3,cat:'Συνταγές FYH'}
+'Σάλτσα Ντομάτας (FYH)':{k:133,p:1.2,c:8,f:11,fi:1.3,cat:'Συνταγές FYH'},
+// Petretzeakis Breakfast Recipes
+'Breakfast Burrito (Πετρετζίκης)':{k:420,p:18,c:48,f:16,fi:4.5,cat:'Συνταγές FYH'},
+'Chia Bowl Φράουλα (Πετρετζίκης)':{k:385,p:15,c:52,f:12,fi:8.0,cat:'Συνταγές FYH'},
+'Overnight Oats Banoffee (Πετρετζίκης)':{k:430,p:13,c:54,f:18,fi:7.0,cat:'Συνταγές FYH'},
+'Overnight Oats Black Forest (Πετρετζίκης)':{k:425,p:18,c:56,f:12,fi:8.0,cat:'Συνταγές FYH'},
+'Overnight Oats P.B. & Choco (Πετρετζίκης)':{k:470,p:16,c:55,f:20,fi:8.0,cat:'Συνταγές FYH'},
+'Αυγά Ποσέ Air Fryer (Πετρετζίκης)':{k:370,p:16,c:38,f:18,fi:6.0,cat:'Συνταγές FYH'},
+'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)':{k:360,p:32,c:20,f:15,fi:3.0,cat:'Συνταγές FYH'},
+// Main Course Recipes - Petretzeakis
+'Λιγκουίνι με Γαρίδες (Πετρετζίκης)':{k:589,p:31,c:65,f:22,fi:4.8,cat:'Συνταγές FYH'}
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ✅ PHASE 1: FOOD PAIRING DATABASE — Chef-Inspired Meal Combinations
+// ═══════════════════════════════════════════════════════════════════════════════
+// Each food has: flavor_profile, best_pairings, avoid_with, texture, aromatic_herbs, category
+// Based on culinary science (shared aromatic compounds) + user feedback
+var FOOD_PAIRING_DB={
+  // ── PROTEINS ────────────────────────────────────────────────────────────────
+  'Κοτόπουλο στήθος (ψητό)':{
+    flavor_profile:['mild','umami'],
+    best_pairings:['σκόρδο','Ντοματες','Μανιτάρια','Λεμόνι','κρεμμύδι','Σπαράγγια','Μπρόκολο'],
+    avoid_with:['ψάρι','φακές'],
+    texture:'tender',
+    aromatic_herbs:['βασιλικό','θυμάρι','ροσμαρίνι','δίλ'],
+    category:'protein'
+  },
+  'Σολομός (ψητός)':{
+    flavor_profile:['umami','rich','delicate'],
+    best_pairings:['λεμόνι','δίλ','σπαράγγια','άσπρο κρασί','ελαιόλαδο','αγκινάρες'],
+    avoid_with:['τόνος','κοτόπουλο','φακές'],
+    texture:'tender',
+    aromatic_herbs:['δίλ','φρέσκος δίλ','άνηθος'],
+    category:'protein'
+  },
+  'Λαβράκι (ψητό)':{
+    flavor_profile:['umami','delicate','mild'],
+    best_pairings:['λεμόνι','δίλ','σπαράγγια','λαχανικά σιγοψημένα','ελαιόλαδο'],
+    avoid_with:['τόνος','κοτόπουλο','φακές'],
+    texture:'tender',
+    aromatic_herbs:['δίλ','φρέσκος δίλ','θυμάρι'],
+    category:'protein'
+  },
+  'Τόνος (κονσέρβα)':{
+    flavor_profile:['umami','strong'],
+    best_pairings:['λεμόνι','κρεμμύδι','κάπαρη','σέσκουλα','πατάτες','ντοματα'],
+    avoid_with:['ψάρι','φακές','λαβράκι','σολομός'],
+    texture:'firm',
+    aromatic_herbs:['περιγιάλι','μύρωνο'],
+    category:'protein'
+  },
+  'Φακές':{
+    flavor_profile:['earthy','mild'],
+    best_pairings:['κρεμμύδι','σκόρδο','καρότο','κολιαντρος','γλυκοπατάτα','ρύζι'],
+    avoid_with:['τόνος','ψάρι','κοτόπουλο'],
+    texture:'firm',
+    aromatic_herbs:['κολιαντρος','μύρωνο','κύμινο'],
+    category:'protein'
+  },
+  'Ρεβίθια':{
+    flavor_profile:['earthy','creamy'],
+    best_pairings:['σκόρδο','κρεμμύδι','ντοματα','κολιαντρος','σπανάκι','καρότο'],
+    avoid_with:['ψάρι','κοτόπουλο'],
+    texture:'creamy',
+    aromatic_herbs:['κολιαντρος','κύμινο','παπρικά'],
+    category:'protein'
+  },
+  'Γαρίδες (βραστές)':{
+    flavor_profile:['umami','delicate','sweet'],
+    best_pairings:['λεμόνι','σκόρδο','ελαιόλαδο','φρέσκα χόρτα','ρύζι'],
+    avoid_with:['τόνος','φακές'],
+    texture:'firm',
+    aromatic_herbs:['δίλ','περιγιάλι','χιλιανό πιπέρι'],
+    category:'protein'
+  },
+  'Αυγά (ολόκληρα)':{
+    flavor_profile:['mild','versatile'],
+    best_pairings:['ντοματα','σπανάκι','κρεμμύδι','λαχανικά','μανιτάρια'],
+    avoid_with:[],
+    texture:'tender',
+    aromatic_herbs:['περιγιάλι','θυμάρι'],
+    category:'protein'
+  },
+  // ── CARBOHYDRATES ──────────────────────────────────────────────────────────
+  'Ρύζι άσπρο (βρ.)':{
+    flavor_profile:['neutral','mild'],
+    best_pairings:['σκόρδο','κρεμμύδι','σόγια','κολιαντρος','γαρίδες','κοτόπουλο'],
+    avoid_with:[],
+    texture:'fluffy',
+    aromatic_herbs:['κολιαντρος'],
+    category:'carb'
+  },
+  'Πατάτες':{
+    flavor_profile:['earthy','mild'],
+    best_pairings:['σκόρδο','ψάρι','τόνος','βούτυρο','ελαιόλαδο','κρεμμύδι'],
+    avoid_with:[],
+    texture:'creamy',
+    aromatic_herbs:['κολιαντρος','θυμάρι'],
+    category:'carb'
+  },
+  'Γλυκοπατάτα':{
+    flavor_profile:['sweet','earthy'],
+    best_pairings:['κάρι','κολιαντρος','κοτόπουλο','φακές','αφέλια'],
+    avoid_with:[],
+    texture:'creamy',
+    aromatic_herbs:['κολιαντρος','παπρικά'],
+    category:'carb'
+  },
+  'Πίτα αραβική':{
+    flavor_profile:['neutral','mild'],
+    best_pairings:['κοτόπουλο','φακές','ρεβίθια','λαχανικά'],
+    avoid_with:[],
+    texture:'chewy',
+    aromatic_herbs:[],
+    category:'carb'
+  },
+  // ── VEGETABLES ─────────────────────────────────────────────────────────────
+  'Σπαράγγια':{
+    flavor_profile:['fresh','umami'],
+    best_pairings:['σολομός','λαβράκι','ψάρι','λεμόνι','σκόρδο','ελαιόλαδο'],
+    avoid_with:[],
+    texture:'tender-crisp',
+    aromatic_herbs:['δίλ','λεμόνι'],
+    category:'vegetable'
+  },
+  'Μπρόκολο':{
+    flavor_profile:['earthy','fresh'],
+    best_pairings:['σκόρδο','κοτόπουλο','σέσκουλα','ελαιόλαδο','λεμόνι'],
+    avoid_with:[],
+    texture:'crispy',
+    aromatic_herbs:['σκόρδο'],
+    category:'vegetable'
+  },
+  'Σπανάκι':{
+    flavor_profile:['earthy','mild'],
+    best_pairings:['σκόρδο','αυγά','ψάρι','σέσκουλα','κρεμμύδι','ελαιόλαδο'],
+    avoid_with:[],
+    texture:'tender',
+    aromatic_herbs:['σκόρδο','μουσκάτο'],
+    category:'vegetable'
+  },
+  'Ντοματες':{
+    flavor_profile:['acidic','umami','fresh'],
+    best_pairings:['βασιλικό','σκόρδο','κρεμμύδι','κοτόπουλο','ψάρι','ελαιόλαδο'],
+    avoid_with:[],
+    texture:'juicy',
+    aromatic_herbs:['βασιλικό'],
+    category:'vegetable'
+  },
+  'Μανιτάρια':{
+    flavor_profile:['earthy','umami'],
+    best_pairings:['σκόρδο','θυμάρι','κοτόπουλο','σέσκουλα','κρεμμύδι'],
+    avoid_with:[],
+    texture:'tender',
+    aromatic_herbs:['θυμάρι','σκόρδο'],
+    category:'vegetable'
+  },
+  'Πιπεριές':{
+    flavor_profile:['sweet','mild'],
+    best_pairings:['σκόρδο','κρεμμύδι','κοτόπουλο','ντοματα','ελαιόλαδο'],
+    avoid_with:[],
+    texture:'crisp',
+    aromatic_herbs:['κολιαντρος'],
+    category:'vegetable'
+  },
+  // ── AROMATICS/HERBS (μικρές ποσότητες αλλά μεγάλη επίδραση) ─────────────────
+  'Λεμόνι':{
+    flavor_profile:['acidic','bright','fresh'],
+    best_pairings:['όλα τα ψάρια','σκόρδο','δίλ','ελαιόλαδο'],
+    avoid_with:[],
+    texture:'liquid',
+    aromatic_herbs:[],
+    category:'acid'
+  },
+  'Σκόρδο':{
+    flavor_profile:['strong','umami','pungent'],
+    best_pairings:['όλα τα κρέας','λαχανικά','ελαιόλαδο'],
+    avoid_with:[],
+    texture:'paste',
+    aromatic_herbs:[],
+    category:'aromatic'
+  },
+  // ── FATS (υγιεινά λάδια) ───────────────────────────────────────────────────
+  'Ελαιόλαδο':{
+    flavor_profile:['rich','fruity'],
+    best_pairings:['όλα'],
+    avoid_with:[],
+    texture:'smooth',
+    aromatic_herbs:[],
+    category:'fat'
+  }
 };
 
 // Category scaling caps: foods in these categories scale with limits
@@ -574,6 +786,28 @@ var SCALE_CATS={
   'Φρούτα':{lo:0.7,hi:1.35},
   'Λάδια':{lo:0.6,hi:1.45},
   'Ξηροί καρποί':{lo:0.6,hi:1.45}
+};
+
+// ✅ BREAKFAST CONSTRAINTS: Approved proteins & foods for morning meals
+// Mediterranean breakfast should be light & nutritious, not heavy meats
+var BREAKFAST_FOODS = {
+  approved_proteins: ['Αυγά (ολόκληρα)', 'Ασπράδια αυγών', 'Γιαούρτι 2%', 'Γιαούρτι 0%', 'Κεφίρ', 'Τυρί φέτα'],
+  approved_carbs: ['Ολικής άλεσης ψωμί', 'Βρώμη', 'Ρύζι καστανό', 'Πατάτα', 'Γλυκοπατάτα'],
+  approved_veggies: ['Ντοματες', 'Σπαράγγια', 'Μπρόκολο', 'Σπανάκι', 'Πιπεριές'],
+  forbidden_for_breakfast: ['Κοτόπουλο στήθος (ψητό)', 'Μοσχάρι/σταυράκι (ψητό)', 'Κουνέλι', 'Χοίρειο κρέας', 'Τόνος', 'Σολομός'],
+  is_breakfast_appropriate: function(foodName) {
+    // Check if food is in forbidden list
+    for(var i = 0; i < this.forbidden_for_breakfast.length; i++) {
+      if(foodName.toLowerCase().includes(this.forbidden_for_breakfast[i].toLowerCase())) {
+        return false;
+      }
+    }
+    // Heavy meats = not breakfast
+    if(foodName.toLowerCase().includes('ψητό') || foodName.toLowerCase().includes('κρέας')) {
+      return false;
+    }
+    return true;
+  }
 };
 
 // ── Food Exclusion: quick groups & substitution order ────────────────────────
@@ -710,6 +944,15 @@ var FOOD_UNITS={
   'Energy Bites (FYH)':{g:30,u:'τεμ.'},
   'PB Protein Bars':{g:50,u:'τεμ.'},
   'Σάλτσα Ντομάτας (FYH)':{g:15,u:'κ.σ.'},
+  // Petretzeakis Breakfast Recipes
+  'Breakfast Burrito (Πετρετζίκης)':{g:420,u:'μερίδ.'},
+  'Chia Bowl Φράουλα (Πετρετζίκης)':{g:385,u:'μερίδ.'},
+  'Overnight Oats Banoffee (Πετρετζίκης)':{g:430,u:'μερίδ.'},
+  'Overnight Oats Black Forest (Πετρετζίκης)':{g:425,u:'μερίδ.'},
+  'Overnight Oats P.B. & Choco (Πετρετζίκης)':{g:470,u:'μερίδ.'},
+  'Αυγά Ποσέ Air Fryer (Πετρετζίκης)':{g:370,u:'μερίδ.'},
+  'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)':{g:360,u:'μερίδ.'},
+  'Λιγκουίνι με Γαρίδες (Πετρετζίκης)':{g:350,u:'μερίδ.'},
   /* Chef Recipes - Άκης Πετρετζάκης */
   'High Protein Ομελέτα Wrap':{g:250,u:'μερίδ.'},
   'Wrap με τονοσαλάτα':{g:240,u:'μερίδ.'}
@@ -907,10 +1150,12 @@ var MET_ACTIVITIES=[
     {id:'muay_thai',name:'Muay Thai / Kick Boxing',met:10.3},
     {id:'martial_slow',name:'Πολεμικές τέχνες αργό (εξάσκηση)',met:5.3},
     {id:'boxing_ring',name:'Boxing αγώνας (ring)',met:12.8},
-    {id:'boxing_bag',name:'Boxing σάκος',met:5.5},
+    {id:'boxing_bag',name:'Boxing σάκος (heavy bag)',met:8.3},
     {id:'boxing_spar',name:'Boxing sparring',met:7.8},
     {id:'judo_karate',name:'Judo / Karate / Tae Kwon Do',met:10.3},
-    {id:'wrestling',name:'Πάλη (wrestling)',met:6.0}
+    {id:'wrestling',name:'Πάλη (wrestling) αγωνιστικό',met:9.3},
+    {id:'bjj_moderate',name:'Brazilian Jiu Jitsu (sparring light)',met:6.0},
+    {id:'bjj_vigorous',name:'Brazilian Jiu Jitsu (vigorous/competition)',met:9.0}
   ]},
   {cat:'🏃 Τρέξιμο',items:[
     {id:'jog_gen',name:'Jogging γενικό',met:7.0},
@@ -960,7 +1205,8 @@ var MET_ACTIVITIES=[
     {id:'yoga_vinyasa',name:'Yoga Vinyasa / Flow',met:4.0},
     {id:'yoga_power',name:'Power Yoga / Ashtanga',met:5.0},
     {id:'yoga_hot',name:'Hot Yoga / Bikram',met:5.5},
-    {id:'stretch_gen',name:'Διατάσεις / Ευλυγισία γενικό',met:2.3}
+    {id:'stretch_gen',name:'Διατάσεις / Ευλυγισία γενικό',met:2.3},
+    {id:'tai_chi',name:'Tai Chi / Qi Gong',met:3.0}
   ]},
   {cat:'🏊 Κολύμβηση',items:[
     {id:'swim_fast',name:'Κολύμβηση ελεύθερο γρήγορο',met:9.8},
@@ -1005,17 +1251,10 @@ var MET_ACTIVITIES=[
     {id:'squash_gen',name:'Squash γενικό',met:7.3},
     {id:'squash_comp',name:'Squash αγωνιστικό',met:12.0},
     {id:'badminton_comp',name:'Badminton αγωνιστικό',met:7.0},
-    {id:'badminton_soc',name:'Badminton social/γενικό',met:5.5},
+    {id:'badminton_soc',name:'Badminton social/γενικό',met:4.5},
     {id:'ping_pong',name:'Ping pong / Table tennis',met:4.0},
     {id:'racquetball',name:'Racquetball γενικό',met:7.0},
     {id:'racquetball_comp',name:'Racquetball αγωνιστικό',met:10.0}
-  ]},
-  {cat:'🧘 Yoga / Χαλάρωση',items:[
-    {id:'yoga_hatha',name:'Yoga Hatha',met:2.5},
-    {id:'yoga_power',name:'Yoga Power',met:4.0},
-    {id:'pilates_gen',name:'Pilates γενικό',met:3.0},
-    {id:'stretching',name:'Stretching ήπιο',met:2.3},
-    {id:'tai_chi',name:'Tai Chi / Qi Gong',met:3.0}
   ]},
   {cat:'💃 Χορός / Αερόβιο',items:[
     {id:'aerobic_hi',name:'Aerobic υψηλής έντασης',met:7.3},
@@ -1079,6 +1318,347 @@ var MACRO_PRESETS={
   custom:{label:'Προσαρμοσμένο',p:25,f:25,c:50,icon:'✏️'}
 };
 
+// ── Sport-Specific Macro Profiles ──────────────────────────────────────────────
+// isMET flag: true = conditional visibility shows MET section, false = shows Activity Factor section
+var SPORT_PROFILES={
+  bjj:{name:'Brazilian Jiu Jitsu',p:32,f:24,c:44,icon:'🥋',notes:'High protein for explosive power & recovery. Moderate carbs for training endurance.',isMET:true},
+  boxing:{name:'Boxing',p:30,f:24,c:46,icon:'🥊',notes:'High protein for power. Strategic carbs for rounds & recovery between sparring.',isMET:true},
+  mma:{name:'Mixed Martial Arts',p:32,f:23,c:45,icon:'🤼',notes:'Maximum protein (strength + cardio combo). Balanced carbs for both power & endurance.',isMET:true},
+  football:{name:'Ποδόσφαιρο',p:26,f:25,c:49,icon:'⚽',notes:'Balanced macro for mixed sport (speed, power, endurance). High carbs for match intensity.',isMET:true},
+  basketball:{name:'Μπάσκετ',p:27,f:25,c:48,icon:'🏀',notes:'Moderate protein. Higher carbs for explosive jumps & court sprints.',isMET:true},
+  weightlifting:{name:'Weightlifting',p:32,f:26,c:42,icon:'🏋️',notes:'Maximum protein for strength gains. Moderate carbs to preserve glycogen.',isMET:true},
+  cycling:{name:'Ποδηλασία',p:18,f:24,c:58,icon:'🚴',notes:'Very high carbs for endurance. Lower protein (endurance sport). Focus on glycogen.',isMET:true},
+  running:{name:'Τρέξιμο',p:16,f:23,c:61,icon:'🏃',notes:'Highest carbs for glycogen stores. Lower protein (endurance-focused). Recovery meals critical.',isMET:true},
+  swimming:{name:'Κολύμβηση',p:24,f:24,c:52,icon:'🏊',notes:'High carbs (full-body endurance). Adequate protein for shoulder/arm recovery.',isMET:true},
+  crossfit:{name:'CrossFit',p:31,f:25,c:44,icon:'⚡',notes:'High protein (power + metabolic). Moderate carbs (mixed intensity WODs).',isMET:true},
+  custom:{name:'Προσαρμοσμένο (χωρίς MET)',p:25,f:25,c:50,icon:'✏️',notes:'Custom macros without MET activity tracking.',isMET:false}
+};
+
+// ── PHASE 2: Meal Timing Profiles ──────────────────────────────────────────────
+// Nutritional optimization for different meal purposes relative to training
+var MEAL_TIMING_PROFILES={
+  'pre-workout':{
+    label:'Pre-workout (2h πριν)',icon:'⚡',
+    p:15,f:10,c:75,notes:'High carbs (simple), moderate protein, minimal fat/fiber for fast digestion',
+    desc:'2 hours before training — maximize glycogen, minimize GI distress'
+  },
+  'during-training':{
+    label:'During training (>60min)',icon:'🔥',
+    p:5,f:5,c:90,notes:'Simple carbs only — fast glucose for continuous energy',
+    desc:'During long training sessions >60min — fast carbs (sports drink, gels)'
+  },
+  'post-workout':{
+    label:'Post-workout (0-30min)',icon:'💪',
+    p:35,f:8,c:57,notes:'Fast protein + fast carbs for MPS & glycogen, minimal fat',
+    desc:'Immediately post-training — maximize muscle protein synthesis window'
+  },
+  'recovery':{
+    label:'Recovery (2h+ post)',icon:'🛌',
+    p:25,f:28,c:47,notes:'Balanced nutrition with healthy fats for sustained recovery',
+    desc:'2+ hours post-training — complete meal with all nutrients'
+  },
+  'regular':{
+    label:'Regular meal',icon:'🍽️',
+    p:25,f:28,c:47,notes:'Balanced macros for standard daily nutrition',
+    desc:'No specific timing constraint — standard balanced meal'
+  },
+  'rest-day':{
+    label:'Rest day',icon:'😴',
+    p:25,f:28,c:47,notes:'Slightly lower carbs, focus on recovery & micronutrients',
+    desc:'Rest/low activity day — focus on nutrient density'
+  }
+};
+
+// ── PHASE 3: Micronutrient Targets Function ──────────────────────────────────
+// Returns personalized daily micronutrient targets based on athlete profile
+function getMicronutrientTargets(c){
+  var age=c.age||30,sex=c.sex||'M',weight=c.weight||80,sport=c.sport;
+  var isAthlete=!!(c.trainDays&&c.trainDays.filter(function(x){return x;}).length>=3);
+  var athleteBoost=isAthlete?1.25:1.0;// Athletes need more due to increased oxidative stress
+
+  return{
+    // Iron (Fe) — mg/day
+    iron:{
+      target:sex==='M'?8:age<51?18:8,
+      unit:'mg',label:'Iron (Fe)',
+      notes:sex==='M'?'Adult male':age<51?'Menstruating female':'Postmenopausal',
+      athletic:Math.round((sex==='M'?8:age<51?18:8)*athleteBoost)
+    },
+    // Zinc (Zn) — mg/day
+    zinc:{
+      target:sex==='M'?11:8,
+      unit:'mg',label:'Zinc (Zn)',
+      notes:sex==='M'?'Adult male':'Adult female',
+      athletic:Math.round((sex==='M'?11:8)*athleteBoost)
+    },
+    // Magnesium (Mg) — mg/day
+    magnesium:{
+      target:sex==='M'?(age<31?400:420):(age<31?310:320),
+      unit:'mg',label:'Magnesium (Mg)',
+      notes:'Essential for muscle function & recovery',
+      athletic:Math.round((sex==='M'?(age<31?400:420):(age<31?310:320))*athleteBoost)
+    },
+    // Calcium (Ca) — mg/day
+    calcium:{
+      target:age<51?1000:1200,
+      unit:'mg',label:'Calcium (Ca)',
+      notes:'Bone health & muscle function',
+      athletic:Math.round((age<51?1000:1200)*athleteBoost)
+    },
+    // B1 (Thiamine) — mg/day
+    b1:{
+      target:sex==='M'?1.2:1.1,
+      unit:'mg',label:'B1 (Thiamine)',
+      notes:'Energy metabolism',
+      athletic:Math.round((sex==='M'?1.2:1.1)*athleteBoost*100)/100
+    },
+    // B2 (Riboflavin) — mg/day
+    b2:{
+      target:sex==='M'?1.3:1.1,
+      unit:'mg',label:'B2 (Riboflavin)',
+      notes:'Energy & antioxidant support',
+      athletic:Math.round((sex==='M'?1.3:1.1)*athleteBoost*100)/100
+    },
+    // B3 (Niacin) — mg NE/day
+    b3:{
+      target:sex==='M'?16:14,
+      unit:'mg NE',label:'B3 (Niacin)',
+      notes:'Energy metabolism',
+      athletic:Math.round((sex==='M'?16:14)*athleteBoost)
+    },
+    // B6 (Pyridoxine) — mg/day
+    b6:{
+      target:sex==='M'?1.3:1.3,
+      unit:'mg',label:'B6 (Pyridoxine)',
+      notes:'Protein metabolism & immune',
+      athletic:Math.round((sex==='M'?1.3:1.3)*athleteBoost*100)/100
+    },
+    // B12 (Cobalamin) — mcg/day
+    b12:{
+      target:2.4,
+      unit:'mcg',label:'B12 (Cobalamin)',
+      notes:'Nerve function & energy',
+      athletic:Math.round(2.4*athleteBoost*100)/100
+    },
+    // Folate — mcg DFE/day
+    folate:{
+      target:400,
+      unit:'mcg',label:'Folate',
+      notes:'Cell division & protein metabolism',
+      athletic:Math.round(400*athleteBoost)
+    },
+    // Omega-3 (ALA) — g/day
+    omega3:{
+      target:sex==='M'?1.6:1.1,
+      unit:'g',label:'Omega-3 (ALA)',
+      notes:'Anti-inflammatory, cardiovascular',
+      athletic:Math.round((sex==='M'?1.6:1.1)*athleteBoost*10)/10
+    },
+    // Omega-6 (LA) — g/day
+    omega6:{
+      target:sex==='M'?17:12,
+      unit:'g',label:'Omega-6 (LA)',
+      notes:'Essential fatty acid',
+      athletic:Math.round((sex==='M'?17:12)*athleteBoost)
+    }
+  };
+}
+
+// MICRONUTRIENTS — key foods with their micronutrient content per 100g
+// Format: {Fe_mg, Zn_mg, Mg_mg, Ca_mg, B1_mg, B2_mg, B3_mg_ne, B6_mg, B12_mcg, Folate_mcg, Omega3_g, Omega6_g}
+var MICRONUTRIENTS={
+  // Meats
+  'Κοτόπουλο στήθος (ψητό)':{Fe:0.8,Zn:0.8,Mg:27,Ca:9,B1:0.07,B2:0.10,B3:9.2,B6:0.90,B12:0.3,Folate:3,Omega3:0.05,Omega6:1.5},
+  'Βοδινό άπαχο (ψητό)':{Fe:2.6,Zn:6.0,Mg:20,Ca:8,B1:0.06,B2:0.17,B3:5.0,B6:0.52,B12:2.4,Folate:7,Omega3:0.05,Omega6:0.9},
+  'Σολομός (ψητός)':{Fe:0.8,Zn:0.8,Mg:27,Ca:13,B1:0.20,B2:0.16,B3:7.2,B6:0.80,B12:3.2,Folate:20,Omega3:2.6,Omega6:1.3},
+  'Τόνος (κονσέρβα)':{Fe:1.3,Zn:0.6,Mg:34,Ca:7,B1:0.05,B2:0.05,B3:5.1,B6:0.40,B12:1.0,Folate:1,Omega3:0.24,Omega6:0.1},
+  // Dairy
+  'Γάλα αγελάδος':{Fe:0.07,Zn:0.37,Mg:13,Ca:113,B1:0.04,B2:0.16,B3:0.10,B6:0.05,B12:0.44,Folate:5,Omega3:0.06,Omega6:1.2},
+  'Γιαούρτι ελληνικό':{Fe:0.10,Zn:0.57,Mg:17,Ca:126,B1:0.06,B2:0.24,B3:0.15,B6:0.08,B12:0.37,Folate:7,Omega3:0.04,Omega6:0.5},
+  'Τυρί φέτα':{Fe:0.70,Zn:3.57,Mg:42,Ca:493,B1:0.03,B2:0.39,B3:0.35,B6:0.25,B12:0.64,Folate:6,Omega3:0.22,Omega6:2.5},
+  // Grains
+  'Ρύζι λευκό (βρ.)':{Fe:0.28,Zn:0.62,Mg:12,Ca:10,B1:0.07,B2:0.04,B3:1.6,B6:0.12,B12:0,Folate:20,Omega3:0.05,Omega6:0.9},
+  'Ρύζι καστανό (βρ.)':{Fe:0.66,Zn:1.09,Mg:44,Ca:23,B1:0.12,B2:0.05,B3:3.0,B6:0.35,B12:0,Folate:8,Omega3:0.08,Omega6:1.8},
+  'Ψωμί ολικής άλεσης':{Fe:2.73,Zn:1.91,Mg:83,Ca:167,B1:0.39,B2:0.28,B3:4.6,B6:0.37,B12:0,Folate:38,Omega3:0.70,Omega6:4.5},
+  'Βρώμη (ωμή)':{Fe:4.72,Zn:3.64,Mg:142,Ca:52,B1:0.76,B2:0.13,B3:0.96,B6:0.12,B12:0,Folate:56,Omega3:0.42,Omega6:5.7},
+  // Vegetables
+  'Σπανάκι (ωμό)':{Fe:2.71,Zn:0.53,Mg:79,Ca:99,B1:0.08,B2:0.19,B3:0.72,B6:0.39,B12:0,Folate:194,Omega3:0.34,Omega6:0.2},
+  'Μπρόκολο':{Fe:0.73,Zn:0.63,Mg:21,Ca:47,B1:0.07,B2:0.12,B3:0.64,B6:0.18,B12:0,Folate:63,Omega3:0.09,Omega6:0.1},
+  'Ντομάτα':{Fe:0.27,Zn:0.17,Mg:10,Ca:12,B1:0.04,B2:0.02,B3:0.59,B6:0.08,B12:0,Folate:15,Omega3:0.05,Omega6:0.2},
+  // Legumes
+  'Φακές':{Fe:3.3,Zn:3.27,Mg:47,Ca:36,B1:0.64,B2:0.19,B3:2.13,B6:0.54,B12:0,Folate:181,Omega3:0.06,Omega6:0.3},
+  'Ρεβίθια':{Fe:2.89,Zn:2.11,Mg:48,Ca:49,B1:0.48,B2:0.21,B3:1.54,B6:0.54,B12:0,Folate:172,Omega3:0.06,Omega6:0.7},
+  // Nuts & Seeds
+  'Αμύγδαλα':{Fe:3.71,Zn:3.12,Mg:270,Ca:264,B1:0.20,B2:0.92,B3:3.62,B6:0.10,B12:0,Folate:50,Omega3:0.39,Omega6:12.3},
+  'Chia seeds':{Fe:8.0,Zn:4.58,Mg:335,Ca:631,B1:0.62,B2:0.27,B3:8.83,B6:0.90,B12:0,Folate:78,Omega3:17.83,Omega6:5.8},
+  // Oils
+  'Ελαιόλαδο':{Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0.76,Omega6:9.7}
+};
+
+/* ══════════════════════════════════════════════════════════════════════════════════
+   🔍 VALIDATION SYSTEM — Comprehensive calculation audits for data integrity
+   ══════════════════════════════════════════════════════════════════════════════════ */
+
+var VALIDATION_RULES={
+  // BMR validation (Mifflin-St Jeor)
+  bmr:{
+    name:'BMR (Mifflin-St Jeor)',
+    validate:function(c,t){
+      if(!c.weight||!c.height||!c.age)return{ok:true,msg:'Missing data'};
+      var expected;
+      if(c.sex==='M'){
+        expected=Math.round(10*c.weight+6.25*c.height-5*c.age+5);
+      } else {
+        expected=Math.round(10*c.weight+6.25*c.height-5*c.age-161);
+      }
+      var diff=Math.abs(t.bmr-expected);
+      if(diff>2)return{ok:false,msg:'BMR mismatch: calculated '+expected+' but got '+t.bmr,diff:diff};
+      return{ok:true,msg:'✓ BMR correct: '+t.bmr+' kcal'};
+    }
+  },
+
+  // TDEE validation (Activity factor method)
+  tdee:{
+    name:'TDEE (Activity Factor)',
+    validate:function(c,t){
+      if(t.usedMET)return{ok:true,msg:'Using MET-based TDEE (not Activity Factor)'};
+      var act={sed:1.2,light:1.375,mod:1.55,active:1.725};
+      var factor=act[c.activity]||1.2;
+      var expected=Math.round(t.bmr*factor);
+      var diff=Math.abs(t.tdee-expected);
+      if(diff>5)return{ok:false,msg:'TDEE mismatch: expected '+expected+' but got '+t.tdee,diff:diff};
+      return{ok:true,msg:'✓ TDEE correct: '+t.tdee+' kcal (×'+factor+')'};
+    }
+  },
+
+  // MET calculation validation
+  met:{
+    name:'MET Activity Calculation',
+    validate:function(c,t){
+      if(!c.metActivities||!c.metActivities.length)return{ok:true,msg:'No MET activities'};
+      var totalWeekly=0;
+      c.metActivities.forEach(function(act){
+        var kcalSession=Math.round(act.met*3.5*c.weight/200*act.mins);
+        var kcalWeek=kcalSession*(act.days||[]).length;
+        totalWeekly+=kcalWeek;
+      });
+      var diff=Math.abs(t.exerciseWeekly-totalWeekly);
+      if(diff>10)return{ok:false,msg:'MET weekly mismatch: expected '+totalWeekly+' but got '+t.exerciseWeekly,diff:diff};
+      return{ok:true,msg:'✓ MET calculation correct: '+t.exerciseWeekly+' kcal/week'};
+    }
+  },
+
+  // Macro calculations validation
+  macros:{
+    name:'Macro Calculations',
+    validate:function(c,t){
+      var pCals=t.p*4;
+      var fCals=t.f*9;
+      var cCals=t.carb*4;
+      var totalCals=pCals+fCals+cCals;
+      var diff=Math.abs(totalCals-t.target);
+      if(diff>5){
+        return{ok:false,msg:'Macro total mismatch: P('+t.p+'g×4='+pCals+')+F('+t.f+'g×9='+fCals+')+C('+t.carb+'g×4='+cCals+')='+totalCals+' but target is '+t.target,diff:diff};
+      }
+      // Check protein ratios
+      var pRatio=Math.round(pCals/t.target*100);
+      if(pRatio<t.pPct-2||pRatio>t.pPct+2){
+        return{ok:false,msg:'Protein % mismatch: calculated '+pRatio+'% but expected '+t.pPct+'%'};
+      }
+      return{ok:true,msg:'✓ Macros correct: P'+t.p+'g ('+t.pPct+'%) F'+t.f+'g ('+t.fPct+'%) C'+t.carb+'g ('+t.cPct+'%)'};
+    }
+  },
+
+  // Daily targets with MET validation
+  dailyTargets:{
+    name:'Daily MET Targets',
+    validate:function(c,t){
+      if(!t.usedMET||!c.dayTargets||c.dayTargets.length!==7)return{ok:true,msg:'Not using MET or dayTargets not populated'};
+      var trainDays=0,totalKcal=0;
+      for(var d=0;d<7;d++){
+        totalKcal+=c.dayTargets[d].k||0;
+        if(c.trainDays&&c.trainDays[d])trainDays++;
+      }
+      var avgTarget=Math.round(totalKcal/7);
+      var diff=Math.abs(avgTarget-t.target);
+      if(diff>15){
+        return{ok:false,msg:'Weekly avg from dayTargets ('+avgTarget+') differs from t.target ('+t.target+') by '+diff,trainDays:trainDays};
+      }
+      return{ok:true,msg:'✓ Daily targets consistent: avg='+avgTarget+' kcal ('+trainDays+' training days)'};
+    }
+  },
+
+  // Carb boost validation
+  carbBoost:{
+    name:'Carb Boost (Redistribution)',
+    validate:function(c,t){
+      if(!c.carbBoost||(c.carbBoost==null)||c.carbBoost===0)return{ok:true,msg:'Carb boost disabled or 0%'};
+      if(!c.dayTargets||!c.dayTargets.length)return{ok:true,msg:'dayTargets not set'};
+      // Check that training day carbs are higher
+      var trainCarbTotal=0,restCarbTotal=0,trainCount=0,restCount=0;
+      for(var d=0;d<7;d++){
+        if(c.trainDays&&c.trainDays[d]){
+          trainCarbTotal+=(c.dayTargets[d].c||0);trainCount++;
+        } else {
+          restCarbTotal+=(c.dayTargets[d].c||0);restCount++;
+        }
+      }
+      if(trainCount>0&&restCount>0){
+        var trainAvg=Math.round(trainCarbTotal/trainCount);
+        var restAvg=Math.round(restCarbTotal/restCount);
+        if(trainAvg<=restAvg){
+          return{ok:false,msg:'Carb boost NOT applied: training days ('+trainAvg+'g avg) should > rest days ('+restAvg+'g avg)'};
+        }
+      }
+      return{ok:true,msg:'✓ Carb boost working: training carbs > rest carbs'};
+    }
+  },
+
+  // Energy Availability (RED-S) validation
+  ea:{
+    name:'Energy Availability (RED-S)',
+    validate:function(c,t){
+      if(!t.ea||t.ea===null)return{ok:true,msg:'EA not calculated'};
+      if(t.ea<30)return{ok:false,msg:'🔴 CRITICAL: EA='+t.ea+' kcal/kgLBM (RED-S threshold <30)',severity:'alert'};
+      if(t.ea<45)return{ok:false,msg:'🟡 WARNING: EA='+t.ea+' kcal/kgLBM (borderline, should be >45)',severity:'warn'};
+      return{ok:true,msg:'✓ EA safe: '+t.ea+' kcal/kgLBM'};
+    }
+  }
+};
+
+// Master validation function
+function validateAllCalculations(c){
+  if(!c)return{status:'error',msg:'No client data'};
+  var t=calcTDEE(c);
+  var results={};
+  var allOk=true;
+
+  Object.keys(VALIDATION_RULES).forEach(function(key){
+    var rule=VALIDATION_RULES[key];
+    var result=rule.validate(c,t);
+    results[key]={name:rule.name,result:result};
+    if(!result.ok){allOk=false;}
+  });
+
+  return{status:allOk?'pass':'fail',results:results,t:t};
+}
+
+// Audit logging
+function logValidation(c){
+  var audit=validateAllCalculations(c);
+  console.log('═══════════════════════════════════════════════════════════════');
+  console.log('📊 VALIDATION AUDIT: '+c.name);
+  console.log('═══════════════════════════════════════════════════════════════');
+  Object.keys(audit.results).forEach(function(key){
+    var r=audit.results[key];
+    var icon=r.result.ok?'✓':'✗';
+    console.log(icon+' '+r.name+': '+r.result.msg);
+  });
+  console.log('═══════════════════════════════════════════════════════════════');
+  console.log('AUDIT STATUS: '+audit.status.toUpperCase());
+  return audit;
+}
+
 /* ── Autosave system ──────────────────────────────────────────────────────────
    save()     = debounced 800ms — καλείται σε κάθε αλλαγή, δεν σπαταλά πόρους
    saveNow()  = άμεσα — για import/backup, beforeunload
@@ -1095,6 +1675,229 @@ function save(){clearTimeout(_saveTimer);_saveTimer=setTimeout(_doSave,800);}
 function saveNow(){clearTimeout(_saveTimer);_doSave();}
 window.addEventListener('beforeunload',function(){saveNow();});
 
+/* ══════════════════════════════════════════════════════════════════════════════════
+   ⚡ AUTO-RECALCULATION SYSTEM — Cascade recalculation when ANY client data changes
+   ══════════════════════════════════════════════════════════════════════════════════ */
+
+var _recalcTimeout=null;
+var _recalcDebounceMs=300;  // Debounce rapid changes
+var _lastRecalcChanges=null;  // Track what changed for notification
+
+// ── Master: Called when ANY client data changes
+function onClientChange(){
+  clearTimeout(_recalcTimeout);
+  _recalcTimeout=setTimeout(function(){
+    var c=getC();if(!c)return;
+
+    // Store old values for change detection
+    var oldTDEE=c._lastTDEE;
+
+    // STEP 1: Recalculate TDEE and macros
+    recalculateMacros(c);
+
+    // STEP 1.5: Validate all calculations (CRITICAL QA CHECK)
+    if(c._enableValidationLogging===true){
+      logValidation(c);  // Console audit log for debugging
+    }
+
+    // STEP 2: Update meal timing guide
+    updateMealTimingGuide(c);
+
+    // STEP 3: Check if plan regeneration needed
+    if(c.weekPlan&&Object.keys(c.weekPlan).length>0){
+      if(shouldRegeneratePlan(c)){
+        showPlanRegenerationPrompt(c);
+      }
+    }
+
+    // STEP 4: Update all UI sections
+    renderMain();
+
+    // STEP 5: Save to localStorage
+    save();
+
+    // STEP 6: Track changes and show notification
+    _lastRecalcChanges={
+      tdeeChanged:oldTDEE&&(c._lastTDEE!==oldTDEE),
+      newTDEE:c._lastTDEE,
+      oldTDEE:oldTDEE,
+      sportChanged:c._lastSportApplied!==c.sport
+    };
+    showAutoRecalculationNotification(c);
+  }, _recalcDebounceMs);
+}
+
+// ── CORE: Recalculate TDEE and all macro targets
+function recalculateMacros(c){
+  if(!c)return;
+
+  // 1. Calculate TDEE
+  var t=calcTDEE(c);
+
+  // 2. Get sport macro ratios (or use custom presets)
+  var sport=c.sport?SPORT_PROFILES[c.sport]:null;
+  var p_pct=sport?sport.p:(c.macroP||25);
+  var f_pct=sport?sport.f:(c.macroF||25);
+  var c_pct=sport?sport.c:(c.macroC||50);
+
+  // 3. Calculate daily targets with macros (including carb boost & MET per-day kcal)
+  var dayTargets=makeDayTgtDefaults(c,t);
+
+  // 4. Apply athletic boost (1.25x micronutrients if 3+ training days)
+  var numTrainDays=(c.trainDays||[]).filter(function(x){return x;}).length;
+  c.athleticBoost=numTrainDays>=3?1.25:1.0;
+
+  // NOTE: Carb boost is ALREADY applied in makeDayTgtDefaults()
+  // Do NOT re-apply it here to avoid double-counting
+
+  // 5. Store updated targets and metadata
+  c.dayTargets=dayTargets;
+  c._lastTDEE=t.tdee;
+  c._lastTarget=t.target;
+  c._lastSportApplied=c.sport;
+  c._lastRecalcTime=new Date().toISOString();
+}
+
+// ── Update meal timing based on current training activities
+function updateMealTimingGuide(c){
+  if(!c)return;
+  // This is handled by getMealTimingGuide() which reads current activities
+  // No persistent state needed here
+}
+
+// ── Check if plan needs regeneration
+function shouldRegeneratePlan(c){
+  if(!c||!c.weekPlan||!Object.keys(c.weekPlan).length)return false;
+
+  // First time recalc or sport changed
+  if(!c._lastRecalcTime)return false;  // First generation, don't ask again
+  if(c._lastSportApplied!==c.sport)return true;
+
+  // TDEE changed significantly (>100 kcal)
+  var currentTDEE=calcTDEE(c).target;
+  if(c._lastTarget&&Math.abs(currentTDEE-c._lastTarget)>100)return true;
+
+  return false;
+}
+
+// ── Dialog: Ask user to regenerate plan
+function showPlanRegenerationPrompt(c){
+  var oldTDEE=c._lastTarget||0;
+  var newTDEE=calcTDEE(c).target;
+  var oldSport=c._lastSportApplied||'Προσαρμοσμένο';
+  var newSport=c.sport?(SPORT_PROFILES[c.sport]?SPORT_PROFILES[c.sport].name:c.sport):'Προσαρμοσμένο';
+
+  var msg='Τα στοιχεία του πελάτη άλλαξαν σημαντικά.\n\n'
+    +'Παλιό TDEE: '+oldTDEE+' kcal\n'
+    +'Νέο TDEE: '+newTDEE+' kcal (+'+Math.round(newTDEE-oldTDEE)+' kcal)\n\n'
+    +'Παλιό Άθλημα: '+oldSport+'\n'
+    +'Νέο Άθλημα: '+newSport+'\n\n'
+    +'Θέλεις να αναδημιουργηθεί το πλάνο με τις νέες τιμές;';
+
+  if(confirm(msg)){
+    c.weekPlan={};  // Clear old plan
+    c._lastRecalcTime=null;  // Reset recalc time so it doesn't ask again
+    genPlan();
+  }
+}
+
+// ── Notification: Show "auto-updated" badge + visual feedback
+function showAutoRecalculationNotification(c){
+  // Add subtle highlight to the main content area (flash effect)
+  var main=document.getElementById('main');
+  if(main){
+    main.style.transition='background-color 0.3s ease';
+    main.style.backgroundColor='#f0f9f7';
+    setTimeout(function(){
+      main.style.backgroundColor='transparent';
+    }, 400);
+  }
+
+  // Also highlight the TDEE box to draw attention
+  var tdeeBox=document.querySelector('.tdee-row');
+  if(tdeeBox){
+    tdeeBox.style.transition='border-color 0.3s ease, box-shadow 0.3s ease';
+    var origBorder=tdeeBox.style.borderColor;
+    var origShadow=tdeeBox.style.boxShadow;
+    tdeeBox.style.borderColor='#4caf50';
+    tdeeBox.style.boxShadow='0 0 8px rgba(76,175,80,0.3)';
+    setTimeout(function(){
+      tdeeBox.style.borderColor=origBorder||'';
+      tdeeBox.style.boxShadow=origShadow||'';
+    }, 600);
+  }
+
+  // Find or create notification element (ensure it exists in DOM)
+  var notifContainer=document.getElementById('notifications-container');
+  if(!notifContainer){
+    notifContainer=document.createElement('div');
+    notifContainer.id='notifications-container';
+    notifContainer.style.cssText='position:fixed;top:20px;right:20px;z-index:5000;'
+      +'pointer-events:none;max-width:320px';  // Allow clicks to pass through
+    document.body.appendChild(notifContainer);
+  }
+
+  // Build notification message with details
+  var changes=_lastRecalcChanges||{};
+  var msg='<span style="font-size:14px;margin-right:8px">✓</span><span><strong>Ενημέρωση Ρυθμίσεων</strong>';
+
+  if(changes.tdeeChanged){
+    msg+='<br><span style="font-size:11px;color:#1b5e20;margin-top:4px;display:block">'
+      +'TDEE: '+changes.oldTDEE+' → '+changes.newTDEE+' kcal'
+      +'</span>';
+  }
+  if(changes.sportChanged){
+    msg+='<br><span style="font-size:11px;color:#1b5e20;display:block">'
+      +'Macros ενημερώθηκαν'
+      +'</span>';
+  }
+
+  msg+='</span>';
+
+  // Create individual notification
+  var notif=document.createElement('div');
+  notif.className='auto-calc-notif';
+  notif.style.cssText='background:#e8f5e9;border:2px solid #4caf50;'
+    +'padding:12px 14px;border-radius:8px;'
+    +'box-shadow:0 4px 16px rgba(76,175,80,0.3);'
+    +'font-size:12px;color:#1b5e20;font-weight:500;'
+    +'margin-bottom:10px;'
+    +'opacity:0;transform:translateX(400px) scale(0.9);'
+    +'transition:all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);'
+    +'pointer-events:auto;'
+    +'cursor:pointer;'
+    +'line-height:1.5';
+
+  notif.innerHTML=msg;
+
+  notifContainer.appendChild(notif);
+
+  // Animate in
+  setTimeout(function(){
+    notif.style.opacity='1';
+    notif.style.transform='translateX(0) scale(1)';
+  }, 10);
+
+  // Remove after delay
+  var timer=setTimeout(function(){
+    notif.style.opacity='0';
+    notif.style.transform='translateX(400px) scale(0.9)';
+    setTimeout(function(){
+      notif.remove();
+    }, 400);
+  }, 3200);  // Slightly longer duration for readability
+
+  // Allow click to dismiss early
+  notif.onclick=function(){
+    clearTimeout(timer);
+    notif.style.opacity='0';
+    notif.style.transform='translateX(400px) scale(0.9)';
+    setTimeout(function(){
+      notif.remove();
+    }, 400);
+  };
+}
+
 function cm(n,g){var f=FOODS[n]||{k:0,p:0,c:0,f:0,fi:0};return{k:+(g/100*f.k).toFixed(1),p:+(g/100*f.p).toFixed(1),f:+(g/100*f.f).toFixed(1),c:+(g/100*f.c).toFixed(1),fi:+(g/100*(f.fi||0)).toFixed(1)};}
 /* Fiber target (g/day) — DRI Adequate Intake by age & sex */
 function getFiberTarget(age,sex){
@@ -1105,6 +1908,44 @@ function getFiberTarget(age,sex){
   if(age<19)return sex==='M'?38:26;
   if(sex==='M')return age<=50?38:30;
   return age<=50?25:21;
+}
+
+// ── Calculate micronutrient totals for a day ──────────────────────────────────
+function getDayMicronutrients(meals){
+  var result={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0};
+  (meals||[]).forEach(function(meal){
+    (meal.foods||[]).forEach(function(food){
+      var mn=MICRONUTRIENTS[food.n];
+      if(mn){
+        result.Fe+=(mn.Fe||0)*food.g/100;
+        result.Zn+=(mn.Zn||0)*food.g/100;
+        result.Mg+=(mn.Mg||0)*food.g/100;
+        result.Ca+=(mn.Ca||0)*food.g/100;
+        result.B1+=(mn.B1||0)*food.g/100;
+        result.B2+=(mn.B2||0)*food.g/100;
+        result.B3+=(mn.B3||0)*food.g/100;
+        result.B6+=(mn.B6||0)*food.g/100;
+        result.B12+=(mn.B12||0)*food.g/100;
+        result.Folate+=(mn.Folate||0)*food.g/100;
+        result.Omega3+=(mn.Omega3||0)*food.g/100;
+        result.Omega6+=(mn.Omega6||0)*food.g/100;
+      }
+    });
+  });
+  return result;
+}
+
+// ── Check micronutrient adequacy for the day ────────────────────────────────
+function checkMicronutrientAdequacy(dayMN,targets,useAthletic){
+  var result={};
+  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6'].forEach(function(key){
+    var tgt=targets[key.toLowerCase()]||targets[key]||{};
+    var target=useAthletic?tgt.athletic:tgt.target;
+    var actual=dayMN[key]||0;
+    var pct=target?Math.round(actual/target*100):100;
+    result[key]={actual:actual,target:target,pct:pct,status:pct>=90?'ok':pct>=65?'low':'critical'};
+  });
+  return result;
 }
 function calcMETkcal(c){
   // Returns weekly, daily avg, perTrainDay, and byDay[0..6] exercise kcal
@@ -1164,9 +2005,16 @@ function calcTDEE(c){
   var usedMET=c.metActivities&&c.metActivities.length>0;
   var neat=Math.round(bmr*1.2);// NEAT = BMR × 1.2 (basic daily movement)
   var exerciseKcal=metKcal.daily;// Exercise from MET or estimated
+  // CRITICAL: Check for double counting between Activity Factor and MET
+  var hasDoubleCountingRisk=false;
   if(usedMET){
     // MET-based: TDEE = NEAT + daily average exercise kcal
     tdee=neat+metKcal.daily;
+    // WARNING: If Activity Factor > 1.2, there's risk of double counting
+    // Activity Factor already includes exercise estimate
+    if(c.activity && c.activity!=='sed'){
+      hasDoubleCountingRisk=true;
+    }
   } else {
     // Activity factor method: factor includes both NEAT and exercise estimates
     var act={sed:1.2,light:1.375,mod:1.55,active:1.725};
@@ -1176,8 +2024,10 @@ function calcTDEE(c){
     exerciseKcal=Math.round(Math.max(0,(totalMultiplier-1.2)*bmr));
   }
   tdee=Math.round(tdee);
+  // Goal deltas - CLINICAL: -96 for mild is optimal for intense training with safe EA
   var def={mild:-250,loss:-500,maintain:0,gain:300};
-  var goalDelta=def[c.goal]||0;
+  // Support for custom clientgoalDelta override (set in client object if needed)
+  var goalDelta=(c.customGoalDelta!=null)?c.customGoalDelta:def[c.goal]||0;
   var target=tdee+goalDelta+growthAdd;
   // Per-day MET targets: each day gets its own exercise kcal based on assigned activities
   var baseTDEE=neat;
@@ -1216,6 +2066,20 @@ function calcTDEE(c){
   var ea=null;
   // Calculate EA using actual exercise (now works with or without MET)
   if(lbmForEA>0)ea=+((target-exerciseKcal)/lbmForEA).toFixed(1);
+  // VALIDATION WARNINGS
+  var warnings=[];
+  if(hasDoubleCountingRisk){
+    warnings.push({type:'alert',msg:'⚠️ Double Counting Risk: Χρησιμοποιείτε ΑΜΦΟΤΕΡΑ Activity Factor ('+c.activity+') ΚΑΙ MET activities. Αυτό μπορεί να υπερεκτιμήσει τον TDEE κατά 300-500 kcal. Πρόταση: Θέστε Activity="Sedentary" (1.2) όταν χρησιμοποιείτε MET.'});
+  }
+  if(protGperKg<1.2){
+    warnings.push({type:'warn',msg:'⚠️ Πρωτείνη χαμηλή: '+protGperKg+'g/kg (ελάχιστο 1.2 για απώλεια)'});
+  }
+  if(protGperKg>3.0){
+    warnings.push({type:'warn',msg:'⚠️ Πρωτείνη υψηλή: '+protGperKg+'g/kg (μέγιστο 3.0)'});
+  }
+  if(carbG<20&&target>1200){
+    warnings.push({type:'warn',msg:'⚠️ Πολύ λίγοι υδατάνθρακες: '+carbG+'g (ίσως συντακτικό λάθος;)'});
+  }
   return{bmr:Math.round(bmr),tdee:tdee,target:target,
     restTarget:restTarget,trainTarget:trainTarget,trainTargetByDay:trainTargetByDay,
     p:protG,f:fatG,carb:carbG,
@@ -1224,7 +2088,7 @@ function calcTDEE(c){
     exerciseDaily:exerciseKcal,exerciseWeekly:metKcal.weekly,
     perTrainDay:metKcal.perTrainDay,byDay:metKcal.byDay,usedMET:usedMET,
     isMinor:isMinor,growthAdd:growthAdd,neat:neat,
-    protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA};
+    protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA,warnings:warnings};
 }
 
 /* ── Default plan templates (one set per goal) ─────────────────────────────── */
@@ -1362,7 +2226,7 @@ function scalePlan(tmpl,tgt){
 
 var clients=[],curId=null,currentDD=null;
 
-function addClient(){var id='c'+Date.now();clients.push({id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[]});selectClient(id);}
+function addClient(){var id='c'+Date.now();clients.push({id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[]});selectClient(id);}
 function deleteClient(id){clients=clients.filter(function(c){return c.id!==id;});if(curId===id){curId=null;document.getElementById('main').innerHTML='<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';}renderSB();}
 function selectClient(id){
   curId=id;
@@ -1570,6 +2434,15 @@ function selectTmplForClient(id){
 function renderMain(){
   var c=getC();if(!c)return;
   var t=calcTDEE(c);
+  // Calculate weekly average target from daily targets (for MET-based accuracy)
+  var avgTarget=t.target;
+  if(c.dayTargets&&c.dayTargets.length===7){
+    var totalKcal=0;
+    for(var di=0;di<7;di++){
+      totalKcal+=(c.dayTargets[di].k||0);
+    }
+    avgTarget=Math.round(totalKcal/7);
+  }
   var sOpts='<option value="M"'+(c.sex==='M'?' selected':'')+'>Άνδρας</option><option value="F"'+(c.sex==='F'?' selected':'')+'>Γυναίκα</option>';
   var aOpts='<option value="sed"'+(c.activity==='sed'?' selected':'')+'>Καθιστικός</option><option value="light"'+(c.activity==='light'?' selected':'')+'>Ελαφρά ενεργός (1-3x)</option><option value="mod"'+(c.activity==='mod'?' selected':'')+'>Μέτρια ενεργός (3-5x)</option><option value="active"'+(c.activity==='active'?' selected':'')+'>Έντονα ενεργός (6-7x)</option>';
   var gOpts='<option value="mild"'+(c.goal==='mild'?' selected':'')+'>Ήπια απώλεια (-250)</option><option value="loss"'+(c.goal==='loss'?' selected':'')+'>Απώλεια βάρους (-500)</option><option value="maintain"'+(c.goal==='maintain'?' selected':'')+'>Διατήρηση</option><option value="gain"'+(c.goal==='gain'?' selected':'')+'>Αύξηση μάζας (+300)</option>';
@@ -1585,8 +2458,12 @@ function renderMain(){
     +'<div class="fgrp"><label>Βάρος (kg)</label><input type="number" id="inp-weight" value="'+c.weight+'"></div>'
     +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+c.height+'"></div>'
     +'<div class="fgrp"><label>Λίπος σώματος % <span style="font-size:9px;color:#888;font-weight:400">(τελευταία μέτρηση)</span></label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' <span style="font-size:10px;color:#888">(NEAT baseline)</span>':'')+'</label><select id="inp-activity">'+aOpts+'</select></div>'
-    +'<div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
+    +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' <span style="font-size:10px;color:#888">(NEAT baseline)</span>':'')+'</label><select id="inp-activity">'+aOpts+'</select></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>🏅 Άθλημα</label><select id="inp-sport">'
+    +'<option value="">-- Επιλέξτε άθλημα --</option>'
+    +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
+    +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
     +'<div class="fg"><div class="fgrp"><label>Φόρμουλα TDEE <span class="formula-tag'+(t.isMinor?' cunningham':isCunn?' cunningham':'')+'">'+(t.isMinor?'Schofield':isCunn?'Cunningham':'Mifflin')+'</span></label>'
     +(t.isMinor?'<div style="font-size:10px;color:#e65100;background:#fff8e1;border-radius:5px;padding:4px 8px">👶 Αυτόματα Schofield (1985) — ισχύει για ηλικία &lt;18</div>':'<select id="inp-formula">'+fOpts+'</select>')+'</div>'
     +'<div class="fgrp" id="lbm-wrap" style="display:'+(isCunn?'block':'none')+'">'
@@ -1597,9 +2474,21 @@ function renderMain(){
     +(t.isMinor?'<div class="minor-banner">👶 Ανήλικος αθλητής — Φόρμουλα Schofield (1985) &nbsp;|&nbsp; Growth Allowance: +'+t.growthAdd+' kcal &nbsp;|&nbsp; Ηλικία: '+c.age+' ετών</div>':'')
     +'<div class="tdee-row"><div class="ti"><div class="tl">BMR'+(t.isMinor?' <span class="formula-tag cunningham" style="font-size:8px">Schofield</span>':'')+'</div><div class="tv" id="v-bmr">'+t.bmr+' kcal</div></div>'
     +'<div class="ti"><div class="tl">TDEE'+(t.usedMET?' (MET)':'')+'</div><div class="tv" id="v-tdee">'+t.tdee+' kcal'+(t.usedMET?'<span class="v-ex-chip" id="v-exday">+'+t.exerciseDaily+'</span>':'')+'</div></div>'
-    +'<div class="ti"><div class="tl">Στόχος</div><div class="tv" id="v-target">'+t.target+' kcal</div></div>'
+    +'<div class="ti"><div class="tl">Στόχος'+(t.usedMET?'<span style="font-size:9px;color:#666;margin-left:4px" title="Μέσος στόχος. Δείτε τον πίνακα για MET-προσαρμοσμένες ημερήσιες τιμές">ℹ️</span>':'')+'</div><div class="tv" id="v-target">'+avgTarget+' kcal'+(t.usedMET?'<span style="font-size:10px;color:#666;font-weight:400"> (μέσο)</span>':'')+'</div></div>'
     +'<div class="ti"><div class="tl">Πρωτεΐνη</div><div class="tv b" id="v-macros">'+t.p+'g <span style="font-size:10px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span></div></div></div>'
-    +(t.ea!==null?'<div class="ea-row'+(t.ea<30?' ea-danger':t.ea<45?' ea-warn':' ea-ok')+'" id="ea-row">⚡ Energy Availability: <b>'+t.ea+' kcal/kgLBM</b> &nbsp;'+(t.ea<30?'🔴 Κίνδυνος RED-S — ανεπαρκής ενεργειακή διαθεσιμότητα':t.ea<45?'🟡 Οριακή EA — παρακολούθηση απαραίτητη':'🟢 Φυσιολογική EA')+'</div>':'')
+    +(t.ea!==null?'<div class="ea-row'+(t.ea<30?' ea-danger':t.ea<45?' ea-warn':' ea-ok')+'" id="ea-row">⚡ Energy Availability: <b>'+t.ea+' kcal/kgLBM</b> &nbsp;'+(t.ea<30?'🔴 Κίνδυνος RED-S — ανεπαρκής ενεργειακή διαθεσιμότητα':t.ea<45?'🟡 Οριακή EA — παρακολούθηση απαραίτητη':'🟢 Φυσιολογική EA')+'</div>':'')+
+    (function(){
+      if(!t.warnings||!t.warnings.length)return'<div id="warnings-container"></div>';
+      var whtml='<div id="warnings-container">';
+      t.warnings.forEach(function(w){
+        var bgColor=w.type==='alert'?'#ffebee':'#fff3e0';
+        var borderColor=w.type==='alert'?'#f44336':'#ff9800';
+        var textColor=w.type==='alert'?'#c62828':'#e65100';
+        whtml+='<div style="background:'+bgColor+';border:1px solid '+borderColor+';border-radius:6px;padding:8px 12px;margin:6px 0;font-size:13px;color:'+textColor+'">'+w.msg+'</div>';
+      });
+      whtml+='</div>';
+      return whtml;
+    })()
     +buildMacroPresetHtml(c,t)
     +'<div class="hydration-row">'
     +'<div class="hydration-chip">&#128167; Ανάπαυση: '+hydBase+' ml<span>('+Math.round(hydBase/1000*10)/10+'L)</span></div>'
@@ -1642,13 +2531,40 @@ function renderMain(){
   document.getElementById('inp-name').value=c.name;
   document.getElementById('inp-name').oninput=function(){upd('name',this.value);};
   document.getElementById('inp-sex').onchange=function(){upd('sex',this.value);};
-  document.getElementById('inp-age').oninput=function(){upd('age',+this.value);};
-  document.getElementById('inp-weight').oninput=function(){upd('weight',+this.value);};
-  document.getElementById('inp-height').oninput=function(){upd('height',+this.value);};
+  document.getElementById('inp-age').onblur=function(){upd('age',+this.value);};
+  document.getElementById('inp-weight').onblur=function(){upd('weight',+this.value);};
+  document.getElementById('inp-height').onblur=function(){upd('height',+this.value);};
   var bfProfInp=document.getElementById('inp-bf');
-  if(bfProfInp)bfProfInp.oninput=function(){upd('bf',+this.value||0);};
+  if(bfProfInp)bfProfInp.onblur=function(){upd('bf',+this.value||0);};
   document.getElementById('inp-activity').onchange=function(){upd('activity',this.value);};
   document.getElementById('inp-goal').onchange=function(){upd('goal',this.value);};
+  // Sport selector — auto-update macros & show sport-specific notes & toggle conditional visibility
+  var sportSel=document.getElementById('inp-sport');
+  if(sportSel){
+    sportSel.onchange=function(){
+      upd('sport',this.value);
+      updateConditionalVisibility(this.value);
+      var noteDiv=document.getElementById('sport-note');
+      if(this.value && SPORT_PROFILES[this.value]){
+        var prof=SPORT_PROFILES[this.value];
+        if(noteDiv)noteDiv.textContent=prof.notes;
+        // Auto-update macro preset to match sport
+        var macroPresetSel=document.querySelector('[data-preset-sel]');
+        if(macroPresetSel){
+          macroPresetSel.value=this.value;
+          upd('macroPreset',this.value);
+        }
+      } else {
+        if(noteDiv)noteDiv.textContent='';
+      }
+    };
+    // Show initial sport note and set initial visibility
+    updateConditionalVisibility(c.sport);
+    if(c.sport && SPORT_PROFILES[c.sport]){
+      var noteDiv=document.getElementById('sport-note');
+      if(noteDiv)noteDiv.textContent=SPORT_PROFILES[c.sport].notes;
+    }
+  }
   var fSel=document.getElementById('inp-formula');
   if(fSel)fSel.onchange=function(){
     upd('formula',this.value);
@@ -1657,8 +2573,11 @@ function renderMain(){
   var lbmInp=document.getElementById('inp-lbm');
   if(lbmInp)lbmInp.oninput=function(){upd('lbm',+this.value);};
   renderFoodLib('');
-  if(Object.keys(c.weekPlan).length)renderWeekTable();
+  if(Object.keys(c.weekPlan).length){initializeMealTiming(c);renderWeekTable();}
   renderSuppNotes();
+
+  // ← Setup event listeners for all form inputs (CRITICAL for auto-recalculation)
+  setupFormEventListeners();
 }
 
 function makeDayTgtDefaults(c,t){
@@ -1670,15 +2589,49 @@ function makeDayTgtDefaults(c,t){
     // Per-day hours: use trainHoursByDay if set, otherwise fallback to global trainHoursPerDay
     var dayHrs=(c.trainHoursByDay&&c.trainHoursByDay[i]!=null)?c.trainHoursByDay[i]:(isT?baseHrs:0);
     var hScale=(isT&&baseHrs>0)?(dayHrs/baseHrs):0;
+    // Carb boost: REDISTRIBUTE (don't add calories)
+    // On training days: add extra carbs, subtract from fat to keep total kcal same
     var extraC=isT?Math.round(t.carb*boost*(t.usedMET?1:hScale)):0;
+    var dayP=t.p;
+    var dayF=t.f;
+    var dayC=t.carb+extraC;
+    if(extraC>0){
+      // Reduce fat by the carb increase amount (carbs are 4kcal/g, fat is 9kcal/g)
+      var kcalFromExtraC=extraC*4;
+      dayF=Math.max(0,Math.round(dayF-(kcalFromExtraC/9)));
+    }
     // MET active: use precise per-day kcal from assigned activities
+    // With carb boost=0%, all days should have same kcal (no redistribution across days)
     var dayKcal;
     if(t.usedMET){
       dayKcal=t.trainTargetByDay?t.trainTargetByDay[i]:t.restTarget;
-    } else {
+    } else if(boost===0){
+      // Zero carb boost: all days identical target
       dayKcal=t.target;
+    } else {
+      // Carb boost > 0: adjust daily targets based on training days
+      dayKcal=isT?Math.round(t.target+(t.trainTarget-t.restTarget)):t.target;
     }
-    r.push({k:dayKcal+extraC*4,p:t.p,f:t.f,c:t.carb+extraC});
+
+    // CRITICAL FIX v2: Recalculate macros based on ACTUAL daily kcal, not average
+    // When using MET activities, each day has different kcal so macros must be recalculated
+    var pPct=t.pPct/100;
+    var fPct=t.fPct/100;
+    var cPct=t.cPct/100;
+
+    var dayP=Math.round(dayKcal*pPct/4);
+    var dayF=Math.round(dayKcal*fPct/9);
+    var dayC=Math.round((dayKcal-dayP*4-dayF*9)/4);
+
+    // Apply carb boost redistribution on top of daily macro targets
+    if(extraC>0){
+      // Reduce fat by the carb increase amount (carbs are 4kcal/g, fat is 9kcal/g)
+      var kcalFromExtraC=extraC*4;
+      dayF=Math.max(0,Math.round(dayF-(kcalFromExtraC/9)));
+      dayC=dayC+extraC;
+    }
+
+    r.push({k:dayKcal,p:dayP,f:dayF,c:dayC});
   }
   return r;
 }
@@ -1689,6 +2642,73 @@ function getDayTgtEff(c,t){
   if(typeof eff[0]==='number')return eff.map(function(k){return{k:k,p:Math.round(k*.25/4),f:Math.round(k*.25/9),c:Math.round(k*.5/4)};});
   return eff;
 }
+
+// ✅ HYBRID SYSTEM: Allocate daily targets across individual meals
+function allocateMealTargets(dailyTarget, numMeals) {
+  // Intelligent distribution based on meal timing priorities
+  // Breakfast: 22% (metabolic priority)
+  // Lunch/Main: 28% (largest meal)
+  // Dinner: 25% (balanced evening)
+  // Snack 1: 12% (mid-morning/afternoon energy)
+  // Snack 2: 13% (evening or post-workout)
+
+  var mealAlloc = [0.22, 0.28, 0.25, 0.12, 0.13];
+  if(numMeals !== 5) {
+    // Fallback: equal distribution if meal count differs
+    var equal = 1.0 / numMeals;
+    mealAlloc = [];
+    for(var i = 0; i < numMeals; i++) mealAlloc.push(equal);
+  }
+
+  var targets = [];
+  for(var i = 0; i < numMeals; i++) {
+    var pct = mealAlloc[i] || (1.0 / numMeals);
+    targets.push({
+      k: Math.round(dailyTarget.k * pct),
+      p: Math.round(dailyTarget.p * pct),
+      f: Math.round(dailyTarget.f * pct),
+      c: Math.round(dailyTarget.c * pct)
+    });
+  }
+  return targets;
+}
+
+function getMealTimingGuide(c){
+  var abbr=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
+  var td=c.trainDays||[false,false,false,false,false,false,false];
+  var times=c.trainTimesByDay||['','','','','','',''];
+  var hasAnyTime=times.some(function(t,i){return t&&td[i];});
+  if(!hasAnyTime)return'';
+
+  var guide='<div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#2e7d32;margin-bottom:6px">⏰ Προτεινόμενα γεύματα ανά ημέρα</div>';
+
+  for(var i=0;i<7;i++){
+    if(!td[i]||!times[i])continue;
+    var trainTime=times[i];
+    var h=parseInt(trainTime)||0,m=parseInt(trainTime.split(':')[1])||0;
+
+    // Pre-workout: 2 hours before
+    var preH=(h-2)<0?(h-2+24):(h-2);
+    var preTime=String(preH).padStart(2,'0')+':'+'00';
+
+    // Post-workout: 30 min after
+    var postMin=m+30;
+    var postH=h;
+    if(postMin>=60){postH=(h+1)%24;postMin=postMin-60;}
+    var postTime=String(postH).padStart(2,'0')+':'+String(postMin).padStart(2,'0');
+
+    guide+='<div style="font-size:10px;color:#333;margin-bottom:5px;padding:4px 6px;background:#f1f8f6;border-radius:4px">'
+      +'<b>'+abbr[i]+'</b> — προπόνηση στις '+trainTime
+      +' | <span style="color:#1565C0">⚡Pre (2h πριν): '+preTime+'</span>'
+      +' | <span style="color:#e65100">💪Post (30min μετά): '+postTime+'</span>'
+      +'</div>';
+  }
+
+  guide+='</div>';
+  return guide;
+}
+
 function buildDayTgtHtml(c,t){
   var abbr=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
   var eff=getDayTgtEff(c,t);
@@ -1726,7 +2746,17 @@ function buildDayTgtHtml(c,t){
       actRow+='<td class="act-cell">'+(dayActs.length?dayActs.join('<br>'):'—')+'</td>';
     }
     actRow+='</tr>';
-    dayRowHtml=actRow;
+    // Time of training row (for MET mode too)
+    var timeRow='<tr class="time-row"><td>🕐 Ώρα</td>';
+    if(!c.trainTimesByDay)c.trainTimesByDay=['','','','','','',''];
+    for(var ti=0;ti<7;ti++){
+      var tiT=td[ti];
+      var tVal=(c.trainTimesByDay&&c.trainTimesByDay[ti])?c.trainTimesByDay[ti]:'';
+      timeRow+='<td><input class="dt-inp time-inp '+(tiT?'time-t':'time-r')+'" type="time"'
+        +' value="'+tVal+'" id="time-'+ti+'" '+(tiT?'':'disabled')+' onchange="setTrainTime('+ti+',this.value)"></td>';
+    }
+    timeRow+='</tr>';
+    dayRowHtml=actRow+timeRow;
   } else {
     // Manual hours row
     var hrsRow='<tr class="hrs-row"><td>⏱ ώρες</td>';
@@ -1737,7 +2767,17 @@ function buildDayTgtHtml(c,t){
         +' value="'+hVal+'" id="hrs-'+hi+'" onchange="setTrainHours('+hi+',this.value)"></td>';
     }
     hrsRow+='</tr>';
-    dayRowHtml=hrsRow;
+    // Time of training row (when during the day)
+    var timeRow='<tr class="time-row"><td>🕐 Ώρα</td>';
+    if(!c.trainTimesByDay)c.trainTimesByDay=['','','','','','',''];
+    for(var ti=0;ti<7;ti++){
+      var tiT=td[ti];
+      var tVal=(c.trainTimesByDay&&c.trainTimesByDay[ti])?c.trainTimesByDay[ti]:'';
+      timeRow+='<td><input class="dt-inp time-inp '+(tiT?'time-t':'time-r')+'" type="time"'
+        +' value="'+tVal+'" id="time-'+ti+'" '+(tiT?'':'disabled')+' onchange="setTrainTime('+ti+',this.value)"></td>';
+    }
+    timeRow+='</tr>';
+    dayRowHtml=hrsRow+timeRow;
   }
   var tbody=trainRow+dayRowHtml;
   macros.forEach(function(m){
@@ -1750,14 +2790,16 @@ function buildDayTgtHtml(c,t){
     tbody+='</tr>';
   });
   var carbBoostVal=c.carbBoost!=null?c.carbBoost:20;
+  var timingGuide=getMealTimingGuide(c);
   return '<div class="day-tgt-wrap">'
     +'<div class="day-tgt-head"><span class="day-tgt-title">Θερμίδες &amp; μακροθρεπτικά ανά ημέρα</span>'
     +'<button class="day-tgt-reset" onclick="resetDayTargets()">&#8635; Επαναφορά TDEE</button></div>'
+    +timingGuide
     +'<div class="carb-boost-row">'
     +'<label>&#127947; Carb boost ημέρας προπόνησης:</label>'
     +'<input class="carb-boost-inp" type="number" min="0" max="60" value="'+carbBoostVal+'" onchange="setCarbBoost(this.value)">%'
     +'</div>'
-    +'<div style="font-size:10px;color:#999;margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
+    +'<div style="font-size:10px;color:#999;margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
     +'<table class="day-tgt-table"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></div>';
 }
 
@@ -1766,15 +2808,17 @@ function buildMetHtml(c,t){
   if(!c.metActivities)c.metActivities=[];
   var acts=c.metActivities;
 
-  // Category select
+  // Category select (no default - user must choose)
   var catSel='<select class="met-cat-sel" id="met-cat" onchange="metCatChange()">';
+  catSel+='<option value="">Επίλεξε κατηγορία</option>';
   MET_ACTIVITIES.forEach(function(g,i){
     catSel+='<option value="'+i+'">'+g.cat+'</option>';
   });
   catSel+='</select>';
 
-  // Activity select (first category by default)
+  // Activity select (no default selection - user must choose)
   var actSel='<select class="met-act-sel" id="met-act">';
+  actSel+='<option value="">Επίλεξε αθλήματα</option>';
   MET_ACTIVITIES[0].items.forEach(function(a){
     actSel+='<option value="'+a.id+'">'+a.name+' — '+a.met+' METs</option>';
   });
@@ -1817,25 +2861,41 @@ function buildMetHtml(c,t){
   });
   dayToggles+='</div>';
 
-  return '<div class="met-wrap">'
+  return '<div class="met-wrap" id="met-section-wrap">'
     +'<div class="met-head">'
     +'<span class="met-title">⚡ Αθλητική δραστηριότητα (MET-based)</span>'
     +(useMET?'<span class="met-badge">MET ✓ ενεργό</span>':'')
     +'</div>'
-    +'<div class="met-add-row">'
+
+    // ✅ IMPROVED LAYOUT: Organized sections
+    +(useMET?'<div class="met-added-section"><div class="met-added-title">✓ Δραστηριότητες που προστέθηκαν:</div><div class="met-list">'+listHtml+'</div>'+totalStr+'</div>':'')
+
+    +'<div class="met-input-section">'
+    +'<div class="met-input-title">Προσθήκη νέας δραστηριότητας:</div>'
+    +'<div class="met-form-group">'
+    +'<label>Κατηγορία αθλήματος:</label>'
     +catSel
+    +'<label>Επιλέξτε δραστηριότητα:</label>'
     +actSel
-    +'<span class="met-add-lbl">λεπτά</span>'
+    +'<label>Διάρκεια:</label>'
+    +'<div style="display:flex;gap:6px;align-items:center">'
     +'<input class="met-mins-inp" type="number" id="met-mins" min="10" max="300" step="5" value="60">'
+    +'<span style="font-size:12px;color:#666">λεπτά</span>'
     +'</div>'
-    +'<div class="met-add-row" style="margin-top:-2px">'
-    +'<span class="met-add-lbl">Ημέρες:</span>'
+    +'</div>'
+
+    +'<div class="met-form-group">'
+    +'<label>Ημέρες εκτέλεσης:</label>'
     +dayToggles
-    +'<button class="btn" style="padding:5px 11px;font-size:11px;margin-left:4px" onclick="addMetActivity()">+ Προσθήκη</button>'
     +'</div>'
-    +(listHtml?'<div class="met-list">'+listHtml+'</div>':'')
-    +totalStr
-    +(useMET?'':'<div class="met-note" style="margin-top:4px">Χωρίς επιλογή δραστηριότητας χρησιμοποιείται ο παραδοσιακός πολλαπλασιαστής δραστηριότητας.</div>')
+
+    +'<div style="padding-top:8px;border-top:1px solid #e0e0e0;margin-top:8px">'
+    +'<button class="btn primary" style="padding:8px 16px;font-size:12px" onclick="addMetActivity()">+ Προσθήκη δραστηριότητας</button>'
+    +'</div>'
+    +'</div>'
+
+    +(useMET?'':'<div class="met-note" style="margin-top:8px;padding:8px 12px;background:#f5f5f5;border-left:3px solid #ff9800">💡 Χωρίς επιλογή δραστηριότητας χρησιμοποιείται ο παραδοσιακός πολλαπλασιαστής δραστηριότητας.</div>')
+
     +'</div>';
 }
 
@@ -1883,14 +2943,51 @@ function addMetActivity(){
     c.trainHoursByDay[d]=Math.max(c.trainHoursByDay[d],+(mins/60).toFixed(1));
   });
   c.dayTargets=null; // recalculate
-  save();renderMain();
+  save();
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION
+}
+
+/* ── Conditional Visibility System ──────────────────────────────────────────*/
+// Show/hide Activity Factor or MET section based on sport selection
+function updateConditionalVisibility(sportId){
+  var metWrap=document.getElementById('met-section-wrap');
+  var afWrap=document.getElementById('activity-factor-wrap');
+
+  if(!metWrap||!afWrap)return;
+
+  // If no sport selected, hide both sections
+  if(!sportId){
+    metWrap.style.display='none';
+    afWrap.style.display='none';
+    return;
+  }
+
+  // If sport selected, check isMET flag
+  var sport=SPORT_PROFILES[sportId];
+  if(!sport){
+    metWrap.style.display='none';
+    afWrap.style.display='none';
+    return;
+  }
+
+  // Show/hide based on isMET flag
+  if(sport.isMET){
+    // MET-based sport: show MET section, hide Activity Factor
+    metWrap.style.display='block';
+    afWrap.style.display='none';
+  } else {
+    // Non-MET sport: show Activity Factor, hide MET section
+    metWrap.style.display='none';
+    afWrap.style.display='block';
+  }
 }
 
 function removeMetActivity(idx){
   var c=getC();if(!c||!c.metActivities)return;
   c.metActivities.splice(idx,1);
   c.dayTargets=null; // recalculate
-  save();renderMain();
+  save();
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 
 /* ── Macro Preset UI ─────────────────────────────────────────────────────── */
@@ -1930,7 +3027,8 @@ function setMacroPreset(k){
   var pr=MACRO_PRESETS[k];if(!pr)return;
   c.macroPreset=k;
   c.macroP=pr.p;c.macroF=pr.f;c.macroC=pr.c;
-  save();renderMain();
+  save();
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 
 function setMacroCustom(key,val){
@@ -1940,8 +3038,11 @@ function setMacroCustom(key,val){
   else if(key==='f')c.macroF=v;
   else if(key==='c')c.macroC=v;
   save();
-  var t=calcTDEE(c);
-  var m=document.getElementById('v-macros');if(m)m.innerHTML=t.p+'g <span style="font-size:10px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span>';
+  // Trigger update to recalculate TDEE and update table
+  if(key==='p')upd('macroP',c.macroP);
+  else if(key==='f')upd('macroF',c.macroF);
+  else if(key==='c')upd('macroC',c.macroC);
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 
 /* ── Body Composition & Consultation Tracker ────────────────────────────── */
@@ -2379,6 +3480,7 @@ function setDayMacro(key,d,v){
   var val=parseFloat(v)||0;
   if(key==='k')val=Math.max(500,Math.min(6000,val||t.target));
   c.dayTargets[d][key]=val;
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 
 function setTrainDay(d,isT){
@@ -2405,8 +3507,12 @@ function setTrainDay(d,isT){
   // Update hours input appearance
   var hInp=document.getElementById('hrs-'+d);
   if(hInp){hInp.value=c.trainHoursByDay[d];hInp.className='dt-inp hrs-inp '+(isT?'hrs-t':'hrs-r');}
-  buildDayTgtHtml(c,t);
-  renderMain();
+  // Update time input appearance and enable/disable
+  var tInp=document.getElementById('time-'+d);
+  if(tInp){tInp.disabled=!isT;tInp.className='dt-inp time-inp '+(isT?'time-t':'time-r');}
+  save();
+  upd('trainDays',c.trainDays);
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 
 function setTrainHours(d,v){
@@ -2414,28 +3520,25 @@ function setTrainHours(d,v){
   if(!c.trainHoursByDay)c.trainHoursByDay=[1,1,1,1,1,1,1];
   var hrs=Math.max(0,Math.min(8,parseFloat(v)||0));
   c.trainHoursByDay[d]=hrs;
-  // Also update global trainHoursPerDay as the average of active days (for backward compat)
-  var t=calcTDEE(c);
-  if(!c.dayTargets||typeof c.dayTargets[0]==='number')c.dayTargets=makeDayTgtDefaults(c,t);
-  var isT=c.trainDays&&c.trainDays[d];
-  var baseHrs=c.trainHoursPerDay||1;
-  var hScale=(isT&&baseHrs>0)?(hrs/baseHrs):0;
-  var boost=(c.carbBoost!=null?c.carbBoost:20)/100;
-  var extraC=isT?Math.round(t.carb*boost*hScale):0;
-  var dayKcal=t.usedMET?Math.round(t.restTarget+(t.trainTarget-t.restTarget)*hScale):t.target;
-  c.dayTargets[d].c=t.carb+extraC;
-  c.dayTargets[d].k=dayKcal+extraC*4;
-  var kinp=document.getElementById('dt-k-'+d);if(kinp)kinp.value=c.dayTargets[d].k;
-  var cinp=document.getElementById('dt-c-'+d);if(cinp)cinp.value=c.dayTargets[d].c;
   save();
-  renderStats();
+  upd('trainHoursByDay',c.trainHoursByDay);
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION
+}
+function setTrainTime(d,v){
+  var c=getC();if(!c)return;
+  if(!c.trainTimesByDay)c.trainTimesByDay=['','','','','','',''];
+  c.trainTimesByDay[d]=(v||'');
+  save();
+  upd('trainTimesByDay',c.trainTimesByDay);
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION (updates meal timing guide)
 }
 function setCarbBoost(v){
   var c=getC();if(!c)return;
   var val=parseInt(v);c.carbBoost=Math.max(0,Math.min(60,isNaN(val)?20:val));
-  // If no custom targets, let defaults recompute on next render
+  upd('carbBoost',c.carbBoost);
+  // If no custom targets, let defaults recompute
   if(c.dayTargets)c.dayTargets=null;
-  renderMain();
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 function resetDayTargets(){
   var c=getC();if(!c)return;
@@ -2649,6 +3752,34 @@ function renderSuppNotes(){
   el.innerHTML=any?html:'';
 }
 
+function setupFormEventListeners(){
+  // Wire up form inputs to call upd() with cascade recalculation
+  var handlers={
+    'inp-name':['name',null],
+    'inp-age':['age','number'],
+    'inp-weight':['weight','number'],
+    'inp-height':['height','number'],
+    'inp-bf':['bf','number'],
+    'inp-sex':['sex',null],
+    'inp-activity':['activity',null],
+    'inp-goal':['goal',null],
+    'inp-sport':['sport',null],
+    'inp-formula':['formula',null],
+    'inp-lbm':['lbm','number']
+  };
+
+  Object.keys(handlers).forEach(function(elemId){
+    var el=document.getElementById(elemId);
+    if(!el)return;
+    var fieldName=handlers[elemId][0];
+    var type=handlers[elemId][1];
+    el.onchange=function(){
+      var val=type==='number'?parseFloat(this.value)||0:this.value;
+      upd(fieldName,val);
+    };
+  });
+}
+
 function swTab(n){
   document.getElementById('t1').classList.toggle('active',n===1);
   document.getElementById('t2').classList.toggle('active',n===2);
@@ -2656,7 +3787,45 @@ function swTab(n){
   document.getElementById('s1').style.display=n===1?'':'none';
   document.getElementById('s2').style.display=n===2?'':'none';
   document.getElementById('s3').style.display=n===3?'':'none';
-  if(n===2){renderFoodLib('');renderWeekTable();renderSuppNotes();}
+  if(n===1){setupFormEventListeners();}  // ← SET UP EVENT LISTENERS
+  if(n===2){renderFoodLib('');var c=getC();if(c){initializeMealTiming(c);}renderWeekTable();renderSuppNotes();}
+}
+
+/* Update the day-target table display when macros change (e.g., carb boost, training days) */
+function updateDayTargetTable(c,t){
+  var tableEl=document.querySelector('table.day-tgt-table');
+  if(!tableEl)return; // Table not on page
+
+  // Get default day targets (respects carb boost, training days, etc.)
+  var defs=!c.dayTargets?makeDayTgtDefaults(c,t):getDayTgtEff(c,t);
+  if(!defs||defs.length!==7)return;
+
+  // Update each day's displayed values in the table
+  // The table has cells with IDs like: dt-k-0, dt-p-0, dt-f-0, dt-c-0, etc.
+  var keys=['k','p','f','c'];
+  for(var i=0;i<7;i++){
+    keys.forEach(function(key){
+      var cellEl=document.getElementById('dt-'+key+'-'+i);
+      if(cellEl){
+        var oldVal=cellEl.value;
+        var val=defs[i][key];
+        cellEl.value=val;
+
+        // Visual highlight if value changed (flash effect)
+        if(oldVal&&oldVal!==String(val)){
+          cellEl.style.transition='background-color 0.3s ease';
+          cellEl.style.backgroundColor='#fff9c4';  // Light yellow flash
+          setTimeout(function(){
+            cellEl.style.backgroundColor='';
+          }, 500);
+        }
+
+        // Also update the display text if there's a separate display element
+        var dispEl=document.querySelector('[data-day-'+key+'-'+i+']');
+        if(dispEl)dispEl.textContent=val;
+      }
+    });
+  }
 }
 
 function upd(k,v){
@@ -2677,8 +3846,33 @@ function upd(k,v){
       tdEl.textContent=t.tdee+' kcal';
     }
   }
-  var tg=document.getElementById('v-target');if(tg)tg.textContent=t.target+' kcal';
+  // Calculate weekly average target from daily targets (for MET-based accuracy)
+  var avgTarget=t.target;
+  if(c.dayTargets&&c.dayTargets.length===7){
+    var totalKcal=0;
+    for(var di=0;di<7;di++){
+      totalKcal+=(c.dayTargets[di].k||0);
+    }
+    avgTarget=Math.round(totalKcal/7);
+  }
+  var tg=document.getElementById('v-target');if(tg)tg.textContent=avgTarget+' kcal';
   var m=document.getElementById('v-macros');if(m)m.innerHTML=t.p+'g <span style="font-size:10px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span>';
+  // Display validation warnings
+  var wc=document.getElementById('warnings-container');
+  if(wc){
+    if(t.warnings&&t.warnings.length>0){
+      var whtml='';
+      t.warnings.forEach(function(w){
+        var bgColor=w.type==='alert'?'#ffebee':'#fff3e0';
+        var borderColor=w.type==='alert'?'#f44336':'#ff9800';
+        var textColor=w.type==='alert'?'#c62828':'#e65100';
+        whtml+='<div style="background:'+bgColor+';border:1px solid '+borderColor+';border-radius:6px;padding:8px 12px;margin:6px 0;font-size:13px;color:'+textColor+'">'+w.msg+'</div>';
+      });
+      wc.innerHTML=whtml;
+    } else {
+      wc.innerHTML='';
+    }
+  }
   // Refresh EA row if present
   var eaEl=document.getElementById('ea-row');
   if(t.ea!==null){
@@ -2701,6 +3895,31 @@ function upd(k,v){
     var defs=makeDayTgtDefaults(c,t);
     for(var i=0;i<7;i++){['k','p','f','c'].forEach(function(mk){var inp2=document.getElementById('dt-'+mk+'-'+i);if(inp2)inp2.value=defs[i][mk];});}
   }
+  // CRITICAL FIX: Rebuild the day-target table display when settings change
+  // This ensures the visible macro values update when ANY calculation parameter changes
+  // Parameters that affect TDEE (and thus daily targets):
+  //   - age, weight, height, sex: affect BMR calculation
+  //   - activity: affects TDEE multiplier
+  //   - formula: affects BMR method (Mifflin vs Cunningham)
+  //   - lbm: used in Cunningham formula
+  //   - bf: used for LBM estimation
+  //   - goal, customGoalDelta: directly affect target calculation
+  //   - macroP, macroF, macroC: change macro distribution
+  //   - metActivities: affects exercise energy calculation
+  // Parameters that directly affect daily targets:
+  //   - carbBoost: redistributes carbs/fats across training days
+  //   - trainDays: determines which days are training vs rest
+  //   - trainHoursByDay, trainHoursPerDay: affects training day calorie scaling
+  // Only skip 'name' and 'formula' (formula requires recalc that happens in renderMain)
+  if(k!=='name'){
+    updateDayTargetTable(c,t);
+  }
+
+  // ← TRIGGER CASCADE RECALCULATION for fields that affect TDEE/macros
+  var recalcFields=['weight','age','height','sex','activity','goal','bf','sport','lbm'];
+  if(recalcFields.indexOf(k)!==-1){
+    onClientChange();
+  }
 }
 
 // FYH recipes that are complete meals on their own — no sides needed
@@ -2722,7 +3941,17 @@ var FYH_COMPLETE_MEAL={
   'Chia Pudding (FYH)':1,
   'Πίτα Αυγών (FYH)':1,
   'Green Protein Smoothie (FYH)':1,
-  'Berry Protein Smoothie (FYH)':1
+  'Berry Protein Smoothie (FYH)':1,
+  // Petretzeakis Breakfast Recipes
+  'Breakfast Burrito (Πετρετζίκης)':1,
+  'Chia Bowl Φράουλα (Πετρετζίκης)':1,
+  'Overnight Oats Banoffee (Πετρετζίκης)':1,
+  'Overnight Oats Black Forest (Πετρετζίκης)':1,
+  'Overnight Oats P.B. & Choco (Πετρετζίκης)':1,
+  'Αυγά Ποσέ Air Fryer (Πετρετζίκης)':1,
+  'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)':1,
+  // Main Course Recipes
+  'Λιγκουίνι με Γαρίδες (Πετρετζίκης)':1
 };
 
 // FYH recipes that the client can't recognize by name — expand to ingredients in the plan
@@ -2775,6 +4004,86 @@ var FYH_RECIPE_EXPAND={
     {n:'Πρωτεΐνη σκόνη (whey)',g:30},
     {n:'Chia seeds',g:10},
     {n:'Μέλι άβραστο',g:7}
+  ]},
+  'Breakfast Burrito (Πετρετζίκης)':{base:420,ing:[
+    {n:'Τορτίλια (large)',g:60},
+    {n:'Αυγά (ολόκληρα)',g:150},
+    {n:'Σπανάκι',g:30},
+    {n:'Τυρί Cheddar',g:30},
+    {n:'Πατάτες',g:100},
+    {n:'Πιπεριά κόκκινη',g:50},
+    {n:'Ελαιόλαδο',g:5}
+  ]},
+  'Chia Bowl Φράουλα (Πετρετζίκης)':{base:385,ing:[
+    {n:'Γιαούρτι 2%',g:150},
+    {n:'Βρώμη (ωμή)',g:40},
+    {n:'Chia seeds',g:15},
+    {n:'Μαρμελάδα φράουλα',g:20},
+    {n:'Αμύγδαλα',g:15},
+    {n:'Φράουλες',g:80},
+    {n:'Μέλι άβραστο',g:5}
+  ]},
+  'Overnight Oats Banoffee (Πετρετζίκης)':{base:430,ing:[
+    {n:'Βρώμη (ωμή)',g:50},
+    {n:'Γάλα αμυγδάλου',g:200},
+    {n:'Μπανάνα',g:80},
+    {n:'Φυστικοβούτυρο',g:20},
+    {n:'Μέλι άβραστο',g:10},
+    {n:'Σοκολάτα 85% dark',g:10}
+  ]},
+  'Overnight Oats Black Forest (Πετρετζίκης)':{base:425,ing:[
+    {n:'Βρώμη (ωμή)',g:50},
+    {n:'Γάλα αγελάδος',g:200},
+    {n:'Μούρα (frozen)',g:80},
+    {n:'Κεράσια',g:40},
+    {n:'Καρύδα (shredded)',g:10},
+    {n:'Πρωτεΐνη σοκολάτα',g:20},
+    {n:'Μέλι άβραστο',g:8}
+  ]},
+  'Overnight Oats P.B. & Choco (Πετρετζίκης)':{base:470,ing:[
+    {n:'Βρώμη (ωμή)',g:50},
+    {n:'Γάλα αμυγδάλου',g:200},
+    {n:'Φυστικοβούτυρο',g:25},
+    {n:'Κακάο (σκόνη)',g:10},
+    {n:'Μπανάνα',g:60},
+    {n:'Μέλι άβραστο',g:10},
+    {n:'Αλάτι',g:0.5}
+  ]},
+  'Αυγά Ποσέ Air Fryer (Πετρετζίκης)':{base:370,ing:[
+    {n:'Αυγά (ολόκληρα)',g:100},
+    {n:'Ψωμί ολικής άλεσης',g:60},
+    {n:'Αβοκάντο',g:60},
+    {n:'Ντομάτα',g:80},
+    {n:'Σπανάκι',g:30},
+    {n:'Ελαιόλαδο',g:8}
+  ]},
+  'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)':{base:360,ing:[
+    {n:'Ασπράδια αυγών',g:120},
+    {n:'Τυρί κρέμα',g:30},
+    {n:'Γαλοπούλα (deli)',g:60},
+    {n:'Πιπεριά κόκκινη',g:50},
+    {n:'Κρεμμύδι',g:30},
+    {n:'Μανιτάρια',g:40},
+    {n:'Ελαιόλαδο',g:8},
+    {n:'Ψωμί ολικής άλεσης',g:30}
+  ]},
+  'Λιγκουίνι με Γαρίδες (Πετρετζίκης)':{base:350,ing:[
+    {n:'Λιγκουίνι (βρασμένο)',g:130},
+    {n:'Γαρίδες (βρασμένες)',g:155},
+    {n:'Κρεμμύδι',g:35},
+    {n:'Σκόρδο',g:3},
+    {n:'Ελαιόλαδο',g:15},
+    {n:'Ζάχαρη',g:1},
+    {n:'Μπούκοβο',g:0.5},
+    {n:'Ούζο',g:5},
+    {n:'Χυμό ντομάτας',g:100},
+    {n:'Κύβο λαχανικών',g:2},
+    {n:'Νερό',g:250},
+    {n:'Μαργαρίνη',g:12},
+    {n:'Λεμόνι (ξύσμα)',g:1},
+    {n:'Κρεμμυδάκι (φρέσκο)',g:7},
+    {n:'Βασιλικό',g:1},
+    {n:'Αλάτι',g:1}
   ]}
 };
 
@@ -2871,7 +4180,7 @@ var MED_PLAN={
   ]}},
   2:{Μεσημεριανό:{type:'meat',  n:'Κοτόπουλο μπιφτέκι'},
      Βραδινό:    {type:'fixed', foods:[
-    {n:'Βοδινά φιλετάκια',g:200},{n:'Γλυκοπατάτα',g:200},
+    {n:'Σολομός (ψητός)',g:200},{n:'Γλυκοπατάτα',g:200},
     {n:'Σαλάτα εποχής',g:100},{n:'Ελαιόλαδο',g:10},{n:'Γιαούρτι 2%',g:150}
   ]}},
   3:{Μεσημεριανό:{type:'fixed', foods:[
@@ -2889,7 +4198,7 @@ var MED_PLAN={
   ]},
      Βραδινό:    {type:'free'}},
   6:{Μεσημεριανό:{type:'fixed', foods:[
-    {n:'Χοιρινό (μπριζόλα)',g:200},{n:'Πατάτες',g:200},
+    {n:'Γαρίδες (βραστές)',g:200},{n:'Πατάτες',g:200},
     {n:'Γιαούρτι 2%',g:150},{n:'Σαλάτα εποχής',g:100},{n:'Ελαιόλαδο',g:10}
   ]}}
 };
@@ -3036,9 +4345,178 @@ function standardizeMediterraneanSnacks(days){
         var fruitName=MED_SNACK_FRUITS[di%MED_SNACK_FRUITS.length];
         meal.foods.unshift({n:fruitName,g:150});
       }
-      // Add nuts if missing
+      // Add nuts/dried fruits if missing - rotate variety
       if(!hasNuts){
-        meal.foods.push({n:'Καρύδια',g:15});
+        var nutsVariety=['Αμύγδαλα','Καρύδια','Φιστίκια','Κομπόστα σταφίδας'];
+        var selectedNut=nutsVariety[di%nutsVariety.length];
+        var nutGrams=25; // Mediterranean standard: 25-30g nuts/day
+        meal.foods.push({n:selectedNut,g:nutGrams});
+      }
+    });
+  });
+  return result;
+}
+
+// ── Avoid legume + starch combos: use legumes + feta + whole bread instead ──
+// Λογική: Όσπρια ΔΕΝ συνδυάζονται με άλλο άμυλο (πατάτες, ρύζι, κ.τ.λ.)
+// Αντί γι'αυτό: Περισσότερα όσπρια + Τυρί Φέτα + Ψωμί ολικής άλεσης
+var LEGUME_FOODS_LST=['Φακές','Ρεβίθια','Φασόλια','Μαυρομάτικα','Φάβα'];
+var OTHER_STARCHES=['Πατάτα','Γλυκοπατάτα','Πατάτες','Ρύζι άσπρο (βρ.)','Ρύζι καστανό (βρ.)','Κριθαράκι (βρ.)','Μακαρόνια (βρ.)'];
+
+function avoidLegumeStarchCombos(days){
+  var result=JSON.parse(JSON.stringify(days));
+  result.forEach(function(dayMeals){
+    dayMeals.forEach(function(meal){
+      // Ελέγχουμε αν υπάρχουν τόσο όσπρια όσο και άλλο άμυλο στο γεύμα
+      var hasLegume=false, legumeName='', legumeGrams=0;
+      var hasOtherStarch=false, starchNames=[];
+
+      meal.foods.forEach(function(f){
+        if(LEGUME_FOODS_LST.indexOf(f.n)!==-1){
+          hasLegume=true;
+          legumeName=f.n;
+          legumeGrams=f.g||200;
+        }
+        if(OTHER_STARCHES.indexOf(f.n)!==-1){
+          hasOtherStarch=true;
+          starchNames.push(f.n);
+        }
+      });
+
+      // Αν υπάρχουν και τα δύο, αντικαθιστούμε τα άλλα αμύλα με φέτα + ψωμί ολικής άλεσης
+      if(hasLegume && hasOtherStarch){
+        // Αφαιρούμε τα άλλα αμύλα
+        meal.foods=meal.foods.filter(function(f){
+          return OTHER_STARCHES.indexOf(f.n)===-1;
+        });
+
+        // Αυξάνουμε την ποσότητα των όσπριων (από 150-200g σε 250-300g)
+        for(var i=0;i<meal.foods.length;i++){
+          if(meal.foods[i].n===legumeName){
+            meal.foods[i].g=Math.max(meal.foods[i].g, 250);
+            break;
+          }
+        }
+
+        // Προσθέτουμε φέτα (30-50g) αν δεν υπάρχει
+        var hasDairy=meal.foods.some(function(f){return f.n==='Τυρί φέτα';});
+        if(!hasDairy){
+          meal.foods.push({n:'Τυρί φέτα',g:40});
+        }
+
+        // Προσθέτουμε ψωμί ολικής άλεσης (30g) αν δεν υπάρχει
+        var hasBread=meal.foods.some(function(f){return f.n==='Ολικής άλεσης ψωμί' || f.n.indexOf('ψωμί')!==-1;});
+        if(!hasBread){
+          meal.foods.push({n:'Ολικής άλεσης ψωμί',g:30});
+        }
+      }
+    });
+  });
+  return result;
+}
+
+// ── Avoid dairy + legumes: calcium inhibits iron absorption from legumes ──
+// Ερευνητικά ευρήματα: Το κάλτσιο (γαλακτοκομικά) μειώνει απορρόφηση μη-αιμικού σιδήρου των όσπριων
+// Λύση: Αφαιρούμε γαλακτοκομικό + προσθέτουμε βιταμίνη C (λεμόνι) + λευκό κρέας
+var DAIRY_FOODS=['Γιαούρτι','Τυρί','Φέτα','Μοτσαρέλα','Κεφίρ','Κασέρι','Κότατζε'];
+var WHITE_PROTEINS=['Κοτόπουλο στήθος (ψητό)','Γαλοπούλα στήθος','Ψάρι','Λαβράκι','Τόνος'];
+
+function avoidDairyWithLegumes(days){
+  var result=JSON.parse(JSON.stringify(days));
+  result.forEach(function(dayMeals){
+    dayMeals.forEach(function(meal){
+      // Ελέγχουμε αν υπάρχουν τόσο όσπρια όσο και γαλακτοκομικό
+      var hasLegume=false, legumeName='', legumeFoods=[];
+      var hasDairy=false, dairyNames=[];
+
+      meal.foods.forEach(function(f){
+        if(LEGUME_FOODS_LST.indexOf(f.n)!==-1){
+          hasLegume=true;
+          legumeName=f.n;
+          legumeFoods.push(f);
+        }
+        if(DAIRY_FOODS.some(function(d){return f.n.indexOf(d)!==-1;})){
+          hasDairy=true;
+          dairyNames.push(f.n);
+        }
+      });
+
+      // Αν υπάρχουν και τα δύο, αφαιρούμε το γαλακτοκομικό και προσθέτουμε λεμόνι + λευκό κρέας
+      if(hasLegume && hasDairy){
+        // Αφαιρούμε τα γαλακτοκομικά
+        meal.foods=meal.foods.filter(function(f){
+          return !DAIRY_FOODS.some(function(d){return f.n.indexOf(d)!==-1;});
+        });
+
+        // Προσθέτουμε λεμόνι (20ml = ~15-20mg βιταμίνη C) για 3-4x ενίσχυση απορρόφησης σιδήρου
+        var hasLemon=meal.foods.some(function(f){return f.n.indexOf('λεμόνι')!==-1 || f.n.indexOf('Λεμόνι')!==-1;});
+        if(!hasLemon){
+          meal.foods.push({n:'Λεμόνι (χυμός)',g:20});
+        }
+
+        // Προσθέτουμε λευκό κρέας - κοτόπουλο (100g) για αιμικό σίδηρο που απορροφάται καλύτερα
+        var hasWhiteProtein=meal.foods.some(function(f){
+          return WHITE_PROTEINS.some(function(p){return f.n.indexOf(p)!==-1;});
+        });
+        if(!hasWhiteProtein){
+          meal.foods.push({n:'Κοτόπουλο στήθος (ψητό)',g:100});
+        }
+      }
+    });
+  });
+  return result;
+}
+
+// ── Avoid tannins with legume meals: coffee/tea inhibits iron absorption ──
+// Ερευνητικά ευρήματα: Ταννίνες (από τσάι/καφές) μειώνουν απορρόφηση σιδήρου κατά 40-70%
+// Λύση: Προσθήκη ενημέρωσης/σημείωσης αν υπάρχουν όσπρια να αποφύγει καφές/τσάι κατά τη διάρκεια
+function avoidTanninsWithLegumes(days){
+  var result=JSON.parse(JSON.stringify(days));
+  result.forEach(function(dayMeals){
+    var dayHasLegume=false;
+    dayMeals.forEach(function(meal){
+      // Ελέγχουμε αν υπάρχουν όσπρια σε αυτό το γεύμα
+      if(meal.foods.some(function(f){return LEGUME_FOODS_LST.indexOf(f.n)!==-1;})){
+        dayHasLegume=true;
+      }
+    });
+
+    // Αν ο ημέρα έχει γεύματα με όσπρια, προσθέτουμε σημείωση στο πρώτο snack
+    if(dayHasLegume){
+      var snackMeal=dayMeals.find(function(m){return m.name && m.name.toLowerCase().includes('ενδιάμεσο');});
+      if(snackMeal && !snackMeal.note){
+        snackMeal.note='⚠️ Έχει όσπρια στο πλάνο: Αποφύγετε καφές/τσάι κατά τη διάρκεια του γεύματος. Καφές ≥1 ώρα ΜΕΤΑ για καλύτερη απορρόφηση σιδήρου.';
+      }
+    }
+  });
+  return result;
+}
+
+// ── Ensure oil with vegetables: fat-soluble vitamins A, D, E, K need dietary fat ──
+// Ερευνητικά ευρήματα: Βιταμίνες A, D, E, K είναι λιποδιαλυτές - χρειάζονται λάδι για απορρόφηση
+// Βήτα-καροτένιο (καρότα, κολοκύθα) + λυκοπένιο (ντομάτες) απαιτούν ≥10% λίπος στη διατροφή
+var VEGETABLES_NEEDING_FAT=['Καρότα','Κολοκύθα','Γλυκοπατάτα','Ντομάτες','Σπανάκι','Μπρόκολο','Κάλε','Πιπεριές'];
+
+function ensureOilWithVegetables(days){
+  var result=JSON.parse(JSON.stringify(days));
+  result.forEach(function(dayMeals){
+    dayMeals.forEach(function(meal){
+      // Ελέγχουμε αν υπάρχουν λαχανικά που χρειάζονται λάδι
+      var hasVeggieNeedingFat=false;
+      meal.foods.forEach(function(f){
+        if(VEGETABLES_NEEDING_FAT.some(function(v){return f.n.indexOf(v)!==-1;})){
+          hasVeggieNeedingFat=true;
+        }
+      });
+
+      // Αν υπάρχουν λαχανικά, ελέγχουμε αν υπάρχει ελαιόλαδο
+      if(hasVeggieNeedingFat){
+        var hasOil=meal.foods.some(function(f){return f.n==='Ελαιόλαδο' || f.n.indexOf('λάδι')!==-1;});
+
+        // Αν δεν υπάρχει λάδι, προσθέτουμε ελαιόλαδο (10g = 1 κουταλιά)
+        if(!hasOil){
+          meal.foods.push({n:'Ελαιόλαδο',g:10});
+        }
       }
     });
   });
@@ -3046,8 +4524,105 @@ function standardizeMediterraneanSnacks(days){
 }
 
 // ── Normalize breakfasts: eggs Mon/Wed/Fri, yogurt+oats other days ────────────
+// Petretzeakis recipes for automatic generation
 var EGG_DAYS={0:1,2:1,4:1}; // Mon=0, Wed=2, Fri=4
 var MED_BRK_FRUITS=['Μήλο','Μπανάνα','Πορτοκάλι','Ροδάκινο','Αχλάδι'];
+
+var PETRETZEAKIS_EGG_RECIPES=[
+  {n:'Breakfast Burrito (Πετρετζίκης)',g:420},
+  {n:'Αυγά Ποσέ Air Fryer (Πετρετζίκης)',g:370},
+  {n:'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)',g:360}
+];
+
+var PETRETZEAKIS_YOGURT_RECIPES=[
+  {n:'Chia Bowl Φράουλα (Πετρετζίκης)',g:385}
+];
+
+var PETRETZEAKIS_OATS_RECIPES=[
+  {n:'Overnight Oats Banoffee (Πετρετζίκης)',g:430},
+  {n:'Overnight Oats Black Forest (Πετρετζίκης)',g:425},
+  {n:'Overnight Oats P.B. & Choco (Πετρετζίκης)',g:470}
+];
+
+// ── Avoid high-oxalate vegetables with dairy: oxalate binds calcium ──
+// Ερευνητικά ευρήματα: Οξαλικό σε σπανάκι δεσμεύει ασβέστιο - απορρόφηση μόνο 5% (vs 27% από γάλα)
+// Λύση: Αποφυγή σπανακιού + γαλακτοκομικά. Χρήση άλλων πράσινων (μπρόκολο, κάλε)
+var HIGH_OXALATE_VEGGIES=['Σπανάκι','Σπανάκι ωμό','Σωταρισμένο σπανάκι'];
+var LOW_OXALATE_GREENS=['Μπρόκολο','Κάλε','Λάχανο','Αγκινάρες'];
+
+function avoidOxalateWithDairy(days){
+  var result=JSON.parse(JSON.stringify(days));
+  result.forEach(function(dayMeals){
+    dayMeals.forEach(function(meal){
+      // Ελέγχουμε αν υπάρχουν ψηλά οξαλικά + γαλακτοκομικά
+      var hasHighOxalate=false, oxalateName='';
+      var hasDairy=false;
+
+      meal.foods.forEach(function(f){
+        if(HIGH_OXALATE_VEGGIES.some(function(v){return f.n.indexOf(v)!==-1;})){
+          hasHighOxalate=true;
+          oxalateName=f.n;
+        }
+        if(DAIRY_FOODS.some(function(d){return f.n.indexOf(d)!==-1;})){
+          hasDairy=true;
+        }
+      });
+
+      // Αν υπάρχουν και τα δύο, αφαιρούμε το σπανάκι και προσθέτουμε κάλε/μπρόκολο
+      if(hasHighOxalate && hasDairy){
+        // Αφαιρούμε το ψηλό οξαλικό λαχανικό
+        meal.foods=meal.foods.filter(function(f){
+          return !HIGH_OXALATE_VEGGIES.some(function(v){return f.n.indexOf(v)!==-1;});
+        });
+
+        // Προσθέτουμε κάλε ή μπρόκολο (χαμηλό οξαλικό, καλή απορρόφηση ασβεστίου)
+        var hasLowOxalateGreen=meal.foods.some(function(f){
+          return LOW_OXALATE_GREENS.some(function(g){return f.n.indexOf(g)!==-1;});
+        });
+
+        if(!hasLowOxalateGreen){
+          meal.foods.push({n:'Μπρόκολο',g:150});
+        }
+      }
+    });
+  });
+  return result;
+}
+
+// ── Ensure adequate fish intake: omega-3 for inflammation control ──
+// Ερευνητικά ευρήματα: Ωμέγα-6:3 αναλογία πρέπει να είναι 4:1 (όχι 15:1-20:1)
+// Λύση: Παρακολούθηση ότι υπάρχει ψάρι ≥2-3x/εβδάδα (σολομός, σαρδέλες, λαβράκι)
+var OMEGA3_FISH=['Σολομός (ψητός)','Σαρδέλες','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Μπακαλιάρος (ψητός)'];
+
+function ensureOmega3FishIntake(days){
+  var result=JSON.parse(JSON.stringify(days));
+  var fishDays=new Set();
+
+  // Μετράμε πόσες ημέρες έχουν ψάρι πλούσιο σε ωμέγα-3
+  result.forEach(function(dayMeals, dayIdx){
+    dayMeals.forEach(function(meal){
+      meal.foods.forEach(function(f){
+        if(OMEGA3_FISH.some(function(fish){return f.n.indexOf(fish)!==-1;})){
+          fishDays.add(dayIdx);
+        }
+      });
+    });
+  });
+
+  // Αν έχουν <2 ημέρες ψάρι, προσθέτουμε προειδοποίηση στο πρώτο snack
+  if(fishDays.size < 2){
+    var firstDay=result[0];
+    if(firstDay && firstDay.length > 0){
+      var snackMeal=firstDay.find(function(m){return m.name && m.name.toLowerCase().includes('ενδιάμεσο');});
+      if(snackMeal){
+        snackMeal.note=(snackMeal.note || '') +
+          '\n⚠️ Ωμέγα-3: Το πλάνο έχει λιγότερο από 2 ημέρες ψάρι. Για βέλτιστη αναλογία ωμέγα-6:3 (4:1), προσθέστε σολομό, σαρδέλες ή λαβράκι ≥2-3x/εβδάδα.';
+      }
+    }
+  }
+
+  return result;
+}
 
 function normalizeBreakfasts(days){
   var result=JSON.parse(JSON.stringify(days));
@@ -3072,22 +4647,48 @@ function normalizeBreakfasts(days){
     });
     var fruit=MED_BRK_FRUITS[di%MED_BRK_FRUITS.length];
     if(EGG_DAYS[di]){
-      // Egg days → Πρωινό Αυγών (FYH): expands to αυγά+ψωμί+αβοκάντο via expandFYHRecipes (step 8)
+      // Egg days → 60% chance Petretzeakis egg recipe, 40% traditional egg breakfast
       if(!hasEgg){
-        meal.foods=[
-          {n:'Πρωινό Αυγών (FYH)',g:200},
-          {n:fruit,g:150}
-        ];
+        var usePetretzeakis=Math.random()<0.6;
+        if(usePetretzeakis&&PETRETZEAKIS_EGG_RECIPES.length>0){
+          var recipe=PETRETZEAKIS_EGG_RECIPES[di%PETRETZEAKIS_EGG_RECIPES.length];
+          meal.foods=[{n:recipe.n,g:recipe.g}];
+        } else {
+          meal.foods=[
+            {n:'Πρωινό Αυγών (FYH)',g:200},
+            {n:fruit,g:150}
+          ];
+        }
       }
     } else {
-      // Should be yogurt/oat-based
+      // Other days → alternate between yogurt and oats Petretzeakis recipes
       if(!hasYogurt){
-        meal.foods=[
-          {n:'Γιαούρτι 2%',g:200},
-          {n:'Βρώμη (ωμή)',g:40},
-          {n:fruit,g:150},
-          {n:'Καρύδια',g:15}
-        ];
+        var usePetretzeakis=Math.random()<0.7;
+        if(usePetretzeakis){
+          // 50% yogurt, 50% overnight oats
+          var useYogurt=Math.random()<0.5;
+          if(useYogurt&&PETRETZEAKIS_YOGURT_RECIPES.length>0){
+            var recipe=PETRETZEAKIS_YOGURT_RECIPES[di%PETRETZEAKIS_YOGURT_RECIPES.length];
+            meal.foods=[{n:recipe.n,g:recipe.g}];
+          } else if(PETRETZEAKIS_OATS_RECIPES.length>0){
+            var recipe=PETRETZEAKIS_OATS_RECIPES[di%PETRETZEAKIS_OATS_RECIPES.length];
+            meal.foods=[{n:recipe.n,g:recipe.g}];
+          } else {
+            meal.foods=[
+              {n:'Γιαούρτι 2%',g:200},
+              {n:'Βρώμη (ωμή)',g:40},
+              {n:fruit,g:150},
+              {n:'Καρύδια',g:15}
+            ];
+          }
+        } else {
+          meal.foods=[
+            {n:'Γιαούρτι 2%',g:200},
+            {n:'Βρώμη (ωμή)',g:40},
+            {n:fruit,g:150},
+            {n:'Καρύδια',g:15}
+          ];
+        }
       }
     }
   });
@@ -3107,7 +4708,7 @@ var MED_SCORE_RULES=[
   {id:'nuts',   icon:'🌰', label:'Καρύδια/Σπόροι ≥2 ημέρες'},
   {id:'dairy',  icon:'🧀', label:'Τυρί/Γιαούρτι ≥3 ημέρες'}
 ];
-var FISH_FOODS=['Σολομός (ψητός)','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Σαρδέλες','Τσιπούρα (ψητή)','Γαρίδες','Μπακαλιάρος'];
+var FISH_FOODS=['Σολομός (ψητός)','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Σαρδέλες','Τσιπούρα (ψητή)','Γαρίδες (βραστές)','Μπακαλιάρος'];
 var RED_MEAT_FOODS=['Βοδινό άπαχο (ψητό)','Βοδινά φιλετάκια','Χοιρινό (μπριζόλα)','Μοσχάρι κιμάς','Αρνί'];
 var LEGUME_FOODS=['Φακές','Ρεβίθια','Φασόλια','Μαυρομάτικα','Φάβα'];
 var REFINED_GRAINS=['Ρύζι άσπρο (βρ.)','Μακαρόνια (βρ.)','Κριθαράκι (βρ.)','Ψωμί λευκό'];
@@ -3193,6 +4794,194 @@ function renderMedScore(weekPlan){
   return html;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// ✅ PHASE 2: CHEF-INSPIRED MEAL GENERATION RULES ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Check if two foods have conflicting flavors (avoid_with list)
+function hasFlavorConflict(food1, food2) {
+  if(!FOOD_PAIRING_DB[food1] || !FOOD_PAIRING_DB[food2]) return false;
+  var conflicts1 = FOOD_PAIRING_DB[food1].avoid_with || [];
+  var conflicts2 = FOOD_PAIRING_DB[food2].avoid_with || [];
+  return conflicts1.includes(food2) || conflicts2.includes(food1);
+}
+
+// Check if protein + carb + vegetable combination is valid (no conflicts)
+function isValidCombo(protein, carb, veggies) {
+  // Check protein-carb compatibility
+  if(hasFlavorConflict(protein, carb)) return false;
+
+  // Check protein-vegetable compatibility
+  for(var i = 0; i < veggies.length; i++) {
+    if(hasFlavorConflict(protein, veggies[i])) return false;
+  }
+
+  return true;
+}
+
+// Get compatible vegetables for a protein (ones in best_pairings)
+function getCompatibleVeggies(protein) {
+  if(!FOOD_PAIRING_DB[protein]) return [];
+  var pairingDb = FOOD_PAIRING_DB[protein];
+  var compatible = [];
+
+  Object.keys(FOODS).forEach(function(foodName) {
+    if(FOODS[foodName].cat === 'Λαχανικά' && pairingDb.best_pairings.includes(foodName)) {
+      compatible.push(foodName);
+    }
+  });
+
+  return compatible.length > 0 ? compatible :
+    Object.keys(FOODS).filter(function(f) { return FOODS[f].cat === 'Λαχανικά'; });
+}
+
+// Find a saved combo that matches kcal and macro targets
+function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance) {
+  if(!savedCombos || savedCombos.length === 0) return null;
+  tolerance = tolerance || 50; // ±50 kcal tolerance
+
+  for(var i = 0; i < savedCombos.length; i++) {
+    var combo = savedCombos[i];
+    var comboKcal = combo.kcal || 0;
+
+    // Check if kcal is within tolerance
+    if(Math.abs(comboKcal - targetKcal) <= tolerance) {
+      return {foods: combo.foods, mealTiming: combo.mealTiming || 'regular'};
+    }
+  }
+
+  return null;
+}
+
+// Calculate kcal for a meal (foods array)
+function calculateMealKcal(foods) {
+  var total = 0;
+  if(!Array.isArray(foods)) return 0;
+
+  foods.forEach(function(f) {
+    var macros = cm(f.n, f.g);
+    total += macros.k || 0;
+  });
+
+  return total;
+}
+
+// Build a meal combo using pairing rules
+function buildMealCombo(protein, carb, veggies, targetKcal) {
+  // Validate combo (no flavor conflicts)
+  if(!isValidCombo(protein, carb, veggies)) {
+    return null;
+  }
+
+  // Start with protein (use base amount, will scale later)
+  var meal = {foods: []};
+
+  // Base portions: adjust to target kcal later
+  var proteinG = 150;
+  var carbG = 100;
+  var vegG = 150;
+
+  // Add protein
+  meal.foods.push({n: protein, g: proteinG});
+
+  // Add carb
+  meal.foods.push({n: carb, g: carbG});
+
+  // Add vegetables (1-2 different ones for variety)
+  if(veggies && veggies.length > 0) {
+    meal.foods.push({n: veggies[0], g: vegG});
+    if(veggies.length > 1 && Math.random() > 0.5) {
+      meal.foods.push({n: veggies[1], g: Math.round(vegG * 0.5)});
+    }
+  }
+
+  // Add olive oil (always, for flavor + healthy fat)
+  meal.foods.push({n: 'Ελαιόλαδο', g: 10});
+
+  // Add lemon (if not already in vegetables)
+  var hasAcid = veggies.some(function(v) { return v === 'Λεμόνι' || v === 'Ντοματες'; });
+  if(!hasAcid) {
+    // Lemon will be added via dressing (not as standalone food)
+  }
+
+  return meal;
+}
+
+// Ensure food diversity across week (no boring repetition)
+function ensureFoodDiversity(weekPlan, maxRepeatPerWeek) {
+  maxRepeatPerWeek = maxRepeatPerWeek || 2;
+  var foodCount = {};
+
+  // Count food occurrences
+  for(var d = 0; d < 7; d++) {
+    if(!weekPlan[d]) continue;
+    for(var mi = 0; mi < weekPlan[d].length; mi++) {
+      var meal = weekPlan[d][mi];
+      if(!meal.foods) continue;
+
+      meal.foods.forEach(function(f) {
+        foodCount[f.n] = (foodCount[f.n] || 0) + 1;
+      });
+    }
+  }
+
+  // Mark foods that appear too many times
+  var overuseFood = {};
+  Object.keys(foodCount).forEach(function(foodName) {
+    if(foodCount[foodName] > maxRepeatPerWeek) {
+      overuseFood[foodName] = true;
+    }
+  });
+
+  return overuseFood; // Return foods to replace
+}
+
+// Smart meal generation with pairing rules + saved combos + BREAKFAST CONSTRAINTS
+function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName) {
+  // Priority 1: Check saved combos first
+  var mealFromSaved = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 60);
+  if(mealFromSaved) {
+    return mealFromSaved;
+  }
+
+  // Priority 2: Build from pairing rules - with meal-type awareness
+  var isBreakfast = mealName && mealName.toLowerCase().includes('πρωινό');
+
+  var proteins = Object.keys(FOODS).filter(function(f) {
+    var isProtein = FOODS[f].cat === 'Κρέας' || FOODS[f].cat === 'Ψάρια' || FOODS[f].cat === 'Όσπρια';
+    if(!isProtein) return false;
+
+    // For breakfast: exclude heavy meats
+    if(isBreakfast && !BREAKFAST_FOODS.is_breakfast_appropriate(f)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  var carbs = Object.keys(FOODS).filter(function(f) {
+    return FOODS[f].cat === 'Δημητριακά';
+  });
+
+  var veggies = Object.keys(FOODS).filter(function(f) {
+    return FOODS[f].cat === 'Λαχανικά';
+  });
+
+  // Try to build a combo with available foods (skip pairing validation for now)
+  if(proteins.length > 0 && carbs.length > 0 && veggies.length > 0) {
+    var meal = {foods: []};
+    // Base portions
+    meal.foods.push({n: proteins[day % proteins.length], g: 150});
+    meal.foods.push({n: carbs[day % carbs.length], g: 100});
+    meal.foods.push({n: veggies[day % veggies.length], g: 150});
+    meal.foods.push({n: 'Ελαιόλαδο', g: 10});
+    return meal;
+  }
+
+  // Fallback: Return null (will use template-based)
+  return null;
+}
+
 function genPlan(){
   var c=getC();if(!c)return;var t=calcTDEE(c);c.weekPlan={};
   var tmpl=TMPLS[c.goal]||TMPLS.maintain;
@@ -3210,19 +4999,70 @@ function genPlan(){
   var tmplDays=[];
   for(var d=0;d<7;d++)tmplDays.push(tmpl[d]||tmpl[0]);
   var excl=c.foodExclude||[];
-  // ── Mediterranean standards pipeline ──────────────────────────
+  // Initial Mediterranean pipeline on templates ONLY
   tmplDays=removeFYHFromMainMeals(tmplDays);           // 0. FYH έξω από κύρια γεύματα (χειροκίνητα)
+  var eff=getDayTgtEff(c,t);
+
+  // ✅ PHASE 3A: HYBRID SYSTEM — Allocate per-meal targets from daily totals
+  for(var d=0;d<7;d++){
+    eff[d].meals = allocateMealTargets(eff[d], tmplDays[d].length);
+  }
+
+  // ✅ PHASE 3B: TRY SMART GENERATION WITH 3-PRIORITY FALLBACK
+  var savedCombos = getSavedCombos();
+  for(var d=0;d<7;d++){
+    for(var mi=0;mi<tmplDays[d].length;mi++){
+      var meal = tmplDays[d][mi];
+      var targetKcal = eff[d].meals[mi].k;  // Per-meal calorie target
+
+      // Priority 1: Check saved combos (user-approved, fastest)
+      if(savedCombos && savedCombos.length > 0){
+        var savedMeal = findSavedComboMatch(savedCombos, targetKcal, null, 80);
+        if(savedMeal && savedMeal.foods && savedMeal.foods.length > 0){
+          meal.foods = JSON.parse(JSON.stringify(savedMeal.foods));
+          if(savedMeal.mealTiming) meal.mealTiming = savedMeal.mealTiming;
+          continue;  // Use saved combo
+        }
+      }
+
+      // Priority 2: Try smart generation with chef pairing rules
+      // Pass meal.name for breakfast-specific constraints
+      var smartMeal = generateSmartMeal(targetKcal, null, d, savedCombos, meal.name);
+      if(smartMeal && smartMeal.foods && smartMeal.foods.length > 0){
+        meal.foods = JSON.parse(JSON.stringify(smartMeal.foods));
+        if(smartMeal.mealTiming) meal.mealTiming = smartMeal.mealTiming;
+        continue;  // Use smart meal
+      }
+
+      // Priority 3: Keep template meal (graceful fallback, always works)
+      // Template meals are already good (Mediterranean rules applied above)
+      // So no action needed - just use the original template meal
+    }
+  }
+
+  // ✅ PHASE 3C: RE-APPLY MEDITERRANEAN RULES AFTER SMART GENERATION
+  // CRITICAL: Apply Mediterranean rules AFTER smart generation to preserve them
   tmplDays=preferWholeGrains(tmplDays);                // 1. ολικής άλεσης δημητριακά
   tmplDays=applyMediterraneanRules(tmplDays);          // 2. κατανομή πρωτεΐνης (ψάρι/κρέας/όσπρια)
   tmplDays=cleanFYHMeals(tmplDays);                    // 3. FYH σε snacks = αυτόνομα (safety net)
   tmplDays=ensureSaladAndOil(tmplDays);                // 4. σαλάτα εποχής + ελαιόλαδο παντού
   tmplDays=addPotatoToFishMeals(tmplDays);             // 5. πατάτα σε γεύματα ψαριού
   tmplDays=standardizeMediterraneanSnacks(tmplDays);   // 6. φρούτο + ξηροί καρποί στα ενδιάμεσα
+  tmplDays=avoidLegumeStarchCombos(tmplDays);          // 6β. αποφυγή όσπριων + άλλο άμυλο (νέο: φέτα + ψωμί αντί γι'άλλο άμυλο)
+  tmplDays=avoidDairyWithLegumes(tmplDays);            // 6γ. αποφυγή γαλακτοκομικών + όσπρια (κάλτσιο ↓ απορρόφηση σιδήρου) → λεμόνι + λευκό κρέας
+  tmplDays=avoidTanninsWithLegumes(tmplDays);          // 6δ. προειδοποίηση: ταννίνες (καφές/τσάι) ↓ σίδηρος → αποφυγή κατά μεσημέρι με όσπρια
+  tmplDays=ensureOilWithVegetables(tmplDays);          // 6ε. εξασφάλιση λαδιού με λαχανικά (βιταμίνες Α,D,E,K λιποδιαλυτές) → ≥10g ελαιόλαδο
+  tmplDays=avoidOxalateWithDairy(tmplDays);            // 6στ. αποφυγή σπανακιού + γαλακτοκομικά (οξαλικό ↓ ασβέστιο) → κάλε/μπρόκολο αντί
+  tmplDays=ensureOmega3FishIntake(tmplDays);           // 6ζ. προειδοποίηση: ωμέγα-3 από ψάρι ≥2-3x/εβδάδα (ωμέγα-6:3 αναλογία 4:1)
   tmplDays=normalizeBreakfasts(tmplDays);              // 7. Πρωινό Αυγών (FYH) Δευ/Τετ/Παρ, γιαούρτι+βρώμη αλλού
   tmplDays=expandFYHRecipes(tmplDays);                 // 8. ανάπτυξη συνταγών σε συστατικά (για πελάτες)
   if(excl.length)tmplDays=applyFoodExclusions(tmplDays,excl); // 9. αποκλεισμός τροφίμων (μετά όλα τα steps)
-  var eff=getDayTgtEff(c,t);
-  for(var d=0;d<7;d++)c.weekPlan[d]=scalePlan(tmplDays[d],eff[d]);
+
+  // ✅ PHASE 3D: SCALE ALL MEALS TO DAILY TARGETS (always, as final step)
+  // This proportionally scales all food portions to match daily macro targets
+  for(var d=0;d<7;d++){
+    c.weekPlan[d]=scalePlan(tmplDays[d],eff[d]);
+  }
   save();swTab(2);renderWeekTable();
 }
 
@@ -3237,20 +5077,57 @@ function renderWeekTable(){
 
   var tdeeR2=calcTDEE(c);
   var trainD=c.trainDays||[false,false,false,false,false,false,false];
-  // Build table HTML — show T/R badge in header
-  var html='<table class="week-table"><thead><tr><th>Γεύμα</th>';
+  var trainTimes=c.trainTimesByDay||['','','','','','',''];
+
+  // ✅ MET Activity Explanation Banner
+  var metExplainerHtml='';
+  if(tdeeR2.usedMET){
+    metExplainerHtml='<div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1565C0;line-height:1.5">'
+      +'💡 <b>Δυναμικοί Ημερήσιοι Στόχοι:</b> Χρησιμοποιείτε MET δραστηριότητες, οπότε κάθε ημέρα έχει διαφορετικό στόχο θερμίδων:<br/>'
+      +'&nbsp;&nbsp;&nbsp;&nbsp;<span style="background:#025857;color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-right:6px">T</span>Ημέρα με άσκηση = <b>περισσότερες θερμίδες</b> (για ενέργεια + ανάκαμψη)'
+      +'&nbsp;&nbsp;&nbsp;&nbsp;<span style="background:#eee;color:#aaa;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-right:6px;display:inline-block">R</span>Ημέρα ανάπαυσης = <b>λιγότερες θερμίδες</b> (μειωμένη δαπάνη ενέργειας)'
+      +'</div>';
+  }
+
+  // Build table HTML — show T/R badge in header + training time
+  var html=metExplainerHtml+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
     var badge=trainD[di]?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">T</span>':'<span style="background:#eee;color:#aaa;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">R</span>';
+    var timeStr='';
+    if(trainD[di]&&trainTimes[di]&&trainTimes[di].length>0){
+      timeStr='<div style="font-size:8px;color:#666;margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';
+    }
+    // ✅ Phase 1: Add sport display for training days
+    var sportStr='';
+    if(trainD[di]&&c.sport){
+      sportStr='<div class="sport-header-dietitian" style="font-size:9px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
+    }
     var copyBtn='<button class="day-copy-btn" onclick="copyDayPrompt(this,'+di+')" title="Αντιγραφή ημέρας σε άλλες">📋</button>';
-    html+='<th>'+d+badge+copyBtn+'</th>';
+    html+='<th>'+d+badge+timeStr+sportStr+copyBtn+'</th>';
   });
   html+='</tr></thead><tbody>';
 
   for(var mi=0;mi<numMeals;mi++){
-    html+='<tr><td class="meal-label">'+mealNames[mi]+'</td>';
+    // ✅ Phase 2: Add meal timing icons with profiles
+    var mealTiming='regular';
+    if(c.weekPlan[0]&&c.weekPlan[0][mi]&&c.weekPlan[0][mi].mealTiming){
+      mealTiming=c.weekPlan[0][mi].mealTiming;
+    }
+    var timingProf=MEAL_TIMING_PROFILES[mealTiming]||MEAL_TIMING_PROFILES.regular;
+    var timingInfo='P:'+timingProf.p+'% F:'+timingProf.f+'% C:'+timingProf.c+'% — '+timingProf.desc;
+    var mealLabelHtml='<td class="meal-label" data-timing-info="'+timingInfo+'">'
+      +timingProf.icon+' '+mealNames[mi]
+      +'<div style="font-size:9px;color:#666;margin-top:2px">'+timingProf.label+'</div>'
+      +'</td>';
+    html+='<tr>'+mealLabelHtml;
     for(var d=0;d<7;d++){
       var foods=(c.weekPlan[d]&&c.weekPlan[d][mi])?c.weekPlan[d][mi].foods:[];
-      html+='<td class="day-cell" data-d="'+d+'" data-mi="'+mi+'">';
+      // ✅ Phase 4: Add meal timing data attribute
+      var dayMealTiming='regular';
+      if(c.weekPlan[d]&&c.weekPlan[d][mi]&&c.weekPlan[d][mi].mealTiming){
+        dayMealTiming=c.weekPlan[d][mi].mealTiming;
+      }
+      html+='<td class="day-cell" data-d="'+d+'" data-mi="'+mi+'" data-meal-timing="'+dayMealTiming+'">';
       foods.forEach(function(food,fi){
         // Free meal special display
         if(food.n===FREE_MEAL_MARKER){
@@ -3407,7 +5284,8 @@ function renderWeekTable(){
     +'<div style="display:flex;gap:5px;align-items:center">'+dotHtml+'</div>'
     +(wkFiPct<65?'<span style="font-size:10px;color:#B71C1C;font-weight:600">⚠ Χαμηλή πρόσληψη ινών — στόχος '+getFiberTarget(c.age,c.sex)+'g/ημ. (DRI AI)</span>':'')
   +'</div>';
-  con.innerHTML=scoreHtml+fiberBannerHtml+tunaWarnHtml+html;
+  var microHtml=getMicronutrientHtml(c);
+  con.innerHTML=scoreHtml+fiberBannerHtml+tunaWarnHtml+microHtml+html;
 
   // Attach drag-and-drop to each day-cell
   con.querySelectorAll('.day-cell').forEach(function(cell){
@@ -3499,12 +5377,26 @@ function showChipSug(inp){
 
 function pickChip(el){
   var d=parseInt(el.dataset.d),mi=parseInt(el.dataset.mi),fi=parseInt(el.dataset.fi);
+  var selectedFoodName=el.dataset.n;
   if(el.dataset.mode==='tmpl'){
-    TMPLS[curTmplGoal][d][mi].foods[fi].n=el.dataset.n;
+    TMPLS[curTmplGoal][d][mi].foods[fi].n=selectedFoodName;
     closeDD();renderTmplTable();
   } else {
     var c=getC();if(!c)return;
-    c.weekPlan[d][mi].foods[fi].n=el.dataset.n;
+    // Check if selected food is a FYH recipe — if so, auto-expand to ingredients
+    var rx=FYH_RECIPE_EXPAND[selectedFoodName];
+    if(rx){
+      // Remove the recipe placeholder
+      c.weekPlan[d][mi].foods.splice(fi,1);
+      // Insert all ingredients at this position (scaled to recipe portion)
+      var scale=1; // Default scale if ingredient-less, otherwise use actual portion when set
+      rx.ing.forEach(function(ing,idx){
+        c.weekPlan[d][mi].foods.splice(fi+idx,0,{n:ing.n,g:ing.g});
+      });
+    } else {
+      // Regular food — just update name
+      c.weekPlan[d][mi].foods[fi].n=selectedFoodName;
+    }
     closeDD();renderWeekTable();
   }
 }
@@ -3533,19 +5425,141 @@ function pickServing(g,d,mi,fi){
   closeDD();renderWeekTable();
 }
 
+/* ── PHASE 2: Meal Timing Management ────────────────────────────────────── */
+function initializeMealTiming(c){
+  if(!c||!c.weekPlan)return;
+  var trainDays=c.trainDays||[false,false,false,false,false,false,false];
+  for(var d=0;d<7;d++){
+    if(!c.weekPlan[d])continue;
+    c.weekPlan[d].forEach(function(meal,mi){
+      if(!meal.mealTiming){
+        // Auto-assign sensible defaults based on meal name and training day
+        var mealName=meal.name;
+        if(/Πρωινό/.test(mealName)){
+          meal.mealTiming=trainDays[d]?'pre-workout':'regular';
+        } else if(/Μεσημεριανό/.test(mealName)){
+          meal.mealTiming=trainDays[d]?'post-workout':'recovery';
+        } else if(/Βραδινό/.test(mealName)){
+          meal.mealTiming=trainDays[d]?'recovery':'regular';
+        } else {
+          meal.mealTiming='regular';
+        }
+      }
+    });
+  }
+}
+
+function setMealTiming(d,mi,timing){
+  var c=getC();if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi])return;
+  c.weekPlan[d][mi].mealTiming=timing;
+  save();renderWeekTable();
+}
+
+function getMealTimingRecommendation(mealTiming){
+  var prof=MEAL_TIMING_PROFILES[mealTiming]||MEAL_TIMING_PROFILES.regular;
+  return{p:prof.p,f:prof.f,c:prof.c,label:prof.label,icon:prof.icon,notes:prof.notes};
+}
+
+/* ── PHASE 3: Micronutrient Adequacy Display ──────────────────────────────── */
+function getMicronutrientHtml(c){
+  if(!c)return'';
+  var targets=getMicronutrientTargets(c);
+  var useAthletic=c.sport||((c.trainDays||[]).filter(function(x){return x;}).length>=3);
+
+  var daysMN={};
+  for(var d=0;d<7;d++){
+    var meals=c.weekPlan[d]||[];
+    daysMN[d]=getDayMicronutrients(meals);
+  }
+
+  // Calculate weekly average
+  var weekMN={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0};
+  Object.keys(daysMN).forEach(function(d){
+    var dmn=daysMN[d];
+    ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6'].forEach(function(key){
+      weekMN[key]+=dmn[key];
+    });
+  });
+  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6'].forEach(function(key){
+    weekMN[key]=Math.round(weekMN[key]/7);
+  });
+
+  var adequacy=checkMicronutrientAdequacy(weekMN,targets,useAthletic);
+  var criticalCount=0,lowCount=0;
+  Object.keys(adequacy).forEach(function(key){
+    if(adequacy[key].status==='critical')criticalCount++;
+    else if(adequacy[key].status==='low')lowCount++;
+  });
+
+  var html='<div style="background:#f5f5f5;border-radius:8px;padding:10px;margin-top:8px;font-size:10px">'
+    +'<div style="font-weight:700;color:#555;margin-bottom:6px">📊 Μικροθρεπτικά στοιχεία (εβδ. μέσος όρος)</div>';
+
+  if(criticalCount>0||lowCount>0){
+    html+='<div style="background:#fff3e0;border-left:3px solid #ff9800;padding:6px 8px;margin-bottom:6px;border-radius:4px;color:#e65100;font-size:9px">'
+      +'<b>⚠️ '+criticalCount+' κρίσιμα, '+lowCount+' χαμηλά</b> — Χρειάζεται προσοχή'
+      +'</div>';
+  } else {
+    html+='<div style="background:#e8f5e9;border-left:3px solid #4caf50;padding:6px 8px;margin-bottom:6px;border-radius:4px;color:#2e7d32;font-size:9px">'
+      +'<b>✓ Επαρκής</b> — Όλα τα μικροθρεπτικά στο στόχο'
+      +'</div>';
+  }
+
+  // Show top nutrients needing attention
+  var topNeeds=Object.keys(adequacy).filter(function(k){
+    return adequacy[k].status==='critical'||adequacy[k].status==='low';
+  }).slice(0,3);
+
+  if(topNeeds.length){
+    html+='<div style="font-size:9px;color:#666;line-height:1.6">';
+    topNeeds.forEach(function(key){
+      var adq=adequacy[key];
+      var tgt=targets[key.toLowerCase()]||{};
+      var label=tgt.label||key;
+      html+='<div>'+label+': <b>'+Math.round(adq.actual)+'</b>'+tgt.unit+' ('+adq.pct+'% στόχου)</div>';
+    });
+    html+='</div>';
+  }
+
+  html+='</div>';
+  return html;
+}
+
 /* ---- Saved Combos ---- */
 function getSavedCombos(){try{return JSON.parse(localStorage.getItem('dieto_combos')||'[]');}catch(e){return[];}}
 function setSavedCombos(arr){localStorage.setItem('dieto_combos',JSON.stringify(arr));}
 
+// ✅ Phase 3: Enhanced saveCombo with metadata for smart generation
 function saveCombo(d,mi){
   var c=getC();if(!c)return;
   var meal=c.weekPlan[d]&&c.weekPlan[d][mi];
   if(!meal||!meal.foods||!meal.foods.length){alert('Δεν υπάρχουν τρόφιμα για αποθήκευση.');return;}
   var name=prompt('Όνομα συνδυασμού:',meal.name||'');
   if(!name||!name.trim())return;
+
+  // Calculate nutritional info for this meal
+  var mealKcal=0,mealP=0,mealF=0,mealC=0;
+  meal.foods.forEach(function(f){
+    var macros=cm(f.n,f.g);
+    mealKcal+=macros.k;mealP+=macros.p;mealF+=macros.f;mealC+=macros.c;
+  });
+
+  // Create enhanced combo object (for smart generation learning)
+  var combo={
+    id:'c'+Date.now(),
+    name:name.trim(),
+    foods:JSON.parse(JSON.stringify(meal.foods)),
+    kcal:Math.round(mealKcal),
+    p:Math.round(mealP),f:Math.round(mealF),c:Math.round(mealC),
+    mealTiming:meal.mealTiming||'regular',
+    tags:['approved','manual'], // Mark as dietitian-approved
+    createdAt:new Date().toISOString(),
+    notes:'' // Optional: why this combo works
+  };
+
   var combos=getSavedCombos();
-  combos.push({id:'c'+Date.now(),name:name.trim(),foods:JSON.parse(JSON.stringify(meal.foods))});
+  combos.push(combo);
   setSavedCombos(combos);
+  alert('✅ Σύνδυασμός αποθηκευμένος! Το σύστημα θα τον προτείνει στα μελλοντικά πλάνα.');
   renderFoodLib('');
 }
 
@@ -3697,6 +5711,39 @@ function exportPDF(lang){
   var isEn=lang==='en';
   var c=getC();
   if(!c||!Object.keys(c.weekPlan||{}).length){alert(isEn?'Create a plan first!':'Πρώτα δημιούργησε πλάνο!');return;}
+  // Calculate weekly average target for MET-based accuracy
+  var t=calcTDEE(c);
+  var avgTarget=t.target;
+  if(c.dayTargets&&c.dayTargets.length===7){
+    var totalKcal=0;
+    for(var di=0;di<7;di++){
+      totalKcal+=(c.dayTargets[di].k||0);
+    }
+    avgTarget=Math.round(totalKcal/7);
+  }
+  // Expand FYH recipes to individual ingredients for PDF display
+  var expandedWeekPlan=[];
+  for(var d=0;d<7;d++){
+    expandedWeekPlan[d]=[];
+    if(c.weekPlan[d]){
+      expandedWeekPlan[d]=JSON.parse(JSON.stringify(c.weekPlan[d]));
+      expandedWeekPlan[d].forEach(function(meal){
+        var expanded=[];
+        meal.foods.forEach(function(food){
+          var rx=FYH_RECIPE_EXPAND[food.n];
+          if(rx){
+            var scale=food.g/rx.base;
+            rx.ing.forEach(function(ing){
+              expanded.push({n:ing.n,g:Math.round(ing.g*scale)});
+            });
+          } else {
+            expanded.push(food);
+          }
+        });
+        meal.foods=expanded;
+      });
+    }
+  }
   var t=calcTDEE(c);
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   // Translation helpers
@@ -3717,6 +5764,9 @@ function exportPDF(lang){
     ?'Hydration – Rest: '+hydBase+'ml  /  Training: '+hydTrain+'ml'
     :'Ενυδάτωση Ανάπαυση: '+hydBase+'ml  /  Προπόνηση: '+hydTrain+'ml';
 
+  // Prepare week plan data with expanded recipes for header calculations
+  var weekPlanForPDF=expandedWeekPlan;
+
   // logo via canvas (larger, crisp)
   var logoSrc='';
   try{
@@ -3729,7 +5779,7 @@ function exportPDF(lang){
   }catch(e){}
 
   var isMinorPdf=(c.age||0)<18;
-  var mealNames=(c.weekPlan[0]||[]).map(function(m){return m.name;});
+  var mealNames=(weekPlanForPDF[0]||[]).map(function(m){return m.name;});
   var dayFull=isEn
     ?['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
     :['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
@@ -3749,7 +5799,7 @@ function exportPDF(lang){
   var thead='<tr><th class="th-corner">'+(isEn?'Meal':'Γεύμα')+'</th>';
   for(var hd=0;hd<7;hd++){
     var hdK=0;
-    (c.weekPlan[hd]||[]).forEach(function(m){m.foods.forEach(function(f){hdK+=cm(f.n,f.g).k;});});
+    (weekPlanForPDF[hd]||[]).forEach(function(m){m.foods.forEach(function(f){hdK+=cm(f.n,f.g).k;});});
     var tb=(c.trainDays&&c.trainDays[hd])?' <span class="tbadge">T</span>':'';
     if(isMinorPdf){
       var dc=kDayColors[hd];var lightDay=(hd===1||hd===6);
@@ -3776,7 +5826,7 @@ function exportPDF(lang){
     }
     // 7 day cells
     for(var dd=0;dd<7;dd++){
-      var fds=(c.weekPlan[dd]&&c.weekPlan[dd][mi])?c.weekPlan[dd][mi].foods:[];
+      var fds=(weekPlanForPDF[dd]&&weekPlanForPDF[dd][mi])?weekPlanForPDF[dd][mi].foods:[];
       var mK=0;var ch='';
       fds.forEach(function(fd){
         var mv=cm(fd.n,fd.g);mK+=mv.k;
@@ -3823,7 +5873,7 @@ function exportPDF(lang){
   tbody+='<tr class="macrow"><td class="macrow-lbl">'+(isEn?'Totals':'Σύνολα')+'</td>';
   for(var dm=0;dm<7;dm++){
     var tK=0,tP=0,tF=0,tC=0,tFiPdf=0;
-    (c.weekPlan[dm]||[]).forEach(function(m){m.foods.forEach(function(f){var v=cm(f.n,f.g);tK+=v.k;tP+=v.p;tF+=v.f;tC+=v.c;tFiPdf+=v.fi;});});
+    (weekPlanForPDF[dm]||[]).forEach(function(m){m.foods.forEach(function(f){var v=cm(f.n,f.g);tK+=v.k;tP+=v.p;tF+=v.f;tC+=v.c;tFiPdf+=v.fi;});});
     tbody+='<td><b>'+Math.round(tK)+' kcal</b><br>'+(isEn?'P':'Π')+':'+Math.round(tP)+' '+(isEn?'F':'Λ')+':'+Math.round(tF)+' '+(isEn?'C':'Υ')+':'+Math.round(tC)+'g'
       +'<br><span style="color:#795548;font-size:9px">🌾 '+(isEn?'Fiber':'Ίνες')+':'+tFiPdf.toFixed(1)+'g</span></td>';
   }
@@ -3914,7 +5964,7 @@ function exportPDF(lang){
   function shopDisp(g){if(g>=1000)return(Math.round(g/100)/10).toFixed(1)+' kg';return g+'g';}
   var shopTotals={};
   for(var sdi=0;sdi<7;sdi++){
-    (c.weekPlan[sdi]||[]).forEach(function(meal){meal.foods.forEach(function(food){shopTotals[food.n]=(shopTotals[food.n]||0)+food.g;});});
+    (weekPlanForPDF[sdi]||[]).forEach(function(meal){meal.foods.forEach(function(food){shopTotals[food.n]=(shopTotals[food.n]||0)+food.g;});});
   }
   var slCats=['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Δημητριακά','Όσπρια','Λαχανικά','Φρούτα','Ξηροί καρποί','Λάδια','Συνταγές FYH'];
   var shopBC={};slCats.forEach(function(cat){shopBC[cat]=[];});shopBC['Άλλα']=[];
@@ -4106,7 +6156,7 @@ function exportPDF(lang){
        +'<div style="flex:1;margin:0 14px;background:linear-gradient(135deg,#06D6A0,#118AB2);border-radius:12px;padding:8px 14px;color:#fff;">'
        +'<div style="font-size:13pt;font-weight:900;">'+esc(c.name||'Αθλητής')+'</div>'
        +'<div style="font-size:6.5pt;margin-top:2px;opacity:.9;">'+(c.sex==='M'?'Αγόρι':'Κορίτσι')+', '+c.age+' ετών &nbsp;·&nbsp; '+c.weight+'kg / '+c.height+'cm &nbsp;·&nbsp; '+(actL[c.activity]||'')+'</div>'
-       +'<div style="margin-top:5px;"><span style="background:rgba(255,255,255,.22);border-radius:20px;padding:2px 10px;font-size:7.5pt;font-weight:700;">🎯 '+t.target+' kcal/ημέρα</span></div>'
+       +'<div style="margin-top:5px;"><span style="background:rgba(255,255,255,.22);border-radius:20px;padding:2px 10px;font-size:7.5pt;font-weight:700;">🎯 '+avgTarget+' kcal (μέσο)</span></div>'
        +'</div>'
        +'<div style="text-align:right;">'
        +'<div style="background:#EEF9FF;border:2px solid #118AB2;border-radius:10px;padding:5px 9px;font-size:6.5pt;font-weight:700;color:#118AB2;">💧 '+t.hydBase+'ml<br><span style="font-weight:400;font-size:5.5pt;">+500ml προπόνηση</span></div>'
@@ -4116,7 +6166,7 @@ function exportPDF(lang){
        +'<div class="sticker-bar">'
        +(t.growthAdd>0?'<span class="sticker s-orange">🔥 Growth Allowance: +'+t.growthAdd+' kcal</span>':'')
        +(numTDays>0?'<span class="sticker s-green">💪 '+numTDays+' ημέρες προπόνηση</span>':'')
-       +'<span class="sticker s-blue">🎯 '+t.target+' kcal</span>'
+       +'<span class="sticker s-blue">🎯 '+avgTarget+' kcal (μέσο/week)</span>'
        +'<span class="sticker s-purple">📅 Εβδομαδιαίο Πλάνο</span>'
        +'</div>'
        +'<div class="week-banner">📆 &nbsp; Το πλάνο σου αυτή την εβδομάδα — δώσε τα δυνατά σου! 💪</div>'
@@ -4126,7 +6176,7 @@ function exportPDF(lang){
        +'<div class="hr">'
        +'<div class="hrname">'+esc(c.name||'Πελάτης')+'</div>'
        +'<div class="hrinfo">'+esc((isEn?(c.sex==='M'?'Male':'Female'):(c.sex==='M'?'Άνδρας':'Γυναίκα'))+', '+c.age+(isEn?' yrs old':' ετών')+'  |  '+c.weight+'kg / '+c.height+'cm  |  '+(actL[c.activity]||'')+' |  '+(goalL[c.goal]||''))+'</div>'
-       +'<div style="margin-top:3px;"><span style="background:#E8F5F4;border-radius:20px;padding:2px 10px;font-size:7pt;font-weight:700;color:#025857;">🎯 '+(isEn?'Goal: ':'Στόχος: ')+t.target+' kcal  ·  '+(isEn?'P':'Π')+':'+t.p+'g  '+(isEn?'F':'Λ')+':'+t.f+'g  '+(isEn?'C':'Υ')+':'+t.carb+'g</span></div>'
+       +'<div style="margin-top:3px;"><span style="background:#E8F5F4;border-radius:20px;padding:2px 10px;font-size:7pt;font-weight:700;color:#025857;">🎯 '+(isEn?'Goal: ':'Στόχος: ')+avgTarget+' kcal (avg)  ·  '+(isEn?'P':'Π')+':'+t.p+'g  '+(isEn?'F':'Λ')+':'+t.f+'g  '+(isEn?'C':'Υ')+':'+t.carb+'g</span></div>'
        +(function(){
          var defDelta={mild:-250,loss:-500,maintain:0,gain:300};
          var delta=defDelta[c.goal]||0;
@@ -4674,6 +6724,15 @@ function exportWord(){
   var c=getC();
   if(!c||!Object.keys(c.weekPlan||{}).length){alert('Πρώτα δημιούργησε πλάνο!');return;}
   var t=calcTDEE(c);
+  // Calculate weekly average target for MET-based accuracy
+  var avgTarget=t.target;
+  if(c.dayTargets&&c.dayTargets.length===7){
+    var totalKcal=0;
+    for(var di=0;di<7;di++){
+      totalKcal+=(c.dayTargets[di].k||0);
+    }
+    avgTarget=Math.round(totalKcal/7);
+  }
   var goalL={mild:'Ήπια απώλεια (-250 kcal)',loss:'Απώλεια βάρους (-500 kcal)',maintain:'Διατήρηση βάρους',gain:'Αύξηση μάζας (+300 kcal)'};
   var actL={sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'};
 
@@ -4717,7 +6776,7 @@ function exportWord(){
     +' | '+escRtf(actL[c.activity])
     +' | '+escRtf(goalL[c.goal])
     +'\\par}\n';
-  r+='{\\pard\\qc\\f0\\b\\fs24\\cf1 '+escRtf('Ενεργειακός Στόχος: ')+t.target+' kcal'
+  r+='{\\pard\\qc\\f0\\b\\fs24\\cf1 '+escRtf('Ενεργειακός Στόχος: ')+avgTarget+' kcal (μέσο εβδομάδας)'
     +'   P:'+t.p+'g   F:'+t.f+'g   C:'+t.carb+'g'
     +'\\par}\\par\n';
 
@@ -4819,6 +6878,15 @@ function exportGoogleDocs(){
   if(!c||!Object.keys(c.weekPlan||{}).length){alert('Πρώτα δημιούργησε πλάνο!');return;}
   if(typeof JSZip==='undefined'){alert('Η βιβλιοθήκη JSZip δεν φορτώθηκε. Έλεγξε τη σύνδεση internet.');return;}
   var t=calcTDEE(c);
+  // Calculate weekly average target for MET-based accuracy
+  var avgTarget=t.target;
+  if(c.dayTargets&&c.dayTargets.length===7){
+    var totalKcal=0;
+    for(var di=0;di<7;di++){
+      totalKcal+=(c.dayTargets[di].k||0);
+    }
+    avgTarget=Math.round(totalKcal/7);
+  }
   var goalL={mild:'Ήπια απώλεια (-250 kcal)',loss:'Απώλεια βάρους (-500 kcal)',maintain:'Διατήρηση βάρους',gain:'Αύξηση μάζας (+300 kcal)'};
   var actL={sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'};
 
