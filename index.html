@@ -3121,7 +3121,8 @@ function buildMacroPresetHtml(c,t){
     +'<div class="macro-preset-btns">'
     +'<button class="macro-preset-btn'+(dietType==='normal'?' active':'')+'" onclick="setDietType(\'normal\')" title="Κανονική διατροφή">🍗 Κανονική</button>'
     +'<button class="macro-preset-btn'+(dietType==='vegetarian'?' active':'')+'" onclick="setDietType(\'vegetarian\')" title="Χορτοφαγική διατροφή">🥬 Χορτοφαγική</button>'
-    +'<button class="macro-preset-btn'+(dietType==='vegan'?' active':'')+'" onclick="setDietType(\'vegan\')" title="Веганική διατροφή">🌱 Веганι</button>'
+    +'<button class="macro-preset-btn'+(dietType==='vegan'?' active':'')+'" onclick="setDietType(\'vegan\')" title="Веγανική διατροφή">🌱 Веγανι</button>'
+    +'<button class="macro-preset-btn'+(dietType==='keto'?' active':'')+'" onclick="setDietType(\'keto\')" title="Κετογονική διατροφή">⚡ Κετογονική</button>'
     +'</div>';
   if(preset==='custom'){
     html+='<div class="macro-custom-row">'
@@ -3147,6 +3148,16 @@ function buildMacroPresetHtml(c,t){
 function setDietType(dtype){
   var c=getC();if(!c)return;
   c.dietType=dtype;
+  // If keto is selected, automatically set keto macros
+  if(dtype==='keto'){
+    c.macroPreset='keto';
+    var ketoPreset=MACRO_PRESETS['keto'];
+    if(ketoPreset){
+      c.macroP=ketoPreset.p;
+      c.macroF=ketoPreset.f;
+      c.macroC=ketoPreset.c;
+    }
+  }
   save();
   onClientChange();
 }
