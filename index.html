@@ -2030,12 +2030,22 @@ function calcTDEE(c){
   var goalDelta=(c.customGoalDelta!=null)?c.customGoalDelta:def[c.goal]||0;
   var target=tdee+goalDelta+growthAdd;
   // Per-day MET targets: each day gets its own exercise kcal based on assigned activities
+  // CRITICAL: Growth allowance applies ONLY on rest days (when no training occurs)
+  // - Rest days (R): baseTDEE + goalDelta + growthAdd (for development)
+  // - Train days (T): baseTDEE + exercise kcal + goalDelta (no growth allowance needed, training provides stimulus)
   var baseTDEE=neat;
-  var restTarget=usedMET?baseTDEE+goalDelta+growthAdd:target;
-  var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta+growthAdd:target;
+  var restTarget=usedMET?baseTDEE+goalDelta+growthAdd:tdee+goalDelta+growthAdd;
+  var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta:tdee+goalDelta;  // NO growthAdd on training days
   var trainTargetByDay=[];
   for(var tdi=0;tdi<7;tdi++){
-    trainTargetByDay.push(usedMET?Math.round(baseTDEE+metKcal.byDay[tdi]+goalDelta+growthAdd):target);
+    var isTrainDay=(c.trainDays&&c.trainDays[tdi])?true:false;
+    if(usedMET){
+      // MET-based: use per-day exercise kcal
+      trainTargetByDay.push(Math.round(baseTDEE+metKcal.byDay[tdi]+goalDelta+(isTrainDay?0:growthAdd)));
+    } else {
+      // Activity factor-based: differentiate training vs rest days
+      trainTargetByDay.push(isTrainDay?Math.round(tdee+goalDelta):Math.round(tdee+goalDelta+growthAdd));
+    }
   }
   // Hydration: weight×35ml base; +500ml per training hour on training days
   var baseHydration=Math.round(c.weight*35);
