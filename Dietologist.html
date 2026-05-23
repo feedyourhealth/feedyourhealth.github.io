@@ -2489,7 +2489,7 @@ function renderMain(){
     +buildMetHtml(c,t)
     +(t.isMinor?'<div class="minor-banner">👶 Ανήλικος αθλητής — Φόρμουλα Schofield (1985) &nbsp;|&nbsp; Growth Allowance: +'+t.growthAdd+' kcal &nbsp;|&nbsp; Ηλικία: '+c.age+' ετών</div>':'')
     +'<div class="tdee-row"><div class="ti"><div class="tl">BMR'+(t.isMinor?' <span class="formula-tag cunningham" style="font-size:8px">Schofield</span>':'')+'</div><div class="tv" id="v-bmr">'+t.bmr+' kcal</div></div>'
-    +'<div class="ti"><div class="tl">TDEE'+(t.usedMET?' (MET)':'')+'</div><div class="tv" id="v-tdee">'+t.tdee+' kcal'+(t.usedMET?'<span class="v-ex-chip" id="v-exday">+'+t.exerciseDaily+'</span>':'')+'</div></div>'
+    +'<div class="ti"><div class="tl">TDEE'+(t.usedMET?' (MET)':'')+'</div><div class="tv" id="v-tdee">'+(t.usedMET?('NEAT: '+t.neat+' kcal'):(t.tdee+' kcal'))+(t.usedMET?'<div style="font-size:12px;color:#666;margin-top:4px;">Training: '+t.trainTarget+' | Rest: '+t.restTarget+'</div>':'')+'</div></div>'
     +'<div class="ti"><div class="tl">Στόχος'+'<span style="font-size:9px;color:#666;margin-left:4px" title="Μέσο ημερήσιο στόχο (NEAT + άσκηση + ανάπτυξη + στόχος)">ℹ️</span>'+'</div><div class="tv" id="v-target">'+t.target+' kcal</div></div>'
     +'<div class="ti"><div class="tl">Πρωτεΐνη</div><div class="tv b" id="v-macros">'+t.p+'g <span style="font-size:10px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span></div></div></div>'
     +(t.ea!==null?'<div class="ea-row'+(t.ea<30?' ea-danger':t.ea<45?' ea-warn':' ea-ok')+'" id="ea-row">⚡ Energy Availability: <b>'+t.ea+' kcal/kgLBM</b> &nbsp;'+(t.ea<30?'🔴 Κίνδυνος RED-S — ανεπαρκής ενεργειακή διαθεσιμότητα':t.ea<45?'🟡 Οριακή EA — παρακολούθηση απαραίτητη':'🟢 Φυσιολογική EA')+'</div>':'')+
