@@ -5303,13 +5303,33 @@ function genPlan(){
 // SUPPLEMENT RECOMMENDATIONS — SCIENTIFICALLY-BACKED
 // ══════════════════════════════════════════════════════════════════════════════
 function getSupplementRecommendations(c){
-  if(!c||c.dietType==='normal')return'';
+  if(!c)return'';
+  var isNormal=(c.dietType==='normal');
+  var isKeto=(c.dietType==='keto');
   var isVegan=(c.dietType==='vegan');
+  var isVegetarian=(c.dietType==='vegetarian');
   var rec='<div style="background:#f5f5f5;border-left:4px solid #ff9800;padding:12px 14px;margin:12px 0;border-radius:4px;font-size:12px;line-height:1.6">'
-    +'<b style="color:#e65100">💊 Προτάσεις Συμπληρωμάτων (AND 2025)</b><br/><br/>';
+    +'<b style="color:#e65100">💊 Προτάσεις Συμπληρωμάτων</b><br/><br/>';
 
+  // NORMAL DIET
+  if(isNormal){
+    rec+='<b>🍗 Κανονική Διατροφή:</b><br/>'
+      +'&nbsp;&nbsp;☀️ <b>Vitamin D3:</b> 10-25 mcg/day (ιδιαίτερα χειμώνα)<br/>'
+      +'&nbsp;&nbsp;💪 <b>Magnesium:</b> 300-400mg/day (σπόροι, καρύδια)<br/>'
+      +'&nbsp;&nbsp;🛡️ <b>Zinc:</b> 8-11mg/day (κόκκινο κρέας, στρείδια)<br/>'
+      +'&nbsp;&nbsp;⚡ <b>B Complex:</b> B6, B3 (ψάρι, κοτόπουλο, αυγά)<br/>'
+      +'&nbsp;&nbsp;❤️ <b>Omega-3:</b> 2-3x ψάρι/εβδάδα (σολομός)<br/><br/>';
+  }
+  // KETOGENIC DIET
+  else if(isKeto){
+    rec+='<b>⚡ Κετογονική Διατροφή:</b><br/>'
+      +'&nbsp;&nbsp;🧂 <b>Electrolytes (ΚΡΙΤΙΚΟ):</b> Νάτριο 3-5g, Κάλιο 2-3g, Μάγνησιο 300-400mg<br/>'
+      +'&nbsp;&nbsp;☀️ <b>Vitamin D3:</b> 10-25 mcg/day<br/>'
+      +'&nbsp;&nbsp;🥗 <b>Fiber:</b> Σκούρα λαχανικά, ψίλια, χία σπόροι<br/>'
+      +'&nbsp;&nbsp;💡 <b>MCT Oil:</b> Optional, για ketone energy (μετά εβδάδα 1)<br/><br/>';
+  }
   // B12 — MANDATORY for vegan, recommended for vegetarian
-  if(isVegan){
+  else if(isVegan){
     rec+='<b>Vitamin B12</b> (υποχρεωτικό για веγάν):<br/>'
       +'&nbsp;&nbsp;💉 Ημερήσια: 10 mcg supplement OR 25-100 mcg fortified foods (3+ times)<br/>'
       +'&nbsp;&nbsp;💉 Εβδομαδιαία: 2000 mcg supplement (κάθε 7 ημέρες)<br/>'
@@ -5342,8 +5362,15 @@ function getSupplementRecommendations(c){
     +'&nbsp;&nbsp;🌱 ALA: Σπόροι (flaxseed 1tbsp, chia 1tbsp, walnuts 1oz)<br/>'
     +'&nbsp;&nbsp;🍃 EPA/DHA: '+(isVegan?'Algae supplement 200-300mg/day':'Consider algae supplement (limited conversion)')+'<br/><br/>';
 
+  // Magnesium & Zinc for plant-based diets
+  if(isVegan || isVegetarian){
+    rec+='<b>Magnesium & Zinc:</b><br/>'
+      +'&nbsp;&nbsp;💪 Magnesium: 300-400mg/day (σπόροι, καρύδια, dark chocolate)<br/>'
+      +'&nbsp;&nbsp;🛡️ Zinc: 8-11mg/day supplement (limited in plant sources)<br/><br/>';
+  }
+
   // Other micronutrients
-  rec+='<b>Άλλα:</b> Ιωδίνη (iodized salt), Ψευδάργυρος (legumes/seeds), Σελήνιο (brazil nuts)<br/>';
+  rec+='<b>Άλλα:</b> Ιωδίνη (αλατισμένο αλάτι), Σελήνιο (2-3 brazil nuts/day), Vitamin B6<br/>';
   rec+='</div>';
   return rec;
 }
