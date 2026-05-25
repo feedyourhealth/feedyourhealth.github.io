@@ -2350,6 +2350,19 @@ var TMPLS=JSON.parse(JSON.stringify(DEFAULT_TMPLS));
 // User-saved custom plan templates
 var customTemplates=[];
 
+// ══════════════════════════════════════════════════════════════════════════════
+// CHEF-INSPIRED MEAL RECIPES — Culinary-sensible combinations
+// ══════════════════════════════════════════════════════════════════════════════
+var MEAL_RECIPES=[
+  {id:'grilled_salmon_rice',name:'Σολομός Ψητός με Ρύζι & Σάλτσα',foods:[{n:'Σολομός (ψητός)',g:150},{n:'Ρύζι καστανό (βρ.)',g:80},{n:'Μπρόκολο',g:120},{n:'Σάλτσα λεμονιού',g:15},{n:'Ελαιόλαδο',g:8}],kcal:420,macro:{p:32,f:15,c:42},tags:['Mediterranean','Ψάρι','Ω3','Υγιεινό']},
+  {id:'chicken_lemon_vegetables',name:'Κοτόπουλο Λεμονάτο με Λαχανικά',foods:[{n:'Κοτόπουλο (στήθος)',g:150},{n:'Λεμόνι (χυμός)',g:20},{n:'Σπανάκι',g:100},{n:'Ντομάτα',g:100},{n:'Ελαιόλαδο',g:10}],kcal:340,macro:{p:38,f:12,c:18},tags:['Ελληνικό','Κοτόπουλο','Ελαφρύ']},
+  {id:'vegan_buddha_bowl',name:'Buddha Bowl - Κινόα, Νοτ, Λαχανικά',foods:[{n:'Κινόα (βρ.)',g:80},{n:'Ρεβίθια (βρ.)',g:100},{n:'Σβέτα πατάτα',g:100},{n:'Καλάμι',g:80},{n:'Ελαιόλαδο',g:10}],kcal:380,macro:{p:14,f:12,c:52},tags:['Vegan','HighFiber','Energizing']},
+  {id:'vegan_lentil_curry',name:'Φακή Κάρι με Καρότο & Μπρόκολο',foods:[{n:'Φακές',g:120},{n:'Καρότο',g:80},{n:'Μπρόκολο',g:100},{n:'Κοκος γάλα light',g:100},{n:'Ρύζι (βρ.)',g:60}],kcal:340,macro:{p:16,f:8,c:52},tags:['Vegan','Curry','Ζεστό']},
+  {id:'keto_steak_butter',name:'Μπριζόλα με Αβοκάντο & Σπανάκι',foods:[{n:'Μοσχάρι (ψητό)',g:200},{n:'Αβοκάντο',g:80},{n:'Σπανάκι',g:120},{n:'Βούτυρο',g:12},{n:'Αλάτι & μπαχαρικά',g:5}],kcal:450,macro:{p:42,f:28,c:8},tags:['Keto','Κρέας','LowCarb']},
+  {id:'keto_salmon_avocado',name:'Σολομός με Αβοκάντο & Σάλτσα Χυμό Λεμονιού',foods:[{n:'Σολομός (ψητός)',g:180},{n:'Αβοκάντο',g:100},{n:'Λεμόνι (χυμός)',g:15},{n:'Αλάτι',g:3},{n:'Πιπέρι',g:2}],kcal:420,macro:{p:35,f:28,c:6},tags:['Keto','Ψάρι','Ω3']},
+  {id:'quick_chicken_rice',name:'Κοτόπουλο Ψητό + Ρύζι (Express)',foods:[{n:'Κοτόπουλο (στήθος)',g:150},{n:'Ρύζι (ψάχνη)',g:80},{n:'Καρότο',g:80},{n:'Σάλτσα',g:20}],kcal:360,macro:{p:38,f:8,c:38},tags:['Γρήγορη','Έξπρες','Κοτόπουλο']}
+];
+
 // Maps each food category to the macro it primarily contributes
 // Used by scalePlan for per-macro scaling
 var MACRO_TYPE={
@@ -5133,6 +5146,22 @@ function ensureFoodDiversity(weekPlan, maxRepeatPerWeek) {
   return overuseFood; // Return foods to replace
 }
 
+// ── Chef-Inspired Recipe Selection ────────────────────────────────────────────
+function findBestRecipe(dietType, targetKcal, mealType){
+  if(!MEAL_RECIPES||!MEAL_RECIPES.length)return null;
+  var dietTagMap={'normal':['Mediterranean','Ελληνικό','Ψάρι'],'vegan':['Vegan'],'vegetarian':['Vegetarian'],'keto':['Keto','LowCarb']};
+  var dietTags=dietTagMap[dietType]||[];
+  var candidates=MEAL_RECIPES.filter(function(recipe){
+    var dietMatch=dietTags.some(function(tag){return recipe.tags.indexOf(tag)!==-1;});
+    var calMatch=(recipe.kcal >= targetKcal*0.80) && (recipe.kcal <= targetKcal*1.20);
+    return dietMatch && calMatch;
+  });
+  if(!candidates.length)return null;
+  candidates.sort(function(a,b){return Math.abs(a.kcal-targetKcal) - Math.abs(b.kcal-targetKcal);});
+  var best=candidates[0];
+  return{foods:JSON.parse(JSON.stringify(best.foods)),name:best.name,tags:best.tags,originalKcal:best.kcal,recipeId:best.id};
+}
+
 // Smart meal generation with pairing rules + saved combos + BREAKFAST CONSTRAINTS
 function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName) {
   // Priority 1: Check saved combos first
@@ -5224,6 +5253,14 @@ function genPlan(){
       for(var mi=0;mi<tmplDays[d].length;mi++){
         var meal = tmplDays[d][mi];
         var targetKcal = eff[d].meals[mi].k;  // Per-meal calorie target
+
+        // ✨ Priority 0: Check Chef-Inspired Recipes (culinary-sensible combinations)
+        var recipeMeal = findBestRecipe(c.dietType, targetKcal, meal.name);
+        if(recipeMeal && recipeMeal.foods && recipeMeal.foods.length > 0){
+          meal.foods = JSON.parse(JSON.stringify(recipeMeal.foods));
+          meal.recipeId = recipeMeal.recipeId;  // Track which recipe was used
+          continue;  // Use chef-inspired recipe
+        }
 
         // Priority 1: Check saved combos (user-approved, fastest)
         if(savedCombos && savedCombos.length > 0){
