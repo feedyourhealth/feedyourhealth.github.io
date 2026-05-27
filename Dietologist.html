@@ -654,7 +654,7 @@ var FOODS={
 'Γαρίδες γίγαντες (βρ.)':{k:115,p:27,c:0,f:0.5,fi:0,cat:'Ψάρια'},
 'Καβούρι (βρ.)':{k:89,p:19,c:0,f:0.7,fi:0,cat:'Ψάρια'},
 'Καλαμαράκια (ψητά)':{k:92,p:15.6,c:3.1,f:1.4,fi:0,cat:'Ψάρια'},
-'Φιδάκι (ψητό)':{k:116,p:24,c:1.2,f:1,fi:0,cat:'Ψάρια'}
+'Φιδάκι (ψητό)':{k:116,p:24,c:1.2,f:1,fi:0,cat:'Ψάρια'},
 'Moving Mountains Burger':{k:270,p:14.3,c:6.1,f:19.8,fi:5,cat:'Κρέας'},
 };
 
@@ -6439,6 +6439,25 @@ function removeOatsFromMainMeals(tmplDays) {
   return tmplDays;
 }
 
+// ✅ Reorder meals to standard sequence: Πρωινό → Γεύμα → Ενδιάμεσο → Βραδινό
+function reorderMealsToStandardSequence(tmplDays){
+  var reorderedDays=[];
+  tmplDays.forEach(function(day){
+    var newDay=[];
+    var breakfast=day.find(function(m){return m.name.includes('Πρωινό');});
+    var lunch=day.find(function(m){return m.name.includes('Μεσημεριανό');});
+    var snacks=day.filter(function(m){return m.name.includes('Ενδιάμεσο');});
+    var dinner=day.find(function(m){return m.name.includes('Βραδινό');});
+    if(breakfast)newDay.push(breakfast);
+    if(lunch)newDay.push(lunch);
+    if(snacks&&snacks.length>0)newDay.push(snacks[0]);
+    if(dinner)newDay.push(dinner);
+    if(newDay.length===0)newDay=day;
+    reorderedDays.push(newDay);
+  });
+  return reorderedDays;
+}
+
 function genPlan(){
   var c=getC();if(!c)return;var t=calcTDEE(c);c.weekPlan={};
   // Build template key: dietType_goal (e.g., 'vegetarian_loss') or just goal (e.g., 'loss')
@@ -6458,6 +6477,8 @@ function genPlan(){
   var tmplDays=[];
   for(var d=0;d<7;d++)tmplDays.push(tmpl[d]||tmpl[0]);
   var excl=c.foodExclude||[];
+  // ✅ Reorder meals to standard sequence before other operations
+  tmplDays=reorderMealsToStandardSequence(tmplDays);
   // Initial Mediterranean pipeline on templates ONLY
   tmplDays=removeFYHFromMainMeals(tmplDays);           // 0. FYH έξω από κύρια γεύματα (χειροκίνητα)
   tmplDays=removeOatsFromMainMeals(tmplDays);          // 0β. Βρώμη ΜΟΝΟ σε πρωινό (χειροκίνητα)
