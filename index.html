@@ -7019,52 +7019,82 @@ function exportBackup(){
 function importBackup(){
   var inp=document.createElement('input');
   inp.type='file';inp.accept='.json';
-  inp.onchange=function(){
-    var f=inp.files[0];if(!f)return;
-    var r=new FileReader();
-    r.onload=function(e){
-      try{
-        var d=JSON.parse(e.target.result);
-        if(!d.clients||!Array.isArray(d.clients))throw new Error('Λάθος format αρχείου');
-        var incoming=d.clients.length;
-        var existing=clients.length;
-        // Offer merge or replace
-        var choice=existing>0
-          ?window.confirm(
-              'Βρέθηκαν '+incoming+' πελάτες στο αρχείο.\n\n'
-              +'ΟΚ = Προσθήκη στους υπάρχοντες ('+existing+' + '+incoming+')\n'
-              +'Άκυρο = Αντικατάσταση (διαγραφή υπαρχόντων)')
-          :true; // no existing clients, just load
-        if(choice===null)return; // user pressed X
-        if(choice){
-          // Merge — avoid duplicate IDs
-          var existingIds=clients.map(function(c){return c.id;});
-          var toAdd=d.clients.filter(function(c){return existingIds.indexOf(c.id)<0;});
-          var dupes=d.clients.length-toAdd.length;
-          clients=clients.concat(toAdd);
-          if(dupes>0)alert(dupes+' πελάτης/ες παραλείφθηκαν (ίδιο ID υπάρχει ήδη).');
-        } else {
-          // Replace
-          clients=d.clients;
+  inp.style.display='none';
+  inp.onchange=function(event){
+    console.log('File selected:', event);
+    try{
+      var f=inp.files[0];
+      console.log('File object:', f);
+      if(!f){console.log('No file');return;}
+      console.log('File name:', f.name, 'Size:', f.size);
+
+      // Remove from DOM after selection
+      setTimeout(function(){if(inp.parentNode)inp.parentNode.removeChild(inp);},0);
+      var r=new FileReader();
+      r.onload=function(e){
+        console.log('FileReader onload triggered');
+        try{
+          var d=JSON.parse(e.target.result);
+          console.log('JSON parsed, clients count:', d.clients?d.clients.length:'no clients array');
+          if(!d.clients||!Array.isArray(d.clients))throw new Error('Λάθος format αρχείου');
+          var incoming=d.clients.length;
+          var existing=clients.length;
+          console.log('Incoming:', incoming, 'Existing:', existing);
+          // Offer merge or replace
+          var choice=existing>0
+            ?window.confirm(
+                'Βρέθηκαν '+incoming+' πελάτες στο αρχείο.\n\n'
+                +'ΟΚ = Προσθήκη στους υπάρχοντες ('+existing+' + '+incoming+')\n'
+                +'Άκυρο = Αντικατάσταση (διαγραφή υπαρχόντων)')
+            :true; // no existing clients, just load
+          console.log('User choice:', choice);
+          if(choice===null)return; // user pressed X
+          if(choice){
+            // Merge — avoid duplicate IDs
+            var existingIds=clients.map(function(c){return c.id;});
+            var toAdd=d.clients.filter(function(c){return existingIds.indexOf(c.id)<0;});
+            var dupes=d.clients.length-toAdd.length;
+            clients=clients.concat(toAdd);
+            console.log('Merged. New total:', clients.length);
+            if(dupes>0)alert(dupes+' πελάτης/ες παραλείφθηκαν (ίδιο ID υπάρχει ήδη).');
+          } else {
+            // Replace
+            clients=d.clients;
+            console.log('Replaced. New total:', clients.length);
+          }
+          // Restore custom templates if present
+          if(d.customTemplates&&Array.isArray(d.customTemplates)){
+            customTemplates=d.customTemplates;
+          }
+          curId=null;
+          saveNow();
+          renderSB();
+          var loadedN=choice?d.clients.length-(d.clients.length-(clients.length-existing)):incoming;
+          console.log('Success! Showing confirmation');
+          document.getElementById('main').innerHTML='<div class="empty">'
+            +'<div style="font-size:44px;margin-bottom:12px">✅</div>'
+            +'<div style="font-size:15px;font-weight:600;margin-bottom:6px">Εισαγωγή επιτυχής!</div>'
+            +'<div style="font-size:12px;color:#555">'+clients.length+' πελάτες συνολικά'
+            +(d.exportedAt?' · Backup από: '+d.exportedAt.slice(0,10):'')
+            +'</div></div>';
+        }catch(ex){
+          console.error('Error in onload:', ex);
+          alert('Σφάλμα κατά την εισαγωγή: '+ex.message);
         }
-        // Restore custom templates if present
-        if(d.customTemplates&&Array.isArray(d.customTemplates)){
-          customTemplates=d.customTemplates;
-        }
-        curId=null;
-        saveNow();
-        renderSB();
-        var loadedN=choice?d.clients.length-(d.clients.length-(clients.length-existing)):incoming;
-        document.getElementById('main').innerHTML='<div class="empty">'
-          +'<div style="font-size:44px;margin-bottom:12px">✅</div>'
-          +'<div style="font-size:15px;font-weight:600;margin-bottom:6px">Εισαγωγή επιτυχής!</div>'
-          +'<div style="font-size:12px;color:#555">'+clients.length+' πελάτες συνολικά'
-          +(d.exportedAt?' · Backup από: '+d.exportedAt.slice(0,10):'')
-          +'</div></div>';
-      }catch(ex){alert('Σφάλμα κατά την εισαγωγή: '+ex.message);}
-    };
-    r.readAsText(f);
+      };
+      r.onerror=function(){
+        console.error('FileReader error');
+        alert('Σφάλμα κατά την ανάγνωση αρχείου');
+      };
+      console.log('Starting to read file');
+      r.readAsText(f);
+    }catch(ex){
+      console.error('Error in onchange:', ex);
+      alert('Σφάλμα: '+ex.message);
+    }
   };
+  // Add to DOM before clicking for better browser compatibility
+  document.body.appendChild(inp);
   inp.click();
 }
 
