@@ -136,6 +136,39 @@
   </div>
 
   <script>
+    // Check if logged in on page load
+    window.addEventListener('load', function() {
+      const currentUser = localStorage.getItem('currentUser');
+      if (currentUser) {
+        showWelcomePage();
+      }
+    });
+
+    function showWelcomePage() {
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      document.body.innerHTML = `
+        <div class="container" style="text-align: center; max-width: 600px;">
+          <div style="font-size: 60px; margin-bottom: 20px;">✅</div>
+          <h1 style="color: #025857; font-size: 32px; margin-bottom: 10px;">Καλώς ήρθατε!</h1>
+          <p style="color: #666; font-size: 18px; margin-bottom: 30px;">Είστε συνδεδεμένοι ως: <strong>${user.username}</strong></p>
+          <p style="color: #999; margin-bottom: 30px;">Email: ${user.email}</p>
+
+          <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <p style="color: #333; font-size: 14px;">📋 Το Dietologist App φορτώνει σύντομα...</p>
+          </div>
+
+          <button onclick="logout()" style="background: #ff6b35; padding: 12px 30px; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px;">
+            🚪 Αποσύνδεση
+          </button>
+        </div>
+      `;
+    }
+
+    function logout() {
+      localStorage.removeItem('currentUser');
+      location.reload();
+    }
+
     function log(msg) {
       const logEl = document.getElementById('debugLog');
       const timestamp = new Date().toLocaleTimeString();
