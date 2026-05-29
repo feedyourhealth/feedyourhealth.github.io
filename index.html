@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8">
-  <title>Dietologist Cloud - Login</title>
+  <title>Dietologist Cloud - Login (Debug)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -86,6 +86,17 @@
       display: none;
     }
     .error.show { display: block; }
+    .debug {
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-size: 11px;
+      font-family: monospace;
+      color: #333;
+      max-height: 150px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
@@ -117,46 +128,63 @@
       <input type="password" id="registerPass2" placeholder="Επιβεβαίωση κωδικού" />
       <button onclick="handleRegister()">Δημιουργία Λογαριασμού</button>
     </div>
+
+    <div class="debug" id="debug">
+      <strong>📋 Debug Log:</strong><br>
+      <div id="debugLog"></div>
+    </div>
   </div>
 
   <script>
+    function log(msg) {
+      const logEl = document.getElementById('debugLog');
+      const timestamp = new Date().toLocaleTimeString();
+      logEl.innerHTML += `[${timestamp}] ${msg}<br>`;
+      logEl.parentElement.scrollTop = logEl.parentElement.scrollHeight;
+      console.log(msg);
+    }
+
     function switchTab(tab) {
-      // Hide all forms
       document.getElementById('login').classList.remove('active');
       document.getElementById('register').classList.remove('active');
-
-      // Deactivate all tabs
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-
-      // Show selected form and activate tab
       document.getElementById(tab).classList.add('active');
       event.target.classList.add('active');
-
-      // Clear errors
       document.getElementById('loginError').classList.remove('show');
       document.getElementById('registerError').classList.remove('show');
+      log(`📌 Switched to: ${tab}`);
     }
 
     function showError(formType, msg) {
       const errorEl = document.getElementById(formType + 'Error');
       errorEl.textContent = msg;
       errorEl.classList.add('show');
+      log(`❌ Error (${formType}): ${msg}`);
     }
 
     function handleLogin() {
       const user = document.getElementById('loginUser').value.trim();
       const pass = document.getElementById('loginPass').value;
 
+      log(`🔐 Login attempt: user="${user}"`);
+
       if (!user || !pass) {
         showError('login', 'Συμπληρώστε όλα τα πεδία');
         return;
       }
 
-      // Get users from localStorage
       const users = JSON.parse(localStorage.getItem('fallback_users') || '{}');
+      log(`📦 Users in storage: ${JSON.stringify(Object.keys(users))}`);
 
-      if (!users[user] || users[user].password !== pass) {
-        showError('login', 'Λάθος όνομα χρήστη ή κωδικός');
+      if (!users[user]) {
+        showError('login', 'Χρήστης δεν βρέθηκε');
+        log(`❌ User "${user}" not found`);
+        return;
+      }
+
+      if (users[user].password !== pass) {
+        showError('login', 'Λάθος κωδικός');
+        log(`❌ Wrong password for user "${user}"`);
         return;
       }
 
@@ -167,6 +195,7 @@
         id: users[user].id
       }));
 
+      log(`✅ Login successful for "${user}"!`);
       alert('✅ Σύνδεση επιτυχής!');
       window.location.reload();
     }
@@ -176,6 +205,8 @@
       const email = document.getElementById('registerEmail').value.trim();
       const pass = document.getElementById('registerPass').value;
       const pass2 = document.getElementById('registerPass2').value;
+
+      log(`➕ Register attempt: user="${user}", email="${email}"`);
 
       if (!user || !email || !pass || !pass2) {
         showError('register', 'Συμπληρώστε όλα τα πεδία');
@@ -192,15 +223,14 @@
         return;
       }
 
-      // Get users from localStorage
       const users = JSON.parse(localStorage.getItem('fallback_users') || '{}');
 
       if (users[user]) {
         showError('register', 'Αυτό το όνομα χρήστη υπάρχει ήδη');
+        log(`❌ User "${user}" already exists`);
         return;
       }
 
-      // Create new user
       users[user] = {
         id: 'u' + Date.now(),
         username: user,
@@ -209,16 +239,19 @@
       };
 
       localStorage.setItem('fallback_users', JSON.stringify(users));
-
+      log(`✅ User "${user}" registered! Data: ${JSON.stringify(users[user])}`);
       alert('✅ Λογαριασμός δημιουργήθηκε! Συνδεθείτε.');
 
-      // Clear form and switch to login
       document.getElementById('registerUser').value = '';
       document.getElementById('registerEmail').value = '';
       document.getElementById('registerPass').value = '';
       document.getElementById('registerPass2').value = '';
       document.querySelector('.tab').click();
     }
+
+    // Initial log
+    log('🚀 App started');
+    log(`📦 Current users: ${JSON.stringify(Object.keys(JSON.parse(localStorage.getItem('fallback_users') || '{}')))}`)
   </script>
 </body>
 </html>
