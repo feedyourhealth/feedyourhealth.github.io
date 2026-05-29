@@ -2452,8 +2452,30 @@ function calcTDEE(c){
     // Cunningham: more accurate for athletes — uses lean body mass
     bmr=500+22*c.lbm;
   } else {
-    // Mifflin-St Jeor (default)
-    bmr=c.sex==='M'?10*c.weight+6.25*c.height-5*c.age+5:10*c.weight+6.25*c.height-5*c.age-161;
+    // ✅ PRIORITY SYSTEM for BMR (Katch-McArdle when possible)
+    // Priority 1: Measured Lean Mass (NEW: c.leanmass)
+    if(c.leanmass && c.leanmass>0){
+      // Katch-McArdle using measured lean mass
+      bmr=370+21.6*c.leanmass;
+      t.bmrMethod='Katch-McArdle (Measured LM)';
+      t.ffmUsed=c.leanmass;
+    }
+    // Priority 2: Calculated FFM from Body Fat %
+    else if((c.bf || 0)>0 && c.weight>0){
+      // Calculate FFM from body fat percentage
+      var ffm=c.weight*(1-(c.bf/100));
+      // Katch-McArdle using calculated FFM
+      bmr=370+21.6*ffm;
+      t.bmrMethod='Katch-McArdle (Calc FFM)';
+      t.ffmUsed=+(ffm.toFixed(1));
+    }
+    // Priority 3: Fallback to Mifflin-St Jeor
+    else {
+      // Mifflin-St Jeor (default)
+      bmr=c.sex==='M'?10*c.weight+6.25*c.height-5*c.age+5:10*c.weight+6.25*c.height-5*c.age-161;
+      t.bmrMethod='Mifflin-St Jeor';
+      t.ffmUsed=null;
+    }
   }
   var tdee;
   var metKcal=calcMETkcal(c);
@@ -2560,6 +2582,110 @@ function calcTDEE(c){
     perTrainDay:metKcal.perTrainDay,byDay:metKcal.byDay,usedMET:usedMET,
     isMinor:isMinor,growthAdd:growthAdd,neat:neat,
     protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA,warnings:warnings};
+}
+
+// ═══ TRAINING-DAY VS REST-DAY MACRO ADJUSTMENT ═══
+// Intelligently adjust macros based on training schedule for better athletic performance
+function applyTrainingDayMacroAdjustment(eff, c){
+  if(!eff || !c || !c.trainDays || c.trainDays.length!==7) return eff;
+
+  var adjusted={};
+  var baseMacros={p:eff.p, f:eff.f, carb:eff.carb};
+  var baseKcal=eff.target;
+
+  // TRAINING DAY ADJUSTMENTS (High Carbs + High Protein)
+  // - Protein: +10% (better muscle recovery from intense training)
+  // - Carbs: +20% (muscle glycogen replenishment)
+  // - Fat: -15% (make room for extra carbs)
+  var trainProtMult=1.10;
+  var trainCarbMult=1.20;
+  var trainFatMult=0.85;
+
+  // REST DAY ADJUSTMENTS (Lower Carbs, Stable Protein, Higher Fat)
+  // - Protein: baseline (recovery still important)
+  // - Carbs: -15% (less glycogen depletion on rest days)
+  // - Fat: +15% (hormonal balance, satiety on rest days)
+  var restProtMult=1.0;
+  var restCarbMult=0.85;
+  var restFatMult=1.15;
+
+  // Apply by-day adjustments
+  adjusted.byDay=[
+    {k:eff.trainTargetByDay[0]||baseKcal, p:0, f:0, c:0},
+    {k:eff.trainTargetByDay[1]||baseKcal, p:0, f:0, c:0},
+    {k:eff.trainTargetByDay[2]||baseKcal, p:0, f:0, c:0},
+    {k:eff.trainTargetByDay[3]||baseKcal, p:0, f:0, c:0},
+    {k:eff.trainTargetByDay[4]||baseKcal, p:0, f:0, c:0},
+    {k:eff.trainTargetByDay[5]||baseKcal, p:0, f:0, c:0},
+    {k:eff.trainTargetByDay[6]||baseKcal, p:0, f:0, c:0}
+  ];
+
+  for(var d=0; d<7; d++){
+    var isTrainDay=c.trainDays[d];
+    var dayKcal=adjusted.byDay[d].k;
+
+    if(isTrainDay){
+      // TRAINING DAY: High carbs + high protein
+      var trainP=Math.round(baseMacros.p * trainProtMult);
+      var trainC=Math.round(baseMacros.carb * trainCarbMult);
+      var trainF=Math.round(baseMacros.f * trainFatMult);
+
+      // Recalculate to match exact kcal target
+      var protKcal=trainP*4;
+      var carbKcal=trainC*4;
+      var fatKcal=trainF*9;
+      var totalKcal=protKcal+carbKcal+fatKcal;
+      var surplus=dayKcal-totalKcal;
+
+      // Distribute surplus to carbs (post-training recovery)
+      if(surplus!==0){
+        trainC=Math.round(trainC+surplus/4);
+      }
+
+      adjusted.byDay[d].p=trainP;
+      adjusted.byDay[d].c=trainC;
+      adjusted.byDay[d].f=trainF;
+      adjusted.byDay[d].trainDay=true;
+    } else {
+      // REST DAY: Lower carbs, higher fat
+      var restP=Math.round(baseMacros.p * restProtMult);
+      var restC=Math.round(baseMacros.carb * restCarbMult);
+      var restF=Math.round(baseMacros.f * restFatMult);
+
+      // Recalculate to match exact kcal target
+      var restProtKcal=restP*4;
+      var restCarbKcal=restC*4;
+      var restFatKcal=restF*9;
+      var restTotalKcal=restProtKcal+restCarbKcal+restFatKcal;
+      var restSurplus=dayKcal-restTotalKcal;
+
+      // Distribute surplus to fat (hormonal health)
+      if(restSurplus!==0){
+        restF=Math.round(restF+restSurplus/9);
+      }
+
+      adjusted.byDay[d].p=restP;
+      adjusted.byDay[d].c=restC;
+      adjusted.byDay[d].f=restF;
+      adjusted.byDay[d].trainDay=false;
+    }
+  }
+
+  // Calculate weekly average for display
+  var weekP=0, weekF=0, weekC=0;
+  for(var di=0; di<7; di++){
+    weekP+=adjusted.byDay[di].p;
+    weekF+=adjusted.byDay[di].f;
+    weekC+=adjusted.byDay[di].c;
+  }
+
+  return {
+    p:Math.round(weekP/7),
+    f:Math.round(weekF/7),
+    carb:Math.round(weekC/7),
+    byDay:adjusted.byDay,
+    trainDayMacroAdjustmentEnabled:true
+  };
 }
 
 /* ── Default plan templates (one set per goal) ─────────────────────────────── */
@@ -3430,7 +3556,7 @@ function scalePlan(tmpl,tgt){
 
 var clients=[],curId=null,currentDD=null;
 
-function addClient(){var id='c'+Date.now();clients.push({id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal'});selectClient(id);}
+function addClient(){var id='c'+Date.now();clients.push({id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,leanmass:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal'});selectClient(id);}
 function deleteClient(id){clients=clients.filter(function(c){return c.id!==id;});if(curId===id){curId=null;document.getElementById('main').innerHTML='<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';}renderSB();}
 function selectClient(id){
   curId=id;
@@ -3680,7 +3806,8 @@ function renderMain(){
     +'<div class="fg fg4"><div class="fgrp"><label>Ηλικία</label><input type="number" id="inp-age" value="'+c.age+'"></div>'
     +'<div class="fgrp"><label>Βάρος (kg)</label><input type="number" id="inp-weight" value="'+c.weight+'"></div>'
     +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+c.height+'"></div>'
-    +'<div class="fgrp"><label>Λίπος σώματος % <span style="font-size:9px;color:#888;font-weight:400">(τελευταία μέτρηση)</span></label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div></div>'
+    +'<div class="fgrp"><label>% Σώμα. Λίπος <span style="font-size:9px;color:#888;font-weight:400">(μέτρηση)</span></label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div>'
+    +'<div class="fgrp"><label>Lean Mass (kg) <span style="font-size:9px;color:#888;font-weight:400">(FFM)</span></label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63"></div></div>'
     +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' <span style="font-size:10px;color:#888">(NEAT baseline)</span>':'')+'</label><select id="inp-activity">'+aOpts+'</select></div></div>'
     +'<div class="fg"><div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
     +'<div class="fg"><div class="fgrp"><label>Τύπος Διατροφής</label><select id="inp-dietType" onchange="upd(\'dietType\',this.value);">'+dOpts+'</select></div></div>'
@@ -3696,7 +3823,35 @@ function renderMain(){
     +'</div></div>'
     +buildMetHtml(c,t)
     +(t.isMinor?'<div class="minor-banner">👶 Ανήλικος αθλητής — Φόρμουλα Schofield (1985) &nbsp;|&nbsp; Growth Allowance: +'+t.growthAdd+' kcal &nbsp;|&nbsp; Ηλικία: '+c.age+' ετών</div>':'')
-    +'<div class="tdee-row"><div class="ti"><div class="tl">BMR'+(t.isMinor?' <span class="formula-tag cunningham" style="font-size:8px">Schofield</span>':'')+'</div><div class="tv" id="v-bmr">'+t.bmr+' kcal</div></div>'
+    +(function(){
+      // Build body composition display
+      if(!c.leanmass && (!c.bf || c.bf===0)) return '';
+      var bcomp='<div style="background:#f8fffe;border:1px solid #c5ddd8;border-radius:10px;padding:12px;margin-bottom:12px;">';
+      bcomp+='<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:8px;">📊 ΣΩΜΑΤΙΚΗ ΣΥΝΘΕΣΗ</div>';
+      if(c.leanmass && c.leanmass>0){
+        var fatmass=c.weight-c.leanmass;
+        var fatpct=+(((fatmass/c.weight)*100).toFixed(1));
+        bcomp+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;line-height:1.6;">';
+        bcomp+='<div>Βάρος: <b>'+c.weight+'</b> kg</div>';
+        bcomp+='<div>Lean Mass: <b>'+c.leanmass+'</b> kg</div>';
+        bcomp+='<div>Σωματικό Λίπος: <b>'+fatmass.toFixed(1)+'</b> kg</div>';
+        bcomp+='<div>% Λίπος: <b>'+fatpct+'</b>%</div>';
+        bcomp+='</div>';
+      } else if(c.bf && c.bf>0){
+        var ffm=+(c.weight*(1-(c.bf/100))).toFixed(1);
+        var fatmass=+(c.weight-ffm).toFixed(1);
+        bcomp+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;line-height:1.6;">';
+        bcomp+='<div>Βάρος: <b>'+c.weight+'</b> kg</div>';
+        bcomp+='<div>Lean Mass (calc): <b>'+ffm+'</b> kg</div>';
+        bcomp+='<div>Σωματικό Λίπος: <b>'+fatmass+'</b> kg</div>';
+        bcomp+='<div>% Λίπος: <b>'+c.bf+'</b>%</div>';
+        bcomp+='</div>';
+      }
+      bcomp+='<div style="font-size:9px;color:#666;margin-top:6px;padding-top:6px;border-top:1px solid #e0e0e0;">✓ BMR: <b>'+(t.bmrMethod||'Mifflin-St Jeor')+'</b></div>';
+      bcomp+='</div>';
+      return bcomp;
+    })()
+    +'<div class="tdee-row"><div class="ti"><div class="tl">BMR'+(t.isMinor?' <span class="formula-tag cunningham" style="font-size:8px">Schofield</span>':t.bmrMethod && t.bmrMethod.includes('Katch')?'<span class="formula-tag cunningham" style="font-size:8px;">'+t.bmrMethod.split(' ')[0]+'</span>':'')+'</div><div class="tv" id="v-bmr">'+t.bmr+' kcal</div></div>'
     +'<div class="ti"><div class="tl">TDEE'+(t.usedMET?' (MET)':'')+'</div><div class="tv" id="v-tdee">'+(t.usedMET?('NEAT: '+t.neat+' kcal'):(t.tdee+' kcal'))+(t.usedMET?'<div style="font-size:12px;color:#666;margin-top:4px;">Training: '+t.trainTarget+' | Rest: '+t.restTarget+'</div>':'')+'</div></div>'
     +'<div class="ti"><div class="tl">Στόχος'+'<span style="font-size:9px;color:#666;margin-left:4px" title="Μέσο ημερήσιο στόχο (NEAT + άσκηση + ανάπτυξη + στόχος)">ℹ️</span>'+'</div><div class="tv" id="v-target">'+t.target+' kcal</div></div>'
     +'<div class="ti"><div class="tl">Πρωτεΐνη</div><div class="tv b" id="v-macros">'+t.p+'g <span style="font-size:10px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span></div></div></div>'
@@ -3760,6 +3915,8 @@ function renderMain(){
   document.getElementById('inp-height').onblur=function(){upd('height',+this.value);};
   var bfProfInp=document.getElementById('inp-bf');
   if(bfProfInp)bfProfInp.onblur=function(){upd('bf',+this.value||0);};
+  var lmInp=document.getElementById('inp-leanmass');
+  if(lmInp)lmInp.onblur=function(){upd('leanmass',+this.value||0);};
   document.getElementById('inp-activity').onchange=function(){upd('activity',this.value);};
   document.getElementById('inp-goal').onchange=function(){upd('goal',this.value);};
   // Sport selector — auto-update macros & show sport-specific notes & toggle conditional visibility
@@ -4026,6 +4183,13 @@ function buildDayTgtHtml(c,t){
     +'<input class="carb-boost-inp" type="number" min="0" max="60" value="'+carbBoostVal+'" onchange="setCarbBoost(this.value)">%'
     +'</div>'
     +'<div style="font-size:10px;color:#999;margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
+    +'<div style="background:#f0f7ff;border:1px solid #80d4ff;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#0056b3">'
+    +'<div style="font-weight:700;margin-bottom:4px">⚡ Προσαρμογή Macros ανάλογα Προπόνησης</div>'
+    +'<div style="line-height:1.5">'
+    +'<div>📈 <b>Ημέρες Προπόνησης (T):</b> +10% Πρωτεΐνη, +20% Υδατάνθρακες, -15% Λιπαρά (ανάρρωση μυών + γλυκογόνο)</div>'
+    +'<div>😴 <b>Ημέρες Ανάπαυσης (R):</b> Σταθερή Πρωτεΐνη, -15% Υδατάνθρακες, +15% Λιπαρά (ορμονική ισορροπία)</div>'
+    +'</div>'
+    +'</div>'
     +'<table class="day-tgt-table"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></div>';
 }
 
@@ -6650,6 +6814,29 @@ function genPlan(){
   tmplDays=removeFYHFromMainMeals(tmplDays);           // 0. FYH έξω από κύρια γεύματα (χειροκίνητα)
   tmplDays=removeOatsFromMainMeals(tmplDays);          // 0β. Βρώμη ΜΟΝΟ σε πρωινό (χειροκίνητα)
   var eff=getDayTgtEff(c,t);
+
+  // ✅ TRAINING-DAY VS REST-DAY MACRO ADJUSTMENT
+  // Check if training schedule is defined (at least one training day marked)
+  var hasTrainingSchedule = c.trainDays && c.trainDays.some(function(x){return x;});
+  if(hasTrainingSchedule){
+    // Apply intelligent macro adjustments based on training days
+    var adjustedMacros = applyTrainingDayMacroAdjustment(eff[0], c);
+    if(adjustedMacros && adjustedMacros.byDay){
+      // Update each day's macros based on training schedule
+      for(var daj=0; daj<7; daj++){
+        if(eff[daj] && adjustedMacros.byDay[daj]){
+          var dayAdj = adjustedMacros.byDay[daj];
+          eff[daj].p = dayAdj.p;
+          eff[daj].f = dayAdj.f;
+          eff[daj].carb = dayAdj.c;
+          eff[daj].trainDayAdjusted = dayAdj.trainDay;
+          eff[daj].pPct = Math.round((dayAdj.p*4/dayAdj.k)*100);
+          eff[daj].fPct = Math.round((dayAdj.f*9/dayAdj.k)*100);
+          eff[daj].cPct = Math.round((dayAdj.c*4/dayAdj.k)*100);
+        }
+      }
+    }
+  }
 
   // ✅ PHASE 3A: HYBRID SYSTEM — Allocate per-meal targets from daily totals
   for(var d=0;d<7;d++){
