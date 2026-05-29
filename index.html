@@ -819,6 +819,8 @@
   // ========== INIT ==========
   function init() {
     const saved = localStorage.getItem("currentUser");
+
+    // Auto-cleanup: remove invalid sessions
     if (saved) {
       try {
         currentUser = JSON.parse(saved);
@@ -826,22 +828,25 @@
         // Verify user exists in fallback_users
         const users = JSON.parse(localStorage.getItem("fallback_users") || "{}");
         if (users[currentUser.username]) {
+          console.log("✅ Valid user found, loading...");
           showAuthPage(false);
           loadClients();
         } else {
-          // User not found, show login page
-          console.log("User not found in database, showing login page");
+          // User not found, auto-cleanup
+          console.log("⚠️ Invalid session detected, clearing...");
           localStorage.removeItem("currentUser");
+          localStorage.removeItem("fallback_users");
           currentUser = null;
           showAuthPage(true);
         }
       } catch (err) {
         console.error("Init error:", err);
-        localStorage.removeItem("currentUser");
+        localStorage.clear();
         currentUser = null;
         showAuthPage(true);
       }
     } else {
+      console.log("ℹ️ No session, showing login page");
       showAuthPage(true);
     }
   }
