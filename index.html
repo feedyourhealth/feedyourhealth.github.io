@@ -245,8 +245,8 @@
       }));
 
       log(`✅ Login successful for "${user}"!`);
-      alert('✅ Σύνδεση επιτυχής!');
-      window.location.reload();
+      // Direct to app (skip welcome page)
+      window.location.href = 'Dietologist.html';
     }
 
     function handleRegister() {
