@@ -590,6 +590,23 @@
 
   // ========== LOAD DIETOLOGIST APP ==========
   function loadDietologistApp() {
+    // Safety check: only load if currentUser is valid
+    if (!currentUser) {
+      console.log("⚠️ No valid user, showing login page");
+      showAuthPage(true);
+      return;
+    }
+
+    // Verify user exists
+    const users = JSON.parse(localStorage.getItem("fallback_users") || "{}");
+    if (!users[currentUser.username]) {
+      console.log("⚠️ User not found, showing login page");
+      localStorage.removeItem("currentUser");
+      currentUser = null;
+      showAuthPage(true);
+      return;
+    }
+
     // Import data from desktop version on first load
     importDesktopData();
 
