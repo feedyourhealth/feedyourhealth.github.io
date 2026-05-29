@@ -175,25 +175,9 @@
         return;
       }
 
-      // Load the Dietologist app
-      document.body.innerHTML = `
-        <div style="width: 100%; height: 100vh; margin: 0; padding: 0;">
-          <iframe id="appFrame" src="Dietologist.html" style="width: 100%; height: 100%; border: none; margin: 0; padding: 0;"></iframe>
-        </div>
-      `;
-
-      // Send user info to iframe
-      setTimeout(() => {
-        const iframe = document.getElementById('appFrame');
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage({
-            type: 'CLOUD_USER',
-            username: user.username,
-            email: user.email,
-            id: user.id
-          }, '*');
-        }
-      }, 1000);
+      // Redirect to Dietologist app
+      alert('🚀 Φορτώνει το Dietologist App...');
+      window.location.href = 'Dietologist.html';
     }
 
     function logout() {
