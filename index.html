@@ -217,8 +217,11 @@
     </div>
 
     <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 15px;">
-      <button onclick="importExistingData()" style="width: 100%; padding: 10px; background: #1565C0; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+      <button onclick="importExistingData()" style="width: 100%; padding: 10px; background: #1565C0; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 8px;">
         📥 Εισαγωγή Παλιών Δεδομένων
+      </button>
+      <button onclick="clearAllData()" style="width: 100%; padding: 10px; background: #ff6b35; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+        🔄 Καθαρισμός Δεδομένων
       </button>
       <p style="font-size: 11px; color: #666; margin-top: 8px; text-align: center;">
         Έχεις παλιά JSON file; Εισάγε το εδώ πριν δημιουργήσεις account
@@ -422,6 +425,14 @@
   }
 
   // ========== IMPORT EXISTING DATA BEFORE ACCOUNT CREATION ==========
+  function clearAllData() {
+    if (confirm('⚠️ Αυτό θα διαγράψει ΌΛΑ τα τοπικά δεδομένα. Είσαι σίγουρος;')) {
+      localStorage.clear();
+      alert('✅ Τα δεδομένα διαγράφηκαν! Ανανέωσε τη σελίδα.');
+      location.reload();
+    }
+  }
+
   function importExistingData() {
     const input = document.createElement('input');
     input.type = 'file';
