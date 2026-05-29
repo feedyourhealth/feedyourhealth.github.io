@@ -169,7 +169,13 @@
     }
 
     /* MAIN APP */
-    .app-page { display: none; }
+    .app-page {
+      display: none !important;
+    }
+    .app-page.show {
+      display: flex !important;
+      flex-direction: column;
+    }
 
     /* HEADER */
     .header { background: #025857; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
@@ -481,8 +487,22 @@
 
   // ========== UI HELPERS ==========
   function showAuthPage(show) {
-    document.getElementById("authPage").style.display = show ? "flex" : "none";
-    document.getElementById("appPage").style.display = show ? "none" : "block";
+    const authPage = document.getElementById("authPage");
+    const appPage = document.getElementById("appPage");
+
+    if (show) {
+      // Show login, hide app
+      authPage.style.display = "flex";
+      appPage.classList.remove("show");
+      appPage.style.display = "none";
+      console.log("✅ Showing login page");
+    } else {
+      // Hide login, show app
+      authPage.style.display = "none";
+      appPage.style.display = "flex";
+      appPage.classList.add("show");
+      console.log("✅ Showing app page");
+    }
   }
 
   function showAuthError(msg) {
