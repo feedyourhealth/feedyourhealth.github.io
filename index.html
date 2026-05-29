@@ -499,7 +499,21 @@
 
   // ========== LOAD DATA ==========
   async function loadClients() {
-    if (!currentUser) return;
+    if (!currentUser) {
+      console.log("No current user, showing login page");
+      showAuthPage(true);
+      return;
+    }
+
+    // Verify user exists
+    const users = JSON.parse(localStorage.getItem("fallback_users") || "{}");
+    if (!users[currentUser.username]) {
+      console.log("User not found, clearing and showing login page");
+      localStorage.removeItem("currentUser");
+      currentUser = null;
+      showAuthPage(true);
+      return;
+    }
 
     updateSyncStatus("📥 Φόρτωση δεδομένων...");
 
@@ -541,6 +555,7 @@
       updateSyncStatus("⚠️ Offline mode - χρήση τοπικής αποθήκευσης");
       loadDietologistApp();
     } catch (err) {
+      console.error("Load clients error:", err);
       document.getElementById("userDisplay").textContent = "👤 " + currentUser.username;
       updateSyncStatus("⚠️ Offline mode");
       loadDietologistApp();
