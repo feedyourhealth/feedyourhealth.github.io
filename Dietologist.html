@@ -2586,12 +2586,12 @@ function calcTDEE(c){
 
 // ═══ TRAINING-DAY VS REST-DAY MACRO ADJUSTMENT ═══
 // Intelligently adjust macros based on training schedule for better athletic performance
-function applyTrainingDayMacroAdjustment(eff, c){
-  if(!eff || !c || !c.trainDays || c.trainDays.length!==7) return eff;
+// eff is the ARRAY of daily targets (eff[0] through eff[6]), not a single day
+function applyTrainingDayMacroAdjustment(effArray, c){
+  if(!effArray || !effArray.length || !c || !c.trainDays || c.trainDays.length!==7) return null;
 
   var adjusted={};
-  var baseMacros={p:eff.p, f:eff.f, carb:eff.carb};
-  var baseKcal=eff.target;
+  adjusted.byDay=[];
 
   // TRAINING DAY ADJUSTMENTS (High Carbs + High Protein)
   // - Protein: +10% (better muscle recovery from intense training)
@@ -2609,20 +2609,16 @@ function applyTrainingDayMacroAdjustment(eff, c){
   var restCarbMult=0.85;
   var restFatMult=1.15;
 
-  // Apply by-day adjustments
-  adjusted.byDay=[
-    {k:eff.trainTargetByDay[0]||baseKcal, p:0, f:0, c:0},
-    {k:eff.trainTargetByDay[1]||baseKcal, p:0, f:0, c:0},
-    {k:eff.trainTargetByDay[2]||baseKcal, p:0, f:0, c:0},
-    {k:eff.trainTargetByDay[3]||baseKcal, p:0, f:0, c:0},
-    {k:eff.trainTargetByDay[4]||baseKcal, p:0, f:0, c:0},
-    {k:eff.trainTargetByDay[5]||baseKcal, p:0, f:0, c:0},
-    {k:eff.trainTargetByDay[6]||baseKcal, p:0, f:0, c:0}
-  ];
-
+  // Process each day
   for(var d=0; d<7; d++){
+    if(!effArray[d]) continue;
+
+    var dayEff=effArray[d];
     var isTrainDay=c.trainDays[d];
-    var dayKcal=adjusted.byDay[d].k;
+    var dayKcal=dayEff.target || dayEff.trainTargetByDay[d] || dayEff.k || 2000;
+    var baseMacros={p:dayEff.p, f:dayEff.f, carb:dayEff.carb};
+
+    var dayAdj={k:dayKcal, p:0, f:0, c:0, trainDay:isTrainDay};
 
     if(isTrainDay){
       // TRAINING DAY: High carbs + high protein
@@ -2642,10 +2638,9 @@ function applyTrainingDayMacroAdjustment(eff, c){
         trainC=Math.round(trainC+surplus/4);
       }
 
-      adjusted.byDay[d].p=trainP;
-      adjusted.byDay[d].c=trainC;
-      adjusted.byDay[d].f=trainF;
-      adjusted.byDay[d].trainDay=true;
+      dayAdj.p=trainP;
+      dayAdj.c=trainC;
+      dayAdj.f=trainF;
     } else {
       // REST DAY: Lower carbs, higher fat
       var restP=Math.round(baseMacros.p * restProtMult);
@@ -2664,16 +2659,17 @@ function applyTrainingDayMacroAdjustment(eff, c){
         restF=Math.round(restF+restSurplus/9);
       }
 
-      adjusted.byDay[d].p=restP;
-      adjusted.byDay[d].c=restC;
-      adjusted.byDay[d].f=restF;
-      adjusted.byDay[d].trainDay=false;
+      dayAdj.p=restP;
+      dayAdj.c=restC;
+      dayAdj.f=restF;
     }
+
+    adjusted.byDay.push(dayAdj);
   }
 
   // Calculate weekly average for display
   var weekP=0, weekF=0, weekC=0;
-  for(var di=0; di<7; di++){
+  for(var di=0; di<adjusted.byDay.length; di++){
     weekP+=adjusted.byDay[di].p;
     weekF+=adjusted.byDay[di].f;
     weekC+=adjusted.byDay[di].c;
@@ -6820,8 +6816,9 @@ function genPlan(){
   var hasTrainingSchedule = c.trainDays && c.trainDays.some(function(x){return x;});
   if(hasTrainingSchedule){
     // Apply intelligent macro adjustments based on training days
-    var adjustedMacros = applyTrainingDayMacroAdjustment(eff[0], c);
-    if(adjustedMacros && adjustedMacros.byDay){
+    // Pass ENTIRE eff array (all 7 days), not just eff[0]
+    var adjustedMacros = applyTrainingDayMacroAdjustment(eff, c);
+    if(adjustedMacros && adjustedMacros.byDay && adjustedMacros.byDay.length===7){
       // Update each day's macros based on training schedule
       for(var daj=0; daj<7; daj++){
         if(eff[daj] && adjustedMacros.byDay[daj]){
