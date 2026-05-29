@@ -499,6 +499,7 @@ var FOODS={
 'Quark (0%)':{k:65,p:12,c:3.5,f:0.2,fi:0,cat:'Αυγά/Γαλακτ.'},
 'Ricotta':{k:174,p:11.3,c:3.0,f:13,fi:0,cat:'Αυγά/Γαλακτ.'},
 'Edam light':{k:235,p:25,c:1.5,f:15,fi:0,cat:'Αυγά/Γαλακτ.'},
+'Γαλατάκι σοκολάτα delact χωρίς ζάχαρη':{k:48,p:3.5,c:4.7,f:1.8,fi:0,cat:'Αυγά/Γαλακτ.'},
 /* Δημητριακά */
 'Βρώμη (ωμή)':{k:389,p:17,c:66,f:7,fi:10.6,cat:'Δημητριακά'},
 'Ρύζι άσπρο (βρ.)':{k:130,p:2.4,c:28,f:0.3,fi:0.4,cat:'Δημητριακά'},
@@ -594,6 +595,7 @@ var FOODS={
 'Φουντούκια':{k:628,p:15,c:17,f:60.8,fi:9.7,cat:'Ξηροί καρποί'},
 'Κολοκυθόσποροι':{k:559,p:30,c:10.7,f:49,fi:6.0,cat:'Ξηροί καρποί'},
 'Ηλιόσποροι':{k:584,p:20.8,c:20,f:51.5,fi:8.6,cat:'Ξηροί καρποί'},
+'USN Trust Crunch Bar':{k:355,p:33,c:27,f:14,fi:12,cat:'Ξηροί καρποί'},
 'Σουσάμι':{k:573,p:17.7,c:23.5,f:49.7,fi:11.8,cat:'Ξηροί καρποί'},
 'Λιναρόσπορος':{k:534,p:18.3,c:28.9,f:42.2,fi:27.3,cat:'Ξηροί καρποί'},
 'Ελαιόλαδο':{k:884,p:0,c:0,f:100,fi:0,cat:'Λάδια'},
@@ -955,6 +957,8 @@ var FOOD_UNITS={
   'Ricotta':{g:125,u:'τεμ.'},
 'Moving Mountains Burger':{g:113,u:'patty'},
   'Edam light':{g:30,u:'φέτα'},
+  'Γαλατάκι σοκολάτα delact χωρίς ζάχαρη':{g:250,u:'συσκευασία'},
+  'USN Trust Crunch Bar':{g:60,u:'bar'},
   'Σύκα φρέσκα':{g:50,u:'τεμ.'},
   'Χουρμάδες (ξερές)':{g:15,u:'τεμ.'},
   'Ακτινίδιο':{g:100,u:'τεμ.'},
@@ -1897,8 +1901,8 @@ function logValidation(c){
 */
 var _saveTimer=null;
 function _doSave(){
-  try{localStorage.setItem('fyh_clients',JSON.stringify(clients));}catch(e){}
-  try{localStorage.setItem('fyh_custom_tmpls',JSON.stringify(customTemplates));}catch(e){}
+  try{localStorage.setItem(getStorageKey('fyh_clients'),JSON.stringify(clients));}catch(e){}
+  try{localStorage.setItem(getStorageKey('fyh_custom_tmpls'),JSON.stringify(customTemplates));}catch(e){}
   var t=document.getElementById('autosave-toast');
   if(t){t.style.opacity='1';clearTimeout(t._ft);t._ft=setTimeout(function(){t.style.opacity='0';},1600);}
 }
@@ -2839,6 +2843,40 @@ orthodox_fasting:[
 [{name:'Πρωινό',foods:[{n:'Φυτικό γάλα σόγια',g:250},{n:'Βρώμη (ωμή)',g:90},{n:'Μπανάνα',g:140},{n:'Σπόροι ηλιόσπορου',g:20}]},{name:'Ενδιάμεσο',foods:[{n:'Μήλο',g:160},{n:'Αμύγδαλα',g:25}]},{name:'Μεσημεριανό',foods:[{n:'Φασόλια',g:260},{n:'Κινόα (βρ.)',g:170},{n:'Σπανάκι',g:140},{n:'Ελαιόλαδο',g:12}]},{name:'Ενδιάμεσο',foods:[{n:'Ρυζογκοφρέτες',g:40},{n:'Φυστικοβούτυρο (vegan)',g:25}]},{name:'Βραδινό',foods:[{n:'Ρεβίθια',g:270},{n:'Ρύζι καστανό (βρ.)',g:160},{n:'Τομάτες',g:120},{n:'Ελαιόλαδο',g:12}]}],
 [{name:'Πρωινό',foods:[{n:'Βρώμη (ωμή)',g:80},{n:'Φυτικό γάλα καρύδας',g:280},{n:'Κεράσια',g:140},{n:'Chia seeds',g:12}]},{name:'Ενδιάμεσο',foods:[{n:'Μπανάνα',g:140},{n:'Φιστίκια',g:30}]},{name:'Μεσημεριανό',foods:[{n:'Φακές',g:250},{n:'Ρύζι άσπρο (βρ.)',g:160},{n:'Μανιτάρια',g:120},{n:'Ελαιόλαδο',g:12}]},{name:'Ενδιάμεσο',foods:[{n:'Πορτοκάλι',g:180},{n:'Σταφίδες',g:35}]},{name:'Βραδινό',foods:[{n:'Ρεβίθια',g:260},{n:'Πλιγούρι (βρ.)',g:170},{n:'Σαλάτα',g:140},{n:'Ελαιόλαδο',g:12}]}],
 [{name:'Πρωινό',foods:[{n:'Φυτικό γάλα αμύγδαλο',g:250},{n:'Βρώμη (ωμή)',g:90},{n:'Φράουλες',g:150},{n:'Σπόροι κολοκύνθης',g:18}]},{name:'Ενδιάμεσο',foods:[{n:'Μήλο',g:160},{n:'Αμύγδαλα',g:30}]},{name:'Μεσημεριανό',foods:[{n:'Φασόλια',g:270},{n:'Κινόα (βρ.)',g:170},{n:'Κολοκυθάκια',g:130},{n:'Ελαιόλαδο',g:12}]},{name:'Ενδιάμεσο',foods:[{n:'Πορτοκάλι',g:180},{n:'Ξηρά δαμάσκηνα',g:40}]},{name:'Βραδινό',foods:[{n:'Φακές',g:250},{n:'Ρύζι καστανό (βρ.)',g:170},{n:'Σπανάκι',g:130},{n:'Ελαιόλαδο',g:12}]}]
+],
+// ══════════════════════════════════════════════════════════════════════════════
+// ΠΑΙΔΙΑ 10-14 ΕΤΩΝ — Θρεπτικές ανάγκες για υγιή ανάπτυξη
+// ══════════════════════════════════════════════════════════════════════════════
+// TDEE: ~2000 kcal | Πρωτεΐνη: 55g | Λίπη: 60g | Υδατάνθρακες: 240g
+// Σάντουιτς στο πρωινό ενδιάμεσο για σχολείο + ελαφρά φαγητά
+kids_10_14:[
+[{name:'Πρωινό',foods:[{n:'Γιαούρτι ελληνικό 2%',g:200},{n:'Δημητριακά ολικής άλεσης',g:40},{n:'Μπανάνα',g:120},{n:'Μέλι',g:15}]},{name:'Ενδιάμεσο',foods:[{n:'Ψωμί ολικής άλεσης',g:60},{n:'Κοτόπουλο ψητό',g:50},{n:'Ντομάτα',g:40},{n:'Μαρούλι',g:30},{n:'Τυρί ασυνάγων λίπους',g:20},{n:'Μήλο',g:120}]},{name:'Μεσημεριανό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:150},{n:'Ρύζι άσπρο (βρ.)',g:120},{n:'Μπρόκολο',g:130},{n:'Ελαιόλαδο',g:8}]},{name:'Ενδιάμεσο',foods:[{n:'Γιαούρτι 2%',g:150},{n:'Μπάρα granola (χαμηλή ζάχαρη)',g:30},{n:'Πορτοκάλι',g:120}]},{name:'Βραδινό',foods:[{n:'Φακές (μαγειρεμένες)',g:180},{n:'Ψωμί σίκαλης',g:50},{n:'Σαλάτα με λάδι',g:150},{n:'Ελαιόλαδο',g:5}]}],
+
+[{name:'Πρωινό',foods:[{n:'Αυγά (ολόκληρα)',g:100},{n:'Ψωμί σίκαλης',g:50},{n:'Ντομάτα',g:50},{n:'Πορτοκάλι',g:130}]},{name:'Ενδιάμεσο',foods:[{n:'Ψωμί ολικής άλεσης',g:60},{n:'Τόνος (κονσέρβα σε νερό)',g:60},{n:'Αγγούρι',g:50},{n:'Φυστικοβούτυρο (φυσικό)',g:15},{n:'Φράουλες',g:120}]},{name:'Μεσημεριανό',foods:[{n:'Ψάρι λευκό ψητό',g:150},{n:'Πατάτες (βρασμένες)',g:150},{n:'Σπανάκι σαλάτα',g:120},{n:'Ελαιόλαδο',g:8}]},{name:'Ενδιάμεσο',foods:[{n:'Γάλα πλήρες',g:200},{n:'Κουλουράκια (ολικής άλεσης)',g:40},{n:'Μπανάνα',g:100}]},{name:'Βραδινό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:140},{n:'Πλιγούρι (βρ.)',g:120},{n:'Γλυκοπατάτα',g:100},{n:'Ελαιόλαδο',g:5}]}],
+
+[{name:'Πρωινό',foods:[{n:'Βρώμη (ωμή)',g:50},{n:'Γάλα πλήρες',g:200},{n:'Μπερδέ φρούτα',g:100},{n:'Μέλι',g:10}]},{name:'Ενδιάμεσο',foods:[{n:'Ψωμί ολικής άλεσης',g:60},{n:'Κοτόπουλο ψητό',g:50},{n:'Μαρούλι',g:30},{n:'Σαλάτα λάχανο',g:40},{n:'Φυστικοβούτυρο',g:12},{n:'Μήλο',g:130}]},{name:'Μεσημεριανό',foods:[{n:'Λαβράκι (ψητό)',g:150},{n:'Κινόα (βρ.)',g:110},{n:'Σπαράγγια',g:130},{n:'Ελαιόλαδο',g:8}]},{name:'Ενδιάμεσο',foods:[{n:'Γιαούρτι 2%',g:170},{n:'Μούρα',g:100},{n:'Κουλουράκια ολικής άλεσης',g:25}]},{name:'Βραδινό',foods:[{n:'Κοτόπουλο σουβλάκι',g:140},{n:'Πίτα ολικής άλεσης',g:60},{n:'Σαλάτα ντομάτας',g:120},{n:'Ελαιόλαδο',g:5}]}],
+
+[{name:'Πρωινό',foods:[{n:'Αυγά (ολόκληρα)',g:100},{n:'Ψωμί ολικής άλεσης',g:50},{n:'Αβοκάντο',g:40},{n:'Μπανάνα',g:120}]},{name:'Ενδιάμεσο',foods:[{n:'Ψωμί σίκαλης',g:60},{n:'Αυγό μαγιονέζα (ελαφριά)',g:15},{n:'Γαλοπούλα ψητή',g:50},{n:'Ντομάτα',g:40},{n:'Αγγούρι',g:40},{n:'Φράουλες',g:120}]},{name:'Μεσημεριανό',foods:[{n:'Φακές (μαγειρεμένες)',g:200},{n:'Ρύζι άσπρο (βρ.)',g:110},{n:'Μπρόκολο',g:130},{n:'Ελαιόλαδο',g:8}]},{name:'Ενδιάμεσο',foods:[{n:'Γάλα πλήρες',g:200},{n:'Μπάρα σοκολάτας ολικής',g:35},{n:'Πορτοκάλι',g:130}]},{name:'Βραδινό',foods:[{n:'Κοτόπουλο κομματιασμένο',g:140},{n:'Ρύζι καστανό (βρ.)',g:120},{n:'Κολοκυθάκια (ψητά)',g:130},{n:'Ελαιόλαδο',g:5}]}],
+
+[{name:'Πρωινό',foods:[{n:'Γιαούρτι ελληνικό 2%',g:200},{n:'Γράνολα χαμηλής ζάχαρης',g:45},{n:'Φράουλες',g:100},{n:'Μέλι',g:10}]},{name:'Ενδιάμεσο',foods:[{n:'Ψωμί ολικής άλεσης',g:60},{n:'Τόνος (κονσέρβα)',g:60},{n:'Σαλάτα λάχανο',g:50},{n:'Αγγούρι',g:40},{n:'Φυστικοβούτυρο',g:15},{n:'Μήλο',g:120}]},{name:'Μεσημεριανό',foods:[{n:'Ψάρι λευκό ψητό',g:160},{n:'Πατάτες (βρασμένες)',g:140},{n:'Σπανάκι σαλάτα',g:120},{n:'Ελαιόλαδο',g:8}]},{name:'Ενδιάμεσο',foods:[{n:'Γιαούρτι 2%',g:150},{n:'Σταφίδες',g:30},{n:'Αμύγδαλα',g:15}]},{name:'Βραδινό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:140},{n:'Πλιγούρι (βρ.)',g:120},{n:'Σαλάτα ντομάτας',g:130},{n:'Ελαιόλαδο',g:5}]}],
+
+[{name:'Πρωινό',foods:[{n:'Αυγά (ολόκληρα)',g:100},{n:'Ψωμί σίκαλης',g:50},{n:'φυστικοβούτυρο',g:15},{n:'Μπανάνα',g:130}]},{name:'Ενδιάμεσο',foods:[{n:'Ψωμί ολικής άλεσης',g:60},{n:'Κοτόπουλο ψητό',g:50},{n:'Ντομάτα',g:50},{n:'Φυστικοβούτυρο',g:12},{n:'Πορτοκάλι',g:130}]},{name:'Μεσημεριανό',foods:[{n:'Λαβράκι (ψητό)',g:160},{n:'Πατάτες (βρασμένες)',g:140},{n:'Μπρόκολο',g:120},{n:'Ελαιόλαδο',g:8}]},{name:'Ενδιάμεσο',foods:[{n:'Γάλα πλήρες',g:200},{n:'Κουλουράκια ολικής άλεσης',g:40},{n:'Μήλο',g:120}]},{name:'Βραδινό',foods:[{n:'Φακές (μαγειρεμένες)',g:180},{n:'Ρύζι άσπρο (βρ.)',g:110},{n:'Σαλάτα λάχανο',g:130},{n:'Ελαιόλαδο',g:5}]}],
+
+[{name:'Πρωινό',foods:[{n:'Γιαούρτι ελληνικό 2%',g:200},{n:'Δημητριακά ολικής άλεσης',g:45},{n:'Μπερδέ φρούτα',g:120},{n:'Μέλι',g:10}]},{name:'Ενδιάμεσο',foods:[{n:'Ψωμί σίκαλης',g:60},{n:'Αυγό βρασμένο',g:50},{n:'Μαρούλι',g:30},{n:'Ντομάτα',g:40},{n:'Φυστικοβούτυρο',g:15},{n:'Φράουλες',g:120}]},{name:'Μεσημεριανό',foods:[{n:'Ψάρι λευκό ψητό',g:160},{n:'Πλιγούρι (βρ.)',g:120},{n:'Γλυκοπατάτα',g:100},{n:'Ελαιόλαδο',g:8}]},{name:'Ενδιάμεσο',foods:[{n:'Γιαούρτι 2%',g:170},{n:'Μούρα',g:100},{n:'Μπάρα granola (χαμηλή ζάχαρη)',g:30}]},{name:'Βραδινό',foods:[{n:'Κοτόπουλο κομματιασμένο',g:140},{n:'Ρύζι καστανό (βρ.)',g:120},{n:'Σπανάκι σαλάτα',g:130},{n:'Ελαιόλαδο',g:5}]}]
+],
+// ══════════════════════════════════════════════════════════════════════════════
+// ⚽ ΠΟΔΟΣΦΑΙΡΟ — Αθλητικό πλάνο για ποδοσφαιριστές
+// ══════════════════════════════════════════════════════════════════════════════
+// Υψηλή πρωτεΐνη για ανάπτυξη μυών + υψηλοί υδατάνθρακες για ενέργεια αγώνων
+// Μεσογειακή διατροφή με προσοχή στο timing (πριν/μετά προπόνηση)
+football:[
+[{name:'Πρωινό',foods:[{n:'Αυγά (ολόκληρα)',g:140},{n:'Ψωμί ολικής άλεσης',g:80},{n:'Μπανάνα',g:150},{n:'Ελαιόλαδο',g:8}]},{name:'Σνακ πρωί',foods:[{n:'Γιαούρτι 2%',g:200},{n:'Energy Bites (FYH)',g:70},{n:'Πορτοκάλι',g:180}]},{name:'Μεσημεριανό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:200},{n:'Ρύζι καστανό (βρ.)',g:220},{n:'Μπρόκολο',g:150},{n:'Ελαιόλαδο',g:12}]},{name:'Σνακ απόγευμα',foods:[{n:'Cottage cheese',g:150},{n:'Μούρα',g:100},{n:'Αμύγδαλα',g:20}]},{name:'Βραδινό',foods:[{n:'Σολομός (ψητός)',g:180},{n:'Γλυκοπατάτα',g:240},{n:'Σπανάκι',g:100},{n:'Ελαιόλαδο',g:10}]}],
+[{name:'Πρωινό',foods:[{n:'Γκρανόλα χωρίς ζάχαρη',g:60},{n:'Γάλα πλήρες',g:250},{n:'Φράουλες',g:140},{n:'Μέλι',g:15}]},{name:'Σνακ πρωί',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:80},{n:'Ρυζογκοφρέτες',g:35},{n:'Ντομάτα',g:80}]},{name:'Μεσημεριανό',foods:[{n:'Σολομός (ψητός)',g:200},{n:'Κινόα (βρ.)',g:200},{n:'Σπαράγγια',g:140},{n:'Ελαιόλαδο',g:12}]},{name:'Σνακ απόγευμα',foods:[{n:'Γιαούρτι 2%',g:200},{n:'Μπανάνα',g:120},{n:'Αμύγδαλα',g:20}]},{name:'Βραδινό',foods:[{n:'Φακές (μαγειρεμένες)',g:240},{n:'Κοτόπουλο στήθος (ψητό)',g:150},{n:'Τυρί φέτα',g:25},{n:'Ελαιόλαδο',g:10}]}],
+[{name:'Πρωινό',foods:[{n:'Αυγά (ολόκληρα)',g:140},{n:'Ψωμί σίκαλης',g:90},{n:'Αβοκάντο',g:60},{n:'Μπανάνα',g:120}]},{name:'Σνακ πρωί',foods:[{n:'Cottage cheese',g:160},{n:'Φράουλες',g:120},{n:'Chia seeds',g:10}]},{name:'Μεσημεριανό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:200},{n:'Μακαρόνια (βρ.)',g:200},{n:'Τομάτες',g:150},{n:'Τυρί φέτα',g:20},{n:'Ελαιόλαδο',g:12}]},{name:'Σνακ απόγευμα',foods:[{n:'Γιαούρτι 2%',g:200},{n:'Μπανάνα',g:130},{n:'Αμύγδαλα',g:20}]},{name:'Βραδινό',foods:[{n:'Σολομός (ψητός)',g:180},{n:'Κριθαράκι (βρ.)',g:200},{n:'Κολοκυθάκια',g:150},{n:'Ελιές',g:20},{n:'Ελαιόλαδο',g:10}]}],
+[{name:'Πρωινό',foods:[{n:'Γκρανόλα χωρίς ζάχαρη',g:60},{n:'Γιαούρτι 2%',g:220},{n:'Μπερδέ φρούτα',g:150},{n:'Μέλι',g:12}]},{name:'Σνακ πρωί',foods:[{n:'Energy Bites (FYH)',g:75},{n:'Μήλο',g:180}]},{name:'Μεσημεριανό',foods:[{n:'Βοδινό άπαχο (ψητό)',g:200},{n:'Ρύζι άσπρο (βρ.)',g:220},{n:'Μανιτάρια',g:130},{n:'Ελαιόλαδο',g:12}]},{name:'Σνακ απόγευμα',foods:[{n:'Γιαούρτι 2%',g:200},{n:'Μπανάνα',g:120},{n:'Καρύδια',g:20}]},{name:'Βραδινό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:180},{n:'Πλιγούρι (βρ.)',g:200},{n:'Σπανάκι',g:120},{n:'Ελαιόλαδο',g:10}]}],
+[{name:'Πρωινό',foods:[{n:'Αυγά (ολόκληρα)',g:150},{n:'Ψωμί ολικής άλεσης',g:80},{n:'Φυστικοβούτυρο',g:25},{n:'Μπανάνα',g:140}]},{name:'Σνακ πρωί',foods:[{n:'Γιαούρτι 2%',g:200},{n:'Dark Choc Oat Bites',g:75},{n:'Πορτοκάλι',g:180}]},{name:'Μεσημεριανό',foods:[{n:'Σολομός (ψητός)',g:200},{n:'Κινόα (βρ.)',g:200},{n:'Κολοκυθάκια',g:150},{n:'Ελαιόλαδο',g:12}]},{name:'Σνακ απόγευμα',foods:[{n:'Cottage cheese',g:160},{n:'Μούρα',g:120},{n:'Αμύγδαλα',g:20}]},{name:'Βραδινό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:180},{n:'Ρύζι καστανό (βρ.)',g:220},{n:'Τομάτες',g:120},{n:'Τυρί φέτα',g:20},{n:'Ελαιόλαδο',g:10}]}],
+[{name:'Πρωινό',foods:[{n:'Γκρανόλα χωρίς ζάχαρη',g:60},{n:'Γάλα πλήρες',g:250},{n:'Κεράσια',g:140},{n:'Καρύδια',g:15}]},{name:'Σνακ πρωί',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:80},{n:'Ρυζογκοφρέτες',g:35},{n:'Τομάτα',g:100}]},{name:'Μεσημεριανό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:200},{n:'Μακαρόνια (βρ.)',g:200},{n:'Μπρόκολο',g:150},{n:'Τυρί φέτα',g:20},{n:'Ελαιόλαδο',g:12}]},{name:'Σνακ απόγευμα',foods:[{n:'Γιαούρτι 2%',g:220},{n:'Μπανάνα',g:130},{n:'Αμύγδαλα',g:20}]},{name:'Βραδινό',foods:[{n:'Γαρίδες (βραστές)',g:220},{n:'Ρύζι άσπρο (βρ.)',g:220},{n:'Σπανάκι',g:100},{n:'Ελιές',g:20},{n:'Ελαιόλαδο',g:10}]}],
+[{name:'Πρωινό',foods:[{n:'Αυγά (ολόκληρα)',g:140},{n:'Ψωμί σίκαλης',g:90},{n:'Αβοκάντο',g:50},{n:'Μήλο',g:160}]},{name:'Σνακ πρωί',foods:[{n:'Γιαούρτι 2%',g:200},{n:'Energy Bites (FYH)',g:70},{n:'Μπανάνα',g:120}]},{name:'Μεσημεριανό',foods:[{n:'Σολομός (ψητός)',g:200},{n:'Κριθαράκι (βρ.)',g:200},{n:'Σπαράγγια',g:140},{n:'Ελαιόλαδο',g:12}]},{name:'Σνακ απόγευμα',foods:[{n:'Cottage cheese',g:160},{n:'Φράουλες',g:120},{n:'Καρύδια',g:20}]},{name:'Βραδινό',foods:[{n:'Κοτόπουλο στήθος (ψητό)',g:180},{n:'Γλυκοπατάτα',g:240},{n:'Σπανάκι',g:120},{n:'Ελαιόλαδο',g:10}]}]
 ]
 };
 
@@ -3424,9 +3462,9 @@ function renderSB(){
 
 /* ======== TEMPLATE EDITOR ======== */
 var curTmplGoal='maintain';
-var GOAL_LABELS={loss:'Απώλεια βάρους',mild:'Ήπια απώλεια',maintain:'Διατήρηση',gain:'Αύξηση μάζας',
+var GOAL_LABELS={loss:'Απώλεια βάρους',mild:'Ήπια απώλεια',maintain:'Διατήρηση',gain:'Αύξηση μάζας',football:'⚽ Ποδόσφαιρο',
   kcal2000:'2000 kcal',kcal2300:'2300 kcal',kcal2500:'2500 kcal',kcal2700:'2700 kcal',kcal3000:'3000 kcal'};
-var GOAL_KEYS=['loss','mild','maintain','gain','kcal2000','kcal2300','kcal2500','kcal2700','kcal3000'];
+var GOAL_KEYS=['loss','mild','maintain','gain','football','kcal2000','kcal2300','kcal2500','kcal2700','kcal3000'];
 
 function selectTmpl(){
   curId=null;renderSB();
@@ -3551,6 +3589,24 @@ function buildTmplSelectorHtml(c){
     var gl=GOAL_LABELS[ct.goal]||ct.goal;
     opts+='<option value="'+ct.id+'"'+(sel===ct.id?' selected':'')+'>⭐ '+ct.name+' — '+gl+' ('+ct.createdAt+')</option>';
   });
+  // Existing clients' plans (as basis for new plans)
+  console.log('Building template selector. Total clients:', clients.length);
+  console.log('Current client ID:', c.id);
+  var clientsWithPlans=clients.filter(function(cl){
+    var hasWeekPlan=Object.keys(cl.weekPlan||{}).length>0;
+    console.log('Client:', cl.name||'Νέος πελάτης', '| ID:', cl.id, '| Has weekPlan:', hasWeekPlan, '| weekPlan keys:', Object.keys(cl.weekPlan||{}));
+    return cl.id!==c.id && hasWeekPlan;
+  });
+  console.log('Clients with plans (excluding current):', clientsWithPlans.length);
+  if(clientsWithPlans.length>0){
+    opts+='<optgroup label="━━━ Υπάρχοντα πλάνα πελατών ━━━">';
+    clientsWithPlans.forEach(function(cl){
+      var cGoal=GOAL_LABELS[cl.goal]||cl.goal;
+      var cName=cl.name||'Νέος πελάτης';
+      opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+cName+' — '+cGoal+'</option>';
+    });
+    opts+='</optgroup>';
+  }
   return '<div class="tmpl-sel-row">'
     +'<label>📋 Βάση πλάνου:</label>'
     +'<select class="tmpl-sel-drop" onchange="selectTmplForClient(this.value)">'+opts+'</select>'
@@ -3612,7 +3668,7 @@ function renderMain(){
   var sOpts='<option value="M"'+(c.sex==='M'?' selected':'')+'>Άνδρας</option><option value="F"'+(c.sex==='F'?' selected':'')+'>Γυναίκα</option>';
   var aOpts='<option value="sed"'+(c.activity==='sed'?' selected':'')+'>Καθιστικός</option><option value="light"'+(c.activity==='light'?' selected':'')+'>Ελαφρά ενεργός (1-3x)</option><option value="mod"'+(c.activity==='mod'?' selected':'')+'>Μέτρια ενεργός (3-5x)</option><option value="active"'+(c.activity==='active'?' selected':'')+'>Έντονα ενεργός (6-7x)</option>';
   var gOpts='<option value="mild"'+(c.goal==='mild'?' selected':'')+'>Ήπια απώλεια (-250)</option><option value="loss"'+(c.goal==='loss'?' selected':'')+'>Απώλεια βάρους (-500)</option><option value="maintain"'+(c.goal==='maintain'?' selected':'')+'>Διατήρηση</option><option value="gain"'+(c.goal==='gain'?' selected':'')+'>Αύξηση μάζας (+300)</option>';
-  var dOpts='<option value="normal"'+(c.dietType==='normal'?' selected':'')+'>🍗 Κανονική διατροφή</option><option value="vegetarian"'+(c.dietType==='vegetarian'?' selected':'')+'>🥬 Χορτοφαγική</option><option value="vegan"'+(c.dietType==='vegan'?' selected':'')+'>🌱 Веганι</option><option value="keto"'+(c.dietType==='keto'?' selected':'')+'>⚡ Κετογονική</option><option value="orthodox_fasting"'+(c.dietType==='orthodox_fasting'?' selected':'')+'>✝️ Ορθόδοξη Νηστεία</option><option value="intermittent_fasting"'+(c.dietType==='intermittent_fasting'?' selected':'')+'>⏰ Διαλείπουσα Νηστεία</option><option value="bodybuilding_clean"'+(c.dietType==='bodybuilding_clean'?' selected':'')+'>🏋️ Bodybuilding Clean</option>';
+  var dOpts='<option value="normal"'+(c.dietType==='normal'?' selected':'')+'>🍗 Κανονική διατροφή</option><option value="vegetarian"'+(c.dietType==='vegetarian'?' selected':'')+'>🥬 Χορτοφαγική</option><option value="vegan"'+(c.dietType==='vegan'?' selected':'')+'>🌱 Веганι</option><option value="keto"'+(c.dietType==='keto'?' selected':'')+'>⚡ Κετογονική</option><option value="orthodox_fasting"'+(c.dietType==='orthodox_fasting'?' selected':'')+'>✝️ Ορθόδοξη Νηστεία</option><option value="intermittent_fasting"'+(c.dietType==='intermittent_fasting'?' selected':'')+'>⏰ Διαλείπουσα Νηστεία</option><option value="bodybuilding_clean"'+(c.dietType==='bodybuilding_clean'?' selected':'')+'>🏋️ Bodybuilding Clean</option><option value="kids_10_14"'+(c.dietType==='kids_10_14'?' selected':'')+'>👧 Παιδιά 10-14 ετών</option>';
   var fOpts='<option value="mifflin"'+(c.formula==='mifflin'||!c.formula?' selected':'')+'>Mifflin-St Jeor</option><option value="cunningham"'+(c.formula==='cunningham'?' selected':'')+'>Cunningham (αθλητές)</option>';
   var isCunn=c.formula==='cunningham';
   var numTrainDays=(c.trainDays||[]).filter(function(x){return x;}).length;
@@ -3627,6 +3683,7 @@ function renderMain(){
     +'<div class="fgrp"><label>Λίπος σώματος % <span style="font-size:9px;color:#888;font-weight:400">(τελευταία μέτρηση)</span></label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div></div>'
     +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' <span style="font-size:10px;color:#888">(NEAT baseline)</span>':'')+'</label><select id="inp-activity">'+aOpts+'</select></div></div>'
     +'<div class="fg"><div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>Τύπος Διατροφής</label><select id="inp-dietType" onchange="upd(\'dietType\',this.value);">'+dOpts+'</select></div></div>'
     +'<div class="fg"><div class="fgrp"><label>🏅 Άθλημα</label><select id="inp-sport">'
     +'<option value="">-- Επιλέξτε άθλημα --</option>'
     +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
@@ -4180,6 +4237,7 @@ function buildMacroPresetHtml(c,t){
     +'<button class="macro-preset-btn'+(dietType==='bodybuilding_clean'?' active':'')+'" onclick="setDietType(\'bodybuilding_clean\')" title="Bodybuilding Clean Eating">🏋️ Bodybuilding Clean</button>'
     +'<button class="macro-preset-btn'+(dietType==='intermittent_fasting'?' active':'')+'" onclick="setDietType(\'intermittent_fasting\')" title="Διαλείπουσα νηστεία">⏰ Διαλείπουσα Νηστεία</button>'
     +'<button class="macro-preset-btn'+(dietType==='orthodox_fasting'?' active':'')+'" onclick="setDietType(\'orthodox_fasting\')" title="Ορθόδοξη νηστεία">✝️ Ορθόδοξη Νηστεία</button>'
+    +'<button class="macro-preset-btn'+(dietType==='kids_10_14'?' active':'')+'" onclick="setDietType(\'kids_10_14\')" title="Πλάνο για παιδιά 10-14 ετών">👧 Παιδιά 10-14</button>'
     +'</div>';
   if(preset==='custom'){
     html+='<div class="macro-custom-row">'
@@ -6439,7 +6497,7 @@ function removeOatsFromMainMeals(tmplDays) {
   return tmplDays;
 }
 
-// ✅ Reorder meals to standard sequence: Πρωινό → Γεύμα → Ενδιάμεσο → Βραδινό
+// ✅ Reorder meals to standard sequence: Πρωινό → Ενδιάμεσο → Μεσημεριανό → Ενδιάμεσο → Βραδινό
 function reorderMealsToStandardSequence(tmplDays){
   var reorderedDays=[];
   tmplDays.forEach(function(day){
@@ -6449,8 +6507,9 @@ function reorderMealsToStandardSequence(tmplDays){
     var snacks=day.filter(function(m){return m.name.includes('Ενδιάμεσο');});
     var dinner=day.find(function(m){return m.name.includes('Βραδινό');});
     if(breakfast)newDay.push(breakfast);
+    if(snacks&&snacks.length>0)newDay.push(snacks[0]); // First snack (between breakfast and lunch)
     if(lunch)newDay.push(lunch);
-    if(snacks&&snacks.length>0)newDay.push(snacks[0]);
+    if(snacks&&snacks.length>1)newDay.push(snacks[1]); // Second snack (between lunch and dinner)
     if(dinner)newDay.push(dinner);
     if(newDay.length===0)newDay=day;
     reorderedDays.push(newDay);
@@ -6458,8 +6517,116 @@ function reorderMealsToStandardSequence(tmplDays){
   return reorderedDays;
 }
 
+// Helper function: Clone and scale a client's plan as basis
+function cloneAndScaleClientPlan(baseCId, newClient, newTDEE) {
+  console.log('=== cloneAndScaleClientPlan DEBUG ===');
+  console.log('Looking for base client ID:', baseCId);
+  console.log('All clients:', clients);
+
+  var baseClient=null;
+  clients.forEach(function(cl){
+    console.log('Checking client:', cl.name, 'ID:', cl.id, 'weekPlan keys:', Object.keys(cl.weekPlan||{}));
+    if(cl.id===baseCId)baseClient=cl;
+  });
+
+  console.log('Found baseClient:', baseClient);
+  if(baseClient)console.log('baseClient.weekPlan:', baseClient.weekPlan);
+
+  if(!baseClient){
+    console.warn('Basis client not found!');
+    return null;
+  }
+
+  // Check if weekPlan has actual meal data (could be {} or {0: [...], 1: [...], etc})
+  var hasWeekPlan = baseClient.weekPlan && (Object.keys(baseClient.weekPlan).length > 0 || baseClient.weekPlan[0]);
+  if(!hasWeekPlan){
+    console.warn('Basis client has no weekPlan data!');
+    console.log('baseClient.weekPlan:', baseClient.weekPlan);
+    return null;
+  }
+
+  // Calculate TDEE ratio for scaling
+  var baseTDEE=calcTDEE(baseClient);
+  console.log('Base TDEE:', baseTDEE.target, '| New TDEE:', newTDEE.target);
+  var tdeeRatio=newTDEE.target / (baseTDEE.target||1);
+  console.log('TDEE Ratio:', tdeeRatio);
+
+  // Deep clone the base client's weekPlan and scale portions
+  var scaledPlan={};
+  for(var d=0;d<7;d++){
+    if(!baseClient.weekPlan[d])continue;
+    scaledPlan[d]=[];
+    baseClient.weekPlan[d].forEach(function(meal){
+      var newMeal={
+        name:meal.name,
+        foods:[]
+      };
+      if(meal.mealTiming)newMeal.mealTiming=meal.mealTiming;
+      if(meal.recipeId)newMeal.recipeId=meal.recipeId;
+
+      // Scale food portions by TDEE ratio
+      if(meal.foods&&meal.foods.length>0){
+        meal.foods.forEach(function(food){
+          var scaledFood={
+            n:food.n,
+            g:Math.round(food.g * tdeeRatio)
+          };
+          newMeal.foods.push(scaledFood);
+        });
+      }
+      scaledPlan[d].push(newMeal);
+    });
+  }
+
+  console.log('Cloned and scaled plan:', scaledPlan);
+  console.log('Scaled plan day 0 meals:', scaledPlan[0] ? scaledPlan[0].length + ' meals' : 'No day 0');
+  return scaledPlan;
+}
+
 function genPlan(){
   var c=getC();if(!c)return;var t=calcTDEE(c);c.weekPlan={};
+
+  // Check if basis plan is from an existing client
+  var isClientPlan=c.selectedTemplate && c.selectedTemplate.indexOf('__client_')===0;
+  if(isClientPlan){
+    var baseCId=c.selectedTemplate.replace('__client_','');
+    console.log('Attempting to clone plan from client:', baseCId);
+    var clonedPlan=cloneAndScaleClientPlan(baseCId, c, t);
+    console.log('Cloned plan result:', clonedPlan);
+    if(clonedPlan){
+      c.weekPlan=clonedPlan;
+      // Apply food exclusions to the cloned plan
+      var excl=c.foodExclude||[];
+      if(excl.length>0){
+        for(var d=0;d<7;d++){
+          if(c.weekPlan[d]){
+            for(var mi=0;mi<c.weekPlan[d].length;mi++){
+              var meal=c.weekPlan[d][mi];
+              if(meal.foods&&meal.foods.length>0){
+                meal.foods=meal.foods.filter(function(food){
+                  var foodName=food.n||'';
+                  return excl.indexOf(foodName)===-1 && excl.indexOf(foodName.toLowerCase())===-1;
+                });
+              }
+            }
+          }
+        }
+      }
+      // Final scaling to match exact daily targets
+      var eff=getDayTgtEff(c,t);
+      for(var d=0;d<7;d++){
+        if(c.weekPlan[d] && c.weekPlan[d].length > 0){
+          c.weekPlan[d]=scalePlan(c.weekPlan[d],eff[d]);
+        }
+      }
+      saveNow();  // Save immediately, not delayed
+      renderWeekTable();
+      swTab(2);
+      return;
+    }
+  }
+
+  // Original template-based plan generation
   // Build template key: dietType_goal (e.g., 'vegetarian_loss') or just goal (e.g., 'loss')
   var templateKey = (c.dietType && c.dietType !== 'normal') ? (c.dietType + '_' + c.goal) : c.goal;
   var tmpl=TMPLS[templateKey]||TMPLS[c.dietType]||TMPLS[c.goal]||TMPLS.maintain;
@@ -7619,13 +7786,31 @@ function getMicronutrientHtml(c){
 }
 
 /* ---- Saved Combos ---- */
-function getSavedCombos(){try{return JSON.parse(localStorage.getItem('dieto_combos')||'[]');}catch(e){return[];}}
-function setSavedCombos(arr){localStorage.setItem('dieto_combos',JSON.stringify(arr));}
+function getSavedCombos(){
+  var c=getC();
+  // Προτεραιότητα 1: Ανάκτηση από client object (backup)
+  if(c && c.savedCombos && Array.isArray(c.savedCombos)){
+    return c.savedCombos;
+  }
+  // Προτεραιότητα 2: Ανάκτηση από localStorage (παλαιό σύστημα)
+  try{return JSON.parse(localStorage.getItem(getStorageKey('dieto_combos'))||'[]');}catch(e){return[];}
+}
+
+function setSavedCombos(arr){
+  var c=getC();
+  // Αποθήκευση στο client object (backup)
+  if(c){
+    c.savedCombos=arr;
+    save();
+  }
+  // Αποθήκευση και στο localStorage για συμβατότητα
+  localStorage.setItem(getStorageKey('dieto_combos'),JSON.stringify(arr));
+}
 
 /* ---- Auto-Backup System (Every 1 Hour) ---- */
 function autoBackupClients(){
   try{
-    var clientsStr=localStorage.getItem('clients')||'[]';
+    var clientsStr=localStorage.getItem(getStorageKey('clients'))||'[]';
     var clientsData=JSON.parse(clientsStr);
     if(!clientsData||!clientsData.length)return; // No clients to backup
 
@@ -7660,6 +7845,11 @@ function initAutoBackup(){
   autoBackupClients(); // Run once immediately after a delay
   setInterval(autoBackupClients,3600000); // Then every 1 hour
 }
+
+// ✅ ACTIVATE AUTO-BACKUP ON PAGE LOAD
+window.addEventListener('load', function(){
+  setTimeout(initAutoBackup, 2000); // Start after 2 seconds to ensure page is ready
+});
 
 // ✅ Phase 3: Enhanced saveCombo with metadata for smart generation
 function saveCombo(d,mi){
@@ -7737,12 +7927,12 @@ function pasteMealFromClipboard(d,mi){
 
 /* ---- Favorite Meals System ---- */
 function getFavoriteMeals(){
-  var fav=localStorage.getItem('favoriteMeals');
+  var fav=localStorage.getItem(getStorageKey('favoriteMeals'));
   return fav?JSON.parse(fav):[];
 }
 
 function saveFavoriteMeals(meals){
-  localStorage.setItem('favoriteMeals',JSON.stringify(meals));
+  localStorage.setItem(getStorageKey('favoriteMeals'),JSON.stringify(meals));
 }
 
 function toggleFavoriteMeal(d,mi,btn){
@@ -9250,49 +9440,104 @@ function exportWord(){
     r+='\\pard\\row\n';
   }
 
-  // ── Supplements section ───────────────────────────────────────────────────────
+  // ── Supplements section ──── (TWO-LEVEL CONSOLIDATION) ────────────────────────
+  // STRATEGY A: Consolidated Supplement List (Existing + Recommended)
+  var consolidatedSuppsByT={};
+  var processedSuppNames=new Set();
+
+  // Step 1: Add currently taken supplements (from Page 1 - c.supps)
   if(c.supps&&c.supps.length){
     if(!c.suppExclude)c.suppExclude=[];
-    var sByT={};
-    SUPP_TIMINGS.forEach(function(tm){sByT[tm]=[];});
-    c.supps.forEach(function(id){
-      var s=null;SUPPS.forEach(function(x){if(x.id===id)s=x;});
-      if(!s)return;
-      s.timing.forEach(function(ti){
-        if(!sByT[ti.t])return;
-        if(c.suppExclude.indexOf(id+'|'+ti.t)>-1)return;
-        sByT[ti.t].push(s.name+(ti.d?' ('+ti.d+')':''));
-      });
-    });
-    var suppAny=false;
-    SUPP_TIMINGS.forEach(function(tm){if(sByT[tm].length)suppAny=true;});
-    if(suppAny){
-      r+='\\par\n';
-      r+='{\\pard\\ql\\f0\\b\\fs30\\cf1 '+escRtf('Πρωτόκολλο Συμπληρωμάτων')+'\\par}\\par\n';
-      // 2-column table: timing col | items col
-      var ST_W=3200; // timing column width in twips
-      var SCX0=LM+ST_W, SCX1=R_EDGE;
-      function sCell(x,bg){
-        var s='\\clbrdrt\\brdrs\\brdrw12\\clbrdrl\\brdrs\\brdrw12\\clbrdrb\\brdrs\\brdrw12\\clbrdrr\\brdrs\\brdrw12\\clvertalt';
-        if(bg===1)s+='\\clcbpat1';
-        if(bg===3)s+='\\clcbpat3';
-        return s+'\\cellx'+x;
+    c.supps.forEach(function(suppId){
+      var suppObj=SUPPS.find(function(s){return s.id===suppId;});
+      if(suppObj){
+        processedSuppNames.add(suppObj.name);
+        suppObj.timing.forEach(function(ti){
+          if(!SUPP_TIMINGS.includes(ti.t))return;
+          if(c.suppExclude.indexOf(suppId+'|'+ti.t)>-1)return;
+          if(!consolidatedSuppsByT[ti.t])consolidatedSuppsByT[ti.t]=[];
+          consolidatedSuppsByT[ti.t].push({
+            name:suppObj.name,
+            dose:suppObj.dose||'(per product label)',
+            source:'existing',
+            dosage:ti.d||''
+          });
+        });
       }
-      // header
-      r+='\\trowd\\trgaph0'+sCell(SCX0,1)+sCell(SCX1,1)+'\n';
-      r+='\\pard\\intbl\\ql\\li80\\f0\\b\\fs22\\cf2 '+escRtf('Χρόνος Λήψης')+'\\cell\n';
-      r+='\\pard\\intbl\\ql\\li80\\f0\\b\\fs22\\cf2 '+escRtf('Συμπληρώματα & Δοσολογία')+'\\cell\n';
-      r+='\\pard\\row\n';
-      var sRowBg=0;
-      SUPP_TIMINGS.forEach(function(tm){
-        if(!sByT[tm].length)return;
-        sRowBg=sRowBg?0:3;
-        r+='\\trowd\\trgaph0'+sCell(SCX0,sRowBg?3:0)+sCell(SCX1,0)+'\n';
-        r+='\\pard\\intbl\\ql\\li80\\f0\\b\\fs20\\cf1 '+escRtf(tm)+'\\cell\n';
-        r+='\\pard\\intbl\\ql\\li80\\f0\\fs20\\cf0 '+escRtf(sByT[tm].join('   •   '))+'\\cell\n';
+    });
+  }
+
+  // Step 2: Add recommended supplements that aren't already taken (from Page 2 - selected)
+  if(c.selectedSupplements && c.selectedSupplements.length > 0){
+    c.selectedSupplements.forEach(function(supp){
+      if(!processedSuppNames.has(supp.supplement)){
+        processedSuppNames.add(supp.supplement);
+        // Find timing from SUPPS database if available
+        var suppObj=SUPPS.find(function(s){return s.name===supp.supplement;});
+        if(suppObj&&suppObj.timing){
+          suppObj.timing.forEach(function(ti){
+            if(!SUPP_TIMINGS.includes(ti.t))return;
+            if(!consolidatedSuppsByT[ti.t])consolidatedSuppsByT[ti.t]=[];
+            consolidatedSuppsByT[ti.t].push({
+              name:supp.supplement,
+              dose:supp.dose||supp.info||'',
+              source:'recommended',
+              dosage:ti.d||''
+            });
+          });
+        } else {
+          // If no timing found, add to 'During meals' as default
+          if(!consolidatedSuppsByT['During meals'])consolidatedSuppsByT['During meals']=[];
+          consolidatedSuppsByT['During meals'].push({
+            name:supp.supplement,
+            dose:supp.dose||supp.info||'',
+            source:'recommended',
+            dosage:''
+          });
+        }
+      }
+    });
+  }
+
+  // Step 3: Generate RTF section with consolidated list
+  var suppAny=false;
+  Object.keys(consolidatedSuppsByT).forEach(function(tm){if(consolidatedSuppsByT[tm].length)suppAny=true;});
+  if(suppAny){
+    r+='\\par\n';
+    r+='{\\pard\\ql\\f0\\b\\fs30\\cf1 '+escRtf('Πρωτόκολλο Συμπληρωμάτων')+'\\par}\\par\n';
+    // 3-column table: timing col | supplement col | status col
+    var ST_W=2400; // timing column width
+    var SS_W=2000; // supplement column width
+    var SR_W=1200; // status column width
+    var SCX0=LM+ST_W, SCX1=SCX0+SS_W, SCX2=R_EDGE;
+    function sCell(x,bg){
+      var s='\\clbrdrt\\brdrs\\brdrw12\\clbrdrl\\brdrs\\brdrw12\\clbrdrb\\brdrs\\brdrw12\\clbrdrr\\brdrs\\brdrw12\\clvertalt';
+      if(bg===1)s+='\\clcbpat1';
+      if(bg===3)s+='\\clcbpat3';
+      return s+'\\cellx'+x;
+    }
+    // header
+    r+='\\trowd\\trgaph0'+sCell(SCX0,1)+sCell(SCX1,1)+sCell(SCX2,1)+'\n';
+    r+='\\pard\\intbl\\ql\\li80\\f0\\b\\fs20\\cf2 '+escRtf('Χρόνος')+'\\cell\n';
+    r+='\\pard\\intbl\\ql\\li80\\f0\\b\\fs20\\cf2 '+escRtf('Συμπλήρωμα')+'\\cell\n';
+    r+='\\pard\\intbl\\qc\\f0\\b\\fs20\\cf2 '+escRtf('Κατάστ.')+'\\cell\n';
+    r+='\\pard\\row\n';
+    var sRowBg=0;
+    SUPP_TIMINGS.forEach(function(tm){
+      if(!consolidatedSuppsByT[tm]||!consolidatedSuppsByT[tm].length)return;
+      sRowBg=sRowBg?0:3;
+      var suppsInTiming=consolidatedSuppsByT[tm];
+      suppsInTiming.forEach(function(supp,idx){
+        var tmLabel=idx===0?tm:'';
+        var statusMark=supp.source==='existing'?'✓':'NEW';
+        var statusCol=supp.source==='existing'?4:2; // cf4=gray, cf2=black
+        r+='\\trowd\\trgaph0'+sCell(SCX0,sRowBg?3:0)+sCell(SCX1,0)+sCell(SCX2,0)+'\n';
+        r+='\\pard\\intbl\\ql\\li80\\f0\\b\\fs18\\cf1 '+escRtf(tmLabel)+'\\cell\n';
+        r+='\\pard\\intbl\\ql\\li80\\f0\\fs18\\cf0 '+escRtf(supp.name+(supp.dose?' - '+supp.dose:''))+'\\cell\n';
+        r+='\\pard\\intbl\\qc\\f0\\b\\fs18\\cf'+statusCol+' '+escRtf(statusMark)+'\\cell\n';
         r+='\\pard\\row\n';
       });
-    }
+    });
   }
 
   r+='}';
@@ -9488,43 +9733,98 @@ function exportGoogleDocs(){
   }
   body+='</w:tbl>';
 
-  // supplements
+  // ── supplements ──── (TWO-LEVEL CONSOLIDATION) ────────────────────────────────
+  // STRATEGY A: Consolidated Supplement List (Existing + Recommended)
+  var consolidatedSuppsByT2={};
+  var processedSuppNames2=new Set();
+
+  // Step 1: Add currently taken supplements (from Page 1 - c.supps)
   if(c.supps&&c.supps.length){
     if(!c.suppExclude)c.suppExclude=[];
-    var sByT2={};
-    SUPP_TIMINGS.forEach(function(tm){sByT2[tm]=[];});
-    c.supps.forEach(function(id){
-      var sx=null;SUPPS.forEach(function(x){if(x.id===id)sx=x;});
-      if(!sx)return;
-      sx.timing.forEach(function(ti){
-        if(!sByT2[ti.t])return;
-        if(c.suppExclude.indexOf(id+'|'+ti.t)>-1)return;
-        sByT2[ti.t].push(sx.name+(ti.d?' ('+ti.d+')':''));
-      });
+    c.supps.forEach(function(suppId){
+      var suppObj=SUPPS.find(function(s){return s.id===suppId;});
+      if(suppObj){
+        processedSuppNames2.add(suppObj.name);
+        suppObj.timing.forEach(function(ti){
+          if(!SUPP_TIMINGS.includes(ti.t))return;
+          if(c.suppExclude.indexOf(suppId+'|'+ti.t)>-1)return;
+          if(!consolidatedSuppsByT2[ti.t])consolidatedSuppsByT2[ti.t]=[];
+          consolidatedSuppsByT2[ti.t].push({
+            name:suppObj.name,
+            dose:suppObj.dose||'(per product label)',
+            source:'existing',
+            dosage:ti.d||''
+          });
+        });
+      }
     });
-    var sAny=false;SUPP_TIMINGS.forEach(function(stm){if(sByT2[stm].length)sAny=true;});
-    if(sAny){
-      body+=ep();
-      body+=para1('Πρωτόκολλο Συμπληρωμάτων','left',true,30,CT,120,80);
-      var STW=3200,SCW=PAGE_W-STW;
-      var sgrid2='<w:tblGrid><w:gridCol w:w="'+STW+'"/><w:gridCol w:w="'+SCW+'"/></w:tblGrid>';
-      var stpr2='<w:tblPr><w:tblW w:w="'+PAGE_W+'" w:type="dxa"/><w:tblLook w:val="0000"/></w:tblPr>';
-      body+='<w:tbl>'+stpr2+sgrid2;
-      body+='<w:tr>'
-        +'<w:tc>'+tcp(STW,CT)+'<w:p>'+pp('left',0,0)+'<w:r>'+rp(true,22,CW)+'<w:t>'+xe('Χρόνος Λήψης')+'</w:t></w:r></w:p></w:tc>'
-        +'<w:tc>'+tcp(SCW,CT)+'<w:p>'+pp('left',0,0)+'<w:r>'+rp(true,22,CW)+'<w:t>'+xe('Συμπληρώματα & Δοσολογία')+'</w:t></w:r></w:p></w:tc>'
-        +'</w:tr>';
-      var sAlt=false;
-      SUPP_TIMINGS.forEach(function(stm2){
-        if(!sByT2[stm2].length)return;
-        var sbg=sAlt?CL:CW;sAlt=!sAlt;
+  }
+
+  // Step 2: Add recommended supplements that aren't already taken (from Page 2 - selected)
+  if(c.selectedSupplements && c.selectedSupplements.length > 0){
+    c.selectedSupplements.forEach(function(supp){
+      if(!processedSuppNames2.has(supp.supplement)){
+        processedSuppNames2.add(supp.supplement);
+        // Find timing from SUPPS database if available
+        var suppObj=SUPPS.find(function(s){return s.name===supp.supplement;});
+        if(suppObj&&suppObj.timing){
+          suppObj.timing.forEach(function(ti){
+            if(!SUPP_TIMINGS.includes(ti.t))return;
+            if(!consolidatedSuppsByT2[ti.t])consolidatedSuppsByT2[ti.t]=[];
+            consolidatedSuppsByT2[ti.t].push({
+              name:supp.supplement,
+              dose:supp.dose||supp.info||'',
+              source:'recommended',
+              dosage:ti.d||''
+            });
+          });
+        } else {
+          // If no timing found, add to 'During meals' as default
+          if(!consolidatedSuppsByT2['During meals'])consolidatedSuppsByT2['During meals']=[];
+          consolidatedSuppsByT2['During meals'].push({
+            name:supp.supplement,
+            dose:supp.dose||supp.info||'',
+            source:'recommended',
+            dosage:''
+          });
+        }
+      }
+    });
+  }
+
+  // Step 3: Generate DOCX section with consolidated list
+  var sAny2=false;
+  Object.keys(consolidatedSuppsByT2).forEach(function(tm){if(consolidatedSuppsByT2[tm].length)sAny2=true;});
+  if(sAny2){
+    body+=ep();
+    body+=para1('Πρωτόκολλο Συμπληρωμάτων','left',true,30,CT,120,80);
+    var STW2=3200,SNW2=2400,SSW2=PAGE_W-STW2-SNW2;
+    var sgrid2='<w:tblGrid><w:gridCol w:w="'+STW2+'"/><w:gridCol w:w="'+SNW2+'"/><w:gridCol w:w="'+SSW2+'"/></w:tblGrid>';
+    var stpr2='<w:tblPr><w:tblW w:w="'+PAGE_W+'" w:type="dxa"/><w:tblLook w:val="0000"/></w:tblPr>';
+    body+='<w:tbl>'+stpr2+sgrid2;
+    body+='<w:tr>'
+      +'<w:tc>'+tcp(STW2,CT)+'<w:p>'+pp('left',0,0)+'<w:r>'+rp(true,22,CW)+'<w:t>'+xe('Χρόνος')+'</w:t></w:r></w:p></w:tc>'
+      +'<w:tc>'+tcp(SNW2,CT)+'<w:p>'+pp('left',0,0)+'<w:r>'+rp(true,22,CW)+'<w:t>'+xe('Συμπλήρωμα')+'</w:t></w:r></w:p></w:tc>'
+      +'<w:tc>'+tcp(SSW2,CT)+'<w:p>'+pp('center',0,0)+'<w:r>'+rp(true,22,CW)+'<w:t>'+xe('Κατάστ.')+'</w:t></w:r></w:p></w:tc>'
+      +'</w:tr>';
+    var sAlt2=false;
+    SUPP_TIMINGS.forEach(function(stm2){
+      if(!consolidatedSuppsByT2[stm2]||!consolidatedSuppsByT2[stm2].length)return;
+      var suppsInTiming=consolidatedSuppsByT2[stm2];
+      suppsInTiming.forEach(function(supp,idx){
+        var tmLabel=idx===0?stm2:'';
+        var sbg=sAlt2?CL:CW;
+        if(idx===suppsInTiming.length-1)sAlt2=!sAlt2;
+        var statusText=supp.source==='existing'?'✓':'NEW';
+        var statusCol=supp.source==='existing'?CG:CD;
         body+='<w:tr>'
-          +'<w:tc>'+tcp(STW,sbg)+'<w:p>'+pp('left',0,0)+'<w:r>'+rp(true,20,CT)+'<w:t>'+xe(stm2)+'</w:t></w:r></w:p></w:tc>'
-          +'<w:tc>'+tcp(SCW,CW)+'<w:p>'+pp('left',0,0)+'<w:r>'+rp(false,20,CD)+'<w:t>'+xe(sByT2[stm2].join('   •   '))+'</w:t></w:r></w:p></w:tc>'
+          +'<w:tc>'+tcp(STW2,sbg)+'<w:p>'+pp('left',0,0)+'<w:r>'+rp(true,18,CT)+'<w:t>'+xe(tmLabel)+'</w:t></w:r></w:p></w:tc>'
+          +'<w:tc>'+tcp(SNW2,sbg)+'<w:p>'+pp('left',0,0)+'<w:r>'+rp(false,18,CD)+'<w:t>'+xe(supp.name+(supp.dose?' - '+supp.dose:''))+'</w:t></w:r></w:p></w:tc>'
+          +'<w:tc>'+tcp(SSW2,sbg)+'<w:p>'+pp('center',0,0)+'<w:r>'+rp(true,18,statusCol)+'<w:t>'+xe(statusText)+'</w:t></w:r></w:p></w:tc>'
           +'</w:tr>';
       });
-      body+='</w:tbl>';
-    }
+    });
+    body+='</w:tbl>';
   }
 
   // ── Shopping List ────────────────────────────────────────────────────────────
@@ -9713,14 +10013,33 @@ function exportGoogleDocs(){
     });
 }
 
+// ── Cloud Integration: Listen for user info from cloud wrapper ───────────────────────────────────
+var cloudUsername = null;
+
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'CLOUD_USER') {
+    cloudUsername = event.data.username;
+    console.log('Cloud user detected:', cloudUsername);
+    // Re-load data with cloud user prefix
+    loadCloudData();
+  }
+}, false);
+
+function getStorageKey(baseKey) {
+  if (cloudUsername) {
+    return 'cloud_' + cloudUsername + '_' + baseKey;
+  }
+  return baseKey;
+}
+
 // ── Auto-load from localStorage on startup ───────────────────────────────────
 (function(){
   try{
-    var ct=localStorage.getItem('fyh_custom_tmpls');
+    var ct=localStorage.getItem(getStorageKey('fyh_custom_tmpls'));
     if(ct){var parsedCt=JSON.parse(ct);if(Array.isArray(parsedCt))customTemplates=parsedCt;}
   }catch(e){}
   try{
-    var d=localStorage.getItem('fyh_clients');
+    var d=localStorage.getItem(getStorageKey('fyh_clients'));
     if(d){
       var parsed=JSON.parse(d);
       if(Array.isArray(parsed)&&parsed.length){
@@ -9743,6 +10062,35 @@ function exportGoogleDocs(){
     }
   }catch(e){}
 })();
+
+function loadCloudData() {
+  try{
+    var ct=localStorage.getItem(getStorageKey('fyh_custom_tmpls'));
+    if(ct){var parsedCt=JSON.parse(ct);if(Array.isArray(parsedCt))customTemplates=parsedCt;}
+  }catch(e){}
+  try{
+    var d=localStorage.getItem(getStorageKey('fyh_clients'));
+    if(d){
+      var parsed=JSON.parse(d);
+      if(Array.isArray(parsed)&&parsed.length){
+        clients=parsed;
+        clients.forEach(function(c){
+          if(!c.metActivities)c.metActivities=[];
+          if(!c.weightLog)c.weightLog=[];
+          if(!c.consultLog)c.consultLog=[];
+          if(c.macroP==null)c.macroP=25;
+          if(c.macroF==null)c.macroF=25;
+          if(c.macroC==null)c.macroC=50;
+          if(!c.macroPreset)c.macroPreset='balanced';
+          if(!c.suppExclude)c.suppExclude=[];
+          if(!c.foodExclude)c.foodExclude=[];
+          if(c.selectedTemplate===undefined)c.selectedTemplate=null;
+        });
+        renderSB();
+      }
+    }
+  }catch(e){}
+}
 
 /* Recipe Modal Display */
 function showRecipeModal(foodName){
@@ -9836,11 +10184,12 @@ function toggleSuppCheckbox(containerEl){
   // Toggle the checkbox
   checkbox.checked=!checkbox.checked;
 
-  // Update visual appearance
-  var checkboxDiv=containerEl.querySelector('div[style*="border:2px solid"]');
-  if(checkboxDiv){
-    var isChecked=checkbox.checked;
+  // Get current state
+  var isChecked=checkbox.checked;
 
+  // Update visual appearance
+  var checkboxDiv=containerEl.querySelector('.supp-visual-checkbox');
+  if(checkboxDiv){
     // Update checkmark
     if(isChecked){
       if(!checkboxDiv.querySelector('span')){
@@ -10035,16 +10384,16 @@ function buildDynamicSupplementHtml(c, gapBasedRecs, gaps){
       html += '<input type="checkbox" id="'+suppId+'" '+( isChecked ? 'checked' : '')+' style="display:none;" class="supp-checkbox">';
 
       // Custom visible checkbox
-      html += '<div style="flex-shrink:0;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:2px solid '+(alreadyTaking?'#4caf50':'#025857')+';border-radius:4px;background:'+(isChecked?'#025857':'white')+';transition:all 0.2s;position:relative;">';
+      html += '<div class="supp-visual-checkbox" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:2px solid '+(alreadyTaking?'#4caf50':'#025857')+';border-radius:4px;background:'+(isChecked?'#025857':'white')+';transition:all 0.2s;position:relative;">';
       if(isChecked) html += '<span style="width:14px;height:14px;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;font-weight:bold;">✓</span>';
       html += '</div>';
 
       // Content
       html += '<div style="flex:1;min-width:0;">';
-      html += '<label for="'+suppId+'" style="cursor:pointer;font-weight:bold;color:'+(alreadyTaking?'#2e7d32':'#e65100')+';font-size:13px;display:block;user-select:none;margin-bottom:4px;">';
+      html += '<div style="cursor:pointer;font-weight:bold;color:'+(alreadyTaking?'#2e7d32':'#e65100')+';font-size:13px;display:block;user-select:none;margin-bottom:4px;">';
       html += rec.supplement + ' - ' + rec.recommendedDose + rec.unit;
       if(alreadyTaking) html += ' <span style="background:#e8f5e9;color:#2e7d32;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">⭐ Παίρνετε ήδη</span>';
-      html += '</label>';
+      html += '</div>';
       html += '<div style="font-size:11px;color:#666;margin-top:3px;">';
       html += '📊 Στόχος: ' + rec.nutrient + ' | Ελλείπει: ' + rec.gap.toFixed(1) + rec.unit;
       html += ' (έχετε ' + rec.actual.toFixed(1) + '/' + rec.target + ')';
@@ -10175,7 +10524,7 @@ var TRACKING_DATA = {
 
 // Load tracking data from localStorage
 function loadTrackingData(){
-  var stored = localStorage.getItem('dietologist_tracking');
+  var stored = localStorage.getItem(getStorageKey('dietologist_tracking'));
   if(stored){
     try{
       TRACKING_DATA = JSON.parse(stored);
@@ -10189,7 +10538,7 @@ function loadTrackingData(){
 // Save tracking data to localStorage
 function saveTrackingData(){
   TRACKING_DATA.lastUpdated = new Date().toISOString();
-  localStorage.setItem('dietologist_tracking', JSON.stringify(TRACKING_DATA));
+  localStorage.setItem(getStorageKey('dietologist_tracking'), JSON.stringify(TRACKING_DATA));
 }
 
 // Log plan generation
