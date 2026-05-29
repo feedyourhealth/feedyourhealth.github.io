@@ -2431,6 +2431,7 @@ function normalizeGreekText(text) {
 
 function calcTDEE(c){
   var bmr;
+  var t={}; // Initialize tracking object for BMR method and FFM
   var isMinor=(c.age||0)<18;
   var growthAdd=0;
   if(isMinor){
@@ -2581,7 +2582,8 @@ function calcTDEE(c){
     exerciseDaily:exerciseKcal,exerciseWeekly:metKcal.weekly,
     perTrainDay:metKcal.perTrainDay,byDay:metKcal.byDay,usedMET:usedMET,
     isMinor:isMinor,growthAdd:growthAdd,neat:neat,
-    protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA,warnings:warnings};
+    protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA,warnings:warnings,
+    bmrMethod:t.bmrMethod||'Mifflin-St Jeor',ffmUsed:t.ffmUsed||null};
 }
 
 // ═══ TRAINING-DAY VS REST-DAY MACRO ADJUSTMENT ═══
