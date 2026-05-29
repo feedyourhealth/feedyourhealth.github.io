@@ -835,35 +835,45 @@
 
   // ========== INIT ==========
   function init() {
+    console.log("🔍 Initializing...");
+
+    // First, check if fallback_users exists and has data
+    const fallbackUsers = localStorage.getItem("fallback_users");
+    if (!fallbackUsers || fallbackUsers === "{}") {
+      console.log("📭 No users database found, clearing everything and showing login");
+      localStorage.clear();
+      currentUser = null;
+      showAuthPage(true);
+      return;
+    }
+
     const saved = localStorage.getItem("currentUser");
+    if (!saved) {
+      console.log("ℹ️ No session, showing login page");
+      showAuthPage(true);
+      return;
+    }
 
-    // Auto-cleanup: remove invalid sessions
-    if (saved) {
-      try {
-        currentUser = JSON.parse(saved);
+    try {
+      currentUser = JSON.parse(saved);
+      const users = JSON.parse(fallbackUsers);
 
-        // Verify user exists in fallback_users
-        const users = JSON.parse(localStorage.getItem("fallback_users") || "{}");
-        if (users[currentUser.username]) {
-          console.log("✅ Valid user found, loading...");
-          showAuthPage(false);
-          loadClients();
-        } else {
-          // User not found, auto-cleanup
-          console.log("⚠️ Invalid session detected, clearing...");
-          localStorage.removeItem("currentUser");
-          localStorage.removeItem("fallback_users");
-          currentUser = null;
-          showAuthPage(true);
-        }
-      } catch (err) {
-        console.error("Init error:", err);
+      // Verify user exists and is valid
+      if (currentUser.username && users[currentUser.username]) {
+        console.log("✅ Valid user found, loading:", currentUser.username);
+        showAuthPage(false);
+        loadClients();
+      } else {
+        // User not found, complete cleanup
+        console.log("⚠️ Invalid session, clearing everything");
         localStorage.clear();
         currentUser = null;
         showAuthPage(true);
       }
-    } else {
-      console.log("ℹ️ No session, showing login page");
+    } catch (err) {
+      console.error("❌ Init error:", err);
+      localStorage.clear();
+      currentUser = null;
       showAuthPage(true);
     }
   }
