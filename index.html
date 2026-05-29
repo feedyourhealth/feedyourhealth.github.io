@@ -8,17 +8,165 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; }
 
-    /* LOGIN PAGE */
-    .auth-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .auth-container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
-    .auth-title { text-align: center; margin-bottom: 30px; font-size: 28px; color: #333; }
-    .auth-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
-    .auth-button { width: 100%; padding: 12px; margin-top: 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-    .auth-button:hover { background: #5568d3; }
-    .auth-toggle { text-align: center; margin-top: 15px; font-size: 14px; color: #666; }
-    .auth-toggle a { color: #667eea; cursor: pointer; text-decoration: none; }
-    .auth-error { color: red; margin-top: 10px; font-size: 13px; text-align: center; }
-    .auth-loading { text-align: center; color: #667eea; }
+    /* LOGIN PAGE - IMPROVED DESIGN */
+    .auth-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #025857 0%, #037070 50%, #1b6f6f 100%);
+      padding: 20px;
+    }
+
+    .auth-container {
+      background: white;
+      padding: 50px 40px;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 450px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 40px;
+      border-bottom: 3px solid #E2EEE5;
+      padding-bottom: 20px;
+    }
+
+    .auth-logo {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .auth-app-name {
+      font-size: 28px;
+      font-weight: bold;
+      color: #025857;
+      margin-bottom: 5px;
+    }
+
+    .auth-subtitle {
+      font-size: 13px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .auth-title {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 20px;
+      color: #025857;
+      font-weight: 600;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      margin: 12px 0;
+      border: 2px solid #E2EEE5;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: #f9faf9;
+    }
+
+    .auth-input:focus {
+      outline: none;
+      border-color: #025857;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(2, 88, 87, 0.1);
+    }
+
+    .auth-button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      background: linear-gradient(135deg, #025857 0%, #037070 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .auth-button:hover {
+      background: linear-gradient(135deg, #037070 0%, #025857 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(2, 88, 87, 0.3);
+    }
+
+    .auth-button:active {
+      transform: translateY(0);
+    }
+
+    .auth-toggle {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 13px;
+      color: #999;
+      padding-top: 20px;
+      border-top: 1px solid #E2EEE5;
+    }
+
+    .auth-toggle a {
+      color: #025857;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .auth-toggle a:hover {
+      color: #037070;
+      text-decoration: underline;
+    }
+
+    .auth-error {
+      color: #c62828;
+      margin-top: 15px;
+      font-size: 13px;
+      text-align: center;
+      background: #ffebee;
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 4px solid #c62828;
+    }
+
+    .auth-loading {
+      text-align: center;
+      color: #025857;
+      font-weight: 600;
+    }
+
+    /* MOBILE RESPONSIVE */
+    @media (max-width: 600px) {
+      .auth-container {
+        padding: 40px 25px;
+        margin: 20px;
+      }
+      .auth-header {
+        margin-bottom: 30px;
+      }
+      .auth-app-name {
+        font-size: 24px;
+      }
+      .auth-input {
+        padding: 12px 14px;
+        font-size: 16px;
+      }
+    }
 
     /* MAIN APP */
     .app-page { display: none; }
@@ -46,6 +194,13 @@
 <!-- LOGIN/REGISTER PAGE -->
 <div id="authPage" class="auth-page">
   <div class="auth-container">
+    <!-- Header with Branding -->
+    <div class="auth-header">
+      <div class="auth-logo">🍽️</div>
+      <div class="auth-app-name">Dietologist</div>
+      <div class="auth-subtitle">Cloud Edition</div>
+    </div>
+
     <div class="auth-title" id="authTitle">Σύνδεση</div>
 
     <input type="text" id="authUsername" class="auth-input" placeholder="Όνομα χρήστη" />
