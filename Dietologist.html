@@ -7332,9 +7332,21 @@ function genPlan(){
 
   // Original template-based plan generation
   // Build template key: dietType_goal (e.g., 'vegetarian_loss') or just goal (e.g., 'loss')
+  console.log('CLIENT DATA:', {dietType: c.dietType, goal: c.goal, selectedTemplate: c.selectedTemplate});
+  console.log('AVAILABLE TEMPLATES IN TMPLS:', Object.keys(TMPLS));
+
   var templateKey = (c.dietType && c.dietType !== 'normal') ? (c.dietType + '_' + c.goal) : c.goal;
+  console.log('Template lookup - templateKey:', templateKey, 'dietType:', c.dietType, 'goal:', c.goal);
+
   var tmpl=TMPLS[templateKey]||TMPLS[c.dietType]||TMPLS[c.goal]||TMPLS.maintain;
+  console.log('Template found (tmpl):', tmpl ? 'YES - has ' + (tmpl.length || '?') + ' days' : 'NO - tmpl is', tmpl);
+
+  if(!tmpl){
+    throw new Error('Δεν υπάρχει κατάλληλο πρότυπο για dietType=' + c.dietType + ' goal=' + c.goal);
+  }
+
   if(c.selectedTemplate){
+    console.log('Custom template selected:', c.selectedTemplate);
     if(c.selectedTemplate.indexOf('__kcal_')===0){
       var kcalKey=c.selectedTemplate.replace('__kcal_','');
       if(TMPLS[kcalKey])tmpl=TMPLS[kcalKey];
