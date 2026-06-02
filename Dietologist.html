@@ -3991,8 +3991,46 @@ var MACRO_TYPE={
   // Λαχανικά, Όσπρια, Συνταγές FYH, Άλλα → fallback to calorie ratio
 };
 
-function scalePlan(tmpl,tgt){
-  var p=JSON.parse(JSON.stringify(tmpl)),tot={k:0,pt:0,f:0,c:0};
+function scalePlan(tmpl,tgt,mealTargets){
+  var p=JSON.parse(JSON.stringify(tmpl));
+
+  // ✅ NEW: If per-meal targets provided, scale each meal individually
+  if(mealTargets && Array.isArray(mealTargets) && mealTargets.length===tmpl.length){
+    console.log('scalePlan: Using per-meal targets for precise scaling');
+    p.forEach(function(m,mealIdx){
+      var mealTarget=mealTargets[mealIdx];
+      var mealTot={k:0,pt:0,f:0,c:0};
+
+      // Calculate current totals for this meal
+      m.foods.forEach(function(f){var v=cm(f.n,f.g);mealTot.k+=v.k;mealTot.pt+=v.p;mealTot.f+=v.f;mealTot.c+=v.c;});
+      if(mealTot.k===0)return; // Skip empty meals
+
+      // Scale this meal to hit its specific target
+      var targetK=mealTarget.k||mealTot.k;
+      var targetP=mealTarget.p||0;
+      var targetF=mealTarget.f||0;
+      var targetC=mealTarget.c||0;
+
+      var ratioK=targetK/mealTot.k;
+      var ratioP=(targetP>0&&mealTot.pt>0)?targetP/mealTot.pt:ratioK;
+      var ratioC=(targetC>0&&mealTot.c>0)?targetC/mealTot.c:ratioK;
+      var ratioF=(targetF>0&&mealTot.f>0)?targetF/mealTot.f:ratioK;
+
+      // Scale foods in this meal
+      m.foods.forEach(function(f){
+        var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+        var mt=MACRO_TYPE[cat]||'k';
+        var r=mt==='p'?ratioP:mt==='c'?ratioC:mt==='f'?ratioF:ratioK;
+        var cap=SCALE_CATS[cat];
+        if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
+        f.g=Math.max(5,Math.round(f.g*r));
+      });
+    });
+    return p;
+  }
+
+  // FALLBACK: Original behavior for backward compatibility
+  var tot={k:0,pt:0,f:0,c:0};
   p.forEach(function(m){m.foods.forEach(function(f){var v=cm(f.n,f.g);tot.k+=v.k;tot.pt+=v.p;tot.f+=v.f;tot.c+=v.c;});});
   if(!tot.k)return p;
 
@@ -4001,10 +4039,7 @@ function scalePlan(tmpl,tgt){
   var targetF=(typeof tgt==='object'&&tgt&&tgt.f)?tgt.f:0;
   var targetC=(typeof tgt==='object'&&tgt&&tgt.c)?tgt.c:0;
 
-  // Base calorie ratio (fallback for mixed/uncategorised foods)
   var ratioK=targetK/tot.k;
-  // Per-macro ratios — each food group scales to hit its own macro target
-  // Falls back to ratioK if no target or no template quantity for that macro
   var ratioP=(targetP>0&&tot.pt>0)?targetP/tot.pt:ratioK;
   var ratioC=(targetC>0&&tot.c>0)?targetC/tot.c:ratioK;
   var ratioF=(targetF>0&&tot.f>0)?targetF/tot.f:ratioK;
@@ -4014,8 +4049,6 @@ function scalePlan(tmpl,tgt){
       var cat=FOODS[f.n]?FOODS[f.n].cat:'';
       var mt=MACRO_TYPE[cat]||'k';
       var r=mt==='p'?ratioP:mt==='c'?ratioC:mt==='f'?ratioF:ratioK;
-      // Hard caps for foods that should never scale too far
-      // (olive oil, nuts, vegetables — palatability limits)
       var cap=SCALE_CATS[cat];
       if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
       f.g=Math.max(5,Math.round(f.g*r));
@@ -7487,10 +7520,11 @@ function genPlan(){
 
   if(excl.length)tmplDays=applyFoodExclusions(tmplDays,excl); // 9. αποκλεισμός τροφίμων (μετά όλα τα steps)
 
-  // ✅ PHASE 3D: SCALE ALL MEALS TO DAILY TARGETS (always, as final step)
-  // This proportionally scales all food portions to match daily macro targets
+  // ✅ PHASE 3D: SCALE ALL MEALS TO PER-MEAL TARGETS (always, as final step)
+  // This scales each meal individually to hit its specific calorie target
+  // Uses per-meal targets from allocateMealTargets() for precise distribution
   for(var d=0;d<7;d++){
-    c.weekPlan[d]=scalePlan(tmplDays[d],eff[d]);
+    c.weekPlan[d]=scalePlan(tmplDays[d],eff[d],eff[d].meals);
   }
 
   // ✅ ENFORCE RED MEAT FREQUENCY (MAX 2x/week for cholesterol)
