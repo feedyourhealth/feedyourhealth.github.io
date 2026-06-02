@@ -402,13 +402,186 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
 .gap-item{padding:10px;border-left:4px solid #ccc;margin-bottom:8px;display:flex;justify-content:space-between}
 .gap-item.critical{background:#ffebee;border-left-color:#d32f2f}
 .supp-rec{padding:12px;background:#f5f5f5;border-radius:6px;margin-bottom:10px;border-left:3px solid #1976d2}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN - MOBILE, TABLET, DESKTOP
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* BASE: Desktop (1024px+) */
+html{font-size:16px}
+.app{display:flex;height:100vh}
+.sb{width:250px;overflow-y:auto;border-right:1px solid #ddd}
+.main{flex:1;overflow-y:auto}
+
+/* TABLET: 768px - 1023px */
+@media(max-width:1023px){
+  html{font-size:15px}
+  .sb{width:220px}
+  .sb-title{font-size:14px}
+  .stabs button{font-size:13px;padding:8px 12px}
+  .btn{min-height:40px;padding:8px 12px;font-size:13px}
+  .fgrp label{font-size:12px}
+  input[type="text"],input[type="number"],select{font-size:13px;padding:6px 8px}
+}
+
+/* MOBILE: 320px - 767px */
+@media(max-width:767px){
+  html{font-size:14px}
+
+  /* Layout: Stack sidebar vertically */
+  .app{flex-direction:column}
+  .sb{width:100%;height:auto;border-right:none;border-bottom:1px solid #ddd;max-height:40vh;overflow-y:auto}
+  .main{flex:1;overflow-y:auto}
+
+  /* Font sizing */
+  h1,h2{font-size:16px}
+  h3{font-size:14px}
+
+  /* Form elements: Touch-friendly minimum 44px */
+  button,.btn,.add-btn,.backup-btn,.tmpl-sb-btn{
+    min-height:44px;
+    padding:8px 12px;
+    font-size:13px;
+    width:100%;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="date"],
+  select,textarea{
+    font-size:16px;/* Prevent zoom on iOS */
+    padding:8px 10px;
+    min-height:44px;
+    width:100%;
+    box-sizing:border-box;
+  }
+
+  /* Sidebar */
+  .sb-title{font-size:13px;padding:8px}
+  .client-search-inp{font-size:13px;padding:8px}
+  .ci{padding:10px 8px;font-size:12px}
+  .sb-sep{margin:6px 0}
+
+  /* Main content */
+  .fg{display:flex;flex-direction:column;gap:6px}
+  .fgrp{flex:none;width:100%}
+  .fgrp label{font-size:11px;font-weight:600}
+
+  /* Tabs */
+  .stabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+  .stabs button{
+    font-size:12px;
+    padding:6px 10px;
+    flex:1;
+    min-width:70px;
+  }
+
+  /* Table responsiveness */
+  .week-table{font-size:11px}
+  .week-table tr{font-size:11px}
+  .week-table td{padding:4px 3px}
+
+  /* Modal windows */
+  .recipe-modal-content,
+  .micro-modal-content,
+  .supp-modal-content{
+    width:95%;
+    max-height:90vh;
+    padding:15px;
+  }
+
+  /* Remove excess padding on mobile */
+  .empty{padding:20px 10px}
+
+  /* Menu items */
+  .ci{display:flex;align-items:center;justify-content:space-between}
+  .ci span{flex:1;word-break:break-word}
+  .cdel{padding:4px 8px;font-size:12px}
+}
+
+/* SMALL PHONES: 320px - 479px */
+@media(max-width:479px){
+  html{font-size:13px}
+
+  button,.btn,.add-btn{
+    font-size:12px;
+    padding:8px 10px;
+  }
+
+  .stabs button{
+    font-size:11px;
+    padding:5px 8px;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select{
+    font-size:14px;
+    padding:6px 8px;
+  }
+
+  .sb-title{font-size:12px}
+  .ci{font-size:11px}
+  .week-table{font-size:10px}
+  .week-table td{padding:3px 2px}
+
+  /* Full-width buttons */
+  .btn,button{width:100%}
+}
+
+/* TOUCH DEVICE OPTIMIZATIONS */
+@media(hover:none){
+  button:active,
+  .btn:active,
+  .ci:active{
+    background:rgba(0,0,0,0.1);
+  }
+
+  /* Larger touch targets */
+  .cdel{min-width:32px;min-height:32px}
+}
+
+/* LANDSCAPE ORIENTATION */
+@media(max-height:500px) and (orientation:landscape){
+  .sb{max-height:unset;height:100vh;overflow-y:auto}
+  .app{flex-direction:row}
+  .main{flex:1}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <!-- Autosave indicator -->
 <div id="autosave-toast">✓ Αποθηκεύτηκε</div>
-<div class="app">
+
+<!-- LOGIN / SIGNUP PAGE -->
+<div id="login-page" style="display:none;background:linear-gradient(135deg,#025857 0%,#037070 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:12px;padding:40px;box-shadow:0 10px 40px rgba(0,0,0,0.2);max-width:400px;width:90%;">
+    <div style="text-align:center;margin-bottom:30px;">
+      <div style="font-size:48px;margin-bottom:15px;">🥗</div>
+      <h1 style="color:#025857;font-size:24px;margin-bottom:8px;">Εργαλείο Διαιτολόγου</h1>
+      <p style="color:#999;font-size:14px;">Διαχείριση πελατών & σχεδιασμός διατροφής</p>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <button onclick="goToApp()" style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+        ✓ Σύνδεση
+      </button>
+      <button onclick="goToApp()" style="width:100%;padding:12px;background:#f0f0f0;color:#025857;border:1px solid #ddd;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
+        + Δημιουργία Λογαριασμού
+      </button>
+    </div>
+
+    <div style="text-align:center;color:#999;font-size:12px;">
+      <p>Τοπικό εργαλείο - Δεν απαιτείται κωδικός πρόσβασης</p>
+      <p style="margin-top:8px;">Όλα τα δεδομένα αποθηκεύονται τοπικά στον υπολογιστή σας</p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" style="display:none;" id="app-container">
 <div class="sb">
   <div class="sb-title">Πελάτες</div>
   <input type="text" id="client-search" class="client-search-inp" placeholder="🔍 Αναζήτηση πελάτη..." oninput="filterClients(this.value)">
@@ -424,6 +597,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:13px;background:#f
   <button class="backup-btn" onclick="importBackup()">&#9650; Εισαγωγή αντιγράφου</button>
   <div class="sb-sep"></div>
   <button class="backup-btn" onclick="showReferences()" style="color:#5d4037;border-color:#bcaaa4">📚 Βιβλιογραφία &amp; Πηγές</button>
+  <button class="backup-btn" onclick="showDebugPanel()" style="color:#666;border-color:#ccc">🔧 Σφάλματα &amp; Αναφορά</button>
 </div>
 <div class="main" id="main">
   <div class="empty">
@@ -1894,6 +2068,176 @@ function logValidation(c){
   return audit;
 }
 
+/* ── Safe Storage Wrappers ────────────────────────────────────────────────────
+   Protects against: Safari private mode, quota exceeded, storage disabled
+*/
+function safeStorageGet(key, defaultVal) {
+  try {
+    var val = localStorage.getItem(getStorageKey(key));
+    return val ? JSON.parse(val) : (defaultVal || null);
+  } catch(e) {
+    console.warn('⚠️ Storage read failed for key: ' + key, e.message);
+    return defaultVal || null;
+  }
+}
+
+function safeStorageSet(key, val) {
+  try {
+    localStorage.setItem(getStorageKey(key), JSON.stringify(val));
+    return true;
+  } catch(e) {
+    console.warn('⚠️ Storage write failed for key: ' + key, e.message);
+    // Silent fail - data stays in memory but won't persist on reload
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// LOGGER & VALIDATION SYSTEM — Error tracking, warnings, and data validation
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+var LOGGER={
+  errors:[],
+  warnings:[],
+  infos:[],
+
+  // Log levels
+  ERROR:function(msg,data){
+    var entry={timestamp:new Date().toLocaleTimeString(),msg:msg,data:data,type:'ERROR'};
+    this.errors.push(entry);
+    console.error('[ERROR] '+msg,data||'');
+    return entry;
+  },
+
+  WARN:function(msg,data){
+    var entry={timestamp:new Date().toLocaleTimeString(),msg:msg,data:data,type:'WARN'};
+    this.warnings.push(entry);
+    console.warn('[WARN] '+msg,data||'');
+    return entry;
+  },
+
+  INFO:function(msg,data){
+    var entry={timestamp:new Date().toLocaleTimeString(),msg:msg,data:data,type:'INFO'};
+    this.infos.push(entry);
+    console.log('[INFO] '+msg,data||'');
+    return entry;
+  },
+
+  DEBUG:function(msg,data){
+    console.log('[DEBUG] '+msg,data||'');
+  },
+
+  // Get audit trail
+  getAuditTrail:function(){
+    return{
+      errors:this.errors.slice(-20),
+      warnings:this.warnings.slice(-20),
+      infos:this.infos.slice(-20),
+      total:{errors:this.errors.length,warnings:this.warnings.length,infos:this.infos.length}
+    };
+  },
+
+  // Clear logs
+  clear:function(){
+    this.errors=[];this.warnings=[];this.infos=[];
+  },
+
+  // Export logs
+  exportLogs:function(){
+    return JSON.stringify(this.getAuditTrail(),null,2);
+  }
+};
+
+// Validation wrapper for calcTDEE
+function calcTDEEWithValidation(c){
+  try{
+    if(!c){throw new Error('calcTDEE: client object is null/undefined');}
+    if(!c.age||c.age<1||c.age>120){
+      LOGGER.WARN('calcTDEE: Invalid age',{age:c.age});
+      return {error:true,msg:'Age must be 1-120'};
+    }
+    if(!c.weight||c.weight<20||c.weight>300){
+      LOGGER.WARN('calcTDEE: Invalid weight',{weight:c.weight});
+      return {error:true,msg:'Weight must be 20-300 kg'};
+    }
+    if(!c.height||c.height<100||c.height>230){
+      LOGGER.WARN('calcTDEE: Invalid height',{height:c.height});
+      return {error:true,msg:'Height must be 100-230 cm'};
+    }
+
+    var result=calcTDEE(c);
+
+    // Validate result
+    if(!result.target||result.target<800||result.target>5000){
+      LOGGER.WARN('calcTDEE: Suspicious TDEE value',{tdee:result.target,client:c.name});
+    }
+    if(!result.bmr||result.bmr<600||result.bmr>3000){
+      LOGGER.WARN('calcTDEE: Suspicious BMR value',{bmr:result.bmr,client:c.name});
+    }
+
+    LOGGER.INFO('calcTDEE: Calculated for '+c.name,{tdee:result.target,bmr:result.bmr});
+    return result;
+  }catch(e){
+    LOGGER.ERROR('calcTDEEWithValidation failed',{error:e.message,client:c});
+    throw e;
+  }
+}
+
+// Validation wrapper for scalePlan
+function scalePlanWithValidation(tmpl,target){
+  try{
+    if(!tmpl){throw new Error('scalePlan: template is null');}
+    if(!target||!target.k){throw new Error('scalePlan: target missing calories');}
+    if(target.k<500||target.k>5000){
+      LOGGER.WARN('scalePlan: Suspicious target calories',{target:target.k});
+    }
+
+    var result=scalePlan(tmpl,target);
+
+    // Validate result
+    var scaled=result.k||0;
+    var diff=Math.abs(scaled-target.k);
+    var tolerance=Math.max(30,target.k*0.05);  // 5% or 30 kcal
+
+    if(diff>tolerance){
+      LOGGER.WARN('scalePlan: Calorie mismatch exceeds tolerance',{
+        target:target.k,
+        scaled:scaled,
+        diff:diff,
+        tolerance:tolerance
+      });
+    }
+
+    LOGGER.INFO('scalePlan: Scaled meal',{target:target.k,result:scaled});
+    return result;
+  }catch(e){
+    LOGGER.ERROR('scalePlanWithValidation failed',{error:e.message,target:target});
+    throw e;
+  }
+}
+
+// Data integrity check
+function validateClientData(c){
+  var issues=[];
+
+  if(!c.id)issues.push('Missing client ID');
+  if(!c.name)issues.push('Missing client name');
+  if(c.age<1||c.age>120)issues.push('Invalid age: '+c.age);
+  if(c.weight<20||c.weight>300)issues.push('Invalid weight: '+c.weight);
+  if(c.height<100||c.height>230)issues.push('Invalid height: '+c.height);
+  if(c.bf<0||c.bf>60)issues.push('Invalid body fat %: '+c.bf);
+  if(!c.trainDays||c.trainDays.length!==7)issues.push('trainDays corrupted');
+  if(!c.weekPlan)issues.push('weekPlan missing');
+
+  if(issues.length>0){
+    LOGGER.WARN('Client data integrity issues',{client:c.name,issues:issues});
+    return{ok:false,issues:issues};
+  }
+
+  LOGGER.INFO('Client validation passed',{client:c.name});
+  return{ok:true};
+}
+
 /* ── Autosave system ──────────────────────────────────────────────────────────
    save()     = debounced 800ms — καλείται σε κάθε αλλαγή, δεν σπαταλά πόρους
    saveNow()  = άμεσα — για import/backup, beforeunload
@@ -1901,14 +2245,142 @@ function logValidation(c){
 */
 var _saveTimer=null;
 function _doSave(){
-  try{localStorage.setItem(getStorageKey('fyh_clients'),JSON.stringify(clients));}catch(e){}
-  try{localStorage.setItem(getStorageKey('fyh_custom_tmpls'),JSON.stringify(customTemplates));}catch(e){}
+  safeStorageSet('fyh_clients', clients);
+  safeStorageSet('fyh_custom_tmpls', customTemplates);
   var t=document.getElementById('autosave-toast');
   if(t){t.style.opacity='1';clearTimeout(t._ft);t._ft=setTimeout(function(){t.style.opacity='0';},1600);}
 }
 function save(){clearTimeout(_saveTimer);_saveTimer=setTimeout(_doSave,800);}
 function saveNow(){clearTimeout(_saveTimer);_doSave();}
 window.addEventListener('beforeunload',function(){saveNow();});
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// AUTO-SAVE INTERVAL (Every 30 seconds)
+// ═══════════════════════════════════════════════════════════════════════════════════
+var _autoSaveInterval=null;
+function startAutoSaveInterval(){
+  if(_autoSaveInterval) clearInterval(_autoSaveInterval);
+  _autoSaveInterval=setInterval(function(){
+    // Save without user intervention
+    _doSave();
+    console.log('[AUTO-SAVE] Saved at ' + new Date().toLocaleTimeString());
+  }, 30000);  // 30 seconds
+}
+function stopAutoSaveInterval(){
+  if(_autoSaveInterval){
+    clearInterval(_autoSaveInterval);
+    _autoSaveInterval=null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// EXPORT/IMPORT FUNCTIONALITY
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+function exportData(){
+  // Create export object with timestamp
+  var exportObj={
+    version: '2.0',
+    exportedAt: new Date().toISOString(),
+    clients: JSON.parse(JSON.stringify(clients)),  // Deep copy
+    customTemplates: JSON.parse(JSON.stringify(customTemplates)),
+    trackingData: TRACKING_DATA || {},
+    backupCount: (safeStorageGet('backup_count') || 0) + 1
+  };
+
+  // Create blob and download
+  var dataStr=JSON.stringify(exportObj, null, 2);
+  var blob=new Blob([dataStr], {type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var link=document.createElement('a');
+  link.href=url;
+  link.download='Dietologist_Backup_' + new Date().toISOString().split('T')[0] + '.json';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  // Show confirmation
+  var t=document.getElementById('autosave-toast');
+  if(t){
+    t.innerHTML='✅ Δεδομένα εξαγωγής με επιτυχία';
+    t.style.opacity='1';
+    clearTimeout(t._ft);
+    t._ft=setTimeout(function(){t.innerHTML='💾 Αυτόματη αποθήκευση...'; t.style.opacity='0';},2000);
+  }
+
+  console.log('[EXPORT] Created backup with ' + clients.length + ' clients');
+}
+
+function importData(){
+  // Create hidden file input
+  var input=document.createElement('input');
+  input.type='file';
+  input.accept='application/json';
+  input.onchange=function(e){
+    var file=e.target.files[0];
+    if(!file) return;
+
+    var reader=new FileReader();
+    reader.onload=function(event){
+      try{
+        var importObj=JSON.parse(event.target.result);
+
+        // Validate structure
+        if(!importObj.clients || !Array.isArray(importObj.clients)){
+          throw new Error('Invalid backup file: clients array missing');
+        }
+
+        // Merge strategy: Ask user
+        var action=confirm(
+          'Δεδομένα εισαγωγής: ' + importObj.clients.length + ' πελάτες\n\n' +
+          '✅ OK = Αντικατάσταση όλων (εγγυημένη)\n' +
+          '❌ Cancel = Ακύρωση'
+        );
+
+        if(!action) return;
+
+        // Replace data
+        clients=importObj.clients;
+        customTemplates=importObj.customTemplates || [];
+        if(importObj.trackingData) TRACKING_DATA=importObj.trackingData;
+
+        // Save to localStorage
+        _doSave();
+
+        // Reload UI
+        curId=null;
+        renderSB();
+        renderMain();
+
+        // Show confirmation
+        var t=document.getElementById('autosave-toast');
+        if(t){
+          t.innerHTML='✅ Εισαγωγή με επιτυχία! ' + clients.length + ' πελάτες φορτώθηκαν';
+          t.style.opacity='1';
+          clearTimeout(t._ft);
+          t._ft=setTimeout(function(){t.innerHTML='💾 Αυτόματη αποθήκευση...'; t.style.opacity='0';},3000);
+        }
+
+        console.log('[IMPORT] Loaded ' + clients.length + ' clients');
+      } catch(err){
+        alert('❌ Σφάλμα κατά την εισαγωγή:\n' + err.message);
+        console.error('[IMPORT ERROR]', err);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function showBackupInfo(){
+  var backupCount=safeStorageGet('backup_count') || 0;
+  var lastBackup=safeStorageGet('last_backup_date');
+  var msg='Αυτόματη αποθήκευση κάθε 30 δευτερόλεπτα\n\n' +
+          'Συνολικές αποθηκεύσεις: ' + backupCount + '\n' +
+          'Τελευταία: ' + (lastBackup || 'ποτέ');
+  alert(msg);
+}
 
 /* ══════════════════════════════════════════════════════════════════════════════════
    ⚡ AUTO-RECALCULATION SYSTEM — Cascade recalculation when ANY client data changes
@@ -3765,6 +4237,56 @@ function doSaveAsTmpl(){
   if(btn){var orig=btn.innerHTML;btn.innerHTML='&#10003; Αποθηκεύτηκε!';btn.style.background='#2e7d32';
     setTimeout(function(){btn.innerHTML=orig;btn.style.background='';},2500);}
 }
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// LOGIN / LOGOUT / APP STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+function goToApp(){
+  // Show app, hide login
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app-container').style.display = 'flex';
+  renderSB();  // Load client list
+}
+
+function logout(){
+  // Clear current selection
+  curId = null;
+  // Hide app, show login
+  document.getElementById('app-container').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+  // Optionally clear data (comment out to keep data)
+  // clients = []; customTemplates = []; TRACKING_DATA = { plans: [], recipes: {}, patterns: {}, lastUpdated: null };
+  // save();
+}
+
+// Check if app should start
+function initializeApp(){
+  // If localStorage has clients, start directly; otherwise show login
+  if(clients && clients.length > 0){
+    goToApp();
+  } else {
+    document.getElementById('login-page').style.display = 'flex';
+    document.getElementById('app-container').style.display = 'none';
+  }
+
+  // Start auto-save interval
+  startAutoSaveInterval();
+}
+
+// NAVIGATION: Back to Clients List (Logout)
+// ═══════════════════════════════════════════════════════════════
+function backToClientsList(){
+  curId = null;  // Clear selected client
+  renderSB();    // Re-render sidebar with client list
+  var empty = '<div class="empty" style="padding:20px;text-align:center;color:#999;">';
+  empty += '<div style="font-size:15px;font-weight:600;margin-bottom:10px;">Κανένας πελάτης επιλεγμένος</div>';
+  empty += '<p style="font-size:12px;color:#bbb;">Επιλέξτε έναν πελάτη από την αριστερή στήλη</p>';
+  empty += '</div>';
+  document.getElementById('main').innerHTML = empty;
+  save();  // Save state to localStorage
+}
+
 function deleteCustomTmpl(id){
   if(!confirm('Διαγραφή αυτού του προτύπου;'))return;
   customTemplates=customTemplates.filter(function(t){return t.id!==id;});
@@ -3779,6 +4301,17 @@ function selectTmplForClient(id){
 
 function renderMain(){
   var c=getC();if(!c)return;
+
+  // DEFENSIVE: Ensure all required fields exist (migration safety)
+  if(!c.metActivities) c.metActivities = [];
+  if(!c.weekPlan) c.weekPlan = {};
+  if(!c.dayTargets) c.dayTargets = [];
+  if(!c.supps) c.supps = [];
+  if(!c.suppExclude) c.suppExclude = [];
+  if(!c.foodExclude) c.foodExclude = [];
+  if(!c.trainDays) c.trainDays = [false, false, false, false, false, false, false];
+  if(!c.trainHoursByDay) c.trainHoursByDay = [1, 1, 1, 1, 1, 1, 1];
+
   var t=calcTDEE(c);
   // Calculate weekly average target from daily targets (for MET-based accuracy)
   var avgTarget=t.target;
@@ -3798,7 +4331,8 @@ function renderMain(){
   var numTrainDays=(c.trainDays||[]).filter(function(x){return x;}).length;
   var hydBase=t.hydBase||Math.round(c.weight*35);
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
-  var html='<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button></div>'
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 style="margin:0;color:#025857;font-size:18px;">👤 '+c.name+'</h2></div><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;" onclick="logout()">← Έξοδος</button></div>'
+    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button></div>'
     +'<div id="s1"><div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div></div>'
     +'<div class="fg fg4"><div class="fgrp"><label>Ηλικία</label><input type="number" id="inp-age" value="'+c.age+'"></div>'
@@ -4015,11 +4549,16 @@ function makeDayTgtDefaults(c,t){
   return r;
 }
 function getDayTgtEff(c,t){
+  // DEFENSIVE: Check for null client object
+  if(!c){
+    console.warn('⚠️ getDayTgtEff called with null client');
+    return {};
+  }
   // CRITICAL FIX: Always recalculate daily targets to ensure growthAdd is included
   // Don't rely on cached c.dayTargets as it may be stale
   var eff=makeDayTgtDefaults(c,t);
   // Store freshly calculated values for persistence
-  c.dayTargets=eff;
+  if(c) c.dayTargets=eff;
   return eff;
 
 }
@@ -4032,6 +4571,8 @@ function allocateMealTargets(dailyTarget, numMeals) {
   // Dinner: 25% (balanced evening)
   // Snack 1: 12% (mid-morning/afternoon energy)
   // Snack 2: 13% (evening or post-workout)
+
+  console.log('allocateMealTargets called with:', {dailyTarget, numMeals});
 
   var mealAlloc = [0.22, 0.28, 0.25, 0.12, 0.13];
   if(numMeals !== 5) {
@@ -6746,6 +7287,7 @@ function cloneAndScaleClientPlan(baseCId, newClient, newTDEE) {
 }
 
 function genPlan(){
+  try{
   var c=getC();if(!c)return;var t=calcTDEE(c);c.weekPlan={};
 
   // Check if basis plan is from an existing client
@@ -6805,13 +7347,16 @@ function genPlan(){
   // Build base day array
   var tmplDays=[];
   for(var d=0;d<7;d++)tmplDays.push(tmpl[d]||tmpl[0]);
+  console.log('tmplDays built:', tmplDays.length, 'days');
   var excl=c.foodExclude||[];
   // ✅ Reorder meals to standard sequence before other operations
   tmplDays=reorderMealsToStandardSequence(tmplDays);
   // Initial Mediterranean pipeline on templates ONLY
   tmplDays=removeFYHFromMainMeals(tmplDays);           // 0. FYH έξω από κύρια γεύματα (χειροκίνητα)
   tmplDays=removeOatsFromMainMeals(tmplDays);          // 0β. Βρώμη ΜΟΝΟ σε πρωινό (χειροκίνητα)
+  console.log('About to call getDayTgtEff with c=', c, 't=', t);
   var eff=getDayTgtEff(c,t);
+  console.log('getDayTgtEff returned:', eff, 'is Array?', Array.isArray(eff));
 
   // ✅ TRAINING-DAY VS REST-DAY MACRO ADJUSTMENT
   // Check if training schedule is defined (at least one training day marked)
@@ -6838,8 +7383,11 @@ function genPlan(){
   }
 
   // ✅ PHASE 3A: HYBRID SYSTEM — Allocate per-meal targets from daily totals
+  console.log('PHASE 3A: About to allocate meal targets. eff=', eff);
   for(var d=0;d<7;d++){
+    console.log('Day', d, '- eff[d]=', eff[d], 'tmplDays[d].length=', tmplDays[d].length);
     eff[d].meals = allocateMealTargets(eff[d], tmplDays[d].length);
+    console.log('Day', d, '- meals allocated:', eff[d].meals);
   }
 
   // ✅ PHASE 3B: TRY SMART GENERATION WITH 3-PRIORITY FALLBACK
@@ -7015,6 +7563,11 @@ function genPlan(){
   logPlanGeneration(c, c.weekPlan);
 
   save();swTab(2);renderWeekTable();
+  }catch(e){
+    console.error('GENPLAN ERROR:', e.message);
+    console.error('Stack:', e.stack);
+    alert('Σφάλμα στη δημιουργία πλάνου: ' + e.message);
+  }
 }
 
 /* ======== WEEKLY TABLE ======== */
@@ -7979,7 +8532,7 @@ function getSavedCombos(){
     return c.savedCombos;
   }
   // Προτεραιότητα 2: Ανάκτηση από localStorage (παλαιό σύστημα)
-  try{return JSON.parse(localStorage.getItem(getStorageKey('dieto_combos'))||'[]');}catch(e){return[];}
+  return safeStorageGet('dieto_combos', []);
 }
 
 function setSavedCombos(arr){
@@ -7990,14 +8543,13 @@ function setSavedCombos(arr){
     save();
   }
   // Αποθήκευση και στο localStorage για συμβατότητα
-  localStorage.setItem(getStorageKey('dieto_combos'),JSON.stringify(arr));
+  safeStorageSet('dieto_combos', arr);
 }
 
 /* ---- Auto-Backup System (Every 1 Hour) ---- */
 function autoBackupClients(){
   try{
-    var clientsStr=localStorage.getItem(getStorageKey('clients'))||'[]';
-    var clientsData=JSON.parse(clientsStr);
+    var clientsData=safeStorageGet('clients', []);
     if(!clientsData||!clientsData.length)return; // No clients to backup
 
     var now=new Date();
@@ -8113,12 +8665,11 @@ function pasteMealFromClipboard(d,mi){
 
 /* ---- Favorite Meals System ---- */
 function getFavoriteMeals(){
-  var fav=localStorage.getItem(getStorageKey('favoriteMeals'));
-  return fav?JSON.parse(fav):[];
+  return safeStorageGet('favoriteMeals', []);
 }
 
 function saveFavoriteMeals(meals){
-  localStorage.setItem(getStorageKey('favoriteMeals'),JSON.stringify(meals));
+  safeStorageSet('favoriteMeals', meals);
 }
 
 function toggleFavoriteMeal(d,mi,btn){
@@ -9361,6 +9912,65 @@ function exportBodyCompPDF(){
   setTimeout(function(){w.print();},600);
 }
 
+/* ── Debug Panel / Error Reporting ──────────────────────────────────────────── */
+function showDebugPanel(){
+  var existing=document.getElementById('debug-modal');
+  if(existing){existing.remove();return;}
+
+  var audit=LOGGER.getAuditTrail();
+  var modal=document.createElement('div');
+  modal.id='debug-modal';
+  modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999';
+
+  var content=document.createElement('div');
+  content.style.cssText='background:#fff;border-radius:8px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+
+  var html='<h2 style="color:#d32f2f;margin-top:0">🔧 Debug Panel - Error Reporting</h2>';
+  html+='<div style="margin-bottom:15px;padding:10px;background:#f5f5f5;border-radius:4px;font-size:12px">';
+  html+='<strong>Summary:</strong> Errors: '+audit.total.errors+' | Warnings: '+audit.total.warnings+' | Infos: '+audit.total.infos+'</div>';
+
+  // Errors
+  if(audit.errors.length>0){
+    html+='<h3 style="color:#d32f2f;font-size:13px;margin-top:15px">❌ Errors ('+audit.errors.length+')</h3>';
+    html+='<div style="background:#ffebee;border-left:4px solid #d32f2f;padding:10px;margin-bottom:10px;border-radius:3px;font-size:11px;max-height:150px;overflow-y:auto">';
+    audit.errors.forEach(function(e){
+      html+='<div style="padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.1)">';
+      html+='<strong>['+e.timestamp+']</strong> '+e.msg;
+      if(e.data)html+=' <code style="color:#666;font-size:10px">'+JSON.stringify(e.data).substring(0,100)+'</code>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  // Warnings
+  if(audit.warnings.length>0){
+    html+='<h3 style="color:#ff9800;font-size:13px;margin-top:15px">⚠️ Warnings ('+audit.warnings.length+')</h3>';
+    html+='<div style="background:#fff3e0;border-left:4px solid #ff9800;padding:10px;margin-bottom:10px;border-radius:3px;font-size:11px;max-height:150px;overflow-y:auto">';
+    audit.warnings.forEach(function(w){
+      html+='<div style="padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.1)">';
+      html+='<strong>['+w.timestamp+']</strong> '+w.msg;
+      if(w.data)html+=' <code style="color:#666;font-size:10px">'+JSON.stringify(w.data).substring(0,100)+'</code>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  // Actions
+  html+='<div style="margin-top:15px;display:flex;gap:8px">';
+  html+='<button onclick="LOGGER.clear();alert(\'Logs cleared\');document.getElementById(\\\'debug-modal\\\').remove()" style="flex:1;padding:8px;background:#4caf50;color:white;border:none;border-radius:4px;cursor:pointer">Clear Logs</button>';
+  html+='<button onclick="var txt=LOGGER.exportLogs();var a=document.createElement(\'a\');a.href=\'data:text/plain,\'+encodeURIComponent(txt);a.download=\'debug_'+new Date().toISOString().slice(0,10)+'.txt\';a.click()" style="flex:1;padding:8px;background:#2196f3;color:white;border:none;border-radius:4px;cursor:pointer">Export Logs</button>';
+  html+='<button onclick="document.getElementById(\'debug-modal\').remove()" style="flex:1;padding:8px;background:#999;color:white;border:none;border-radius:4px;cursor:pointer">Close</button>';
+  html+='</div>';
+
+  content.innerHTML=html;
+  modal.appendChild(content);
+
+  modal.onclick=function(e){if(e.target===modal)modal.remove()};
+  document.body.appendChild(modal);
+
+  LOGGER.INFO('Debug panel opened');
+}
+
 /* ── Scientific References Panel ─────────────────────────────────────────── */
 function showReferences(){
   var existing=document.getElementById('ref-modal');
@@ -10220,62 +10830,54 @@ function getStorageKey(baseKey) {
 
 // ── Auto-load from localStorage on startup ───────────────────────────────────
 (function(){
-  try{
-    var ct=localStorage.getItem(getStorageKey('fyh_custom_tmpls'));
-    if(ct){var parsedCt=JSON.parse(ct);if(Array.isArray(parsedCt))customTemplates=parsedCt;}
-  }catch(e){}
-  try{
-    var d=localStorage.getItem(getStorageKey('fyh_clients'));
-    if(d){
-      var parsed=JSON.parse(d);
-      if(Array.isArray(parsed)&&parsed.length){
-        clients=parsed;
-        // Migrate: ensure new fields exist on old client objects
-        clients.forEach(function(c){
-          if(!c.metActivities)c.metActivities=[];
-          if(!c.weightLog)c.weightLog=[];
-          if(!c.consultLog)c.consultLog=[];
-          if(c.macroP==null)c.macroP=25;
-          if(c.macroF==null)c.macroF=25;
-          if(c.macroC==null)c.macroC=50;
-          if(!c.macroPreset)c.macroPreset='balanced';
-          if(!c.suppExclude)c.suppExclude=[];
-          if(!c.foodExclude)c.foodExclude=[];
-          if(c.selectedTemplate===undefined)c.selectedTemplate=null;
-        });
-        renderSB();
-      }
-    }
-  }catch(e){}
+  // Load custom templates
+  var parsedCt = safeStorageGet('fyh_custom_tmpls', null);
+  if(Array.isArray(parsedCt)) customTemplates = parsedCt;
+
+  // Load clients data
+  var d = safeStorageGet('fyh_clients', null);
+  if(Array.isArray(d) && d.length){
+    clients = d;
+    // Migrate: ensure new fields exist on old client objects
+    clients.forEach(function(c){
+      if(!c.metActivities)c.metActivities=[];
+      if(!c.weightLog)c.weightLog=[];
+      if(!c.consultLog)c.consultLog=[];
+      if(c.macroP==null)c.macroP=25;
+      if(c.macroF==null)c.macroF=25;
+      if(c.macroC==null)c.macroC=50;
+      if(!c.macroPreset)c.macroPreset='balanced';
+      if(!c.suppExclude)c.suppExclude=[];
+      if(!c.foodExclude)c.foodExclude=[];
+      if(c.selectedTemplate===undefined)c.selectedTemplate=null;
+    });
+    renderSB();
+  }
 })();
 
 function loadCloudData() {
-  try{
-    var ct=localStorage.getItem(getStorageKey('fyh_custom_tmpls'));
-    if(ct){var parsedCt=JSON.parse(ct);if(Array.isArray(parsedCt))customTemplates=parsedCt;}
-  }catch(e){}
-  try{
-    var d=localStorage.getItem(getStorageKey('fyh_clients'));
-    if(d){
-      var parsed=JSON.parse(d);
-      if(Array.isArray(parsed)&&parsed.length){
-        clients=parsed;
-        clients.forEach(function(c){
-          if(!c.metActivities)c.metActivities=[];
-          if(!c.weightLog)c.weightLog=[];
-          if(!c.consultLog)c.consultLog=[];
-          if(c.macroP==null)c.macroP=25;
-          if(c.macroF==null)c.macroF=25;
-          if(c.macroC==null)c.macroC=50;
-          if(!c.macroPreset)c.macroPreset='balanced';
-          if(!c.suppExclude)c.suppExclude=[];
-          if(!c.foodExclude)c.foodExclude=[];
-          if(c.selectedTemplate===undefined)c.selectedTemplate=null;
-        });
-        renderSB();
-      }
-    }
-  }catch(e){}
+  // Load custom templates
+  var parsedCt = safeStorageGet('fyh_custom_tmpls', null);
+  if(Array.isArray(parsedCt)) customTemplates = parsedCt;
+
+  // Load clients data
+  var d = safeStorageGet('fyh_clients', null);
+  if(Array.isArray(d) && d.length){
+    clients = d;
+    clients.forEach(function(c){
+      if(!c.metActivities)c.metActivities=[];
+      if(!c.weightLog)c.weightLog=[];
+      if(!c.consultLog)c.consultLog=[];
+      if(c.macroP==null)c.macroP=25;
+      if(c.macroF==null)c.macroF=25;
+      if(c.macroC==null)c.macroC=50;
+      if(!c.macroPreset)c.macroPreset='balanced';
+      if(!c.suppExclude)c.suppExclude=[];
+      if(!c.foodExclude)c.foodExclude=[];
+      if(c.selectedTemplate===undefined)c.selectedTemplate=null;
+    });
+    renderSB();
+  }
 }
 
 /* Recipe Modal Display */
@@ -10710,21 +11312,18 @@ var TRACKING_DATA = {
 
 // Load tracking data from localStorage
 function loadTrackingData(){
-  var stored = localStorage.getItem(getStorageKey('dietologist_tracking'));
-  if(stored){
-    try{
-      TRACKING_DATA = JSON.parse(stored);
-    }catch(e){
-      console.log('Could not load tracking data, starting fresh');
-      TRACKING_DATA = { plans: [], recipes: {}, patterns: {}, lastUpdated: null };
-    }
+  var stored = safeStorageGet('dietologist_tracking', null);
+  if(stored && typeof stored === 'object'){
+    TRACKING_DATA = stored;
+  } else {
+    TRACKING_DATA = { plans: [], recipes: {}, patterns: {}, lastUpdated: null };
   }
 }
 
 // Save tracking data to localStorage
 function saveTrackingData(){
   TRACKING_DATA.lastUpdated = new Date().toISOString();
-  localStorage.setItem(getStorageKey('dietologist_tracking'), JSON.stringify(TRACKING_DATA));
+  safeStorageSet('dietologist_tracking', TRACKING_DATA);
 }
 
 // Log plan generation
@@ -11687,6 +12286,12 @@ function closeGapAnalysisModal(){
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// INITIALIZE APP ON LOAD
+// ══════════════════════════════════════════════════════════════════════════════
+window.addEventListener('load', function(){
+  loadTrackingData();  // Load tracking data from localStorage
+  initializeApp();     // Show login or app based on whether clients exist
+});
 </script>
 </body>
 </html>
