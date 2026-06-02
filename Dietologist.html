@@ -12289,8 +12289,16 @@ function closeGapAnalysisModal(){
 // INITIALIZE APP ON LOAD
 // ══════════════════════════════════════════════════════════════════════════════
 window.addEventListener('load', function(){
+  console.log('=== PAGE LOAD STARTED ===');
+  console.log('genPlan defined?', typeof genPlan);
+  console.log('getC defined?', typeof getC);
+  console.log('calcTDEE defined?', typeof calcTDEE);
+  console.log('allocateMealTargets defined?', typeof allocateMealTargets);
+
   loadTrackingData();  // Load tracking data from localStorage
   initializeApp();     // Show login or app based on whether clients exist
+
+  console.log('=== PAGE LOAD COMPLETE ===');
 });
 </script>
 </body>
