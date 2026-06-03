@@ -4113,6 +4113,29 @@ function renderSB(){
     html+='<div style="font-size:9px;color:#ccc;padding:2px 10px;text-align:right">'+clients.length+' πελάτες</div>';
   }
   document.getElementById('client-list').innerHTML=html;
+
+  // ✅ PHASE 5: ADD ANALYTICS BUTTON
+  var sideBar = document.getElementById('sideBar');
+  if(sideBar){
+    var existingAnalyticsBtn = document.getElementById('analyticsBtn');
+    if(!existingAnalyticsBtn){
+      var analyticsBtn = document.createElement('button');
+      analyticsBtn.id = 'analyticsBtn';
+      analyticsBtn.innerHTML = '📊 Αναλυτικά';
+      analyticsBtn.style.cssText = 'width: 90%; padding: 10px; margin: 5px auto; background: #025857; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.3s; display: block;';
+      analyticsBtn.onmouseover = function() { this.style.background = '#034848'; };
+      analyticsBtn.onmouseout = function() { this.style.background = '#025857'; };
+      analyticsBtn.onclick = function() {
+        swTab(5);
+        if (typeof renderAnalyticsDashboard === 'function') {
+          renderAnalyticsDashboard();
+        } else {
+          console.warn('[ANALYTICS] renderAnalyticsDashboard not found');
+        }
+      };
+      sideBar.appendChild(analyticsBtn);
+    }
+  }
 }
 
 /* ======== TEMPLATE EDITOR ======== */
@@ -4521,7 +4544,9 @@ function renderMain(){
     +'<input class="food-lib-search" type="text" placeholder="Αναζήτηση..." oninput="filterLib(this)">'
     +'<div id="lib-list"></div></div></div>'
     +'<div id="supp-notes"></div></div>'
-    +'<div id="s3" style="display:none">'+buildTrackerHtml(c)+'</div>';
+    +'<div id="s3" style="display:none">'+buildTrackerHtml(c)+'</div>'
+    // ✅ PHASE 5: ANALYTICS CONTENT AREA
+    +'<div id="analyticsContent" style="display:none;padding:0;background:#f9f9f9;min-height:600px;overflow-y:auto;"></div>';
   document.getElementById('main').innerHTML=html;
   document.getElementById('inp-name').value=c.name;
   document.getElementById('inp-name').oninput=function(){upd('name',this.value);};
@@ -5888,6 +5913,25 @@ function swTab(n){
   document.getElementById('s1').style.display=n===1?'':'none';
   document.getElementById('s2').style.display=n===2?'':'none';
   document.getElementById('s3').style.display=n===3?'':'none';
+
+  // ✅ PHASE 5: ANALYTICS TAB SUPPORT
+  var analyticsDiv = document.getElementById('analyticsContent');
+  if(analyticsDiv){
+    analyticsDiv.style.display=n===5?'block':'none';
+    if(n===5){
+      if(typeof renderAnalyticsDashboard === 'function'){
+        try{
+          renderAnalyticsDashboard();
+        } catch(e){
+          console.error('[ANALYTICS] Error rendering dashboard:', e);
+          analyticsDiv.innerHTML='<div style="padding:20px;color:red;">Σφάλμα φόρτωσης αναλυτικών. Δείτε την κονσόλα.</div>';
+        }
+      } else {
+        analyticsDiv.innerHTML='<div style="padding:20px;color:red;">Ενότητα αναλυτικών δεν φορτώθηκε. Ελέγξτε τη φόρτωση των αρχείων.</div>';
+      }
+    }
+  }
+
   if(n===1){setupFormEventListeners();}  // ← SET UP EVENT LISTENERS
   if(n===2){renderFoodLib('');var c=getC();if(c){initializeMealTiming(c);}renderWeekTable();renderSuppNotes();}
 }
@@ -12442,6 +12486,9 @@ window.addEventListener('load', function(){
   console.log('=== PAGE LOAD COMPLETE ===');
 });
 </script>
+<!-- ✅ PHASE 5: ANALYTICS DASHBOARD -->
+<script src="js/12-analytics.js"></script>
+<script src="js/13-analytics-ui.js"></script>
 <!-- ✅ PHASE 4: UNDO/REDO SYSTEM -->
 <script src="js/11-undo-redo.js"></script>
 </body>
