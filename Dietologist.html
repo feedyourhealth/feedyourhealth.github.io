@@ -3088,8 +3088,9 @@ function applyTrainingDayMacroAdjustment(effArray, c){
     if(!effArray[d]) continue;
 
     var dayEff=effArray[d];
+    if(!dayEff){console.warn('⚠️ applyTrainingDayMacroAdjustment: dayEff is undefined for day', d);continue;}
     var isTrainDay=c.trainDays[d];
-    var dayKcal=dayEff.target || dayEff.trainTargetByDay[d] || dayEff.k || 2000;
+    var dayKcal=(dayEff.target || dayEff.k || dayEff.trainTargetByDay && dayEff.trainTargetByDay[d]) || 2000;
     var baseMacros={p:dayEff.p, f:dayEff.f, carb:dayEff.carb};
 
     var dayAdj={k:dayKcal, p:0, f:0, c:0, trainDay:isTrainDay};
