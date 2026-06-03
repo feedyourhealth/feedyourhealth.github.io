@@ -9291,9 +9291,9 @@ function exportPDF(lang){
     var tb=(c.trainDays&&c.trainDays[hd])?' <span class="tbadge">T</span>':'';
     if(isMinorPdf){
       var dc=kDayColors[hd];var lightDay=(hd===1||hd===6);
-      thead+='<th style="background:'+dc+';color:'+(lightDay?'#333':'#fff')+';border-radius:8px;">'+esc(dayFull[hd])+tb+'<br><span class="dkcal" style="color:'+(lightDay?'#555':'rgba(255,255,255,.85)')+'">'+Math.round(hdK)+' kcal</span></th>';
+      thead+='<th style="background:'+dc+';color:'+(lightDay?'#333':'#fff')+';border-radius:8px;">'+esc(dayFull[hd])+tb+'</th>';
     } else {
-      thead+='<th style="background:linear-gradient(160deg,#025857,#037a7a);color:#fff;">'+esc(dayFull[hd])+tb+'<br><span class="dkcal">'+Math.round(hdK)+' kcal</span></th>';
+      thead+='<th style="background:linear-gradient(160deg,#025857,#037a7a);color:#fff;">'+esc(dayFull[hd])+tb+'</th>';
     }
   }
   thead+='</tr>';
