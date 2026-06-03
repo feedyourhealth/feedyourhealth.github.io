@@ -4059,8 +4059,34 @@ function scalePlan(tmpl,tgt,mealTargets){
 
 var clients=[],curId=null,currentDD=null;
 
-function addClient(){var id='c'+Date.now();clients.push({id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,leanmass:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal'});selectClient(id);}
-function deleteClient(id){clients=clients.filter(function(c){return c.id!==id;});if(curId===id){curId=null;document.getElementById('main').innerHTML='<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';}renderSB();}
+// ✅ PHASE 4: CREATE CLIENT WITH UNDO/REDO
+function addClient(){
+  var id='c'+Date.now();
+  var newClient={id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,leanmass:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal'};
+
+  if(window.undoRedoManager && typeof CreateClientCommand !== 'undefined'){
+    var cmd = new CreateClientCommand(newClient);
+    window.undoRedoManager.execute(cmd);
+  } else {
+    clients.push(newClient);
+    selectClient(id);
+  }
+}
+
+// ✅ PHASE 4: DELETE CLIENT WITH UNDO/REDO
+function deleteClient(id){
+  if(window.undoRedoManager && typeof DeleteClientCommand !== 'undefined'){
+    var clientToDelete = clients.find(function(c){return c.id===id;});
+    if(clientToDelete){
+      var cmd = new DeleteClientCommand(clientToDelete);
+      window.undoRedoManager.execute(cmd);
+    }
+  } else {
+    clients=clients.filter(function(c){return c.id!==id;});
+    if(curId===id){curId=null;document.getElementById('main').innerHTML='<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';}
+    renderSB();
+  }
+}
 function selectClient(id){
   curId=id;
   var tb=document.getElementById('tmpl-sb-btn');if(tb)tb.classList.remove('active');
@@ -4282,6 +4308,31 @@ function goToApp(){
   renderSB();  // Load client list
 }
 
+// ✅ PHASE 4: UNDO/REDO WRAPPER FUNCTIONS
+function undo(){
+  if(!window.undoRedoManager) return;
+  window.undoRedoManager.undo();
+  updateUndoRedoUI();
+  renderMain();
+}
+
+function redo(){
+  if(!window.undoRedoManager) return;
+  window.undoRedoManager.redo();
+  updateUndoRedoUI();
+  renderMain();
+}
+
+function updateUndoRedoUI(){
+  if(!window.undoRedoManager) return;
+  var undoBtn = document.getElementById('undoBtn');
+  var redoBtn = document.getElementById('redoBtn');
+  if(undoBtn) undoBtn.disabled = !window.undoRedoManager.canUndo();
+  if(redoBtn) redoBtn.disabled = !window.undoRedoManager.canRedo();
+  if(undoBtn) undoBtn.style.opacity = window.undoRedoManager.canUndo() ? '1' : '0.5';
+  if(redoBtn) redoBtn.style.opacity = window.undoRedoManager.canRedo() ? '1' : '0.5';
+}
+
 function logout(){
   // Clear current selection
   curId = null;
@@ -4364,7 +4415,7 @@ function renderMain(){
   var numTrainDays=(c.trainDays||[]).filter(function(x){return x;}).length;
   var hydBase=t.hydBase||Math.round(c.weight*35);
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
-  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 style="margin:0;color:#025857;font-size:18px;">👤 '+c.name+'</h2></div><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;" onclick="logout()">← Έξοδος</button></div>'
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 style="margin:0;color:#025857;font-size:18px;">👤 '+c.name+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
     +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button></div>'
     +'<div id="s1"><div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div></div>'
@@ -4443,7 +4494,7 @@ function renderMain(){
     +buildSuppHtml(c)
     +buildExcludeHtml(c)
     +buildTmplSelectorHtml(c)
-    +'<div class="brow"><button class="btn primary" onclick="genPlan()">Δημιουργία πλάνου</button><button class="btn info" onclick="swTab(2)">Δες το πλάνο &#8594;</button><button class="btn" style="background:#6c757d;" onclick="showTrackingDashboard()">📊 Analytics (' + TRACKING_DATA.plans.length + ')</button></div></div>'
+    +'<div class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου</button><button class="btn info" onclick="swTab(2)">Δες το πλάνο &#8594;</button><button class="btn" style="background:#6c757d;" onclick="showTrackingDashboard()">📊 Analytics (' + TRACKING_DATA.plans.length + ')</button></div></div>'
     +'<div id="s2" style="display:none">'
     +'<div class="brow"><button class="btn" onclick="swTab(1)">&#8592; Στοιχεία</button>'
     +'<button class="btn" style="background:#ff9800;color:#fff;" onclick="regeneratePlan()">&#8635; Αναδημιουργία (δεν μου αρέσει)</button>'
@@ -5879,7 +5930,16 @@ function updateDayTargetTable(c,t){
 }
 
 function upd(k,v){
-  var c=getC();if(!c)return;c[k]=v;save();
+  var c=getC();if(!c)return;
+  var oldValue = c[k];
+
+  // ✅ PHASE 4: UPDATE CLIENT WITH UNDO/REDO
+  if(window.undoRedoManager && typeof UpdateClientCommand !== 'undefined' && k !== 'name' && oldValue !== v){
+    var cmd = new UpdateClientCommand(c, k, oldValue, v);
+    window.undoRedoManager.execute(cmd);
+  } else {
+    c[k]=v;save();
+  }
   if(k==='name')renderSB();
   // formula/lbm changes need full re-render to update formula tag + LBM field visibility
   if(k==='formula'||k==='lbm'){renderMain();return;}
@@ -7317,6 +7377,19 @@ function cloneAndScaleClientPlan(baseCId, newClient, newTDEE) {
   console.log('Cloned and scaled plan:', scaledPlan);
   console.log('Scaled plan day 0 meals:', scaledPlan[0] ? scaledPlan[0].length + ' meals' : 'No day 0');
   return scaledPlan;
+}
+
+// ✅ PHASE 4: GENERATE PLAN WITH UNDO/REDO WRAPPER
+function genPlanWithUndo(){
+  var c=getC();if(!c)return;
+  var oldPlan = JSON.parse(JSON.stringify(c.weekPlan));
+
+  if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
+    var cmd = new GeneratePlanCommand(c, oldPlan);
+    window.undoRedoManager.execute(cmd);
+  } else {
+    genPlan();
+  }
 }
 
 function genPlan(){
@@ -12343,6 +12416,28 @@ window.addEventListener('load', function(){
 
   loadTrackingData();  // Load tracking data from localStorage
   initializeApp();     // Show login or app based on whether clients exist
+
+  // ✅ PHASE 4: INITIALIZE UNDO/REDO SYSTEM
+  setTimeout(function(){
+    if(typeof UndoRedoManager !== 'undefined' && !window.undoRedoManager){
+      window.undoRedoManager = new UndoRedoManager();
+      console.log('✅ UndoRedoManager initialized');
+
+      // Setup keyboard shortcuts
+      document.addEventListener('keydown', function(e){
+        if((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey){
+          e.preventDefault();
+          undo();
+        }
+        if((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))){
+          e.preventDefault();
+          redo();
+        }
+      });
+      console.log('✅ Keyboard shortcuts registered (Ctrl+Z, Ctrl+Y)');
+      updateUndoRedoUI();
+    }
+  }, 500);
 
   console.log('=== PAGE LOAD COMPLETE ===');
 });
