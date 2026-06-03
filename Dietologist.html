@@ -4672,6 +4672,49 @@ function getDayTgtEff(c,t){
 
 }
 
+// ✅ PHASE 3: ALLOCATE PER-MEAL CALORIE TARGETS
+// Splits daily targets across 5 meals with intelligent distribution
+function allocateMealTargets(dailyTarget, numMeals, mealTiming) {
+  // Default distribution: breakfast 22%, lunch 28%, dinner 25%, snacks 12-13%
+  // This ensures larger meals when appetite is higher (lunch/dinner)
+  // and smaller snacks between meals
+  var mealAlloc = [0.22, 0.28, 0.25, 0.12, 0.13];
+
+  if(!dailyTarget || !dailyTarget.k) {
+    console.warn('⚠️ allocateMealTargets: Invalid daily target');
+    return [];
+  }
+
+  var targets = [];
+  for (var i = 0; i < Math.min(numMeals, mealAlloc.length); i++) {
+    targets.push({
+      k: Math.round(dailyTarget.k * mealAlloc[i]),
+      p: Math.round(dailyTarget.p * mealAlloc[i]),
+      f: Math.round(dailyTarget.f * mealAlloc[i]),
+      c: Math.round(dailyTarget.c * mealAlloc[i])
+    });
+  }
+
+  // Handle excess meals (if > 5) by distributing evenly
+  if(numMeals > mealAlloc.length) {
+    var remainingKcal = dailyTarget.k;
+    for(var i = 0; i < mealAlloc.length; i++) {
+      remainingKcal -= targets[i].k;
+    }
+    var perExtraMeal = Math.round(remainingKcal / (numMeals - mealAlloc.length));
+    for(var i = mealAlloc.length; i < numMeals; i++) {
+      targets.push({
+        k: perExtraMeal,
+        p: Math.round(dailyTarget.p * (perExtraMeal / dailyTarget.k)),
+        f: Math.round(dailyTarget.f * (perExtraMeal / dailyTarget.k)),
+        c: Math.round(dailyTarget.c * (perExtraMeal / dailyTarget.k))
+      });
+    }
+  }
+
+  return targets;
+}
+
 // ✅ HYBRID SYSTEM: Allocate daily targets across individual meals
 function allocateMealTargets(dailyTarget, numMeals) {
   // Intelligent distribution based on meal timing priorities
