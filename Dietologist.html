@@ -548,6 +548,97 @@ html{font-size:16px}
   .app{flex-direction:row}
   .main{flex:1}
 }
+
+/* ✅ MOBILE: Touch-friendly enhancements */
+@media(max-width:767px){
+  /* Larger touch targets - minimum 48px for easy tapping */
+  button, .btn, input[type="button"], input[type="submit"]{
+    min-height: 48px;
+    padding: 10px 16px;
+  }
+
+  /* Remove hover effects on touch devices */
+  @media(hover:none){
+    button:hover, .btn:hover{ background: none; }
+    .ci:hover{ background: none; }
+  }
+
+  /* Horizontal scroll for tables */
+  .week-table{
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  /* Better spacing for form inputs */
+  .fgrp{
+    margin-bottom: 12px;
+  }
+
+  .fgrp input, .fgrp select{
+    padding: 10px 12px;
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+
+  /* Stack buttons vertically on mobile */
+  .brow{
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .brow .btn{
+    width: 100%;
+  }
+}
+
+/* ✅ MOBILE: Extra small phones (under 480px) */
+@media(max-width:479px){
+  /* Aggressive spacing reduction */
+  .main{ padding: 8px 10px; }
+  .app{ gap: 0; }
+
+  /* Simplify week table */
+  .week-table{
+    font-size: 10px;
+  }
+
+  .week-table td, .week-table th{
+    padding: 2px 2px;
+  }
+
+  /* Hide less important columns */
+  .tdee-row{
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 8px;
+  }
+
+  /* Single column layout for forms */
+  .fg, .fg3, .fg4{
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ✅ TABLET: Medium devices (768px - 1024px) */
+@media(min-width:768px) and (max-width:1024px){
+  .app{ flex-direction: row; }
+  .sb{ width: 220px; }
+
+  .fg3{ grid-template-columns: 1fr 1fr; }
+  .fg4{ grid-template-columns: 1fr 1fr; }
+
+  /* Responsive buttons */
+  .brow{ flex-wrap: wrap; }
+  .brow .btn{ flex: 1 1 calc(50% - 4px); min-width: 120px; }
+}
+
+/* ✅ PREVENT ZOOM on iOS input focus */
+@media(max-width:767px){
+  input, select, textarea{
+    font-size: 16px;
+  }
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -4183,6 +4274,82 @@ var EventDelegator={
     }
   }
 };
+
+// ✅ MOBILE: Touch event handling
+var TOUCH_HANDLERS={
+  // Detect if device is touch-capable
+  isTouchDevice: function(){
+    return (('ontouchstart' in window) ||
+            (navigator.maxTouchPoints > 0) ||
+            (navigator.msMaxTouchPoints > 0));
+  },
+
+  // Initialize touch handlers
+  init: function(){
+    if(!this.isTouchDevice()) return;
+
+    // Add touch-friendly feedback to buttons
+    document.addEventListener('touchstart', function(e){
+      var el = e.target.closest('button, .btn, input[type="button"]');
+      if(el){
+        el.style.opacity = '0.8';
+        el.style.transform = 'scale(0.95)';
+      }
+    }, {passive: true});
+
+    document.addEventListener('touchend', function(e){
+      var el = e.target.closest('button, .btn, input[type="button"]');
+      if(el){
+        el.style.opacity = '1';
+        el.style.transform = 'scale(1)';
+      }
+    }, {passive: true});
+
+    console.log('✅ Touch handlers initialized');
+  }
+};
+
+// ✅ MOBILE: Viewport optimization
+var MOBILE_VIEWPORT={
+  isMobile: function(){
+    return window.innerWidth <= 767;
+  },
+
+  isSmallPhone: function(){
+    return window.innerWidth <= 479;
+  },
+
+  isTablet: function(){
+    return window.innerWidth >= 768 && window.innerWidth <= 1024;
+  },
+
+  onResize: function(){
+    // Adjust layout on resize
+    if(this.isMobile()){
+      console.log('📱 Mobile layout');
+    } else if(this.isTablet()){
+      console.log('📱 Tablet layout');
+    } else {
+      console.log('🖥️ Desktop layout');
+    }
+  }
+};
+
+// Listen for orientation changes
+window.addEventListener('orientationchange', function(){
+  MOBILE_VIEWPORT.onResize();
+  PERF_METRICS.startRender();
+  setTimeout(function(){ PERF_METRICS.endRender(); }, 100);
+}, {passive: true});
+
+// ✅ MOBILE: Prevent rubber-band scroll bounce
+document.addEventListener('touchmove', function(e){
+  // Allow scroll on specific elements
+  var scrollable = e.target.closest('.sb, .main, .week-table');
+  if(!scrollable && e.cancelable){
+    e.preventDefault();
+  }
+}, {passive: false});
 
 // ✅ PERFORMANCE MONITORING
 var PERF_METRICS={
@@ -12650,6 +12817,11 @@ window.addEventListener('load', function(){
 
   loadTrackingData();  // Load tracking data from localStorage
   initializeApp();     // Show login or app based on whether clients exist
+
+  // ✅ PHASE 3: INITIALIZE MOBILE OPTIMIZATIONS
+  TOUCH_HANDLERS.init();
+  MOBILE_VIEWPORT.onResize();
+  console.log('✅ Mobile optimizations initialized');
 
   // ✅ PHASE 4: INITIALIZE UNDO/REDO SYSTEM
   setTimeout(function(){
