@@ -4060,6 +4060,152 @@ function scalePlan(tmpl,tgt,mealTargets){
 
 var clients=[],curId=null,currentDD=null;
 
+// ✅ PERFORMANCE: DOM CACHE - Cache frequently accessed elements
+var DOM_CACHE={
+  main: null,
+  sideBar: null,
+  clientList: null,
+  tabContent: null,
+
+  // Initialize cache on first access
+  init: function(){
+    if(!this.main) this.main = document.getElementById('main');
+    if(!this.sideBar) this.sideBar = document.getElementById('sideBar');
+    if(!this.clientList) this.clientList = document.getElementById('client-list');
+    if(!this.tabContent) this.tabContent = document.getElementById('tabContent');
+  },
+
+  // Helper to get cached or find element
+  get: function(id){
+    if(!this[id]) this[id] = document.getElementById(id);
+    return this[id];
+  },
+
+  // Clear cache on major DOM changes
+  clear: function(){
+    this.main = null;
+    this.sideBar = null;
+    this.clientList = null;
+    this.tabContent = null;
+  }
+};
+
+// Initialize cache on load
+document.addEventListener('DOMContentLoaded', function(){ DOM_CACHE.init(); });
+
+// ✅ PERFORMANCE: JSON CACHE - Cache parsed JSON to avoid repeated parsing
+var JSON_CACHE={
+  storage: {},
+  maxSize: 100,
+
+  set: function(key, obj){
+    if(Object.keys(this.storage).length >= this.maxSize){
+      delete this.storage[Object.keys(this.storage)[0]];
+    }
+    this.storage[key] = obj;
+  },
+
+  get: function(key){
+    return this.storage[key];
+  },
+
+  parseAndCache: function(jsonStr, key){
+    if(!jsonStr) return null;
+    var cached = this.get(key);
+    if(cached) return cached;
+    var parsed = JSON.parse(jsonStr);
+    if(key) this.set(key, parsed);
+    return parsed;
+  },
+
+  clear: function(){
+    this.storage = {};
+  }
+};
+
+// ✅ PERFORMANCE: DEBOUNCE HELPER - Prevent excessive function calls
+function debounce(fn, delay){
+  var timer = null;
+  return function(){
+    var args = arguments;
+    clearTimeout(timer);
+    timer = setTimeout(function(){ fn.apply(null, args); }, delay);
+  };
+}
+
+// ✅ PERFORMANCE: BATCH DOM UPDATE - Reduce reflows/repaints
+function batchDOMUpdate(element, updates){
+  if(!element) return;
+  // Use fragment for batch insertions
+  if(updates.innerHTML){
+    element.innerHTML = updates.innerHTML;
+  }
+  if(updates.style && typeof updates.style === 'object'){
+    Object.assign(element.style, updates.style);
+  }
+  if(updates.className){
+    element.className = updates.className;
+  }
+}
+
+// ✅ PERFORMANCE: REQUEST ANIMATION FRAME - Sync DOM updates with browser refresh
+function scheduleRender(fn){
+  if(typeof requestAnimationFrame !== 'undefined'){
+    requestAnimationFrame(fn);
+  } else {
+    setTimeout(fn, 16); // ~60fps fallback
+  }
+}
+
+// ✅ PERFORMANCE: EVENT DELEGATION - Reduce event listener count
+var EventDelegator={
+  listeners: {},
+
+  on: function(parent, event, selector, handler){
+    if(!this.listeners[event]) this.listeners[event] = [];
+
+    parent.addEventListener(event, function(e){
+      var target = e.target;
+      if(target.matches && target.matches(selector)){
+        handler.call(target, e);
+      }
+    });
+
+    this.listeners[event].push({parent, selector, handler});
+  },
+
+  off: function(event){
+    if(this.listeners[event]){
+      this.listeners[event].forEach(function(l){
+        l.parent.removeEventListener(event, l.handler);
+      });
+      delete this.listeners[event];
+    }
+  }
+};
+
+// ✅ PERFORMANCE MONITORING
+var PERF_METRICS={
+  renderStart: 0,
+  renderEnd: 0,
+  saveStart: 0,
+  saveEnd: 0,
+
+  startRender: function(){ this.renderStart = performance.now(); },
+  endRender: function(){
+    this.renderEnd = performance.now();
+    var duration = this.renderEnd - this.renderStart;
+    if(duration > 100) console.warn('⚠️  Slow render: ' + Math.round(duration) + 'ms');
+  },
+
+  startSave: function(){ this.saveStart = performance.now(); },
+  endSave: function(){
+    this.saveEnd = performance.now();
+    var duration = this.saveEnd - this.saveStart;
+    if(duration > 50) console.warn('⚠️  Slow save: ' + Math.round(duration) + 'ms');
+  }
+};
+
 // ✅ PHASE 4: CREATE CLIENT WITH UNDO/REDO
 function addClient(){
   var id='c'+Date.now();
