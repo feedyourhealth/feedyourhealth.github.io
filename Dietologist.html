@@ -950,7 +950,7 @@ body.dark-mode #keyboardHelpPanel {
       <button onclick="goToApp()" style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">
         ✓ Σύνδεση
       </button>
-      <button onclick="goToApp()" style="width:100%;padding:12px;background:#f0f0f0;color:#025857;border:1px solid #ddd;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
+      <button onclick="createNewAccount()" style="width:100%;padding:12px;background:#f0f0f0;color:#025857;border:1px solid #ddd;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
         + Δημιουργία Λογαριασμού
       </button>
     </div>
@@ -5749,9 +5749,27 @@ function buildPlanHistoryHtml(c){
 
 function goToApp(){
   // Show app, hide login
-  document.getElementById('login-page').style.display = 'none';
-  document.getElementById('app-container').style.display = 'flex';
-  renderSB();  // Load client list
+  try {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('app-container').style.display = 'flex';
+    renderSB();  // Load client list
+  } catch(e) {
+    console.error('Error in goToApp():', e.message);
+    showErrorToast('Σφάλμα: ' + e.message);
+  }
+}
+
+function createNewAccount(){
+  // Show welcome modal and then go to app
+  try {
+    showSuccessToast('✨ Καλώς ήρθες! Ας ξεκινήσουμε...');
+    setTimeout(function(){
+      goToApp();
+    }, 500);
+  } catch(e) {
+    console.error('Error in createNewAccount():', e.message);
+    showErrorToast('Σφάλμα: ' + e.message);
+  }
 }
 
 // ✅ PHASE 4: UNDO/REDO WRAPPER FUNCTIONS
