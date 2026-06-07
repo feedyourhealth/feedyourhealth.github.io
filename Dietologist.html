@@ -6209,27 +6209,41 @@ function renderMain(){
     +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
 
     // ✅ MEDICAL & ALLERGIES SECTION
-    +'<div style="background:#f8fffe;border:1px solid #c5ddd8;border-radius:10px;padding:12px;margin-top:14px;">'
-    +'<div style="font-size:12px;font-weight:700;color:#025857;margin-bottom:10px;">⚕️ Ιατρικές Συνθήκες & Αλλεργίες</div>'
-
     +'<div class="fg"><div class="fgrp"><label>Αλλεργίες / Αποφεύξεις</label>'
     +'<input type="text" id="inp-allergies" placeholder="π.χ. γαρίδες, καρύδια, γάλα" value="'+(c.allergies||'')+'">'
-    +'<div style="font-size:9px;color:#666;margin-top:4px">Αποχωρίστε με κόμμα</div>'
+    +'<div style="font-size:11px;color:#999;margin-top:4px;">💡 Αποχωρίστε με κόμμα</div>'
     +'</div></div>'
 
     +'<div class="fg"><div class="fgrp"><label>Ιατρικές Συνθήκες</label>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
-    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-diabetes" '+(c.medConditions&&c.medConditions.diabetes?'checked':'')+' onchange="upd(\'medConditions.diabetes\', this.checked)"> Σακχαρώδης Διαβήτης</label>'
-    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-hypertension" '+(c.medConditions&&c.medConditions.hypertension?'checked':'')+' onchange="upd(\'medConditions.hypertension\', this.checked)"> Υψηλή Πίεση</label>'
-    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-celiac" '+(c.medConditions&&c.medConditions.celiac?'checked':'')+' onchange="upd(\'medConditions.celiac\', this.checked)"> Κοιλιοκάκη</label>'
-    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-ibs" '+(c.medConditions&&c.medConditions.ibs?'checked':'')+' onchange="upd(\'medConditions.ibs\', this.checked)"> IBS</label>'
-    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-lactose" '+(c.medConditions&&c.medConditions.lactose?'checked':'')+' onchange="upd(\'medConditions.lactose\', this.checked)"> Δυσανεξία Λακτόζης</label>'
-    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-vegetarian" '+(c.medConditions&&c.medConditions.vegetarian?'checked':'')+' onchange="upd(\'medConditions.vegetarian\', this.checked)"> Χορτοφαγική</label>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">'
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
+    +'<input type="checkbox" id="chk-diabetes" '+(c.medConditions&&c.medConditions.diabetes?'checked':'')+' onchange="upd(\'medConditions.diabetes\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
+    +'<span>Σακχαρώδης Διαβήτης</span></label>'
+
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
+    +'<input type="checkbox" id="chk-hypertension" '+(c.medConditions&&c.medConditions.hypertension?'checked':'')+' onchange="upd(\'medConditions.hypertension\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
+    +'<span>Υψηλή Πίεση</span></label>'
+
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
+    +'<input type="checkbox" id="chk-celiac" '+(c.medConditions&&c.medConditions.celiac?'checked':'')+' onchange="upd(\'medConditions.celiac\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
+    +'<span>Κοιλιοκάκη</span></label>'
+
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
+    +'<input type="checkbox" id="chk-ibs" '+(c.medConditions&&c.medConditions.ibs?'checked':'')+' onchange="upd(\'medConditions.ibs\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
+    +'<span>IBS</span></label>'
+
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
+    +'<input type="checkbox" id="chk-lactose" '+(c.medConditions&&c.medConditions.lactose?'checked':'')+' onchange="upd(\'medConditions.lactose\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
+    +'<span>Δυσανεξία Λακτόζης</span></label>'
+
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
+    +'<input type="checkbox" id="chk-vegetarian" '+(c.medConditions&&c.medConditions.vegetarian?'checked':'')+' onchange="upd(\'medConditions.vegetarian\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
+    +'<span>Χορτοφαγική</span></label>'
     +'</div>'
     +'</div></div>'
 
     +'<div class="fg"><div class="fgrp"><label>Προτιμήσεις & Περιορισμοί</label>'
-    +'<textarea id="inp-preferences" placeholder="π.χ. προτιμώ ψάρι, δεν τρώω πολλά ξηρά φρούτα..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:12px;height:60px">'+(c.preferences||'')+'</textarea>'
+    +'<textarea id="inp-preferences" placeholder="π.χ. προτιμώ ψάρι, δεν τρώω πολλά ξηρά φρούτα..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:13px;height:60px;resize:vertical;">'+(c.preferences||'')+'</textarea>'
     +'</div></div>'
 
     +'<div class="fg"><div class="fgrp"><label>Εβδομαδιαίος Προϋπολογισμός (€)</label>'
