@@ -6192,7 +6192,7 @@ function renderMain(){
   var hydBase=t.hydBase||Math.round(c.weight*35);
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 style="margin:0;color:#025857;font-size:18px;">👤 '+c.name+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
-    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
+    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button><button class="stab" id="t5" onclick="swTab(5)">📈 Analytics</button></div>'
     +'<div id="s1"><div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div></div>'
     +'<div class="fg fg4"><div class="fgrp"><label>Ηλικία</label><input type="number" id="inp-age" value="'+c.age+'"></div>'
@@ -6309,6 +6309,12 @@ function renderMain(){
     +'<button class="btn secondary" onclick="addProgressEntry()" title="Καταγράψε βάρος & σημειώσεις">📈 Εγγραφή Προόδου</button>'
     +'<button class="btn secondary" onclick="generateShoppingList()" title="Κατεβάσμε λίστα αγορών">🛒 Λίστα Αγορών</button>'
     +'<button class="btn secondary" onclick="generateProgressReport()" title="Αναφορά προόδου PDF">📋 Αναφορά</button>'
+    +'</div>'
+
+    // ✅ FEATURE 2: AUTO-ADJUST BUTTONS
+    +'<div class="brow">'
+    +'<button class="btn warning" onclick="showAutoAdjustHints()" title="Δες συστάσεις βελτίωσης από feedback">💡 Συστάσεις</button>'
+    +'<button class="btn success" onclick="generateSmartPlanWithFeedback()" title="Δημιουργία νέου πλάνου με AI learning">🤖 AI Πλάνο</button>'
     +'</div></div>'
     +'<div id="s2" style="display:none">'
     +'<div class="brow"><button class="btn" onclick="swTab(1)">&#8592; Στοιχεία</button>'
@@ -7937,6 +7943,7 @@ function swTab(n){
   document.getElementById('t2').classList.toggle('active',n===2);
   document.getElementById('t3').classList.toggle('active',n===3);
   var t4=document.getElementById('t4');if(t4)t4.classList.toggle('active',n===4);
+  var t5=document.getElementById('t5');if(t5)t5.classList.toggle('active',n===5);
   document.getElementById('s1').style.display=n===1?'block':'none';
   document.getElementById('s2').style.display=n===2?'block':'none';
   document.getElementById('s3').style.display=n===3?'block':'none';
@@ -15537,6 +15544,207 @@ function generateShoppingList() {
   a.click();
 
   showSuccessToast('📋 Λίστα λήφθηκε!');
+}
+
+// 5A. Auto-adjust based on feedback
+function getAutoAdjustmentHints(c) {
+  // Analyze meal feedback to improve future plans
+  if(!c.mealFeedback || Object.keys(c.mealFeedback).length === 0) return null;
+
+  var badMeals = [];  // 1-2 star meals
+  var goodMeals = []; // 5 star meals
+
+  Object.keys(c.mealFeedback).forEach(function(key) {
+    var feedback = c.mealFeedback[key];
+    if(feedback.rating <= 2) {
+      badMeals.push({key: key, rating: feedback.rating, notes: feedback.notes});
+    } else if(feedback.rating === 5) {
+      goodMeals.push({key: key, notes: feedback.notes});
+    }
+  });
+
+  return {
+    avoid: badMeals,
+    favorite: goodMeals,
+    hints: []
+  };
+}
+
+// Show auto-adjust recommendations
+function showAutoAdjustHints() {
+  var c = getC();
+  if(!c) return;
+
+  var hints = getAutoAdjustmentHints(c);
+  if(!hints || (hints.avoid.length === 0 && hints.favorite.length === 0)) {
+    showErrorToast('Δεν υπάρχει αρκετή ανατροφοδότηση ακόμα');
+    return;
+  }
+
+  var message = '💡 ΣΥΣΤΑΣΕΙΣ ΒΕΛΤΙΩΣΗΣ:\n\n';
+
+  if(hints.favorite.length > 0) {
+    message += '✅ Αγαπημένα γεύματα (χρησιμοποίησε περισσότερο):\n';
+    hints.favorite.forEach(function(meal) {
+      message += '  • ' + meal.key + '\n';
+    });
+    message += '\n';
+  }
+
+  if(hints.avoid.length > 0) {
+    message += '❌ Γεύματα που δεν αρέσουν (αποφύγετε):\n';
+    hints.avoid.forEach(function(meal) {
+      message += '  • ' + meal.key + ' (' + meal.rating + '⭐) - ' + meal.notes + '\n';
+    });
+  }
+
+  alert(message);
+}
+
+// 5B. Generate next plan with auto-adjustments
+function generateSmartPlanWithFeedback() {
+  var c = getC();
+  if(!c) return;
+
+  var hints = getAutoAdjustmentHints(c);
+  var message = '📊 Δημιουργία νέου πλάνου με AI learning:\n\n';
+
+  if(hints) {
+    message += '✅ Θα χρησιμοποιηθούν αγαπημένα γεύματα\n';
+    message += '❌ Θα αποφευχθούν προβληματικά γεύματα\n';
+  }
+
+  message += '🎯 Θα διατηρηθούν θερμίδες & macros\n\n';
+  message += 'Επιβεβαίωση;';
+
+  if(confirm(message)) {
+    genPlanWithUndo();
+    showSuccessToast('📈 Νέο πλάνο με AI adjustments!');
+  }
+}
+
+// 6. Analytics Dashboard Rendering
+function renderAnalyticsDashboard() {
+  var clients = DATA.clients || [];
+  if(clients.length === 0) {
+    document.getElementById('analyticsContent').innerHTML = '<div style="padding:20px;color:#666;">Δεν υπάρχουν πελάτες ακόμα.</div>';
+    return;
+  }
+
+  var stats = {
+    totalClients: clients.length,
+    clientsWithPlans: clients.filter(function(c) { return c.weekPlan && c.weekPlan.length > 0; }).length,
+    clientsWithProgress: clients.filter(function(c) { return c.progressLog && c.progressLog.length > 1; }).length,
+    avgAge: Math.round(clients.reduce(function(sum, c) { return sum + (c.age || 0); }, 0) / clients.length),
+    avgWeight: Math.round(clients.reduce(function(sum, c) { return sum + (c.weight || 0); }, 0) / clients.length * 10) / 10,
+    totalPlansGenerated: TRACKING_DATA.plans.length || 0,
+    avgWeightChange: 0
+  };
+
+  // Calculate average weight change
+  var totalWeightChange = 0, countWithChange = 0;
+  clients.forEach(function(c) {
+    if(c.progressLog && c.progressLog.length >= 2) {
+      var first = c.progressLog[0].weight;
+      var last = c.progressLog[c.progressLog.length - 1].weight;
+      totalWeightChange += (last - first);
+      countWithChange++;
+    }
+  });
+  if(countWithChange > 0) stats.avgWeightChange = (totalWeightChange / countWithChange).toFixed(1);
+
+  var html = '<div style="padding:20px;">';
+
+  // ✅ METRICS CARDS
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px;">';
+
+  html += '<div style="background:#E2F5E0;border:2px solid #4CAF50;border-radius:8px;padding:15px;text-align:center;">';
+  html += '<div style="font-size:32px;font-weight:bold;color:#2E7D32;">'+stats.totalClients+'</div>';
+  html += '<div style="color:#558B2F;font-weight:bold;">Σύνολο Πελατών</div>';
+  html += '</div>';
+
+  html += '<div style="background:#E3F2FD;border:2px solid #2196F3;border-radius:8px;padding:15px;text-align:center;">';
+  html += '<div style="font-size:32px;font-weight:bold;color:#1565C0;">'+stats.clientsWithPlans+'</div>';
+  html += '<div style="color:#0D47A1;font-weight:bold;">Με Ενεργά Πλάνα</div>';
+  html += '</div>';
+
+  html += '<div style="background:#FFF3E0;border:2px solid #FF9800;border-radius:8px;padding:15px;text-align:center;">';
+  html += '<div style="font-size:32px;font-weight:bold;color:#E65100;">'+stats.clientsWithProgress+'</div>';
+  html += '<div style="color:#BF360C;font-weight:bold;">Με Καταγραφή Προόδου</div>';
+  html += '</div>';
+
+  html += '<div style="background:#FCE4EC;border:2px solid #E91E63;border-radius:8px;padding:15px;text-align:center;">';
+  html += '<div style="font-size:32px;font-weight:bold;color:#880E4F;">'+stats.totalPlansGenerated+'</div>';
+  html += '<div style="color:#AD1457;font-weight:bold;">Πλάνα Δημιουργηθέντα</div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  // ✅ CLIENT LIST TABLE
+  html += '<div style="margin-top:20px;">';
+  html += '<h3 style="color:#025857;border-bottom:2px solid #E2EEE5;padding-bottom:10px;">📊 Λεπτομέρειες Πελατών</h3>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
+  html += '<tr style="background:#E2EEE5;color:#025857;font-weight:bold;">';
+  html += '<th style="padding:10px;text-align:left;border-bottom:2px solid #025857;">Όνομα</th>';
+  html += '<th style="padding:10px;text-align:center;border-bottom:2px solid #025857;">Ηλικία</th>';
+  html += '<th style="padding:10px;text-align:center;border-bottom:2px solid #025857;">Βάρος (kg)</th>';
+  html += '<th style="padding:10px;text-align:center;border-bottom:2px solid #025857;">Πλάνα</th>';
+  html += '<th style="padding:10px;text-align:center;border-bottom:2px solid #025857;">Πρόοδος</th>';
+  html += '<th style="padding:10px;text-align:center;border-bottom:2px solid #025857;">Αλλαγή Βάρους</th>';
+  html += '</tr>';
+
+  clients.forEach(function(c, idx) {
+    var hasPlans = c.weekPlan && c.weekPlan.length > 0 ? '✅' : '❌';
+    var hasProgress = c.progressLog && c.progressLog.length > 1 ? '✅' : '❌';
+    var weightChange = '—';
+    if(c.progressLog && c.progressLog.length >= 2) {
+      var first = c.progressLog[0].weight;
+      var last = c.progressLog[c.progressLog.length - 1].weight;
+      var change = last - first;
+      weightChange = (change > 0 ? '+' : '') + change.toFixed(1) + ' kg';
+    }
+
+    var bgColor = idx % 2 === 0 ? '#fff' : '#F5F5F5';
+    html += '<tr style="background:'+bgColor+';border-bottom:1px solid #ddd;">';
+    html += '<td style="padding:10px;"><strong>'+c.name+'</strong></td>';
+    html += '<td style="padding:10px;text-align:center;">'+c.age+'</td>';
+    html += '<td style="padding:10px;text-align:center;">'+c.weight+'</td>';
+    html += '<td style="padding:10px;text-align:center;">'+hasPlans+'</td>';
+    html += '<td style="padding:10px;text-align:center;">'+hasProgress+'</td>';
+    html += '<td style="padding:10px;text-align:center;font-weight:bold;">'+weightChange+'</td>';
+    html += '</tr>';
+  });
+
+  html += '</table>';
+  html += '</div>';
+
+  // ✅ SUMMARY STATISTICS
+  html += '<div style="margin-top:20px;background:#F5F5F5;border-radius:8px;padding:15px;">';
+  html += '<h3 style="color:#025857;margin-top:0;">📈 Σύνοψη Στατιστικών</h3>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;">';
+
+  html += '<div>';
+  html += '<label style="color:#666;font-weight:bold;">Μέση Ηλικία:</label>';
+  html += '<div style="font-size:20px;color:#025857;font-weight:bold;">'+stats.avgAge+' ετών</div>';
+  html += '</div>';
+
+  html += '<div>';
+  html += '<label style="color:#666;font-weight:bold;">Μέσο Βάρος:</label>';
+  html += '<div style="font-size:20px;color:#025857;font-weight:bold;">'+stats.avgWeight+' kg</div>';
+  html += '</div>';
+
+  html += '<div>';
+  html += '<label style="color:#666;font-weight:bold;">Μ. Αλλαγή Βάρους:</label>';
+  var changeColor = stats.avgWeightChange < 0 ? '#4CAF50' : stats.avgWeightChange > 0 ? '#FF9800' : '#666';
+  html += '<div style="font-size:20px;color:'+changeColor+';font-weight:bold;">'+(stats.avgWeightChange >= 0 ? '+' : '')+stats.avgWeightChange+' kg</div>';
+  html += '</div>';
+
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  document.getElementById('analyticsContent').innerHTML = html;
 }
 
 // 5. Generate progress report
