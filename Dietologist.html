@@ -6217,28 +6217,28 @@ function renderMain(){
     +'<div class="fg"><div class="fgrp"><label>Ιατρικές Συνθήκες</label>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">'
     +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-diabetes" '+(c.medConditions&&c.medConditions.diabetes?'checked':'')+' onchange="upd(\'medConditions.diabetes\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
-    +'<span>Σακχαρώδης Διαβήτης</span></label>'
+    +'<input type="checkbox" id="chk-diabetes" '+(c.medConditions&&c.medConditions.diabetes?'checked':'')+' onchange="upd(\'medConditions.diabetes\', this.checked); applyMedicalProtocol(\'diabetes\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
+    +'<span onclick="showMedicalProtocol(\'diabetes\')" style="cursor:help;">Σακχαρώδης Διαβήτης ℹ️</span></label>'
 
     +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-hypertension" '+(c.medConditions&&c.medConditions.hypertension?'checked':'')+' onchange="upd(\'medConditions.hypertension\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
-    +'<span>Υψηλή Πίεση</span></label>'
+    +'<input type="checkbox" id="chk-hypertension" '+(c.medConditions&&c.medConditions.hypertension?'checked':'')+' onchange="upd(\'medConditions.hypertension\', this.checked); applyMedicalProtocol(\'hypertension\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
+    +'<span onclick="showMedicalProtocol(\'hypertension\')" style="cursor:help;">Υψηλή Πίεση ℹ️</span></label>'
 
     +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-celiac" '+(c.medConditions&&c.medConditions.celiac?'checked':'')+' onchange="upd(\'medConditions.celiac\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
-    +'<span>Κοιλιοκάκη</span></label>'
+    +'<input type="checkbox" id="chk-celiac" '+(c.medConditions&&c.medConditions.celiac?'checked':'')+' onchange="upd(\'medConditions.celiac\', this.checked); applyMedicalProtocol(\'celiac\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
+    +'<span onclick="showMedicalProtocol(\'celiac\')" style="cursor:help;">Κοιλιοκάκη ℹ️</span></label>'
 
     +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-ibs" '+(c.medConditions&&c.medConditions.ibs?'checked':'')+' onchange="upd(\'medConditions.ibs\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
-    +'<span>IBS</span></label>'
+    +'<input type="checkbox" id="chk-ibs" '+(c.medConditions&&c.medConditions.ibs?'checked':'')+' onchange="upd(\'medConditions.ibs\', this.checked); applyMedicalProtocol(\'ibs\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
+    +'<span onclick="showMedicalProtocol(\'ibs\')" style="cursor:help;">IBS ℹ️</span></label>'
 
     +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-lactose" '+(c.medConditions&&c.medConditions.lactose?'checked':'')+' onchange="upd(\'medConditions.lactose\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
-    +'<span>Δυσανεξία Λακτόζης</span></label>'
+    +'<input type="checkbox" id="chk-lactose" '+(c.medConditions&&c.medConditions.lactose?'checked':'')+' onchange="upd(\'medConditions.lactose\', this.checked); applyMedicalProtocol(\'lactose\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
+    +'<span onclick="showMedicalProtocol(\'lactose\')" style="cursor:help;">Δυσανεξία Λακτόζης ℹ️</span></label>'
 
     +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-vegetarian" '+(c.medConditions&&c.medConditions.vegetarian?'checked':'')+' onchange="upd(\'medConditions.vegetarian\', this.checked)" style="cursor:pointer;width:16px;height:16px;">'
-    +'<span>Χορτοφαγική</span></label>'
+    +'<input type="checkbox" id="chk-vegetarian" '+(c.medConditions&&c.medConditions.vegetarian?'checked':'')+' onchange="upd(\'medConditions.vegetarian\', this.checked); applyMedicalProtocol(\'vegetarian\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
+    +'<span onclick="showMedicalProtocol(\'vegetarian\')" style="cursor:help;">Χορτοφαγική ℹ️</span></label>'
     +'</div>'
     +'</div></div>'
 
@@ -15634,6 +15634,205 @@ function generateSmartPlanWithFeedback() {
   if(confirm(message)) {
     genPlanWithUndo();
     showSuccessToast('📈 Νέο πλάνο με AI adjustments!');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 5B. MEDICAL CONDITIONS PROTOCOL SYSTEM
+// ═══════════════════════════════════════════════════════════════════
+
+// Define medical protocols for each condition
+var MEDICAL_PROTOCOLS = {
+  diabetes: {
+    name: 'Σακχαρώδης Διαβήτης',
+    icon: '🩺',
+    restrictions: {
+      avoidFoods: ['Σοκολάτα', 'Γλυκίσματα', 'Αναψυκτικά', 'Γλυκά δημητριακά'],
+      reduceCarbs: true,
+      carbPercentage: 40, // 40% instead of 50%
+      increaseProtein: true,
+      proteinPercentage: 35, // 35% instead of 25%
+      preferFiber: true,
+      minFiberGrams: 30
+    },
+    foodReplacements: {
+      'Ρύζι λευκό': 'Ρύζι ολικής',
+      'Ψωμί λευκό': 'Ψωμί ολικής',
+      'Ζυμαρικά λευκά': 'Ζυμαρικά ολικής'
+    },
+    supplements: ['Μαγνήσιο', 'Χρώμιο', 'Ψευδάργυρος'],
+    notes: 'Σταθερή ζάχαρη αίματος. Αποφύγετε γρήγορες αλλαγές γευμάτων.'
+  },
+
+  hypertension: {
+    name: 'Υψηλή Πίεση (Υπέρταση)',
+    icon: '❤️',
+    restrictions: {
+      maxSodium: 2300, // mg per day
+      avoidFoods: ['Αλάτι', 'Παστράμι', 'Ζαμπόν', 'Διάφορα ξηρά'],
+      increaseKalium: true,
+      minKaliumFoods: ['Μπανάνα', 'Ντομάτα', 'Σπανάκι', 'Σέλινο']
+    },
+    foodReplacements: {
+      'Ψάρι αλατισμένο': 'Ψάρι φρέσκο',
+      'Ζαμπόν': 'Κοτόπουλο φρέσκο'
+    },
+    supplements: ['Κάλιο', 'Μαγνήσιο', 'Ασβέστιο'],
+    notes: 'Περιορίστε το αλάτι. Αυξήστε φρούτα και λαχανικά.'
+  },
+
+  celiac: {
+    name: 'Κοιλιοκάκη',
+    icon: '🌾',
+    restrictions: {
+      avoidFoods: ['Σίτος', 'Κριθή', 'Σίκαλη', 'Ψωμί', 'Ζυμαρικά (κανονικά)'],
+      glutenFree: true
+    },
+    foodReplacements: {
+      'Ψωμί': 'Ψωμί χωρίς γλουτένη',
+      'Ζυμαρικά': 'Ζυμαρικά κινόας/ρυζιού',
+      'Σίτος': 'Αμάρανθος / Κινόα / Ρύζι'
+    },
+    supplements: ['Σίδηρος', 'Ασβέστιο', 'Βιταμίνη Β12', 'Ψευδάργυρος'],
+    notes: 'Απόλυτη αποφυγή γλουτένης. Ελέγξτε όλα τα επεξεργασμένα τρόφιμα.'
+  },
+
+  ibs: {
+    name: 'Σύνδρομο Ευερέθιστου Εντέρου (IBS)',
+    icon: '🔴',
+    restrictions: {
+      avoidFoods: ['Μεγάλες ποσότητες λίπους', 'Φρυγανιές', 'Αερώδη ποτά'],
+      smallFrequentMeals: true,
+      mealsPerDay: 5, // instead of 3
+      increaseIsolubileFiber: true
+    },
+    foodReplacements: {
+      'Μεγάλα γεύματα': 'Μικρά, συχνά γεύματα',
+      'Τηγανιτά': 'Βραστά/Ψητά'
+    },
+    supplements: ['Προβιοτικά', 'Ίνα', 'Σπιρουλίνα'],
+    notes: 'Μικρά γεύματα κάθε 3-4 ώρες. Αποφύγετε γρήγορες αλλαγές διατροφής.'
+  },
+
+  lactose: {
+    name: 'Δυσανεξία Λακτόζης',
+    icon: '🥛',
+    restrictions: {
+      avoidFoods: ['Γάλα', 'Κρέμα', 'Πάγωτο'],
+      lactoseFree: true
+    },
+    foodReplacements: {
+      'Γάλα': 'Φυτικό γάλα (αμύγδαλο, ρύζι, σόγια)',
+      'Γιαούρτι': 'Γιαούρτι χωρίς λακτόζη',
+      'Τυρί': 'Τυρί χαμηλής λακτόζης'
+    },
+    supplements: ['Ασβέστιο', 'Βιταμίνη D'],
+    notes: 'Αποφύγετε το γάλα. Χρησιμοποιήστε φυτικές εναλλακτικές.'
+  },
+
+  vegetarian: {
+    name: 'Χορτοφαγική Δίαιτα',
+    icon: '🌱',
+    restrictions: {
+      avoidFoods: ['Κοτόπουλο', 'Χοιρινό', 'Μοσχάρι', 'Ψάρι', 'Θαλασσινά'],
+      vegetarian: true
+    },
+    foodReplacements: {
+      'Κοτόπουλο': 'Φακές, Ρεβίθια, Τόφου',
+      'Ψάρι': 'Καρυδιές, Σπόροι, Ταχίνι',
+      'Κρέας': 'Όσπρια, Αυγά, Τυρί'
+    },
+    supplements: ['Βιταμίνη Β12', 'Σίδηρος', 'Ψευδάργυρος', 'Ω-3 (φυτικά)'],
+    notes: 'Αποφύγετε όλο το κρέας. Συμπληρώστε με Β12.'
+  }
+};
+
+// Get protocol for a specific condition
+function getProtocol(condition) {
+  return MEDICAL_PROTOCOLS[condition] || null;
+}
+
+// Get all active protocols for a client
+function getActiveProtocols(client) {
+  var protocols = [];
+  if(!client.medConditions) return protocols;
+
+  Object.keys(client.medConditions).forEach(function(condition) {
+    if(client.medConditions[condition]) {
+      var protocol = getProtocol(condition);
+      if(protocol) protocols.push(protocol);
+    }
+  });
+
+  return protocols;
+}
+
+// Show medical protocol details in a modal
+function showMedicalProtocol(condition) {
+  var protocol = getProtocol(condition);
+  if(!protocol) {
+    alert('Δεν βρέθηκε πρωτόκολο για: ' + condition);
+    return;
+  }
+
+  var html = '<div style="padding:20px;">';
+  html += '<h3 style="color:#025857;margin-top:0;">' + protocol.icon + ' ' + protocol.name + '</h3>';
+
+  html += '<div style="margin-bottom:15px;"><strong>🚫 Αποφύγετε:</strong>';
+  html += '<ul style="margin:8px 0;">';
+  protocol.restrictions.avoidFoods.forEach(function(food) {
+    html += '<li>' + food + '</li>';
+  });
+  html += '</ul></div>';
+
+  if(protocol.foodReplacements && Object.keys(protocol.foodReplacements).length > 0) {
+    html += '<div style="margin-bottom:15px;"><strong>🔄 Αντικαταστάσεις τροφίμων:</strong>';
+    html += '<ul style="margin:8px 0;">';
+    Object.keys(protocol.foodReplacements).forEach(function(original) {
+      html += '<li>"' + original + '" → "' + protocol.foodReplacements[original] + '"</li>';
+    });
+    html += '</ul></div>';
+  }
+
+  if(protocol.supplements && protocol.supplements.length > 0) {
+    html += '<div style="margin-bottom:15px;"><strong>💊 Συνιστώμενα συμπληρώματα:</strong>';
+    html += '<ul style="margin:8px 0;">';
+    protocol.supplements.forEach(function(supp) {
+      html += '<li>' + supp + '</li>';
+    });
+    html += '</ul></div>';
+  }
+
+  html += '<div style="background:#f0f8f5;padding:10px;border-radius:6px;color:#1b5e20;margin-top:15px;">';
+  html += '<strong>📋 Σημειώσεις:</strong> ' + protocol.notes;
+  html += '</div>';
+
+  html += '</div>';
+
+  alert(html);
+}
+
+// Apply medical protocols when checkbox changes
+function applyMedicalProtocol(condition, isChecked) {
+  var c = getC();
+  if(!c) return;
+
+  var protocol = getProtocol(condition);
+  if(!protocol) return;
+
+  if(isChecked) {
+    showSuccessToast('✅ ' + protocol.icon + ' ' + protocol.name + ' ενεργοποιήθηκε');
+  } else {
+    showSuccessToast('❌ ' + protocol.icon + ' ' + protocol.name + ' απενεργοποιήθηκε');
+  }
+
+  // If there's an active plan, show recommendation to regenerate
+  if(c.weekPlan && c.weekPlan.length > 0) {
+    var msg = protocol.icon + ' ' + protocol.name + ' ενεργοποιήθηκε.\n\n';
+    msg += 'Θέλετε να δημιουργήσετε νέο πλάνο με αυτό το πρωτόκολο;';
+    if(confirm(msg)) {
+      genPlanWithUndo();
+    }
   }
 }
 
