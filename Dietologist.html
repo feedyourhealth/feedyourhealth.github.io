@@ -15641,7 +15641,7 @@ function generateSmartPlanWithFeedback() {
 // 5B. MEDICAL CONDITIONS PROTOCOL SYSTEM
 // ═══════════════════════════════════════════════════════════════════
 
-// Define medical protocols for each condition
+// Define medical protocols for each condition with OFFICIAL SOURCES
 var MEDICAL_PROTOCOLS = {
   diabetes: {
     name: 'Σακχαρώδης Διαβήτης',
@@ -15649,9 +15649,9 @@ var MEDICAL_PROTOCOLS = {
     restrictions: {
       avoidFoods: ['Σοκολάτα', 'Γλυκίσματα', 'Αναψυκτικά', 'Γλυκά δημητριακά'],
       reduceCarbs: true,
-      carbPercentage: 40, // 40% instead of 50%
+      carbPercentage: 40,
       increaseProtein: true,
-      proteinPercentage: 35, // 35% instead of 25%
+      proteinPercentage: 35,
       preferFiber: true,
       minFiberGrams: 30
     },
@@ -15661,14 +15661,19 @@ var MEDICAL_PROTOCOLS = {
       'Ζυμαρικά λευκά': 'Ζυμαρικά ολικής'
     },
     supplements: ['Μαγνήσιο', 'Χρώμιο', 'Ψευδάργυρος'],
-    notes: 'Σταθερή ζάχαρη αίματος. Αποφύγετε γρήγορες αλλαγές γευμάτων.'
+    notes: 'Σταθερή ζάχαρη αίματος. Αποφύγετε γρήγορες αλλαγές γευμάτων.',
+    sources: [
+      { name: 'American Diabetes Association (ADA)', url: 'https://www.diabetes.org/nutrition', official: true },
+      { name: 'NIH - Diabetes Nutrition Guidelines', url: 'https://www.niddk.nih.gov/health-information/diabetes', official: true },
+      { name: 'WHO - Global Diabetes Recommendations', url: 'https://www.who.int/news-room/fact-sheets/detail/diabetes', official: true }
+    ]
   },
 
   hypertension: {
     name: 'Υψηλή Πίεση (Υπέρταση)',
     icon: '❤️',
     restrictions: {
-      maxSodium: 2300, // mg per day
+      maxSodium: 2300,
       avoidFoods: ['Αλάτι', 'Παστράμι', 'Ζαμπόν', 'Διάφορα ξηρά'],
       increaseKalium: true,
       minKaliumFoods: ['Μπανάνα', 'Ντομάτα', 'Σπανάκι', 'Σέλινο']
@@ -15678,7 +15683,12 @@ var MEDICAL_PROTOCOLS = {
       'Ζαμπόν': 'Κοτόπουλο φρέσκο'
     },
     supplements: ['Κάλιο', 'Μαγνήσιο', 'Ασβέστιο'],
-    notes: 'Περιορίστε το αλάτι. Αυξήστε φρούτα και λαχανικά.'
+    notes: 'Περιορίστε το αλάτι. Αυξήστε φρούτα και λαχανικά.',
+    sources: [
+      { name: 'American Heart Association (AHA)', url: 'https://www.heart.org/blood-pressure', official: true },
+      { name: 'DASH Diet Official Site', url: 'https://www.nhlbi.nih.gov/health-topics/dash-eating-plan', official: true },
+      { name: 'ACC - Blood Pressure Guidelines', url: 'https://www.acc.org/latest-in-cardiology/articles/2017/11/08/11/47/2017-acc-aha-guideline', official: true }
+    ]
   },
 
   celiac: {
@@ -15694,7 +15704,12 @@ var MEDICAL_PROTOCOLS = {
       'Σίτος': 'Αμάρανθος / Κινόα / Ρύζι'
     },
     supplements: ['Σίδηρος', 'Ασβέστιο', 'Βιταμίνη Β12', 'Ψευδάργυρος'],
-    notes: 'Απόλυτη αποφυγή γλουτένης. Ελέγξτε όλα τα επεξεργασμένα τρόφιμα.'
+    notes: 'Απόλυτη αποφυγή γλουτένης. Ελέγξτε όλα τα επεξεργασμένα τρόφιμα.',
+    sources: [
+      { name: 'Celiac Disease Foundation', url: 'https://celiac.org/gluten-free-living/gluten-free-diet/', official: true },
+      { name: 'American Gastroenterological Association', url: 'https://gastro.org/resource/celiac-disease/', official: true },
+      { name: 'NIH Celiac Disease Info', url: 'https://www.niddk.nih.gov/health-information/digestive-diseases/celiac-disease', official: true }
+    ]
   },
 
   ibs: {
@@ -15703,7 +15718,7 @@ var MEDICAL_PROTOCOLS = {
     restrictions: {
       avoidFoods: ['Μεγάλες ποσότητες λίπους', 'Φρυγανιές', 'Αερώδη ποτά'],
       smallFrequentMeals: true,
-      mealsPerDay: 5, // instead of 3
+      mealsPerDay: 5,
       increaseIsolubileFiber: true
     },
     foodReplacements: {
@@ -15711,7 +15726,12 @@ var MEDICAL_PROTOCOLS = {
       'Τηγανιτά': 'Βραστά/Ψητά'
     },
     supplements: ['Προβιοτικά', 'Ίνα', 'Σπιρουλίνα'],
-    notes: 'Μικρά γεύματα κάθε 3-4 ώρες. Αποφύγετε γρήγορες αλλαγές διατροφής.'
+    notes: 'Μικρά γεύματα κάθε 3-4 ώρες. Αποφύγετε γρήγορες αλλαγές διατροφής.',
+    sources: [
+      { name: 'American College of Gastroenterology', url: 'https://gi.org/topics/irritable-bowel-syndrome/', official: true },
+      { name: 'Digestive Health Association', url: 'https://www.digestivehealth.org/ibs', official: true },
+      { name: 'NIH IBS Information', url: 'https://www.niddk.nih.gov/health-information/digestive-diseases/irritable-bowel-syndrome', official: true }
+    ]
   },
 
   lactose: {
@@ -15727,7 +15747,12 @@ var MEDICAL_PROTOCOLS = {
       'Τυρί': 'Τυρί χαμηλής λακτόζης'
     },
     supplements: ['Ασβέστιο', 'Βιταμίνη D'],
-    notes: 'Αποφύγετε το γάλα. Χρησιμοποιήστε φυτικές εναλλακτικές.'
+    notes: 'Αποφύγετε το γάλα. Χρησιμοποιήστε φυτικές εναλλακτικές.',
+    sources: [
+      { name: 'National Institute of Health (NIH)', url: 'https://www.niddk.nih.gov/health-information/digestive-diseases/lactose-intolerance', official: true },
+      { name: 'American Gastroenterological Association', url: 'https://gi.org/topics/lactose-intolerance/', official: true },
+      { name: 'Mayo Clinic - Lactose Intolerance', url: 'https://www.mayoclinic.org/diseases-conditions/lactose-intolerance/diagnosis-treatment/drc-20374232', official: true }
+    ]
   },
 
   vegetarian: {
@@ -15743,7 +15768,12 @@ var MEDICAL_PROTOCOLS = {
       'Κρέας': 'Όσπρια, Αυγά, Τυρί'
     },
     supplements: ['Βιταμίνη Β12', 'Σίδηρος', 'Ψευδάργυρος', 'Ω-3 (φυτικά)'],
-    notes: 'Αποφύγετε όλο το κρέας. Συμπληρώστε με Β12.'
+    notes: 'Αποφύγετε όλο το κρέας. Συμπληρώστε με Β12.',
+    sources: [
+      { name: 'American Dietetic Association', url: 'https://www.eatright.org/nutrition/special-diets/vegetarian', official: true },
+      { name: 'Academy of Nutrition & Dietetics', url: 'https://www.eatright.org/food-and-nutrition/planning-meals/eating-as-a-vegetarian', official: true },
+      { name: 'Vegetarian Society Guidelines', url: 'https://www.vegsoc.org/resources/', official: true }
+    ]
   }
 };
 
@@ -15767,7 +15797,7 @@ function getActiveProtocols(client) {
   return protocols;
 }
 
-// Show medical protocol details in a modal
+// Show medical protocol details with official sources
 function showMedicalProtocol(condition) {
   var protocol = getProtocol(condition);
   if(!protocol) {
@@ -15775,41 +15805,94 @@ function showMedicalProtocol(condition) {
     return;
   }
 
-  var html = '<div style="padding:20px;">';
-  html += '<h3 style="color:#025857;margin-top:0;">' + protocol.icon + ' ' + protocol.name + '</h3>';
+  var html = '<div style="padding:20px;max-width:600px;font-family:Arial,sans-serif;">';
+  html += '<h3 style="color:#025857;margin-top:0;border-bottom:3px solid #E2EEE5;padding-bottom:10px;">' + protocol.icon + ' ' + protocol.name + '</h3>';
 
-  html += '<div style="margin-bottom:15px;"><strong>🚫 Αποφύγετε:</strong>';
-  html += '<ul style="margin:8px 0;">';
+  // RESTRICTIONS
+  html += '<div style="margin-bottom:15px;"><strong style="color:#d32f2f;">🚫 Αποφύγετε:</strong>';
+  html += '<ul style="margin:8px 0;color:#333;">';
   protocol.restrictions.avoidFoods.forEach(function(food) {
-    html += '<li>' + food + '</li>';
+    html += '<li style="margin:4px 0;">' + food + '</li>';
   });
   html += '</ul></div>';
 
+  // FOOD REPLACEMENTS
   if(protocol.foodReplacements && Object.keys(protocol.foodReplacements).length > 0) {
-    html += '<div style="margin-bottom:15px;"><strong>🔄 Αντικαταστάσεις τροφίμων:</strong>';
-    html += '<ul style="margin:8px 0;">';
+    html += '<div style="margin-bottom:15px;background:#f5f5f5;padding:10px;border-radius:6px;"><strong style="color:#0277bd;">🔄 Αντικαταστάσεις τροφίμων:</strong>';
+    html += '<ul style="margin:8px 0;color:#333;">';
     Object.keys(protocol.foodReplacements).forEach(function(original) {
-      html += '<li>"' + original + '" → "' + protocol.foodReplacements[original] + '"</li>';
+      html += '<li style="margin:4px 0;"><em>"' + original + '"</em> → <strong>"' + protocol.foodReplacements[original] + '"</strong></li>';
     });
     html += '</ul></div>';
   }
 
+  // SUPPLEMENTS
   if(protocol.supplements && protocol.supplements.length > 0) {
-    html += '<div style="margin-bottom:15px;"><strong>💊 Συνιστώμενα συμπληρώματα:</strong>';
-    html += '<ul style="margin:8px 0;">';
+    html += '<div style="margin-bottom:15px;"><strong style="color:#388e3c;">💊 Συνιστώμενα συμπληρώματα:</strong>';
+    html += '<ul style="margin:8px 0;color:#333;">';
     protocol.supplements.forEach(function(supp) {
-      html += '<li>' + supp + '</li>';
+      html += '<li style="margin:4px 0;">' + supp + '</li>';
     });
     html += '</ul></div>';
   }
 
-  html += '<div style="background:#f0f8f5;padding:10px;border-radius:6px;color:#1b5e20;margin-top:15px;">';
-  html += '<strong>📋 Σημειώσεις:</strong> ' + protocol.notes;
+  // NOTES
+  html += '<div style="background:#e8f5e9;padding:12px;border-left:4px solid #4caf50;margin-bottom:15px;border-radius:4px;">';
+  html += '<strong style="color:#1b5e20;">📋 Σημειώσεις:</strong><br>';
+  html += '<span style="color:#2e7d32;line-height:1.6;">' + protocol.notes + '</span>';
+  html += '</div>';
+
+  // OFFICIAL SOURCES
+  if(protocol.sources && protocol.sources.length > 0) {
+    html += '<div style="background:#e3f2fd;padding:12px;border-left:4px solid #2196f3;border-radius:4px;">';
+    html += '<strong style="color:#0d47a1;">📚 Επίσημες Πηγές:</strong>';
+    html += '<ul style="margin:8px 0;color:#0d47a1;">';
+    protocol.sources.forEach(function(source) {
+      html += '<li style="margin:6px 0;">';
+      html += '<a href="' + source.url + '" target="_blank" style="color:#1976d2;text-decoration:none;font-weight:500;">';
+      html += source.name + ' ↗';
+      html += '</a>';
+      html += ' <span style="color:#999;font-size:11px;">[Επίσημη πηγή]</span>';
+      html += '</li>';
+    });
+    html += '</ul>';
+    html += '<small style="color:#555;margin-top:8px;display:block;">Κλικ για πρόσβαση στις επίσημες κατευθύνσεις</small>';
+    html += '</div>';
+  }
+
+  // DISCLAIMER
+  html += '<div style="background:#fff3e0;padding:10px;border-left:4px solid #ff9800;margin-top:15px;border-radius:4px;font-size:12px;color:#666;">';
+  html += '<strong style="color:#e65100;">⚠️ ΣΗΜΑΝΤΙΚΟ:</strong><br>';
+  html += 'Αυτές οι κατευθύνσεις βασίζονται σε επίσημες οργανώσεις υγείας. Συμβουλευθείτε πάντα έναν ιατρό πριν αλλάξετε τη διατροφή του πελάτη.';
   html += '</div>';
 
   html += '</div>';
 
-  alert(html);
+  // Use modal instead of alert for better display
+  var modalDiv = document.createElement('div');
+  modalDiv.innerHTML = html;
+  modalDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:0;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:9999;max-height:90vh;overflow-y:auto;width:90%;max-width:650px;';
+
+  // Close button
+  var closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕ Κλείσιμο';
+  closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;background:#ff6b35;color:white;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;font-weight:bold;';
+  closeBtn.onclick = function() {
+    document.body.removeChild(overlay);
+    document.body.removeChild(modalDiv);
+  };
+  modalDiv.appendChild(closeBtn);
+
+  // Overlay
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9998;';
+  overlay.onclick = function() {
+    document.body.removeChild(overlay);
+    document.body.removeChild(modalDiv);
+  };
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(modalDiv);
 }
 
 // Apply medical protocols when checkbox changes
