@@ -8,12 +8,15 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a}
 .app{display:flex;min-height:100vh}
+/* ✅ IMPROVED: Card-based client design */
 /* Sidebar clients */
-.sb{width:190px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:12px 8px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto}
-.sb-title{font-size:10px;font-weight:700;color:#999;padding:0 8px 8px;text-transform:uppercase;letter-spacing:.5px}
-.ci{padding:6px 10px;border-radius:7px;cursor:pointer;font-size:12px;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between}
-.ci:hover{background:#f5f5f5}
-.ci.active{background:#E2EEE5;color:#025857;font-weight:600}
+.sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:12px 10px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-title{font-size:10px;font-weight:700;color:#999;padding:0 10px 10px;text-transform:uppercase;letter-spacing:.5px}
+.ci{padding:10px 12px;border-radius:10px;cursor:pointer;font-size:12px;margin-bottom:6px;display:flex;flex-direction:column;gap:4px;border:1px solid #f0f0f0;background:#f9f9f9;transition:all .2s}
+.ci:hover{background:#f0f7f7;border-color:#c5ddd8;transform:translateY(-2px);box-shadow:0 4px 12px rgba(2,88,87,.08)}
+.ci.active{background:#E2EEE5;color:#025857;font-weight:600;border-color:#c5ddd8;box-shadow:0 4px 12px rgba(2,88,87,.15)}
+.ci-name{font-weight:600;color:#025857}
+.ci-info{font-size:11px;color:#999}
 .ci .cdel{opacity:0;font-size:10px;cursor:pointer;color:#c62828;border:none;background:none;padding:1px 3px}
 .ci:hover .cdel{opacity:1}
 .add-btn{width:100%;padding:10px 12px;border-radius:7px;border:1px dashed #ccc;background:transparent;cursor:pointer;font-size:12px;color:#888;text-align:left;margin-top:8px;min-height:36px}
@@ -40,9 +43,33 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .btn{padding:10px 16px;border-radius:7px;border:1px solid #ddd;cursor:pointer;font-size:12px;font-weight:600;background:#fff;color:#333;min-height:36px}
 .btn:hover{background:#f5f5f5}
 .btn.primary{background:#025857;color:#fff;border-color:#025857}
-.btn.primary:hover{background:#037070}
+.btn.primary:hover{background:#037070;box-shadow:0 4px 12px rgba(2,88,87,.2)}
 .btn.info{background:#1565C0;color:#fff;border-color:#1565C0}
-.btn.info:hover{background:#1976D2}
+.btn.info:hover{background:#1976D2;box-shadow:0 4px 12px rgba(21,101,192,.2)}
+/* ✅ Secondary buttons (outline style) */
+.btn.secondary{background:transparent;color:#025857;border-color:#025857}
+.btn.secondary:hover{background:#E2EEE5}
+/* ✅ Tertiary buttons (text-only) */
+.btn.tertiary{background:transparent;color:#666;border:none}
+.btn.tertiary:hover{color:#025857}
+/* ✅ Danger buttons */
+.btn.danger{background:#c62828;color:#fff;border-color:#c62828}
+.btn.danger:hover{background:#b71c1c;box-shadow:0 4px 12px rgba(198,40,40,.2)}
+/* ✅ Floating Action Button */
+.fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:#025857;color:#fff;border:none;cursor:pointer;font-size:24px;box-shadow:0 4px 12px rgba(2,88,87,.3);transition:all .2s;z-index:100}
+.fab:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(2,88,87,.4)}
+.fab:active{transform:scale(0.95)}
+/* ✅ Breadcrumbs */
+.breadcrumbs{display:flex;align-items:center;gap:8px;font-size:12px;color:#888;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid #f0f0f0}
+.breadcrumbs a{color:#025857;text-decoration:none;cursor:pointer;font-weight:500}
+.breadcrumbs a:hover{text-decoration:underline}
+.breadcrumbs span{color:#ddd;margin:0 2px}
+/* ✅ Tooltips */
+.tooltip-wrap{position:relative;display:inline-block}
+.tooltip-icon{display:inline-block;width:16px;height:16px;background:#ddd;color:#fff;border-radius:50%;text-align:center;line-height:16px;font-size:11px;font-weight:700;cursor:help;margin-left:4px}
+.tooltip-text{visibility:hidden;width:200px;background:#333;color:#fff;text-align:center;padding:8px 10px;border-radius:6px;position:absolute;z-index:1000;bottom:125%;left:-92px;opacity:0;transition:opacity .3s;font-size:11px;font-weight:400;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.tooltip-text::after{content:'';position:absolute;top:100%;left:50%;margin-left:-5px;border-width:5px;border-style:solid;border-color:#333 transparent transparent transparent}
+.tooltip-wrap:hover .tooltip-text{visibility:visible;opacity:1}
 /* Plan layout */
 .plan-wrap{display:flex;gap:12px;align-items:flex-start}
 .week-main{flex:1;overflow-x:auto;min-width:0}
@@ -110,6 +137,78 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .lib-recipe-btn{background:none;border:none;cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0;opacity:0.6}
 .lib-recipe-btn:hover{opacity:1}
 .chip-ingredients-print{display:none}
+/* ✅ MICRO-INTERACTIONS: Smooth animations */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.slide-in { animation: slideIn 0.3s ease-out; }
+.pulse { animation: pulse 0.6s ease-in-out; }
+.shake { animation: shake 0.4s ease-in-out; }
+.spin { animation: spin 1s linear infinite; }
+
+/* ✅ IMPROVED DARK MODE */
+body.dark-mode {
+  background: #1a1a1a;
+  color: #e0e0e0;
+}
+body.dark-mode .sb {
+  background: #242424;
+  border-right-color: #333;
+}
+body.dark-mode .ci {
+  background: #333;
+  border-color: #444;
+  color: #e0e0e0;
+}
+body.dark-mode .ci:hover {
+  background: #3d3d3d;
+  border-color: #555;
+}
+body.dark-mode .ci.active {
+  background: #1a4d4c;
+  border-color: #4fc3f7;
+}
+body.dark-mode .main {
+  background: #1a1a1a;
+}
+body.dark-mode .empty {
+  color: #999;
+}
+body.dark-mode .btn {
+  background: #333;
+  color: #e0e0e0;
+  border-color: #444;
+}
+body.dark-mode .btn.primary {
+  background: #025857;
+  border-color: #037070;
+}
+body.dark-mode .fab {
+  background: #025857;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+body.dark-mode #fab-menu {
+  background: #2a2a2a;
+  color: #e0e0e0;
+}
+body.dark-mode .tooltip-text {
+  background: #444;
+}
+
 @media print{
   .chip-ingredients-print{display:block;background:#f9f9f9;border-left:2px solid #ccc;padding:2px 4px;margin:2px 0;border-radius:3px}
   .chip-del{display:none}
@@ -982,11 +1081,39 @@ body.dark-mode #keyboardHelpPanel {
   <button class="backup-btn" onclick="showDebugPanel()" style="color:#666;border-color:#ccc">🔧 Σφάλματα &amp; Αναφορά</button>
 </div>
 <div class="main" id="main">
-  <div class="empty">
-    <div style="font-size:44px;margin-bottom:12px">&#128100;</div>
-    <div style="font-size:15px;font-weight:600;margin-bottom:6px">Κανένας πελάτης επιλεγμένος</div>
-    <div style="font-size:12px">Πάτα «Νέος πελάτης» για να ξεκινήσεις</div>
+  <!-- ✅ Breadcrumbs Navigation -->
+  <div class="breadcrumbs" id="breadcrumbs" style="display:none;">
+    <a onclick="swTab(0)">🏠 Αρχική</a>
+    <span>›</span>
+    <span id="breadcrumb-current">Πελάτης</span>
   </div>
+
+  <div class="empty" id="empty-state">
+    <div style="font-size:64px;margin-bottom:12px">👥</div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:8px;color:#025857">Καλώς ήρθες στον Διαιτολόγο!</div>
+    <div style="font-size:13px;color:#999;margin-bottom:20px;max-width:400px">Δημιουργήστε τον πρώτο σας πελάτη για να ξεκινήσετε τη διαχείριση διατροφικών σχεδίων</div>
+    <button class="btn primary" onclick="addClient()" style="font-size:14px;padding:12px 24px;">
+      + Δημιουργήστε Πρώτο Πελάτη
+    </button>
+  </div>
+</div>
+
+<!-- ✅ Floating Action Button (FAB) -->
+<button class="fab" id="fab-btn" onclick="fabMenu()" title="Γρήγορες ενέργειες">
+  +
+</button>
+
+<!-- ✅ FAB Menu Modal -->
+<div id="fab-menu" style="position:fixed;bottom:80px;right:20px;background:white;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:99;display:none;overflow:hidden;">
+  <button onclick="addClient();fabMenu()" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-bottom:1px solid #f0f0f0;transition:background .2s;">
+    + Νέος Πελάτης
+  </button>
+  <button onclick="if(getC()){genPlanWithUndo();fabMenu();}" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-bottom:1px solid #f0f0f0;transition:background .2s;">
+    📊 Δημιουργία Πλάνου
+  </button>
+  <button onclick="toggleSettingsPanel();fabMenu()" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;transition:background .2s;">
+    ⚙️ Ρυθμίσεις
+  </button>
 </div>
 </div>
 <script>
@@ -4902,15 +5029,24 @@ function renderSB(){
     html='<div style="font-size:11px;color:#bbb;padding:6px 10px;font-style:italic">Κανένα αποτέλεσμα</div>';
   } else {
     list.forEach(function(c){
+      var hasActive = c.weekPlan && Object.keys(c.weekPlan).length > 0;
       html+='<div class="ci'+(c.id===curId?' active':'')+'" onclick="selectClient(\''+c.id+'\')">'
-        +'<span>'+(c.name||'Νέος πελάτης')+'</span>'
-        +'<button class="cdel" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">&#10005;</button></div>';
+        +'<div class="ci-name">'+(c.name||'Νέος πελάτης')+'</div>'
+        +'<div class="ci-info">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999">'
+        +'<span>'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
+        +'<button class="cdel" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
+        +'</div>'
+        +'</div>';
     });
   }
   if(!term&&clients.length>0){
-    html+='<div style="font-size:9px;color:#ccc;padding:2px 10px;text-align:right">'+clients.length+' πελάτες</div>';
+    html+='<div style="font-size:9px;color:#999;padding:6px 10px;text-align:center;margin-top:8px;font-weight:500">'+clients.length+' πελάτες</div>';
   }
   document.getElementById('client-list').innerHTML=html;
+
+  // ✅ Update breadcrumbs after rendering
+  updateBreadcrumbs();
 
   // ✅ PHASE 5: ADD ANALYTICS BUTTON
   var sideBar = document.getElementById('sideBar');
@@ -15100,6 +15236,118 @@ if(window.location.search.includes('debug=a11y')) {
   window.DEBUG_ACCESSIBILITY = true;
   console.log('🔍 Accessibility debugging enabled. Monitor tab/focus navigation.');
 }
+
+// ✅ IMPROVED UX: FAB Menu Toggle
+function fabMenu(){
+  var menu = document.getElementById('fab-menu');
+  if(menu.style.display === 'none' || !menu.style.display){
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
+  }
+}
+
+// Close FAB menu when clicking elsewhere
+document.addEventListener('click', function(e){
+  var fab = document.getElementById('fab-btn');
+  var menu = document.getElementById('fab-menu');
+  if(!fab.contains(e.target) && !menu.contains(e.target)){
+    menu.style.display = 'none';
+  }
+});
+
+// ✅ IMPROVED UX: Update Breadcrumbs
+function updateBreadcrumbs(){
+  var c = getC();
+  var bc = document.getElementById('breadcrumbs');
+  var current = document.getElementById('breadcrumb-current');
+
+  if(c){
+    bc.style.display = 'flex';
+    current.textContent = '👤 ' + (c.name || 'Πελάτης');
+  } else {
+    bc.style.display = 'none';
+  }
+}
+
+// ✅ IMPROVED UX: Onboarding Tour (first time only)
+function initOnboarding(){
+  if(localStorage.getItem('dietologist-tour-done')) return;
+
+  // Show onboarding tooltip after 1 second
+  setTimeout(function(){
+    showSuccessToast('💡 Tip: Πάτα το + για γρήγορες ενέργειες!');
+    localStorage.setItem('dietologist-tour-done', 'true');
+  }, 1000);
+}
+
+// ✅ IMPROVED UX: Smooth animations for client cards
+function renderSBImproved(){
+  var c = clients || [];
+  var html = '';
+
+  c.forEach(function(cl, idx){
+    var active = (currentClient === idx) ? ' active' : '';
+    html += '<div class="ci' + active + '" onclick="selectClient(' + idx + ')">'
+      + '<div class="ci-name">' + (cl.name || 'Πελάτης') + '</div>'
+      + '<div class="ci-info">' + (cl.age || '?') + ' ετών • ' + (cl.weight || '?') + 'kg</div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999">'
+      + '<span>' + ((cl.weekPlan && Object.keys(cl.weekPlan).length > 0) ? '📊 Ενεργό σχέδιο' : '⭕ Χωρίς σχέδιο') + '</span>'
+      + '<button class="cdel" onclick="event.stopPropagation();delClient(' + idx + ')">✕</button>'
+      + '</div>'
+      + '</div>';
+  });
+
+  document.getElementById('client-list').innerHTML = html;
+}
+
+// ✅ IMPROVED UX: Show onboarding on first load
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(initOnboarding, 2000);
+});
+
+// ✅ IMPROVED UX: Enhanced notifications with animations
+var originalShowSuccessToast = showSuccessToast;
+window.showSuccessToast = function(message) {
+  originalShowSuccessToast(message);
+  var toast = document.querySelector('[role="status"]');
+  if(toast) toast.classList.add('slide-in', 'pulse');
+};
+
+var originalShowErrorToast = showErrorToast;
+window.showErrorToast = function(message) {
+  originalShowErrorToast(message);
+  var toast = document.querySelector('[role="alert"]');
+  if(toast) toast.classList.add('shake');
+};
+
+// ✅ IMPROVED UX: Loading state for plan generation
+function genPlanWithLoading() {
+  var fab = document.getElementById('fab-btn');
+  fab.classList.add('spin');
+  fab.disabled = true;
+
+  setTimeout(function(){
+    genPlanWithUndo();
+    fab.classList.remove('spin');
+    fab.disabled = false;
+  }, 500);
+}
+
+// ✅ IMPROVED UX: Smooth transitions for renderMain
+var originalRenderMain = renderMain;
+window.renderMain = function() {
+  var main = document.getElementById('main');
+  if(main) main.style.opacity = '0.5';
+
+  setTimeout(function(){
+    originalRenderMain();
+    if(main) {
+      main.style.opacity = '1';
+      main.style.transition = 'opacity 0.3s ease-out';
+    }
+  }, 100);
+};
 </script>
 
 </body>
