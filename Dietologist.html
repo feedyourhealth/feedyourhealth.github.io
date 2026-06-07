@@ -6529,38 +6529,6 @@ function allocateMealTargets(dailyTarget, numMeals, mealTiming) {
   return targets;
 }
 
-// ✅ HYBRID SYSTEM: Allocate daily targets across individual meals
-function allocateMealTargets(dailyTarget, numMeals) {
-  // Intelligent distribution based on meal timing priorities
-  // Breakfast: 22% (metabolic priority)
-  // Lunch/Main: 28% (largest meal)
-  // Dinner: 25% (balanced evening)
-  // Snack 1: 12% (mid-morning/afternoon energy)
-  // Snack 2: 13% (evening or post-workout)
-
-  console.log('allocateMealTargets called with:', {dailyTarget, numMeals});
-
-  var mealAlloc = [0.22, 0.28, 0.25, 0.12, 0.13];
-  if(numMeals !== 5) {
-    // Fallback: equal distribution if meal count differs
-    var equal = 1.0 / numMeals;
-    mealAlloc = [];
-    for(var i = 0; i < numMeals; i++) mealAlloc.push(equal);
-  }
-
-  var targets = [];
-  for(var i = 0; i < numMeals; i++) {
-    var pct = mealAlloc[i] || (1.0 / numMeals);
-    targets.push({
-      k: Math.round(dailyTarget.k * pct),
-      p: Math.round(dailyTarget.p * pct),
-      f: Math.round(dailyTarget.f * pct),
-      c: Math.round(dailyTarget.c * pct)
-    });
-  }
-  return targets;
-}
-
 function getMealTimingGuide(c){
   var abbr=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
   var td=c.trainDays||[false,false,false,false,false,false,false];
@@ -7663,20 +7631,47 @@ function excludeSupp(id,timing){
 }
 
 // ── Food Exclusion functions ─────────────────────────────────────────────────
-function applyFoodExclusions(tmplDays,excludeList){
-  if(!excludeList||!excludeList.length)return tmplDays;
+// ✅ FIX #2: Parse allergies with proper trimming
+function parseAllergies(allergyString) {
+  if (!allergyString || typeof allergyString !== 'string') return [];
+
+  return allergyString
+    .split(',')
+    .map(function(a) { return a.trim().toLowerCase(); })
+    .filter(function(a) { return a.length > 0; });
+}
+
+// ✅ FIX #2: Check if food matches allergy (with fuzzy matching)
+function isFoodAllergy(foodName, allergyList) {
+  if (!allergyList || allergyList.length === 0) return false;
+
+  var normalized = (foodName || '').toLowerCase().trim();
+  return allergyList.some(function(allergy) {
+    return normalized.indexOf(allergy) !== -1 || allergy.indexOf(normalized) !== -1;
+  });
+}
+
+function applyFoodExclusions(tmplDays,excludeList,allergyList){
+  if((!excludeList||!excludeList.length)&&(!allergyList||!allergyList.length))return tmplDays;
   var result=JSON.parse(JSON.stringify(tmplDays));
   result.forEach(function(meals){
     meals.forEach(function(meal){
       meal.foods=meal.foods.map(function(food){
-        if(excludeList.indexOf(food.n)===-1)return food;
-        // CRITICAL: This food is in the exclusion list - find a substitute or mark for removal
+        // ✅ FIX #2: Check both excludeList AND allergies
+        var isExcluded = excludeList && excludeList.indexOf(food.n) !== -1;
+        var isAllergy = isFoodAllergy(food.n, allergyList);
+
+        if(!isExcluded && !isAllergy) return food;
+
+        // CRITICAL: This food is in the exclusion list OR is an allergy - find a substitute
         var cat=FOODS[food.n]?FOODS[food.n].cat:'';
         var order=SUBST_ORDER[cat]||[cat];
         var sub=null;
         for(var i=0;i<order.length&&!sub;i++){
           var candidates=Object.keys(FOODS).filter(function(n){
-            return FOODS[n].cat===order[i]&&excludeList.indexOf(n)===-1;
+            var notExcluded = !excludeList || excludeList.indexOf(n) === -1;
+            var notAllergy = !isFoodAllergy(n, allergyList);
+            return FOODS[n].cat===order[i] && notExcluded && notAllergy;
           });
           if(candidates.length){
             var origDens=FOODS[food.n]?FOODS[food.n].k:100;
@@ -15868,8 +15863,15 @@ function showMedicalProtocol(condition) {
 
   html += '</div>';
 
+  // ✅ FIX #3: Clean up old modals before creating new one (prevents memory leak)
+  var oldOverlay = document.querySelector('[data-medical-modal-overlay]');
+  var oldModal = document.querySelector('[data-medical-modal]');
+  if (oldOverlay && oldOverlay.parentNode) oldOverlay.parentNode.removeChild(oldOverlay);
+  if (oldModal && oldModal.parentNode) oldModal.parentNode.removeChild(oldModal);
+
   // Use modal instead of alert for better display
   var modalDiv = document.createElement('div');
+  modalDiv.setAttribute('data-medical-modal', 'true');
   modalDiv.innerHTML = html;
   modalDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:0;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:9999;max-height:90vh;overflow-y:auto;width:90%;max-width:650px;';
 
@@ -15878,17 +15880,18 @@ function showMedicalProtocol(condition) {
   closeBtn.innerHTML = '✕ Κλείσιμο';
   closeBtn.style.cssText = 'position:absolute;top:10px;right:10px;background:#ff6b35;color:white;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;font-weight:bold;';
   closeBtn.onclick = function() {
-    document.body.removeChild(overlay);
-    document.body.removeChild(modalDiv);
+    if (overlay.parentNode) document.body.removeChild(overlay);
+    if (modalDiv.parentNode) document.body.removeChild(modalDiv);
   };
   modalDiv.appendChild(closeBtn);
 
   // Overlay
   var overlay = document.createElement('div');
+  overlay.setAttribute('data-medical-modal-overlay', 'true');
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9998;';
   overlay.onclick = function() {
-    document.body.removeChild(overlay);
-    document.body.removeChild(modalDiv);
+    if (overlay.parentNode) document.body.removeChild(overlay);
+    if (modalDiv.parentNode) document.body.removeChild(modalDiv);
   };
 
   document.body.appendChild(overlay);
@@ -15961,8 +15964,15 @@ function calculateAnalyticsStats() {
 
     // Weight change calculation
     if(c.progressLog && c.progressLog.length >= 2) {
-      var first = c.progressLog[0].weight;
-      var last = c.progressLog[c.progressLog.length - 1].weight;
+      // ✅ FIX #4: Sort by date before calculating weight change
+      var sorted = c.progressLog.slice().sort(function(a, b) {
+        var dateA = new Date(a.date || 0);
+        var dateB = new Date(b.date || 0);
+        return dateA - dateB;
+      });
+
+      var first = sorted[0].weight;
+      var last = sorted[sorted.length - 1].weight;
       var change = last - first;
       totalWeightChange += change;
       countWithChange++;
@@ -16181,8 +16191,14 @@ function renderAnalyticsDashboard() {
     var hasProgress = c.progressLog && c.progressLog.length > 1 ? '✅' : '❌';
     var weightChange = '—';
     if(c.progressLog && c.progressLog.length >= 2) {
-      var first = c.progressLog[0].weight;
-      var last = c.progressLog[c.progressLog.length - 1].weight;
+      // ✅ FIX #4: Sort by date before calculating weight change
+      var sorted = c.progressLog.slice().sort(function(a, b) {
+        var dateA = new Date(a.date || 0);
+        var dateB = new Date(b.date || 0);
+        return dateA - dateB;
+      });
+      var first = sorted[0].weight;
+      var last = sorted[sorted.length - 1].weight;
       var change = last - first;
       weightChange = (change > 0 ? '+' : '') + change.toFixed(1) + ' kg';
     }
@@ -16246,6 +16262,21 @@ function renderAnalyticsDashboard() {
     renderSuccessRateChart();
   }).catch(function(e) {
     console.error('[ANALYTICS] Error loading Chart.js:', e);
+    // ✅ FIX #5: Show user-friendly error message instead of silent failure
+    var chartContainers = document.querySelectorAll('canvas');
+    if (chartContainers.length > 0) {
+      var errorHtml = '<div style="background:#ffebee;border:2px solid #c62828;border-radius:8px;padding:20px;text-align:center;color:#b71c1c;">';
+      errorHtml += '<strong>⚠️ Σφάλμα Φόρτωσης Γραφημάτων</strong><br>';
+      errorHtml += '<small style="color:#d32f2f;">Τα γραφήματα δεν θα εμφανιστούν. Ελέγξτε τη σύνδεσή σας.</small>';
+      errorHtml += '</div>';
+
+      chartContainers.forEach(function(canvas) {
+        var parent = canvas.parentNode;
+        if (parent) {
+          parent.innerHTML = errorHtml;
+        }
+      });
+    }
   });
 }
 
