@@ -15623,7 +15623,188 @@ function generateSmartPlanWithFeedback() {
   }
 }
 
-// 6. Analytics Dashboard Rendering
+// 6A. Load Chart.js library (lazy load)
+function loadChartJS() {
+  if(window.Chart) return Promise.resolve();
+
+  return new Promise(function(resolve, reject) {
+    var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+// 6B. Calculate analytics statistics
+function calculateAnalyticsStats() {
+  var clients = DATA.clients || [];
+  var stats = {
+    totalClients: clients.length,
+    clientsWithPlans: clients.filter(function(c) { return c.weekPlan && c.weekPlan.length > 0; }).length,
+    clientsWithProgress: clients.filter(function(c) { return c.progressLog && c.progressLog.length > 1; }).length,
+    avgAge: 0,
+    avgWeight: 0,
+    totalPlansGenerated: TRACKING_DATA.plans.length || 0,
+    avgWeightChange: 0,
+    clientsLostWeight: 0,
+    clientsGainedWeight: 0,
+    clientWeightData: [],
+    ageDistribution: {under25: 0, age25to35: 0, age35to45: 0, age45plus: 0},
+    successRate: '0%'
+  };
+
+  if(clients.length === 0) return stats;
+
+  // Calculate basic stats
+  var totalAge = 0, totalWeight = 0, totalWeightChange = 0, countWithChange = 0;
+
+  clients.forEach(function(c) {
+    totalAge += (c.age || 0);
+    totalWeight += (c.weight || 0);
+
+    // Weight change calculation
+    if(c.progressLog && c.progressLog.length >= 2) {
+      var first = c.progressLog[0].weight;
+      var last = c.progressLog[c.progressLog.length - 1].weight;
+      var change = last - first;
+      totalWeightChange += change;
+      countWithChange++;
+
+      stats.clientWeightData.push({
+        name: c.name,
+        initial: first,
+        current: last,
+        change: change
+      });
+
+      if(change < 0) stats.clientsLostWeight++;
+      if(change > 0) stats.clientsGainedWeight++;
+    }
+
+    // Age distribution
+    var age = c.age || 30;
+    if(age < 25) stats.ageDistribution.under25++;
+    else if(age < 35) stats.ageDistribution.age25to35++;
+    else if(age < 45) stats.ageDistribution.age35to45++;
+    else stats.ageDistribution.age45plus++;
+  });
+
+  stats.avgAge = Math.round(totalAge / clients.length);
+  stats.avgWeight = Math.round(totalWeight / clients.length * 10) / 10;
+  if(countWithChange > 0) stats.avgWeightChange = (totalWeightChange / countWithChange).toFixed(1);
+
+  // Success rate: % of clients with plans who are tracking progress
+  if(stats.clientsWithPlans > 0) {
+    var successPercent = Math.round((stats.clientsWithProgress / stats.clientsWithPlans) * 100);
+    stats.successRate = successPercent + '%';
+  }
+
+  return stats;
+}
+
+// 6C. Render weight trend chart
+function renderWeightTrendChart() {
+  var stats = calculateAnalyticsStats();
+  var canvas = document.getElementById('weightTrendChart');
+  if(!canvas || stats.clientWeightData.length === 0) return;
+
+  var names = stats.clientWeightData.map(function(d) { return d.name; });
+  var initialWeights = stats.clientWeightData.map(function(d) { return d.initial; });
+  var currentWeights = stats.clientWeightData.map(function(d) { return d.current; });
+
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [
+        {
+          label: 'Αρχικό Βάρος (kg)',
+          data: initialWeights,
+          backgroundColor: '#FF6B6B',
+          borderColor: '#C92A2A',
+          borderWidth: 1
+        },
+        {
+          label: 'Τρέχον Βάρος (kg)',
+          data: currentWeights,
+          backgroundColor: '#51CF66',
+          borderColor: '#2F9E44',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        title: { display: true, text: '📊 Σύγκριση Βάρους: Αρχικό vs Τρέχον' },
+        legend: { display: true }
+      },
+      scales: {
+        y: { beginAtZero: false, title: { display: true, text: 'Βάρος (kg)' } }
+      }
+    }
+  });
+}
+
+// 6D. Render age distribution chart
+function renderAgeDistributionChart() {
+  var stats = calculateAnalyticsStats();
+  var canvas = document.getElementById('ageDistributionChart');
+  if(!canvas) return;
+
+  var dist = stats.ageDistribution;
+  new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['< 25 ετών', '25-35 ετών', '35-45 ετών', '45+ ετών'],
+      datasets: [{
+        data: [dist.under25, dist.age25to35, dist.age35to45, dist.age45plus],
+        backgroundColor: ['#FF6B9D', '#FEC260', '#6BCB77', '#4D96FF'],
+        borderColor: '#fff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: { display: true, text: '👥 Κατανομή Ηλικίας Πελατών' },
+        legend: { display: true, position: 'bottom' }
+      }
+    }
+  });
+}
+
+// 6E. Render success rate gauge
+function renderSuccessRateChart() {
+  var stats = calculateAnalyticsStats();
+  var canvas = document.getElementById('successRateChart');
+  if(!canvas) return;
+
+  var successPercent = parseInt(stats.successRate);
+  new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Με Πρόοδο', 'Χωρίς Πρόοδο'],
+      datasets: [{
+        data: [stats.clientsWithProgress, stats.clientsWithPlans - stats.clientsWithProgress],
+        backgroundColor: ['#4CAF50', '#E0E0E0'],
+        borderColor: '#fff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: { display: true, text: '📈 Ποσοστό Παρακολούθησης Προόδου: ' + stats.successRate },
+        legend: { display: true }
+      }
+    }
+  });
+}
+
+// 6F. Analytics Dashboard Rendering with Charts
 function renderAnalyticsDashboard() {
   var clients = DATA.clients || [];
   if(clients.length === 0) {
@@ -15631,32 +15812,13 @@ function renderAnalyticsDashboard() {
     return;
   }
 
-  var stats = {
-    totalClients: clients.length,
-    clientsWithPlans: clients.filter(function(c) { return c.weekPlan && c.weekPlan.length > 0; }).length,
-    clientsWithProgress: clients.filter(function(c) { return c.progressLog && c.progressLog.length > 1; }).length,
-    avgAge: Math.round(clients.reduce(function(sum, c) { return sum + (c.age || 0); }, 0) / clients.length),
-    avgWeight: Math.round(clients.reduce(function(sum, c) { return sum + (c.weight || 0); }, 0) / clients.length * 10) / 10,
-    totalPlansGenerated: TRACKING_DATA.plans.length || 0,
-    avgWeightChange: 0
-  };
+  var stats = calculateAnalyticsStats();
 
-  // Calculate average weight change
-  var totalWeightChange = 0, countWithChange = 0;
-  clients.forEach(function(c) {
-    if(c.progressLog && c.progressLog.length >= 2) {
-      var first = c.progressLog[0].weight;
-      var last = c.progressLog[c.progressLog.length - 1].weight;
-      totalWeightChange += (last - first);
-      countWithChange++;
-    }
-  });
-  if(countWithChange > 0) stats.avgWeightChange = (totalWeightChange / countWithChange).toFixed(1);
-
-  var html = '<div style="padding:20px;">';
+  var html = '<div style="padding:20px;background:#fafafa;min-height:100vh;">';
+  html += '<h2 style="color:#025857;margin-bottom:20px;">📊 ANALYTICS DASHBOARD</h2>';
 
   // ✅ METRICS CARDS
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px;">';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:30px;">';
 
   html += '<div style="background:#E2F5E0;border:2px solid #4CAF50;border-radius:8px;padding:15px;text-align:center;">';
   html += '<div style="font-size:32px;font-weight:bold;color:#2E7D32;">'+stats.totalClients+'</div>';
@@ -15680,9 +15842,34 @@ function renderAnalyticsDashboard() {
 
   html += '</div>';
 
+  // ✅ CHARTS SECTION
+  html += '<div style="margin-bottom:30px;">';
+  html += '<h3 style="color:#025857;border-bottom:2px solid #E2EEE5;padding-bottom:10px;">📈 ΓΡΑΦΉΜΑΤΑ</h3>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;">';
+
+  // Weight Trend Chart
+  if(stats.clientWeightData.length > 0) {
+    html += '<div style="background:white;padding:15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">';
+    html += '<canvas id="weightTrendChart" style="max-height:300px;"></canvas>';
+    html += '</div>';
+  }
+
+  // Age Distribution Chart
+  html += '<div style="background:white;padding:15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">';
+  html += '<canvas id="ageDistributionChart" style="max-height:300px;"></canvas>';
+  html += '</div>';
+
+  // Success Rate Chart
+  html += '<div style="background:white;padding:15px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">';
+  html += '<canvas id="successRateChart" style="max-height:300px;"></canvas>';
+  html += '</div>';
+
+  html += '</div>';
+  html += '</div>';
+
   // ✅ CLIENT LIST TABLE
-  html += '<div style="margin-top:20px;">';
-  html += '<h3 style="color:#025857;border-bottom:2px solid #E2EEE5;padding-bottom:10px;">📊 Λεπτομέρειες Πελατών</h3>';
+  html += '<div style="margin-top:20px;background:white;border-radius:8px;padding:15px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">';
+  html += '<h3 style="color:#025857;border-bottom:2px solid #E2EEE5;padding-bottom:10px;margin-top:0;">📊 Λεπτομέρειες Πελατών</h3>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
   html += '<tr style="background:#E2EEE5;color:#025857;font-weight:bold;">';
   html += '<th style="padding:10px;text-align:left;border-bottom:2px solid #025857;">Όνομα</th>';
@@ -15739,12 +15926,31 @@ function renderAnalyticsDashboard() {
   html += '<div style="font-size:20px;color:'+changeColor+';font-weight:bold;">'+(stats.avgWeightChange >= 0 ? '+' : '')+stats.avgWeightChange+' kg</div>';
   html += '</div>';
 
+  html += '<div>';
+  html += '<label style="color:#666;font-weight:bold;">Πελάτες χάσαν βάρος:</label>';
+  html += '<div style="font-size:20px;color:#4CAF50;font-weight:bold;">'+stats.clientsLostWeight+'</div>';
+  html += '</div>';
+
+  html += '<div>';
+  html += '<label style="color:#666;font-weight:bold;">Πελάτες κέρδισαν βάρος:</label>';
+  html += '<div style="font-size:20px;color:#FF9800;font-weight:bold;">'+stats.clientsGainedWeight+'</div>';
+  html += '</div>';
+
   html += '</div>';
   html += '</div>';
 
   html += '</div>';
 
   document.getElementById('analyticsContent').innerHTML = html;
+
+  // Load Chart.js and render charts
+  loadChartJS().then(function() {
+    if(stats.clientWeightData.length > 0) renderWeightTrendChart();
+    renderAgeDistributionChart();
+    renderSuccessRateChart();
+  }).catch(function(e) {
+    console.error('[ANALYTICS] Error loading Chart.js:', e);
+  });
 }
 
 // 5. Generate progress report
