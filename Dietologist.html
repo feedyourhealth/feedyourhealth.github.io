@@ -6343,7 +6343,8 @@ function renderMain(){
       whtml+='</div>';
       return whtml;
     })()
-    +buildMacroPresetHtml(c,t)
+    // ✅ REMOVED: Macro presets - not needed in s1
+    // +buildMacroPresetHtml(c,t)
     +'<div class="hydration-row">'
     +'<div class="hydration-chip">&#128167; Ανάπαυση: '+hydBase+' ml<span>('+Math.round(hydBase/1000*10)/10+'L)</span></div>'
     +(numTrainDays>0?'<div class="hydration-chip" style="background:#e8f5e9;color:#2e7d32">&#127947; Προπόνηση: '+hydTrain+' ml<span>('+Math.round(hydTrain/1000*10)/10+'L)</span></div>':'')
