@@ -6349,27 +6349,19 @@ function renderMain(){
     +(numTrainDays>0?'<div class="hydration-chip" style="background:#e8f5e9;color:#2e7d32">&#127947; Προπόνηση: '+hydTrain+' ml<span>('+Math.round(hydTrain/1000*10)/10+'L)</span></div>':'')
     +'<div class="hydration-chip" style="background:#fff3e0;color:#e65100">&#128197; '+numTrainDays+'/7 ημέρες προπόνησης</div>'
     +'</div>'
+    // ✅ REMOVED: These should only appear with meal plan in s2
+    // +buildDayTgtHtml(c,t)
+    // +buildSuppHtml(c)
+    // +buildExcludeHtml(c)
+    // +buildAlertsAndTipsHtml(c)
+    // ✅ PLAN GENERATION BUTTON ONLY IN S1
+    +'<div class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου</button></div>'
+    +'</div>'
+    +'<div id="s2" style="display:none">'
     +buildDayTgtHtml(c,t)
     +buildSuppHtml(c)
     +buildExcludeHtml(c)
     +buildAlertsAndTipsHtml(c)
-    +buildTmplSelectorHtml(c)
-    +'<div class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου</button><button class="btn info" onclick="swTab(2)">Δες το πλάνο &#8594;</button><button class="btn" style="background:#6c757d;" onclick="swTab(5)">📊 Analytics (' + TRACKING_DATA.plans.length + ')</button></div>'
-
-    // ✅ BUSINESS SUITE BUTTONS
-    +'<div class="brow">'
-    +'<button class="btn secondary" onclick="copyShareLink()" title="Δώσε αυτό το link στον client">🔗 Δώσε στον Client</button>'
-    +'<button class="btn secondary" onclick="addProgressEntry()" title="Καταγράψε βάρος & σημειώσεις">📈 Εγγραφή Προόδου</button>'
-    +'<button class="btn secondary" onclick="generateShoppingList()" title="Κατεβάσμε λίστα αγορών">🛒 Λίστα Αγορών</button>'
-    +'<button class="btn secondary" onclick="generateProgressReport()" title="Αναφορά προόδου PDF">📋 Αναφορά</button>'
-    +'</div>'
-
-    // ✅ FEATURE 2: AUTO-ADJUST BUTTONS
-    +'<div class="brow">'
-    +'<button class="btn warning" onclick="showAutoAdjustHints()" title="Δες συστάσεις βελτίωσης από feedback">💡 Συστάσεις</button>'
-    +'<button class="btn success" onclick="generateSmartPlanWithFeedback()" title="Δημιουργία νέου πλάνου με AI learning">🤖 AI Πλάνο</button>'
-    +'</div></div>'
-    +'<div id="s2" style="display:none">'
     +'<div class="brow"><button class="btn" onclick="swTab(1)">&#8592; Στοιχεία</button>'
     +'<button class="btn" style="background:#ff9800;color:#fff;" onclick="regeneratePlan()">&#8635; Αναδημιουργία (δεν μου αρέσει)</button>'
     +'<button class="btn primary" style="background:#2196F3;color:#fff;" onclick="showSavePlanPanel()">💾 Αποθήκευση Διατροφής</button>'
