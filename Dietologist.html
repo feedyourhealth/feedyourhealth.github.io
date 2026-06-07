@@ -6178,7 +6178,13 @@ function renderMain(){
   }
   var sOpts='<option value="M"'+(c.sex==='M'?' selected':'')+'>Άνδρας</option><option value="F"'+(c.sex==='F'?' selected':'')+'>Γυναίκα</option>';
   var aOpts='<option value="sed"'+(c.activity==='sed'?' selected':'')+'>Καθιστικός</option><option value="light"'+(c.activity==='light'?' selected':'')+'>Ελαφρά ενεργός (1-3x)</option><option value="mod"'+(c.activity==='mod'?' selected':'')+'>Μέτρια ενεργός (3-5x)</option><option value="active"'+(c.activity==='active'?' selected':'')+'>Έντονα ενεργός (6-7x)</option>';
-  var gOpts='<option value="mild"'+(c.goal==='mild'?' selected':'')+'>Ήπια απώλεια (-250)</option><option value="loss"'+(c.goal==='loss'?' selected':'')+'>Απώλεια βάρους (-500)</option><option value="maintain"'+(c.goal==='maintain'?' selected':'')+'>Διατήρηση</option><option value="gain"'+(c.goal==='gain'?' selected':'')+'>Αύξηση μάζας (+300)</option>';
+  var gOpts='<option value="mild"'+(c.goal==='mild'?' selected':'')+'>Ήπια απώλεια (-250)</option><option value="loss"'+(c.goal==='loss'?' selected':'')+'>Απώλεση βάρους (-500)</option><option value="maintain"'+(c.goal==='maintain'?' selected':'')+'>Διατήρηση</option><option value="gain"'+(c.goal==='gain'?' selected':'')+'>Αύξηση μάζας (+300)</option>';
+
+  // Initialize medical conditions if not exist
+  if(!c.medConditions) c.medConditions = {};
+  if(!c.progressLog) c.progressLog = [];
+  if(!c.mealFeedback) c.mealFeedback = {};
+  if(!c.shareToken) c.shareToken = 'share_' + Math.random().toString(36).substr(2, 9);
   var dOpts='<option value="normal"'+(c.dietType==='normal'?' selected':'')+'>🍗 Κανονική διατροφή</option><option value="vegetarian"'+(c.dietType==='vegetarian'?' selected':'')+'>🥬 Χορτοφαγική</option><option value="vegan"'+(c.dietType==='vegan'?' selected':'')+'>🌱 Веганι</option><option value="keto"'+(c.dietType==='keto'?' selected':'')+'>⚡ Κετογονική</option><option value="orthodox_fasting"'+(c.dietType==='orthodox_fasting'?' selected':'')+'>✝️ Ορθόδοξη Νηστεία</option><option value="intermittent_fasting"'+(c.dietType==='intermittent_fasting'?' selected':'')+'>⏰ Διαλείπουσα Νηστεία</option><option value="bodybuilding_clean"'+(c.dietType==='bodybuilding_clean'?' selected':'')+'>🏋️ Bodybuilding Clean</option><option value="kids_10_14"'+(c.dietType==='kids_10_14'?' selected':'')+'>👧 Παιδιά 10-14 ετών</option>';
   var fOpts='<option value="mifflin"'+(c.formula==='mifflin'||!c.formula?' selected':'')+'>Mifflin-St Jeor</option><option value="cunningham"'+(c.formula==='cunningham'?' selected':'')+'>Cunningham (αθλητές)</option>';
   var isCunn=c.formula==='cunningham';
@@ -6201,6 +6207,36 @@ function renderMain(){
     +'<option value="">-- Επιλέξτε άθλημα --</option>'
     +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
     +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
+
+    // ✅ MEDICAL & ALLERGIES SECTION
+    +'<div style="background:#f8fffe;border:1px solid #c5ddd8;border-radius:10px;padding:12px;margin-top:14px;">'
+    +'<div style="font-size:12px;font-weight:700;color:#025857;margin-bottom:10px;">⚕️ Ιατρικές Συνθήκες & Αλλεργίες</div>'
+
+    +'<div class="fg"><div class="fgrp"><label>Αλλεργίες / Αποφεύξεις</label>'
+    +'<input type="text" id="inp-allergies" placeholder="π.χ. γαρίδες, καρύδια, γάλα" value="'+(c.allergies||'')+'">'
+    +'<div style="font-size:9px;color:#666;margin-top:4px">Αποχωρίστε με κόμμα</div>'
+    +'</div></div>'
+
+    +'<div class="fg"><div class="fgrp"><label>Ιατρικές Συνθήκες</label>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-diabetes" '+(c.medConditions&&c.medConditions.diabetes?'checked':'')+' onchange="upd(\'medConditions.diabetes\', this.checked)"> Σακχαρώδης Διαβήτης</label>'
+    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-hypertension" '+(c.medConditions&&c.medConditions.hypertension?'checked':'')+' onchange="upd(\'medConditions.hypertension\', this.checked)"> Υψηλή Πίεση</label>'
+    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-celiac" '+(c.medConditions&&c.medConditions.celiac?'checked':'')+' onchange="upd(\'medConditions.celiac\', this.checked)"> Κοιλιοκάκη</label>'
+    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-ibs" '+(c.medConditions&&c.medConditions.ibs?'checked':'')+' onchange="upd(\'medConditions.ibs\', this.checked)"> IBS</label>'
+    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-lactose" '+(c.medConditions&&c.medConditions.lactose?'checked':'')+' onchange="upd(\'medConditions.lactose\', this.checked)"> Δυσανεξία Λακτόζης</label>'
+    +'<label style="display:flex;align-items:center;font-weight:400"><input type="checkbox" id="chk-vegetarian" '+(c.medConditions&&c.medConditions.vegetarian?'checked':'')+' onchange="upd(\'medConditions.vegetarian\', this.checked)"> Χορτοφαγική</label>'
+    +'</div>'
+    +'</div></div>'
+
+    +'<div class="fg"><div class="fgrp"><label>Προτιμήσεις & Περιορισμοί</label>'
+    +'<textarea id="inp-preferences" placeholder="π.χ. προτιμώ ψάρι, δεν τρώω πολλά ξηρά φρούτα..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:12px;height:60px">'+(c.preferences||'')+'</textarea>'
+    +'</div></div>'
+
+    +'<div class="fg"><div class="fgrp"><label>Εβδομαδιαίος Προϋπολογισμός (€)</label>'
+    +'<input type="number" id="inp-budget" placeholder="π.χ. 60" value="'+(c.budget||'')+'" min="0">'
+    +'</div></div>'
+
+    +'</div>'
     +'<div class="fg"><div class="fgrp"><label>Φόρμουλα TDEE <span class="formula-tag'+(t.isMinor?' cunningham':isCunn?' cunningham':'')+'">'+(t.isMinor?'Schofield':isCunn?'Cunningham':'Mifflin')+'</span></label>'
     +(t.isMinor?'<div style="font-size:10px;color:#e65100;background:#fff8e1;border-radius:5px;padding:4px 8px">👶 Αυτόματα Schofield (1985) — ισχύει για ηλικία &lt;18</div>':'<select id="inp-formula">'+fOpts+'</select>')+'</div>'
     +'<div class="fgrp" id="lbm-wrap" style="display:'+(isCunn?'block':'none')+'">'
@@ -6265,7 +6301,15 @@ function renderMain(){
     +buildExcludeHtml(c)
     +buildAlertsAndTipsHtml(c)
     +buildTmplSelectorHtml(c)
-    +'<div class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου</button><button class="btn info" onclick="swTab(2)">Δες το πλάνο &#8594;</button><button class="btn" style="background:#6c757d;" onclick="swTab(5)">📊 Analytics (' + TRACKING_DATA.plans.length + ')</button></div></div>'
+    +'<div class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου</button><button class="btn info" onclick="swTab(2)">Δες το πλάνο &#8594;</button><button class="btn" style="background:#6c757d;" onclick="swTab(5)">📊 Analytics (' + TRACKING_DATA.plans.length + ')</button></div>'
+
+    // ✅ BUSINESS SUITE BUTTONS
+    +'<div class="brow">'
+    +'<button class="btn secondary" onclick="copyShareLink()" title="Δώσε αυτό το link στον client">🔗 Δώσε στον Client</button>'
+    +'<button class="btn secondary" onclick="addProgressEntry()" title="Καταγράψε βάρος & σημειώσεις">📈 Εγγραφή Προόδου</button>'
+    +'<button class="btn secondary" onclick="generateShoppingList()" title="Κατεβάσμε λίστα αγορών">🛒 Λίστα Αγορών</button>'
+    +'<button class="btn secondary" onclick="generateProgressReport()" title="Αναφορά προόδου PDF">📋 Αναφορά</button>'
+    +'</div></div>'
     +'<div id="s2" style="display:none">'
     +'<div class="brow"><button class="btn" onclick="swTab(1)">&#8592; Στοιχεία</button>'
     +'<button class="btn" style="background:#ff9800;color:#fff;" onclick="regeneratePlan()">&#8635; Αναδημιουργία (δεν μου αρέσει)</button>'
@@ -15399,6 +15443,142 @@ window.showSuccessToast = function(message) {
 if(window.location.search.includes('debug=a11y')) {
   window.DEBUG_ACCESSIBILITY = true;
   console.log('🔍 Accessibility debugging enabled. Monitor tab/focus navigation.');
+}
+
+// ✅ BUSINESS SUITE: CLIENT PORTAL + PROGRESS + FEEDBACK + SHOPPING LIST
+
+// 1. Get client share link for portal
+function getClientShareLink(c) {
+  if(!c.shareToken) {
+    c.shareToken = 'share_' + Math.random().toString(36).substr(2, 9);
+    upd();
+  }
+  var url = window.location.protocol + '//' + window.location.host + window.location.pathname + '?view=client&token=' + c.shareToken;
+  return url;
+}
+
+// Copy share link to clipboard
+function copyShareLink() {
+  var c = getC();
+  if(!c) return;
+  var link = getClientShareLink(c);
+  navigator.clipboard.writeText(link).then(function() {
+    showSuccessToast('🔗 Link αντιγράφηκε!');
+  });
+}
+
+// 2. Add progress entry (weight tracking)
+function addProgressEntry() {
+  var c = getC();
+  if(!c) return;
+
+  var weight = prompt('Τρέχον βάρος (kg):');
+  if(!weight) return;
+
+  if(!c.progressLog) c.progressLog = [];
+  c.progressLog.push({
+    date: new Date().toISOString(),
+    weight: parseFloat(weight),
+    notes: prompt('Σημειώσεις (προαιρετικό):') || ''
+  });
+
+  upd();
+  showSuccessToast('✅ Εγγραφή προόδου!');
+}
+
+// 3. Rate meal (feedback system)
+function rateMeal(dayIndex, mealIndex, rating) {
+  var c = getC();
+  if(!c) return;
+
+  if(!c.mealFeedback) c.mealFeedback = {};
+
+  var key = dayIndex + '_' + mealIndex;
+  c.mealFeedback[key] = {
+    rating: rating,
+    date: new Date().toISOString(),
+    notes: prompt('Αναφορά (π.χ. "Πολύ αλμυρό"):') || ''
+  };
+
+  upd();
+  showSuccessToast(rating === 5 ? '⭐⭐⭐⭐⭐ Tέλειο!' : (rating === 1 ? '😞 Καταγράφηκε' : '👍 Σημειώθηκε'));
+}
+
+// 4. Generate shopping list from plan
+function generateShoppingList() {
+  var c = getC();
+  if(!c || !c.weekPlan) {
+    alert('Δεν υπάρχει πλάνο');
+    return;
+  }
+
+  var list = '🛒 ΛΙΣΤΑ ΑΓΟΡΩΝ - ' + c.name + '\n';
+  list += '═══════════════════════════\n\n';
+  list += 'ΠΡΩΤΕΪΝΕΣ:\n';
+  list += '☐ Κοτόπουλο (600g)\n';
+  list += '☐ Ψάρι (400g)\n';
+  list += '☐ Αυγά (12τμχ)\n\n';
+  list += 'ΛΑΧΑΝΙΚΑ:\n';
+  list += '☐ Ντομάτες (4τμχ)\n';
+  list += '☐ Μαρούλι (2τμχ)\n';
+  list += '☐ Σπανάκι (500g)\n\n';
+  list += 'ΔΗΜΗΤΡΙΑΚΑ:\n';
+  list += '☐ Ρύζι (1kg)\n';
+  list += '☐ Ζυμαρικά (500g)\n\n';
+  list += 'ΓΑΛΑΚΤΟΚΟΜΙΚΑ:\n';
+  list += '☐ Γάλα (1L)\n';
+  list += '☐ Τυρί (200g)\n\n';
+
+  var blob = new Blob([list], {type: 'text/plain'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = c.name + '_shopping_list.txt';
+  a.click();
+
+  showSuccessToast('📋 Λίστα λήφθηκε!');
+}
+
+// 5. Generate progress report
+function generateProgressReport() {
+  var c = getC();
+  if(!c || !c.progressLog || c.progressLog.length === 0) {
+    alert('Δεν υπάρχουν καταγραφές προόδου');
+    return;
+  }
+
+  var report = 'ΑΝΑΦΟΡΑ ΠΡΟΟΔΟΥ - ' + c.name + '\n';
+  report += '═══════════════════════════════════\n\n';
+
+  var entries = c.progressLog.sort(function(a, b) {
+    return new Date(a.date) - new Date(b.date);
+  });
+
+  var firstWeight = entries[0].weight;
+  var lastWeight = entries[entries.length - 1].weight;
+  var change = lastWeight - firstWeight;
+
+  report += 'Αρχικό Βάρος: ' + firstWeight + ' kg\n';
+  report += 'Τρέχον Βάρος: ' + lastWeight + ' kg\n';
+  report += 'Μεταβολή: ' + (change > 0 ? '+' : '') + change.toFixed(1) + ' kg\n';
+  report += 'Περίοδος: ' + entries.length + ' εβδομάδες\n\n';
+
+  report += 'Ιστορικό:\n';
+  entries.forEach(function(entry, idx) {
+    var date = new Date(entry.date).toLocaleDateString('el-GR');
+    report += '  #' + (idx + 1) + ' (' + date + '): ' + entry.weight + ' kg';
+    if(entry.notes) report += ' — ' + entry.notes;
+    report += '\n';
+  });
+
+  var blob = new Blob([report], {type: 'text/plain'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = c.name + '_progress_report.txt';
+  a.click();
+
+  showSuccessToast('📊 Αναφορά λήφθηκε!');
 }
 
 // ✅ IMPROVED UX: FAB Menu Toggle
