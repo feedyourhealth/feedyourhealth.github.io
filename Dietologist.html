@@ -6,8 +6,8 @@
 <title>Εργαλείο Διαιτολόγου</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a}
-.app{display:flex;min-height:100vh}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a;-webkit-user-select:none;user-select:none}
+.app{display:flex;min-height:100vh;position:relative}
 /* ✅ IMPROVED: Card-based client design */
 /* Sidebar clients */
 .sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:12px 10px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto}
@@ -23,6 +23,18 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .add-btn:hover{background:#f5f5f5;border-color:#025857;color:#025857}
 .client-search-inp{width:100%;padding:5px 9px;border:1px solid #e0e0e0;border-radius:7px;font-size:11px;background:#f9f9f9;margin-bottom:6px;font-family:inherit}
 .client-search-inp:focus{outline:none;border-color:#025857;background:#fff}
+/* ✅ BOTTOM NAVIGATION BAR (Mobile) */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e0e0e0;z-index:99;flex-direction:row;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+.bottom-nav button{flex:1;background:none;border:none;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#999;transition:all .2s}
+.bottom-nav button.active{color:#025857;font-weight:600}
+.bottom-nav button span{font-size:20px}
+@media(max-width:768px){
+  .bottom-nav{display:flex}
+  .sb{display:none}
+  .app{flex-direction:column}
+  .main{padding-bottom:70px}
+}
+
 /* Main */
 .main{flex:1;padding:14px 16px;overflow:auto;min-width:0}
 .stabs{display:flex;border-bottom:1px solid #e0e0e0;margin-bottom:14px}
@@ -237,8 +249,36 @@ body.dark-mode .tooltip-text {
 .supp-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:1001}
 .supp-modal-content{background:#fff;border-radius:12px;padding:20px;max-width:900px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
 .supp-modal-header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #fff3e0;padding-bottom:10px;margin-bottom:15px}
-/* Empty */
+/* ✅ Empty states - Responsive */
 .empty{text-align:center;padding:60px 20px;color:#bbb}
+@media(max-width:768px){
+  .empty{padding:80px 20px 140px}
+  .empty div:first-child{font-size:48px !important}
+}
+
+/* ✅ Mobile optimizations */
+@media(max-width:768px){
+  body{font-size:13px}
+  .btn{padding:8px 12px;font-size:11px}
+  .fab{width:48px;height:48px;bottom:70px;font-size:20px}
+  .fgrp input, .fgrp select{font-size:16px !important} /* Prevent zoom on iOS */
+  .ci{padding:8px 10px}
+  .ci-name{font-size:13px;font-weight:600}
+  .ci-info{font-size:10px}
+  .week-table{min-width:100%;font-size:10px}
+  .stabs{flex-wrap:wrap;gap:0}
+  .stab{padding:5px 10px;font-size:11px}
+}
+
+@media(max-width:480px){
+  .main{padding:12px 10px;padding-bottom:80px}
+  .sb{width:100%;height:auto;position:relative;border-right:none;border-bottom:1px solid #e0e0e0;padding:8px 5px;margin-bottom:10px}
+  .sb-title{padding:0 5px 5px;font-size:9px}
+  .brow{gap:4px;flex-direction:column}
+  .btn{width:100%;padding:10px 12px}
+  .fgrp{grid-template-columns:1fr}
+  .fg3, .fg4{grid-template-columns:1fr}
+}
 /* Day-targets section */
 .day-tgt-wrap{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:10px 12px;margin-bottom:12px}
 .day-tgt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
@@ -1113,6 +1153,42 @@ body.dark-mode #keyboardHelpPanel {
   </button>
   <button onclick="toggleSettingsPanel();fabMenu()" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;transition:background .2s;">
     ⚙️ Ρυθμίσεις
+  </button>
+</div>
+
+<!-- ✅ CONTEXT MENU (Right-click) -->
+<div id="context-menu" style="position:fixed;background:white;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:1000;display:none;min-width:180px;overflow:hidden;">
+  <button onclick="editClient()" style="width:100%;padding:10px 16px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;transition:background .2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">
+    ✏️ Επεξεργασία
+  </button>
+  <button onclick="duplicateClient()" style="width:100%;padding:10px 16px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-top:1px solid #f0f0f0;transition:background .2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">
+    📋 Αντιγραφή
+  </button>
+  <button onclick="exportClientData()" style="width:100%;padding:10px 16px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-top:1px solid #f0f0f0;transition:background .2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">
+    💾 Εξαγωγή
+  </button>
+  <button onclick="deleteClient(curId);hideContextMenu()" style="width:100%;padding:10px 16px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#c62828;font-weight:500;border-top:1px solid #f0f0f0;transition:background .2s;" onmouseover="this.style.background='#ffebee'" onmouseout="this.style.background='none'">
+    🗑️ Διαγραφή
+  </button>
+</div>
+
+<!-- ✅ BOTTOM NAVIGATION BAR (Mobile) -->
+<div class="bottom-nav">
+  <button onclick="swTab(0)" class="bottom-nav-btn active" data-tab="0">
+    <span>👥</span>
+    <span>Πελάτες</span>
+  </button>
+  <button onclick="swTab(1)" class="bottom-nav-btn" data-tab="1">
+    <span>📋</span>
+    <span>Στοιχεία</span>
+  </button>
+  <button onclick="swTab(2)" class="bottom-nav-btn" data-tab="2">
+    <span>📊</span>
+    <span>Πλάνο</span>
+  </button>
+  <button onclick="toggleSettingsPanel()" class="bottom-nav-btn" data-tab="settings">
+    <span>⚙️</span>
+    <span>Ρυθμίσεις</span>
   </button>
 </div>
 </div>
@@ -15348,6 +15424,121 @@ window.renderMain = function() {
     }
   }, 100);
 };
+
+// ✅ CONTEXT MENU: Right-click actions
+var contextMenuClientId = null;
+document.addEventListener('contextmenu', function(e){
+  var clientEl = e.target.closest('.ci');
+  if(clientEl){
+    e.preventDefault();
+    showContextMenu(e.clientX, e.clientY);
+  }
+});
+
+function showContextMenu(x, y){
+  var menu = document.getElementById('context-menu');
+  menu.style.display = 'block';
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+}
+
+function hideContextMenu(){
+  document.getElementById('context-menu').style.display = 'none';
+}
+
+// Close context menu on click elsewhere
+document.addEventListener('click', function(){
+  hideContextMenu();
+});
+
+function editClient(){
+  showSuccessToast('✏️ Σε ενημέρωση του πελάτη...');
+  hideContextMenu();
+}
+
+function duplicateClient(){
+  var c = getC();
+  if(!c) return;
+
+  var newClient = JSON.parse(JSON.stringify(c));
+  newClient.name = c.name + ' (Αντιγραφή)';
+  clients.push(newClient);
+  upd();
+  showSuccessToast('📋 Πελάτης αντιγράφηκε!');
+  renderSB();
+  hideContextMenu();
+}
+
+function exportClientData(){
+  var c = getC();
+  if(!c) return;
+
+  var data = JSON.stringify(c, null, 2);
+  var blob = new Blob([data], {type: 'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = (c.name || 'Client') + '_data.json';
+  a.click();
+  showSuccessToast('💾 Πελάτης εξάχθηκε!');
+  hideContextMenu();
+}
+
+// ✅ BOTTOM NAVIGATION: Update active button
+var originalSwTab = swTab;
+window.swTab = function(tabNum){
+  originalSwTab(tabNum);
+  updateBottomNav(tabNum);
+};
+
+function updateBottomNav(tabNum){
+  var btns = document.querySelectorAll('.bottom-nav-btn');
+  btns.forEach(function(btn){
+    btn.classList.remove('active');
+    if(btn.getAttribute('data-tab') == tabNum){
+      btn.classList.add('active');
+    }
+  });
+}
+
+// ✅ IMPROVED SEARCH: Live filtering with animations
+var searchTimeout;
+document.addEventListener('input', function(e){
+  if(e.target.id === 'client-search'){
+    clearTimeout(searchTimeout);
+    var inp = e.target;
+    inp.style.borderColor = '#025857';
+
+    searchTimeout = setTimeout(function(){
+      filterClients(inp.value);
+      inp.style.borderColor = '#ddd';
+    }, 300);
+  }
+});
+
+// ✅ Mobile optimization: Swipe gestures
+var touchStartX = 0;
+var touchEndX = 0;
+
+document.addEventListener('touchstart', function(e){
+  touchStartX = e.changedTouches[0].screenX;
+}, false);
+
+document.addEventListener('touchend', function(e){
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipe();
+}, false);
+
+function handleSwipe(){
+  var diff = touchEndX - touchStartX;
+  if(Math.abs(diff) > 50){ // Swipe threshold
+    if(diff > 0 && currentTab > 0){
+      swTab(currentTab - 1);
+    } else if(diff < 0 && currentTab < 4){
+      swTab(currentTab + 1);
+    }
+  }
+}
 </script>
 
 </body>
