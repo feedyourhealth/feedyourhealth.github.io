@@ -4131,6 +4131,24 @@ var TMPLS=JSON.parse(JSON.stringify(DEFAULT_TMPLS));
 // User-saved custom plan templates
 var customTemplates=[];
 
+// ✅ TRACKING_DATA - Initialize early to prevent undefined errors
+var TRACKING_DATA = {
+  plans: [],
+  recipes: {},
+  patterns: {},
+  lastUpdated: null
+};
+
+// Load TRACKING_DATA from localStorage if available
+try {
+  var stored = JSON.parse(localStorage.getItem('TRACKING_DATA'));
+  if(stored && stored.plans){
+    TRACKING_DATA = stored;
+  }
+} catch(e) {
+  console.warn('Could not load TRACKING_DATA:', e.message);
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // CHEF-INSPIRED MEAL RECIPES — Culinary-sensible combinations
 // ══════════════════════════════════════════════════════════════════════════════
@@ -13591,13 +13609,8 @@ function regeneratePlan(){
 // BEHAVIORAL TRACKING SYSTEM — Learning from your usage patterns
 // ══════════════════════════════════════════════════════════════════════════════
 
-// Data structure for tracking
-var TRACKING_DATA = {
-  plans: [],          // History of all plans created
-  recipes: {},        // Recipe usage stats
-  patterns: {},       // Detected patterns
-  lastUpdated: null
-};
+// Data structure for tracking - ✅ MOVED TO TOP OF FILE FOR EARLY INITIALIZATION
+// var TRACKING_DATA = { ... } - Already initialized earlier in the script
 
 // Load tracking data from localStorage
 function loadTrackingData(){
