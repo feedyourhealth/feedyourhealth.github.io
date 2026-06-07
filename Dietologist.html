@@ -10136,6 +10136,7 @@ function renderWeekTable(){
           +'<input class="chip-g" type="number" min="0" max="'+chipMax+'" value="'+chipVal+'" onchange="'+chipChg+'">'
           +'<span class="chip-unit">'+chipUnit+'</span>'
           +(fu&&fu.u==='μερίδ.'?'<span class="chip-ghint">('+food.g+'g)</span>':'')
+          +'<button class="chip-swap-btn" onclick="swapMealAlternative('+d+','+mi+')" title="Εναλλακτικό γεύμα">🔄</button>'
           +'<button class="chip-del" onclick="delF('+d+','+mi+','+fi+')">&#10005;</button>'
           +'</div>';
         // Recipe ingredients — visible only in print/PDF
@@ -10842,6 +10843,29 @@ function getMicronutrientHtml(c){
   });
 
   html+='</tbody></table>';
+  html+='</div>';
+
+  // ✅ ADD DAILY TOTALS & STATUS HEADERS
+  html+='<div style="margin-top:20px;display:grid;grid-template-columns:repeat(7,1fr);gap:10px;">';
+  var targetTotals = calcTDEE(c);
+  for(var dayIdx = 0; dayIdx < 7; dayIdx++){
+    var dayMeals = c.weekPlan[dayIdx] || [];
+    var dayTotals = calculateDailyTotals(dayMeals);
+    var dayStatus = getDayStatus(dayTotals, targetTotals);
+
+    html+='<div class="day-header">'
+      +'<div style="flex:1">'
+      +'<div class="day-header-title">'+DAYS[dayIdx]+'</div>'
+      +'<div class="day-header-totals" style="margin-top:6px;">'
+      +'<div class="day-total-item kcal">'+dayTotals.k+' kcal</div>'
+      +'</div>'
+      +'<div style="margin-top:4px;font-size:10px;color:#666">'
+      +'Π: '+dayTotals.p+'g | Λ: '+dayTotals.f+'g | Υ: '+dayTotals.c+'g'
+      +'</div>'
+      +'</div>'
+      +'<div class="day-status-badge '+dayStatus.status+'">'+dayStatus.label+'</div>'
+      +'</div>';
+  }
   html+='</div>';
 
   // Footer note
