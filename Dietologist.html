@@ -44,9 +44,27 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .fg3{grid-template-columns:1fr 1fr 1fr}
 .fg4{grid-template-columns:1fr 1fr 1fr 1fr}
-.fgrp label{display:block;font-size:12px;color:#666;margin-bottom:6px;font-weight:500}
-.fgrp input,.fgrp select{width:100%;padding:10px 12px;border-radius:7px;border:1px solid #ddd;background:#fff;color:#1a1a1a;font-size:12px;min-height:36px}
-.fgrp input:focus,.fgrp select:focus{outline:none;border-color:#025857;box-shadow:0 0 0 2px rgba(2,88,87,.1)}
+.fgrp label{display:block;font-size:11px;color:#555;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+.fgrp input,.fgrp select,.fgrp textarea{width:100%;padding:10px 12px;border-radius:7px;border:1.5px solid #e0e0e0;background:#fff;color:#1a1a1a;font-size:12px;min-height:36px;transition:all 0.2s ease;font-family:inherit}
+.fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{outline:none;border-color:#025857;box-shadow:0 0 0 3px rgba(2,88,87,.1);background:#fafbfb}
+.fgrp textarea{min-height:70px;resize:vertical}
+/* ✅ NEW: Section Cards for better visual hierarchy */
+.section-card{background:#fff;border-left:4px solid #ccc;border-radius:8px;padding:16px;margin-bottom:12px;box-shadow:0 2px 4px rgba(0,0,0,0.06);transition:all 0.3s ease}
+.section-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);transform:translateY(-1px)}
+.section-card.basic{border-left-color:#025857}
+.section-card.anthropometry{border-left-color:#FF6B35}
+.section-card.activity{border-left-color:#7CB342}
+.section-card.dietary{border-left-color:#D4A574}
+.section-card.medical{border-left-color:#E91E63}
+.section-card.budget{border-left-color:#2196F3}
+.section-header{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #f0f0f0}
+.section-header.basic{color:#025857}
+.section-header.anthropometry{color:#FF6B35}
+.section-header.activity{color:#7CB342}
+.section-header.dietary{color:#D4A574}
+.section-header.medical{color:#E91E63}
+.section-header.budget{color:#2196F3}
+.section-icon{font-size:18px;line-height:1}
 .tdee-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;background:#E2EEE5;border-radius:10px;padding:12px;border:1px solid #c5ddd8}
 .ti .tl{font-size:10px;color:#555;font-weight:500}
 .ti .tv{font-size:15px;font-weight:700;margin-top:3px;color:#025857}
@@ -6193,28 +6211,57 @@ function renderMain(){
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 style="margin:0;color:#025857;font-size:18px;">👤 '+c.name+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
     +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button><button class="stab" id="t5" onclick="swTab(5)">📈 Analytics</button></div>'
-    +'<div id="s1"><div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος"></div>'
+    +'<div id="s1">'
+
+    // ✅ SECTION 1: ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ
+    +'<div class="section-card basic">'
+    +'<div class="section-header basic"><span class="section-icon">👤</span>Βασικά Στοιχεία</div>'
+    +'<div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος" value="'+(c.name||'')+'"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div></div>'
-    +'<div class="fg fg4"><div class="fgrp"><label>Ηλικία</label><input type="number" id="inp-age" value="'+c.age+'"></div>'
-    +'<div class="fgrp"><label>Βάρος (kg)</label><input type="number" id="inp-weight" value="'+c.weight+'"></div>'
-    +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+c.height+'"></div>'
-    +'<div class="fgrp"><label>% Σώμα. Λίπος <span style="font-size:9px;color:#888;font-weight:400">(μέτρηση)</span></label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div>'
-    +'<div class="fgrp"><label>Lean Mass (kg) <span style="font-size:9px;color:#888;font-weight:400">(FFM)</span></label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63"></div></div>'
-    +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' <span style="font-size:10px;color:#888">(NEAT baseline)</span>':'')+'</label><select id="inp-activity">'+aOpts+'</select></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>Τύπος Διατροφής</label><select id="inp-dietType" onchange="upd(\'dietType\',this.value);">'+dOpts+'</select></div></div>'
+    +'<div class="fg fg4"><div class="fgrp"><label>Ηλικία</label><input type="number" id="inp-age" value="'+(c.age||'')+'" min="1" max="150"></div>'
+    +'<div class="fgrp"><label>Βάρος (kg)</label><input type="number" id="inp-weight" value="'+(c.weight||'')+'" min="25" max="300" step="0.1"></div>'
+    +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+(c.height||'')+'" min="100" max="250"></div>'
+    +'<div class="fgrp"><label>BMI</label><input type="number" readonly style="background:#f5f5f5;color:#999;" value="'+(c.weight&&c.height?Math.round(c.weight/(c.height/100/c.height/100)*10)/10:'-')+'"></div>'
+    +'</div></div>'
+    +'</div>'
+
+    // ✅ SECTION 2: ΑΝΘΡΩΠΟΜΕΤΡΙΑ
+    +'<div class="section-card anthropometry">'
+    +'<div class="section-header anthropometry"><span class="section-icon">📏</span>Ανθρωπομετρία</div>'
+    +'<div class="fg"><div class="fgrp"><label>% Σώμ. Λίπος</label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div>'
+    +'<div class="fgrp"><label>Lean Mass (kg)</label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63"></div></div>'
+    +'</div>'
+    // ✅ SECTION 3: ΔΡΑΣΤΗΡΙΟΤΗΤΑ & ΣΤΟΧΟΣ
+    +'<div class="section-card activity">'
+    +'<div class="section-header activity"><span class="section-icon">⚡</span>Δραστηριότητα & Στόχος</div>'
+    +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' (NEAT baseline)':'')+'</label><select id="inp-activity">'+aOpts+'</select></div>'
+    +'<div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
     +'<div class="fg"><div class="fgrp"><label>🏅 Άθλημα</label><select id="inp-sport">'
     +'<option value="">-- Επιλέξτε άθλημα --</option>'
     +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
-    +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
+    +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div>'
+    +'<div class="fgrp"><label>Formula TDEE</label><select id="inp-formula">'+fOpts+'</select></div></div>'
+    +'</div>'
 
-    // ✅ MEDICAL & ALLERGIES SECTION
-    +'<div class="fg"><div class="fgrp"><label>Αλλεργίες / Αποφεύξεις</label>'
+    // ✅ SECTION 4: ΔΙΑΤΡΟΦΗ
+    +'<div class="section-card dietary">'
+    +'<div class="section-header dietary"><span class="section-icon">🍽️</span>Διατροφή</div>'
+    +'<div class="fg"><div class="fgrp"><label>Τύπος Διατροφής</label><select id="inp-dietType" onchange="upd(\'dietType\',this.value);">'+dOpts+'</select></div></div>'
+
+    +'<div class="fgrp"><label>Αλλεργίες / Αποφεύξεις</label>'
     +'<input type="text" id="inp-allergies" placeholder="π.χ. γαρίδες, καρύδια, γάλα" value="'+(c.allergies||'')+'">'
-    +'<div style="font-size:11px;color:#999;margin-top:4px;">💡 Αποχωρίστε με κόμμα</div>'
-    +'</div></div>'
+    +'<div style="font-size:10px;color:#999;margin-top:4px;">💡 Αποχωρίστε με κόμμα</div>'
+    +'</div>'
 
-    +'<div class="fg"><div class="fgrp"><label>Ιατρικές Συνθήκες</label>'
+    +'<div class="fgrp"><label>Προτιμήσεις & Περιορισμοί</label>'
+    +'<textarea id="inp-preferences" placeholder="π.χ. προτιμώ ψάρι, δεν τρώω πολλά ξηρά..." style="width:100%;padding:10px;border:1.5px solid #e0e0e0;border-radius:6px;font-family:inherit;font-size:12px;height:70px;resize:vertical;transition:all 0.2s ease">'+(c.preferences||'')+'</textarea>'
+    +'</div>'
+    +'</div>'
+
+    // ✅ SECTION 5: ΙΑΤΡΙΚΑ
+    +'<div class="section-card medical">'
+    +'<div class="section-header medical"><span class="section-icon">🩺</span>Ιατρικές Συνθήκες</div>'
+    +'<div class="fg"><div class="fgrp"><label>Ενεργές Συνθήκες</label>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">'
     +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
     +'<input type="checkbox" id="chk-diabetes" '+(c.medConditions&&c.medConditions.diabetes?'checked':'')+' onchange="upd(\'medConditions.diabetes\', this.checked); applyMedicalProtocol(\'diabetes\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
@@ -6236,27 +6283,19 @@ function renderMain(){
     +'<input type="checkbox" id="chk-lactose" '+(c.medConditions&&c.medConditions.lactose?'checked':'')+' onchange="upd(\'medConditions.lactose\', this.checked); applyMedicalProtocol(\'lactose\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
     +'<span onclick="showMedicalProtocol(\'lactose\')" style="cursor:help;">Δυσανεξία Λακτόζης ℹ️</span></label>'
 
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
+    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:12px;cursor:pointer;">'
     +'<input type="checkbox" id="chk-vegetarian" '+(c.medConditions&&c.medConditions.vegetarian?'checked':'')+' onchange="upd(\'medConditions.vegetarian\', this.checked); applyMedicalProtocol(\'vegetarian\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
     +'<span onclick="showMedicalProtocol(\'vegetarian\')" style="cursor:help;">Χορτοφαγική ℹ️</span></label>'
+    +'</div></div>'
     +'</div>'
-    +'</div></div>'
 
-    +'<div class="fg"><div class="fgrp"><label>Προτιμήσεις & Περιορισμοί</label>'
-    +'<textarea id="inp-preferences" placeholder="π.χ. προτιμώ ψάρι, δεν τρώω πολλά ξηρά φρούτα..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-family:inherit;font-size:13px;height:60px;resize:vertical;">'+(c.preferences||'')+'</textarea>'
-    +'</div></div>'
-
-    +'<div class="fg"><div class="fgrp"><label>Εβδομαδιαίος Προϋπολογισμός (€)</label>'
+    // ✅ SECTION 6: BUDGET
+    +'<div class="section-card budget">'
+    +'<div class="section-header budget"><span class="section-icon">💰</span>Προϋπολογισμός</div>'
+    +'<div class="fg"><div class="fgrp"><label>Εβδομαδιαίος (€)</label>'
     +'<input type="number" id="inp-budget" placeholder="π.χ. 60" value="'+(c.budget||'')+'" min="0">'
     +'</div></div>'
-
     +'</div>'
-    +'<div class="fg"><div class="fgrp"><label>Φόρμουλα TDEE <span class="formula-tag'+(t.isMinor?' cunningham':isCunn?' cunningham':'')+'">'+(t.isMinor?'Schofield':isCunn?'Cunningham':'Mifflin')+'</span></label>'
-    +(t.isMinor?'<div style="font-size:10px;color:#e65100;background:#fff8e1;border-radius:5px;padding:4px 8px">👶 Αυτόματα Schofield (1985) — ισχύει για ηλικία &lt;18</div>':'<select id="inp-formula">'+fOpts+'</select>')+'</div>'
-    +'<div class="fgrp" id="lbm-wrap" style="display:'+(isCunn?'block':'none')+'">'
-    +'<label>Άλιπη μάζα / LBM (kg)</label>'
-    +'<input type="number" id="inp-lbm" value="'+(c.lbm||0)+'" min="30" max="150" step="0.5">'
-    +'</div></div>'
     +buildMetHtml(c,t)
     +(t.isMinor?'<div class="minor-banner">👶 Ανήλικος αθλητής — Φόρμουλα Schofield (1985) &nbsp;|&nbsp; Growth Allowance: +'+t.growthAdd+' kcal &nbsp;|&nbsp; Ηλικία: '+c.age+' ετών</div>':'')
     +(function(){
@@ -6408,6 +6447,15 @@ function renderMain(){
   };
   var lbmInp=document.getElementById('inp-lbm');
   if(lbmInp)lbmInp.oninput=function(){upd('lbm',+this.value);};
+  // ✅ Allergies handler
+  var allerInp=document.getElementById('inp-allergies');
+  if(allerInp)allerInp.oninput=function(){upd('allergies',this.value);};
+  // ✅ Budget handler
+  var budgetInp=document.getElementById('inp-budget');
+  if(budgetInp)budgetInp.oninput=function(){upd('budget',+this.value);};
+  // ✅ Preferences handler
+  var prefInp=document.getElementById('inp-preferences');
+  if(prefInp)prefInp.oninput=function(){upd('preferences',this.value);};
   renderFoodLib('');
   if(Object.keys(c.weekPlan).length){initializeMealTiming(c);renderWeekTable();}
   renderSuppNotes();
