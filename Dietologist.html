@@ -100,6 +100,11 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .meal-label{position:relative;cursor:help}
 .meal-label:hover::after{content:attr(data-timing-info);position:absolute;background:#333;color:#fff;padding:8px 10px;border-radius:5px;font-size:10px;white-space:nowrap;z-index:1000;bottom:100%;left:0;margin-bottom:4px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .meal-label:hover::before{content:'';position:absolute;background:#333;width:6px;height:6px;z-index:999;bottom:calc(100% - 4px);left:8px;transform:rotate(45deg)}
+/* ✅ QUICK MEAL SWAP BUTTON */
+.chip-swap-btn{background:none;border:1px dashed #c5ddd8;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:10px;color:#025857;font-weight:600;flex-shrink:0;transition:all .2s;margin-left:4px}
+.chip-swap-btn:hover{background:#E2EEE5;border-color:#025857;color:#014545}
+.chip-swap-btn:active{transform:scale(0.95)}
+
 /* Food chips */
 .food-chip{display:flex;align-items:center;gap:2px;padding:4px 8px;margin-bottom:4px;border-radius:5px;background:#f4f4f4;border:1px solid #ebebeb}
 .food-chip:hover{background:#E2EEE5;border-color:#c5ddd8}
@@ -113,6 +118,22 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .chip-del:hover{color:#c62828}
 .chip-add{background:none;border:1px dashed #d0d0d0;border-radius:4px;cursor:pointer;font-size:11px;color:#bbb;padding:1px 0;width:100%;display:block;margin-top:2px;text-align:center}
 .chip-add:hover{color:#025857;border-color:#025857;background:#E2EEE5}
+/* ✅ DAILY TOTALS HEADER */
+.day-header{background:#f8fffe;border:1px solid #c5ddd8;border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.day-header-title{font-size:13px;font-weight:700;color:#025857}
+.day-header-totals{display:flex;gap:16px;font-size:11px;flex-wrap:wrap}
+.day-total-item{display:flex;align-items:center;gap:4px;font-weight:600}
+.day-total-item.kcal{font-size:12px;color:#025857}
+.day-total-item.ok{color:#2e7d32}
+.day-total-item.close{color:#f57c00}
+.day-total-item.over{color:#c62828}
+
+/* ✅ STATUS INDICATOR BADGE */
+.day-status-badge{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:700;text-align:center;min-width:60px}
+.day-status-badge.ok{background:#e8f5e9;color:#2e7d32}
+.day-status-badge.close{background:#fff3e0;color:#e65100}
+.day-status-badge.over{background:#ffebee;color:#c62828}
+
 /* Totals row */
 .totals-row td{border-top:2px solid #025857;background:#f5faf9;padding:5px 6px;text-align:left;vertical-align:top}
 .totals-row .meal-label{font-size:10px;font-weight:600;color:#666;background:#eef5f3}
@@ -15581,6 +15602,88 @@ function handleSwipe(){
       swTab(currentTab + 1);
     }
   }
+}
+
+// ✅ PLAN PAGE ENHANCEMENTS: Daily Totals, Status, Quick Swap
+
+function calculateDailyTotals(dayMeals){
+  // Calculate total macros for a single day
+  var totals = {k: 0, p: 0, f: 0, c: 0};
+
+  if(!dayMeals || dayMeals.length === 0) return totals;
+
+  dayMeals.forEach(function(meal){
+    if(!meal || !meal.foods) return;
+
+    meal.foods.forEach(function(food){
+      if(!food) return;
+      var foodData = ALLFOODS[food.name];
+      if(!foodData) return;
+
+      var qty = food.g || 0;
+      totals.k += (foodData.k * qty / 100) || 0;
+      totals.p += (foodData.p * qty / 100) || 0;
+      totals.f += (foodData.f * qty / 100) || 0;
+      totals.c += (foodData.c * qty / 100) || 0;
+    });
+  });
+
+  return {
+    k: Math.round(totals.k),
+    p: Math.round(totals.p),
+    f: Math.round(totals.f),
+    c: Math.round(totals.c)
+  };
+}
+
+function getDayStatus(dayTotals, targetTotals){
+  // Determine if day is OK, Close to limit, or Over
+  var kcalDiff = dayTotals.k - targetTotals.k;
+  var tolerance = targetTotals.k * 0.05; // ±5% tolerance
+
+  if(Math.abs(kcalDiff) <= tolerance){
+    return {status: 'ok', label: '✅ Σωστό', color: '#2e7d32'};
+  } else if(kcalDiff > 0 && kcalDiff <= tolerance * 2){
+    return {status: 'close', label: '🟡 Κοντά', color: '#e65100'};
+  } else if(kcalDiff > tolerance * 2){
+    return {status: 'over', label: '🔴 Υπέρβαση', color: '#c62828'};
+  } else {
+    return {status: 'low', label: '❌ Χαμηλά', color: '#1565C0'};
+  }
+}
+
+function swapMealAlternative(dayIndex, mealIndex){
+  // Quick meal swap - find alternative of same calorie range
+  var c = getC();
+  if(!c || !c.weekPlan || !c.weekPlan[dayIndex]) return;
+
+  var currentMeal = c.weekPlan[dayIndex][mealIndex];
+  if(!currentMeal) return;
+
+  // Calculate current meal calories
+  var currentKcal = 0;
+  if(currentMeal.foods){
+    currentMeal.foods.forEach(function(food){
+      var foodData = ALLFOODS[food.name];
+      if(foodData){
+        currentKcal += (foodData.k * (food.g || 0) / 100);
+      }
+    });
+  }
+
+  // Try to generate alternative with same calorie target
+  if(typeof generateSmartMeal === 'function'){
+    var altMeal = generateSmartMeal(Math.round(currentKcal), null, dayIndex);
+    if(altMeal && altMeal.foods && altMeal.foods.length > 0){
+      currentMeal.foods = altMeal.foods;
+      upd();
+      renderWeekTable();
+      showSuccessToast('🔄 Γεύμα ανταλλάχθηκε!');
+      return;
+    }
+  }
+
+  showErrorToast('❌ Δεν μπορέσαμε να βρούμε εναλλακτική');
 }
 </script>
 
