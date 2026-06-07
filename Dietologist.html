@@ -6357,12 +6357,8 @@ function renderMain(){
     // ✅ PLAN GENERATION BUTTON ONLY IN S1
     +'<div class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου</button></div>'
     +'</div>'
-    // ✅ S2: MEAL PLAN VIEW
+    // ✅ S2: MEAL PLAN VIEW ONLY
     +'<div id="s2" style="display:none">'
-    +buildDayTgtHtml(c,t)
-    +buildSuppHtml(c)
-    +buildExcludeHtml(c)
-    +buildAlertsAndTipsHtml(c)
     +'<div class="brow"><button class="btn" onclick="swTab(1)">&#8592; Στοιχεία</button>'
     +'<button class="btn" style="background:#ff9800;color:#fff;" onclick="regeneratePlan()">&#8635; Αναδημιουργία (δεν μου αρέσει)</button>'
     +'<button class="btn primary" style="background:#2196F3;color:#fff;" onclick="showSavePlanPanel()">💾 Αποθήκευση Διατροφής</button>'
