@@ -6456,9 +6456,10 @@ function renderMain(){
   // ✅ Preferences handler
   var prefInp=document.getElementById('inp-preferences');
   if(prefInp)prefInp.oninput=function(){upd('preferences',this.value);};
-  renderFoodLib('');
-  if(Object.keys(c.weekPlan).length){initializeMealTiming(c);renderWeekTable();}
-  renderSuppNotes();
+  // ✅ FIX: Don't render week table in s1, only render when swTab(2) is called
+  // renderFoodLib('');
+  // if(Object.keys(c.weekPlan).length){initializeMealTiming(c);renderWeekTable();}
+  // renderSuppNotes();
 
   // ← Setup event listeners for all form inputs (CRITICAL for auto-recalculation)
   setupFormEventListeners();
