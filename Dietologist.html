@@ -6226,13 +6226,13 @@ function renderMain(){
     +'</div>'
 
     // ✅ SECTION 2: ΑΝΘΡΩΠΟΜΕΤΡΙΑ
-    +'<div class="section-card anthropometry">'
+    +'<div class="section-card anthropometry" id="sec-anthropometry">'
     +'<div class="section-header anthropometry"><span class="section-icon">📏</span>Ανθρωπομετρία</div>'
     +'<div class="fg"><div class="fgrp"><label>% Σώμ. Λίπος</label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div>'
     +'<div class="fgrp"><label>Lean Mass (kg)</label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63"></div></div>'
     +'</div>'
     // ✅ SECTION 3: ΔΡΑΣΤΗΡΙΟΤΗΤΑ & ΣΤΟΧΟΣ
-    +'<div class="section-card activity">'
+    +'<div class="section-card activity" id="sec-activity">'
     +'<div class="section-header activity"><span class="section-icon">⚡</span>Δραστηριότητα & Στόχος</div>'
     +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' (NEAT baseline)':'')+'</label><select id="inp-activity">'+aOpts+'</select></div>'
     +'<div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
@@ -6244,7 +6244,7 @@ function renderMain(){
     +'</div>'
 
     // ✅ SECTION 4: ΔΙΑΤΡΟΦΗ
-    +'<div class="section-card dietary">'
+    +'<div class="section-card dietary" id="sec-dietary">'
     +'<div class="section-header dietary"><span class="section-icon">🍽️</span>Διατροφή</div>'
     +'<div class="fg"><div class="fgrp"><label>Τύπος Διατροφής</label><select id="inp-dietType" onchange="upd(\'dietType\',this.value);">'+dOpts+'</select></div></div>'
 
@@ -6259,7 +6259,7 @@ function renderMain(){
     +'</div>'
 
     // ✅ SECTION 5: ΙΑΤΡΙΚΑ
-    +'<div class="section-card medical">'
+    +'<div class="section-card medical" id="sec-medical">'
     +'<div class="section-header medical"><span class="section-icon">🩺</span>Ιατρικές Συνθήκες</div>'
     +'<div class="fg"><div class="fgrp"><label>Ενεργές Συνθήκες</label>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">'
@@ -7943,6 +7943,13 @@ function swTab(n){
   document.getElementById('s2').style.display=n===2?'block':'none';
   document.getElementById('s3').style.display=n===3?'block':'none';
   var s4=document.getElementById('s4');if(s4)s4.style.display=n===4?'block':'none';
+
+  // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1
+  var sectionIds=['sec-anthropometry','sec-activity','sec-dietary','sec-medical'];
+  sectionIds.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.style.display=n===1?'block':'none';
+  });
 
   // ✅ PHASE 5: ANALYTICS TAB SUPPORT
   var analyticsDiv = document.getElementById('analyticsContent');
