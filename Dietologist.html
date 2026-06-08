@@ -7945,7 +7945,7 @@ function swTab(n){
   var s4=document.getElementById('s4');if(s4)s4.style.display=n===4?'block':'none';
 
   // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1
-  var sectionIds=['sec-anthropometry','sec-activity','sec-dietary','sec-medical'];
+  var sectionIds=['sec-anthropometry','sec-activity','sec-dietary','sec-medical','met-section-wrap'];
   sectionIds.forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.style.display=n===1?'block':'none';
