@@ -12,7 +12,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 /* Sidebar clients */
 .sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:12px 10px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto}
 .sb-title{font-size:10px;font-weight:700;color:#999;padding:0 10px 10px;text-transform:uppercase;letter-spacing:.5px}
-.ci{padding:10px 12px;border-radius:10px;cursor:pointer;font-size:12px;margin-bottom:6px;display:flex;flex-direction:column;gap:4px;border:1px solid #f0f0f0;background:#f9f9f9;transition:all .2s}
+.ci{padding:6px 8px;border-radius:8px;cursor:pointer;font-size:11px;margin-bottom:4px;display:flex;flex-direction:column;gap:2px;border:1px solid #f0f0f0;background:#f9f9f9;transition:all .2s}
 .ci:hover{background:#f0f7f7;border-color:#c5ddd8;transform:translateY(-2px);box-shadow:0 4px 12px rgba(2,88,87,.08)}
 .ci.active{background:#E2EEE5;color:#025857;font-weight:600;border-color:#c5ddd8;box-shadow:0 4px 12px rgba(2,88,87,.15)}
 .ci-name{font-weight:600;color:#025857}
@@ -5121,7 +5121,7 @@ function showErrorToast(message) {
 function addClient(){
   try {
     var id='c'+Date.now();
-    var newClient={id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,leanmass:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal'};
+    var newClient={id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,leanmass:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
 
     if(window.undoRedoManager && typeof CreateClientCommand !== 'undefined'){
       var cmd = new CreateClientCommand(newClient);
@@ -5159,6 +5159,10 @@ function deleteClient(id){
 function selectClient(id){
   try {
     curId=id;
+    // ✅ Update lastAccess timestamp for sorting
+    var c=clients.find(function(x){return x.id===id;});
+    if(c){c.lastAccess=Date.now();upd();}
+
     var tb=document.getElementById('tmpl-sb-btn');
     if(tb) tb.classList.remove('active');
 
@@ -5187,6 +5191,8 @@ function filterClients(val){_clientSearchTerm=(val||'').toLowerCase().trim();ren
 function renderSB(){
   var term=_clientSearchTerm;
   var list=term?clients.filter(function(c){return(c.name||'Νέος πελάτης').toLowerCase().indexOf(term)>-1;}):clients;
+  // ✅ Sort by lastAccess (most recent first)
+  list.sort(function(a,b){return(b.lastAccess||0)-(a.lastAccess||0);});
   var html='';
   if(term&&list.length===0){
     html='<div style="font-size:11px;color:#bbb;padding:6px 10px;font-style:italic">Κανένα αποτέλεσμα</div>';
