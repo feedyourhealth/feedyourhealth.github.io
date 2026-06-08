@@ -6297,59 +6297,6 @@ function renderMain(){
     +'</div></div>'
     +'</div></div>'
     +buildMetHtml(c,t)
-    +(t.isMinor?'<div class="minor-banner">👶 Ανήλικος αθλητής — Φόρμουλα Schofield (1985) &nbsp;|&nbsp; Growth Allowance: +'+t.growthAdd+' kcal &nbsp;|&nbsp; Ηλικία: '+c.age+' ετών</div>':'')
-    +(function(){
-      // Build body composition display
-      if(!c.leanmass && (!c.bf || c.bf===0)) return '';
-      var bcomp='<div style="background:#f8fffe;border:1px solid #c5ddd8;border-radius:10px;padding:12px;margin-bottom:12px;">';
-      bcomp+='<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:8px;">📊 ΣΩΜΑΤΙΚΗ ΣΥΝΘΕΣΗ</div>';
-      if(c.leanmass && c.leanmass>0){
-        var fatmass=c.weight-c.leanmass;
-        var fatpct=+(((fatmass/c.weight)*100).toFixed(1));
-        bcomp+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;line-height:1.6;">';
-        bcomp+='<div>Βάρος: <b>'+c.weight+'</b> kg</div>';
-        bcomp+='<div>Lean Mass: <b>'+c.leanmass+'</b> kg</div>';
-        bcomp+='<div>Σωματικό Λίπος: <b>'+fatmass.toFixed(1)+'</b> kg</div>';
-        bcomp+='<div>% Λίπος: <b>'+fatpct+'</b>%</div>';
-        bcomp+='</div>';
-      } else if(c.bf && c.bf>0){
-        var ffm=+(c.weight*(1-(c.bf/100))).toFixed(1);
-        var fatmass=+(c.weight-ffm).toFixed(1);
-        bcomp+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;line-height:1.6;">';
-        bcomp+='<div>Βάρος: <b>'+c.weight+'</b> kg</div>';
-        bcomp+='<div>Lean Mass (calc): <b>'+ffm+'</b> kg</div>';
-        bcomp+='<div>Σωματικό Λίπος: <b>'+fatmass+'</b> kg</div>';
-        bcomp+='<div>% Λίπος: <b>'+c.bf+'</b>%</div>';
-        bcomp+='</div>';
-      }
-      bcomp+='<div style="font-size:9px;color:#666;margin-top:6px;padding-top:6px;border-top:1px solid #e0e0e0;">✓ BMR: <b>'+(t.bmrMethod||'Mifflin-St Jeor')+'</b></div>';
-      bcomp+='</div>';
-      return bcomp;
-    })()
-    +'<div class="tdee-row"><div class="ti"><div class="tl">BMR'+(t.isMinor?' <span class="formula-tag cunningham" style="font-size:8px">Schofield</span>':t.bmrMethod && t.bmrMethod.includes('Katch')?'<span class="formula-tag cunningham" style="font-size:8px;">'+t.bmrMethod.split(' ')[0]+'</span>':'')+'</div><div class="tv" id="v-bmr">'+t.bmr+' kcal</div></div>'
-    +'<div class="ti"><div class="tl">TDEE'+(t.usedMET?' (MET)':'')+'</div><div class="tv" id="v-tdee">'+(t.usedMET?('NEAT: '+t.neat+' kcal'):(t.tdee+' kcal'))+(t.usedMET?'<div style="font-size:12px;color:#666;margin-top:4px;">Training: '+t.trainTarget+' | Rest: '+t.restTarget+'</div>':'')+'</div></div>'
-    +'<div class="ti"><div class="tl">Στόχος'+'<span style="font-size:9px;color:#666;margin-left:4px" title="Μέσο ημερήσιο στόχο (NEAT + άσκηση + ανάπτυξη + στόχος)">ℹ️</span>'+'</div><div class="tv" id="v-target">'+t.target+' kcal</div></div>'
-    +'<div class="ti"><div class="tl">Πρωτεΐνη</div><div class="tv b" id="v-macros">'+t.p+'g <span style="font-size:10px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span></div></div></div>'
-    +(t.ea!==null?'<div class="ea-row'+(t.ea<30?' ea-danger':t.ea<45?' ea-warn':' ea-ok')+'" id="ea-row">⚡ Energy Availability: <b>'+t.ea+' kcal/kgLBM</b> &nbsp;'+(t.ea<30?'🔴 Κίνδυνος RED-S — ανεπαρκής ενεργειακή διαθεσιμότητα':t.ea<45?'🟡 Οριακή EA — παρακολούθηση απαραίτητη':'🟢 Φυσιολογική EA')+'</div>':'')+
-    (function(){
-      if(!t.warnings||!t.warnings.length)return'<div id="warnings-container"></div>';
-      var whtml='<div id="warnings-container">';
-      t.warnings.forEach(function(w){
-        var bgColor=w.type==='alert'?'#ffebee':'#fff3e0';
-        var borderColor=w.type==='alert'?'#f44336':'#ff9800';
-        var textColor=w.type==='alert'?'#c62828':'#e65100';
-        whtml+='<div style="background:'+bgColor+';border:1px solid '+borderColor+';border-radius:6px;padding:8px 12px;margin:6px 0;font-size:13px;color:'+textColor+'">'+w.msg+'</div>';
-      });
-      whtml+='</div>';
-      return whtml;
-    })()
-    // ✅ REMOVED: Macro presets - not needed in s1
-    // +buildMacroPresetHtml(c,t)
-    +'<div class="hydration-row">'
-    +'<div class="hydration-chip">&#128167; Ανάπαυση: '+hydBase+' ml<span>('+Math.round(hydBase/1000*10)/10+'L)</span></div>'
-    +(numTrainDays>0?'<div class="hydration-chip" style="background:#e8f5e9;color:#2e7d32">&#127947; Προπόνηση: '+hydTrain+' ml<span>('+Math.round(hydTrain/1000*10)/10+'L)</span></div>':'')
-    +'<div class="hydration-chip" style="background:#fff3e0;color:#e65100">&#128197; '+numTrainDays+'/7 ημέρες προπόνησης</div>'
-    +'</div>'
     // ✅ REMOVED: These should only appear with meal plan in s2
     // +buildDayTgtHtml(c,t)
     // +buildSuppHtml(c)
