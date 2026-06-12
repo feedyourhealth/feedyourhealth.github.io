@@ -183,9 +183,11 @@
 
     function log(msg) {
       const logEl = document.getElementById('debugLog');
-      const timestamp = new Date().toLocaleTimeString();
-      logEl.innerHTML += `[${timestamp}] ${msg}<br>`;
-      logEl.parentElement.scrollTop = logEl.parentElement.scrollHeight;
+      if (logEl) {
+        const timestamp = new Date().toLocaleTimeString();
+        logEl.innerHTML += `[${timestamp}] ${msg}<br>`;
+        logEl.parentElement.scrollTop = logEl.parentElement.scrollHeight;
+      }
       console.log(msg);
     }
 
