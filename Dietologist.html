@@ -10,7 +10,38 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .app{display:flex;min-height:100vh;position:relative}
 /* ✅ IMPROVED: Card-based client design */
 /* Sidebar clients */
-.sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:12px 10px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto}
+/* Sidebar toggle button */
+.sidebar-toggle{
+  position:fixed;
+  top:12px;
+  left:12px;
+  width:40px;
+  height:40px;
+  background:#025857;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-size:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  transition:all 0.3s;
+  z-index:999;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+}
+.sidebar-toggle:hover{
+  background:#014545;
+  transform:scale(1.1);
+  box-shadow:0 3px 12px rgba(0,0,0,0.3);
+}
+.sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:12px 10px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto;transition:width 0.3s ease;}
+.sb.collapsed{
+  width:0;
+  padding:0;
+  overflow:hidden;
+  border:none;
+}
 .sb-title{font-size:10px;font-weight:700;color:#999;padding:0 10px 10px;text-transform:uppercase;letter-spacing:.5px}
 .ci{padding:6px 8px;border-radius:8px;cursor:pointer;font-size:11px;margin-bottom:4px;display:flex;flex-direction:column;gap:2px;border:1px solid #f0f0f0;background:#f9f9f9;transition:all .2s}
 .ci:hover{background:#f0f7f7;border-color:#c5ddd8;transform:translateY(-2px);box-shadow:0 4px 12px rgba(2,88,87,.08)}
@@ -40,6 +71,17 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .stabs{display:flex;border-bottom:1px solid #e0e0e0;margin-bottom:14px}
 .stab{padding:7px 16px;font-size:12px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none}
 .stab.active{color:#025857;border-bottom-color:#025857;font-weight:600}
+/* ✅ PAGE SECTIONS - ENSURE ONLY ONE VISIBLE AT A TIME */
+#s1,#s2,#s3,#s4,#s5{
+  display:block;
+  width:100%;
+  clear:both;
+  float:none;
+  position:relative;
+}
+#s1[style*="display:none"],#s2[style*="display:none"],#s3[style*="display:none"],#s4[style*="display:none"]{
+  display:none!important;
+}
 /* Client form */
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .fg3{grid-template-columns:1fr 1fr 1fr}
@@ -104,11 +146,13 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .plan-wrap{display:flex;gap:12px;align-items:flex-start}
 .week-main{flex:1;overflow-x:auto;min-width:0}
 /* Weekly table */
-.week-table{border-collapse:collapse;min-width:860px;width:100%}
-.week-table thead th{padding:7px 6px;background:#025857;color:#fff;font-size:11px;font-weight:600;text-align:center;white-space:nowrap;position:sticky;top:0;z-index:2}
-.week-table thead th:first-child{background:#014545;min-width:76px;text-align:left;padding-left:8px;z-index:3}
-.meal-label{font-size:11px;font-weight:700;color:#025857;background:#E2EEE5;padding:6px 8px;white-space:nowrap;vertical-align:top;border-right:2px solid #c5ddd8;border-bottom:1px solid #d8ebe4}
-.day-cell{border:1px solid #ebebeb;padding:8px 8px 6px;vertical-align:top;min-width:118px;background:#fff;transition:background .12s,border-color .12s;cursor:grab;position:relative}
+.week-table{border-collapse:collapse;width:100%;min-width:840px;table-layout:fixed}
+.week-table thead th.daycol-eq{width:auto}
+.week-table thead th{padding:8px 8px;background:#E8F5E9;color:#025857;font-size:10px;font-weight:700;text-align:center;white-space:normal;position:sticky;top:0;z-index:2;letter-spacing:0.3px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border-bottom:2px solid #C8E6C9}
+.week-table thead th:first-child{background:#E8F5E9;color:#025857;width:76px;min-width:76px;text-align:center;padding:8px 8px;z-index:3;font-size:10px;border-bottom:2px solid #C8E6C9}
+.meal-label{font-size:9px;font-weight:700;color:#000;background:#e8f5e9;padding:5px 7px;white-space:nowrap;vertical-align:top;border-right:2px solid #aed581;border-bottom:1px solid #c8e6c9;line-height:1.3}
+.meal-section-header{padding:10px 12px;background:#E8F5E9;border-bottom:2px solid #C8E6C9;text-align:center;vertical-align:middle;font-weight:700;color:#025857;box-shadow:0 2px 4px rgba(0,0,0,0.1);letter-spacing:0.4px;font-size:12px}
+.day-cell{border:1px solid #ddd;padding:4px 5px;vertical-align:top;min-width:100px;background:#fff;transition:background .12s,border-color .12s;cursor:grab;position:relative;font-size:9px;word-wrap:break-word;overflow-wrap:break-word;white-space:normal;line-height:1.2}
 .day-cell::before{content:'≡≡';position:absolute;top:2px;right:2px;font-size:10px;color:#ccc;pointer-events:none;opacity:0;transition:opacity .2s}
 .day-cell:hover::before{opacity:1}
 .day-cell:hover{background:#f9f9f9;border-color:#ddd}
@@ -119,22 +163,98 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .meal-label:hover::after{content:attr(data-timing-info);position:absolute;background:#333;color:#fff;padding:8px 10px;border-radius:5px;font-size:10px;white-space:nowrap;z-index:1000;bottom:100%;left:0;margin-bottom:4px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .meal-label:hover::before{content:'';position:absolute;background:#333;width:6px;height:6px;z-index:999;bottom:calc(100% - 4px);left:8px;transform:rotate(45deg)}
 /* ✅ QUICK MEAL SWAP BUTTON */
-.chip-swap-btn{background:none;border:1px dashed #c5ddd8;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:10px;color:#025857;font-weight:600;flex-shrink:0;transition:all .2s;margin-left:4px}
+.chip-swap-btn{
+  background:none;
+  border:1px dashed #c5ddd8;
+  border-radius:4px;
+  padding:2px 6px;
+  cursor:pointer;
+  font-size:10px;
+  color:#025857;
+  font-weight:600;
+  flex-shrink:0;
+  transition:all .2s;
+  margin-left:4px;
+}
 .chip-swap-btn:hover{background:#E2EEE5;border-color:#025857;color:#014545}
 .chip-swap-btn:active{transform:scale(0.95)}
 
-/* Food chips */
-.food-chip{display:flex;align-items:center;gap:2px;padding:4px 8px;margin-bottom:4px;border-radius:5px;background:#f4f4f4;border:1px solid #ebebeb}
-.food-chip:hover{background:#E2EEE5;border-color:#c5ddd8}
+/* Food chips - Card style */
+.food-chip{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:2px;
+  padding:4px 7px;
+  margin-bottom:4px;
+  border-radius:4px;
+  background:#ffffff;
+  border:1px solid #e8e8e8;
+  line-height:1.2;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08);
+  transition:all 0.15s ease;
+  position:relative;
+}
+.food-chip:hover{
+  background:#f9f9f9;
+  border-color:#c5ddd8;
+  box-shadow:0 2px 6px rgba(0,0,0,0.12);
+}
+/* ✅ Action buttons appear on hover only (cleaner cells) */
+.food-chip .chip-swap-btn,.food-chip .chip-del,.food-chip .chip-srv{opacity:0;transition:opacity .12s ease}
+.food-chip:hover .chip-swap-btn,.food-chip:hover .chip-del,.food-chip:hover .chip-srv{opacity:1}
+.food-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.chip-r1{display:flex;align-items:center;gap:5px}
+.chip-r2{display:flex;align-items:center;gap:4px;justify-content:flex-end}
 .chip-name-wrap{position:relative;flex:1;min-width:0}
-.chip-inp{width:100%;background:none;border:none;font-size:10px;color:#1a1a1a;padding:0;font-family:inherit;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip-inp{
+  width:100%;
+  background:none;
+  border:none;
+  font-size:11px;
+  color:#000;
+  font-weight:600;
+  padding:0;
+  font-family:inherit;
+  cursor:pointer;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  height:17px;
+  min-height:0;
+  line-height:17px;
+}
 .chip-inp:focus{outline:none;color:#025857;cursor:text}
-.chip-g{width:32px;border:none;background:none;font-size:10px;font-weight:700;color:#025857;text-align:right;padding:0;font-family:inherit}
+.chip-g{
+  width:40px;
+  border:none;
+  background:none;
+  font-size:12px;
+  font-weight:700;
+  color:#c62828;
+  text-align:right;
+  padding:0;
+  font-family:inherit;
+  height:18px;
+  min-height:0;
+}
 .chip-g:focus{outline:1px solid #025857;border-radius:2px;background:#fff}
-.chip-unit{font-size:9px;color:#bbb;flex-shrink:0}
-.chip-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:10px;padding:0 1px;flex-shrink:0;line-height:1}
-.chip-del:hover{color:#c62828}
-.chip-add{background:none;border:1px dashed #d0d0d0;border-radius:4px;cursor:pointer;font-size:11px;color:#bbb;padding:1px 0;width:100%;display:block;margin-top:2px;text-align:center}
+.chip-unit{font-size:11px;color:#888;flex-shrink:0;font-weight:600}
+.chip-unit-btn{font-size:11px;color:#025857;flex-shrink:0;font-weight:600;background:none;border:1px solid #ccc;border-radius:4px;padding:2px 6px;cursor:pointer;transition:all 0.2s}
+.chip-unit-btn:hover{background:#e2eee5;border-color:#025857;color:#014545}
+.chip-del{
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:#ccc;
+  font-size:13px;
+  padding:0 3px;
+  flex-shrink:0;
+  line-height:1;
+  transition:all 0.1s;
+}
+.chip-del:hover{color:#c62828;transform:scale(1.2)}
+.chip-add{background:none;border:1px dashed #d0d0d0;border-radius:4px;cursor:pointer;font-size:13px;color:#bbb;padding:3px 0;width:100%;display:block;margin-top:4px;text-align:center;font-weight:600}
 .chip-add:hover{color:#025857;border-color:#025857;background:#E2EEE5}
 /* ✅ DAILY TOTALS HEADER */
 .day-header{background:#f8fffe;border:1px solid #c5ddd8;border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
@@ -165,7 +285,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .macro-bar-fill{height:100%;border-radius:3px}
 .mbr-val{font-size:8.5px;color:#555;white-space:nowrap;width:40px;text-align:right;flex-shrink:0}
 /* Per-meal macro bar inside each day cell */
-.meal-mac-bar{font-size:10px;color:#777;border-top:1px dashed #e0e0e0;margin-top:3px;padding-top:2px;white-space:nowrap;line-height:1.4}
+.meal-mac-bar{font-size:11px;color:#333;border-top:1px solid #e5e5e5;margin-top:2px;padding-top:2px;white-space:nowrap;line-height:1.3;font-weight:600}
 /* Chip dropdown */
 .chip-dd{position:absolute;left:0;top:calc(100% + 2px);z-index:9999;background:#fff;border:1px solid #ddd;border-radius:7px;box-shadow:0 4px 16px rgba(0,0,0,.13);min-width:220px;max-height:180px;overflow-y:auto}
 .chip-ddi{padding:5px 10px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;gap:6px;white-space:nowrap}
@@ -346,8 +466,20 @@ body.dark-mode .tooltip-text {
 .dt-inp-f{color:#e65100}.dt-inp-f:focus{border-color:#e65100}
 .dt-inp-c{color:#2e7d32}.dt-inp-c:focus{border-color:#2e7d32}
 /* Portion button & dropdown */
-.chip-srv{background:none;border:1px solid #c5ddd8;border-radius:3px;cursor:pointer;color:#025857;font-size:9px;padding:1px 3px;flex-shrink:0;line-height:1;font-family:inherit}
-.chip-srv:hover{background:#E2EEE5}
+.chip-srv{
+  background:none;
+  border:1px solid #c5ddd8;
+  border-radius:3px;
+  cursor:pointer;
+  color:#025857;
+  font-size:11px;
+  padding:3px 6px;
+  flex-shrink:0;
+  line-height:1;
+  font-family:inherit;
+  transition:all 0.1s;
+}
+.chip-srv:hover{background:#E2EEE5;border-color:#025857}
 .srv-ddi{padding:5px 10px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;gap:8px;white-space:nowrap}
 .srv-ddi:hover{background:#E2EEE5;color:#025857}
 .srv-ddg{font-size:9px;color:#bbb}
@@ -405,8 +537,8 @@ body.dark-mode .tooltip-text {
 .combo-del{border:none;background:none;cursor:pointer;color:#ccc;font-size:11px;padding:0 2px;line-height:1;flex-shrink:0}
 .combo-del:hover{color:#c62828}
 .combo-preview{font-size:9px;color:#999;padding:0 6px 3px;line-height:1.5}
-.combo-save-btn{background:none;border:1px dashed #e0c9a0;border-radius:4px;cursor:pointer;font-size:10px;color:#bbb;padding:2px 0;margin-top:2px;display:block;width:100%;text-align:center;font-family:inherit}
-.combo-save-btn:hover{color:#e65100;border-color:#e65100;background:#fff8f0}
+.combo-save-btn{background:none;border:1px dashed #e0c9a0;border-radius:4px;cursor:pointer;font-size:11px;color:#bbb;padding:4px 0;margin-top:4px;display:block;width:100%;text-align:center;font-family:inherit;font-weight:600;transition:all 0.15s}
+.combo-save-btn:hover{color:#e65100;border-color:#e65100;background:#fff8f0;transform:scale(1.02)}
 /* Totals target indicator */
 .tot-pct{font-size:9px;margin-top:1px;font-weight:600}
 .tot-pct.ok{color:#025857}
@@ -1108,6 +1240,17 @@ body.dark-mode #keyboardHelpPanel {
   font-family: monospace;
   color: #4fc3f7;
 }
+
+/* ✅ FOOD TYPE COLOR CODING - VIBRANT & BALANCED PALETTE */
+.food-chip.food-protein { background: #5DADE2 !important; color: white !important; }
+.food-chip.food-carbs { background: #F8B739 !important; color: white !important; }
+.food-chip.food-vegetables { background: #52B788 !important; color: white !important; }
+.food-chip.food-dairy { background: #E8A0BF !important; color: white !important; }
+.food-chip.food-fruits { background: #C77DFF !important; color: white !important; }
+.food-chip.food-grains { background: #FFB703 !important; color: white !important; }
+.food-chip.food-oils { background: #FB8500 !important; color: white !important; }
+.food-chip.food-supplements { background: #06A77D !important; color: white !important; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -1142,7 +1285,8 @@ body.dark-mode #keyboardHelpPanel {
 
 <!-- APP -->
 <div class="app" style="display:none;" id="app-container">
-<div class="sb">
+<div class="sb" id="sidebar">
+  <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" title="Ανοίγ/Κλείσιμο">☰</button>
   <div class="sb-title">Πελάτες</div>
   <input type="text" id="client-search" class="client-search-inp" placeholder="🔍 Αναζήτηση πελάτη..." oninput="filterClients(this.value)">
   <div id="client-list"></div>
@@ -1252,13 +1396,16 @@ var FOODS={
 'Μπριζόλα άπαχη':{k:165,p:28,c:0,f:5.4,fi:0,cat:'Κρέας'},
 'Βοδινό άπαχο (ψητό)':{k:204,p:28,c:0,f:8,fi:0,cat:'Κρέας'},
 'Βοδινά φιλετάκια':{k:200,p:28,c:0,f:8,fi:0,cat:'Κρέας'},
+'Βοδινά μπιφτέκια (ψημένα)':{k:193,p:28,c:0,f:9.3,fi:0,cat:'Κρέας'},
 'Γαλοπούλα στήθος':{k:135,p:30,c:0,f:1,fi:0,cat:'Κρέας'},
 'Κοτόπουλο μπούτι (ψητό)':{k:189,p:27,c:0,f:8.2,fi:0,cat:'Κρέας'},
+'Μοσχάρι (ψητό)':{k:200,p:28,c:0,f:8,fi:0,cat:'Κρέας'},
 'Μοσχάρι κιμάς (μαγ.)':{k:215,p:26,c:0,f:11,fi:0,cat:'Κρέας'},
 'Αρνί (ψητό)':{k:258,p:25.5,c:0,f:16.6,fi:0,cat:'Κρέας'},
 'Χοιρινός κιμάς (μαγ.)':{k:263,p:21,c:0,f:19,fi:0,cat:'Κρέας'},
 'Ελεύθερο γεύμα':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
 'Μέλι άβραστο':{k:304,p:0.3,c:82,f:0,fi:0.2,cat:'Άλλα'},
+'Σάλτσα σόγιας (μειωμένο αλάτι)':{k:60,p:2.4,c:12.7,f:0.1,fi:0,cat:'Άλλα'},
 /* Ψάρια — fi=0 */
 'Σολομός (ψητός)':{k:206,p:22,c:0,f:13,fi:0,cat:'Ψάρια'},
 'Λαβράκι (ψητό)':{k:124,p:23,c:0,f:2.5,fi:0,cat:'Ψάρια'},
@@ -1298,12 +1445,15 @@ var FOODS={
 'Ricotta':{k:174,p:11.3,c:3.0,f:13,fi:0,cat:'Αυγά/Γαλακτ.'},
 'Edam light':{k:235,p:25,c:1.5,f:15,fi:0,cat:'Αυγά/Γαλακτ.'},
 'Γαλατάκι σοκολάτα delact χωρίς ζάχαρη':{k:48,p:3.5,c:4.7,f:1.8,fi:0,cat:'Αυγά/Γαλακτ.'},
+'Χαλλούμι (ψητό)':{k:330,p:24,c:1.8,f:26,fi:0,cat:'Αυγά/Γαλακτ.'},
+'Χαλλούμι (ωμό)':{k:362,p:21,c:2.0,f:30,fi:0,cat:'Αυγά/Γαλακτ.'},
 /* Δημητριακά */
 'Βρώμη (ωμή)':{k:389,p:17,c:66,f:7,fi:10.6,cat:'Δημητριακά'},
 'Ρύζι άσπρο (βρ.)':{k:130,p:2.4,c:28,f:0.3,fi:0.4,cat:'Δημητριακά'},
 'Ρύζι καστανό (βρ.)':{k:123,p:2.6,c:25,f:1,fi:1.8,cat:'Δημητριακά'},
 'Κινόα (βρ.)':{k:120,p:4.1,c:21,f:1.9,fi:2.8,cat:'Δημητριακά'},
 'Μακαρόνια (βρ.)':{k:158,p:5.8,c:30,f:0.9,fi:1.8,cat:'Δημητριακά'},
+'Noodles αυγού (M&S)':{k:132,p:5,c:26.1,f:0.6,fi:1.3,cat:'Δημητριακά'},
 'Κριθαράκι (βρ.)':{k:158,p:5.8,c:31,f:0.9,fi:1.8,cat:'Δημητριακά'},
 'Πλιγούρι (βρ.)':{k:83,p:3,c:19,f:0.2,fi:3.7,cat:'Δημητριακά'},
 'Ψωμί σίκαλης':{k:250,p:8.5,c:48,f:3.3,fi:6.2,cat:'Δημητριακά'},
@@ -1319,6 +1469,7 @@ var FOODS={
 'Σπαγγέτι ολικής (βρ.)':{k:124,p:5.3,c:25,f:0.8,fi:3.9,cat:'Δημητριακά'},
 'Τραχανάς (βρ.)':{k:87,p:3.2,c:17,f:0.8,fi:2.1,cat:'Δημητριακά'},
 'Φρυγανιές':{k:385,p:9.5,c:74,f:4,fi:3.5,cat:'Δημητριακά'},
+'Wasa Φρυγανιές Σίκαλης':{k:336,p:9,c:62,f:1.5,fi:19,cat:'Δημητριακά'},
 /* Όσπρια (βρασμένα) — εξαιρετικές πηγές φυτικών ινών */
 'Φασόλια':{k:127,p:9,c:23.7,f:0.5,fi:6.3,cat:'Όσπρια'},
 'Ρεβίθια':{k:164,p:9,c:27.4,f:2.6,fi:7.6,cat:'Όσπρια'},
@@ -1339,6 +1490,8 @@ var FOODS={
 'Γλυκοπατάτα':{k:86,p:1.6,c:20,f:0.1,fi:3.0,cat:'Λαχανικά'},
 'Καρότα':{k:41,p:0.9,c:10,f:0.2,fi:2.8,cat:'Λαχανικά'},
 'Κολοκυθάκια':{k:17,p:1.2,c:3.1,f:0.3,fi:1.0,cat:'Λαχανικά'},
+'Καλαμπόκι (ολόκληρο στον ατμό 200g)':{k:172,p:6.6,c:38,f:2.2,fi:4.8,cat:'Λαχανικά'},
+'Καλαμπόκι (ολόκληρο στον ατμό 400g - Halvatzis)':{k:344,p:13.2,c:76,f:4.4,fi:9.6,cat:'Λαχανικά'},
 'Κουνουπίδι':{k:25,p:1.9,c:5,f:0.3,fi:2.0,cat:'Λαχανικά'},
 'Μανιτάρια':{k:22,p:3.1,c:3.3,f:0.3,fi:1.0,cat:'Λαχανικά'},
 'Μαρούλι':{k:15,p:1.4,c:2.9,f:0.2,fi:1.3,cat:'Λαχανικά'},
@@ -1456,6 +1609,20 @@ var FOODS={
 'Καλαμαράκια (ψητά)':{k:92,p:15.6,c:3.1,f:1.4,fi:0,cat:'Ψάρια'},
 'Φιδάκι (ψητό)':{k:116,p:24,c:1.2,f:1,fi:0,cat:'Ψάρια'},
 'Moving Mountains Burger':{k:270,p:14.3,c:6.1,f:19.8,fi:5,cat:'Κρέας'},
+/* Τρόφιμα/καρυκεύματα από συνταγές & αποθηκευμένα πλάνα — τιμές USDA ανά 100g */
+'Βούτυρο':{k:717,p:0.9,c:0.1,f:81,fi:0,cat:'Λάδια'},
+'Φιστίκια':{k:567,p:26,c:16,f:49,fi:8.5,cat:'Ξηροί καρποί'},
+'Χυμό ντομάτας':{k:17,p:0.8,c:4.2,f:0.1,fi:0.4,cat:'Λαχανικά'},
+'Κρεμμυδάκι (φρέσκο)':{k:32,p:1.8,c:7.3,f:0.2,fi:2.6,cat:'Λαχανικά'},
+'Λεμόνι (χυμός)':{k:22,p:0.4,c:6.9,f:0.2,fi:0.3,cat:'Φρούτα'},
+'Λεμόνι (ξύσμα)':{k:47,p:1.5,c:16,f:0.3,fi:10.6,cat:'Φρούτα'},
+'Βασιλικό':{k:23,p:3.2,c:2.7,f:0.6,fi:1.6,cat:'Λαχανικά'},
+'Κύβο λαχανικών':{k:230,p:9,c:18,f:14,fi:0,cat:'Άλλα'},
+'Μπούκοβο':{k:282,p:12,c:50,f:14,fi:35,cat:'Άλλα'},
+'Ούζο':{k:225,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
+'Αλάτι':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
+'Αλάτι & μπαχαρικά':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
+'Νερό':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1714,11 +1881,11 @@ var FOOD_UNITS={
   'Αυγά (ολόκληρα)':{g:55,u:'τεμ.'},
   'Ασπράδια αυγών':{g:30,u:'τεμ.'},
   // Γαλακτοκομικά
-  'Γιαούρτι 2%':{g:200,u:'φλ.'},
-  'Cottage cheese':{g:100,u:'φλ.'},
-  'Γάλα πλήρες':{g:200,u:'φλ.'},
+  'Γιαούρτι 2%':{g:200,u:'Κ'},
+  'Cottage cheese':{g:100,u:'Κ'},
+  'Γάλα πλήρες':{g:200,u:'Κ'},
   // Λάδια / Λίπη
-  'Αβοκάντο':{g:50,u:'1/4 τεμ.'},
+  'Αβοκάντο':{g:200,u:'τεμ.'},
   'Ελαιόλαδο':{g:10,u:'κ.σ.'},
   'Μέλι άβραστο':{g:7,u:'κ.γ.'},
   'Edamame (βρ.)':{g:80,u:'φλ.'},
@@ -1741,12 +1908,13 @@ var FOOD_UNITS={
   'Ψωμί ολικής άλεσης':{g:35,u:'φέτα'},
   'Κρίθινο παξιμάδι':{g:50,u:'τεμ.'},
   'Φρυγανιές':{g:12,u:'τεμ.'},
-  'Στραγγιστό γιαούρτι 0%':{g:200,u:'φλ.'},
-  'Γιαούρτι πλήρες 5%':{g:200,u:'φλ.'},
-  'Γάλα σόγιας':{g:200,u:'φλ.'},
-  'Γάλα βρώμης':{g:200,u:'φλ.'},
-  'Γάλα φρέσκο 1.5% Λιπαρά':{g:200,u:'φλ.'},
-  'Koko Γιαούρτι Καρύδας (Νηστίσιμο)':{g:200,u:'φλ.'},
+  'Wasa Φρυγανιές Σίκαλης':{g:11.5,u:'φέτα'},
+  'Στραγγιστό γιαούρτι 0%':{g:200,u:'Κ'},
+  'Γιαούρτι πλήρες 5%':{g:200,u:'Κ'},
+  'Γάλα σόγιας':{g:200,u:'Κ'},
+  'Γάλα βρώμης':{g:200,u:'Κ'},
+  'Γάλα φρέσκο 1.5% Λιπαρά':{g:200,u:'Κ'},
+  'Koko Γιαούρτι Καρύδας (Νηστίσιμο)':{g:200,u:'Κ'},
   'Γραβιέρα':{g:30,u:'φέτα'},
   'Κασέρι':{g:30,u:'φέτα'},
   'Κεφαλοτύρι':{g:20,u:'φέτα'},
@@ -1758,7 +1926,10 @@ var FOOD_UNITS={
   'Γαλατάκι σοκολάτα delact χωρίς ζάχαρη':{g:250,u:'συσκευασία'},
   'USN Trust Crunch Bar':{g:60,u:'bar'},
   'Σύκα φρέσκα':{g:50,u:'τεμ.'},
+  'Σύκα ξερά':{g:20,u:'τεμ.'},
   'Χουρμάδες (ξερές)':{g:15,u:'τεμ.'},
+  'Τορτίλια (large)':{g:64,u:'τεμ.'},
+  'Βοδινά μπιφτέκια (ψημένα)':{g:100,u:'τεμ.'},
   'Ακτινίδιο':{g:100,u:'τεμ.'},
   'Πίτα αραβική':{g:60,u:'τεμ.'},
   'Κυπριακή πίτα':{g:70,u:'τεμ.'},
@@ -1774,25 +1945,25 @@ var FOOD_UNITS={
   'Chia seeds':{g:10,u:'κ.σ.'},
   'Ταχίνι':{g:15,u:'κ.σ.'},
   // Φρούτα — 1 μερίδα (σύμφωνα με λίστα ανταλλαγής)
-  'Ανανάς':{g:116,u:'3/4 φλ.'},
+  'Ανανάς':{g:155,u:'φλ.'},
   'Αχλάδι':{g:110,u:'τεμ.'},
-  'Βερίκοκα':{g:150,u:'4 τεμ.'},
+  'Βερίκοκα':{g:38,u:'τεμ.'},
   'Γκρέιπφρούτ':{g:330,u:'τεμ.'},
-  'Δαμάσκηνα':{g:140,u:'2 τεμ.'},
+  'Δαμάσκηνα':{g:70,u:'τεμ.'},
   'Καρπούζι':{g:380,u:'φέτα'},
-  'Κεράσια':{g:85,u:'12 τεμ.'},
-  'Μανταρίνι':{g:220,u:'2 τεμ.'},
+  'Κεράσια':{g:7,u:'τεμ.'},
+  'Μανταρίνι':{g:110,u:'τεμ.'},
   'Μήλο':{g:120,u:'τεμ.'},
-  'Μούρα':{g:109,u:'3/4 φλ.'},
+  'Μούρα':{g:145,u:'φλ.'},
   'Μπανάνα':{g:120,u:'τεμ.'},
   'Λεμόνι':{g:55,u:'τεμ.'},
   'Νεκταρίνι':{g:140,u:'τεμ.'},
-  'Πεπόνι':{g:280,u:'3/4 φλ.'},
+  'Πεπόνι':{g:373,u:'φλ.'},
   'Πορτοκάλι':{g:180,u:'τεμ.'},
   'Ροδάκινο':{g:110,u:'τεμ.'},
   'Σταφίδες':{g:15,u:'κ.σ.'},
-  'Σταφύλια':{g:85,u:'17 ρόγες'},
-  'Φράουλες':{g:190,u:'10 τεμ.'},
+  'Σταφύλια':{g:5,u:'ρόγα'},
+  'Φράουλες':{g:19,u:'τεμ.'},
   // Συνταγές FYH — ανά μερίδα
   'Αυγολέμονο Κυπριακό':{g:250,u:'μερίδ.'},
   'Korean Beef Bowl':{g:350,u:'μερίδ.'},
@@ -1835,6 +2006,25 @@ var FOOD_UNITS={
   'High Protein Ομελέτα Wrap':{g:250,u:'μερίδ.'},
   'Wrap με τονοσαλάτα':{g:240,u:'μερίδ.'}
 };
+
+// Single source of truth for how a food's quantity is shown in printed outputs
+// (PDF + Word). Mirrors the on-screen editor so all three views agree.
+// Honors the per-food unit toggle (food.u==='g' forces grams).
+// Returns {main, sub}: main = headline (e.g. "1½ τεμ." or "120γρ."), sub = "(120γρ.)".
+function fmtFoodQty(food, gLabel, tuFn){
+  gLabel = gLabel || 'γρ.';
+  tuFn = tuFn || function(u){return u;};
+  var fu = FOOD_UNITS[food.n];
+  // Show grams when the food has no unit, or the user toggled it to grams.
+  if(!fu || food.u === 'g') return {main: food.g + gLabel, sub: ''};
+  var r = Math.round(food.g / fu.g * 4) / 4;   // nearest quarter unit
+  var w = Math.floor(r), fr = r - w, str = w > 0 ? '' + w : '';
+  if(Math.abs(fr-0.25)<0.01) str += '¼';
+  else if(Math.abs(fr-0.5)<0.01) str += '½';
+  else if(Math.abs(fr-0.75)<0.01) str += '¾';
+  if(!str) str = '<¼';                          // smaller than a quarter unit
+  return {main: str + ' ' + tuFn(fu.u), sub: '(' + food.g + gLabel + ')'};
+}
 
 // Cooked/boiled → raw/dry conversion for shopping list
 // factor: multiply plan grams by this to get raw grams to purchase
@@ -1888,11 +2078,12 @@ var PORTIONS={
 'Σπαγγέτι ολικής (βρ.)':[{n:'½ φλ.',g:80},{n:'1 φλ.',g:160},{n:'1½ φλ.',g:240}],
 'Τραχανάς (βρ.)':[{n:'½ φλ.',g:80},{n:'1 φλ.',g:150}],
 'Φρυγανιές':[{n:'1 τεμ.',g:12},{n:'2 τεμ.',g:24},{n:'3 τεμ.',g:36},{n:'4 τεμ.',g:48}],
+'Wasa Φρυγανιές Σίκαλης':[{n:'1 φέτα',g:11.5},{n:'2 φέτες',g:23},{n:'3 φέτες',g:34.5},{n:'4 φέτες',g:46}],
 'Κοτόπουλο στήθος (ψητό)':[{n:'μικρή μερίδα',g:100},{n:'μερίδα',g:150},{n:'μεγάλη',g:200}],
 'Κοτόπουλο βραστό':[{n:'μικρή μερίδα',g:100},{n:'μερίδα',g:150},{n:'μεγάλη',g:200},{n:'300g',g:300}],
 'Κοτόπουλο μπιφτέκι':[{n:'1 μπιφτέκι',g:100},{n:'2 μπιφτέκια',g:200}],
 'Κοτόπουλο σουβλάκι':[{n:'1 stick (100g)',g:100},{n:'2 sticks (200g)',g:200},{n:'3 sticks (300g)',g:300}],
-'Γαλοπούλα στήθος':[{n:'2 φέτες',g:60},{n:'μερίδα',g:120}],
+'Γαλοπούλα στήθος':[{n:'1 φέτα',g:15},{n:'2 φέτες',g:30},{n:'μερίδα',g:120}],
 'Κοτόπουλο μπούτι (ψητό)':[{n:'1 μπούτι μικρό',g:100},{n:'μερίδα',g:150},{n:'μεγάλη',g:200}],
 'Μοσχάρι κιμάς (μαγ.)':[{n:'μερίδα',g:120},{n:'μεγάλη',g:200},{n:'300g',g:300}],
 'Αρνί (ψητό)':[{n:'μερίδα',g:120},{n:'μεγάλη',g:180},{n:'250g',g:250}],
@@ -2322,6 +2513,97 @@ var MEAL_TIMING_PROFILES={
   }
 };
 
+// ── PHASE 4: Academic Sports Nutrition Protocols (ISSN, IOC, PubMed) ──────────
+// Based on comprehensive research: ISSN Consensus, IOC 2018, PubMed meta-analyses
+var SPORT_PROTOCOLS={
+  running:{
+    name:'Δρομείς (Τρέξιμο)',category:'Endurance',
+    macros:{p:14,f:22,c:64},
+    criticalMicronutrients:{
+      iron:{target:27,unit:'mg',priority:'CRITICAL',notes:'O2 transport for endurance'},
+      calcium:{target:1150,unit:'mg',priority:'CRITICAL',notes:'Bone density protection'},
+      magnesium:{target:365,unit:'mg',priority:'CRITICAL',notes:'Muscle function, energy metabolism'},
+      vitaminD:{target:1500,unit:'IU',priority:'HIGH',notes:'Many athletes deficient'},
+      potassium:{target:3500,unit:'mg',priority:'HIGH',notes:'Electrolyte balance'}
+    },
+    recommendedSupplements:[
+      {id:'iron',required:false,condition:'if serum ferritin <30µg/L women, <50µg/L men'},
+      {id:'vitaminD',required:false,condition:'if deficient'},
+      {id:'magnesium',required:false,condition:'if deficient'}
+    ],
+    redSAlert:{risk:'Moderate',minCalories:50,details:'Monitor irregular periods (F), hormonal issues, frequent injuries'},
+    hydration:{daily:35,training:40,duringEx:'400-800ml/hr',postEx:'150% weight loss / 4hr'},
+    mealTiming:{
+      preExercise:'2-3hrs before: 1-4g/kg CHO, 0.3-0.5g/kg PRO, <1g/kg FAT',
+      duringExercise:'>90min: 30-60g CHO/hr + 500-700mg Na+',
+      postExercise:'0-30min: 0.8-1.2g/kg CHO, 0.2-0.4g/kg PRO, 3:1 ratio'
+    }
+  },
+  football:{
+    name:'Ποδόσφαιρο (Football/Soccer)',category:'Intermittent High-Intensity',
+    macros:{p:18,f:22,c:60},
+    criticalMicronutrients:{
+      iron:{target:20,unit:'mg',priority:'CRITICAL',notes:'O2 transport for repeated sprints'},
+      calcium:{target:1150,unit:'mg',priority:'CRITICAL',notes:'Bone health (frequent jumping/impact)'},
+      magnesium:{target:365,unit:'mg',priority:'CRITICAL',notes:'Muscle cramps, energy metabolism'},
+      sodium:{target:2000,unit:'mg',priority:'HIGH',notes:'during match: +500-700mg/hr'},
+      potassium:{target:3500,unit:'mg',priority:'HIGH',notes:'Electrolyte balance'},
+      zinc:{target:11,unit:'mg',priority:'HIGH',notes:'Immune function'}
+    },
+    recommendedSupplements:[
+      {id:'creatine',required:true,dose:'3-5g/day',protocol:'Loading: 5-7g/day×5-7d, then 3-5g/day'},
+      {id:'caffeine',required:false,dose:'3-6mg/kg',timing:'60min before match'},
+      {id:'betaalanine',required:false,dose:'3-5g/day',protocol:'4-6 weeks loading'},
+      {id:'iron',required:false,condition:'if deficient'},
+      {id:'vitaminD',required:false,condition:'if deficient'}
+    ],
+    redSAlert:{risk:'Moderate',minCalories:50,details:'Monitor hormonal health, energy levels'},
+    hydration:{daily:35,training:40,beforeMatch:'400-600ml (2-3hrs before)',duringMatch:'150-250ml every 15-20min (6-8% CHO)',postMatch:'150% weight loss / 4-6hrs'},
+    mealTiming:{
+      matchDay:'3-4hrs before: 1-4g/kg CHO, 0.3-0.5g/kg PRO',
+      oneHourBefore:'50-100g CHO (banana, toast with honey)',
+      halfTime:'15-30g CHO + electrolytes',
+      postMatch:'0-30min: 1-1.2g/kg CHO, 0.3-0.4g/kg PRO, 3:1 ratio'
+    }
+  },
+  judo:{
+    name:'Judo (Combat Sport)',category:'Combat - Weight Categories',
+    macros:{p:20,f:22,c:58},
+    criticalMicronutrients:{
+      iron:{target:22,unit:'mg',priority:'CRITICAL',notes:'⚠️ HIGHEST RISK during weight cutting'},
+      calcium:{target:1300,unit:'mg',priority:'CRITICAL',notes:'Bone health, weight cycling risk'},
+      magnesium:{target:420,unit:'mg',priority:'CRITICAL',notes:'Cramp prevention during weight cut'},
+      sodium:{target:2000,unit:'mg',priority:'CRITICAL',notes:'Weight loss → significant depletion'},
+      potassium:{target:3500,unit:'mg',priority:'HIGH',notes:'Electrolyte balance'},
+      zinc:{target:11,unit:'mg',priority:'HIGH',notes:'Elevated due to stress + weight loss'},
+      copper:{target:900,unit:'µg',priority:'HIGH',notes:'Connective tissue (high injury risk)'},
+      vitaminD:{target:1700,unit:'IU',priority:'HIGH',notes:'May need higher'},
+      selenium:{target:55,unit:'µg',priority:'HIGH',notes:'Antioxidant, immune function'}
+    },
+    recommendedSupplements:[
+      {id:'creatine',required:true,dose:'3-5g/day',notes:'Improves strength + power'},
+      {id:'caffeine',required:true,dose:'3-6mg/kg',timing:'60min before competition'},
+      {id:'iron',required:true,condition:'if serum ferritin <30µg/L women, <50µg/L men'},
+      {id:'calcium',required:false,condition:'if dietary intake <1000mg/day'},
+      {id:'vitaminD',required:false,condition:'if deficient (likely in weight-cutters)'},
+      {id:'betaalanine',required:false,dose:'3-5g/day',protocol:'4-6 weeks loading'}
+    ],
+    redSAlert:{risk:'VERY HIGH',minCalories:55,details:'⚠️ WEIGHT CYCLING HIGH RISK - Monitor irregular periods (F), low testosterone (M), frequent injuries, persistent fatigue, poor concentration'},
+    hydration:{daily:35,training:45,duringTraining:'150-250ml every 15-20min',postTraining:'150% weight loss'},
+    safeWeightLoss:{
+      warning:'⚠️ CRITICAL: Modern safe approach = 0.5-1% per WEEK MAX (NOT 5-10%)',
+      normal5to7DaysBefore:'Normal intake, pale urine hydration, normal sodium 1500-2300mg',
+      gradualLoss2to3DaysBefore:'0.5-1% body weight per day MAX, 300-500kcal deficit (mostly CHO), MAINTAIN Protein 1.8-2.0g/kg, light technical training only',
+      final24Hours:'Minimal loss only: light fluid restriction (2-4hrs before weigh-in), small familiar foods',
+      postWeiginCritical:'REHYDRATE: 150% of weight lost over 4-6 hours, Carbs 1.0-1.2g/kg, Protein 0.3-0.4g/kg, Sodium 500-700mg'
+    },
+    mealTiming:{
+      preTraining:'2-3hrs before: 1.5-3.0g/kg CHO, 0.25-0.5g/kg PRO, <1g/kg FAT',
+      postTraining:'0-30min: 1.0-1.2g/kg CHO, 0.25-0.4g/kg PRO, 3:1 ratio, +500-700mg Na+'
+    }
+  }
+};
+
 // ── PHASE 3: Micronutrient Targets Function ──────────────────────────────────
 // Returns personalized daily micronutrient targets based on athlete profile
 // SCIENCE-BASED ADJUSTMENTS (2024-2025 research):
@@ -2525,7 +2807,61 @@ var MICRONUTRIENTS={
   'Αμύγδαλα':{Fe:3.71,Zn:3.12,Mg:270,Ca:264,B1:0.20,B2:0.92,B3:3.62,B6:0.10,B12:0,Folate:50,Omega3:0.39,Omega6:12.3},
   'Chia seeds':{Fe:8.0,Zn:4.58,Mg:335,Ca:631,B1:0.62,B2:0.27,B3:8.83,B6:0.90,B12:0,Folate:78,Omega3:17.83,Omega6:5.8},
   // Oils
-  'Ελαιόλαδο':{Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0.76,Omega6:9.7}
+  'Ελαιόλαδο':{Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0.76,Omega6:9.7},
+  // ── Expanded coverage (USDA per 100g) ──────────────────────────────────────
+  // Meats / Poultry / Fish (cooked)
+  'Κοτόπουλο μπούτι (ψητό)':{Fe:1.13,Zn:1.92,Mg:24,Ca:9,B1:0.096,B2:0.218,B3:6.21,B6:0.462,B12:0.42,Folate:5,Omega3:0.061,Omega6:1.46},
+  'Κοτόπουλο σουβλάκι':{Fe:1.04,Zn:1.0,Mg:29,Ca:15,B1:0.07,B2:0.114,B3:13.7,B6:0.60,B12:0.34,Folate:4,Omega3:0.05,Omega6:1.5},
+  'Κοτόπουλο μπιφτέκι':{Fe:1.1,Zn:1.5,Mg:26,Ca:12,B1:0.08,B2:0.17,B3:10.0,B6:0.53,B12:0.38,Folate:5,Omega3:0.06,Omega6:1.5},
+  'Γαλοπούλα στήθος':{Fe:0.71,Zn:1.72,Mg:32,Ca:9,B1:0.035,B2:0.205,B3:11.8,B6:0.807,B12:0.39,Folate:9,Omega3:0.03,Omega6:0.6},
+  'Μπριζόλα άπαχη':{Fe:1.96,Zn:5.21,Mg:24,Ca:19,B1:0.072,B2:0.128,B3:7.87,B6:0.578,B12:1.91,Folate:9,Omega3:0.02,Omega6:0.3},
+  'Λαβράκι (ψητό)':{Fe:0.37,Zn:0.52,Mg:53,Ca:13,B1:0.13,B2:0.15,B3:1.9,B6:0.46,B12:0.3,Folate:6,Omega3:0.86,Omega6:0.1},
+  'Τσιπούρα (ψητή)':{Fe:0.4,Zn:0.5,Mg:39,Ca:20,B1:0.10,B2:0.12,B3:3.0,B6:0.40,B12:1.0,Folate:8,Omega3:0.50,Omega6:0.1},
+  'Γαρίδες (βραστές)':{Fe:0.5,Zn:1.6,Mg:39,Ca:70,B1:0.03,B2:0.04,B3:2.6,B6:0.16,B12:1.5,Folate:19,Omega3:0.30,Omega6:0.03},
+  // Eggs / Dairy
+  'Αυγά (ολόκληρα)':{Fe:1.75,Zn:1.29,Mg:12,Ca:56,B1:0.04,B2:0.457,B3:3.3,B6:0.17,B12:0.89,Folate:47,Omega3:0.036,Omega6:1.53},
+  'Γιαούρτι 2%':{Fe:0.04,Zn:0.60,Mg:11,Ca:115,B1:0.044,B2:0.233,B3:0.197,B6:0.055,B12:0.52,Folate:12,Omega3:0.02,Omega6:0.07},
+  'Cottage cheese':{Fe:0.13,Zn:0.51,Mg:9,Ca:111,B1:0.02,B2:0.251,B3:0.103,B6:0.057,B12:0.47,Folate:8,Omega3:0.01,Omega6:0.04},
+  'Γάλα πλήρες':{Fe:0.03,Zn:0.37,Mg:10,Ca:113,B1:0.046,B2:0.169,B3:0.089,B6:0.036,B12:0.45,Folate:5,Omega3:0.08,Omega6:0.12},
+  // Fruits
+  'Μήλο':{Fe:0.12,Zn:0.04,Mg:5,Ca:6,B1:0.02,B2:0.03,B3:0.09,B6:0.04,B12:0,Folate:3,Omega3:0.009,Omega6:0.04},
+  'Μπανάνα':{Fe:0.26,Zn:0.15,Mg:27,Ca:5,B1:0.03,B2:0.07,B3:0.66,B6:0.37,B12:0,Folate:20,Omega3:0.03,Omega6:0.05},
+  'Πορτοκάλι':{Fe:0.10,Zn:0.07,Mg:10,Ca:40,B1:0.09,B2:0.04,B3:0.28,B6:0.06,B12:0,Folate:30,Omega3:0.008,Omega6:0.02},
+  'Φράουλες':{Fe:0.41,Zn:0.14,Mg:13,Ca:16,B1:0.02,B2:0.02,B3:0.39,B6:0.05,B12:0,Folate:24,Omega3:0.065,Omega6:0.09},
+  'Ροδάκινο':{Fe:0.25,Zn:0.17,Mg:9,Ca:6,B1:0.02,B2:0.03,B3:0.80,B6:0.025,B12:0,Folate:4,Omega3:0.002,Omega6:0.08},
+  'Κεράσια':{Fe:0.36,Zn:0.07,Mg:11,Ca:13,B1:0.027,B2:0.033,B3:0.15,B6:0.05,B12:0,Folate:4,Omega3:0.026,Omega6:0.03},
+  'Καρπούζι':{Fe:0.24,Zn:0.10,Mg:10,Ca:7,B1:0.03,B2:0.02,B3:0.18,B6:0.045,B12:0,Folate:3,Omega3:0,Omega6:0.05},
+  'Μούρα':{Fe:0.28,Zn:0.16,Mg:6,Ca:6,B1:0.037,B2:0.04,B3:0.42,B6:0.05,B12:0,Folate:6,Omega3:0.06,Omega6:0.09},
+  // Vegetables
+  'Αγγούρι':{Fe:0.28,Zn:0.20,Mg:13,Ca:16,B1:0.027,B2:0.033,B3:0.10,B6:0.04,B12:0,Folate:7,Omega3:0.005,Omega6:0.02},
+  'Τομάτες':{Fe:0.27,Zn:0.17,Mg:11,Ca:10,B1:0.037,B2:0.019,B3:0.59,B6:0.08,B12:0,Folate:15,Omega3:0.003,Omega6:0.08},
+  'Κολοκυθάκια':{Fe:0.37,Zn:0.32,Mg:18,Ca:16,B1:0.045,B2:0.094,B3:0.45,B6:0.16,B12:0,Folate:24,Omega3:0.05,Omega6:0.02},
+  'Μελιτζάνες':{Fe:0.23,Zn:0.16,Mg:14,Ca:9,B1:0.04,B2:0.04,B3:0.65,B6:0.08,B12:0,Folate:22,Omega3:0.013,Omega6:0.06},
+  'Μανιτάρια':{Fe:0.50,Zn:0.52,Mg:9,Ca:3,B1:0.08,B2:0.40,B3:3.6,B6:0.10,B12:0.04,Folate:17,Omega3:0,Omega6:0.13},
+  'Σπαράγγια':{Fe:2.1,Zn:0.54,Mg:14,Ca:24,B1:0.14,B2:0.14,B3:0.98,B6:0.09,B12:0,Folate:52,Omega3:0.01,Omega6:0.08},
+  'Φασολάκια':{Fe:1.0,Zn:0.24,Mg:25,Ca:37,B1:0.08,B2:0.10,B3:0.75,B6:0.14,B12:0,Folate:33,Omega3:0.07,Omega6:0.04},
+  'Σπανάκι':{Fe:2.71,Zn:0.53,Mg:79,Ca:99,B1:0.078,B2:0.189,B3:0.72,B6:0.195,B12:0,Folate:194,Omega3:0.14,Omega6:0.03},
+  'Πιπεριές':{Fe:0.43,Zn:0.25,Mg:12,Ca:10,B1:0.054,B2:0.085,B3:0.98,B6:0.29,B12:0,Folate:46,Omega3:0.03,Omega6:0.05},
+  'Μαρούλι':{Fe:0.86,Zn:0.18,Mg:13,Ca:36,B1:0.07,B2:0.08,B3:0.38,B6:0.09,B12:0,Folate:38,Omega3:0.06,Omega6:0.02},
+  'Σκόρδο':{Fe:1.7,Zn:1.16,Mg:25,Ca:181,B1:0.20,B2:0.11,B3:0.70,B6:1.24,B12:0,Folate:3,Omega3:0.005,Omega6:0.23},
+  'Κρεμμύδι':{Fe:0.21,Zn:0.17,Mg:10,Ca:23,B1:0.046,B2:0.027,B3:0.12,B6:0.12,B12:0,Folate:19,Omega3:0.004,Omega6:0.013},
+  // Grains / Starches (cooked)
+  'Γλυκοπατάτα':{Fe:0.69,Zn:0.32,Mg:25,Ca:38,B1:0.11,B2:0.11,B3:1.49,B6:0.29,B12:0,Folate:6,Omega3:0.01,Omega6:0.05},
+  'Κινόα (βρ.)':{Fe:1.49,Zn:1.09,Mg:64,Ca:17,B1:0.107,B2:0.11,B3:0.41,B6:0.12,B12:0,Folate:42,Omega3:0.09,Omega6:1.0},
+  'Πλιγούρι (βρ.)':{Fe:0.96,Zn:0.57,Mg:32,Ca:10,B1:0.057,B2:0.028,B3:1.0,B6:0.08,B12:0,Folate:18,Omega3:0.02,Omega6:0.2},
+  'Μακαρόνια (βρ.)':{Fe:0.50,Zn:0.51,Mg:18,Ca:7,B1:0.02,B2:0.02,B3:0.40,B6:0.049,B12:0,Folate:7,Omega3:0.03,Omega6:0.2},
+  'Κριθαράκι (βρ.)':{Fe:0.50,Zn:0.51,Mg:18,Ca:7,B1:0.02,B2:0.02,B3:0.40,B6:0.049,B12:0,Folate:7,Omega3:0.03,Omega6:0.2},
+  'Ρύζι άσπρο (βρ.)':{Fe:0.28,Zn:0.62,Mg:12,Ca:10,B1:0.07,B2:0.04,B3:1.6,B6:0.12,B12:0,Folate:20,Omega3:0.05,Omega6:0.9},
+  'Πίτα αραβική':{Fe:1.6,Zn:0.6,Mg:26,Ca:86,B1:0.34,B2:0.20,B3:2.9,B6:0.04,B12:0,Folate:45,Omega3:0.02,Omega6:0.5},
+  'Ψωμί σίκαλης':{Fe:2.5,Zn:1.4,Mg:40,Ca:73,B1:0.17,B2:0.17,B3:1.7,B6:0.07,B12:0,Folate:35,Omega3:0.06,Omega6:0.6},
+  'Ψωμί λευκό':{Fe:3.6,Zn:0.7,Mg:23,Ca:151,B1:0.40,B2:0.23,B3:3.9,B6:0.10,B12:0,Folate:85,Omega3:0.03,Omega6:0.5},
+  // Legumes
+  'Φασόλια':{Fe:3.7,Zn:1.38,Mg:63,Ca:90,B1:0.118,B2:0.046,B3:0.14,B6:0.093,B12:0,Folate:81,Omega3:0.10,Omega6:0.2},
+  // Fats / Nuts
+  'Αβοκάντο':{Fe:0.55,Zn:0.64,Mg:29,Ca:12,B1:0.067,B2:0.13,B3:1.74,B6:0.26,B12:0,Folate:81,Omega3:0.11,Omega6:1.7},
+  'Ελιές':{Fe:3.3,Zn:0.22,Mg:11,Ca:88,B1:0.003,B2:0,B3:0.04,B6:0.009,B12:0,Folate:3,Omega3:0.06,Omega6:1.2},
+  'Καρύδια':{Fe:2.9,Zn:3.1,Mg:158,Ca:98,B1:0.34,B2:0.15,B3:1.1,B6:0.54,B12:0,Folate:98,Omega3:9.1,Omega6:38.1},
+  'Φυστικοβούτυρο':{Fe:1.9,Zn:2.5,Mg:154,Ca:49,B1:0.10,B2:0.11,B3:13.1,B6:0.40,B12:0,Folate:87,Omega3:0.05,Omega6:11.4}
 };
 
 /* ══════════════════════════════════════════════════════════════════════════════════
@@ -3293,7 +3629,68 @@ function showAutoRecalculationNotification(c){
   };
 }
 
-function cm(n,g){var f=FOODS[n]||{k:0,p:0,c:0,f:0,fi:0};return{k:+(g/100*f.k).toFixed(1),p:+(g/100*f.p).toFixed(1),f:+(g/100*f.f).toFixed(1),c:+(g/100*f.c).toFixed(1),fi:+(g/100*(f.fi||0)).toFixed(1)};}
+// ── Food name aliases: παλιά/εναλλακτικά ονόματα → κανονικό κλειδί στο FOODS ──
+// Διορθώνει αποθηκευμένα πλάνα που χρησιμοποιούν διαφορετική ονομασία (αλλιώς cm() έδινε 0 macros)
+var FOOD_ALIASES={
+  'Ολικής άλεσης ψωμί':'Ψωμί ολικής άλεσης',
+  'Γιαούρτι Ελληνικό 2%':'Γιαούρτι 2%',
+  'Φέτα':'Τυρί φέτα',
+  'Ντομάτα':'Τομάτες',
+  'Γαρίδες (βρασμένες)':'Γαρίδες (βραστές)',
+  'Μέλι':'Μέλι άβραστο',
+  'Λιγκουίνι (βρασμένο)':'Μακαρόνια (βρ.)',
+  'Μύρτιλα':'Μούρα'
+};
+function resolveFood(n){return (FOODS[n]?n:(FOOD_ALIASES[n]||n));}
+function cm(n,g){var key=resolveFood(n);var f=FOODS[key];if(!f){if(typeof console!=='undefined'&&console.warn)console.warn('[cm] Τρόφιμο χωρίς μακροθρεπτικά (δεν βρέθηκε στο FOODS):',n);f={k:0,p:0,c:0,f:0,fi:0};}return{k:+(g/100*f.k).toFixed(1),p:+(g/100*f.p).toFixed(1),f:+(g/100*f.f).toFixed(1),c:+(g/100*f.c).toFixed(1),fi:+(g/100*(f.fi||0)).toFixed(1)};}
+
+/* ✅ Get food color HEX value based on category - RETURNS HEX COLOR */
+function getFoodColorHex(foodName){
+  var fk=resolveFood(foodName);
+  if(!FOODS[fk])return '#F8B739'; // Default carbs (gold)
+  var cat=(FOODS[fk].cat||'');
+
+  // PROTEINS (🔵 Blue #5DADE2)
+  if(cat==='Κρέας'||cat==='Ψάρια'||cat==='Όσπρια'||cat==='Αμινοξέα & Πρωτεΐνες')
+    return '#5DADE2';
+
+  // CARBS (🟡 Gold #F8B739)
+  if(cat==='Δημητριακά'||cat==='Συνταγές'||cat==='Άλλα'||cat==='Συνταγές FYH')
+    return '#F8B739';
+
+  // VEGETABLES (🟢 Green #52B788)
+  if(cat==='Λαχανικά')
+    return '#52B788';
+
+  // DAIRY (🩷 Pink #E8A0BF)
+  if(cat==='Αυγά/Γαλακτ.')
+    return '#E8A0BF';
+
+  // FRUITS (🟣 Purple #C77DFF)
+  if(cat==='Φρούτα')
+    return '#C77DFF';
+
+  // GRAINS/NUTS (🟠 Amber #FFB703)
+  if(cat==='Ξηροί καρποί')
+    return '#FFB703';
+
+  // OILS/FATS (🧡 Orange #FB8500)
+  if(cat==='Λάδια')
+    return '#FB8500';
+
+  // SUPPLEMENTS & SPECIAL (🟦 Teal #06A77D)
+  if(cat==='Βιταμίνες & Μέταλλα'||cat==='Αναβολικά & Ορμόνες'||cat==='Ύπνος & Αποκατάσταση'||
+     cat==='Pre-Workout'||cat==='⚡ Ενέργεια & Ασφάλεια'||cat==='🧘 Pilates / Yoga'||
+     cat==='🥗 Διατροφή & Μακροθρεπτικά'||cat==='🥊 Πολεμικές τέχνες'||cat==='🚶 Περπάτημα'||
+     cat==='🚴 Ποδηλασία'||cat==='🔥 Μεταβολισμός / BMR'||cat==='📐 Σωματική Σύνθεση'||
+     cat==='💃 Χορός / Αερόβιο'||cat==='🏋️ Βάρη / Γυμναστική'||cat==='🏊 Κολύμβηση'||
+     cat==='🏃 Τρέξιμο'||cat==='🏂 Υπαίθριες / Χειμερινές'||cat==='🎾 Ρακέτα / Αντισφαίριση'||
+     cat==='⚽ Ομαδικά αθλήματα')
+    return '#06A77D';
+
+  return '#F8B739'; // Default
+}
+
 /* Fiber target (g/day) — DRI Adequate Intake by age & sex */
 function getFiberTarget(age,sex){
   age=age||30;sex=sex||'M';
@@ -3594,6 +3991,15 @@ function calcTDEE(c){
   var t={}; // Initialize tracking object for BMR method and FFM
   var isMinor=(c.age||0)<18;
   var growthAdd=0;
+
+  // ✅ NEW: PRIORITY 0 - Use measured RMR from indirect calorimetry if available
+  if(c.rmr && c.rmr > 0){
+    bmr = Math.round(c.rmr);
+    t.bmrMethod = 'RMR (Εργαστηριακή Μέτρηση)';
+    t.ffmUsed = null;
+    t.usedRMR = true;
+  } else {
+  t.usedRMR = false;
   if(isMinor){
     // Schofield (1985) equations — validated for children/adolescents; Mifflin is NOT valid under 18
     var w=c.weight||60;
@@ -3638,6 +4044,8 @@ function calcTDEE(c){
       t.ffmUsed=null;
     }
   }
+  }  // Close else block for RMR check
+
   var tdee;
   var metKcal=calcMETkcal(c);
   var usedMET=c.metActivities&&c.metActivities.length>0;
@@ -3662,10 +4070,22 @@ function calcTDEE(c){
     exerciseKcal=Math.round(Math.max(0,(totalMultiplier-1.37)*bmr));
   }
   tdee=Math.round(tdee);
-  // Goal deltas - CLINICAL: -96 for mild is optimal for intense training with safe EA
+  // Goal deltas - Support BOTH old (loss/maintain/gain) and NEW (numeric -500 to +500) formats
   var def={mild:-250,loss:-500,maintain:0,gain:300};
+  var goalDelta=0;
+
+  // ✅ NEW: Check if goal is numeric (new format: -500 to +500) — accept both string and number
+  if((typeof c.goal === 'string' || typeof c.goal === 'number') && !isNaN(parseInt(c.goal))){
+    goalDelta = parseInt(c.goal);  // Use direct numeric value
+  }
   // Support for custom clientgoalDelta override (set in client object if needed)
-  var goalDelta=(c.customGoalDelta!=null)?c.customGoalDelta:def[c.goal]||0;
+  else if(c.customGoalDelta!=null){
+    goalDelta = c.customGoalDelta;
+  }
+  // Fallback to old format (loss/maintain/gain strings)
+  else {
+    goalDelta = def[c.goal]||0;
+  }
   // Per-day MET targets: each day gets its own exercise kcal based on assigned activities
   // CRITICAL: Growth allowance applies ONLY on rest days (when no training occurs)
   // - Rest days (R): baseTDEE + goalDelta + growthAdd (for development)
@@ -3743,7 +4163,7 @@ function calcTDEE(c){
     perTrainDay:metKcal.perTrainDay,byDay:metKcal.byDay,usedMET:usedMET,
     isMinor:isMinor,growthAdd:growthAdd,neat:neat,
     protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA,warnings:warnings,
-    bmrMethod:t.bmrMethod||'Mifflin-St Jeor',ffmUsed:t.ffmUsed||null};
+    bmrMethod:t.bmrMethod||'Mifflin-St Jeor',ffmUsed:t.ffmUsed||null,usedRMR:t.usedRMR||false};
 }
 
 // ═══ TRAINING-DAY VS REST-DAY MACRO ADJUSTMENT ═══
@@ -4698,6 +5118,11 @@ var MACRO_TYPE={
   // Λαχανικά, Όσπρια, Συνταγές FYH, Άλλα → fallback to calorie ratio
 };
 
+// Minimum grams a food may be scaled down to.
+// Foods shown in pieces (FOOD_UNITS) get a floor of half a piece, so the
+// generator can't shrink a banana to ~5g while the chip still reads "1 τεμ.".
+function minScaleG(n){var u=FOOD_UNITS[n];return (u&&u.g)?Math.max(5,Math.round(u.g*0.5)):5;}
+
 function scalePlan(tmpl,tgt,mealTargets){
   var p=JSON.parse(JSON.stringify(tmpl));
 
@@ -4730,7 +5155,7 @@ function scalePlan(tmpl,tgt,mealTargets){
         var r=mt==='p'?ratioP:mt==='c'?ratioC:mt==='f'?ratioF:ratioK;
         var cap=SCALE_CATS[cat];
         if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
-        f.g=Math.max(5,Math.round(f.g*r));
+        f.g=Math.max(minScaleG(f.n),Math.round(f.g*r));
       });
     });
     return p;
@@ -4758,7 +5183,7 @@ function scalePlan(tmpl,tgt,mealTargets){
       var r=mt==='p'?ratioP:mt==='c'?ratioC:mt==='f'?ratioF:ratioK;
       var cap=SCALE_CATS[cat];
       if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
-      f.g=Math.max(5,Math.round(f.g*r));
+      f.g=Math.max(minScaleG(f.n),Math.round(f.g*r));
     });
   });
   return p;
@@ -4819,9 +5244,14 @@ var JSON_CACHE={
     if(!jsonStr) return null;
     var cached = this.get(key);
     if(cached) return cached;
-    var parsed = JSON.parse(jsonStr);
-    if(key) this.set(key, parsed);
-    return parsed;
+    try {
+      var parsed = JSON.parse(jsonStr);
+      if(key) this.set(key, parsed);
+      return parsed;
+    } catch(e) {
+      console.error('[CACHE] JSON parse error for key:', key, e);
+      return null;
+    }
   },
 
   clear: function(){
@@ -5118,10 +5548,28 @@ function showErrorToast(message) {
   }, 4000);
 }
 
+// ✅ Toggle Sidebar (Collapsible)
+function toggleSidebar(){
+  var sidebar = document.getElementById('sidebar');
+  if(sidebar){
+    sidebar.classList.toggle('collapsed');
+    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+  }
+}
+
+// Restore sidebar state on load
+window.addEventListener('load', function(){
+  var isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+  if(isCollapsed){
+    var sidebar = document.getElementById('sidebar');
+    if(sidebar) sidebar.classList.add('collapsed');
+  }
+});
+
 function addClient(){
   try {
     var id='c'+Date.now();
-    var newClient={id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,leanmass:0,activity:'sed',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
+    var newClient={id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,leanmass:0,activity:'mod',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
 
     if(window.undoRedoManager && typeof CreateClientCommand !== 'undefined'){
       var cmd = new CreateClientCommand(newClient);
@@ -5144,24 +5592,57 @@ function addClient(){
 
 // ✅ PHASE 4: DELETE CLIENT WITH UNDO/REDO
 function deleteClient(id){
-  if(window.undoRedoManager && typeof DeleteClientCommand !== 'undefined'){
-    var clientToDelete = clients.find(function(c){return c.id===id;});
-    if(clientToDelete){
-      var cmd = new DeleteClientCommand(clientToDelete);
-      window.undoRedoManager.execute(cmd);
-    }
-  } else {
-    clients=clients.filter(function(c){return c.id!==id;});
-    if(curId===id){curId=null;document.getElementById('main').innerHTML='<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';}
-    renderSB();
+  var clientToDelete = clients.find(function(c){return c.id===id;});
+  if(!clientToDelete) return;
+
+  // ✅ SOFT DELETE: Mark as deleted instead of removing
+  clientToDelete.deleted = true;
+  clientToDelete.deletedAt = new Date().toISOString();
+
+  if(curId===id){
+    curId=null;
+    document.getElementById('main').innerHTML='<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';
   }
+
+  save();
+  renderSB();
+}
+
+function restoreClient(id){
+  var clientToRestore = clients.find(function(c){return c.id===id;});
+  if(!clientToRestore) return;
+
+  // ✅ RESTORE: Unmark as deleted
+  clientToRestore.deleted = false;
+  delete clientToRestore.deletedAt;
+
+  save();
+  renderSB();
+}
+
+function permanentlyDeleteClient(id){
+  if(!confirm('Διαγραφή ΜΟΝΙΜΑ; Δεν θα μπορείς να ανακτήσεις τα δεδομένα!')) return;
+
+  // ✅ HARD DELETE: Permanently remove
+  clients = clients.filter(function(c){return c.id!==id;});
+
+  if(curId===id){
+    curId=null;
+    document.getElementById('main').innerHTML='<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';
+  }
+
+  save();
+  renderSB();
 }
 function selectClient(id){
   try {
     curId=id;
     // ✅ Update lastAccess timestamp for sorting
     var c=clients.find(function(x){return x.id===id;});
-    if(c){c.lastAccess=Date.now();upd();}
+    if(c){
+      c.lastAccess=Date.now();
+      save(); // Save the lastAccess update
+    }
 
     var tb=document.getElementById('tmpl-sb-btn');
     if(tb) tb.classList.remove('active');
@@ -5181,16 +5662,58 @@ function selectClient(id){
   } catch(e) {
     console.error('❌ Σφάλμα στη επιλογή πελάτη:', e.message);
     console.error('Stack:', e.stack);
-    showErrorToast('❌ Σφάλμα φόρτωσης στοιχείων: ' + e.message);
+    console.error('Full error:', e);
+    // showErrorToast('❌ Σφάλμα φόρτωσης στοιχείων: ' + e.message);
   }
 }
 function getC(){return clients.filter(function(c){return c.id===curId;})[0];}
 
 var _clientSearchTerm='';
 function filterClients(val){_clientSearchTerm=(val||'').toLowerCase().trim();renderSB();}
+function loadTestClientBasilina(){
+  var basilina = {
+    id: 'basilina-perisiou-' + Date.now(),
+    name: 'Βασιλίνα Περίσιου',
+    sex: 'F',
+    age: 32,
+    weight: 63.1,
+    height: 165,
+    bf: null,
+    leanmass: null,
+    rmr: 1300,
+    activity: 'moderate',
+    sport: null,
+    goalMain: 'maintain',
+    goalCalAdj: 0,
+    trainDays: [true, true, false, true, true, false, false],
+    hasMultipleTrainings: false,
+    foodExclude: [],
+    allergies: '',
+    medicalConditions: [],
+    menstruCycle: 'regular',
+    suppsSelected: {},
+    mealTimes: {
+      breakfast: '08:00',
+      snack1: '11:00',
+      lunch: '13:00',
+      snack2: '15:30',
+      dinner: '19:00'
+    },
+    weekPlan: {},
+    lastAccess: Date.now(),
+    notes: 'Test Client - Ανακτήθηκε από διατροφικό πλάνο'
+  };
+  clients.push(basilina);
+  save();
+  renderSB();
+  selectClient(basilina.id);
+  alert('✅ Βασιλίνα Περίσιου φορτώθηκε με επιτυχία!');
+}
+
 function renderSB(){
   var term=_clientSearchTerm;
-  var list=term?clients.filter(function(c){return(c.name||'Νέος πελάτης').toLowerCase().indexOf(term)>-1;}):clients;
+  // ✅ FILTER: Exclude deleted clients from main list
+  var list=term?clients.filter(function(c){return !c.deleted && (c.name||'Νέος πελάτης').toLowerCase().indexOf(term)>-1;}):clients.filter(function(c){return !c.deleted;});
   // ✅ Sort by lastAccess (most recent first)
   list.sort(function(a,b){return(b.lastAccess||0)-(a.lastAccess||0);});
   var html='';
@@ -5209,13 +5732,32 @@ function renderSB(){
         +'</div>';
     });
   }
-  if(!term&&clients.length>0){
-    html+='<div style="font-size:9px;color:#999;padding:6px 10px;text-align:center;margin-top:8px;font-weight:500">'+clients.length+' πελάτες</div>';
+
+  // ✅ TRASH SECTION: Show deleted clients
+  var deletedClients = clients.filter(function(c){return c.deleted;});
+  if(deletedClients.length > 0 && !term){
+    html+='<div style="border-top:1px solid #f0f0f0;margin-top:10px;padding-top:10px;">';
+    html+='<div style="font-size:10px;font-weight:700;color:#999;padding:6px 10px;text-transform:uppercase;letter-spacing:0.5px">🗑️ Διαγραμμένοι ('+deletedClients.length+')</div>';
+    deletedClients.forEach(function(c){
+      html+='<div class="ci" style="background:#fafafa;opacity:0.7;padding:8px;">'
+        +'<div class="ci-name" style="color:#999;">'+(c.name||'Νέος πελάτης')+'</div>'
+        +'<div class="ci-info" style="color:#bbb;font-size:9px;">Διαγράφηκε</div>'
+        +'<div style="display:flex;gap:4px;margin-top:6px;">'
+        +'<button style="flex:1;padding:5px;font-size:10px;background:#4CAF50;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:600;" onclick="event.stopPropagation();restoreClient(\''+c.id+'\');renderSB()">↶ Ανάκτηση</button>'
+        +'<button style="flex:1;padding:5px;font-size:10px;background:#c62828;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:600;" onclick="event.stopPropagation();permanentlyDeleteClient(\''+c.id+'\');renderSB()">🗑️ Μόνιμα</button>'
+        +'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+  }
+
+  if(!term&&clients.filter(function(c){return !c.deleted;}).length>0){
+    html+='<div style="font-size:9px;color:#999;padding:6px 10px;text-align:center;margin-top:8px;font-weight:500;">'+clients.filter(function(c){return !c.deleted;}).length+' πελάτες</div>';
   }
   document.getElementById('client-list').innerHTML=html;
 
   // ✅ Update breadcrumbs after rendering
-  updateBreadcrumbs();
+  if(typeof updateBreadcrumbs === 'function') updateBreadcrumbs();
 
   // ✅ PHASE 5: ADD ANALYTICS BUTTON
   var sideBar = document.getElementById('sideBar');
@@ -5310,18 +5852,25 @@ function renderTmplTable(){
       html+='<td class="day-cell tmpl-cell" data-d="'+d+'" data-mi="'+mi+'">';
       foods.forEach(function(food,fi){
         var tfu=FOOD_UNITS[food.n];
-        var tVal=tfu?Math.max(1,Math.round(food.g/tfu.g)):food.g;
-        var tMax=tfu?10:999;
-        var tUnit=tfu?tfu.u:'g';
-        var tChg=tfu?'tmplUpdG('+d+','+mi+','+fi+',this.value*'+tfu.g+')'
-          :'tmplUpdG('+d+','+mi+','+fi+',this.value)';
+        var tDisplayUnit = food.u !== undefined ? food.u : (tfu ? tfu.u : 'g');
+        var tVal, tMax, tChg;
+        if (tDisplayUnit === 'g' || !tfu) {
+          tVal = food.g;
+          tMax = 999;
+          tChg = 'tmplUpdG('+d+','+mi+','+fi+',this.value)';
+        } else {
+          tVal = Math.max(0.1, Math.round(food.g / tfu.g * 10) / 10);
+          tMax = 10;
+          tChg = 'tmplUpdG('+d+','+mi+','+fi+',this.value*'+tfu.g+')';
+        }
+        var tUnit = tDisplayUnit;
         html+='<div class="food-chip">'
           +'<div class="chip-name-wrap">'
           +'<input class="chip-inp" type="text" value="'+food.n+'" autocomplete="off" spellcheck="false"'
           +' data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'" data-mode="tmpl"'
           +' oninput="showChipSug(this)" onfocus="showChipSug(this)" onblur="closeDD()">'
           +'</div>'
-          +'<input class="chip-g" type="number" min="0" max="'+tMax+'" value="'+tVal+'" onchange="'+tChg+'">'
+          +'<input class="chip-g" type="number" min="0" step="'+(tDisplayUnit==='g'||!tfu?'1':'0.1')+'" max="'+tMax+'" value="'+tVal+'" onchange="'+tChg+'">'
           +'<span class="chip-unit">'+tUnit+'</span>'
           +'<button class="chip-del" onclick="tmplDelF('+d+','+mi+','+fi+')">&#10005;</button>'
           +'</div>';
@@ -5347,7 +5896,12 @@ function renderTmplTable(){
   });
 }
 
-function tmplUpdG(d,mi,fi,v){TMPLS[curTmplGoal][d][mi].foods[fi].g=Math.max(0,parseInt(v)||0);}
+function tmplUpdG(d,mi,fi,v){
+  var parsed=parseInt(v,10);
+  if(isNaN(parsed)||parsed<0)return;
+  TMPLS[curTmplGoal][d][mi].foods[fi].g=parsed;
+  renderTmplTable();
+}
 function tmplAddF(d,mi){TMPLS[curTmplGoal][d][mi].foods.push({n:Object.keys(FOODS)[0],g:100});renderTmplTable();}
 function tmplDelF(d,mi,fi){TMPLS[curTmplGoal][d][mi].foods.splice(fi,1);renderTmplTable();}
 function resetTmpl(goal){
@@ -5360,6 +5914,11 @@ function buildTmplSelectorHtml(c){
   var sel=c.selectedTemplate||'';
   var goalLabel=GOAL_LABELS[c.goal]||c.goal;
   var opts='<option value="">📋 Προεπιλεγμένο ('+goalLabel+')</option>';
+
+  // Hide this selector on page 2 and others — only show on Tab 1
+  if(typeof swTab !== 'undefined'){
+    // This will be hidden by swTab logic
+  }
   // Built-in calorie-level reference templates
   var kcalKeys=['kcal2000','kcal2300','kcal2500','kcal2700','kcal3000'];
   kcalKeys.forEach(function(k){
@@ -5589,24 +6148,24 @@ function renderAnalyticsDashboard(){
 
   // Calculate statistics
   var plans=c.savedPlans;
-  var ks=plans.map(p=>p.macros.k);
-  var ps=plans.map(p=>p.macros.p);
-  var fs=plans.map(p=>p.macros.f);
-  var cs=plans.map(p=>p.macros.c);
+  var ks=plans.map(p=>p.macros?p.macros.k:0).filter(x=>x);
+  var ps=plans.map(p=>p.macros?p.macros.p:0).filter(x=>x);
+  var fs=plans.map(p=>p.macros?p.macros.f:0).filter(x=>x);
+  var cs=plans.map(p=>p.macros?p.macros.c:0).filter(x=>x);
 
   var stats={
-    kAvg:Math.round(ks.reduce((a,b)=>a+b)/ks.length),
-    kMin:Math.min(...ks),
-    kMax:Math.max(...ks),
-    pAvg:Math.round(ps.reduce((a,b)=>a+b)/ps.length),
-    pMin:Math.min(...ps),
-    pMax:Math.max(...ps),
-    fAvg:Math.round(fs.reduce((a,b)=>a+b)/fs.length),
-    fMin:Math.min(...fs),
-    fMax:Math.max(...fs),
-    cAvg:Math.round(cs.reduce((a,b)=>a+b)/cs.length),
-    cMin:Math.min(...cs),
-    cMax:Math.max(...cs),
+    kAvg:ks.length>0?Math.round(ks.reduce((a,b)=>a+b,0)/ks.length):0,
+    kMin:ks.length>0?Math.min(...ks):0,
+    kMax:ks.length>0?Math.max(...ks):0,
+    pAvg:ps.length>0?Math.round(ps.reduce((a,b)=>a+b,0)/ps.length):0,
+    pMin:ps.length>0?Math.min(...ps):0,
+    pMax:ps.length>0?Math.max(...ps):0,
+    fAvg:fs.length>0?Math.round(fs.reduce((a,b)=>a+b,0)/fs.length):0,
+    fMin:fs.length>0?Math.min(...fs):0,
+    fMax:fs.length>0?Math.max(...fs):0,
+    cAvg:cs.length>0?Math.round(cs.reduce((a,b)=>a+b,0)/cs.length):0,
+    cMin:cs.length>0?Math.min(...cs):0,
+    cMax:cs.length>0?Math.max(...cs):0,
     count:plans.length
   };
 
@@ -5629,9 +6188,13 @@ function renderAnalyticsDashboard(){
     +'<div style="font-size:10px;color:#666;">('+stats.pMin+' - '+stats.pMax+'g)</div>'
     +'</div>';
 
+  var trendK=0;
+  if(plans.length>1 && plans[0].macros && plans[plans.length-1].macros){
+    trendK=plans[plans.length-1].macros.k-plans[0].macros.k;
+  }
   html+='<div style="background:#e8f5e9;border:1px solid #81c784;border-radius:8px;padding:15px;">'
     +'<div style="font-size:11px;color:#2e7d32;font-weight:600;margin-bottom:5px;">📈 Trend Kcal</div>'
-    +'<div style="font-size:18px;font-weight:bold;color:#2e7d32;">'+(plans[plans.length-1].macros.k-plans[0].macros.k>=0?'📈 +':'📉 ')+(plans[plans.length-1].macros.k-plans[0].macros.k)+'</div>'
+    +'<div style="font-size:18px;font-weight:bold;color:#2e7d32;">'+(trendK>=0?'📈 +':'📉 ')+trendK+'</div>'
     +'</div>';
   html+='</div>';
 
@@ -6202,7 +6765,9 @@ function renderMain(){
   }
   var sOpts='<option value="M"'+(c.sex==='M'?' selected':'')+'>Άνδρας</option><option value="F"'+(c.sex==='F'?' selected':'')+'>Γυναίκα</option>';
   var aOpts='<option value="sed"'+(c.activity==='sed'?' selected':'')+'>Καθιστικός</option><option value="light"'+(c.activity==='light'?' selected':'')+'>Ελαφρά ενεργός (1-3x)</option><option value="mod"'+(c.activity==='mod'?' selected':'')+'>Μέτρια ενεργός (3-5x)</option><option value="active"'+(c.activity==='active'?' selected':'')+'>Έντονα ενεργός (6-7x)</option>';
-  var gOpts='<option value="mild"'+(c.goal==='mild'?' selected':'')+'>Ήπια απώλεια (-250)</option><option value="loss"'+(c.goal==='loss'?' selected':'')+'>Απώλεση βάρους (-500)</option><option value="maintain"'+(c.goal==='maintain'?' selected':'')+'>Διατήρηση</option><option value="gain"'+(c.goal==='gain'?' selected':'')+'>Αύξηση μάζας (+300)</option>';
+  // ✅ NEW: Goal stored as numeric calorie adjustment (-500 to +500)
+  var goalCalAdj = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : (c.goal==='loss'?-500:c.goal==='gain'?300:0);
+  var gOpts='<option value="maintain"'+(c.goal==='maintain'?' selected':'')+'>➡️ Διατήρηση (TDEE ×1)</option>';
 
   // Initialize medical conditions if not exist
   if(!c.medConditions) c.medConditions = {};
@@ -6215,99 +6780,163 @@ function renderMain(){
   var numTrainDays=(c.trainDays||[]).filter(function(x){return x;}).length;
   var hydBase=t.hydBase||Math.round(c.weight*35);
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
-  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 style="margin:0;color:#025857;font-size:18px;">👤 '+c.name+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+c.name+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
     +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button><button class="stab" id="t5" onclick="swTab(5)">📈 Analytics</button></div>'
     +'<div id="s1">'
 
-    // ✅ SECTION 1: ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ
+    // ✅ GOAL SELECTION REMINDER (Only show if goal not set)
+    +((!c.goal)?'<div style="background:linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);border:1.5px solid #ffd54f;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 6px rgba(255,193,7,0.15)">'
+    +'<span style="font-size:20px;flex-shrink:0;">💡</span>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:#f57f17;">🎯 Ορίστε το Σκοπό</div>'
+    +'<div style="font-size:11px;color:#ff8f00;margin-top:2px;">Απαραίτητο για σωστές θερμίδες & μακροθρεπτικά</div>'
+    +'</div>'
+    +'</div>':'')
+
+    // ✅ SUMMARY CARD (Client Overview with Goal)
+    +'<div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1.5px solid #c8e6c9;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">👤 Πελάτης</span>'
+      +'<span style="font-size:13px;font-weight:700;color:#025857">' + (c.name||'—') + '</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">📊 Μέτρα</span>'
+      +'<span id="header-measures" style="font-size:13px;font-weight:600;color:#025857">' + (c.weight||'—') + 'kg / ' + (c.height||'—') + 'cm' + (c.weight&&c.height?' (BMI: '+Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10+')':'') + '</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">🎯 Στόχος</span>'
+      +'<span id="header-goal" style="font-size:13px;font-weight:600;color:#025857">' + (c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'}[c.goalMain]||c.goalMain):'—') + (c.goal&&parseInt(c.goal)?' ('+(parseInt(c.goal)>=0?'+':'')+parseInt(c.goal)+' kcal)':'') + '</span>'
+    +'</div>'
+    +'</div>'
+
+    // ✅ SECTION 1: ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ (Όνομα, Φύλο, Ηλικία)
     +'<div class="section-card basic">'
     +'<div class="section-header basic"><span class="section-icon">👤</span>Βασικά Στοιχεία</div>'
     +'<div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος" value="'+(c.name||'')+'"></div>'
-    +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div></div>'
-    +'<div class="fg fg4"><div class="fgrp"><label>Ηλικία</label><input type="number" id="inp-age" value="'+(c.age||'')+'" min="1" max="150"></div>'
-    +'<div class="fgrp"><label>Βάρος (kg)</label><input type="number" id="inp-weight" value="'+(c.weight||'')+'" min="25" max="300" step="0.1"></div>'
-    +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+(c.height||'')+'" min="100" max="250"></div>'
-    +'<div class="fgrp"><label>BMI</label><input type="number" readonly style="background:#f5f5f5;color:#999;" value="'+(c.weight&&c.height?Math.round(c.weight/(c.height/100/c.height/100)*10)/10:'-')+'"></div>'
-    +'</div></div>'
+    +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div>'
+    +'<div class="fgrp"><label>Ηλικία</label><input type="number" id="inp-age" value="'+(c.age||'')+'" min="1" max="150"></div></div>'
     +'</div>'
 
-    // ✅ SECTION 2: ΑΝΘΡΩΠΟΜΕΤΡΙΑ
+    // ✅ SECTION 2: ΑΝΘΡΩΠΟΜΕΤΡΙΑ (Ενοποιημένη - Βάρος, Ύψος, BMI, Λίπος, Lean Mass)
     +'<div class="section-card anthropometry" id="sec-anthropometry">'
     +'<div class="section-header anthropometry"><span class="section-icon">📏</span>Ανθρωπομετρία</div>'
-    +'<div class="fg"><div class="fgrp"><label>% Σώμ. Λίπος</label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div>'
-    +'<div class="fgrp"><label>Lean Mass (kg)</label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63"></div></div>'
+    +'<div class="fg fg3"><div class="fgrp"><label>Βάρος (kg)</label><input type="number" id="inp-weight" value="'+(c.weight||'')+'" min="25" max="300" step="0.1"></div>'
+    +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+(c.height||'')+'" min="100" max="250"></div>'
+    +'<div class="fgrp"><label>% Σώμ. Λίπος</label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div></div>'
+    // ✅ Lean Mass + RMR now inside Anthropometry section
+    +'<div class="fg"><div class="fgrp"><label>Lean Mass (kg)</label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63"></div>'
+    +'<div class="fgrp"><label>🧪 RMR (kcal)</label><input type="number" id="inp-rmr" value="'+(c.rmr||'')+'" min="500" max="5000" step="1" placeholder="π.χ. 1650 (εργαστηριακή)"></div></div>'
+    // ✅ BMI as badge (not input field)
+    +(c.weight&&c.height?'<div id="bmi-badge" style="background:#E2EEE5;padding:8px 12px;border-radius:6px;margin-top:8px;font-size:12px;font-weight:600;color:#025857;border-left:3px solid #025857;">📊 BMI: '+Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10+' <span style="font-size:10px;color:#666;font-weight:normal;">('+
+    (function(){
+      var bmi=Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10;
+      if(bmi<18.5)return'Χαμηλό';if(bmi<25)return'Φυσιολογικό';if(bmi<30)return'Υπέρβαρο';return'Παχυσαρκία';
+    })()+
+    ')</span></div>':'')
     +'</div>'
-    // ✅ SECTION 3: ΔΡΑΣΤΗΡΙΟΤΗΤΑ & ΣΤΟΧΟΣ
+    +'</div>'
+    // ✅ SECTION 3: ΑΘΛΗΜΑ (Sport Auto-Sets Activity Level)
     +'<div class="section-card activity" id="sec-activity">'
-    +'<div class="section-header activity"><span class="section-icon">⚡</span>Δραστηριότητα & Στόχος</div>'
-    +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>Δραστηριότητα'+(t.usedMET?' (NEAT baseline)':'')+'</label><select id="inp-activity">'+aOpts+'</select></div>'
-    +'<div class="fgrp"><label>Στόχος</label><select id="inp-goal">'+gOpts+'</select></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>🏅 Άθλημα</label><select id="inp-sport">'
+    +'<div class="section-header activity"><span class="section-icon">🏅</span>Άθλημα</div>'
+    +'<div class="fg"><div class="fgrp"><label>Επιλογή Αθλήματος</label><select id="inp-sport" onchange="updateActivityFromSport(this.value)">'
     +'<option value="">-- Επιλέξτε άθλημα --</option>'
     +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
-    +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div>'
-    +'<div class="fgrp"><label>Formula TDEE</label><select id="inp-formula">'+fOpts+'</select></div></div>'
+    +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
+    // ✅ Activity Level — manually selected by dietitian (reflects job + daily life, not just sport)
+    +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>⚡ Επίπεδο Δραστηριότητας Ημέρας'+(t.usedMET?' (NEAT baseline)':'')+'</label><select id="inp-activity">'
+    +'<option value="sed"'+((c.activity||'mod')==='sed'?' selected':'')+'>Καθιστικός (γραφείο, λίγη κίνηση)</option>'
+    +'<option value="light"'+((c.activity||'mod')==='light'?' selected':'')+'>Ελαφρά ενεργός (όρθια εργασία, περπάτημα)</option>'
+    +'<option value="mod"'+((c.activity||'mod')==='mod'?' selected':'')+'>Μέτρια ενεργός (εργασία με κίνηση)</option>'
+    +'<option value="active"'+((c.activity||'mod')==='active'?' selected':'')+'>Έντονα ενεργός (χειρωνακτική π.χ. οικοδόμος)</option>'
+    +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic">Ορίστε με βάση τη δουλειά & καθημερινότητα — όχι μόνο το άθλημα.</div></div></div>'
+    // ✅ Sport-Specific Supplement Recommendations (PHASE 4)
+    +(c.sport && SPORT_PROTOCOLS[c.sport] ?
+      '<div style="background:#E8F5E9;padding:12px;border-radius:5px;margin:10px 0;border-left:4px solid #025857;">'
+      +'<label><b style="color:#025857;">🔬 Συνιστώμενα Συμπληρώματα για '+SPORT_PROTOCOLS[c.sport].name+':</b></label>'
+      +'<div id="sportSuppsContainer" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:10px;">'
+      +SPORT_PROTOCOLS[c.sport].recommendedSupplements.map(function(supp){
+        var suppsObj=SUPPS.find(function(s){return s.id===supp.id;});
+        var suppName=suppsObj?suppsObj.name:supp.id;
+        var isSelected=(c.supps||[]).includes(supp.id);
+        return'<label style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:white;border:1px solid #ddd;border-radius:4px;cursor:pointer;"><input type="checkbox" value="'+supp.id+'" '+(isSelected?'checked':'')
+          +' onchange="toggleSportSupplement(\''+supp.id+'\',this.checked);" style="cursor:pointer;"/><span style="font-size:12px;">'+suppName+(supp.required?' ⭐':'')+'</span></label>';
+      }).join('')
+      +'</div>'
+      +'<div style="font-size:10px;color:#666;margin-top:8px;font-style:italic;">⭐ = Strongly recommended for this sport</div>'
+      +'</div>'
+    : '')
+    // ✅ MET ACTIVITIES - NOW IN MODAL (moved to buttons section)
     +'</div>'
 
-    // ✅ SECTION 4: ΔΙΑΤΡΟΦΗ
-    +'<div class="section-card dietary" id="sec-dietary">'
-    +'<div class="section-header dietary"><span class="section-icon">🍽️</span>Διατροφή</div>'
-    +'<div class="fg"><div class="fgrp"><label>Τύπος Διατροφής</label><select id="inp-dietType" onchange="upd(\'dietType\',this.value);">'+dOpts+'</select></div></div>'
-
-    +'<div class="fgrp"><label>Αλλεργίες / Αποφεύξεις</label>'
-    +'<input type="text" id="inp-allergies" placeholder="π.χ. γαρίδες, καρύδια, γάλα" value="'+(c.allergies||'')+'">'
-    +'<div style="font-size:10px;color:#999;margin-top:4px;">💡 Αποχωρίστε με κόμμα</div>'
+    // ✅ SECTION 4: ΣΤΟΧΟΣ & ΠΡΟΣΑΡΜΟΓΗ (Goal Selection + Adjustment + Formula)
+    +'<div class="section-card goal" id="sec-goal">'
+    +'<div class="section-header goal"><span class="section-icon">⚡</span>Στόχος & Προσαρμογή</div>'
+    // ✅ GOAL SELECTION (NEW) - COMPACT VERSION
+    +'<div class="fg"><div class="fgrp"><label style="font-weight:700;color:#025857;font-size:12px;">🎯 Κύριος Στόχος:</label>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(211,47,47,0.05);border:1px solid #d32f2f;border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<input type="radio" name="goal-main" value="loss" '+(c.goalMain==='loss'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
+    +'<div><div style="font-weight:600;color:#d32f2f;font-size:11px;">📉 Απώλεια</div><div style="font-size:9px;color:#999;">-500 kcal</div></div>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(2,88,87,0.05);border:1px solid #025857;border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<input type="radio" name="goal-main" value="maintain" '+(c.goalMain==='maintain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
+    +'<div><div style="font-weight:600;color:#025857;font-size:11px;">➡️ Διατήρηση</div><div style="font-size:9px;color:#999;">0 kcal</div></div>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(76,175,80,0.05);border:1px solid #4caf50;border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<input type="radio" name="goal-main" value="gain" '+(c.goalMain==='gain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
+    +'<div><div style="font-weight:600;color:#4caf50;font-size:11px;">📈 Αύξηση</div><div style="font-size:9px;color:#999;">+300 kcal</div></div>'
+    +'</label>'
+    +'</div></div></div>'
+    +'<div class="fg"><div class="fgrp"><label style="font-weight:700;color:#025857;font-size:13px;">🎯 ΠΡΟΣΑΡΜΟΓΗ ΘΕΡΜΙΔΩΝ (-500 έως +500)</label>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin:8px 0;">'
+    +'<button type="button" onclick="adjGoalCalories(-100)" style="background:#d32f2f;color:white;border:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;">−100</button>'
+    +'<button type="button" onclick="adjGoalCalories(-10)" style="background:#ff9800;color:white;border:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;">−10</button>'
+    +'<div style="flex:1;text-align:center;background:#E2EEE5;border:2px solid #025857;padding:6px 8px;border-radius:6px;">'
+    +'<div style="font-size:9px;color:#666;">Προσαρμογή Θερμίδων</div>'
+    +'<div style="font-size:18px;font-weight:bold;color:#025857;margin:2px 0;line-height:1.2;" id="goal-display">'+(goalCalAdj>=0?'+':'')+(goalCalAdj)+'</div>'
+    +'<div style="font-size:8px;color:#999;">kcal/ημέρα</div>'
     +'</div>'
-
-    +'<div class="fgrp"><label>Προτιμήσεις & Περιορισμοί</label>'
-    +'<textarea id="inp-preferences" placeholder="π.χ. προτιμώ ψάρι, δεν τρώω πολλά ξηρά..." style="width:100%;padding:10px;border:1.5px solid #e0e0e0;border-radius:6px;font-family:inherit;font-size:12px;height:70px;resize:vertical;transition:all 0.2s ease">'+(c.preferences||'')+'</textarea>'
+    +'<button type="button" onclick="adjGoalCalories(10)" style="background:#4caf50;color:white;border:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;">+10</button>'
+    +'<button type="button" onclick="adjGoalCalories(100)" style="background:#2196f3;color:white;border:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;">+100</button>'
     +'</div>'
-    +'</div>'
-
-    // ✅ SECTION 5: ΙΑΤΡΙΚΑ
-    +'<div class="section-card medical" id="sec-medical">'
-    +'<div class="section-header medical"><span class="section-icon">🩺</span>Ιατρικές Συνθήκες</div>'
-    +'<div class="fg"><div class="fgrp"><label>Ενεργές Συνθήκες</label>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">'
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-diabetes" '+(c.medConditions&&c.medConditions.diabetes?'checked':'')+' onchange="upd(\'medConditions.diabetes\', this.checked); applyMedicalProtocol(\'diabetes\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
-    +'<span onclick="showMedicalProtocol(\'diabetes\')" style="cursor:help;">Σακχαρώδης Διαβήτης ℹ️</span></label>'
-
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-hypertension" '+(c.medConditions&&c.medConditions.hypertension?'checked':'')+' onchange="upd(\'medConditions.hypertension\', this.checked); applyMedicalProtocol(\'hypertension\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
-    +'<span onclick="showMedicalProtocol(\'hypertension\')" style="cursor:help;">Υψηλή Πίεση ℹ️</span></label>'
-
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-celiac" '+(c.medConditions&&c.medConditions.celiac?'checked':'')+' onchange="upd(\'medConditions.celiac\', this.checked); applyMedicalProtocol(\'celiac\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
-    +'<span onclick="showMedicalProtocol(\'celiac\')" style="cursor:help;">Κοιλιοκάκη ℹ️</span></label>'
-
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-ibs" '+(c.medConditions&&c.medConditions.ibs?'checked':'')+' onchange="upd(\'medConditions.ibs\', this.checked); applyMedicalProtocol(\'ibs\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
-    +'<span onclick="showMedicalProtocol(\'ibs\')" style="cursor:help;">IBS ℹ️</span></label>'
-
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:13px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-lactose" '+(c.medConditions&&c.medConditions.lactose?'checked':'')+' onchange="upd(\'medConditions.lactose\', this.checked); applyMedicalProtocol(\'lactose\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
-    +'<span onclick="showMedicalProtocol(\'lactose\')" style="cursor:help;">Δυσανεξία Λακτόζης ℹ️</span></label>'
-
-    +'<label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:12px;cursor:pointer;">'
-    +'<input type="checkbox" id="chk-vegetarian" '+(c.medConditions&&c.medConditions.vegetarian?'checked':'')+' onchange="upd(\'medConditions.vegetarian\', this.checked); applyMedicalProtocol(\'vegetarian\', this.checked);" style="cursor:pointer;width:16px;height:16px;" title="Κλικ για λεπτομέρειες πρωτοκόλου">'
-    +'<span onclick="showMedicalProtocol(\'vegetarian\')" style="cursor:help;">Χορτοφαγική ℹ️</span></label>'
+    +'<input type="hidden" id="inp-goal" value="'+(goalCalAdj)+'"/>'
+    +'<div style="font-size:10px;color:#025857;margin-top:4px;font-style:italic;">⚠️ Αρνητικό = Μείωση | 0 = Διατήρηση | Θετικό = Αύξηση</div>'
     +'</div></div>'
+    // ✅ FORMULA AUTO-SELECT (Removed user picker - auto-detects)
+    +'<div style="background:#E2EEE5;padding:10px 12px;border-radius:6px;font-size:11px;color:#025857;font-weight:600;margin-top:12px;">'
+    +'🧮 Formula: '+
+    (function(){
+      if(c.rmr)return'<b>RMR (Laboratory-Measured)</b> ← Ακριβέστερη';
+      if(c.bf)return'<b>Katch-McArdle</b> (Body Fat %) ← Συνιστώμενη';
+      if(c.leanmass)return'<b>Katch-McArdle</b> (Lean Mass) ← Καλή';
+      return'<b>Mifflin-St Jeor</b> (Default) ← Γενική';
+    })()
+    +'</div>'
     +'</div>'
 
-    // ✅ SECTION 6: BUDGET
-    +'<div class="section-card budget">'
-    +'<div class="section-header budget"><span class="section-icon">💰</span>Προϋπολογισμός</div>'
-    +'<div class="fg"><div class="fgrp"><label>Εβδομαδιαίος (€)</label>'
-    +'<input type="number" id="inp-budget" placeholder="π.χ. 60" value="'+(c.budget||'')+'" min="0">'
-    +'</div></div>'
-    +'</div></div>'
-    +buildMetHtml(c,t)
-    // ✅ REMOVED: These should only appear with meal plan in s2
-    // +buildDayTgtHtml(c,t)
+    // ✅ SECTION 4b: ΚΑΤΑΝΟΜΗ ΜΑΚΡΟΘΡΕΠΤΙΚΩΝ (macro presets)
+    +buildMacroDistributionHtml(c,t)
+
+    // ✅ SECTION 5-7: Moved to Modals (cleaner UI)
+    // ✅ QUICK ACCESS BUTTONS FOR ALL SETTINGS (6 Modal Windows)
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">'
+    +'<button class="btn" onclick="openMealTimesModal()" style="background:#025857;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#014545\'" onmouseout="this.style.background=\'#025857\'">⏱️ Χρόνοι Γευμάτων</button>'
+    +'<button class="btn" onclick="openMetActivitiesModal()" style="background:#046D6B;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#025857\'" onmouseout="this.style.background=\'#046D6B\'">🏃 Προπονήσεις (MET)</button>'
+    +'<button class="btn" onclick="openDietModal()" style="background:#025857;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#014545\'" onmouseout="this.style.background=\'#025857\'">🥗 Διατροφή</button>'
+    +'<button class="btn" onclick="openMedicalConditionsModal()" style="background:#037070;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#025857\'" onmouseout="this.style.background=\'#037070\'">🩺 Ιατρικές Συνθήκες</button>'
+    +'<button class="btn" onclick="openCombinedSupplementsModal()" style="background:#046D6B;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#025857\'" onmouseout="this.style.background=\'#046D6B\'">💊 Συμπληρώματα</button>'
+    +'</div>'
+    // ✅ 2x/day training: now handled by adding 2 MET activities on the same day (different times)
+    +'<div style="background:#E8F5E9;padding:8px 12px;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:15px;border-left:3px solid #025857;">💡 Για 2 προπονήσεις την ίδια ημέρα, πρόσθεσε 2 δραστηριότητες στις «🏃 Προπονήσεις (MET)» με διαφορετική ώρα.</div>'
+
+    // ✅ MET Activities table moved inside SECTION 3
+    // ✅ Day targets table with macros per day (with T/R badges) — S1 ONLY
+    +buildDayTgtHtml(c,t)
     // +buildSuppHtml(c)
     // +buildExcludeHtml(c)
     // +buildAlertsAndTipsHtml(c)
+    // ✅ TEMPLATE SELECTOR - Show available nutrition plan templates
+    +buildTmplSelectorHtml(c)
     // ✅ PLAN GENERATION BUTTON ONLY IN S1
     +'<div class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου</button></div>'
     +'</div>'
@@ -6344,7 +6973,27 @@ function renderMain(){
     // ✅ PHASE 5: ANALYTICS CONTENT AREA
     +'<div id="analyticsContent" style="display:none;padding:0;background:#f9f9f9;min-height:600px;overflow-y:auto;"></div>';
   document.getElementById('main').innerHTML=html;
-  document.getElementById('inp-name').value=c.name;
+
+  // ✅ UPDATE ALL INPUT FIELDS WITH CURRENT CLIENT DATA
+  document.getElementById('inp-name').value=c.name||'';
+  document.getElementById('inp-sex').value=c.sex||'M';
+  document.getElementById('inp-age').value=c.age||'';
+  document.getElementById('inp-weight').value=c.weight||'';
+  document.getElementById('inp-height').value=c.height||'';
+  document.getElementById('inp-activity').value=c.activity||'mod';
+  // ✅ Update goal display (numeric adjuster)
+  var goalVal = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : 0;
+  document.getElementById('inp-goal').value=goalVal;
+  var goalDisplay=document.getElementById('goal-display');
+  if(goalDisplay) goalDisplay.textContent = (goalVal >= 0 ? '+' : '') + goalVal;
+  var inpDietType=document.getElementById('inp-dietType');if(inpDietType)inpDietType.value=c.dietType||'normal';
+  var inpFormula=document.getElementById('inp-formula');if(inpFormula)inpFormula.value=c.formula||'mifflin';
+  var inpBf=document.getElementById('inp-bf');if(inpBf)inpBf.value=c.bf||'';
+  var inpLm=document.getElementById('inp-leanmass');if(inpLm)inpLm.value=c.leanmass||'';
+  var inpSport=document.getElementById('inp-sport');if(inpSport)inpSport.value=c.sport||'';
+  var inpPref=document.getElementById('inp-preferences');if(inpPref)inpPref.value=c.preferences||'';
+
+  // ✅ ADD EVENT LISTENERS
   document.getElementById('inp-name').oninput=function(){upd('name',this.value);};
   document.getElementById('inp-sex').onchange=function(){upd('sex',this.value);};
   document.getElementById('inp-age').onblur=function(){upd('age',+this.value);};
@@ -6393,9 +7042,6 @@ function renderMain(){
   // ✅ Allergies handler
   var allerInp=document.getElementById('inp-allergies');
   if(allerInp)allerInp.oninput=function(){upd('allergies',this.value);};
-  // ✅ Budget handler
-  var budgetInp=document.getElementById('inp-budget');
-  if(budgetInp)budgetInp.oninput=function(){upd('budget',+this.value);};
   // ✅ Preferences handler
   var prefInp=document.getElementById('inp-preferences');
   if(prefInp)prefInp.oninput=function(){upd('preferences',this.value);};
@@ -6534,7 +7180,10 @@ function getMealTimingGuide(c){
   for(var i=0;i<7;i++){
     if(!td[i]||!times[i])continue;
     var trainTime=times[i];
-    var h=parseInt(trainTime)||0,m=parseInt(trainTime.split(':')[1])||0;
+    var parts=trainTime.split(':');
+    var h=parseInt(parts[0],10);
+    var m=parseInt(parts[1],10)||0;
+    if(isNaN(h)||h<0||h>23)continue;
 
     // Pre-workout: 2 hours before
     var preH=(h-2)<0?(h-2+24):(h-2);
@@ -6693,6 +7342,7 @@ function buildMetHtml(c,t){
       +'<span class="met-item-name">'+ma.name+'</span>'
       +'<span class="met-item-met">'+ma.met+' METs</span>'
       +'<span class="met-item-days">'+dayChips+'</span>'
+      +(ma.time?'<span class="met-item-time" style="color:#ff6b35;font-weight:600">🕐 '+ma.time+'</span>':'')  // ← Show training time (HH:MM format)
       +'<span class="met-item-detail">'+ma.mins+' λεπτ./φορά</span>'
       +'<span class="met-item-kcal">= '+kcalWk+' kcal/εβδ.</span>'
       +'<button class="met-del" onclick="removeMetActivity('+i+')" title="Αφαίρεση">&#10005;</button>'
@@ -6740,6 +7390,11 @@ function buildMetHtml(c,t){
     +'</div>'
 
     +'<div class="met-form-group">'
+    +'<label>⏰ Ώρα Προπόνησης:</label>'
+    +'<input type="time" id="met-time" value="17:00" style="padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:7px;background:#fff;font-size:14px;font-weight:600;color:#ff6b35;">'
+    +'</div>'
+
+    +'<div class="met-form-group">'
     +'<label>Ημέρες εκτέλεσης:</label>'
     +dayToggles
     +'</div>'
@@ -6779,6 +7434,7 @@ function addMetActivity(){
   var catIdx=parseInt(document.getElementById('met-cat').value)||0;
   var actId=document.getElementById('met-act').value;
   var mins=parseInt(document.getElementById('met-mins').value)||60;
+  var trainingTime=document.getElementById('met-time').value||'17:00';  // ← NEW: Get training time (format: HH:MM)
   // Collect selected days
   var days=[];
   for(var d=0;d<7;d++){
@@ -6789,13 +7445,18 @@ function addMetActivity(){
   var found=null;
   (MET_ACTIVITIES[catIdx]||MET_ACTIVITIES[0]).items.forEach(function(a){if(a.id===actId)found=a;});
   if(!found)return;
-  c.metActivities.push({id:found.id,name:found.name,met:found.met,mins:mins,days:days});
+  // ✅ NEW: Store training time with the activity
+  c.metActivities.push({id:found.id,name:found.name,met:found.met,mins:mins,time:trainingTime,days:days});
   // Auto-mark days as training days and sync hours
   if(!c.trainDays)c.trainDays=[false,false,false,false,false,false,false];
   if(!c.trainHoursByDay)c.trainHoursByDay=[0,0,0,0,0,0,0];
+  if(!c.trainTimes)c.trainTimes=[null,null,null,null,null,null,null];  // ← NEW: Store training times per day
+  if(!c.trainTimesByDay)c.trainTimesByDay=['','','','','','',''];  // ← Keep in sync for exports (PDF/Word)
   days.forEach(function(d){
     c.trainDays[d]=true;
     c.trainHoursByDay[d]=Math.max(c.trainHoursByDay[d],+(mins/60).toFixed(1));
+    c.trainTimes[d]=trainingTime;  // ← NEW: Store the training time for this day
+    c.trainTimesByDay[d]=trainingTime;  // ← Sync so exports show the training time too
   });
   c.dayTargets=null; // recalculate
   save();
@@ -6804,16 +7465,19 @@ function addMetActivity(){
 
 /* ── Conditional Visibility System ──────────────────────────────────────────*/
 // Show/hide Activity Factor or MET section based on sport selection
+// IMPORTANT: Activity Factor (Δραστηριότητα & Στόχος) MUST ALWAYS be visible for user selection
 function updateConditionalVisibility(sportId){
   var metWrap=document.getElementById('met-section-wrap');
   var afWrap=document.getElementById('activity-factor-wrap');
 
   if(!metWrap||!afWrap)return;
 
-  // If no sport selected, hide both sections
+  // ✅ ALWAYS SHOW Activity Factor/Goal section (user must be able to select these)
+  afWrap.style.display='block';
+
+  // If no sport selected, only show Activity Factor
   if(!sportId){
     metWrap.style.display='none';
-    afWrap.style.display='none';
     return;
   }
 
@@ -6821,15 +7485,14 @@ function updateConditionalVisibility(sportId){
   var sport=SPORT_PROFILES[sportId];
   if(!sport){
     metWrap.style.display='none';
-    afWrap.style.display='none';
     return;
   }
 
-  // Show/hide based on isMET flag
+  // Show/hide MET section based on sport type (but Activity Factor is ALWAYS shown)
   if(sport.isMET){
-    // MET-based sport: show MET section, hide Activity Factor
+    // MET-based sport: show BOTH MET section AND Activity Factor for flexibility
     metWrap.style.display='block';
-    afWrap.style.display='none';
+    afWrap.style.display='block';
   } else {
     // Non-MET sport: show Activity Factor, hide MET section
     metWrap.style.display='none';
@@ -6837,15 +7500,108 @@ function updateConditionalVisibility(sportId){
   }
 }
 
+/* ── UX OPTIMIZATION: Auto-update Activity from Sport Selection ──────────── */
+function updateActivityFromSport(sportId){
+  var c=getC();if(!c)return;
+  upd('sport', sportId);
+
+  if(sportId){
+    var sport=SPORT_PROFILES[sportId];
+    if(!sport)return;
+
+    // Auto-set activity based on sport intensity
+    var newActivity='mod';
+    if(sport.category.includes('Endurance'))newActivity='high';
+    else if(sport.category.includes('High-Intensity'))newActivity='high';
+    else if(sport.category.includes('Combat'))newActivity='vhigh';
+
+    upd('activity', newActivity);
+
+    // Update display badge
+    var activityNames={sed:'Χαμηλή',light:'Ελαφρά',mod:'Μέτρια',high:'Υψηλή',vhigh:'Πολύ Υψηλή'};
+    var display=document.getElementById('activity-display');
+    if(display)display.textContent=activityNames[newActivity];
+
+    updateConditionalVisibility(sportId);
+    var noteDiv=document.getElementById('sport-note');
+    if(noteDiv)noteDiv.textContent=sport.notes||'';
+  }
+
+  onClientChange();
+}
+
+// ── Sport Protocol Supplement Management (PHASE 4) ──────────────────────────
+function toggleSportSupplement(suppId, isChecked){
+  var c=getC();if(!c)return;
+  if(!c.supps)c.supps=[];
+
+  if(isChecked){
+    if(!c.supps.includes(suppId)){
+      c.supps.push(suppId);
+    }
+  } else {
+    var idx=c.supps.indexOf(suppId);
+    if(idx!==-1)c.supps.splice(idx,1);
+  }
+
+  save();
+  onClientChange(); // Recalculate supplement suggestions
+}
+
 function removeMetActivity(idx){
   var c=getC();if(!c||!c.metActivities)return;
   c.metActivities.splice(idx,1);
+  // ✅ Rebuild training-day arrays from remaining activities (MET = single source of truth)
+  c.trainDays=[false,false,false,false,false,false,false];
+  c.trainHoursByDay=[0,0,0,0,0,0,0];
+  c.trainTimes=[null,null,null,null,null,null,null];
+  c.trainTimesByDay=['','','','','','',''];
+  c.metActivities.forEach(function(ma){
+    (ma.days||[]).forEach(function(d){
+      c.trainDays[d]=true;
+      c.trainHoursByDay[d]=Math.max(c.trainHoursByDay[d],+((ma.mins||60)/60).toFixed(1));
+      if(ma.time){c.trainTimes[d]=ma.time;c.trainTimesByDay[d]=ma.time;}
+    });
+  });
   c.dayTargets=null; // recalculate
   save();
   onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 
 /* ── Macro Preset UI ─────────────────────────────────────────────────────── */
+// ✅ Focused macro-distribution block for Page 1 (presets + split bar only — diet type lives in its own modal)
+function buildMacroDistributionHtml(c,t){
+  var preset=c.macroPreset||'balanced';
+  var html='<div class="section-card" id="sec-macros" style="margin-top:12px;">'
+    +'<div class="section-header"><span class="section-icon">🎯</span>Κατανομή Μακροθρεπτικών</div>'
+    +'<div class="macro-preset-btns">';
+  Object.keys(MACRO_PRESETS).forEach(function(k){
+    var pr=MACRO_PRESETS[k];
+    html+='<button class="macro-preset-btn'+(preset===k?' active':'')+'" onclick="setMacroPreset(\''+k+'\')" title="Π:'+pr.p+'% Λ:'+pr.f+'% Υ:'+pr.c+'%">'+pr.icon+' '+pr.label+'</button>';
+  });
+  html+='</div>';
+  if(preset==='custom'){
+    html+='<div class="macro-custom-row">'
+      +'<label>Πρωτεΐνη %</label><input class="macro-custom-inp" type="number" min="10" max="60" value="'+(c.macroP||25)+'" onchange="setMacroCustom(\'p\',this.value)">'
+      +'<label>Λιπαρά %</label><input class="macro-custom-inp" type="number" min="10" max="70" value="'+(c.macroF||25)+'" onchange="setMacroCustom(\'f\',this.value)">'
+      +'<label>Υδατ. %</label><input class="macro-custom-inp" type="number" min="10" max="75" value="'+(c.macroC||50)+'" onchange="setMacroCustom(\'c\',this.value)">'
+      +'</div>';
+  }
+  html+='<div class="macro-split-bar">'
+    +'<span class="macro-split-p" style="width:'+t.pPct+'%">Π '+t.pPct+'%</span>'
+    +'<span class="macro-split-f" style="width:'+t.fPct+'%">Λ '+t.fPct+'%</span>'
+    +'<span class="macro-split-c" style="width:'+t.cPct+'%">Υ '+t.cPct+'%</span>'
+    +'</div>'
+    +'<div class="macro-split-vals">'
+    +'<span class="macro-p-val">Πρωτεΐνη: '+t.p+'g&nbsp;&nbsp;('+t.pPct+'%)</span>'
+    +'<span class="macro-f-val">Λιπαρά: '+t.f+'g&nbsp;&nbsp;('+t.fPct+'%)</span>'
+    +'<span class="macro-c-val">Υδατ/κες: '+t.carb+'g&nbsp;&nbsp;('+t.cPct+'%)</span>'
+    +'</div>'
+    +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Προσαρμόζεται αυτόματα από το άθλημα — αλλάξτε ελεύθερα χειροκίνητα.</div>'
+    +'</div>';
+  return html;
+}
+
 function buildMacroPresetHtml(c,t){
   var preset=c.macroPreset||'balanced';
   var dietType=c.dietType||'normal';
@@ -7661,13 +8417,17 @@ function applyFoodExclusions(tmplDays,excludeList,allergyList){
         var sub=null;
         for(var i=0;i<order.length&&!sub;i++){
           var candidates=Object.keys(FOODS).filter(function(n){
+            if(!FOODS[n])return false;
             var notExcluded = !excludeList || excludeList.indexOf(n) === -1;
             var notAllergy = !isFoodAllergy(n, allergyList);
             return FOODS[n].cat===order[i] && notExcluded && notAllergy;
           });
           if(candidates.length){
             var origDens=FOODS[food.n]?FOODS[food.n].k:100;
-            candidates.sort(function(a,b){return Math.abs(FOODS[a].k-origDens)-Math.abs(FOODS[b].k-origDens);});
+            candidates.sort(function(a,b){
+              if(!FOODS[a]||!FOODS[b])return 0;
+              return Math.abs(FOODS[a].k-origDens)-Math.abs(FOODS[b].k-origDens);
+            });
             sub=candidates[0];
           }
         }
@@ -7851,11 +8611,20 @@ function showExclSug(inp){
     return n.toLowerCase().indexOf(q)!==-1&&excl.indexOf(n)===-1;
   }).slice(0,12);
   if(!matches.length){sug.classList.remove('open');return;}
-  sug.innerHTML=matches.map(function(n){
-    var ns=n.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return '<div class="excl-sug-item" onmousedown="addFoodExclude(\''+ns+'\')">'
-      +'<span>'+n+'</span><span class="excl-sug-cat">'+(FOODS[n].cat||'')+'</span></div>';
-  }).join('');
+  sug.innerHTML='';
+  matches.forEach(function(n){
+    var div=document.createElement('div');
+    div.className='excl-sug-item';
+    var span1=document.createElement('span');
+    span1.textContent=n;
+    var span2=document.createElement('span');
+    span2.className='excl-sug-cat';
+    span2.textContent=FOODS[n].cat||'';
+    div.appendChild(span1);
+    div.appendChild(span2);
+    div.addEventListener('mousedown',function(){addFoodExclude(n);});
+    sug.appendChild(div);
+  });
   sug.classList.add('open');
 }
 
@@ -7940,22 +8709,43 @@ function setupFormEventListeners(){
 }
 
 function swTab(n){
-  document.getElementById('t1').classList.toggle('active',n===1);
-  document.getElementById('t2').classList.toggle('active',n===2);
-  document.getElementById('t3').classList.toggle('active',n===3);
+  var t1=document.getElementById('t1');if(t1)t1.classList.toggle('active',n===1);
+  var t2=document.getElementById('t2');if(t2)t2.classList.toggle('active',n===2);
+  var t3=document.getElementById('t3');if(t3)t3.classList.toggle('active',n===3);
   var t4=document.getElementById('t4');if(t4)t4.classList.toggle('active',n===4);
   var t5=document.getElementById('t5');if(t5)t5.classList.toggle('active',n===5);
-  document.getElementById('s1').style.display=n===1?'block':'none';
-  document.getElementById('s2').style.display=n===2?'block':'none';
-  document.getElementById('s3').style.display=n===3?'block':'none';
-  var s4=document.getElementById('s4');if(s4)s4.style.display=n===4?'block':'none';
 
-  // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1
-  var sectionIds=['sec-anthropometry','sec-activity','sec-dietary','sec-medical','met-section-wrap'];
+  // ✅ HIDE ALL PAGES FIRST
+  var s1=document.getElementById('s1');if(s1)s1.style.display='none';
+  var s2=document.getElementById('s2');if(s2)s2.style.display='none';
+  var s3=document.getElementById('s3');if(s3)s3.style.display='none';
+  var s4=document.getElementById('s4');if(s4)s4.style.display='none';
+
+  // ✅ THEN SHOW ONLY THE SELECTED PAGE
+  if(n===1 && s1)s1.style.display='block';
+  if(n===2 && s2)s2.style.display='block';
+  if(n===3 && s3)s3.style.display='block';
+  if(n===4 && s4)s4.style.display='block';
+
+  // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1 (Page 1 only - Στοιχεία Πελάτη)
+  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','met-section-wrap'];
   sectionIds.forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.style.display=n===1?'block':'none';
   });
+
+  // ✅ HIDE DAY TARGETS TABLE EXCEPT IN TAB 1
+  var dayTgtWrap=document.querySelector('.day-tgt-wrap');
+  if(dayTgtWrap)dayTgtWrap.style.display=n===1?'block':'none';
+
+  // ✅ HIDE TEMPLATE SELECTOR EXCEPT IN TAB 1
+  var tmplSelRow=document.querySelector('.tmpl-sel-row');
+  if(tmplSelRow)tmplSelRow.style.display=n===1?'block':'none';
+
+  // ✅ HIDE MODAL BUTTONS GRID EXCEPT IN TAB 1 (Page 1 only)
+  // Buttons: Χρόνοι Γευμάτων, Εβδομαδιαίο Πρόγραμμα, MET Activities, Διατροφή, Ιατρικές Συνθήκες, Συμπληρώματα
+  var modalButtonsDiv=document.querySelector('div[style*="grid-template-columns"][style*="gap:10px"]');
+  if(modalButtonsDiv)modalButtonsDiv.style.display=n===1?'grid':'none';
 
   // ✅ PHASE 5: ANALYTICS TAB SUPPORT
   var analyticsDiv = document.getElementById('analyticsContent');
@@ -8017,6 +8807,173 @@ function updateDayTargetTable(c,t){
   }
 }
 
+// ✅ NEW: Adjust goal calories (+/- 50, +/- 10)
+function adjGoalCalories(delta) {
+  var c = getC();
+  if(!c) return;
+
+  var currentGoal = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : 0;
+  var newGoal = currentGoal + delta;
+
+  // ✅ Clamp to -500 to +500 range
+  newGoal = Math.max(-500, Math.min(500, newGoal));
+
+  // Save the new goal
+  c.goal = newGoal.toString();
+
+  // Update the display
+  document.getElementById('goal-display').textContent = (newGoal >= 0 ? '+' : '') + newGoal;
+  document.getElementById('inp-goal').value = newGoal;
+
+  // Save to localStorage
+  saveNow();
+
+  // ✅ Full re-render so daily-targets table + header goal reflect the new adjustment
+  renderMain();
+
+  console.log('📊 Goal adjusted to:', newGoal, 'kcal/day');
+}
+
+// ✅ GOAL MACROS AUTO-ADJUSTMENT (NEW)
+function applyGoalMacros(goalType) {
+  var c = getC();
+  if(!c) return;
+
+  // Set goal delta based on selection
+  var goalDeltas = {
+    loss: -500,
+    maintain: 0,
+    gain: 300
+  };
+
+  c.goal = String(goalDeltas[goalType] || 0);
+  c.goalMain = goalType;
+
+  // Update display
+  var goalDisplay = document.getElementById('goal-display');
+  if(goalDisplay) {
+    var val = goalDeltas[goalType];
+    goalDisplay.textContent = (val >= 0 ? '+' : '') + val;
+  }
+
+  // Save changes
+  saveNow();
+
+  // ✅ Full re-render so daily-targets table, macros, and header goal all refresh
+  // (calcTDEE inside renderMain recomputes everything from c.goal)
+  renderMain();
+
+  console.log('✅ Goal macros applied:', goalType, '→', goalDeltas[goalType], 'kcal');
+}
+
+// ✅ RED-S RISK FLAGGING (NEW)
+function flagRedSRisk(status) {
+  var c = getC();
+  if(!c) return;
+
+  if(status === 'absent') {
+    alert('⚠️ ΚΡΙΤΙΚΗ ΠΡΟΕΙΔΟΠΟΙΗΣΗ:\n\nΗ απουσία εμμήνων κύκλου δείχνει HIGH RED-S RISK!\n\nΣυστάσεις:\n• Αυξήστε τις θερμίδες σταδιακά\n• Μειώστε τον όγκο άσκησης\n• Δείτε ενδοκρινολόγο\n\nΓυναίκες αθλήτριες σε RED-S κίνδυνο δεν θα πρέπει να χάνουν >0.5kg/εβδ');
+  }
+
+  console.log('🚨 RED-S Status:', status);
+}
+
+// ✅ CURRENT SUPPLEMENTS TRACKER (NEW)
+function openCurrentSupplementsTracker() {
+  var c = getC();
+  if(!c) {
+    alert('Δημιουργήστε πρώτα ένα προφίλ πελάτη');
+    return;
+  }
+
+  // Create modal for tracking current supplements
+  var modal = document.createElement('div');
+  modal.id = 'currentSuppsModal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1002;';
+
+  var modalContent = document.createElement('div');
+  modalContent.style.cssText = 'background:white;padding:20px;border-radius:8px;max-width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+
+  var title = document.createElement('h3');
+  title.textContent = '✅ Συμπληρώματα που παίρνει ήδη';
+  title.style.cssText = 'color:#025857;margin-bottom:15px;';
+
+  var suppList = document.createElement('div');
+  suppList.style.cssText = 'display:grid;gap:10px;';
+
+  // Show all available supplements as checkboxes
+  SUPPS.forEach(function(supp) {
+    var isChecked = (c.currentSupplements || []).some(s => s.id === supp.id);
+
+    var label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#f5f5f5;border-radius:4px;cursor:pointer;';
+
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = isChecked;
+    checkbox.style.cssText = 'cursor:pointer;width:18px;height:18px;';
+
+    checkbox.onchange = function() {
+      if(!c.currentSupplements) c.currentSupplements = [];
+
+      if(this.checked) {
+        // Add supplement
+        if(!c.currentSupplements.find(s => s.id === supp.id)) {
+          c.currentSupplements.push({id: supp.id, name: supp.name});
+        }
+      } else {
+        // Remove supplement
+        c.currentSupplements = c.currentSupplements.filter(s => s.id !== supp.id);
+      }
+
+      saveNow();
+      updateCurrentSuppsPreview();
+    };
+
+    var text = document.createElement('span');
+    text.textContent = supp.name;
+    text.style.cssText = 'font-size:13px;';
+
+    label.appendChild(checkbox);
+    label.appendChild(text);
+    suppList.appendChild(label);
+  });
+
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✓ Κλείσιμο';
+  closeBtn.style.cssText = 'width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:4px;cursor:pointer;margin-top:15px;font-weight:bold;';
+  closeBtn.onclick = function() {
+    document.body.removeChild(modal);
+  };
+
+  modalContent.appendChild(title);
+  modalContent.appendChild(suppList);
+  modalContent.appendChild(closeBtn);
+
+  modal.appendChild(modalContent);
+  modal.onclick = function(e) {
+    if(e.target === this) document.body.removeChild(this);
+  };
+
+  document.body.appendChild(modal);
+}
+
+// ✅ UPDATE CURRENT SUPPLEMENTS PREVIEW
+function updateCurrentSuppsPreview() {
+  var c = getC();
+  var preview = document.getElementById('current-supp-preview');
+
+  if(!preview || !c) return;
+
+  if((c.currentSupplements || []).length > 0) {
+    var names = c.currentSupplements.map(s => s.name).slice(0, 3).join(', ');
+    var suffix = c.currentSupplements.length > 3 ? '...' : '';
+    preview.textContent = '✓ ' + names + suffix;
+  } else {
+    preview.textContent = '💡 Κάνε κλικ για να εισάγεις συμπληρώματα που παίρνει';
+  }
+}
+
 function upd(k,v){
   var c=getC();if(!c)return;
   var oldValue = c[k];
@@ -8045,12 +9002,31 @@ function upd(k,v){
   } else {
     c[k]=v;save();
   }
-  if(k==='name')renderSB();
+  // ✅ Name change: update sidebar + header text IN PLACE (no full re-render — keeps input focus while typing)
+  if(k==='name'){
+    renderSB();
+    var headerName=document.getElementById('client-header-name');
+    if(headerName)headerName.textContent='👤 '+(v||'Νέος πελάτης');
+    return;
+  }
   // formula/lbm changes need full re-render to update formula tag + LBM field visibility
   if(k==='formula'||k==='lbm'){renderMain();return;}
+  // ✅ Goal/Activity change: needs full re-render to update TDEE, macros, and daily targets
+  if(k==='goal'||k==='activity'){renderMain();return;}
   var t=calcTDEE(c);
   // Age change: full re-render (formula label + minor banner may change)
   if(k==='age'){renderMain();return;}
+  // ✅ Weight/Height change: refresh BMI displays in place (badge was going stale)
+  if(k==='weight'||k==='height'){
+    if(c.weight&&c.height){
+      var bmiVal=Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10;
+      var bmiCat=bmiVal<18.5?'Χαμηλό':bmiVal<25?'Φυσιολογικό':bmiVal<30?'Υπέρβαρο':'Παχυσαρκία';
+      var badge=document.getElementById('bmi-badge');
+      if(badge)badge.innerHTML='📊 BMI: '+bmiVal+' <span style="font-size:10px;color:#666;font-weight:normal;">('+bmiCat+')</span>';
+      var hm=document.getElementById('header-measures');
+      if(hm)hm.textContent=c.weight+'kg / '+c.height+'cm (BMI: '+bmiVal+')';
+    }
+  }
   var b=document.getElementById('v-bmr');if(b)b.textContent=t.bmr+' kcal';
   // TDEE — show exercise chip in MET mode
   var tdEl=document.getElementById('v-tdee');
@@ -9726,6 +10702,19 @@ function genPlan(){
   for(var d=0;d<7;d++)tmplDays.push(tmpl[d]||tmpl[0]);
   console.log('tmplDays built:', tmplDays.length, 'days');
   var excl=c.foodExclude||[];
+  // ✅ ADD FOOD EXCLUSIONS (NEW PICKER) TO EXCLUSION LIST
+  if(c.foodExclusions && Array.isArray(c.foodExclusions)){
+    c.foodExclusions.forEach(function(food){
+      if(excl.indexOf(food)===-1)excl.push(food);
+    });
+  }
+  // ✅ ALSO SUPPORT OLD ALLERGIES FORMAT (for backward compatibility)
+  if(c.allergies){
+    var allergyList=parseAllergies(c.allergies);
+    allergyList.forEach(function(allergy){
+      if(excl.indexOf(allergy)===-1)excl.push(allergy);
+    });
+  }
   // ✅ Reorder meals to standard sequence before other operations
   tmplDays=reorderMealsToStandardSequence(tmplDays);
   // Initial Mediterranean pipeline on templates ONLY
@@ -10128,8 +11117,42 @@ function renderWeekTable(){
 
   // Supplement recommendations now shown in modal only (not inline)
 
+  // ✅ IMPROVEMENT 1: Build summary card with client info
+  var tdeeInfo = calcTDEE(c);
+
+  // Define activity & goal labels locally for this function
+  var actL = {sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'};
+  var goalL = {mild:'Ήπια απώλεια',loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'};
+
+  var activityLabel = actL[c.activity] || c.activity;
+  var goalLabel = goalL[c.goal] || c.goal;
+  var bmiVal = (c.weight && c.height) ? (c.weight / ((c.height/100) * (c.height/100))).toFixed(1) : '—';
+
+  var summaryCard = '<div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1.5px solid #c8e6c9;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">👤 Πελάτης</span>'
+      +'<span style="font-size:13px;font-weight:700;color:#025857">' + c.name + '</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">📊 Μέτρα</span>'
+      +'<span style="font-size:13px;font-weight:600;color:#025857">' + c.weight + 'kg / ' + c.height + 'cm (BMI: ' + bmiVal + ')</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">🎯 Στόχος</span>'
+      +'<span style="font-size:13px;font-weight:600;color:#025857">' + goalLabel + '</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">🔥 Στόχος Ημέρας</span>'
+      +'<span style="font-size:13px;font-weight:600;color:#e65100">' + Math.round(tdeeInfo.target) + ' kcal</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">Μακρο</span>'
+      +'<span style="font-size:12px;font-weight:600;color:#555">P:' + Math.round(tdeeInfo.p) + 'g | F:' + Math.round(tdeeInfo.f) + 'g | C:' + Math.round(tdeeInfo.carb) + 'g</span>'
+    +'</div>'
+    +'</div>';
+
   // Build table HTML — show T/R badge in header + training time
-  var html=metExplainerHtml+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
+  var html=metExplainerHtml+summaryCard+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
     var badge=trainD[di]?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">T</span>':'<span style="background:#eee;color:#aaa;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">R</span>';
     var timeStr='';
@@ -10154,11 +11177,13 @@ function renderWeekTable(){
     }
     var timingProf=MEAL_TIMING_PROFILES[mealTiming]||MEAL_TIMING_PROFILES.regular;
     var timingInfo='P:'+timingProf.p+'% F:'+timingProf.f+'% C:'+timingProf.c+'% — '+timingProf.desc;
-    var mealLabelHtml='<td class="meal-label" data-timing-info="'+timingInfo+'">'
-      +timingProf.icon+' '+mealNames[mi]
-      +'<div style="font-size:9px;color:#666;margin-top:2px">'+timingProf.label+'</div>'
-      +'</td>';
-    html+='<tr>'+mealLabelHtml;
+
+    // ✅ HORIZONTAL LAYOUT: Meal name as section header
+    html+='<tr style="background:linear-gradient(90deg, #f8f8f8 0%, #f0f0f0 100%);box-shadow:0 2px 4px rgba(0,0,0,0.05)"><td colspan="8" class="meal-section-header" data-timing-info="'+timingInfo+'">'
+      +'<span style="font-weight:700;color:#025857;font-size:12px">'+timingProf.icon+' '+mealNames[mi]+'</span>'
+      +'</td></tr>';
+    var rowBg=(mi%2===0)?'background:#fafafa':'background:#fff';
+    html+='<tr style="'+rowBg+'"><td class="meal-label" style="visibility:hidden"></td>';
     for(var d=0;d<7;d++){
       var foods=(c.weekPlan[d]&&c.weekPlan[d][mi])?c.weekPlan[d][mi].foods:[];
       // ✅ Phase 4: Add meal timing data attribute
@@ -10166,7 +11191,7 @@ function renderWeekTable(){
       if(c.weekPlan[d]&&c.weekPlan[d][mi]&&c.weekPlan[d][mi].mealTiming){
         dayMealTiming=c.weekPlan[d][mi].mealTiming;
       }
-      html+='<td class="day-cell" data-d="'+d+'" data-mi="'+mi+'" data-meal-timing="'+dayMealTiming+'">';
+      html+='<td class="day-cell" data-d="'+d+'" data-mi="'+mi+'" data-meal-timing="'+dayMealTiming+'" style="'+rowBg+'">';
       foods.forEach(function(food,fi){
         // Free meal special display
         if(food.n===FREE_MEAL_MARKER){
@@ -10178,25 +11203,39 @@ function renderWeekTable(){
         }
         var hasSrv=PORTIONS[food.n]&&PORTIONS[food.n].length>0;
         var fu=FOOD_UNITS[food.n];
-        var chipVal=fu?Math.max(1,Math.round(food.g/fu.g)):food.g;
-        var chipMax=fu?10:999;
-        var chipUnit=fu?fu.u:'g';
-        var chipChg=fu?'updG('+d+','+mi+','+fi+',this.value*'+fu.g+')'
-          :'updG('+d+','+mi+','+fi+',this.value)';
+        // Use stored unit (food.u) if available, otherwise use default from FOOD_UNITS
+        var displayUnit = food.u !== undefined ? food.u : (fu ? fu.u : 'g');
+        var chipVal, chipMax, chipChg;
+        if (displayUnit === 'g' || !fu) {
+          chipVal = food.g;
+          chipMax = 999;
+          chipChg = 'updG('+d+','+mi+','+fi+',this.value)';
+        } else {
+          chipVal = Math.max(0.1, Math.round(food.g / fu.g * 10) / 10);
+          chipMax = 10;
+          chipChg = 'updG('+d+','+mi+','+fi+',this.value*'+fu.g+')';
+        }
+        var chipUnit = displayUnit;
         var hasIng=FOODS[food.n]&&FOODS[food.n].ingredients?'<button class="chip-srv" onclick="showRecipeModal(\''+food.n.replace(/'/g,"\\'")+'\')" title="Δείτε τα συστατικά">📖</button>':'';
+        var borderColor=getFoodColorHex(food.n);
         html+='<div class="food-chip">'
+          +'<div class="chip-r1">'
+          +'<span class="food-dot" style="background:'+borderColor+'" title="Ομάδα τροφίμου"></span>'
           +'<div class="chip-name-wrap">'
-          +'<input class="chip-inp" type="text" value="'+food.n+'" autocomplete="off" spellcheck="false"'
+          +'<input class="chip-inp" type="text" value="'+food.n+'" autocomplete="off" spellcheck="false" title="'+food.n+'"'
           +' data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'"'
           +' oninput="showChipSug(this)" onfocus="showChipSug(this)" onblur="closeDD()">'
           +'</div>'
+          +'</div>'
+          +'<div class="chip-r2">'
           +hasIng
           +(hasSrv?'<button class="chip-srv" onmousedown="event.preventDefault();showPortions(this,'+d+','+mi+','+fi+')">&#8801;</button>':'')
-          +'<input class="chip-g" type="number" min="0" max="'+chipMax+'" value="'+chipVal+'" onchange="'+chipChg+'">'
-          +'<span class="chip-unit">'+chipUnit+'</span>'
+          +'<input class="chip-g" type="number" min="0" step="'+(displayUnit==='g'||!fu?'1':'0.1')+'" max="'+chipMax+'" value="'+chipVal+'" onchange="'+chipChg+'">'
+          +'<button class="chip-unit-btn" onclick="cycleUnit('+d+','+mi+','+fi+')" title="Αλλαγή μονάδας">'+chipUnit+'</button>'
           +(fu&&fu.u==='μερίδ.'?'<span class="chip-ghint">('+food.g+'g)</span>':'')
           +'<button class="chip-swap-btn" onclick="swapMealAlternative('+d+','+mi+')" title="Εναλλακτικό γεύμα">🔄</button>'
           +'<button class="chip-del" onclick="delF('+d+','+mi+','+fi+')">&#10005;</button>'
+          +'</div>'
           +'</div>';
         // Recipe ingredients — visible only in print/PDF
         if(FOODS[food.n]&&FOODS[food.n].ingredients){
@@ -10227,15 +11266,19 @@ function renderWeekTable(){
       html+='<button class="chip-add" onclick="addF('+d+','+mi+')">+</button>';
       console.log('DEBUG: Day '+d+', Meal '+mi+', Foods: '+foods.length);
       if(foods.length){
-        html+='<button class="combo-save-btn" onclick="toggleFavoriteMeal('+d+','+mi+',this)" title="Προσθήκη/Αφαίρεση από αγαπημένα">⭐</button>'
-          +'<button class="combo-save-btn" onclick="saveCombo('+d+','+mi+')" title="Αποθήκευση γεύματος ως συνδυασμό">💾 Αποθήκευση</button>'
-          +'<button class="combo-save-btn" onclick="balanceMacros('+d+','+mi+')" title="Ελέγχος & εξισορρόπηση μακροθρεπτικών">⚖️ Ισορροπία</button>'
-          +'<button class="combo-save-btn" onclick="copyMealToClipboard('+d+','+mi+')" title="Αντιγραφή γεύματος">❐ Αντιγραφή</button>'
-          +'<span style="margin-left:8px;border-left:1px solid #ddd;padding-left:8px;display:inline-block;white-space:nowrap;font-size:11px">'
-          +'<span style="color:#999;margin-right:4px;">📝</span>'
-          +'<button class="meal-rating-btn" data-meal-rating="'+d+'-'+mi+'" data-rating="up" onclick="rateMeal('+d+','+mi+',1)" title="Μου άρεσε" style="padding:1px 2px;font-size:13px;background:transparent;border:none;color:#888;cursor:pointer;">👍</button>'
-          +'<button class="meal-rating-btn" data-meal-rating="'+d+'-'+mi+'" data-rating="down" onclick="rateMeal('+d+','+mi+',-1);showMealAlternatives('+d+','+mi+')" title="Δεν μου άρεσε" style="padding:1px 2px;font-size:13px;background:transparent;border:none;color:#888;cursor:pointer;">👎</button>'
-          +'</span>';
+        var menuId='meal-menu-'+d+'-'+mi;
+        html+='<div style="display:inline-block;position:relative;margin-left:8px;">'
+          +'<button class="chip-add" onclick="toggleMealMenu(\''+menuId+'\')" style="background:#025857;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;" title="Περισσότερες επιλογές">⋮</button>'
+          +'<div id="'+menuId+'" class="meal-menu-dropdown" style="display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:100;min-width:200px;margin-top:4px;">'
+          +'<button onclick="toggleFavoriteMeal('+d+','+mi+',this);closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">⭐ Αγαπημένο</button>'
+          +'<button onclick="saveCombo('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">💾 Αποθήκευση</button>'
+          +'<button onclick="balanceMacros('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">⚖️ Ισορροπία</button>'
+          +'<button onclick="copyMealToClipboard('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">❐ Αντιγραφή</button>'
+          +'<hr style="margin:4px 0;border:none;border-top:1px solid #eee;">'
+          +'<button onclick="rateMeal('+d+','+mi+',1);closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">👍 Μου άρεσε</button>'
+          +'<button onclick="rateMeal('+d+','+mi+',-1);showMealAlternatives('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#ff6b35;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">👎 Δεν μου άρεσε</button>'
+          +'</div>'
+          +'</div>';
       }
       html+='</td>';
     }
@@ -10377,6 +11420,13 @@ function renderWeekTable(){
   gapBtn.style.cssText='background:#1976d2;color:white;padding:10px 15px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:13px;flex:1;';
   gapBtn.onclick=openGapAnalysisModal;
   btnContainer.appendChild(gapBtn);
+
+  // Add validation audit button
+  var valBtn=document.createElement('button');
+  valBtn.innerHTML='🔍 Validate Plan';
+  valBtn.style.cssText='background:#7cb342;color:white;padding:10px 15px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:13px;flex:1;';
+  valBtn.onclick=openValidationModal;
+  btnContainer.appendChild(valBtn);
 
   // Attach drag-and-drop to each day-cell
   con.querySelectorAll('.day-cell').forEach(function(cell){
@@ -10744,7 +11794,9 @@ function showPortions(btn,d,mi,fi){
   });
   var dd=document.createElement('div');
   dd.className='chip-dd';dd.innerHTML=html;
-  var wrap=btn.parentElement.querySelector('.chip-name-wrap');
+  var chip=btn.closest('.food-chip');
+  var wrap=chip?chip.querySelector('.chip-name-wrap'):null;
+  if(!wrap)return;
   wrap.appendChild(dd);currentDD=dd;
 }
 
@@ -10754,24 +11806,236 @@ function pickServing(g,d,mi,fi){
   closeDD();renderWeekTable();
 }
 
+/* ── FEATURE #1: Custom Meal Times Management ──────────────────────────────── */
+function updateMealTime(mealType, timeValue){
+  var c=getC();if(!c)return;
+  if(!c.mealTimes)c.mealTimes={};
+  c.mealTimes[mealType]=timeValue;
+  save();
+  // Recalculate meal timings if plan exists
+  if(c.weekPlan&&c.weekPlan.length>0){
+    initializeMealTiming(c);
+    renderWeekTable();
+  }
+}
+
+/* ── FEATURE #2: Weekly Training Schedule Management ────────────────────────── */
+function buildWeeklyTrainingScheduleHtml(c){
+  var dayNames=['Δευτέρα','Τρίτα','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+  var dayAbbr=['Δ','Τ','Τ','Π','Π','Σ','Κ'];
+
+  var html='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+  html+='<thead><tr style="background:#E2EEE5;border-bottom:2px solid #c5ddd8;">'
+    +'<th style="padding:8px;text-align:left;font-weight:700;color:#025857;">Ημέρα</th>'
+    +'<th style="padding:8px;text-align:left;font-weight:700;color:#025857;">Προπόνηση</th>'
+    +'<th style="padding:8px;text-align:left;font-weight:700;color:#025857;">Ώρα</th>'
+    +'<th style="padding:8px;text-align:left;font-weight:700;color:#025857;">Διάρκεια</th>'
+    +'</tr></thead>';
+  html+='<tbody>';
+
+  for(var d=0;d<7;d++){
+    var hasTraining=c.weeklyTraining&&c.weeklyTraining[d]&&c.weeklyTraining[d].training;
+    var trainingTime=c.weeklyTraining&&c.weeklyTraining[d]?c.weeklyTraining[d].time:'17:00';
+    var trainingDuration=c.weeklyTraining&&c.weeklyTraining[d]?c.weeklyTraining[d].duration:60;
+
+    html+='<tr style="border-bottom:1px solid #e0e0e0;'+(d%2===0?'background:#f9f9f9':'')+'"><td style="padding:8px;">'
+      +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;">'
+      +'<input type="checkbox" '+(hasTraining?'checked':'')+' onchange="updateWeeklyTraining('+d+',this.checked)" style="cursor:pointer;">'
+      +'<span>'+dayNames[d]+'</span>'
+      +'</label>'
+      +'</td><td style="padding:8px;">'+(hasTraining?'⚽':'😴')+'</td><td style="padding:8px;">'
+      +'<input type="time" '+(hasTraining?'':'disabled')+' id="week-train-time-'+d+'" value="'+trainingTime+'" style="width:90px;padding:4px 6px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;" onchange="updateWeeklyTraining('+d+',true,this.value)">'
+      +'</td><td style="padding:8px;">'
+      +'<input type="number" '+(hasTraining?'':'disabled')+' id="week-train-duration-'+d+'" value="'+trainingDuration+'" min="10" max="180" step="5" style="width:70px;padding:4px 6px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;" onchange="updateWeeklyTraining('+d+',true,null,this.value)"> min'
+      +'</td></tr>';
+  }
+
+  html+='</tbody></table>';
+  return html;
+}
+
+function updateWeeklyTraining(dayIndex, hasTraining, time, duration){
+  var c=getC();if(!c)return;
+  if(!c.weeklyTraining)c.weeklyTraining=[{},{},{},{},{},{},{}];
+
+  c.weeklyTraining[dayIndex].training=hasTraining;
+  if(time)c.weeklyTraining[dayIndex].time=time;
+  if(duration)c.weeklyTraining[dayIndex].duration=parseInt(duration);
+
+  // Update input states
+  document.getElementById('week-train-time-'+dayIndex).disabled=!hasTraining;
+  document.getElementById('week-train-duration-'+dayIndex).disabled=!hasTraining;
+
+  save();
+  // Recalculate if plan exists
+  if(c.weekPlan&&c.weekPlan.length>0){
+    initializeMealTiming(c);
+    renderWeekTable();
+  }
+}
+
+/* ── FEATURE #3: Multiple Training Times (2x/day) ────────────────────────── */
+function addSecondTraining(enabled){
+  var c=getC();if(!c)return;
+  c.hasMultipleTrainings=enabled;
+  if(enabled&&!c.secondTraining){
+    c.secondTraining=[
+      {training:false,time:'06:00',duration:60},
+      {training:false,time:'06:00',duration:60},
+      {training:false,time:'06:00',duration:60},
+      {training:false,time:'06:00',duration:60},
+      {training:false,time:'06:00',duration:60},
+      {training:false,time:'06:00',duration:60},
+      {training:false,time:'06:00',duration:60}
+    ];
+  } else if(!enabled){
+    // When disabling 2x training, clear the data
+    c.secondTraining=null;
+  }
+  save();
+  renderS1();  // Refresh UI
+}
+
+function removeSecondTraining(){
+  var c=getC();if(!c)return;
+  c.hasMultipleTrainings=false;
+  c.secondTraining=null;
+  save();
+  renderS1();
+}
+
+function updateSecondTraining(dayIndex, hasTraining, time, duration){
+  var c=getC();if(!c)return;
+  if(!c.secondTraining)c.secondTraining=[{},{},{},{},{},{},{}];
+
+  c.secondTraining[dayIndex].training=hasTraining;
+  if(time)c.secondTraining[dayIndex].time=time;
+  if(duration)c.secondTraining[dayIndex].duration=parseInt(duration);
+
+  document.getElementById('second-train-time-'+dayIndex).disabled=!hasTraining;
+  document.getElementById('second-train-duration-'+dayIndex).disabled=!hasTraining;
+
+  save();
+  if(c.weekPlan&&c.weekPlan.length>0){
+    initializeMealTiming(c);
+    renderWeekTable();
+  }
+}
+
+function buildSecondTrainingScheduleHtml(c){
+  var dayNames=['Δευτέρα','Τρίτα','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+
+  var html='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+  html+='<thead><tr style="background:#FFE0B2;border-bottom:2px solid #FFB74D;">'
+    +'<th style="padding:8px;text-align:left;font-weight:700;color:#E65100;">Ημέρα</th>'
+    +'<th style="padding:8px;text-align:left;font-weight:700;color:#E65100;">2η Προπόνηση</th>'
+    +'<th style="padding:8px;text-align:left;font-weight:700;color:#E65100;">Ώρα</th>'
+    +'<th style="padding:8px;text-align:left;font-weight:700;color:#E65100;">Διάρκεια</th>'
+    +'</tr></thead>';
+  html+='<tbody>';
+
+  for(var d=0;d<7;d++){
+    var hasTraining=c.secondTraining&&c.secondTraining[d]&&c.secondTraining[d].training;
+    var trainingTime=c.secondTraining&&c.secondTraining[d]?c.secondTraining[d].time:'06:00';
+    var trainingDuration=c.secondTraining&&c.secondTraining[d]?c.secondTraining[d].duration:60;
+
+    html+='<tr style="border-bottom:1px solid #FFE0B2;'+(d%2===0?'background:#fff9e6':'')+'"><td style="padding:8px;">'
+      +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;">'
+      +'<input type="checkbox" '+(hasTraining?'checked':'')+' onchange="updateSecondTraining('+d+',this.checked)" style="cursor:pointer;">'
+      +'<span>'+dayNames[d]+'</span>'
+      +'</label>'
+      +'</td><td style="padding:8px;">'+(hasTraining?'⚽':'😴')+'</td><td style="padding:8px;">'
+      +'<input type="time" '+(hasTraining?'':'disabled')+' id="second-train-time-'+d+'" value="'+trainingTime+'" style="width:90px;padding:4px 6px;border:1px solid #FFB74D;border-radius:4px;font-size:11px;" onchange="updateSecondTraining('+d+',true,this.value)">'
+      +'</td><td style="padding:8px;">'
+      +'<input type="number" '+(hasTraining?'':'disabled')+' id="second-train-duration-'+d+'" value="'+trainingDuration+'" min="10" max="180" step="5" style="width:70px;padding:4px 6px;border:1px solid #FFB74D;border-radius:4px;font-size:11px;" onchange="updateSecondTraining('+d+',true,null,this.value)"> min'
+      +'</td></tr>';
+  }
+
+  html+='</tbody></table>';
+  return html;
+}
+
 /* ── PHASE 2: Meal Timing Management ────────────────────────────────────── */
 function initializeMealTiming(c){
   if(!c||!c.weekPlan)return;
   var trainDays=c.trainDays||[false,false,false,false,false,false,false];
+  // ✅ FEATURE #2: Use weeklyTraining if available, otherwise fall back to trainTimes
+  var trainTimes=[];
+  for(var d=0;d<7;d++){
+    if(c.weeklyTraining&&c.weeklyTraining[d]&&c.weeklyTraining[d].training){
+      trainTimes[d]=c.weeklyTraining[d].time||'17:00';
+      trainDays[d]=true;
+    } else {
+      trainTimes[d]=c.trainTimes?c.trainTimes[d]:null;
+    }
+  }
+
+  // ✅ DEFAULT meal times (in HH:MM format)
+  var DEFAULT_MEAL_TIMES={
+    'Πρωινό':'08:00',
+    'Ενδιάμεσο':'15:30',
+    'Μεσημεριανό':'13:00',
+    'Βραδινό':'20:00'
+  };
+
+  // ✅ FEATURE #1: Use CUSTOM meal times if available, otherwise defaults
+  var MEAL_TIMES={
+    'Πρωινό':(c.mealTimes&&c.mealTimes.breakfast)||DEFAULT_MEAL_TIMES['Πρωινό'],
+    'Ενδιάμεσο':(c.mealTimes&&c.mealTimes.snack)||DEFAULT_MEAL_TIMES['Ενδιάμεσο'],
+    'Μεσημεριανό':(c.mealTimes&&c.mealTimes.lunch)||DEFAULT_MEAL_TIMES['Μεσημεριανό'],
+    'Βραδινό':(c.mealTimes&&c.mealTimes.dinner)||DEFAULT_MEAL_TIMES['Βραδινό']
+  };
+
   for(var d=0;d<7;d++){
     if(!c.weekPlan[d])continue;
     c.weekPlan[d].forEach(function(meal,mi){
       if(!meal.mealTiming){
-        // Auto-assign sensible defaults based on meal name and training day
         var mealName=meal.name;
-        if(/Πρωινό/.test(mealName)){
-          meal.mealTiming=trainDays[d]?'pre-workout':'regular';
-        } else if(/Μεσημεριανό/.test(mealName)){
-          meal.mealTiming=trainDays[d]?'post-workout':'recovery';
-        } else if(/Βραδινό/.test(mealName)){
-          meal.mealTiming=trainDays[d]?'recovery':'regular';
+        var mealTime=MEAL_TIMES[mealName]||'12:00';
+        var trainingTime=trainTimes[d];
+
+        // ✅ NEW: If training day AND we know training time, assign pre/post-workout intelligently
+        if(trainDays[d]&&trainingTime){
+          // Convert times to minutes for calculation
+          var [trainH,trainM]=trainingTime.split(':').map(Number);
+          var trainingMinutes=trainH*60+trainM;
+
+          var [mealH,mealM]=mealTime.split(':').map(Number);
+          var mealMinutes=mealH*60+mealM;
+
+          // Pre-workout: 2-3 hours before training (120-180 min)
+          if(mealMinutes>=trainingMinutes-180&&mealMinutes<=trainingMinutes-120){
+            meal.mealTiming='pre-workout';
+          }
+          // Post-workout: 0-30 min after training (assume 60min training duration)
+          else if(mealMinutes>trainingMinutes&&mealMinutes<=trainingMinutes+30){
+            meal.mealTiming='post-workout';
+          }
+          // If snack/intermediate is close to pre-workout time, mark it
+          else if(/Ενδιάμεσο/.test(mealName)&&mealMinutes>=trainingMinutes-180&&mealMinutes<=trainingMinutes-90){
+            meal.mealTiming='pre-workout';
+          }
+          // Otherwise, use training day defaults
+          else if(/Πρωινό/.test(mealName)){
+            meal.mealTiming='regular';
+          } else if(/Μεσημεριανό/.test(mealName)){
+            meal.mealTiming='recovery';
+          } else if(/Βραδινό/.test(mealName)){
+            meal.mealTiming='recovery';
+          } else {
+            meal.mealTiming='regular';
+          }
         } else {
-          meal.mealTiming='regular';
+          // ✅ ORIGINAL LOGIC: If no training time, use defaults
+          if(/Πρωινό/.test(mealName)){
+            meal.mealTiming=trainDays[d]?'pre-workout':'regular';
+          } else if(/Μεσημεριανό/.test(mealName)){
+            meal.mealTiming=trainDays[d]?'post-workout':'recovery';
+          } else if(/Βραδινό/.test(mealName)){
+            meal.mealTiming=trainDays[d]?'recovery':'regular';
+          } else {
+            meal.mealTiming='regular';
+          }
         }
       }
     });
@@ -11523,34 +12787,9 @@ function exportPDF(lang){
       fds.forEach(function(fd){
         var mv=cm(fd.n,fd.g);mK+=mv.k;
         if(fd.n===FREE_MEAL_MARKER){ch+='<div class="free">🎉 '+(isEn?'Free Meal':'Ελεύθερο')+'</div>';return;}
-        var fu=FOOD_UNITS[fd.n];
-        var pdMain='',pdSub='';
         var g_=isEn?'g':'γρ.';
-        if(!fu){
-          pdMain=fd.g+g_;
-        }else{
-          var pdN=fd.g/fu.g;
-          var pdR=Math.round(pdN*4)/4;
-          var pdW=Math.floor(pdR),pdF=pdR-pdW;
-          var pdS=pdW>0?''+pdW:'';
-          if(Math.abs(pdF-0.25)<0.01)pdS+='¼';
-          else if(Math.abs(pdF-0.5)<0.01)pdS+='½';
-          else if(Math.abs(pdF-0.75)<0.01)pdS+='¾';
-          var isVol=(fu.u==='φλ.'||fu.u==='κ.σ.'||fu.u==='κ.γ.');
-          var isCpd=/^[\d½¼¾]/.test(fu.u);
-          var fu_u=tu(fu.u);
-          if(isVol){
-            pdMain=fd.g+g_;
-            if(pdS)pdSub='(~'+pdS+' '+fu_u+')';
-          }else if(isCpd){
-            if(pdS&&Math.abs(pdR-1)<0.2){pdMain=fu_u;pdSub='('+fd.g+g_+')';}
-            else if(pdS){pdMain=pdS+'× '+fu_u;pdSub='('+fd.g+g_+')';}
-            else{pdMain=fd.g+g_;}
-          }else{
-            if(pdS){pdMain=pdS+' '+fu_u;pdSub='('+fd.g+g_+')';}
-            else{pdMain=fd.g+g_;}
-          }
-        }
+        var _qd=fmtFoodQty(fd,g_,tu);
+        var pdMain=_qd.main,pdSub=_qd.sub;
         ch+='<div class="fr"><span class="fn">'+esc(fn(fd.n))+'</span>'
           +' <span class="fg">'+pdMain+'</span>'
           +(pdSub?' <span class="fghint">'+pdSub+'</span>':'')
@@ -11697,6 +12936,28 @@ function exportPDF(lang){
     });
     selectedSuppHtml+='</tbody></table>';
   }
+
+  // ── Hydration protocol (below supplements) ───────────────────────────────────
+  var hydrationHtml='';
+  (function(){
+    var hb=t.hydBase||Math.round(c.weight*35);
+    var ht=t.hydTrain||(hb+500);
+    var rows='<tr><td class="st-t">'+(isEn?'Daily baseline':'Ημερήσια βάση')+'</td><td>'+hb+' ml ('+(hb/1000).toFixed(1)+' L)</td></tr>';
+    rows+='<tr class="alt"><td class="st-t">'+(isEn?'Training day':'Ημέρα προπόνησης')+'</td><td>'+ht+' ml ('+(ht/1000).toFixed(1)+' L)</td></tr>';
+    var sp=(c.sport&&SPORT_PROTOCOLS[c.sport])?SPORT_PROTOCOLS[c.sport].hydration:null;
+    if(sp){
+      var labelMap=isEn
+        ?{beforeMatch:'Before',preEx:'Before',duringEx:'During',duringMatch:'During',duringTraining:'During',postEx:'After',postMatch:'After',postTraining:'After'}
+        :{beforeMatch:'Πριν',preEx:'Πριν',duringEx:'Κατά τη διάρκεια',duringMatch:'Κατά τη διάρκεια',duringTraining:'Κατά τη διάρκεια',postEx:'Μετά',postMatch:'Μετά',postTraining:'Μετά'};
+      var order=['beforeMatch','preEx','duringEx','duringMatch','duringTraining','postEx','postMatch','postTraining'];
+      var alt=false;
+      order.forEach(function(k){
+        if(sp[k]){rows+='<tr'+(alt?' class="alt"':'')+'><td class="st-t">'+labelMap[k]+'</td><td>'+esc(sp[k])+'</td></tr>';alt=!alt;}
+      });
+    }
+    hydrationHtml='<div class="sec-title">💧 '+(isEn?'Hydration Protocol':'Πρωτόκολλο Ενυδάτωσης')+'</div>'
+      +'<table class="st"><thead><tr><th class="st-t">'+(isEn?'Timing':'Χρόνος')+'</th><th>'+(isEn?'Amount':'Ποσότητα')+'</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  })();
 
   // ── Shopping list ────────────────────────────────────────────────────────────
   var shopHtml='';
@@ -11939,6 +13200,7 @@ function exportPDF(lang){
     +'<table class="mt"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>'
     +selectedSuppHtml
     +suppHtml
+    +hydrationHtml
     +'<div class="shop-page">'+fxHtml+(shopHtml?shopHtml:'')
     +'<div class="footer">'
     +(isMinorPdf
@@ -12634,10 +13896,10 @@ function exportWord(){
       var mK=0,cc='';
       foods.forEach(function(food){
         var mv=cm(food.n,food.g);mK+=mv.k;
-        var _rfu=FOOD_UNITS[food.n];
-        var rtfGStr=_rfu?(Math.max(1,Math.round(food.g/_rfu.g))+' '+_rfu.u+(_rfu.u==='μερίδ.'?' ('+food.g+'g)':'')):food.g+'g';
+        var _rq=fmtFoodQty(food,'g');
+        var rtfGStr=_rq.main+(_rq.sub?' '+_rq.sub:'');
         cc+='\\pard\\intbl\\ql\\li60\\f0\\fs16 '+escRtf(food.n)
-          +'\\b\\cf1  '+rtfGStr+'\\b0\\cf0\\line\n';
+          +'\\b\\cf1  '+escRtf(rtfGStr)+'\\b0\\cf0\\line\n';
       });
       if(foods.length){
         cc+='\\pard\\intbl\\ql\\li60\\f0\\b\\fs14\\cf4 '+escRtf('Σύνολο')+': '+Math.round(mK)+' kcal';
@@ -12923,10 +14185,10 @@ function exportGoogleDocs(){
       for(var fi=0;fi<fds.length;fi++){
         var fd=fds[fi];var mv2=cm(fd.n,fd.g);mK2+=mv2.k;
         if(nbr){cp+='<w:r>'+rp(false,14,CD)+'<w:br/></w:r>';}
-        var _dfu=FOOD_UNITS[fd.n];
-        var docxGStr=_dfu?(Math.max(1,Math.round(fd.g/_dfu.g))+' '+_dfu.u+(_dfu.u==='μερίδ.'?' ('+fd.g+'g)':'')):fd.g+'g';
+        var _dq=fmtFoodQty(fd,'g');
+        var docxGStr=_dq.main+(_dq.sub?' '+_dq.sub:'');
         cp+='<w:r>'+rp(false,14,CD)+'<w:t xml:space="preserve">'+xe(fd.n)+'</w:t></w:r>'
-          +'<w:r>'+rp(true,14,CT)+'<w:t xml:space="preserve"> '+docxGStr+'</w:t></w:r>';
+          +'<w:r>'+rp(true,14,CT)+'<w:t xml:space="preserve"> '+xe(docxGStr)+'</w:t></w:r>';
         nbr=true;
       }
       if(fds.length){
@@ -15441,18 +16703,19 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Announce important changes to screen readers
-var originalShowErrorToast = showErrorToast;
-window.showErrorToast = function(message) {
-  originalShowErrorToast(message);
-  announceToScreenReaders('Σφάλμα: ' + message);
-};
+// Commented out - was causing infinite recursion
+// var originalShowErrorToast = showErrorToast;
+// window.showErrorToast = function(message) {
+//   originalShowErrorToast(message);
+//   announceToScreenReaders('Σφάλμα: ' + message);
+// };
 
-var originalShowSuccessToast = showSuccessToast;
-window.showSuccessToast = function(message) {
-  originalShowSuccessToast(message);
-  announceToScreenReaders('Επιτυχία: ' + message);
-};
+// Commented out - was causing infinite recursion
+// var originalShowSuccessToast = showSuccessToast;
+// window.showSuccessToast = function(message) {
+//   originalShowSuccessToast(message);
+//   announceToScreenReaders('Επιτυχία: ' + message);
+// };
 
 // Enable accessibility debugging mode (add ?debug=a11y to URL)
 if(window.location.search.includes('debug=a11y')) {
@@ -16346,6 +17609,9 @@ function updateBreadcrumbs(){
   var bc = document.getElementById('breadcrumbs');
   var current = document.getElementById('breadcrumb-current');
 
+  // ✅ Safety checks - breadcrumbs may not exist in all layouts
+  if(!bc || !current) return;
+
   if(c){
     bc.style.display = 'flex';
     current.textContent = '👤 ' + (c.name || 'Πελάτης');
@@ -16386,6 +17652,188 @@ function renderSBImproved(){
 }
 
 // ✅ IMPROVED UX: Show onboarding on first load
+// ✅ SUPPLEMENT SELECTOR (Page 1)
+// ✅ NEW: Combined supplements modal (merges current + recommended)
+function openCombinedSupplementsModal() {
+  toggleSupplementSelector(); // Use existing logic
+}
+
+function toggleSupplementSelector() {
+  var c = getC();
+  if (!c) {
+    alert('Δημιουργήστε πρώτα έναν πελάτη');
+    return;
+  }
+
+  // Create modal if not exists
+  var modal = document.getElementById('supp-selector-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'supp-selector-modal';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:2000;';
+    document.body.appendChild(modal);
+  }
+
+  // Build HTML with supplement checkboxes
+  var suppListHtml = '<div style="background:white;border-radius:10px;padding:25px;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">';
+  suppListHtml += '<h2 style="color:#e65100;margin:0 0 15px 0;">💊 Επιλέξτε Συμπληρώματα</h2>';
+  suppListHtml += '<p style="color:#666;font-size:12px;margin:0 0 15px 0;">Τικάρετε τα συμπληρώματα που χρησιμοποιείτε τακτικά</p>';
+
+  // List common supplements
+  var commonSupps = [
+    { name: 'Πολυβιταμίνη', dosage: '1 δισκίο/ημέρα', timing: 'πρωί με φαγητό' },
+    { name: 'Βιταμίνη D3', dosage: '1000-2000 IU/ημέρα', timing: 'πρωί με φαγητό' },
+    { name: 'Ωμέγα-3', dosage: '1000-2000 mg/ημέρα', timing: 'με φαγητό' },
+    { name: 'Μαγνήσιο', dosage: '300-400 mg/ημέρα', timing: 'βράδυ' },
+    { name: 'Ασβέστιο', dosage: '800-1000 mg/ημέρα', timing: 'με φαγητό' },
+    { name: 'Σίδηρος', dosage: '18 mg/ημέρα', timing: 'πρωί χωρίς καφές' },
+    { name: 'Ψευδάργυρος', dosage: '10-15 mg/ημέρα', timing: 'με φαγητό' },
+    { name: 'Βιταμίνη B12', dosage: '1000 mcg/εβδομάδα', timing: 'οποιαδήποτε ώρα' },
+    { name: 'Κρεατίνη', dosage: '5 g/ημέρα', timing: 'με γεύμα' },
+    { name: 'Πρωτεΐνη Σκόνη', dosage: '25-50 g/ημέρα', timing: 'μετά την άσκηση' }
+  ];
+
+  suppListHtml += '<div style="display:grid;gap:10px;margin:15px 0;">';
+
+  commonSupps.forEach(function(supp, idx) {
+    var isSelected = c.selectedSupplements && c.selectedSupplements.some(function(s) { return s.supplement === supp.name; });
+    suppListHtml += '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer;border:2px solid '+(isSelected?'#e65100':'#ddd')+';transition:all 0.2s;">';
+    suppListHtml += '<input type="checkbox" id="supp-cb-'+idx+'" '+(isSelected?'checked':'')+' style="width:18px;height:18px;cursor:pointer;margin-top:2px;">';
+    suppListHtml += '<div style="flex:1;">';
+    suppListHtml += '<div style="font-weight:600;color:#333;">'+supp.name+'</div>';
+    suppListHtml += '<div style="font-size:11px;color:#666;">📋 '+supp.dosage+'</div>';
+    suppListHtml += '<div style="font-size:11px;color:#999;">⏰ '+supp.timing+'</div>';
+    suppListHtml += '</div>';
+    suppListHtml += '</label>';
+  });
+
+  suppListHtml += '</div>';
+  suppListHtml += '<div style="display:flex;gap:10px;margin-top:20px;border-top:1px solid #ddd;padding-top:15px;">';
+  suppListHtml += '<button onclick="savePage1Supplements()" style="flex:1;background:#4caf50;color:white;border:none;padding:12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">✓ Αποθήκευση</button>';
+  suppListHtml += '<button onclick="closePage1SupplementSelector()" style="flex:1;background:#999;color:white;border:none;padding:12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">✕ Κλείσιμο</button>';
+  suppListHtml += '</div>';
+  suppListHtml += '</div>';
+
+  modal.innerHTML = suppListHtml;
+  modal.style.display = 'flex';
+
+  // Close on overlay click
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) closePage1SupplementSelector();
+  });
+}
+
+function closePage1SupplementSelector() {
+  var modal = document.getElementById('supp-selector-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function savePage1Supplements() {
+  var c = getC();
+  if (!c) return;
+
+  var checkboxes = document.querySelectorAll('#supp-selector-modal input[type="checkbox"]:checked');
+  var selectedSupps = [];
+
+  // Common supplements data
+  var commonSupps = [
+    { name: 'Πολυβιταμίνη', dosage: '1 δισκίο/ημέρα' },
+    { name: 'Βιταμίνη D3', dosage: '1000-2000 IU/ημέρα' },
+    { name: 'Ωμέγα-3', dosage: '1000-2000 mg/ημέρα' },
+    { name: 'Μαγνήσιο', dosage: '300-400 mg/ημέρα' },
+    { name: 'Ασβέστιο', dosage: '800-1000 mg/ημέρα' },
+    { name: 'Σίδηρος', dosage: '18 mg/ημέρα' },
+    { name: 'Ψευδάργυρος', dosage: '10-15 mg/ημέρα' },
+    { name: 'Βιταμίνη B12', dosage: '1000 mcg/εβδομάδα' },
+    { name: 'Κρεατίνη', dosage: '5 g/ημέρα' },
+    { name: 'Πρωτεΐνη Σκόνη', dosage: '25-50 g/ημέρα' }
+  ];
+
+  checkboxes.forEach(function(cb) {
+    var id = cb.id.replace('supp-cb-', '');
+    var supp = commonSupps[id];
+    if (supp) {
+      selectedSupps.push({
+        supplement: supp.name,
+        dose: supp.dosage,
+        info: ''
+      });
+    }
+  });
+
+  c.selectedSupplements = selectedSupps;
+  save();
+  closePage1SupplementSelector();
+
+  // Update preview
+  var preview = document.getElementById('supp-preview');
+  if (preview) {
+    if (selectedSupps.length > 0) {
+      preview.textContent = '✓ ' + selectedSupps.map(s => s.supplement).slice(0, 3).join(', ') + (selectedSupps.length > 3 ? '...' : '');
+    } else {
+      preview.textContent = '💡 Κάνε κλικ για να επιλέξεις συμπληρώματα';
+    }
+  }
+
+  showSuccessToast('✓ Συμπληρώματα αποθηκεύτηκαν!');
+}
+
+// ✅ FOOD UNIT CYCLING FUNCTION
+function cycleUnit(d, mi, fi) {
+  var c = getC();
+  if (!c || !c.weekPlan[d] || !c.weekPlan[d][mi] || !c.weekPlan[d][mi].foods[fi]) return;
+
+  var food = c.weekPlan[d][mi].foods[fi];
+  var fu = FOOD_UNITS[food.n];
+
+  if (!fu) {
+    // No predefined units - just use grams
+    if (!food.u || food.u === 'g') return;
+    food.u = 'g';
+  } else {
+    // Cycle through: stored unit → g → stored unit
+    var possibleUnits = ['g', fu.u];
+    var currentIdx = possibleUnits.indexOf(food.u !== undefined ? food.u : fu.u);
+    var nextIdx = (currentIdx + 1) % possibleUnits.length;
+    food.u = possibleUnits[nextIdx];
+  }
+
+  save();
+  renderWeekTable();
+}
+
+// ✅ MEAL MENU DROPDOWN FUNCTIONS
+function toggleMealMenu(menuId) {
+  var menu = document.getElementById(menuId);
+  if (!menu) return;
+
+  // Close all other menus first
+  document.querySelectorAll('.meal-menu-dropdown').forEach(function(m) {
+    if (m.id !== menuId) {
+      m.style.display = 'none';
+    }
+  });
+
+  // Toggle current menu
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+function closeMealMenu(menuId) {
+  var menu = document.getElementById(menuId);
+  if (menu) {
+    menu.style.display = 'none';
+  }
+}
+
+// Close meal menus when clicking outside
+document.addEventListener('click', function(event) {
+  if (!event.target.closest('.meal-menu-dropdown') && !event.target.closest('[onclick*="toggleMealMenu"]')) {
+    document.querySelectorAll('.meal-menu-dropdown').forEach(function(menu) {
+      menu.style.display = 'none';
+    });
+  }
+});
+
 document.addEventListener('DOMContentLoaded', function(){
   setTimeout(initOnboarding, 2000);
 });
@@ -16608,10 +18056,8 @@ function swapMealAlternative(dayIndex, mealIndex){
   var currentKcal = 0;
   if(currentMeal.foods){
     currentMeal.foods.forEach(function(food){
-      var foodData = ALLFOODS[food.name];
-      if(foodData){
-        currentKcal += (foodData.k * (food.g || 0) / 100);
-      }
+      var v = cm(food.n, food.g || 0);
+      if(v){ currentKcal += v.k; }
     });
   }
 
@@ -16628,6 +18074,854 @@ function swapMealAlternative(dayIndex, mealIndex){
   }
 
   showErrorToast('❌ Δεν μπορέσαμε να βρούμε εναλλακτική');
+}
+
+// ✅ MEAL ALTERNATIVES - Show 3-4 alternative meals with same macros
+function showMealAlternativesModal(mealIndex){
+  var c = getC();
+  if(!c || !c.weekPlan || c.weekPlan.length === 0) return;
+
+  // Get first day's meal as reference
+  var refMeal = c.weekPlan[0][mealIndex];
+  if(!refMeal || !refMeal.foods) return;
+
+  // Calculate reference meal macros
+  var refMacros = { k: 0, p: 0, f: 0, c: 0 };
+  refMeal.foods.forEach(function(f){
+    var v = cm(f.n, f.g);
+    refMacros.k += v.k;
+    refMacros.p += v.p;
+    refMacros.f += v.f;
+    refMacros.c += v.c;
+  });
+
+  // Get alternatives using correct function call
+  var excl = c.foodExclusions || [];
+  var alternatives = generateDiverseAlternatives(Math.round(refMacros.k), 0, excl, refMeal.name, 3, { k: refMacros.k, p: refMacros.p, f: refMacros.f, c: refMacros.c });
+
+  // Create modal
+  var modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:white;border-radius:12px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:500px;width:95%;max-height:70vh;overflow-y:auto';
+
+  var mealName = (c.weekPlan[0][mealIndex] && c.weekPlan[0][mealIndex].name) ? c.weekPlan[0][mealIndex].name : 'Γεύμα';
+
+  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #2196F3;padding-bottom:10px;">';
+  html += '<h2 style="color:#2196F3;margin:0;font-size:14px;">🔄 Εναλλακτικά ' + mealName + '</h2>';
+  html += '<button onclick="this.closest(\'div\').parentElement.remove()" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>';
+  html += '</div>';
+
+  html += '<div style="margin-bottom:10px;padding:10px;background:#e3f2fd;border-left:4px solid #2196F3;border-radius:4px;font-size:11px;color:#1565C0;">';
+  html += '<b>Τρέχον γεύμα:</b> P:' + Math.round(refMacros.p) + 'g | F:' + Math.round(refMacros.f) + 'g | C:' + Math.round(refMacros.c) + 'g | <b>' + Math.round(refMacros.k) + ' kcal</b>';
+  html += '</div>';
+
+  html += '<div style="display:flex;flex-direction:column;gap:10px;">';
+
+  (alternatives || []).slice(0, 3).forEach(function(alt, idx){
+    if(!alt || !alt.foods) return;
+
+    var altMacros = { k: 0, p: 0, f: 0, c: 0 };
+    alt.foods.forEach(function(f){
+      var v = cm(f.n, f.g);
+      altMacros.k += v.k;
+      altMacros.p += v.p;
+      altMacros.f += v.f;
+      altMacros.c += v.c;
+    });
+
+    var diffK = Math.round(altMacros.k - refMacros.k);
+    var diffLabel = diffK > 0 ? '+' + diffK : '' + diffK;
+
+    html += '<button onclick="replaceMealAllDays(' + mealIndex + ', ' + idx + ');this.closest(\'div\').parentElement.remove();" ';
+    html += 'style="padding:12px;background:#f9f9f9;border:1.5px solid #e0e0e0;border-radius:6px;cursor:pointer;text-align:left;transition:all 0.2s ease;" ';
+    html += 'onmouseover="this.style.background=\'#e3f2fd\';this.style.borderColor=\'#2196F3\';" ';
+    html += 'onmouseout="this.style.background=\'#f9f9f9\';this.style.borderColor=\'#e0e0e0\';">';
+
+    // Foods list
+    var foodsList = alt.foods.map(function(f){ return f.n + ' (' + f.g + 'g)'; }).join(', ');
+    html += '<div style="font-weight:600;color:#025857;margin-bottom:4px;font-size:11px;">📍 ' + foodsList + '</div>';
+    html += '<div style="font-size:10px;color:#666;"><b>P:</b>' + Math.round(altMacros.p) + 'g | <b>F:</b>' + Math.round(altMacros.f) + 'g | <b>C:</b>' + Math.round(altMacros.c) + 'g | <b style="color:#E65100">' + Math.round(altMacros.k) + ' kcal</b> <span style="color:' + (diffK > 0 ? '#c62828' : '#2e7d32') + '">' + diffLabel + '</span></div>';
+    html += '</button>';
+  });
+
+  html += '</div>';
+  html += '<div style="margin-top:15px;padding-top:15px;border-top:1px solid #e0e0e0;">';
+  html += '<button onclick="this.closest(\'div\').parentElement.remove()" style="width:100%;padding:10px;background:#ddd;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Κλείσιμο</button>';
+  html += '</div>';
+
+  modal.innerHTML = html;
+  document.body.appendChild(modal);
+
+  // Close on background click
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:999';
+  overlay.onclick = function(){ modal.remove(); overlay.remove(); };
+  document.body.insertBefore(overlay, modal);
+}
+
+function replaceMealAllDays(mealIndex, altIndex){
+  var c = getC();
+  if(!c || !c.weekPlan) return;
+
+  // Get reference meal macros
+  var refMeal = c.weekPlan[0][mealIndex];
+  var refMacros = { k: 0, p: 0, f: 0, c: 0 };
+  refMeal.foods.forEach(function(f){
+    var v = cm(f.n, f.g);
+    refMacros.k += v.k;
+    refMacros.p += v.p;
+    refMacros.f += v.f;
+    refMacros.c += v.c;
+  });
+
+  // Get alternative with correct parameters
+  var excl = c.foodExclusions || [];
+  var alternatives = generateDiverseAlternatives(Math.round(refMacros.k), 0, excl, refMeal.name, 3, { k: refMacros.k, p: refMacros.p, f: refMacros.f, c: refMacros.c });
+  var altMeal = alternatives && alternatives[altIndex] ? alternatives[altIndex] : null;
+
+  if(!altMeal) return;
+
+  // Replace in all 7 days
+  for(var d = 0; d < 7; d++){
+    c.weekPlan[d][mealIndex] = JSON.parse(JSON.stringify(altMeal));
+  }
+
+  save();
+  renderWeekTable();
+  showSuccessToast('✅ Γεύμα αντικαταστάθηκε σε όλες τις ημέρες!');
+}
+
+function deleteMealAllDays(mealIndex){
+  if(!confirm('Σίγουρα θέλετε να διαγράψετε αυτό το γεύμα από όλες τις ημέρες;')) return;
+
+  var c = getC();
+  if(!c || !c.weekPlan) return;
+
+  // Remove from all 7 days
+  for(var d = 0; d < 7; d++){
+    if(c.weekPlan[d] && c.weekPlan[d][mealIndex]){
+      c.weekPlan[d].splice(mealIndex, 1);
+    }
+  }
+
+  save();
+  renderWeekTable();
+  showSuccessToast('✅ Γεύμα διαγράφηκε από όλες τις ημέρες!');
+}
+
+// ✅ FOOD EXCLUSION PICKER - NEW FEATURE
+function openFoodExclusionPicker(){
+  var c = getC();
+  if(!c) return;
+
+  var modal = document.getElementById('foodExclusionModal');
+  if(!modal){
+    console.error('Modal not found!');
+    return;
+  }
+
+  // Build food list
+  var foodListHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:400px;overflow-y:auto;padding:10px;border:1px solid #e0e0e0;border-radius:6px;background:#f9f9f9;">';
+
+  var currentExclusions = c.foodExclusions || [];
+
+  Object.keys(FOODS).forEach(function(foodName){
+    var isExcluded = currentExclusions.indexOf(foodName) !== -1;
+    var checkedAttr = isExcluded ? 'checked' : '';
+    foodListHtml += '<label style="display:flex;align-items:center;gap:8px;padding:6px;cursor:pointer;border-radius:4px;transition:all 0.2s ease;" onmouseover="this.style.background=\'#f0f0f0\'" onmouseout="this.style.background=\'transparent\'">'
+      + '<input type="checkbox" data-food="' + foodName + '" ' + checkedAttr + ' style="cursor:pointer;width:16px;height:16px;">'
+      + '<span style="font-size:12px;flex:1;">' + foodName + '</span>'
+      + '</label>';
+  });
+
+  foodListHtml += '</div>';
+
+  document.getElementById('foodListContainer').innerHTML = foodListHtml;
+  modal.style.display = 'flex';
+}
+
+function closeFoodExclusionModal(){
+  document.getElementById('foodExclusionModal').style.display = 'none';
+}
+
+function saveFoodExclusions(){
+  var c = getC();
+  if(!c) return;
+
+  var checkboxes = document.querySelectorAll('#foodListContainer input[type="checkbox"]');
+  var selected = [];
+
+  checkboxes.forEach(function(cb){
+    if(cb.checked){
+      selected.push(cb.dataset.food);
+    }
+  });
+
+  c.foodExclusions = selected;
+  upd();
+
+  // Update preview
+  document.getElementById('excl-preview').innerHTML = selected.length > 0
+    ? '✓ ' + selected.slice(0,3).join(', ') + (selected.length > 3 ? '...' : '')
+    : '💡 Κάνε κλικ για να επιλέξεις τρόφιμα';
+
+  // Update button count
+  document.querySelector('button[onclick="openFoodExclusionPicker()"]').innerHTML =
+    '📋 Επιλέξτε τρόφιμα που δεν του αρέσουν (' + selected.length + ')';
+
+  closeFoodExclusionModal();
+  showSuccessToast('✅ Αποφυγές τροφίμων ενημερώθηκαν!');
+}
+
+// Search function for food picker
+function searchFoodsInModal(query){
+  query = query.toLowerCase();
+  var foodLabels = document.querySelectorAll('#foodListContainer label');
+
+  foodLabels.forEach(function(label){
+    var foodName = label.textContent.toLowerCase();
+    if(foodName.includes(query)){
+      label.style.display = 'flex';
+    } else {
+      label.style.display = 'none';
+    }
+  });
+}
+
+</script>
+
+<!-- 🚫 FOOD EXCLUSION MODAL -->
+<div id="foodExclusionModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #ff6b35;padding-bottom:10px;">
+      <h2 style="color:#ff6b35;margin:0;font-size:16px;">🚫 Τρόφιμα που αποφεύγει</h2>
+      <button onclick="closeFoodExclusionModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <input type="text" id="foodSearchInput" placeholder="🔍 Αναζητήστε τρόφιμα..."
+        oninput="searchFoodsInModal(this.value)"
+        style="width:100%;padding:10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:12px;box-sizing:border-box;">
+    </div>
+
+    <div id="foodListContainer" style="min-height:200px;max-height:400px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:6px;padding:10px;background:#f9f9f9;">
+      <!-- Foods will be inserted here -->
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">
+      <button onclick="closeFoodExclusionModal()" style="padding:10px 20px;background:#ddd;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Ακύρωση</button>
+      <button onclick="saveFoodExclusions()" style="padding:10px 20px;background:#ff6b35;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">✅ Αποθήκευση</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Close modal when clicking outside -->
+<script>
+document.getElementById('foodExclusionModal').addEventListener('click', function(e){
+  if(e.target === this){
+    closeFoodExclusionModal();
+  }
+});
+</script>
+
+<!-- VALIDATION MODAL -->
+<div id="validationModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1100;align-items:center;justify-content:center;overflow-y:auto;padding:20px 0;">
+  <div style="background:white;border-radius:12px;width:95%;max-width:1200px;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);overflow:hidden;">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg, #025857 0%, #014545 100%);color:white;padding:20px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <h2 style="margin:0;font-size:18px;">🔍 Validation Audit - Plan Analysis</h2>
+        <p style="margin:5px 0 0 0;font-size:12px;opacity:0.9;">Check if all calculations are correct and within tolerances</p>
+      </div>
+      <button onclick="closeValidationModal()" style="background:rgba(255,255,255,0.2);border:none;color:white;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:bold;">✕</button>
+    </div>
+
+    <!-- Content -->
+    <div style="padding:20px;max-height:calc(85vh - 80px);overflow-y:auto;">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+        <!-- DEBUG PANEL -->
+        <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;">
+          <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">🖥️ Debug Panel</h3>
+          <div id="valDebugPanel" style="font-family:monospace;font-size:11px;line-height:1.6;color:#555;">
+            <div style="padding:10px;background:#fff;border-radius:4px;color:#999;">Waiting for data...</div>
+          </div>
+        </div>
+
+        <!-- VALIDATION CHECKLIST -->
+        <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;">
+          <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">✓ Validation Checklist</h3>
+          <div id="valCheckList" style="font-size:11px;line-height:1.8;">
+            <div style="padding:10px;color:#999;">Waiting for data...</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TEST CASES -->
+      <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:20px;">
+        <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">🧪 Test Cases (Known Values)</h3>
+        <div id="valTestCases" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;font-size:11px;">
+          <div style="padding:10px;background:#fff;border-radius:4px;border-left:4px solid #025857;color:#999;">Loading...</div>
+        </div>
+      </div>
+
+      <!-- CORRELATION ANALYSIS -->
+      <div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1px solid #c8e6c9;border-radius:8px;padding:15px;">
+        <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;">🔗 Calculation Flow</h3>
+        <div id="valCorrelation" style="font-size:11px;line-height:1.8;color:#333;">
+          <div style="color:#999;">Waiting for data...</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- VALIDATION JAVASCRIPT -->
+<script>
+function openValidationModal() {
+  var c = getC();
+  // Check if weekPlan exists and has at least one day with meals
+  if(!c || !c.weekPlan || Object.keys(c.weekPlan).length === 0){
+    alert('Please generate a meal plan first');
+    return;
+  }
+
+  // ✅ Use the REAL engine — same calcTDEE + macros the actual plan uses (not a duplicate calc)
+  var t = calcTDEE(c);
+  var bmr = t.bmr;
+  var tdee = t.tdee;
+  var actFactor = bmr ? (tdee/bmr) : 1.55;   // derived for display (also correct in MET mode)
+  var adjTDEE = t.target;                      // goal-adjusted daily target
+  var protein = t.p;
+  var fat = t.f;
+  var carbs = t.carb;
+  var weeklyKcal = adjTDEE * 7;
+
+  // Static reference values for the "Test Cases" section below
+  function calcBMR(w, h, a, s) {
+    if(s === 'M') return 10*w + 6.25*h - 5*a + 5;
+    return 10*w + 6.25*h - 5*a - 161;
+  }
+  var actFactors = {sed:1.37, light:1.375, mod:1.55, active:1.725};
+
+  // DEBUG PANEL
+  var debugHTML = '<div style="padding:10px;background:#fff;border-radius:4px;">';
+  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Name:</span><strong>'+c.name+'</strong></div>';
+  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>BMR:</span><strong>'+bmr.toFixed(0)+' kcal</strong></div>';
+  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Activity:</span><strong>'+actFactor.toFixed(2)+'x</strong></div>';
+  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>TDEE:</span><strong>'+adjTDEE.toFixed(0)+' kcal</strong></div>';
+  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Protein:</span><strong>'+protein.toFixed(0)+'g</strong></div>';
+  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Fat:</span><strong>'+fat.toFixed(0)+'g</strong></div>';
+  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span>Carbs:</span><strong>'+carbs.toFixed(0)+'g</strong></div>';
+  debugHTML += '</div>';
+  document.getElementById('valDebugPanel').innerHTML = debugHTML;
+
+  // VALIDATION CHECKLIST
+  var checks = [
+    {name: 'TDEE (1500-3500)', pass: adjTDEE >= 1500 && adjTDEE <= 3500, val: adjTDEE.toFixed(0)},
+    {name: 'Protein (1.6-2.2g/kg)', pass: (protein/c.weight) >= 1.6 && (protein/c.weight) <= 2.2, val: (protein/c.weight).toFixed(2)},
+    {name: 'Carbs (2-5g/kg)', pass: (carbs/c.weight) >= 2 && (carbs/c.weight) <= 5, val: (carbs/c.weight).toFixed(2)},
+    {name: 'Fat (0.8-1.2g/kg)', pass: (fat/c.weight) >= 0.8 && (fat/c.weight) <= 1.2, val: (fat/c.weight).toFixed(2)},
+    {name: 'Macro Total (~TDEE)', pass: Math.abs((protein*4 + fat*9 + carbs*4) - adjTDEE) < adjTDEE*0.05, val: (protein*4+fat*9+carbs*4).toFixed(0)}
+  ];
+
+  var checkHTML = '<div style="padding:10px;background:#fff;border-radius:4px;">';
+  checks.forEach(function(ch){
+    checkHTML += '<div style="display:flex;align-items:center;gap:8px;padding:6px;margin:4px 0;">';
+    checkHTML += '<span style="font-size:16px;'+(ch.pass?'color:#4caf50':'color:#f44336')+'">'+(ch.pass?'✓':'✗')+'</span>';
+    checkHTML += '<span style="flex:1;">'+ch.name+'</span>';
+    checkHTML += '<strong>'+ch.val+'</strong>';
+    checkHTML += '</div>';
+  });
+  checkHTML += '</div>';
+  document.getElementById('valCheckList').innerHTML = checkHTML;
+
+  // TEST CASES
+  var tests = [
+    {name:'Low TDEE',w:65,h:170,a:30,s:'F',act:'sed'},
+    {name:'High TDEE',w:85,h:185,a:25,s:'M',act:'active'},
+    {name:'Moderate',w:75,h:175,a:30,s:'M',act:'mod'}
+  ];
+
+  var testHTML = '';
+  tests.forEach(function(t){
+    var b = calcBMR(t.w, t.h, t.a, t.s);
+    var d = b * actFactors[t.act];
+    var p = t.w * 1.8;
+    testHTML += '<div style="padding:10px;background:#fff;border-radius:4px;border-left:4px solid #025857;">';
+    testHTML += '<strong>'+t.name+'</strong><br/>';
+    testHTML += 'TDEE: <strong>'+d.toFixed(0)+'</strong> kcal<br/>';
+    testHTML += 'P: <strong>'+p.toFixed(0)+'g</strong><br/>';
+    testHTML += '</div>';
+  });
+  document.getElementById('valTestCases').innerHTML = testHTML;
+
+  // CORRELATION
+  var corrHTML = '<strong>Client Profile</strong> → BMR ('+bmr.toFixed(0)+' kcal)<br/>';
+  corrHTML += '↓<br/>';
+  corrHTML += '<strong>Activity</strong> ('+actFactor.toFixed(2)+'x) → TDEE ('+tdee.toFixed(0)+' kcal)<br/>';
+  corrHTML += '↓<br/>';
+  corrHTML += '<strong>Goal Adjustment</strong> → Adjusted TDEE ('+adjTDEE.toFixed(0)+' kcal)<br/>';
+  corrHTML += '↓<br/>';
+  corrHTML += '<strong>Macro Distribution</strong> → P: '+protein.toFixed(0)+'g | F: '+fat.toFixed(0)+'g | C: '+carbs.toFixed(0)+'g<br/>';
+  corrHTML += '↓<br/>';
+  corrHTML += '<strong>Weekly Total</strong> → '+weeklyKcal.toFixed(0)+' kcal for 7 days';
+  document.getElementById('valCorrelation').innerHTML = corrHTML;
+
+  document.getElementById('validationModal').style.display = 'flex';
+}
+
+function closeValidationModal() {
+  document.getElementById('validationModal').style.display = 'none';
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape' && document.getElementById('validationModal').style.display !== 'none'){
+    closeValidationModal();
+  }
+});
+
+document.getElementById('validationModal').addEventListener('click', function(e){
+  if(e.target === this) closeValidationModal();
+});
+
+/* ════════════════════════════════════════════════════════════════════════
+   ✅ PAGE 1 MODALS - 6 Pop-up Windows για καθαρότερη σελίδα
+   ════════════════════════════════════════════════════════════════════════ */
+
+// ✅ MODAL 1: ΕΒΔΟΜΑΔΙΑΙΟ ΠΡΟΓΡΑΜΜΑ ΠΡΟΠΟΝΗΣΗΣ
+function openWeeklyTrainingModal(){
+  var c=getC();if(!c)return;
+  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="weeklyTrainOverlay" onclick="if(event.target===this)closeWeeklyTrainingModal()">'
+    +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#025857;font-size:18px">📅 Εβδομαδιαίο Πρόγραμμα Προπόνησης</h2>'
+    +'<button onclick="closeWeeklyTrainingModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'</div>'
+    +'<div id="weeklyTrainContent" style="font-size:13px"></div>'
+    +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
+    +'<button onclick="closeWeeklyTrainingModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
+    +'<button onclick="closeWeeklyTrainingModal();save()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+
+  var overlay=document.createElement('div');
+  overlay.innerHTML=html;
+  overlay.id='weeklyTrainModal';
+  document.body.appendChild(overlay);
+
+  // Populate content
+  var t=calcTDEE(c);
+  document.getElementById('weeklyTrainContent').innerHTML=buildWeeklyTrainingScheduleHtml(c);
+}
+
+function closeWeeklyTrainingModal(){
+  var m=document.getElementById('weeklyTrainModal');
+  if(m)m.remove();
+}
+
+// ✅ MODAL 2: 2η ΠΡΟΠΟΝΗΣΗ (OPTIONAL)
+function openSecondTrainingModal(){
+  var c=getC();if(!c)return;
+  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="secondTrainOverlay" onclick="if(event.target===this)closeSecondTrainingModal()">'
+    +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #FF6B35;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#FF6B35;font-size:18px">⏱️ 2η Προπόνηση (Optional)</h2>'
+    +'<button onclick="closeSecondTrainingModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'</div>'
+    +'<div style="background:#FFF3E0;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#E65100">'
+    +'⚠️ Για αθλητές που προπονούνται 2 φορές την ημέρα (π.χ. Judoka, Combat Sports)'
+    +'</div>'
+    +'<div id="secondTrainContent" style="font-size:13px"></div>'
+    +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
+    +'<button onclick="closeSecondTrainingModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
+    +'<button onclick="closeSecondTrainingModal();save()" style="padding:10px 20px;background:#FF6B35;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+
+  var overlay=document.createElement('div');
+  overlay.innerHTML=html;
+  overlay.id='secondTrainModal';
+  document.body.appendChild(overlay);
+
+  document.getElementById('secondTrainContent').innerHTML=buildSecondTrainingScheduleHtml(c);
+}
+
+function closeSecondTrainingModal(){
+  var m=document.getElementById('secondTrainModal');
+  if(m)m.remove();
+}
+
+// ✅ MODAL 3: CUSTOM MEAL TIMES
+function openMealTimesModal(){
+  var c=getC();if(!c)return;
+  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="mealTimesOverlay" onclick="if(event.target===this)closeMealTimesModal()">'
+    +'<div style="background:white;border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #2E7D32;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#2E7D32;font-size:18px">⏱️ Χρόνοι Γευμάτων</h2>'
+    +'<button onclick="closeMealTimesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'</div>'
+    +'<div style="background:#E8F5E9;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#2E7D32">'
+    +'💡 Ορίστε τους χρόνους των γευμάτων. Θα χρησιμοποιηθούν για meal planning.'
+    +'</div>'
+    +'<div style="display:grid;gap:12px">'
+    +'<div><label style="font-weight:600;color:#333">🌅 Πρωινό</label><input type="time" id="meal-breakfast" value="'+(c.mealTimes?.breakfast||'07:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:#333">🥤 Πρωινό Ενδιάμεσο</label><input type="time" id="meal-snack" value="'+(c.mealTimes?.snack||'10:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:#333">🍽️ Μεσημέρι</label><input type="time" id="meal-lunch" value="'+(c.mealTimes?.lunch||'13:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:#333">🍎 Απογευματινό Ενδιάμεσο</label><input type="time" id="meal-snack2" value="'+(c.mealTimes?.snack2||'16:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:#333">🌙 Βράδυ</label><input type="time" id="meal-dinner" value="'+(c.mealTimes?.dinner||'19:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
+    +'</div>'
+    +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
+    +'<button onclick="closeMealTimesModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
+    +'<button onclick="saveMealTimes()" style="padding:10px 20px;background:#2E7D32;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+
+  var overlay=document.createElement('div');
+  overlay.innerHTML=html;
+  overlay.id='mealTimesModal';
+  document.body.appendChild(overlay);
+}
+
+function closeMealTimesModal(){
+  var m=document.getElementById('mealTimesModal');
+  if(m)m.remove();
+}
+
+function saveMealTimes(){
+  var c=getC();if(!c)return;
+  if(!c.mealTimes)c.mealTimes={};
+  c.mealTimes.breakfast=document.getElementById('meal-breakfast').value;
+  c.mealTimes.snack=document.getElementById('meal-snack').value;
+  c.mealTimes.lunch=document.getElementById('meal-lunch').value;
+  c.mealTimes.snack2=document.getElementById('meal-snack2').value;
+  c.mealTimes.dinner=document.getElementById('meal-dinner').value;
+  save();
+  closeMealTimesModal();
+  showSuccessToast('✅ Χρόνοι γευμάτων αποθηκεύτηκαν!');
+}
+
+// ✅ MODAL 4: MET ACTIVITIES
+function openMetActivitiesModal(){
+  var c=getC();if(!c)return;
+  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="metActivOverlay" onclick="if(event.target===this)closeMetActivitiesModal()">'
+    +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #1565C0;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#1565C0;font-size:18px">🏃 MET Activities (Δραστηριότητες)</h2>'
+    +'<button onclick="closeMetActivitiesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'</div>'
+    +'<div style="background:#E3F2FD;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#1565C0">'
+    +'💡 Προσθέστε συγκεκριμένες δραστηριότητες για ακριβή υπολογισμό θερμίδων.'
+    +'</div>'
+    +'<div id="metActivContent" style="font-size:13px"></div>'
+    +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
+    +'<button onclick="closeMetActivitiesModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
+    +'<button onclick="closeMetActivitiesModal();save()" style="padding:10px 20px;background:#1565C0;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+
+  var overlay=document.createElement('div');
+  overlay.innerHTML=html;
+  overlay.id='metActivModal';
+  document.body.appendChild(overlay);
+
+  var t=calcTDEE(c);
+  document.getElementById('metActivContent').innerHTML=buildMetHtml(c,t);
+}
+
+function closeMetActivitiesModal(){
+  var m=document.getElementById('metActivModal');
+  if(m)m.remove();
+}
+
+// ✅ MODAL 5: ΙΑΤΡΙΚΕΣ ΣΥΝΘΗΚΕΣ
+function openMedicalConditionsModal(){
+  var c=getC();if(!c)return;
+  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="medicalOverlay" onclick="if(event.target===this)closeMedicalConditionsModal()">'
+    +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #c62828;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#c62828;font-size:18px">🩺 Ιατρικές Συνθήκες</h2>'
+    +'<button onclick="closeMedicalConditionsModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'</div>'
+    +'<div style="background:#FFEBEE;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#c62828">'
+    +'⚠️ Επιλέξτε τυχόν ενεργές ιατρικές συνθήκες για προσαρμογή του πλάνου.'
+    +'</div>'
+    +'<div style="display:grid;gap:10px;margin-bottom:20px">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFCDD2;border-radius:6px;cursor:pointer">'
+    +'<input type="checkbox" id="chk-diabetes-modal" '+(c.medConditions?.diabetes?'checked':'')+' style="width:18px;height:18px">'
+    +'<span style="font-weight:600">🍬 Διαβήτης</span>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFCDD2;border-radius:6px;cursor:pointer">'
+    +'<input type="checkbox" id="chk-hypertension-modal" '+(c.medConditions?.hypertension?'checked':'')+' style="width:18px;height:18px">'
+    +'<span style="font-weight:600">🩸 Υψηλή Πίεση</span>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFECB3;border-radius:6px;cursor:pointer">'
+    +'<input type="checkbox" id="chk-celiac-modal" '+(c.medConditions?.celiac?'checked':'')+' style="width:18px;height:18px">'
+    +'<span style="font-weight:600">🌾 Κοιλιοκάκη</span>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#C8E6C9;border-radius:6px;cursor:pointer">'
+    +'<input type="checkbox" id="chk-ibs-modal" '+(c.medConditions?.ibs?'checked':'')+' style="width:18px;height:18px">'
+    +'<span style="font-weight:600">🔄 IBS</span>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#BBDEFB;border-radius:6px;cursor:pointer">'
+    +'<input type="checkbox" id="chk-lactose-modal" '+(c.medConditions?.lactose?'checked':'')+' style="width:18px;height:18px">'
+    +'<span style="font-weight:600">🥛 Δυσανεξία Λακτόζης</span>'
+    +'</label>'
+    +'</div>'
+    +'<div style="border-top:2px solid #ddd;padding-top:15px">'
+    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:10px">👩 Μητρικός Κύκλος (Γυναίκες):</label>'
+    +'<div style="display:grid;gap:8px">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:4px">'
+    +'<input type="radio" name="menstrual" value="regular" '+(c.menstrualCycle!=='irregular'&&c.menstrualCycle!=='absent'?'checked':'')+' style="width:16px;height:16px">'
+    +'<span>✅ Κανονικός</span>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px;background:#FFF3E0;border-radius:4px">'
+    +'<input type="radio" name="menstrual" value="irregular" '+(c.menstrualCycle==='irregular'?'checked':'')+' style="width:16px;height:16px">'
+    +'<span>⚠️ Ακανόνιστος (Monitor RED-S)</span>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px;background:#FFCDD2;border-radius:4px">'
+    +'<input type="radio" name="menstrual" value="absent" '+(c.menstrualCycle==='absent'?'checked':'')+' style="width:16px;height:16px">'
+    +'<span>🔴 Απών (HIGH RED-S RISK!)</span>'
+    +'</label>'
+    +'</div>'
+    +'</div>'
+    +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
+    +'<button onclick="closeMedicalConditionsModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
+    +'<button onclick="saveMedicalConditions()" style="padding:10px 20px;background:#c62828;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+
+  var overlay=document.createElement('div');
+  overlay.innerHTML=html;
+  overlay.id='medicalModal';
+  document.body.appendChild(overlay);
+}
+
+function closeMedicalConditionsModal(){
+  var m=document.getElementById('medicalModal');
+  if(m)m.remove();
+}
+
+function saveMedicalConditions(){
+  var c=getC();if(!c)return;
+  if(!c.medConditions)c.medConditions={};
+
+  c.medConditions.diabetes=document.getElementById('chk-diabetes-modal').checked;
+  c.medConditions.hypertension=document.getElementById('chk-hypertension-modal').checked;
+  c.medConditions.celiac=document.getElementById('chk-celiac-modal').checked;
+  c.medConditions.ibs=document.getElementById('chk-ibs-modal').checked;
+  c.medConditions.lactose=document.getElementById('chk-lactose-modal').checked;
+
+  var menstrualValue=document.querySelector('input[name="menstrual"]:checked').value;
+  c.menstrualCycle=menstrualValue;
+
+  save();
+  closeMedicalConditionsModal();
+  showSuccessToast('✅ Ιατρικές συνθήκες αποθηκεύτηκαν!');
+  renderMain();
+}
+
+// ✅ MODAL 6: ΔΙΑΤΡΟΦΗ & ΑΠΟΚΛΕΙΣΜΟΙ
+function openDietModal(){
+  var c=getC();if(!c)return;
+  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="dietOverlay" onclick="if(event.target===this)closeDietModal()">'
+    +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #F57C00;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#F57C00;font-size:18px">🥗 Διατροφή & Αποκλεισμοί</h2>'
+    +'<button onclick="closeDietModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'</div>'
+    +'<div style="margin-bottom:20px">'
+    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">📋 Τύπος Διατροφής:</label>'
+    +'<select id="dietType-modal" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px">'
+    +'<option value="normal" '+(c.dietType==='normal'?'selected':'')+'>🍗 Κανονική</option>'
+    +'<option value="vegetarian" '+(c.dietType==='vegetarian'?'selected':'')+'>🥬 Χορτοφαγική</option>'
+    +'<option value="vegan" '+(c.dietType==='vegan'?'selected':'')+'>🌱 Vegan</option>'
+    +'<option value="keto" '+(c.dietType==='keto'?'selected':'')+'>⚡ Κετογονική</option>'
+    +'<option value="bodybuilding_clean" '+(c.dietType==='bodybuilding_clean'?'selected':'')+'>🏋️ Bodybuilding Clean</option>'
+    +'<option value="intermittent_fasting" '+(c.dietType==='intermittent_fasting'?'selected':'')+'>⏰ Intermittent Fasting</option>'
+    +'<option value="orthodox_fasting" '+(c.dietType==='orthodox_fasting'?'selected':'')+'>✝️ Ορθόδοξη Νηστεία</option>'
+    +'<option value="kids_10_14" '+(c.dietType==='kids_10_14'?'selected':'')+'>👧 Παιδιά 10-14</option>'
+    +'</select>'
+    +'</div>'
+    +'<div style="margin-bottom:20px">'
+    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">🚫 Αποκλεισμοί Τροφών:</label>'
+    +'<button onclick="openFoodPickerModal()" style="width:100%;padding:12px;background:#FF6B35;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;margin-bottom:8px">'
+    +'📋 Επιλέξτε τρόφιμα που δεν του αρέσουν ('+(c.foodExclude?.length||0)+')'
+    +'</button>'
+    +'<div style="font-size:11px;color:#666;padding:8px;background:#FFF3E0;border-radius:4px">'
+    +(c.foodExclude&&c.foodExclude.length>0?'✓ '+c.foodExclude.slice(0,3).join(', ')+(c.foodExclude.length>3?'...':''):'💡 Κάνε κλικ για να επιλέξεις τρόφιμα')
+    +'</div>'
+    +'</div>'
+    +'<div style="margin-bottom:20px">'
+    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">💡 Προτιμήσεις (comma-separated):</label>'
+    +'<textarea id="preferences-modal" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px;height:80px;font-family:monospace" placeholder="π.χ. Όχι κόκκινο κρέας, Περισσότερο ψάρι">'+(c.preferences||'')+'</textarea>'
+    +'</div>'
+    +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
+    +'<button onclick="closeDietModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
+    +'<button onclick="saveDietSettings()" style="padding:10px 20px;background:#F57C00;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+
+  var overlay=document.createElement('div');
+  overlay.innerHTML=html;
+  overlay.id='dietModal';
+  document.body.appendChild(overlay);
+}
+
+function closeDietModal(){
+  var m=document.getElementById('dietModal');
+  if(m)m.remove();
+}
+
+function saveDietSettings(){
+  var c=getC();if(!c)return;
+
+  c.dietType=document.getElementById('dietType-modal').value;
+  // Use foodExclude from Food Picker Modal if available
+  var selectedExclusions=[];
+  document.querySelectorAll('[data-food-excl]:checked').forEach(function(cb){
+    selectedExclusions.push(cb.value);
+  });
+  c.foodExclude=selectedExclusions.length>0?selectedExclusions:[];
+  c.preferences=document.getElementById('preferences-modal').value;
+
+  save();
+  closeDietModal();
+  showSuccessToast('✅ Διατροφικές ρυθμίσεις αποθηκεύτηκαν!');
+  renderMain();
+}
+
+// ✅ MODAL 7: FOOD PICKER (for exclusions)
+function openFoodPickerModal(){
+  var c=getC();if(!c)return;
+
+  // Organize foods by category
+  var foodsByCategory={};
+  for(var foodName in FOODS){
+    var food=FOODS[foodName];
+    var cat=food.cat||'Άλλα';
+    if(!foodsByCategory[cat])foodsByCategory[cat]=[];
+    foodsByCategory[cat].push(foodName);
+  }
+
+  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="foodPickerOverlay" onclick="if(event.target===this)closeFoodPickerModal()">'
+    +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #FF6B35;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#FF6B35;font-size:18px">🚫 Αποκλεισμοί Τροφών</h2>'
+    +'<button onclick="closeFoodPickerModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'</div>'
+
+    +'<div style="margin-bottom:15px">'
+    +'<input type="text" id="foodSearch" placeholder="🔍 Αναζήτησε τρόφιμο..." style="width:100%;padding:12px;border:1px solid #ddd;border-radius:6px;font-size:14px" oninput="filterFoodPicker(this.value)">'
+    +'</div>'
+
+    +'<div style="margin-bottom:15px;max-height:300px;overflow-y:auto" id="foodPickerContent">'
+    +'</div>'
+
+    +'<div style="border-top:2px solid #ddd;padding-top:15px;margin-top:15px">'
+    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:10px">✅ ΕΠΙΛΕΓΜΕΝΑ:</label>'
+    +'<div id="selectedFoodsChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px"></div>'
+    +'</div>'
+
+    +'<div style="display:flex;gap:10px;justify-content:flex-end">'
+    +'<button onclick="closeFoodPickerModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
+    +'<button onclick="saveFoodExclusions()" style="padding:10px 20px;background:#FF6B35;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
+
+  var overlay=document.createElement('div');
+  overlay.innerHTML=html;
+  overlay.id='foodPickerModal';
+  document.body.appendChild(overlay);
+
+  // Render all categories
+  var categories=Object.keys(foodsByCategory).sort();
+  var contentHtml='';
+  categories.forEach(function(cat){
+    contentHtml+='<div style="margin-bottom:20px">'
+      +'<div style="font-weight:700;color:#FF6B35;padding:10px;background:#FFF3E0;border-radius:6px;margin-bottom:10px">📁 '+cat+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-left:10px">';
+
+    foodsByCategory[cat].forEach(function(foodName){
+      var isSelected=(c.foodExclude||[]).includes(foodName);
+      contentHtml+='<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px;border-radius:4px;transition:all 0.2s" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'\'">'
+        +'<input type="checkbox" data-food-excl value="'+foodName+'" '+(isSelected?'checked':'')+' style="width:16px;height:16px;cursor:pointer" onchange="updateFoodChips()">'
+        +'<span style="font-size:13px">'+foodName+'</span>'
+        +'</label>';
+    });
+
+    contentHtml+='</div></div>';
+  });
+
+  document.getElementById('foodPickerContent').innerHTML=contentHtml;
+  updateFoodChips();
+}
+
+function closeFoodPickerModal(){
+  var m=document.getElementById('foodPickerModal');
+  if(m)m.remove();
+}
+
+function filterFoodPicker(query){
+  var checkboxes=document.querySelectorAll('[data-food-excl]');
+  var q=query.toLowerCase();
+  checkboxes.forEach(function(cb){
+    var label=cb.value.toLowerCase();
+    var parentLabel=cb.closest('label');
+    if(parentLabel){
+      parentLabel.style.display=label.includes(q)?'flex':'none';
+    }
+  });
+}
+
+function updateFoodChips(){
+  var selected=[];
+  document.querySelectorAll('[data-food-excl]:checked').forEach(function(cb){
+    selected.push(cb.value);
+  });
+
+  var chipsHtml='';
+  selected.forEach(function(food){
+    chipsHtml+='<div style="background:#FF6B35;color:white;padding:6px 12px;border-radius:16px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600">'
+      +food
+      +'<button onclick="removeFoodExclusion(\''+food+'\'" style="background:none;border:none;color:white;cursor:pointer;font-size:16px;padding:0">×</button>'
+      +'</div>';
+  });
+
+  document.getElementById('selectedFoodsChips').innerHTML=chipsHtml||'<div style="color:#999;font-style:italic">Δεν έχεις επιλέξει κανένα τρόφιμο</div>';
+}
+
+function removeFoodExclusion(foodName){
+  var cb=document.querySelector('[data-food-excl][value="'+foodName+'"]');
+  if(cb)cb.checked=false;
+  updateFoodChips();
+}
+
+function saveFoodExclusions(){
+  var c=getC();if(!c)return;
+
+  var selected=[];
+  document.querySelectorAll('[data-food-excl]:checked').forEach(function(cb){
+    selected.push(cb.value);
+  });
+
+  c.foodExclude=selected;
+  save();
+  closeFoodPickerModal();
+  showSuccessToast('✅ Αποκλεισμοί τροφών αποθηκεύτηκαν! ('+(selected.length)+' τρόφιμα)');
 }
 </script>
 
