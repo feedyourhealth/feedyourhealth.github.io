@@ -1299,6 +1299,8 @@ body.dark-mode #keyboardHelpPanel {
   <div class="sb-sep"></div>
   <button class="backup-btn export-btn" onclick="exportBackup()">&#9660; Αντίγραφο ασφαλείας (.json)</button>
   <button class="backup-btn" onclick="importBackup()">&#9650; Εισαγωγή αντιγράφου</button>
+  <button class="backup-btn" onclick="chooseBackupFolder()" style="color:#2e7d32;border-color:#66bb6a">📂 Αυτόματο backup σε φάκελο</button>
+  <button class="backup-btn" onclick="restoreFromSnapshot()" style="color:#e65100;border-color:#ffb74d">↩️ Επαναφορά (snapshot)</button>
   <div class="sb-sep"></div>
   <button class="backup-btn" onclick="showReferences()" style="color:#5d4037;border-color:#bcaaa4">📚 Βιβλιογραφία &amp; Πηγές</button>
   <button class="backup-btn" onclick="showDebugPanel()" style="color:#666;border-color:#ccc">🔧 Σφάλματα &amp; Αναφορά</button>
@@ -1410,6 +1412,9 @@ var FOODS={
 'Σολομός (ψητός)':{k:206,p:22,c:0,f:13,fi:0,cat:'Ψάρια'},
 'Λαβράκι (ψητό)':{k:124,p:23,c:0,f:2.5,fi:0,cat:'Ψάρια'},
 'Τόνος (κονσέρβα)':{k:116,p:26,c:0,f:1,fi:0,cat:'Ψάρια'},
+'Καλαμπόκι (κονσέρβα)':{k:81,p:3,c:18,f:1.2,fi:2.5,cat:'Λαχανικά'},
+'Ρόκα':{k:25,p:2.6,c:3.7,f:0.7,fi:1.6,cat:'Λαχανικά'},
+'Μαγιονέζα light':{k:300,p:0.9,c:9,f:28,fi:0,cat:'Καρυκεύματα'},
 'Γαρίδες (βραστές)':{k:99,p:24,c:0,f:0.3,fi:0,cat:'Ψάρια'},
 'Σαρδέλες':{k:208,p:24.6,c:0,f:11.5,fi:0,cat:'Ψάρια'},
 'Τσιπούρα (ψητή)':{k:131,p:26,c:0,f:2.9,fi:0,cat:'Ψάρια'},
@@ -1429,6 +1434,7 @@ var FOODS={
 'Γάλα πλήρες':{k:61,p:3.3,c:4.8,f:3.3,fi:0,cat:'Αυγά/Γαλακτ.'},
 'Γάλα αμυγδάλου':{k:17,p:0.6,c:0.5,f:1.4,fi:0.2,cat:'Αυγά/Γαλακτ.'},
 'Πρωτεΐνη σκόνη (whey)':{k:400,p:80,c:10,f:7,fi:0,cat:'Αυγά/Γαλακτ.'},
+'Πρωτεΐνη Αμυγδάλου (Amino Animo Organic)':{k:375,p:55,c:7,f:16,fi:15,cat:'Αυγά/Γαλακτ.'},
 'Στραγγιστό γιαούρτι 0%':{k:59,p:10,c:3.6,f:0.4,fi:0,cat:'Αυγά/Γαλακτ.'},
 'Γιαούρτι πλήρες 5%':{k:100,p:9,c:4.7,f:5.0,fi:0,cat:'Αυγά/Γαλακτ.'},
 'Ανθότυρο':{k:127,p:13,c:0.5,f:8,fi:0,cat:'Αυγά/Γαλακτ.'},
@@ -1533,6 +1539,13 @@ var FOODS={
 'Ακτινίδιο':{k:61,p:1.1,c:14.7,f:0.5,fi:3.0,cat:'Φρούτα'},
 'Χουρμάδες (ξερές)':{k:282,p:2.5,c:75,f:0.4,fi:8.0,cat:'Φρούτα'},
 'Βύσσινο':{k:50,p:1.0,c:12.2,f:0.3,fi:1.6,cat:'Φρούτα'},
+'Μπανάνα αποξηραμένη':{k:346,p:3.9,c:88,f:1.8,fi:9.9,cat:'Φρούτα'},
+'Βερίκοκα αποξηραμένα':{k:241,p:3.4,c:62.6,f:0.5,fi:7.3,cat:'Φρούτα'},
+'Δαμάσκηνα αποξηραμένα':{k:240,p:2.2,c:64,f:0.4,fi:7.1,cat:'Φρούτα'},
+'Cranberries αποξηραμένα':{k:308,p:0.2,c:82.8,f:1.1,fi:5.3,cat:'Φρούτα'},
+'Μάνγκο αποξηραμένο':{k:319,p:2.5,c:79,f:1.2,fi:2.4,cat:'Φρούτα'},
+'Ανανάς αποξηραμένος':{k:350,p:1.25,c:83.8,f:0.7,fi:2.4,cat:'Φρούτα'},
+'Μήλο αποξηραμένο':{k:243,p:0.9,c:65.9,f:0.3,fi:8.7,cat:'Φρούτα'},
 /* Ξηροί καρποί / Σπόροι / Λάδια */
 'Αμύγδαλα':{k:579,p:21,c:22,f:50,fi:12.5,cat:'Ξηροί καρποί'},
 'Καρύδια':{k:654,p:15,c:14,f:65,fi:6.7,cat:'Ξηροί καρποί'},
@@ -1551,6 +1564,26 @@ var FOODS={
 'Λιναρόσπορος':{k:534,p:18.3,c:28.9,f:42.2,fi:27.3,cat:'Ξηροί καρποί'},
 'Ελαιόλαδο':{k:884,p:0,c:0,f:100,fi:0,cat:'Λάδια'},
 'Ελιές':{k:115,p:0.8,c:6.3,f:10.7,fi:3.3,cat:'Λάδια'},
+/* ── Καρυκεύματα, βότανα & σάλτσες (μικρές μερίδες, μεγάλη γεύση) ── */
+/* Σημ.: το 'Σκόρδο' ορίζεται ήδη παρακάτω ως 'Λαχανικά' — δεν το ξαναορίζουμε εδώ */
+'Βασιλικός (φρέσκος)':{k:23,p:3.2,c:2.7,f:0.6,fi:1.6,cat:'Καρυκεύματα'},
+'Ρίγανη (ξηρή)':{k:265,p:9,c:69,f:4.3,fi:42.5,cat:'Καρυκεύματα'},
+'Θυμάρι (φρέσκο)':{k:101,p:5.6,c:24.5,f:1.7,fi:14,cat:'Καρυκεύματα'},
+'Δυόσμος/Μέντα':{k:70,p:3.8,c:14.9,f:0.9,fi:8,cat:'Καρυκεύματα'},
+'Άνηθος (φρέσκος)':{k:43,p:3.5,c:7,f:1.1,fi:2.1,cat:'Καρυκεύματα'},
+'Μαϊντανός (φρέσκος)':{k:36,p:3,c:6.3,f:0.8,fi:3.3,cat:'Καρυκεύματα'},
+'Δεντρολίβανο (φρέσκο)':{k:131,p:3.3,c:20.7,f:5.9,fi:14.1,cat:'Καρυκεύματα'},
+'Κύμινο':{k:375,p:18,c:44,f:22,fi:10.5,cat:'Καρυκεύματα'},
+'Πάπρικα':{k:282,p:14,c:54,f:13,fi:35,cat:'Καρυκεύματα'},
+'Μουστάρδα':{k:66,p:4,c:5,f:3.3,fi:3.3,cat:'Καρυκεύματα'},
+'Βαλσάμικο ξίδι':{k:88,p:0.5,c:17,f:0,fi:0,cat:'Καρυκεύματα'},
+'Σάλτσα γιαουρτιού-άνηθου':{k:60,p:4,c:5,f:2.5,fi:0.2,cat:'Καρυκεύματα'},
+'Πέστο βασιλικού':{k:300,p:5,c:6,f:29,fi:2,cat:'Καρυκεύματα'},
+'Σάλτσα ντομάτας (μαγειρεμένη)':{k:32,p:1.6,c:7,f:0.2,fi:1.5,cat:'Καρυκεύματα'},
+'Ταχινοσάλτσα λεμονιού':{k:200,p:6,c:8,f:17,fi:3,cat:'Καρυκεύματα'},
+'Σάλτσα λεμονιού-ελαιολάδου (λαδολέμονο)':{k:240,p:0.2,c:2,f:26,fi:0.2,cat:'Καρυκεύματα'},
+'Τζατζίκι':{k:75,p:3.5,c:4,f:4.8,fi:0.3,cat:'Καρυκεύματα'},
+'Σάλτσα σόγιας-μελιού':{k:120,p:3,c:24,f:0.2,fi:0.2,cat:'Καρυκεύματα'},
 /* ── Συνταγές feedyourhealth.org ── macros per 100g (calculated from ingredients) */
 'Αυγολέμονο Κυπριακό':{k:82,p:7,c:8,f:3.5,fi:0.4,cat:'Συνταγές FYH'},
 'Korean Beef Bowl':{k:149,p:11.8,c:17.7,f:3.9,fi:1.5,cat:'Συνταγές FYH'},
@@ -1622,6 +1655,25 @@ var FOODS={
 'Ούζο':{k:225,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
 'Αλάτι':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
 'Αλάτι & μπαχαρικά':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
+/* Μπαχαρικά & βότανα — ασήμαντη θερμιδική αξία στις δόσεις χρήσης (0 kcal) */
+'Κουρκουμάς':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Μαύρο πιπέρι':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Κανέλα':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Τζίντζερ':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Ρίγανη':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Δεντρολίβανο':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Θυμάρι':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Δυόσμος':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Φασκόμηλο':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Κουμίν':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Γλυκάνισος':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Κορίανδρος':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Τσίλι/Καυτερή πιπ.':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Κάρδαμο':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Μοσχοκάρυδο':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Γαρύφαλλο':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Σαφράνι':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
+'Μάραθος':{k:0,p:0,c:0,f:0,fi:0,cat:'Μπαχαρικά'},
 'Νερό':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
 };
 
@@ -1815,6 +1867,105 @@ var FOOD_PAIRING_DB={
   }
 };
 
+// ── ΕΠΕΚΤΑΣΗ PAIRING DB: κλειδιά ΑΚΡΙΒΩΣ όπως στο FOODS ──────────────────────
+// Διπλασιάζει την κάλυψη ώστε η μηχανή συνδυασμού να έχει υλικό για κάθε τρόφιμο.
+var FOOD_PAIRING_EXT={
+  // ── ΚΡΕΑΣ ──
+  'Κοτόπουλο μπούτι (ψητό)':{flavor_profile:['rich','umami'],best_pairings:['Πατάτες','Λεμόνι','Σκόρδο','Πιπεριές','Ρύζι καστανό (βρ.)','Μανιτάρια'],avoid_with:['Σολομός (ψητός)','Τόνος (κονσέρβα)'],texture:'tender',aromatic_herbs:['ροσμαρίνι','θυμάρι','πάπρικα'],category:'protein'},
+  'Γαλοπούλα στήθος':{flavor_profile:['mild','lean'],best_pairings:['Ρύζι καστανό (βρ.)','Σπανάκι','Μανιτάρια','Πιπεριές','Κινόα (βρ.)'],avoid_with:['Σολομός (ψητός)'],texture:'tender',aromatic_herbs:['θυμάρι','βασιλικό'],category:'protein'},
+  'Μοσχάρι (ψητό)':{flavor_profile:['rich','umami','strong'],best_pairings:['Πατάτες','Μανιτάρια','Κρεμμύδι','Καρότα','Πιπεριά κόκκινη'],avoid_with:['Φακές','ψάρι'],texture:'firm',aromatic_herbs:['ροσμαρίνι','θυμάρι'],category:'protein'},
+  'Βοδινό άπαχο (ψητό)':{flavor_profile:['rich','umami'],best_pairings:['Πατάτες','Μανιτάρια','Σπαράγγια','Μπρόκολο','Ρύζι καστανό (βρ.)'],avoid_with:['ψάρι'],texture:'firm',aromatic_herbs:['ροσμαρίνι','θυμάρι'],category:'protein'},
+  'Μπριζόλα άπαχη':{flavor_profile:['rich','umami'],best_pairings:['Πατάτες','Σαλάτα εποχής','Μανιτάρια','Πιπεριά κόκκινη'],avoid_with:['ψάρι'],texture:'firm',aromatic_herbs:['ροσμαρίνι','πάπρικα'],category:'protein'},
+  'Χοιρινό (μπριζόλα)':{flavor_profile:['rich','savory'],best_pairings:['Πατάτες','Μήλο','Λάχανο','Μουστάρδα','Κρεμμύδι'],avoid_with:['ψάρι'],texture:'firm',aromatic_herbs:['θυμάρι','δεντρολίβανο'],category:'protein'},
+  'Αρνί (ψητό)':{flavor_profile:['rich','strong'],best_pairings:['Πατάτες','Λεμόνι','Σκόρδο','Γιαούρτι 2%','Μελιτζάνες'],avoid_with:['ψάρι'],texture:'firm',aromatic_herbs:['ροσμαρίνι','δυόσμος','ρίγανη'],category:'protein'},
+  'Κουνέλι (μαγ.)':{flavor_profile:['mild','savory'],best_pairings:['Κρεμμύδι','Ντοματες','Σκόρδο','Πατάτες'],avoid_with:['ψάρι'],texture:'tender',aromatic_herbs:['θυμάρι','δάφνη'],category:'protein'},
+  // ── ΨΑΡΙΑ ──
+  'Τσιπούρα (ψητή)':{flavor_profile:['delicate','umami'],best_pairings:['Λεμόνι','Σπαράγγια','Σκόρδο','Σπανάκι'],avoid_with:['Κοτόπουλο στήθος (ψητό)','Φακές'],texture:'tender',aromatic_herbs:['άνηθος','θυμάρι'],category:'protein'},
+  'Μπακαλιάρος (ψητός)':{flavor_profile:['mild','delicate'],best_pairings:['Σκόρδο','Πατάτες','Λεμόνι','Σπανάκι'],avoid_with:['Κοτόπουλο στήθος (ψητό)'],texture:'flaky',aromatic_herbs:['μαϊντανός','σκόρδο'],category:'protein'},
+  'Σαρδέλες':{flavor_profile:['umami','strong','oily'],best_pairings:['Λεμόνι','Ρίγανη','Ντοματες','Κρεμμύδι'],avoid_with:['Κοτόπουλο στήθος (ψητό)','γλυκά'],texture:'tender',aromatic_herbs:['ρίγανη','μαϊντανός'],category:'protein'},
+  'Σκουμπρί (ψητό)':{flavor_profile:['umami','strong','oily'],best_pairings:['Λεμόνι','Σκόρδο','Μαϊντανός','Πατάτες'],avoid_with:['γλυκά'],texture:'tender',aromatic_herbs:['μαϊντανός','ρίγανη'],category:'protein'},
+  'Χταπόδι (βρ.)':{flavor_profile:['umami','delicate'],best_pairings:['Λεμόνι','Ελιές','Ξίδι','Πατάτες','Σκόρδο'],avoid_with:['γαλακτοκομικά'],texture:'tender-firm',aromatic_herbs:['ρίγανη','μαϊντανός'],category:'protein'},
+  'Καλαμάρι (ψητό)':{flavor_profile:['delicate','umami'],best_pairings:['Λεμόνι','Σκόρδο','Μαϊντανός','Πιπεριά κόκκινη'],avoid_with:['γαλακτοκομικά'],texture:'tender',aromatic_herbs:['μαϊντανός','σκόρδο'],category:'protein'},
+  'Μύδια (βρ.)':{flavor_profile:['umami','briny'],best_pairings:['Σκόρδο','Λεμόνι','Ντοματες','Μαϊντανός'],avoid_with:['γλυκά'],texture:'tender',aromatic_herbs:['μαϊντανός','σκόρδο'],category:'protein'},
+  // ── ΟΣΠΡΙΑ / ΦΥΤΙΚΕΣ ΠΡΩΤΕΪΝΕΣ ──
+  'Φασόλια':{flavor_profile:['earthy','creamy'],best_pairings:['Κρεμμύδι','Καρότα','Ντοματες','Σκόρδο','Σέλινο'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['δάφνη','θυμάρι'],category:'protein'},
+  'Μαυρομάτικα':{flavor_profile:['earthy','mild'],best_pairings:['Κρεμμύδι','Σπανάκι','Λεμόνι','Ελαιόλαδο','Άνηθος'],avoid_with:['ψάρι'],texture:'tender',aromatic_herbs:['άνηθος','μαϊντανός'],category:'protein'},
+  'Φάβα':{flavor_profile:['creamy','earthy'],best_pairings:['Κρεμμύδι','Λεμόνι','Ελαιόλαδο','Κάπαρη'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['μαϊντανός'],category:'protein'},
+  'Γίγαντες (βρ.)':{flavor_profile:['creamy','earthy'],best_pairings:['Ντοματες','Κρεμμύδι','Σκόρδο','Καρότα','Σέλινο'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['μαϊντανός','δάφνη'],category:'protein'},
+  'Tofu (φυσικό)':{flavor_profile:['neutral','mild'],best_pairings:['Σάλτσα σόγιας (μειωμένο αλάτι)','Σκόρδο','Πιπεριά κόκκινη','Μπρόκολο','Ρύζι άσπρο (βρ.)'],avoid_with:[],texture:'soft',aromatic_herbs:['τζίντζερ','σκόρδο'],category:'protein'},
+  'Edamame (βρ.)':{flavor_profile:['fresh','mild'],best_pairings:['Σάλτσα σόγιας (μειωμένο αλάτι)','Ρύζι άσπρο (βρ.)','Σουσάμι'],avoid_with:[],texture:'tender',aromatic_herbs:['σουσάμι'],category:'protein'},
+  // ── ΓΑΛΑΚΤΟΚΟΜΙΚΑ ──
+  'Τυρί φέτα':{flavor_profile:['salty','tangy'],best_pairings:['Ντοματες','Αγγούρι','Ελιές','Πιπεριές','Ρίγανη'],avoid_with:['ψάρι'],texture:'crumbly',aromatic_herbs:['ρίγανη','βασιλικό'],category:'protein'},
+  'Χαλλούμι (ψητό)':{flavor_profile:['salty','savory'],best_pairings:['Ντοματες','Δυόσμος','Λεμόνι','Πεπόνι','Πιπεριά κόκκινη'],avoid_with:[],texture:'firm',aromatic_herbs:['δυόσμος','ρίγανη'],category:'protein'},
+  'Γιαούρτι 2%':{flavor_profile:['tangy','creamy'],best_pairings:['Μέλι','Μούρα','Βρώμη','Καρύδια','Αγγούρι'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['δυόσμος'],category:'protein'},
+  'Cottage cheese':{flavor_profile:['mild','creamy'],best_pairings:['Ντοματες','Αγγούρι','Μούρα','Βρώμη'],avoid_with:[],texture:'creamy',aromatic_herbs:['σχοινόπρασο'],category:'protein'},
+  // ── ΥΔΑΤΑΝΘΡΑΚΕΣ ──
+  'Ρύζι καστανό (βρ.)':{flavor_profile:['nutty','mild'],best_pairings:['Σκόρδο','Κοτόπουλο στήθος (ψητό)','Μπρόκολο','Σάλτσα σόγιας (μειωμένο αλάτι)'],avoid_with:[],texture:'firm',aromatic_herbs:['κολιαντρος'],category:'carb'},
+  'Κινόα (βρ.)':{flavor_profile:['nutty','earthy'],best_pairings:['Λεμόνι','Ντοματες','Αγγούρι','Μαϊντανός','Σπανάκι'],avoid_with:[],texture:'fluffy',aromatic_herbs:['μαϊντανός','δυόσμος'],category:'carb'},
+  'Μακαρόνια (βρ.)':{flavor_profile:['neutral','mild'],best_pairings:['Ντοματες','Σκόρδο','Βασιλικός','Μανιτάρια','Κιμάς'],avoid_with:[],texture:'tender',aromatic_herbs:['βασιλικό','ρίγανη'],category:'carb'},
+  'Σπαγγέτι ολικής (βρ.)':{flavor_profile:['nutty','mild'],best_pairings:['Ντοματες','Σκόρδο','Βασιλικός','Γαρίδες (βραστές)','Ελαιόλαδο'],avoid_with:[],texture:'tender',aromatic_herbs:['βασιλικό'],category:'carb'},
+  'Κριθαράκι (βρ.)':{flavor_profile:['neutral','mild'],best_pairings:['Ντοματες','Κοτόπουλο στήθος (ψητό)','Μοσχάρι (ψητό)','Φέτα'],avoid_with:[],texture:'tender',aromatic_herbs:['βασιλικό'],category:'carb'},
+  'Κους κους (βρ.)':{flavor_profile:['mild','nutty'],best_pairings:['Λαχανικά','Λεμόνι','Δυόσμος','Κοτόπουλο στήθος (ψητό)'],avoid_with:[],texture:'fluffy',aromatic_herbs:['δυόσμος','μαϊντανός'],category:'carb'},
+  'Πλιγούρι (βρ.)':{flavor_profile:['nutty','earthy'],best_pairings:['Ντοματες','Μαϊντανός','Λεμόνι','Κρεμμύδι'],avoid_with:[],texture:'tender',aromatic_herbs:['μαϊντανός','δυόσμος'],category:'carb'},
+  'Ψωμί ολικής άλεσης':{flavor_profile:['nutty','mild'],best_pairings:['Αυγά (ολόκληρα)','Τυρί φέτα','Ντοματες','Αβοκάντο'],avoid_with:[],texture:'chewy',aromatic_herbs:[],category:'carb'},
+  // ── ΛΑΧΑΝΙΚΑ ──
+  'Καρότα':{flavor_profile:['sweet','earthy'],best_pairings:['Κύμινο','Μέλι','Κοτόπουλο στήθος (ψητό)','Φακές'],avoid_with:[],texture:'crisp',aromatic_herbs:['κύμινο','κολιαντρος'],category:'vegetable'},
+  'Κολοκυθάκια':{flavor_profile:['mild','fresh'],best_pairings:['Σκόρδο','Λεμόνι','Φέτα','Δυόσμος','Ντοματες'],avoid_with:[],texture:'tender',aromatic_herbs:['δυόσμος','βασιλικό'],category:'vegetable'},
+  'Μελιτζάνες':{flavor_profile:['earthy','smoky'],best_pairings:['Ντοματες','Σκόρδο','Φέτα','Κιμάς','Ελαιόλαδο'],avoid_with:[],texture:'soft',aromatic_herbs:['βασιλικό','ρίγανη'],category:'vegetable'},
+  'Κουνουπίδι':{flavor_profile:['earthy','mild'],best_pairings:['Σκόρδο','Λεμόνι','Κύμινο','Πάπρικα'],avoid_with:[],texture:'tender',aromatic_herbs:['κύμινο','πάπρικα'],category:'vegetable'},
+  'Φασολάκια':{flavor_profile:['fresh','earthy'],best_pairings:['Ντοματες','Σκόρδο','Ελαιόλαδο','Πατάτες'],avoid_with:[],texture:'tender',aromatic_herbs:['μαϊντανός'],category:'vegetable'},
+  'Πιπεριά κόκκινη':{flavor_profile:['sweet','fresh'],best_pairings:['Σκόρδο','Κρεμμύδι','Κοτόπουλο στήθος (ψητό)','Φέτα','Ελαιόλαδο'],avoid_with:[],texture:'crisp',aromatic_herbs:['βασιλικό','ρίγανη'],category:'vegetable'},
+  'Αγγούρι':{flavor_profile:['fresh','cooling'],best_pairings:['Γιαούρτι 2%','Φέτα','Ντοματες','Δυόσμος','Άνηθος'],avoid_with:[],texture:'crisp',aromatic_herbs:['άνηθος','δυόσμος'],category:'vegetable'},
+  'Μαρούλι':{flavor_profile:['fresh','mild'],best_pairings:['Λεμόνι','Άνηθος','Κρεμμυδάκι','Ελαιόλαδο'],avoid_with:[],texture:'crisp',aromatic_herbs:['άνηθος'],category:'vegetable'},
+  'Σαλάτα εποχής':{flavor_profile:['fresh','mixed'],best_pairings:['Λεμόνι','Ελαιόλαδο','Βαλσάμικο','Φέτα'],avoid_with:[],texture:'crisp',aromatic_herbs:['ρίγανη'],category:'vegetable'},
+  'Τομάτες':{flavor_profile:['acidic','umami','fresh'],best_pairings:['Βασιλικός','Φέτα','Ελιές','Κρεμμύδι','Αγγούρι'],avoid_with:[],texture:'juicy',aromatic_herbs:['βασιλικό','ρίγανη'],category:'vegetable'}
+};
+// Συγχώνευση επέκτασης στη βασική βάση (χωρίς να πειραχτεί η αρχική)
+for(var __fpk in FOOD_PAIRING_EXT){ if(FOOD_PAIRING_EXT.hasOwnProperty(__fpk)){ FOOD_PAIRING_DB[__fpk]=FOOD_PAIRING_EXT[__fpk]; } }
+
+// ── ΣΑΛΤΣΕΣ & ΦΙΝΙΡΙΣΜΑ ανά κατηγορία πρωτεΐνης ──────────────────────────────
+// Κάθε καταχώρηση = {n: όνομα τροφίμου στο FOODS, g: γραμμάρια}. Επιλέγεται
+// μία σάλτσα ώστε το πιάτο να μην βγαίνει «γυμνό».
+var SAUCE_DB={
+  'Κρέας':[
+    {n:'Σάλτσα ντομάτας (μαγειρεμένη)',g:40},
+    {n:'Μουστάρδα',g:12},
+    {n:'Σάλτσα λεμονιού-ελαιολάδου (λαδολέμονο)',g:12},
+    {n:'Τζατζίκι',g:30}
+  ],
+  'Ψάρια':[
+    {n:'Σάλτσα λεμονιού-ελαιολάδου (λαδολέμονο)',g:15},
+    {n:'Σάλτσα γιαουρτιού-άνηθου',g:25},
+    {n:'Ταχινοσάλτσα λεμονιού',g:18}
+  ],
+  'Όσπρια':[
+    {n:'Σάλτσα ντομάτας (μαγειρεμένη)',g:40},
+    {n:'Σάλτσα λεμονιού-ελαιολάδου (λαδολέμονο)',g:12},
+    {n:'Ταχινοσάλτσα λεμονιού',g:18}
+  ],
+  'Αυγά/Γαλακτ.':[
+    {n:'Σάλτσα ντομάτας (μαγειρεμένη)',g:30},
+    {n:'Πέστο βασιλικού',g:12},
+    {n:'Τζατζίκι',g:30}
+  ],
+  '_asian':[
+    {n:'Σάλτσα σόγιας-μελιού',g:15},
+    {n:'Σάλτσα σόγιας (μειωμένο αλάτι)',g:12}
+  ]
+};
+// Αντιστοίχιση ονόματος βοτάνου (όπως γράφεται στα aromatic_herbs) → τρόφιμο FOODS
+var HERB_FOOD_MAP={
+  'βασιλικό':'Βασιλικός (φρέσκος)','βασιλικός':'Βασιλικός (φρέσκος)',
+  'ρίγανη':'Ρίγανη (ξηρή)',
+  'θυμάρι':'Θυμάρι (φρέσκο)',
+  'δυόσμος':'Δυόσμος/Μέντα','δυόσμος/μέντα':'Δυόσμος/Μέντα',
+  'άνηθος':'Άνηθος (φρέσκος)','δίλ':'Άνηθος (φρέσκος)','φρέσκος δίλ':'Άνηθος (φρέσκος)',
+  'μαϊντανός':'Μαϊντανός (φρέσκος)',
+  'ροσμαρίνι':'Δεντρολίβανο (φρέσκο)','δεντρολίβανο':'Δεντρολίβανο (φρέσκο)',
+  'κύμινο':'Κύμινο','πάπρικα':'Πάπρικα','παπρικά':'Πάπρικα',
+  'σκόρδο':'Σκόρδο','κολιαντρος':'Μαϊντανός (φρέσκος)'
+};
+
 // Category scaling caps: foods in these categories scale with limits
 // Proteins/Carbs/FYH recipes = no cap (scale fully)
 var SCALE_CATS={
@@ -1962,8 +2113,22 @@ var FOOD_UNITS={
   'Πορτοκάλι':{g:180,u:'τεμ.'},
   'Ροδάκινο':{g:110,u:'τεμ.'},
   'Σταφίδες':{g:15,u:'κ.σ.'},
+  'Μπανάνα αποξηραμένη':{g:30,u:'χούφτα'},
+  'Βερίκοκα αποξηραμένα':{g:30,u:'χούφτα'},
+  'Δαμάσκηνα αποξηραμένα':{g:24,u:'τεμ.'},
+  'Cranberries αποξηραμένα':{g:30,u:'κ.σ.'},
+  'Μάνγκο αποξηραμένο':{g:30,u:'χούφτα'},
+  'Ανανάς αποξηραμένος':{g:30,u:'χούφτα'},
+  'Μήλο αποξηραμένο':{g:30,u:'χούφτα'},
   'Σταφύλια':{g:5,u:'ρόγα'},
   'Φράουλες':{g:19,u:'τεμ.'},
+  // Μπαχαρικά & βότανα — ανά κουταλάκι
+  'Κουρκουμάς':{g:2,u:'κ.γλ.'},'Μαύρο πιπέρι':{g:2,u:'κ.γλ.'},'Κανέλα':{g:2,u:'κ.γλ.'},
+  'Τζίντζερ':{g:2,u:'κ.γλ.'},'Ρίγανη':{g:2,u:'κ.γλ.'},'Δεντρολίβανο':{g:2,u:'κ.γλ.'},
+  'Θυμάρι':{g:2,u:'κ.γλ.'},'Δυόσμος':{g:2,u:'κ.γλ.'},'Φασκόμηλο':{g:2,u:'κ.γλ.'},
+  'Κουμίν':{g:2,u:'κ.γλ.'},'Γλυκάνισος':{g:2,u:'κ.γλ.'},'Κορίανδρος':{g:2,u:'κ.γλ.'},
+  'Τσίλι/Καυτερή πιπ.':{g:1,u:'κ.γλ.'},'Κάρδαμο':{g:2,u:'κ.γλ.'},'Μοσχοκάρυδο':{g:1,u:'κ.γλ.'},
+  'Γαρύφαλλο':{g:1,u:'κ.γλ.'},'Σαφράνι':{g:0.05,u:'πρέζα'},'Μάραθος':{g:2,u:'κ.γλ.'},
   // Συνταγές FYH — ανά μερίδα
   'Αυγολέμονο Κυπριακό':{g:250,u:'μερίδ.'},
   'Korean Beef Bowl':{g:350,u:'μερίδ.'},
@@ -1981,6 +2146,7 @@ var FOOD_UNITS={
   'Berry Protein Smoothie (FYH)':{g:247,u:'μερίδ.'},
   'Γάλα αμυγδάλου':{g:200,u:'φλ.'},
   'Πρωτεΐνη σκόνη (whey)':{g:30,u:'scoop'},
+  'Πρωτεΐνη Αμυγδάλου (Amino Animo Organic)':{g:25,u:'scoop'},
   'Σαλάτα Φακής Μεσογειακή':{g:250,u:'μερίδ.'},
   'Μπουλγκούρ-Κινόα Κοτόπουλο':{g:400,u:'μερίδ.'},
   'Ψάρι στο Φούρνο (FYH)':{g:200,u:'μερίδ.'},
@@ -2159,6 +2325,7 @@ var PORTIONS={
 'Μούρα':[{n:'3/4 φλ.',g:109},{n:'1 φλ.',g:145}],
 'Μπανάνα':[{n:'½ μεγάλη / 1 μικρή',g:120},{n:'1 μεγάλη',g:150}],
 'Λεμόνι':[{n:'1 κ.γ. χυμό',g:5},{n:'1 κ.σ. χυμό',g:15},{n:'1 μικρό',g:40},{n:'1 μέτριο',g:55},{n:'1 μεγάλο',g:70},{n:'χυμό 1 λεμονιού',g:30}],
+'Λεμόνι (χυμός)':[{n:'1 κ.κ.',g:5},{n:'1 κ.σ.',g:15},{n:'2 κ.σ.',g:30},{n:'χυμό 1 λεμονιού',g:30}],
 'Νεκταρίνι':[{n:'1 μέτριο',g:140},{n:'1 μεγάλο',g:180}],
 'Πεπόνι':[{n:'3/4 φλ.',g:280},{n:'1 φλ.',g:375}],
 'Πορτοκάλι':[{n:'1 μικρό',g:180},{n:'1 μεγάλο',g:220}],
@@ -2169,6 +2336,31 @@ var PORTIONS={
 'Ρόδι':[{n:'½ τεμ.',g:100},{n:'1 τεμ.',g:200}],
 'Ακτινίδιο':[{n:'1 μικρό',g:75},{n:'1 μεσαίο',g:100},{n:'2 τεμ.',g:150}],
 'Χουρμάδες (ξερές)':[{n:'2 τεμ.',g:30},{n:'4 τεμ.',g:60},{n:'6 τεμ.',g:90}],
+'Μπανάνα αποξηραμένη':[{n:'1 χούφτα (30g)',g:30},{n:'50g',g:50}],
+'Βερίκοκα αποξηραμένα':[{n:'5 ημίσεις',g:30},{n:'8 ημίσεις',g:48}],
+'Δαμάσκηνα αποξηραμένα':[{n:'3 τεμ.',g:24},{n:'5 τεμ.',g:40}],
+'Cranberries αποξηραμένα':[{n:'1 κ.σ.',g:15},{n:'2 κ.σ.',g:30}],
+'Μάνγκο αποξηραμένο':[{n:'3 φέτες',g:30},{n:'5 φέτες',g:50}],
+'Ανανάς αποξηραμένος':[{n:'3 φέτες',g:30},{n:'5 φέτες',g:50}],
+'Μήλο αποξηραμένο':[{n:'1 χούφτα (30g)',g:30},{n:'5 φέτες',g:30}],
+'Κουρκουμάς':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Μαύρο πιπέρι':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Κανέλα':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Τζίντζερ':[{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2},{n:'1 κ.σ. φρέσκο',g:6}],
+'Ρίγανη':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Δεντρολίβανο':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Θυμάρι':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Δυόσμος':[{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2},{n:'λίγα φύλλα',g:3}],
+'Φασκόμηλο':[{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Κουμίν':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Γλυκάνισος':[{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Κορίανδρος':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Τσίλι/Καυτερή πιπ.':[{n:'1 πρέζα',g:0.25},{n:'¼ κ.γλ.',g:0.5},{n:'½ κ.γλ.',g:1}],
+'Κάρδαμο':[{n:'1 πρέζα',g:0.5},{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
+'Μοσχοκάρυδο':[{n:'1 πρέζα',g:0.25},{n:'¼ κ.γλ.',g:0.5},{n:'½ κ.γλ.',g:1}],
+'Γαρύφαλλο':[{n:'1 πρέζα',g:0.25},{n:'¼ κ.γλ.',g:0.5},{n:'½ κ.γλ.',g:1}],
+'Σαφράνι':[{n:'λίγα στίγματα',g:0.03},{n:'1 πρέζα',g:0.05}],
+'Μάραθος':[{n:'½ κ.γλ.',g:1},{n:'1 κ.γλ.',g:2}],
 'Βύσσινο':[{n:'½ φλ.',g:80},{n:'1 φλ.',g:150}],
 'Σταφύλια':[{n:'17 ρόγες',g:85},{n:'1 φλ.',g:150}],
 'Φράουλες':[{n:'10 μικρές',g:190},{n:'1 1/4 φλ.',g:190}],
@@ -2204,6 +2396,7 @@ var PORTIONS={
 'Berry Protein Smoothie (FYH)':[{n:'1 μερίδα',g:247}],
 'Γάλα αμυγδάλου':[{n:'½ φλ.',g:100},{n:'1 φλ.',g:200},{n:'1½ φλ.',g:300}],
 'Πρωτεΐνη σκόνη (whey)':[{n:'1 scoop',g:30},{n:'1½ scoop',g:45},{n:'2 scoops',g:60}],
+'Πρωτεΐνη Αμυγδάλου (Amino Animo Organic)':[{n:'1 scoop',g:25},{n:'1½ scoop',g:37},{n:'2 scoops',g:50}],
 'Σαλάτα Φακής Μεσογειακή':[{n:'1 μερίδα',g:250},{n:'2 μερίδες',g:500}],
 'Μπουλγκούρ-Κινόα Κοτόπουλο':[{n:'1 μερίδα',g:380},{n:'μεγάλη μερίδα',g:500}],
 'Ψάρι στο Φούρνο (FYH)':[{n:'1 φιλέτο',g:180},{n:'2 φιλέτα',g:360}],
@@ -3028,6 +3221,20 @@ function logValidation(c){
   return audit;
 }
 
+/* ── Safe deep clone ──────────────────────────────────────────────────────────
+   Replaces the deepClone(x) idiom, which throws a SyntaxError
+   when x is undefined (e.g. a client/plan loaded from an old or partial record).
+   On failure it logs and returns a safe empty value instead of crashing the app.
+*/
+function deepClone(obj){
+  try {
+    return JSON.parse(JSON.stringify(obj));
+  } catch(e){
+    console.warn('[deepClone] failed, returning safe default:', e && e.message);
+    return Array.isArray(obj) ? [] : (obj && typeof obj === 'object' ? {} : null);
+  }
+}
+
 /* ── Safe Storage Wrappers ────────────────────────────────────────────────────
    Protects against: Safari private mode, quota exceeded, storage disabled
 */
@@ -3227,12 +3434,184 @@ var _saveTimer=null;
 function _doSave(){
   safeStorageSet('fyh_clients', clients);
   safeStorageSet('fyh_custom_tmpls', customTemplates);
+  try { _rollingSnapshot(); } catch(e){ console.warn('[BACKUP] snapshot hook', e && e.message); }
+  try { _writeFileBackup(false); } catch(e){ console.warn('[BACKUP] file hook', e && e.message); }
   var t=document.getElementById('autosave-toast');
   if(t){t.style.opacity='1';clearTimeout(t._ft);t._ft=setTimeout(function(){t.style.opacity='0';},1600);}
 }
 function save(){clearTimeout(_saveTimer);_saveTimer=setTimeout(_doSave,800);}
 function saveNow(){clearTimeout(_saveTimer);_doSave();}
 window.addEventListener('beforeunload',function(){saveNow();});
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// 🛡️ AUTOMATIC BACKUP SYSTEM
+// Three layers of protection against data loss (cache-clear / corruption / mistakes):
+//   1) Rolling in-app snapshots (instant restore, last 5)
+//   2) Silent backups to a real disk folder (survives cache-clear) via File System Access
+//   3) One-click restore
+// ═══════════════════════════════════════════════════════════════════════════════════
+
+// Canonical backup object shared by every backup path.
+function _buildBackupObj(){
+  return {
+    version: 3,
+    exportedAt: new Date().toISOString(),
+    clients: clients,
+    customTemplates: customTemplates,
+    trackingData: (typeof TRACKING_DATA !== 'undefined' ? TRACKING_DATA : null),
+    totalClients: (clients ? clients.length : 0)
+  };
+}
+
+// Lightweight signature to detect real changes (so we don't back up identical data).
+function _dataSignature(){
+  try { return clients.length + ':' + JSON.stringify(clients).length + ':' + JSON.stringify(customTemplates).length; }
+  catch(e){ return String(Date.now()); }
+}
+
+// ── Layer 1: Rolling in-app snapshots ──────────────────────────────────────────────
+var _BACKUP_SNAP_KEY = 'fyh_snapshots';
+var _BACKUP_SNAP_MAX = 5;
+var _lastSnapSig = null;
+
+function _rollingSnapshot(){
+  try {
+    var sig = _dataSignature();
+    if(sig === _lastSnapSig) return;             // nothing changed since last snapshot
+    if(!clients || clients.length === 0) return; // never overwrite good snapshots with empty data
+    var snaps = [];
+    try { snaps = JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY)) || []; } catch(e){ snaps = []; }
+    snaps.push({ ts: new Date().toISOString(), count: clients.length, sig: sig, data: _buildBackupObj() });
+    while(snaps.length > _BACKUP_SNAP_MAX) snaps.shift();
+    // Quota-safe write: if it doesn't fit, drop the oldest snapshot and retry.
+    var ok = false;
+    while(snaps.length && !ok){
+      try { localStorage.setItem(_BACKUP_SNAP_KEY, JSON.stringify(snaps)); ok = true; }
+      catch(e){ snaps.shift(); }
+    }
+    _lastSnapSig = sig;
+  } catch(e){ console.warn('[BACKUP] snapshot failed', e && e.message); }
+}
+
+function restoreFromSnapshot(){
+  var snaps = [];
+  try { snaps = JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY)) || []; } catch(e){ snaps = []; }
+  if(!snaps.length){ alert('Δεν υπάρχουν διαθέσιμα snapshots ακόμη.\nΘα δημιουργηθούν αυτόματα καθώς δουλεύετε.'); return; }
+  var rev = snaps.slice().reverse(); // newest first
+  var msg = 'Επιλέξτε snapshot για επαναφορά:\n\n';
+  rev.forEach(function(s, i){
+    msg += (i+1) + ') ' + new Date(s.ts).toLocaleString('el-GR') + '  —  ' + s.count + ' πελάτες\n';
+  });
+  msg += '\nΓράψτε τον αριθμό (1 = πιο πρόσφατο) ή Cancel:';
+  var pick = prompt(msg, '1');
+  if(pick === null) return;
+  var idx = parseInt(pick, 10);
+  if(!(idx >= 1 && idx <= rev.length)){ alert('Άκυρη επιλογή.'); return; }
+  var chosen = rev[idx-1];
+  if(!confirm('⚠️ Θα αντικατασταθούν ΟΛΑ τα τρέχοντα δεδομένα με το snapshot της '
+      + new Date(chosen.ts).toLocaleString('el-GR') + ' (' + chosen.count + ' πελάτες).\n\nΣυνέχεια;')) return;
+  var d = chosen.data || {};
+  clients = d.clients || [];
+  customTemplates = d.customTemplates || [];
+  if(d.trackingData && typeof TRACKING_DATA !== 'undefined') TRACKING_DATA = d.trackingData;
+  _doSave();
+  curId = null;
+  if(typeof renderSB === 'function') renderSB();
+  if(typeof renderMain === 'function') renderMain();
+  alert('✅ Επαναφορά ολοκληρώθηκε: ' + clients.length + ' πελάτες.');
+}
+
+// ── Layer 2: Silent backups to a real disk folder (File System Access API) ──────────
+var _backupDirHandle = null;
+var _BACKUP_DIR_DB = 'fyh_backup_db';
+var _lastFileBackupSig = null;
+var _lastFileBackupTime = 0;
+
+function backupFolderSupported(){ return typeof window.showDirectoryPicker === 'function'; }
+
+// Tiny IndexedDB helpers to remember the chosen folder across reloads.
+function _idbGet(cb){
+  try{
+    var req = indexedDB.open(_BACKUP_DIR_DB, 1);
+    req.onupgradeneeded = function(){ req.result.createObjectStore('h'); };
+    req.onsuccess = function(){
+      try{
+        var tx = req.result.transaction('h','readonly');
+        var g = tx.objectStore('h').get('dir');
+        g.onsuccess = function(){ cb(g.result || null); };
+        g.onerror = function(){ cb(null); };
+      }catch(e){ cb(null); }
+    };
+    req.onerror = function(){ cb(null); };
+  }catch(e){ cb(null); }
+}
+function _idbSet(val){
+  try{
+    var req = indexedDB.open(_BACKUP_DIR_DB, 1);
+    req.onupgradeneeded = function(){ req.result.createObjectStore('h'); };
+    req.onsuccess = function(){
+      try{ req.result.transaction('h','readwrite').objectStore('h').put(val, 'dir'); }catch(e){}
+    };
+  }catch(e){}
+}
+
+function chooseBackupFolder(){
+  if(!backupFolderSupported()){
+    alert('Ο browser σας δεν υποστηρίζει αυτόματο backup σε φάκελο.\n\n'
+      + 'Χρησιμοποιήστε «Αντίγραφο ασφαλείας (.json)» χειροκίνητα, ή ανοίξτε την εφαρμογή σε Chrome/Edge.');
+    return;
+  }
+  window.showDirectoryPicker({ mode:'readwrite' }).then(function(handle){
+    _backupDirHandle = handle;
+    _idbSet(handle);
+    _writeFileBackup(true);
+    alert('✅ Συνδέθηκε φάκελος backup.\n\nΑπό εδώ και πέρα αποθηκεύεται αυτόματα αντίγραφο σε κάθε αλλαγή '
+      + '(Dietologist_Backup_latest.json + ημερήσιο αρχείο).');
+  }).catch(function(e){ if(e && e.name !== 'AbortError') console.warn('[BACKUP] folder pick', e && e.message); });
+}
+
+function _ensureDirPermission(cb){
+  if(!_backupDirHandle){ cb(false); return; }
+  try{
+    _backupDirHandle.queryPermission({ mode:'readwrite' }).then(function(p){
+      if(p === 'granted'){ cb(true); return; }
+      _backupDirHandle.requestPermission({ mode:'readwrite' })
+        .then(function(p2){ cb(p2 === 'granted'); })
+        .catch(function(){ cb(false); });
+    }).catch(function(){ cb(false); });
+  }catch(e){ cb(false); }
+}
+
+function _writeToDir(name, content){
+  try{
+    _backupDirHandle.getFileHandle(name, { create:true })
+      .then(function(fh){ return fh.createWritable(); })
+      .then(function(w){ return w.write(content).then(function(){ return w.close(); }); })
+      .catch(function(e){ console.warn('[BACKUP] write ' + name, e && e.message); });
+  }catch(e){ console.warn('[BACKUP] write ' + name, e && e.message); }
+}
+
+function _writeFileBackup(force){
+  if(!_backupDirHandle) return;
+  var sig = _dataSignature();
+  var now = Date.now();
+  if(!force && sig === _lastFileBackupSig) return;          // no change since last file backup
+  if(!force && (now - _lastFileBackupTime) < 60000) return; // throttle: at most once per minute
+  _ensureDirPermission(function(granted){
+    if(!granted) return;
+    var json = JSON.stringify(_buildBackupObj(), null, 2);
+    _writeToDir('Dietologist_Backup_latest.json', json);                                  // always-current copy
+    _writeToDir('Dietologist_Backup_' + new Date().toISOString().slice(0,10) + '.json', json); // daily rotating copy
+    _lastFileBackupSig = sig;
+    _lastFileBackupTime = now;
+  });
+}
+
+// On load, silently restore the previously chosen folder handle (re-grant happens on next user click).
+document.addEventListener('DOMContentLoaded', function(){
+  if(!backupFolderSupported()) return;
+  _idbGet(function(handle){ if(handle){ _backupDirHandle = handle; } });
+});
 
 // ✅ PHASE 3: PERFORMANCE OPTIMIZATION
 // ═══════════════════════════════════════════════════════════════════════════════════
@@ -3306,8 +3685,8 @@ function exportData(){
   var exportObj={
     version: '2.0',
     exportedAt: new Date().toISOString(),
-    clients: JSON.parse(JSON.stringify(clients)),  // Deep copy
-    customTemplates: JSON.parse(JSON.stringify(customTemplates)),
+    clients: deepClone(clients),  // Deep copy
+    customTemplates: deepClone(customTemplates),
     trackingData: TRACKING_DATA || {},
     backupCount: (safeStorageGet('backup_count') || 0) + 1
   };
@@ -3642,7 +4021,16 @@ var FOOD_ALIASES={
   'Μύρτιλα':'Μούρα'
 };
 function resolveFood(n){return (FOODS[n]?n:(FOOD_ALIASES[n]||n));}
-function cm(n,g){var key=resolveFood(n);var f=FOODS[key];if(!f){if(typeof console!=='undefined'&&console.warn)console.warn('[cm] Τρόφιμο χωρίς μακροθρεπτικά (δεν βρέθηκε στο FOODS):',n);f={k:0,p:0,c:0,f:0,fi:0};}return{k:+(g/100*f.k).toFixed(1),p:+(g/100*f.p).toFixed(1),f:+(g/100*f.f).toFixed(1),c:+(g/100*f.c).toFixed(1),fi:+(g/100*(f.fi||0)).toFixed(1)};}
+function cm(n,g){
+  // Expandable recipe → derive macros from its (scaled) ingredients, so the
+  // single-line recipe and its opened-up ingredients always show the same totals.
+  var rx=(typeof FYH_RECIPE_EXPAND!=='undefined')&&FYH_RECIPE_EXPAND[n];
+  if(rx&&rx.ing.every(function(ing){return FOODS[resolveFood(ing.n)];})){
+    var scale=(g||rx.base)/rx.base,R={k:0,p:0,c:0,f:0,fi:0};
+    rx.ing.forEach(function(ing){var v=cm(ing.n,ing.g*scale);R.k+=v.k;R.p+=v.p;R.f+=v.f;R.c+=v.c;R.fi+=v.fi;});
+    return{k:+R.k.toFixed(1),p:+R.p.toFixed(1),f:+R.f.toFixed(1),c:+R.c.toFixed(1),fi:+R.fi.toFixed(1)};
+  }
+  var key=resolveFood(n);var f=FOODS[key];if(!f){if(typeof console!=='undefined'&&console.warn)console.warn('[cm] Τρόφιμο χωρίς μακροθρεπτικά (δεν βρέθηκε στο FOODS):',n);f={k:0,p:0,c:0,f:0,fi:0};}return{k:+(g/100*f.k).toFixed(1),p:+(g/100*f.p).toFixed(1),f:+(g/100*f.f).toFixed(1),c:+(g/100*f.c).toFixed(1),fi:+(g/100*(f.fi||0)).toFixed(1)};}
 
 /* ✅ Get food color HEX value based on category - RETURNS HEX COLOR */
 function getFoodColorHex(foodName){
@@ -3677,6 +4065,10 @@ function getFoodColorHex(foodName){
   // OILS/FATS (🧡 Orange #FB8500)
   if(cat==='Λάδια')
     return '#FB8500';
+
+  // SPICES & HERBS (🟤 Cinnamon #B5651D)
+  if(cat==='Μπαχαρικά')
+    return '#B5651D';
 
   // SUPPLEMENTS & SPECIAL (🟦 Teal #06A77D)
   if(cat==='Βιταμίνες & Μέταλλα'||cat==='Αναβολικά & Ορμόνες'||cat==='Ύπνος & Αποκατάσταση'||
@@ -4586,7 +4978,7 @@ football:[
 };
 
 // Mutable copy — editable by the user
-var TMPLS=JSON.parse(JSON.stringify(DEFAULT_TMPLS));
+var TMPLS=deepClone(DEFAULT_TMPLS);
 // User-saved custom plan templates
 var customTemplates=[];
 
@@ -4632,6 +5024,102 @@ var MEAL_RECIPES=[
   {id:'greek_salad_feta',name:'Ελληνική Σαλάτα με Φέτα & Ολίες',foods:[
     {n:'Ντομάτα',g:150},{n:'Αγγούρι',g:120},{n:'Φέτα',g:60},{n:'Ελιές',g:30},{n:'Ελαιόλαδο',g:15}
   ],kcal:300,macro:{p:10,f:18,c:22},tags:['Mediterranean','Σαλάτα','Χλωρίδα']},
+
+  // ═══ MEDITERRANEAN - ΕΠΕΚΤΑΣΗ (περισσότερη ποικιλία για κανονική δίαιτα) ═══
+  {id:'med_chicken_souvlaki_pita',name:'Κοτόπουλο Σουβλάκι με Πίτα & Τζατζίκι',foods:[
+    {n:'Κοτόπουλο στήθος (ψητό)',g:150},{n:'Πίτα αραβική',g:60},{n:'Τζατζίκι',g:40},{n:'Τομάτες',g:80},{n:'Αγγούρι',g:60},{n:'Ελαιόλαδο',g:5}
+  ],kcal:500,macro:{p:52,f:18,c:40},tags:['Mediterranean','Ελληνικό','Κοτόπουλο']},
+
+  {id:'med_baked_cod_potato',name:'Μπακαλιάρος Πλακί με Πατάτες & Λαδολέμονο',foods:[
+    {n:'Μπακαλιάρος (ψητός)',g:160},{n:'Πατάτες',g:180},{n:'Σκόρδο',g:5},{n:'Λεμόνι',g:15},{n:'Μαϊντανός (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:10}
+  ],kcal:420,macro:{p:40,f:13,c:38},tags:['Mediterranean','Ψάρι','Ελαφρύ']},
+
+  {id:'med_gigantes_feta',name:'Γίγαντες Φούρνου με Φέτα & Ντομάτα',foods:[
+    {n:'Γίγαντες (βρ.)',g:200},{n:'Τυρί φέτα',g:40},{n:'Τομάτες',g:80},{n:'Μαϊντανός (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:10}
+  ],kcal:445,macro:{p:22,f:20,c:45},tags:['Mediterranean','Όσπρια','Ελληνικό']},
+
+  {id:'med_octopus_fava',name:'Χταπόδι με Φάβα & Λεμόνι',foods:[
+    {n:'Χταπόδι (βρ.)',g:150},{n:'Φάβα',g:150},{n:'Λεμόνι',g:15},{n:'Μαϊντανός (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:10}
+  ],kcal:390,macro:{p:34,f:11,c:32},tags:['Mediterranean','Θαλασσινά','Ελληνικό']},
+
+  {id:'med_orzo_shrimp',name:'Κριθαρότο με Γαρίδες & Ντομάτα',foods:[
+    {n:'Κριθαράκι (βρ.)',g:180},{n:'Γαρίδες (βραστές)',g:120},{n:'Τομάτες',g:100},{n:'Σκόρδο',g:5},{n:'Βασιλικός (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:8}
+  ],kcal:480,macro:{p:39,f:10,c:56},tags:['Mediterranean','Θαλασσινά','Ζυμαρικά']},
+
+  {id:'med_stuffed_peppers',name:'Πιπεριές Γεμιστές με Ρύζι & Φέτα',foods:[
+    {n:'Πιπεριά κόκκινη',g:150},{n:'Ρύζι καστανό (βρ.)',g:120},{n:'Τυρί φέτα',g:40},{n:'Τομάτες',g:80},{n:'Δυόσμος/Μέντα',g:3},{n:'Ελαιόλαδο',g:10}
+  ],kcal:400,macro:{p:12,f:16,c:45},tags:['Mediterranean','Λαχανικά','Ελληνικό']},
+
+  // ═══ KETO / LOW-CARB (υψηλά λιπαρά, ελάχιστοι υδατάνθρακες) ═══
+  {id:'keto_salmon_avocado',name:'Σολομός με Αβοκάντο & Σπαράγγια',foods:[
+    {n:'Σολομός (ψητός)',g:120},{n:'Αβοκάντο',g:60},{n:'Σπαράγγια',g:150},{n:'Λεμόνι',g:10},{n:'Άνηθος (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:8}
+  ],kcal:445,macro:{p:27,f:34,c:7},tags:['Keto','LowCarb','Ψάρι','Ω3']},
+
+  {id:'keto_chicken_halloumi',name:'Κοτόπουλο με Χαλούμι & Σαλάτα',foods:[
+    {n:'Κοτόπουλο στήθος (ψητό)',g:120},{n:'Χαλλούμι (ψητό)',g:50},{n:'Σαλάτα εποχής',g:150},{n:'Ελαιόλαδο',g:10}
+  ],kcal:480,macro:{p:49,f:34,c:6},tags:['Keto','LowCarb','Κοτόπουλο','high_protein']},
+
+  {id:'keto_beef_broccoli',name:'Μοσχάρι με Μπρόκολο & Σκόρδο',foods:[
+    {n:'Βοδινό άπαχο (ψητό)',g:150},{n:'Μπρόκολο',g:150},{n:'Σκόρδο',g:5},{n:'Δεντρολίβανο (φρέσκο)',g:3},{n:'Ελαιόλαδο',g:14}
+  ],kcal:480,macro:{p:43,f:30,c:8},tags:['Keto','LowCarb','Κρέας','high_protein']},
+
+  {id:'keto_omelette_feta_avocado',name:'Ομελέτα με Φέτα, Σπανάκι & Αβοκάντο',foods:[
+    {n:'Αυγά (ολόκληρα)',g:150},{n:'Τυρί φέτα',g:40},{n:'Σπανάκι',g:100},{n:'Αβοκάντο',g:60},{n:'Ελαιόλαδο',g:8}
+  ],kcal:510,macro:{p:25,f:42,c:7},tags:['Keto','LowCarb','Αυγά','Πρωινό']},
+
+  {id:'keto_pork_cauliflower',name:'Χοιρινό με Κουνουπίδι Πουρέ & Λεμόνι',foods:[
+    {n:'Χοιρινό (μπριζόλα)',g:150},{n:'Κουνουπίδι',g:180},{n:'Λεμόνι',g:10},{n:'Δεντρολίβανο (φρέσκο)',g:3},{n:'Ελαιόλαδο',g:10}
+  ],kcal:500,macro:{p:41,f:33,c:9},tags:['Keto','LowCarb','Κρέας']},
+
+  {id:'keto_tuna_avocado_salad',name:'Σαλάτα Τόνου με Αβοκάντο & Ελιές',foods:[
+    {n:'Τόνος (κονσέρβα)',g:120},{n:'Αβοκάντο',g:80},{n:'Μαρούλι',g:100},{n:'Ελιές',g:30},{n:'Ελαιόλαδο',g:8}
+  ],kcal:390,macro:{p:32,f:28,c:8},tags:['Keto','LowCarb','Ψάρι','Σαλάτα']},
+
+  // ═══ FYH SIGNATURE — βασισμένα στα ΠΡΑΓΜΑΤΙΚΑ πλάνα/μερίδες της ομάδας ═══
+  // (Πηγή: athlete/1200-1400kcal/παιδικά/πελατειακά πλάνα — μερίδες & συνδυασμοί όπως χρησιμοποιούνται)
+  {id:'fyh_chicken_quinoa_salad',name:'Κοτόπουλο με Κινόα & Σαλάτα Εποχής',foods:[
+    {n:'Κοτόπουλο στήθος (ψητό)',g:120},{n:'Κινόα (βρ.)',g:100},{n:'Σαλάτα εποχής',g:150},{n:'Λεμόνι',g:10},{n:'Ελαιόλαδο',g:10}
+  ],kcal:436,macro:{p:41,f:14,c:27},tags:['Mediterranean','Ελληνικό','Κοτόπουλο']},
+
+  {id:'fyh_tuna_rice_salad',name:'Τόνος με Ρύζι Μπασμάτι & Σαλάτα',foods:[
+    {n:'Τόνος (κονσέρβα)',g:120},{n:'Ρύζι άσπρο (βρ.)',g:120},{n:'Σαλάτα εποχής',g:150},{n:'Λεμόνι',g:10},{n:'Ελαιόλαδο',g:10}
+  ],kcal:413,macro:{p:34,f:12,c:39},tags:['Mediterranean','Ψάρι']},
+
+  {id:'fyh_beef_orzo_salad',name:'Μοσχάρι με Κριθαράκι & Σαλάτα',foods:[
+    {n:'Μοσχάρι (ψητό)',g:120},{n:'Κριθαράκι (βρ.)',g:110},{n:'Σαλάτα εποχής',g:150},{n:'Ελαιόλαδο',g:8}
+  ],kcal:510,macro:{p:40,f:18,c:36},tags:['Mediterranean','Κρέας']},
+
+  {id:'fyh_salmon_sweetpotato_broccoli',name:'Σολομός με Γλυκοπατάτα & Μπρόκολο',foods:[
+    {n:'Σολομός (ψητός)',g:120},{n:'Γλυκοπατάτα',g:150},{n:'Μπρόκολο',g:150},{n:'Λεμόνι',g:10},{n:'Ελαιόλαδο',g:8}
+  ],kcal:497,macro:{p:33,f:24,c:40},tags:['Mediterranean','Ψάρι','Ω3']},
+
+  {id:'fyh_shrimp_orzo_tomato',name:'Γαρίδες με Κριθαράκι & Ντομάτα',foods:[
+    {n:'Γαρίδες (βραστές)',g:120},{n:'Κριθαράκι (βρ.)',g:110},{n:'Τομάτες',g:100},{n:'Σκόρδο',g:5},{n:'Ελαιόλαδο',g:8}
+  ],kcal:388,macro:{p:35,f:9,c:36},tags:['Mediterranean','Θαλασσινά']},
+
+  {id:'fyh_dakos',name:'Κρητικός Ντάκος με Φέτα & Ντομάτα',foods:[
+    {n:'Τομάτες',g:150},{n:'Κρίθινο παξιμάδι',g:50},{n:'Τυρί φέτα',g:40},{n:'Ελιές',g:20},{n:'Βαλσάμικο ξίδι',g:10},{n:'Ελαιόλαδο',g:10}
+  ],kcal:423,macro:{p:12,f:22,c:42},tags:['Mediterranean','Ελληνικό','Σαλάτα']},
+
+  {id:'fyh_zucchini_eggs',name:'Κολοκυθάκια με Αυγά & Ψωμί Ολικής',foods:[
+    {n:'Κολοκυθάκια',g:180},{n:'Αυγά (ολόκληρα)',g:120},{n:'Ψωμί ολικής άλεσης',g:40},{n:'Ελαιόλαδο',g:8}
+  ],kcal:372,macro:{p:19,f:22,c:24},tags:['Vegetarian','Ελαφρύ']},
+
+  {id:'fyh_couscous_feta_veg',name:'Κους Κους με Φέτα & Λαχανικά',foods:[
+    {n:'Κους κους (βρ.)',g:150},{n:'Τυρί φέτα',g:40},{n:'Πιπεριά κόκκινη',g:100},{n:'Τομάτες',g:80},{n:'Δυόσμος/Μέντα',g:3},{n:'Ελαιόλαδο',g:8}
+  ],kcal:388,macro:{p:11,f:17,c:36},tags:['Vegetarian','Μεσογειακό']},
+
+  {id:'fyh_lentils_bread_salad',name:'Φακές με Ψωμί & Αγγουροντομάτα',foods:[
+    {n:'Φακές',g:180},{n:'Ψωμί ολικής άλεσης',g:30},{n:'Τομάτες',g:80},{n:'Αγγούρι',g:80},{n:'Ελαιόλαδο',g:10}
+  ],kcal:398,macro:{p:19,f:12,c:48},tags:['Vegan','Όσπρια']},
+
+  {id:'fyh_chickpea_carrot',name:'Ρεβίθια με Καρότα & Ψωμί',foods:[
+    {n:'Ρεβίθια',g:180},{n:'Καρότα',g:100},{n:'Ψωμί ολικής άλεσης',g:25},{n:'Σκόρδο',g:5},{n:'Κύμινο',g:3},{n:'Ελαιόλαδο',g:8}
+  ],kcal:488,macro:{p:18,f:13,c:55},tags:['Vegan','Όσπρια']},
+
+  {id:'fyh_turkey_pita_wrap',name:'Πίτα με Γαλοπούλα & Λαχανικά',foods:[
+    {n:'Πίτα αραβική',g:50},{n:'Γαλοπούλα στήθος',g:60},{n:'Τυρί φέτα',g:15},{n:'Μαρούλι',g:60},{n:'Τομάτες',g:60},{n:'Ελαιόλαδο',g:5}
+  ],kcal:320,macro:{p:24,f:11,c:28},tags:['Mediterranean','Κρέας','Ελαφρύ']},
 
   // ═══ VEGAN DIET ═══
   {id:'vegan_buddha_bowl',name:'Buddha Bowl - Κινόα, Νοτ, Λαχανικά',foods:[
@@ -5124,7 +5612,7 @@ var MACRO_TYPE={
 function minScaleG(n){var u=FOOD_UNITS[n];return (u&&u.g)?Math.max(5,Math.round(u.g*0.5)):5;}
 
 function scalePlan(tmpl,tgt,mealTargets){
-  var p=JSON.parse(JSON.stringify(tmpl));
+  var p=deepClone(tmpl);
 
   // ✅ NEW: If per-meal targets provided, scale each meal individually
   if(mealTargets && Array.isArray(mealTargets) && mealTargets.length===tmpl.length){
@@ -5905,7 +6393,7 @@ function tmplUpdG(d,mi,fi,v){
 function tmplAddF(d,mi){TMPLS[curTmplGoal][d][mi].foods.push({n:Object.keys(FOODS)[0],g:100});renderTmplTable();}
 function tmplDelF(d,mi,fi){TMPLS[curTmplGoal][d][mi].foods.splice(fi,1);renderTmplTable();}
 function resetTmpl(goal){
-  TMPLS[goal]=JSON.parse(JSON.stringify(DEFAULT_TMPLS[goal]));
+  TMPLS[goal]=deepClone(DEFAULT_TMPLS[goal]);
   renderTemplateEditor();
 }
 
@@ -5969,7 +6457,7 @@ function doSaveAsTmpl(){
   var goal=goalSel?goalSel.value:(c.goal||'loss');
   if(!name){if(nameInp)nameInp.focus();return;}
   var days=[];
-  for(var d=0;d<7;d++)days.push(JSON.parse(JSON.stringify(c.weekPlan[d]||[])));
+  for(var d=0;d<7;d++)days.push(deepClone(c.weekPlan[d]||[]));
   var id='ct'+Date.now();
   customTemplates.push({id:id,name:name,goal:goal,days:days,
     createdAt:new Date().toISOString().slice(0,10),
@@ -6057,7 +6545,7 @@ function doSavePlan(){
     time:new Date().toLocaleTimeString('el-GR'),
     note:note,
     macros:avgDaily,
-    weekPlan:JSON.parse(JSON.stringify(c.weekPlan)),
+    weekPlan:deepClone(c.weekPlan),
     goal:c.goal,
     dietType:c.dietType
   };
@@ -6455,7 +6943,7 @@ function loadPlanAsActive(planIndex){
   var c=getC();
   if(!c||!c.savedPlans||!c.savedPlans[planIndex])return;
   var plan=c.savedPlans[planIndex];
-  c.weekPlan=JSON.parse(JSON.stringify(plan.weekPlan));
+  c.weekPlan=deepClone(plan.weekPlan);
   save();
   alert('✅ Πλάνο #'+plan.number+' φορτώθηκε! Πήγαινε στο "Εβδομαδιαίο πλάνο" για να το δεις.');
   renderMain();
@@ -6483,7 +6971,7 @@ function duplicatePlan(planIndex){
     time:new Date().toLocaleTimeString('el-GR'),
     note:'[Αντιγραφή] '+original.note,
     macros:original.macros,
-    weekPlan:JSON.parse(JSON.stringify(original.weekPlan)),
+    weekPlan:deepClone(original.weekPlan),
     goal:original.goal,
     dietType:original.dietType
   };
@@ -6999,6 +7487,8 @@ function renderMain(){
   document.getElementById('inp-age').onblur=function(){upd('age',+this.value);};
   document.getElementById('inp-weight').onblur=function(){upd('weight',+this.value);};
   document.getElementById('inp-height').onblur=function(){upd('height',+this.value);};
+  var rmrInp=document.getElementById('inp-rmr');
+  if(rmrInp)rmrInp.onblur=function(){upd('rmr',+this.value||0);};
   var bfProfInp=document.getElementById('inp-bf');
   if(bfProfInp)bfProfInp.onblur=function(){upd('bf',+this.value||0);};
   var lmInp=document.getElementById('inp-leanmass');
@@ -8401,7 +8891,7 @@ function isFoodAllergy(foodName, allergyList) {
 
 function applyFoodExclusions(tmplDays,excludeList,allergyList){
   if((!excludeList||!excludeList.length)&&(!allergyList||!allergyList.length))return tmplDays;
-  var result=JSON.parse(JSON.stringify(tmplDays));
+  var result=deepClone(tmplDays);
   result.forEach(function(meals){
     meals.forEach(function(meal){
       meal.foods=meal.foods.map(function(food){
@@ -8979,7 +9469,7 @@ function upd(k,v){
   var oldValue = c[k];
 
   // ✅ PHASE 1: VALIDATE INPUT BEFORE SAVING
-  var tempClient = JSON.parse(JSON.stringify(c));
+  var tempClient = deepClone(c);
   tempClient[k] = v;
   var validationErrors = validateClientData(tempClient);
 
@@ -9301,12 +9791,32 @@ var FYH_RECIPE_EXPAND={
     {n:'Vegan granola',g:60},
     {n:'Μπανάνα (φρέσκια)',g:60},
     {n:'Σπόρια λιναριού (αλεσμένα)',g:5}
+  ]},
+  'Wrap με τονοσαλάτα':{base:285,ing:[
+    {n:'Τόνος (κονσέρβα)',g:100},
+    {n:'Κρεμμύδι',g:20},
+    {n:'Πιπεριά κόκκινη',g:30},
+    {n:'Καλαμπόκι (κονσέρβα)',g:30},
+    {n:'Λεμόνι',g:10},
+    {n:'Μαγιονέζα light',g:15},
+    {n:'Τορτίλια (large)',g:60},
+    {n:'Ρόκα',g:20}
+  ]},
+  'High Protein Ομελέτα Wrap':{base:445,ing:[
+    {n:'Αυγά (ολόκληρα)',g:165},
+    {n:'Πίτα αραβική',g:60},
+    {n:'Cottage cheese',g:50},
+    {n:'Καλαμπόκι (κονσέρβα)',g:40},
+    {n:'Μοτσαρέλα',g:50},
+    {n:'Γαλοπούλα στήθος',g:45},
+    {n:'Ελαιόλαδο',g:20},
+    {n:'Ρόκα',g:15}
   ]}
 };
 
 // Replaces expandable FYH recipe entries with their actual ingredients (scaled to portion)
 function expandFYHRecipes(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(meals){
     meals.forEach(function(meal){
       var expanded=[];
@@ -9337,13 +9847,13 @@ var FYH_DEFAULT_MAIN=[
   {n:'Ελαιόλαδο',g:8}
 ];
 function removeFYHFromMainMeals(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(meals){
     meals.forEach(function(meal){
       if(meal.name!=='Μεσημεριανό'&&meal.name!=='Βραδινό')return;
       var hasFYH=meal.foods.some(function(f){return FYH_COMPLETE_MEAL[f.n];});
       if(!hasFYH)return;
-      meal.foods=JSON.parse(JSON.stringify(FYH_DEFAULT_MAIN));
+      meal.foods=deepClone(FYH_DEFAULT_MAIN);
     });
   });
   return result;
@@ -9352,7 +9862,7 @@ function removeFYHFromMainMeals(days){
 // Ensure every Μεσημεριανό & Βραδινό has 1 φλ. Σαλάτα εποχής + 1 κ.σ. Ελαιόλαδο
 // (skipped for FYH complete meals which are self-contained)
 function ensureSaladAndOil(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(meals){
     meals.forEach(function(meal){
       if(meal.name!=='Μεσημεριανό'&&meal.name!=='Βραδινό')return;
@@ -9426,7 +9936,7 @@ var PROT_CATS=['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Όσπρια'
 var GRAIN_CATS=['Δημητριακά'];
 
 function applyMediterraneanRules(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   Object.keys(MED_PLAN).forEach(function(di){
     var dayIdx=parseInt(di);
     var rules=MED_PLAN[di];
@@ -9447,7 +9957,7 @@ function applyMediterraneanRules(days){
         meal.foods=[{n:FREE_MEAL_MARKER,g:0}];
       } else if(rule.type==='fixed'){
         // Replace entire meal with the fixed meal foods
-        meal.foods=JSON.parse(JSON.stringify(rule.foods));
+        meal.foods=deepClone(rule.foods);
       } else if(rule.type==='legumes'){
         // Remove proteins and grains; replace with legume (+ tuna if specified)
         var keep=meal.foods.filter(function(f){
@@ -9481,7 +9991,7 @@ var MED_GRAIN_SWAP={
   'Ψωμί λευκό':      'Ψωμί σίκαλης'
 };
 function preferWholeGrains(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(meals){
     meals.forEach(function(meal){
       if(meal.foods.some(function(f){return FYH_COMPLETE_MEAL[f.n];}))return;
@@ -9496,7 +10006,7 @@ function preferWholeGrains(days){
 
 // Remove side dishes from meals that already contain a complete FYH recipe
 function cleanFYHMeals(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(meals){
     meals.forEach(function(meal){
       var hero=null;
@@ -9509,7 +10019,7 @@ function cleanFYHMeals(days){
 
 // ── Πατάτα σε γεύματα ψαριού (δεν έχουν υδατάνθρακα) ────────────────────────
 function addPotatoToFishMeals(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(meals){
     meals.forEach(function(meal){
       if(meal.name!=='Μεσημεριανό'&&meal.name!=='Βραδινό')return;
@@ -9544,7 +10054,7 @@ var FRUIT_CAT=['Φρούτα'];
 var NUTS_CATS=['Λιπαρά','Ξηροί καρποί'];
 
 function standardizeMediterraneanSnacks(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(meals,di){
     meals.forEach(function(meal){
       if(meal.name!=='Ενδιάμεσο')return;
@@ -9584,7 +10094,7 @@ var LEGUME_FOODS_LST=['Φακές','Ρεβίθια','Φασόλια','Μαυρο
 var OTHER_STARCHES=['Πατάτα','Γλυκοπατάτα','Πατάτες','Ρύζι άσπρο (βρ.)','Ρύζι καστανό (βρ.)','Κριθαράκι (βρ.)','Μακαρόνια (βρ.)'];
 
 function avoidLegumeStarchCombos(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(dayMeals){
     dayMeals.forEach(function(meal){
       // Ελέγχουμε αν υπάρχουν τόσο όσπρια όσο και άλλο άμυλο στο γεύμα
@@ -9642,7 +10152,7 @@ var DAIRY_FOODS=['Γιαούρτι','Τυρί','Φέτα','Μοτσαρέλα','
 var WHITE_PROTEINS=['Κοτόπουλο στήθος (ψητό)','Γαλοπούλα στήθος','Ψάρι','Λαβράκι','Τόνος'];
 
 function avoidDairyWithLegumes(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(dayMeals){
     dayMeals.forEach(function(meal){
       // Ελέγχουμε αν υπάρχουν τόσο όσπρια όσο και γαλακτοκομικό
@@ -9691,7 +10201,7 @@ function avoidDairyWithLegumes(days){
 // Ερευνητικά ευρήματα: Ταννίνες (από τσάι/καφές) μειώνουν απορρόφηση σιδήρου κατά 40-70%
 // Λύση: Προσθήκη ενημέρωσης/σημείωσης αν υπάρχουν όσπρια να αποφύγει καφές/τσάι κατά τη διάρκεια
 function avoidTanninsWithLegumes(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(dayMeals){
     var dayHasLegume=false;
     dayMeals.forEach(function(meal){
@@ -9718,7 +10228,7 @@ function avoidTanninsWithLegumes(days){
 var VEGETABLES_NEEDING_FAT=['Καρότα','Κολοκύθα','Γλυκοπατάτα','Ντομάτες','Σπανάκι','Μπρόκολο','Κάλε','Πιπεριές'];
 
 function ensureOilWithVegetables(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(dayMeals){
     dayMeals.forEach(function(meal){
       // Ελέγχουμε αν υπάρχουν λαχανικά που χρειάζονται λάδι
@@ -9771,7 +10281,7 @@ var HIGH_OXALATE_VEGGIES=['Σπανάκι','Σπανάκι ωμό','Σωταρι
 var LOW_OXALATE_GREENS=['Μπρόκολο','Κάλε','Λάχανο','Αγκινάρες'];
 
 function avoidOxalateWithDairy(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(dayMeals){
     dayMeals.forEach(function(meal){
       // Ελέγχουμε αν υπάρχουν ψηλά οξαλικά + γαλακτοκομικά
@@ -9815,7 +10325,7 @@ function avoidOxalateWithDairy(days){
 var OMEGA3_FISH=['Σολομός (ψητός)','Σαρδέλες','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Μπακαλιάρος (ψητός)'];
 
 function ensureOmega3FishIntake(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   var fishDays=new Set();
 
   // Μετράμε πόσες ημέρες έχουν ψάρι πλούσιο σε ωμέγα-3
@@ -9845,7 +10355,7 @@ function ensureOmega3FishIntake(days){
 }
 
 function normalizeBreakfasts(days){
-  var result=JSON.parse(JSON.stringify(days));
+  var result=deepClone(days);
   result.forEach(function(meals,di){
     var brkIdx=-1;
     meals.forEach(function(meal,mi){if(meal.name==='Πρωινό')brkIdx=mi;});
@@ -10224,7 +10734,7 @@ function findBestRecipe(dietType, targetKcal, mealType, excl){
 
   var best=candidates[0];
   return{
-    foods:JSON.parse(JSON.stringify(best.foods)),
+    foods:deepClone(best.foods),
     name:best.name,
     tags:best.tags,
     originalKcal:best.kcal,
@@ -10264,7 +10774,9 @@ function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName,
     var isMeat = FOODS[f].cat === 'Κρέας';
     var isFish = FOODS[f].cat === 'Ψάρια';
     var isLegume = FOODS[f].cat === 'Όσπρια';
-    var isDairy = FOODS[f].cat === 'Γαλακτοκομικά';
+    // Μόνο τυριά/αυγά κατάλληλα ως κύρια πρωτεΐνη γεύματος (όχι γάλα/σκόνη/ροφήματα)
+    var MAIN_DAIRY={'Τυρί φέτα':1,'Χαλλούμι (ψητό)':1,'Χαλλούμι (ωμό)':1,'Γιαούρτι 2%':1,'Cottage cheese':1,'Ανθότυρο':1,'Μυζήθρα':1,'Αυγά (ολόκληρα)':1,'Ασπράδια αυγών':1};
+    var isDairy = (FOODS[f].cat === 'Αυγά/Γαλακτ.') && MAIN_DAIRY[f]===1;
     var isProtein = isMeat || isFish || isLegume || isDairy;
 
     if(!isProtein) return false;
@@ -10306,44 +10818,112 @@ function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName,
     return FOODS[f].cat === 'Δημητριακά';
   });
 
+  // Αρωματικά που είναι μεν 'Λαχανικά' αλλά ΔΕΝ πρέπει να μπαίνουν ως κύριο λαχανικό 150g
+  var AROMATIC_VEG={'Σκόρδο':1,'Κρεμμύδι':1,'Κρεμμυδάκι (φρέσκο)':1};
+  // Αμυλούχα/καλαμπόκι: λειτουργούν ως υδατάνθρακας, όχι ως «λαχανικό συνοδευτικό»
+  var STARCHY_VEG={'Καλαμπόκι (ολόκληρο στον ατμό 200g)':1,'Καλαμπόκι (ολόκληρο στον ατμό 400g - Halvatzis)':1};
+  var KETO_STARCH={'Πατάτες':1,'Γλυκοπατάτα':1};
   var veggies = Object.keys(FOODS).filter(function(f) {
     // Skip excluded foods
     if(isExcluded(f)) return false;
+    if(AROMATIC_VEG[f] || STARCHY_VEG[f]) return false;
+    if(dietType==='keto' && KETO_STARCH[f]) return false; // keto: όχι αμυλούχα
     return FOODS[f].cat === 'Λαχανικά';
   });
 
-  // Try to build a combo with available foods (skip pairing validation for now)
+  // ── CHEF PAIRING ENGINE: συνδυάζει με βάση γεύση, βότανα & σάλτσα ──
+  // Helper: pairing entry για ένα τρόφιμο (άμεσα ή μέσω alias)
+  function pairOf(name){ return FOOD_PAIRING_DB[name] || FOOD_PAIRING_DB[resolveFood(name)] || null; }
+  // Helper: συγκρούεται το candidate με τη λίστα avoid; (ασαφές match)
+  function clashes(candidate, avoidList){
+    if(!avoidList||!avoidList.length) return false;
+    var c=(candidate||'').toLowerCase();
+    return avoidList.some(function(a){ a=(a||'').toLowerCase(); return a && (c.indexOf(a)!==-1 || a.indexOf(c)!==-1); });
+  }
+  // Helper: πόσο ταιριάζει το candidate με τις προτιμήσεις (ασαφές match)
+  function pairScore(candidate, prefList){
+    if(!prefList||!prefList.length) return 0;
+    var c=(candidate||'').toLowerCase(), s=0;
+    prefList.forEach(function(p){ p=(p||'').toLowerCase(); if(p && (c.indexOf(p)!==-1||p.indexOf(c)!==-1)) s++; });
+    return s;
+  }
+  // Helper: διάλεξε το καλύτερο από λίστα, με εναλλαγή ανά ημέρα για ποικιλία
+  function pickPaired(list, prefList, avoidList, seed){
+    if(!list||!list.length) return null;
+    var ranked = list.filter(function(x){ return !clashes(x, avoidList); });
+    if(!ranked.length) ranked = list.slice();
+    ranked.sort(function(a,b){ return pairScore(b,prefList)-pairScore(a,prefList); });
+    var top = pairScore(ranked[0],prefList);
+    var pool = ranked.filter(function(x){ return pairScore(x,prefList)===top; });
+    if(pool.length<2) pool = ranked.slice(0, Math.min(4, ranked.length));
+    return pool[seed % pool.length];
+  }
+
   if(proteins.length > 0 && carbs.length > 0 && veggies.length > 0) {
     var meal = {foods: []};
-    // Base portions
+
+    // 1) ΠΡΩΤΕΪΝΗ: εναλλαγή σε όλη τη λίστα για μέγιστη ποικιλία
     var selectedProtein = proteins[day % proteins.length];
-    var selectedCarb = carbs[day % carbs.length];
+    var pP = pairOf(selectedProtein);
+    var pref = pP ? pP.best_pairings : [];
+    var avoid = pP ? pP.avoid_with : [];
+    var protCat = FOODS[selectedProtein] ? FOODS[selectedProtein].cat : '';
 
-    // ✅ SAFETY: Avoid Chicken + Oats (Κοτόπουλο + Βρώμη) culinary mismatch
-    var hasConflict = false;
-    if(selectedProtein.toLowerCase().includes('κοτόπουλο') && selectedCarb.toLowerCase().includes('βρώμη')) {
-      hasConflict = true;
+    // 2) ΥΔΑΤΑΝΘΡΑΚΑΣ: προτίμησε αυτόν που ταιριάζει, απόφυγε συγκρούσεις
+    var selectedCarb = pickPaired(carbs, pref, avoid, day);
+    // Legacy safety: ποτέ κοτόπουλο + βρώμη
+    if(selectedCarb && selectedProtein.toLowerCase().includes('κοτόπουλο') && selectedCarb.toLowerCase().includes('βρώμη')){
+      var altC = carbs.filter(function(x){return !x.toLowerCase().includes('βρώμη');});
+      selectedCarb = altC.length ? pickPaired(altC, pref, avoid, day) : null;
     }
 
-    // If conflict found, try alternate carb
-    if(hasConflict && carbs.length > 1) {
-      for(var altIdx = 0; altIdx < carbs.length; altIdx++) {
-        var altCarb = carbs[altIdx];
-        if(!altCarb.toLowerCase().includes('βρώμη')) {
-          selectedCarb = altCarb;
-          hasConflict = false;
-          break;
-        }
+    // 3) ΛΑΧΑΝΙΚΟ: προτίμησε αυτό που ταιριάζει με την πρωτεΐνη
+    var selectedVeg = pickPaired(veggies, pref, avoid, day+1) || veggies[day % veggies.length];
+
+    // KETO: χωρίς δημητριακά — περισσότερο λαχανικό/λιπαρά + αβοκάντο
+    var gVeg = 150, gOil = 8;
+    if(dietType==='keto'){ selectedCarb=null; gVeg=200; gOil=16; }
+
+    // 4) ΔΥΝΑΜΙΚΕΣ ΜΕΡΙΔΕΣ: κλιμάκωση πρωτεΐνης+υδατ. ώστε να πιάσουμε τις θερμίδες
+    var gProt = 160, gCarb = selectedCarb ? 120 : 0;
+    if(targetKcal && targetKcal>0){
+      var fixedK = cm(selectedVeg,gVeg).k + cm('Ελαιόλαδο',gOil).k;
+      if(dietType==='keto' && FOODS['Αβοκάντο'] && !isExcluded('Αβοκάντο')) fixedK += cm('Αβοκάντο',60).k;
+      var varK0 = cm(selectedProtein,gProt).k + (selectedCarb?cm(selectedCarb,gCarb).k:0);
+      if(varK0>0){
+        var factor = (targetKcal - fixedK) / varK0;
+        factor = Math.max(0.45, Math.min(2.6, factor));
+        gProt = Math.round(gProt*factor);
+        if(selectedCarb) gCarb = Math.round(gCarb*factor);
       }
+      gProt = Math.max(80, Math.min(320, gProt));
+      if(selectedCarb) gCarb = Math.max(30, Math.min(300, gCarb));
     }
 
-    // If still in conflict, skip this meal
-    if(hasConflict) return null;
+    meal.foods.push({n: selectedProtein, g: gProt});
+    if(selectedCarb && gCarb>0) meal.foods.push({n: selectedCarb, g: gCarb});
+    meal.foods.push({n: selectedVeg, g: gVeg});
+    if(dietType==='keto' && FOODS['Αβοκάντο'] && !isExcluded('Αβοκάντο')) meal.foods.push({n:'Αβοκάντο',g:60});
 
-    meal.foods.push({n: selectedProtein, g: 150});
-    meal.foods.push({n: selectedCarb, g: 100});
-    meal.foods.push({n: veggies[day % veggies.length], g: 150});
-    meal.foods.push({n: 'Ελαιόλαδο', g: 10});
+    // 5) ΑΡΩΜΑΤΙΚΟ ΒΟΤΑΝΟ (μικρή ποσότητα, μεγάλη γεύση)
+    var herbName=null;
+    if(pP && pP.aromatic_herbs && pP.aromatic_herbs.length){
+      var hk = pP.aromatic_herbs[day % pP.aromatic_herbs.length];
+      herbName = HERB_FOOD_MAP[(hk||'').toLowerCase()] || null;
+    }
+    if(herbName && FOODS[herbName] && !isExcluded(herbName)) meal.foods.push({n: herbName, g: 3});
+
+    // 6) ΣΑΛΤΣΑ / ΦΙΝΙΡΙΣΜΑ ώστε το πιάτο να μην είναι «γυμνό»
+    var sauceList = SAUCE_DB[protCat] || SAUCE_DB['Κρέας'];
+    if(/tofu|edamame/i.test(selectedProtein)) sauceList = SAUCE_DB['_asian'];
+    if(sauceList && sauceList.length){
+      var sc = sauceList[day % sauceList.length];
+      if(sc && FOODS[sc.n] && !isExcluded(sc.n)) meal.foods.push({n: sc.n, g: sc.g});
+    }
+
+    // 7) Ελαιόλαδο για ισορροπία υγιεινών λιπαρών
+    meal.foods.push({n: 'Ελαιόλαδο', g: gOil});
+
     return meal;
   }
 
@@ -10617,7 +11197,7 @@ function displayFoodDistributionResults(validation) {
 // ✅ PHASE 4: GENERATE PLAN WITH UNDO/REDO WRAPPER
 function genPlanWithUndo(){
   var c=getC();if(!c)return;
-  var oldPlan = JSON.parse(JSON.stringify(c.weekPlan));
+  var oldPlan = deepClone(c.weekPlan);
 
   if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
     var cmd = new GeneratePlanCommand(c, oldPlan);
@@ -10771,7 +11351,7 @@ function genPlan(){
         // ✨ Priority 0: Check Chef-Inspired Recipes (culinary-sensible combinations)
         var recipeMeal = findBestRecipe(c.dietType, targetKcal, meal.name, excl);
         if(recipeMeal && recipeMeal.foods && recipeMeal.foods.length > 0){
-          meal.foods = JSON.parse(JSON.stringify(recipeMeal.foods));
+          meal.foods = deepClone(recipeMeal.foods);
           meal.recipeId = recipeMeal.recipeId;  // Track which recipe was used
           continue;  // Use chef-inspired recipe
         }
@@ -10780,7 +11360,7 @@ function genPlan(){
         if(savedCombos && savedCombos.length > 0){
           var savedMeal = findSavedComboMatch(savedCombos, targetKcal, null, 80, excl);
           if(savedMeal && savedMeal.foods && savedMeal.foods.length > 0){
-            meal.foods = JSON.parse(JSON.stringify(savedMeal.foods));
+            meal.foods = deepClone(savedMeal.foods);
             if(savedMeal.mealTiming) meal.mealTiming = savedMeal.mealTiming;
             continue;  // Use saved combo
           }
@@ -10790,7 +11370,7 @@ function genPlan(){
         // Pass meal.name for breakfast-specific constraints, excl for food exclusions, and dietType for diet compliance
         var smartMeal = generateSmartMeal(targetKcal, null, d, savedCombos, meal.name, excl, c.dietType);
         if(smartMeal && smartMeal.foods && smartMeal.foods.length > 0){
-          meal.foods = JSON.parse(JSON.stringify(smartMeal.foods));
+          meal.foods = deepClone(smartMeal.foods);
           if(smartMeal.mealTiming) meal.mealTiming = smartMeal.mealTiming;
           continue;  // Use smart meal
         }
@@ -11217,6 +11797,7 @@ function renderWeekTable(){
         }
         var chipUnit = displayUnit;
         var hasIng=FOODS[food.n]&&FOODS[food.n].ingredients?'<button class="chip-srv" onclick="showRecipeModal(\''+food.n.replace(/'/g,"\\'")+'\')" title="Δείτε τα συστατικά">📖</button>':'';
+        var hasExpand=FYH_RECIPE_EXPAND[food.n]?'<button class="chip-srv" onclick="expandRecipeInPlan('+d+','+mi+','+fi+')" title="Άνοιγμα υλικών — επεξεργασία ποσοτήτων">🔽</button>':'';
         var borderColor=getFoodColorHex(food.n);
         html+='<div class="food-chip">'
           +'<div class="chip-r1">'
@@ -11229,6 +11810,7 @@ function renderWeekTable(){
           +'</div>'
           +'<div class="chip-r2">'
           +hasIng
+          +hasExpand
           +(hasSrv?'<button class="chip-srv" onmousedown="event.preventDefault();showPortions(this,'+d+','+mi+','+fi+')">&#8801;</button>':'')
           +'<input class="chip-g" type="number" min="0" step="'+(displayUnit==='g'||!fu?'1':'0.1')+'" max="'+chipMax+'" value="'+chipVal+'" onchange="'+chipChg+'">'
           +'<button class="chip-unit-btn" onclick="cycleUnit('+d+','+mi+','+fi+')" title="Αλλαγή μονάδας">'+chipUnit+'</button>'
@@ -11629,7 +12211,7 @@ function doCopyDay(fromDay){
   var copied=[];
   for(var di=0;di<7;di++){
     var cb=document.getElementById('cp-'+di);
-    if(cb&&cb.checked){c.weekPlan[di]=JSON.parse(JSON.stringify(c.weekPlan[fromDay]));copied.push(dayNames[di]);}
+    if(cb&&cb.checked){c.weekPlan[di]=deepClone(c.weekPlan[fromDay]);copied.push(dayNames[di]);}
   }
   if(!copied.length){alert('Δεν επιλέχθηκε καμία ημέρα.');return;}
   save();renderWeekTable();
@@ -11721,7 +12303,7 @@ function enableMealDragDrop(){
         if(mealData.foods&&mealData.foods.length>0){
           // Deep copy foods array
           mealData.foods.forEach(function(food){
-            c.weekPlan[targetD][targetMi].foods.push(JSON.parse(JSON.stringify(food)));
+            c.weekPlan[targetD][targetMi].foods.push(deepClone(food));
           });
 
           // Save and refresh UI
@@ -11762,21 +12344,14 @@ function pickChip(el){
     closeDD();renderTmplTable();
   } else {
     var c=getC();if(!c)return;
-    // Check if selected food is a FYH recipe — if so, auto-expand to ingredients
+    // Update the food name
+    c.weekPlan[d][mi].foods[fi].n=selectedFoodName;
+    // If it's an expandable recipe, set its reference portion so the
+    // "Άνοιγμα υλικών" button (🔽) scales the ingredients correctly.
+    // The recipe stays as a single line — the user opens it on demand.
     var rx=FYH_RECIPE_EXPAND[selectedFoodName];
-    if(rx){
-      // Remove the recipe placeholder
-      c.weekPlan[d][mi].foods.splice(fi,1);
-      // Insert all ingredients at this position (scaled to recipe portion)
-      var scale=1; // Default scale if ingredient-less, otherwise use actual portion when set
-      rx.ing.forEach(function(ing,idx){
-        c.weekPlan[d][mi].foods.splice(fi+idx,0,{n:ing.n,g:ing.g});
-      });
-    } else {
-      // Regular food — just update name
-      c.weekPlan[d][mi].foods[fi].n=selectedFoodName;
-    }
-    closeDD();renderWeekTable();
+    if(rx)c.weekPlan[d][mi].foods[fi].g=rx.base;
+    save();closeDD();renderWeekTable();
   }
 }
 
@@ -11804,6 +12379,21 @@ function pickServing(g,d,mi,fi){
   var c=getC();if(!c)return;
   c.weekPlan[d][mi].foods[fi].g=g;
   closeDD();renderWeekTable();
+}
+
+/* ── Άνοιγμα συνταγής σε επεξεργάσιμα υλικά (γραμμάρια) ── */
+function expandRecipeInPlan(d,mi,fi){
+  var c=getC();if(!c)return;
+  var food=c.weekPlan[d][mi].foods[fi];
+  var rx=FYH_RECIPE_EXPAND[food.n];
+  if(!rx){alert('Αυτή η συνταγή δεν έχει αναλυτικά υλικά για άνοιγμα.');return;}
+  // Scale ingredients to the recipe's current portion
+  var scale=(food.g||rx.base)/rx.base;
+  var ings=rx.ing.map(function(ing){return {n:ing.n,g:Math.max(1,Math.round(ing.g*scale))};});
+  // Replace the single recipe line with its ingredient lines
+  var args=[fi,1].concat(ings);
+  Array.prototype.splice.apply(c.weekPlan[d][mi].foods,args);
+  save();renderWeekTable();
 }
 
 /* ── FEATURE #1: Custom Meal Times Management ──────────────────────────────── */
@@ -12283,7 +12873,7 @@ function saveCombo(d,mi){
   var combo={
     id:'c'+Date.now(),
     name:name.trim(),
-    foods:JSON.parse(JSON.stringify(meal.foods)),
+    foods:deepClone(meal.foods),
     kcal:Math.round(mealKcal),
     p:Math.round(mealP),f:Math.round(mealF),c:Math.round(mealC),
     mealTiming:meal.mealTiming||'regular',
@@ -12314,7 +12904,7 @@ function copyMealToClipboard(d,mi){
   window.mealClipboard={
     d:d,
     mi:mi,
-    meal:JSON.parse(JSON.stringify(meal))
+    meal:deepClone(meal)
   };
 
   // Show user feedback
@@ -12330,7 +12920,7 @@ function pasteMealFromClipboard(d,mi){
 
   // Copy all foods from clipboard
   sourceMeal.foods.forEach(function(food){
-    c.weekPlan[d][mi].foods.push(JSON.parse(JSON.stringify(food)));
+    c.weekPlan[d][mi].foods.push(deepClone(food));
   });
 
   save();
@@ -12366,7 +12956,7 @@ function toggleFavoriteMeal(d,mi,btn){
     favs.push({
       key:mealKey,
       name:meal.name||'Γεύμα',
-      foods:JSON.parse(JSON.stringify(meal.foods)),
+      foods:deepClone(meal.foods),
       createdAt:new Date().toISOString()
     });
     btn.style.opacity='1';
@@ -12435,7 +13025,7 @@ function pasteFavoriteMeal(idx){
 
   // Paste the meal
   fav.foods.forEach(function(food){
-    c.weekPlan[d][mi].foods.push(JSON.parse(JSON.stringify(food)));
+    c.weekPlan[d][mi].foods.push(deepClone(food));
   });
 
   save();
@@ -12633,6 +13223,7 @@ var EN_FOOD_NAMES={
   'Αυγά (ολόκληρα)':'Eggs (whole)','Ασπράδια αυγών':'Egg Whites','Γιαούρτι 2%':'Yogurt 2%','Τυρί φέτα':'Feta Cheese',
   'Μοτσαρέλα':'Mozzarella','Γάλα πλήρες':'Whole Milk','Γάλα αμυγδάλου':'Almond Milk',
   'Πρωτεΐνη σκόνη (whey)':'Whey Protein Powder',
+  'Πρωτεΐνη Αμυγδάλου (Amino Animo Organic)':'Almond Protein (Amino Animo Organic)',
   // Grains
   'Βρώμη (ωμή)':'Oats (raw)','Ρύζι άσπρο (βρ.)':'White Rice (cooked)',
   'Ρύζι καστανό (βρ.)':'Brown Rice (cooked)','Κινόα (βρ.)':'Quinoa (cooked)',
@@ -12657,6 +13248,14 @@ var EN_FOOD_NAMES={
   'Μανταρίνι':'Tangerine','Μήλο':'Apple','Μούρα':'Mixed Berries','Μπανάνα':'Banana',
   'Λεμόνι':'Lemon','Νεκταρίνι':'Nectarine','Πεπόνι':'Cantaloupe','Πορτοκάλι':'Orange',
   'Ροδάκινο':'Peach','Σταφίδες':'Raisins','Σταφύλια':'Grapes','Φράουλες':'Strawberries',
+  'Μπανάνα αποξηραμένη':'Dried Banana','Βερίκοκα αποξηραμένα':'Dried Apricots',
+  'Δαμάσκηνα αποξηραμένα':'Prunes','Cranberries αποξηραμένα':'Dried Cranberries',
+  'Μάνγκο αποξηραμένο':'Dried Mango','Ανανάς αποξηραμένος':'Dried Pineapple','Μήλο αποξηραμένο':'Dried Apple',
+  // Spices & Herbs
+  'Κουρκουμάς':'Turmeric','Μαύρο πιπέρι':'Black Pepper','Κανέλα':'Cinnamon','Τζίντζερ':'Ginger',
+  'Ρίγανη':'Oregano','Δεντρολίβανο':'Rosemary','Θυμάρι':'Thyme','Δυόσμος':'Mint','Φασκόμηλο':'Sage',
+  'Κουμίν':'Cumin','Γλυκάνισος':'Anise','Κορίανδρος':'Coriander','Τσίλι/Καυτερή πιπ.':'Chili Pepper',
+  'Κάρδαμο':'Cardamom','Μοσχοκάρυδο':'Nutmeg','Γαρύφαλλο':'Clove','Σαφράνι':'Saffron','Μάραθος':'Fennel',
   // Nuts / Fats
   'Αμύγδαλα':'Almonds','Καρύδια':'Walnuts','Αβοκάντο':'Avocado',
   'Φυστικοβούτυρο':'Peanut Butter','Αμυγδαλοβούτυρο':'Almond Butter','Ταχίνι':'Tahini','Κάσιους':'Cashews',
@@ -12697,7 +13296,7 @@ function exportPDF(lang){
   for(var d=0;d<7;d++){
     expandedWeekPlan[d]=[];
     if(c.weekPlan[d]){
-      expandedWeekPlan[d]=JSON.parse(JSON.stringify(c.weekPlan[d]));
+      expandedWeekPlan[d]=deepClone(c.weekPlan[d]);
     }
   }
   var t=calcTDEE(c);
@@ -12888,6 +13487,47 @@ function exportPDF(lang){
     fxHtml+='</tr>';
   }
   fxHtml+='</tbody></table>';
+
+  // ── Spices & Herbs Guide (client-facing reference) ───────────────────────────
+  var SPICES=[
+    {n:'Κουρκουμάς',en:'Turmeric',ben:'Αντιφλεγμονώδες, αντιοξειδωτικό',benEn:'Anti-inflammatory, antioxidant',use:'1-3 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Με μαύρο πιπέρι για απορρόφηση',noteEn:'With black pepper for absorption'},
+    {n:'Μαύρο πιπέρι',en:'Black Pepper',ben:'Βελτίωση απορρόφησης θρεπτικών, αντιμικροβιακό',benEn:'Nutrient absorption, antimicrobial',use:'1-2 γρ./ημέρα',useEn:'½ tsp/day',note:'Συνδυάζεται με κουρκουμά',noteEn:'Pairs with turmeric'},
+    {n:'Κανέλα',en:'Cinnamon',ben:'Ρύθμιση σακχάρου, αντιοξειδωτικό',benEn:'Blood sugar control, antioxidant',use:'1-4 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Προτιμήστε Κεϋλάνης για ασφάλεια',noteEn:'Prefer Ceylon for safety'},
+    {n:'Τζίντζερ',en:'Ginger',ben:'Αντιφλεγμονώδες, πέψη, ναυτία',benEn:'Anti-inflammatory, digestion, nausea relief',use:'2-5 γρ./ημέρα (1-2 κ.γλ.)',useEn:'1-2 tsp/day',note:'Φρέσκο ή σκόνη',noteEn:'Fresh or powder'},
+    {n:'Σκόρδο',en:'Garlic',ben:'Καρδιοπροστασία, αντιμικροβιακό',benEn:'Cardiovascular, antimicrobial',use:'1-2 σκελίδες/ημέρα',useEn:'1-2 cloves/day',note:'Καλύτερο ωμό',noteEn:'Best raw'},
+    {n:'Ρίγανη',en:'Oregano',ben:'Αντιμικροβιακό, αντιοξειδωτικό',benEn:'Antimicrobial, antioxidant',use:'1-2 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Ρίγανη ελληνική ισχυρή',noteEn:'Greek oregano is potent'},
+    {n:'Δεντρολίβανο',en:'Rosemary',ben:'Γνωστική λειτουργία, αντιοξειδωτικό',benEn:'Cognitive support, antioxidant',use:'1-2 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Φρέσκο ή αποξηραμένο',noteEn:'Fresh or dried'},
+    {n:'Θυμάρι',en:'Thyme',ben:'Αντιμικροβιακό, αναπνευστική υγεία',benEn:'Antimicrobial, respiratory health',use:'1-2 γρ./ημέρα',useEn:'1 tsp/day',note:'Χρήση σε ροφήματα',noteEn:'Use in teas/infusions'},
+    {n:'Βασιλικός',en:'Basil',ben:'Αντιφλεγμονώδες, καρδιαγγειακή υγεία',benEn:'Anti-inflammatory, cardiovascular health',use:'2-5 γρ./ημέρα (φρέσκα φύλλα)',useEn:'Few leaves/day',note:'Προτιμήστε φρέσκο',noteEn:'Prefer fresh'},
+    {n:'Δυόσμος',en:'Mint',ben:'Πέψη, αναπνευστικό',benEn:'Digestion, respiratory',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Ανακουφίζει από φούσκωμα',noteEn:'Relieves bloating'},
+    {n:'Φασκόμηλο',en:'Sage',ben:'Μνήμη, αντιφλεγμονώδες',benEn:'Memory support, anti-inflammatory',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Σε γυναίκες βοηθά και στην εμμηνόπαυση',noteEn:'May help women in menopause'},
+    {n:'Κουμίν',en:'Cumin',ben:'Πέψη, αντιοξειδωτικό',benEn:'Digestion, antioxidant',use:'1-3 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Συνήθως με φακές/όσπρια',noteEn:'Usually with lentils/legumes'},
+    {n:'Γλυκάνισος',en:'Anise',ben:'Αναπνευστικό, πέψη',benEn:'Respiratory, digestion',use:'1-2 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Χρήση σε ροφήματα',noteEn:'Use in teas/infusions'},
+    {n:'Κορίανδρος',en:'Coriander',ben:'Ρύθμιση σακχάρου, πέψη',benEn:'Blood sugar control, digestion',use:'1-3 γρ./ημέρα',useEn:'1 tsp/day',note:'Φρέσκο ή σπόροι',noteEn:'Fresh or seeds'},
+    {n:'Τσίλι/Καυτερή πιπ.',en:'Chili Pepper',ben:'Μεταβολισμός, αντιφλεγμονώδες',benEn:'Metabolism boost, anti-inflammatory',use:'0.5-1 γρ./ημέρα (1/4 κ.γλ.)',useEn:'1/4 tsp/day',note:'Προσοχή σε στομάχι',noteEn:'Caution with sensitive stomach'},
+    {n:'Κάρδαμο',en:'Cardamom',ben:'Πέψη, αντιοξειδωτικό',benEn:'Digestion, antioxidant',use:'1-2 γρ./ημέρα',useEn:'1 tsp/day',note:'Χρήση σε τσάι',noteEn:'Use in tea'},
+    {n:'Μοσχοκάρυδο',en:'Nutmeg',ben:'Χαλάρωση, πέψη',benEn:'Relaxation, digestion',use:'Μικρή ποσότητα (0.5-1 γρ.)',useEn:'1/4 tsp/day',note:'Υπερβολή → τοξικό',noteEn:'Excess is toxic'},
+    {n:'Γαρύφαλλο',en:'Clove',ben:'Αντιμικροβιακό, αντιοξειδωτικό',benEn:'Antimicrobial, antioxidant',use:'0.5-1 γρ./ημέρα (1/4-1/2 κ.γλ.)',useEn:'1/4 tsp/day',note:'Ισχυρή δράση',noteEn:'Potent action'},
+    {n:'Σαφράνι',en:'Saffron',ben:'Διάθεση, αντιοξειδωτικό',benEn:'Mood, antioxidant',use:'30-50 mg/ημέρα',useEn:'30-50 mg/day',note:'Ακριβό, μικρή δόση',noteEn:'Expensive, small dose'},
+    {n:'Μάραθος',en:'Fennel',ben:'Πέψη, αντιφλεγμονώδες',benEn:'Digestion, anti-inflammatory',use:'1-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Χρήση σε βραστά',noteEn:'Use in cooked dishes'}
+  ];
+  var spH1=isEn?'Spice / Herb':'Μπαχαρικό / Βότανο', spH2=isEn?'Benefits':'Οφέλη', spH3=isEn?'Recommended Use':'Συνιστώμενη Χρήση', spH4=isEn?'Notes':'Σημειώσεις';
+  var spicesHtml='<div class="sec-title">🌿 '+(isEn?'Spices &amp; Herbs Guide':'Οδηγός Μπαχαρικών &amp; Βοτάνων')+'</div>';
+  spicesHtml+='<div class="fxnote">'+(isEn?'Therapeutic spices &amp; herbs — suggested daily use. Not a substitute for medical advice.':'Θεραπευτικά μπαχαρικά &amp; βότανα — ενδεικτική ημερήσια χρήση. Δεν υποκαθιστά ιατρική συμβουλή.')+'</div>';
+  spicesHtml+='<table class="fxt spt"><thead><tr>'
+    +'<th style="width:16%">'+spH1+'</th><th style="width:30%">'+spH2+'</th>'
+    +'<th style="width:27%">'+spH3+'</th><th style="width:27%">'+spH4+'</th>'
+    +'</tr></thead><tbody>';
+  for(var spi=0;spi<SPICES.length;spi++){
+    var sp=SPICES[spi];
+    spicesHtml+='<tr'+(spi%2?' class="alt"':'')+'>'
+      +'<td class="fxname">'+esc(isEn?sp.en:sp.n)+'</td>'
+      +'<td>'+esc(isEn?sp.benEn:sp.ben)+'</td>'
+      +'<td>'+esc(isEn?sp.useEn:sp.use)+'</td>'
+      +'<td>'+esc(isEn?sp.noteEn:sp.note)+'</td>'
+      +'</tr>';
+  }
+  spicesHtml+='</tbody></table>';
 
   // ── STRATEGY A: Consolidated Supplement List (Existing + Recommended) ───────────
   var selectedSuppHtml='';
@@ -13109,6 +13749,9 @@ function exportPDF(lang){
     +'.fxg{color:#025857;font-weight:700;text-align:center}'
     +'.fxk{color:#888;text-align:center}'
     +'.fxnote{font-size:5pt;color:#aaa;margin-bottom:4px}'
+    // Spices & herbs guide table
+    +'table.spt td{white-space:normal;vertical-align:top}'
+    +'table.spt .fxname{white-space:nowrap}'
     // Shopping list (separate page)
     +'.shop-page{page-break-before:always;break-before:page;padding-top:4mm}'
     +'.shop-note{font-size:5.5pt;color:#777;margin-bottom:8px}'
@@ -13201,7 +13844,7 @@ function exportPDF(lang){
     +selectedSuppHtml
     +suppHtml
     +hydrationHtml
-    +'<div class="shop-page">'+fxHtml+(shopHtml?shopHtml:'')
+    +'<div class="shop-page">'+fxHtml+spicesHtml+(shopHtml?shopHtml:'')
     +'<div class="footer">'
     +(isMinorPdf
       ?'<span class="footer-msg">🌟 Συνέχισε έτσι — κάθε γεύμα σε φέρνει πιο κοντά στον στόχο σου!</span><span style="color:#aaa">Feed Your Health © 2025</span>'
@@ -15371,7 +16014,7 @@ function showMealAlternatives(dayIndex, mealIndex){
       // Add to alternatives if compatible (same meal type, within calorie range, no excluded foods)
       if(isSameMealType && isWithinCaloricRange && !hasExcludedFood && savedCombo.foods && savedCombo.foods.length > 0) {
         alternatives.push({
-          foods: JSON.parse(JSON.stringify(savedCombo.foods)),
+          foods: deepClone(savedCombo.foods),
           isSavedCombo: true,
           comboName: savedComboName,
           priority: 'saved'
@@ -15413,7 +16056,7 @@ function showMealAlternatives(dayIndex, mealIndex){
   // PHASE 1: Generate scaled versions of each alternative
   var scaledAlternatives = [];
   alternatives.forEach(function(alt, idx){
-    var tempMeal = {foods: JSON.parse(JSON.stringify(alt.foods)), name: mealName};
+    var tempMeal = {foods: deepClone(alt.foods), name: mealName};
     var effTarget = {
       k: currentCalories,
       p: currentProtein,
@@ -15488,7 +16131,7 @@ function showMealAlternatives(dayIndex, mealIndex){
       +'</div>';
 
     // Store SCALED version for replacement
-    alternatives[data.index].foods = JSON.parse(JSON.stringify(data.scaled.foods));
+    alternatives[data.index].foods = deepClone(data.scaled.foods);
   });
 
   // Note: All alternatives are now shown (no filtering)
@@ -15533,7 +16176,7 @@ function replaceMeal(dayIndex, mealIndex, altIndex){
   if(!c || !c.weekPlan || !window.currentAlternatives || !window.currentAlternatives[altIndex]) return;
 
   var alt = window.currentAlternatives[altIndex];
-  c.weekPlan[dayIndex][mealIndex].foods = JSON.parse(JSON.stringify(alt.foods));
+  c.weekPlan[dayIndex][mealIndex].foods = deepClone(alt.foods);
 
   save();
   renderWeekTable();
@@ -17816,6 +18459,19 @@ function toggleMealMenu(menuId) {
 
   // Toggle current menu
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+
+  // Smart positioning: if menu would be cut off on the left, flip it to open to the right
+  if (menu.style.display === 'block') {
+    // Reset to default (opens leftward) before measuring
+    menu.style.left = 'auto';
+    menu.style.right = '0';
+    var rect = menu.getBoundingClientRect();
+    if (rect.left < 4) {
+      // Not enough room on the left → open toward the right side instead
+      menu.style.right = 'auto';
+      menu.style.left = '0';
+    }
+  }
 }
 
 function closeMealMenu(menuId) {
@@ -17916,7 +18572,7 @@ function duplicateClient(){
   var c = getC();
   if(!c) return;
 
-  var newClient = JSON.parse(JSON.stringify(c));
+  var newClient = deepClone(c);
   newClient.name = c.name + ' (Αντιγραφή)';
   clients.push(newClient);
   upd();
@@ -18182,7 +18838,7 @@ function replaceMealAllDays(mealIndex, altIndex){
 
   // Replace in all 7 days
   for(var d = 0; d < 7; d++){
-    c.weekPlan[d][mealIndex] = JSON.parse(JSON.stringify(altMeal));
+    c.weekPlan[d][mealIndex] = deepClone(altMeal);
   }
 
   save();
