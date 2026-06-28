@@ -1336,6 +1336,9 @@ body.dark-mode #keyboardHelpPanel {
   <button onclick="if(getC()){genPlanWithUndo();fabMenu();}" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-bottom:1px solid #f0f0f0;transition:background .2s;">
     📊 Δημιουργία Πλάνου
   </button>
+  <button onclick="showTrackingDashboard();fabMenu()" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-bottom:1px solid #f0f0f0;transition:background .2s;">
+    📈 Στατιστικά Γευμάτων
+  </button>
   <button onclick="toggleSettingsPanel();fabMenu()" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;transition:background .2s;">
     ⚙️ Ρυθμίσεις
   </button>
@@ -1378,6 +1381,9 @@ body.dark-mode #keyboardHelpPanel {
 </div>
 </div>
 <script>
+// Global HTML-escape helper — sanitizes user input (client names, notes, etc.)
+// before it is injected into innerHTML. Prevents broken markup / XSS.
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 var DAYS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
 var FOODS={
 /* fi = dietary fiber (g per 100g) — DRI/USDA FoodData Central values */
@@ -1403,6 +1409,8 @@ var FOODS={
 'Κοτόπουλο μπούτι (ψητό)':{k:189,p:27,c:0,f:8.2,fi:0,cat:'Κρέας'},
 'Μοσχάρι (ψητό)':{k:200,p:28,c:0,f:8,fi:0,cat:'Κρέας'},
 'Μοσχάρι κιμάς (μαγ.)':{k:215,p:26,c:0,f:11,fi:0,cat:'Κρέας'},
+'Βοδινός κιμάς (μαγ.)':{k:250,p:26,c:0,f:16,fi:0,cat:'Κρέας'},
+'Βοδινός κιμάς άπαχος (μαγ.)':{k:176,p:27,c:0,f:7,fi:0,cat:'Κρέας'},
 'Αρνί (ψητό)':{k:258,p:25.5,c:0,f:16.6,fi:0,cat:'Κρέας'},
 'Χοιρινός κιμάς (μαγ.)':{k:263,p:21,c:0,f:19,fi:0,cat:'Κρέας'},
 'Ελεύθερο γεύμα':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
@@ -2006,7 +2014,7 @@ var BREAKFAST_FOODS = {
 var QUICK_EXCL={
   '🥛 Γαλακτοκομικά':['Γιαούρτι 2%','Cottage cheese','Cream cheese','Τυρί φέτα','Μοτσαρέλα','Γάλα πλήρες','Γάλα αμυγδάλου','Πρωτεΐνη σκόνη (whey)','Στραγγιστό γιαούρτι 0%','Γιαούρτι πλήρες 5%','Ανθότυρο','Μυζήθρα','Γάλα σόγιας','Γάλα βρώμης','Γάλα φρέσκο 1.5% Λιπαρά','Γραβιέρα','Κασέρι','Κεφαλοτύρι','Παρμεζάνα','Quark (0%)','Ricotta','Edam light','Σαγανάκι (τηγανητό)'],
   '🌾 Γλουτένη':['Ψωμί σίκαλης','Ψωμί λευκό','Μακαρόνια (βρ.)','Κριθαράκι (βρ.)','Πίτα αραβική','Κυπριακή πίτα','Μπανανόψωμο','Muffins Μύρτιλου','Ψωμί ολικής άλεσης','Σπαγγέτι ολικής (βρ.)','Τορτίλια (large)'],
-  '🥩 Κρέας':['Βοδινό άπαχο (ψητό)','Χοιρινό (μπριζόλα)','Κουνέλι (μαγ.)','Αρνί (ψητό)','Βοδινά φιλετάκια','Γαλακτοπουλο (βρ.)','Γαλοπούλα στήθος','Κιμάς κοτόπουλο (μαγ.)','Κοτόπουλο βραστό','Κοτόπουλο μπιφτέκι','Κοτόπουλο μπούτι (ψητό)','Κοτόπουλο σουβλάκι','Κοτόπουλο στήθος (ψητό)','Μοσχάρι (ψητό)','Μοσχάρι κιμάς (μαγ.)','Μπριζόλα άπαχη','Χοιρινός κιμάς (μαγ.)','Moving Mountains Burger'],
+  '🥩 Κρέας':['Βοδινό άπαχο (ψητό)','Χοιρινό (μπριζόλα)','Κουνέλι (μαγ.)','Αρνί (ψητό)','Βοδινά φιλετάκια','Γαλακτοπουλο (βρ.)','Γαλοπούλα στήθος','Κιμάς κοτόπουλο (μαγ.)','Κοτόπουλο βραστό','Κοτόπουλο μπιφτέκι','Κοτόπουλο μπούτι (ψητό)','Κοτόπουλο σουβλάκι','Κοτόπουλο στήθος (ψητό)','Μοσχάρι (ψητό)','Μοσχάρι κιμάς (μαγ.)','Βοδινός κιμάς (μαγ.)','Βοδινός κιμάς άπαχος (μαγ.)','Μπριζόλα άπαχη','Χοιρινός κιμάς (μαγ.)','Moving Mountains Burger'],
   '🐟 Ψάρια/Θαλ.':['Σολομός (ψητός)','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Γαρίδες (βραστές)','Σαρδέλες','Τσιπούρα (ψητή)','Μπακαλιάρος (ψητός)','Σκουμπρί (ψητό)','Χταπόδι (βρ.)','Καλαμάρι (ψητό)','Μύδια (βρ.)','Γαρίδες γίγαντες (βρ.)','Καβούρι (βρ.)','Καλαμαράκια (ψητά)','Σούπιες (βρ.)','Φιδάκι (ψητό)'],
   '🫘 Όσπρια':['Φασόλια','Ρεβίθια','Φακές','Μαυρομάτικα','Φάβα','Γίγαντες (βρ.)','Κουκιά (βρ.)','Αρακάς (βρ.)','Φακές κόκκινες (βρ.)','Λούπινα (βρ.)','Κανελλίνι (βρ.)','Φασόλια μπορλότι (βρ.)','Tofu (φυσικό)','Edamame (βρ.)','Beyond Beef (φυτικός κιμάς)'],
   '🥚 Αυγά':['Αυγά (ολόκληρα)','Ασπράδια αυγών'],
@@ -2306,6 +2314,8 @@ var PORTIONS={
 'Γαλοπούλα στήθος':[{n:'1 φέτα',g:15},{n:'2 φέτες',g:30},{n:'μερίδα',g:120}],
 'Κοτόπουλο μπούτι (ψητό)':[{n:'1 μπούτι μικρό',g:100},{n:'μερίδα',g:150},{n:'μεγάλη',g:200}],
 'Μοσχάρι κιμάς (μαγ.)':[{n:'μερίδα',g:120},{n:'μεγάλη',g:200},{n:'300g',g:300}],
+'Βοδινός κιμάς (μαγ.)':[{n:'μερίδα',g:120},{n:'μεγάλη',g:200},{n:'300g',g:300}],
+'Βοδινός κιμάς άπαχος (μαγ.)':[{n:'μερίδα',g:120},{n:'μεγάλη',g:200},{n:'300g',g:300}],
 'Αρνί (ψητό)':[{n:'μερίδα',g:120},{n:'μεγάλη',g:180},{n:'250g',g:250}],
 'Χοιρινός κιμάς (μαγ.)':[{n:'μερίδα',g:120},{n:'μεγάλη',g:200}],
 'Χοιρινό (μπριζόλα)':[{n:'1 μπριζόλα',g:180},{n:'2 μπριζόλες',g:360}],
@@ -3673,50 +3683,6 @@ document.addEventListener('DOMContentLoaded', function(){
   if(!backupFolderSupported()) return;
   _idbGet(function(handle){ if(handle){ _backupDirHandle = handle; } });
 });
-
-// ✅ PHASE 3: PERFORMANCE OPTIMIZATION
-// ═══════════════════════════════════════════════════════════════════════════════════
-var _domCache = {}; // Cache frequently accessed DOM elements
-
-function getCachedElement(id) {
-  if(!_domCache[id]) {
-    _domCache[id] = document.getElementById(id);
-  }
-  return _domCache[id];
-}
-
-function clearDomCache() {
-  _domCache = {};
-}
-
-// Lazy-load Chart.js only when needed
-var _chartsLoaded = false;
-function lazyLoadCharts(callback) {
-  if(_chartsLoaded) {
-    callback();
-    return;
-  }
-
-  var script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-  script.onload = function() {
-    _chartsLoaded = true;
-    callback();
-  };
-  script.onerror = function() {
-    console.error('Failed to load Chart.js');
-  };
-  document.head.appendChild(script);
-}
-
-// RequestAnimationFrame for smooth animations
-function smoothUpdate(callback) {
-  if(window.requestAnimationFrame) {
-    requestAnimationFrame(callback);
-  } else {
-    setTimeout(callback, 16); // ~60fps fallback
-  }
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════════
 // AUTO-SAVE INTERVAL (Every 30 seconds)
@@ -5823,67 +5789,6 @@ var JSON_CACHE={
   }
 };
 
-// ✅ PERFORMANCE: DEBOUNCE HELPER - Prevent excessive function calls
-function debounce(fn, delay){
-  var timer = null;
-  return function(){
-    var args = arguments;
-    clearTimeout(timer);
-    timer = setTimeout(function(){ fn.apply(null, args); }, delay);
-  };
-}
-
-// ✅ PERFORMANCE: BATCH DOM UPDATE - Reduce reflows/repaints
-function batchDOMUpdate(element, updates){
-  if(!element) return;
-  // Use fragment for batch insertions
-  if(updates.innerHTML){
-    element.innerHTML = updates.innerHTML;
-  }
-  if(updates.style && typeof updates.style === 'object'){
-    Object.assign(element.style, updates.style);
-  }
-  if(updates.className){
-    element.className = updates.className;
-  }
-}
-
-// ✅ PERFORMANCE: REQUEST ANIMATION FRAME - Sync DOM updates with browser refresh
-function scheduleRender(fn){
-  if(typeof requestAnimationFrame !== 'undefined'){
-    requestAnimationFrame(fn);
-  } else {
-    setTimeout(fn, 16); // ~60fps fallback
-  }
-}
-
-// ✅ PERFORMANCE: EVENT DELEGATION - Reduce event listener count
-var EventDelegator={
-  listeners: {},
-
-  on: function(parent, event, selector, handler){
-    if(!this.listeners[event]) this.listeners[event] = [];
-
-    parent.addEventListener(event, function(e){
-      var target = e.target;
-      if(target.matches && target.matches(selector)){
-        handler.call(target, e);
-      }
-    });
-
-    this.listeners[event].push({parent, selector, handler});
-  },
-
-  off: function(event){
-    if(this.listeners[event]){
-      this.listeners[event].forEach(function(l){
-        l.parent.removeEventListener(event, l.handler);
-      });
-      delete this.listeners[event];
-    }
-  }
-};
-
 // ✅ MOBILE: Touch event handling
 var TOUCH_HANDLERS={
   // Detect if device is touch-capable
@@ -6710,7 +6615,7 @@ function renderAnalyticsDashboard(){
   }
 
   var html='<div style="padding:20px;">';
-  html+='<h2 style="color:#025857;margin:0 0 20px 0">📊 Analytics Dashboard - '+c.name+'</h2>';
+  html+='<h2 style="color:#025857;margin:0 0 20px 0">📊 Analytics Dashboard - '+esc(c.name)+'</h2>';
 
   // Calculate statistics
   var plans=c.savedPlans;
@@ -6885,11 +6790,11 @@ function exportPlanHistory(){
     return;
   }
 
-  var html='<html><head><meta charset="UTF-8"><title>Ιστορικό Πλάνων - '+c.name+'</title>';
+  var html='<html><head><meta charset="UTF-8"><title>Ιστορικό Πλάνων - '+esc(c.name)+'</title>';
   html+='<style>body{font-family:Arial;margin:20px;color:#333}h1{color:#025857}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{border:1px solid #ddd;padding:12px;text-align:left}th{background:#025857;color:white}tr:nth-child(even){background:#f9f9f9}</style>';
   html+='</head><body>';
   html+='<h1>📊 Ιστορικό Διατροφικών Πλάνων</h1>';
-  html+='<p><strong>Πελάτης:</strong> '+c.name+'</p>';
+  html+='<p><strong>Πελάτης:</strong> '+esc(c.name)+'</p>';
   html+='<p><strong>Ημερομηνία Εξαγωγής:</strong> '+new Date().toLocaleDateString('el-GR')+'</p>';
 
   html+='<table><tr><th>Πλάνο</th><th>Ημερομηνία</th><th>Kcal</th><th>Πρωτ(g)</th><th>Λίπος(g)</th><th>Υδατ(g)</th><th>Σχόλιο</th></tr>';
@@ -7346,7 +7251,7 @@ function renderMain(){
   var numTrainDays=(c.trainDays||[]).filter(function(x){return x;}).length;
   var hydBase=t.hydBase||Math.round(c.weight*35);
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
-  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+c.name+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
     +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button><button class="stab" id="t5" onclick="swTab(5)">📈 Analytics</button></div>'
     +'<div id="s1">'
 
@@ -7380,7 +7285,7 @@ function renderMain(){
     +'<div class="section-header basic"><span class="section-icon">👤</span>Βασικά Στοιχεία</div>'
     +'<div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος" value="'+(c.name||'')+'"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div>'
-    +'<div class="fgrp"><label>Ημερομηνία Γέννησης <span id="age-display" style="color:#025857;font-weight:600;font-size:12px"></span></label><input type="date" id="inp-birthdate" value="'+(c.birthDate||'')+'" max="'+(new Date().toISOString().slice(0,10))+'"></div></div>'
+    +'<div class="fgrp"><label>Ημερομηνία Γέννησης <span id="age-display" style="color:#025857;font-weight:600;font-size:12px"></span></label><div style="display:flex;gap:6px"><select id="inp-bday" style="flex:0.9"></select><select id="inp-bmonth" style="flex:1.4"></select><select id="inp-byear" style="flex:1.1"></select></div></div></div>'
     +'</div>'
 
     // ✅ SECTION 2: ΑΝΘΡΩΠΟΜΕΤΡΙΑ (Ενοποιημένη - Βάρος, Ύψος, BMI, Λίπος, Lean Mass)
@@ -7485,15 +7390,15 @@ function renderMain(){
 
     // ✅ SECTION 5-7: Moved to Modals (cleaner UI)
     // ✅ QUICK ACCESS BUTTONS FOR ALL SETTINGS (6 Modal Windows)
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">'
-    +'<button class="btn" onclick="openMealTimesModal()" style="background:#025857;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#014545\'" onmouseout="this.style.background=\'#025857\'">⏱️ Χρόνοι Γευμάτων</button>'
-    +'<button class="btn" onclick="openMetActivitiesModal()" style="background:#046D6B;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#025857\'" onmouseout="this.style.background=\'#046D6B\'">🏃 Προπονήσεις (MET)</button>'
-    +'<button class="btn" onclick="openDietModal()" style="background:#025857;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#014545\'" onmouseout="this.style.background=\'#025857\'">🥗 Διατροφή</button>'
-    +'<button class="btn" onclick="openMedicalConditionsModal()" style="background:#037070;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#025857\'" onmouseout="this.style.background=\'#037070\'">🩺 Ιατρικές Συνθήκες</button>'
-    +'<button class="btn" onclick="openCombinedSupplementsModal()" style="background:#046D6B;color:white;padding:12px;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#025857\'" onmouseout="this.style.background=\'#046D6B\'">💊 Συμπληρώματα</button>'
+    +'<div id="modal-btns-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">'
+    +'<button class="btn" onclick="openMealTimesModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">⏱️ Χρόνοι Γευμάτων</button>'
+    +'<button class="btn" onclick="openMetActivitiesModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🏃 Προπονήσεις (MET)</button>'
+    +'<button class="btn" onclick="openDietModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🥗 Διατροφή</button>'
+    +'<button class="btn" onclick="openMedicalConditionsModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🩺 Ιατρικές Συνθήκες</button>'
+    +'<button class="btn" onclick="openCombinedSupplementsModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">💊 Συμπληρώματα</button>'
     +'</div>'
     // ✅ 2x/day training: now handled by adding 2 MET activities on the same day (different times)
-    +'<div style="background:#E8F5E9;padding:8px 12px;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:15px;border-left:3px solid #025857;">💡 Για 2 προπονήσεις την ίδια ημέρα, πρόσθεσε 2 δραστηριότητες στις «🏃 Προπονήσεις (MET)» με διαφορετική ώρα.</div>'
+    +'<div id="hint-2x-training" style="background:#E8F5E9;padding:8px 12px;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:15px;border-left:3px solid #025857;">💡 Για 2 προπονήσεις την ίδια ημέρα, πρόσθεσε 2 δραστηριότητες στις «🏃 Προπονήσεις (MET)» με διαφορετική ώρα.</div>'
 
     // ✅ MET Activities table moved inside SECTION 3
     // ✅ Day targets table with macros per day (with T/R badges) — S1 ONLY
@@ -7504,18 +7409,19 @@ function renderMain(){
     // ✅ TEMPLATE SELECTOR - Show available nutrition plan templates
     +buildTmplSelectorHtml(c)
     // ✅ PLAN GENERATION BUTTON ONLY IN S1
-    +'<div class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου</button></div>'
+    +'<div id="genplan-row" class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου →</button></div>'
     +'</div>'
     // ✅ S2: MEAL PLAN VIEW ONLY
     +'<div id="s2" style="display:none">'
     +'<div class="brow"><button class="btn" onclick="swTab(1)">&#8592; Στοιχεία</button>'
-    +'<button class="btn" style="background:#ff9800;color:#fff;" onclick="regeneratePlan()">&#8635; Αναδημιουργία (δεν μου αρέσει)</button>'
-    +'<button class="btn primary" style="background:#2196F3;color:#fff;" onclick="showSavePlanPanel()">💾 Αποθήκευση Διατροφής</button>'
-    +'<button class="btn primary" onclick="exportWord()">&#8659; Εξαγωγή Word (.rtf)</button>'
-    +'<button class="btn" style="background:#1a73e8;color:#fff;border:none;" onclick="exportGoogleDocs()">&#8659; Google Docs (.docx)</button>'
-    +'<button class="btn" style="background:#c62828;color:#fff;border:none;" onclick="exportPDF()">&#8659; Αποθήκευση PDF</button>'
-    +'<button class="btn" style="background:#1565C0;color:#fff;border:none;" onclick="exportPDF(\'en\')">&#8659; Export PDF (English)</button>'
-    +'<button class="btn save-tmpl-btn" style="background:#f57c00;color:#fff;border:none;margin-left:auto" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button></div>'
+    +'<button class="btn" onclick="regeneratePlan()">&#8635; Αναδημιουργία (δεν μου αρέσει)</button>'
+    +'<button class="btn" id="star-tmpl-btn" style="background:'+(c.isMealTemplate?'#ffb300':'#fff')+';color:'+(c.isMealTemplate?'#fff':'#1a1a1a')+';border:1px solid '+(c.isMealTemplate?'#ffb300':'#e0e0e0')+';" onclick="toggleMealTemplate()" title="Χρήση των γευμάτων αυτού του πελάτη ως έμπνευση σε νέα πλάνα">'+(c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης')+'</button>'
+    +'<button class="btn primary" onclick="showSavePlanPanel()">💾 Αποθήκευση Διατροφής</button>'
+    +'<button class="btn secondary" onclick="exportWord()">&#8659; Word (.rtf)</button>'
+    +'<button class="btn secondary" onclick="exportGoogleDocs()">&#8659; Google Docs (.docx)</button>'
+    +'<button class="btn secondary" onclick="exportPDF()">&#8659; PDF</button>'
+    +'<button class="btn secondary" onclick="exportPDF(\'en\')">&#8659; PDF (English)</button>'
+    +'<button class="btn save-tmpl-btn" style="margin-left:auto" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button></div>'
     +'<div id="save-tmpl-panel" class="save-tmpl-panel" style="display:none">'
     +'<span class="save-tmpl-lbl">Όνομα:</span>'
     +'<input type="text" id="save-tmpl-name" class="save-tmpl-inp" placeholder="π.χ. Πλάνο Muay Thai 1800kcal...">'
@@ -7543,7 +7449,7 @@ function renderMain(){
   // ✅ UPDATE ALL INPUT FIELDS WITH CURRENT CLIENT DATA
   document.getElementById('inp-name').value=c.name||'';
   document.getElementById('inp-sex').value=c.sex||'M';
-  var bdInp0=document.getElementById('inp-birthdate');if(bdInp0)bdInp0.value=c.birthDate||'';
+  initBirthdateSelects(c);
   updateAgeDisplay();
   document.getElementById('inp-weight').value=c.weight||'';
   document.getElementById('inp-height').value=c.height||'';
@@ -7563,15 +7469,10 @@ function renderMain(){
   // ✅ ADD EVENT LISTENERS
   document.getElementById('inp-name').oninput=function(){upd('name',this.value);};
   document.getElementById('inp-sex').onchange=function(){upd('sex',this.value);};
-  var bdInp=document.getElementById('inp-birthdate');
-  if(bdInp){
-    bdInp.onchange=function(){
-      c.birthDate=this.value;
-      var a=calcAgeFromBirthdate(this.value);
-      updateAgeDisplay();
-      if(a!=null){upd('age',a);}else{save();}
-    };
-  }
+  ['inp-bday','inp-bmonth','inp-byear'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.onchange=function(){commitBirthdate(c);};
+  });
   document.getElementById('inp-weight').onblur=function(){upd('weight',+this.value);};
   document.getElementById('inp-height').onblur=function(){upd('height',+this.value);};
   var rmrInp=document.getElementById('inp-rmr');
@@ -7668,6 +7569,13 @@ function makeDayTgtDefaults(c,t){
       // Carb boost > 0: adjust daily targets based on training days
       dayKcal=isT?Math.round(t.target+(t.trainTarget-t.restTarget)):t.target;
     }
+
+    // 🛡️ SAFETY FLOOR: a daily target must never fall below BMR/RMR.
+    // Aggressive deficits on low-RMR clients (esp. on rest days with no exercise)
+    // can push the day's target below basal metabolism — clinically unsafe and it
+    // also makes an otherwise-balanced plan read as 150-170% on those days.
+    // t.bmr = measured RMR when available, otherwise the formula BMR.
+    if(t.bmr && dayKcal < t.bmr) dayKcal = t.bmr;
 
     // CRITICAL FIX v2: Recalculate macros based on ACTUAL daily kcal, not average
     // When using MET activities, each day has different kcal so macros must be recalculated
@@ -9322,8 +9230,14 @@ function swTab(n){
 
   // ✅ HIDE MODAL BUTTONS GRID EXCEPT IN TAB 1 (Page 1 only)
   // Buttons: Χρόνοι Γευμάτων, Εβδομαδιαίο Πρόγραμμα, MET Activities, Διατροφή, Ιατρικές Συνθήκες, Συμπληρώματα
-  var modalButtonsDiv=document.querySelector('div[style*="grid-template-columns"][style*="gap:10px"]');
+  var modalButtonsDiv=document.getElementById('modal-btns-grid');
   if(modalButtonsDiv)modalButtonsDiv.style.display=n===1?'grid':'none';
+
+  // ✅ HIDE 2x-TRAINING HINT + "Δημιουργία πλάνου" BUTTON EXCEPT IN TAB 1 (Page 1 only)
+  var hint2x=document.getElementById('hint-2x-training');
+  if(hint2x)hint2x.style.display=n===1?'':'none';
+  var genPlanRow=document.getElementById('genplan-row');
+  if(genPlanRow)genPlanRow.style.display=n===1?'':'none';
 
   // ✅ PHASE 5: ANALYTICS TAB SUPPORT
   var analyticsDiv = document.getElementById('analyticsContent');
@@ -9561,6 +9475,48 @@ function calcAgeFromBirthdate(birthDate){
   var m=t.getMonth()-b.getMonth();
   if(m<0||(m===0&&t.getDate()<b.getDate()))a--;
   return (a>=0&&a<=150)?a:null;
+}
+
+// ✅ Greek month names for the birth-date dropdowns
+var GREEK_MONTHS=['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+
+// ✅ Populate the Day / Month / Year dropdowns (in that order) and preselect
+//    the values from c.birthDate (stored as ISO "YYYY-MM-DD").
+function initBirthdateSelects(c){
+  var dEl=document.getElementById('inp-bday'),mEl=document.getElementById('inp-bmonth'),yEl=document.getElementById('inp-byear');
+  if(!dEl||!mEl||!yEl)return;
+  var parts=(c&&c.birthDate&&/^\d{4}-\d{2}-\d{2}$/.test(c.birthDate))?c.birthDate.split('-'):['','',''];
+  var selY=parts[0],selM=parts[1],selD=parts[2];
+  var i,o,html;
+  // Day 1-31
+  html='<option value="">Ημέρα</option>';
+  for(i=1;i<=31;i++){var dd=(i<10?'0':'')+i;html+='<option value="'+dd+'"'+(dd===selD?' selected':'')+'>'+i+'</option>';}
+  dEl.innerHTML=html;
+  // Month 1-12 (Greek names)
+  html='<option value="">Μήνας</option>';
+  for(i=1;i<=12;i++){var mm=(i<10?'0':'')+i;html+='<option value="'+mm+'"'+(mm===selM?' selected':'')+'>'+GREEK_MONTHS[i-1]+'</option>';}
+  mEl.innerHTML=html;
+  // Year current..1915
+  var nowY=new Date().getFullYear();
+  html='<option value="">Έτος</option>';
+  for(i=nowY;i>=1915;i--){html+='<option value="'+i+'"'+(String(i)===selY?' selected':'')+'>'+i+'</option>';}
+  yEl.innerHTML=html;
+}
+
+// ✅ Assemble the three dropdowns into an ISO birth-date, save it, recalc age.
+function commitBirthdate(c){
+  var d=document.getElementById('inp-bday'),m=document.getElementById('inp-bmonth'),y=document.getElementById('inp-byear');
+  if(!d||!m||!y)return;
+  if(d.value&&m.value&&y.value){
+    c.birthDate=y.value+'-'+m.value+'-'+d.value;
+    var a=calcAgeFromBirthdate(c.birthDate);
+    updateAgeDisplay();
+    if(a!=null){upd('age',a);}else{save();}
+  }else{
+    c.birthDate='';
+    updateAgeDisplay();
+    save();
+  }
 }
 
 // ✅ Update the "(X ετών)" label next to the birth-date field
@@ -10673,9 +10629,70 @@ function getCompatibleVeggies(protein) {
 }
 
 // Find a saved combo that matches kcal and macro targets
-function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, excl) {
+// ── MEAL-SLOT CLASSIFICATION ───────────────────────────────────────────────
+// Categorize a meal by its name so we can match breakfast→breakfast, etc.
+function classifyMealSlot(name){
+  var n=(name||'').toLowerCase();
+  if(n.indexOf('πρωιν')!==-1) return 'breakfast';
+  if(n.indexOf('ενδιάμεσ')!==-1 || n.indexOf('ενδιαμεσ')!==-1 ||
+     n.indexOf('δεκατιαν')!==-1 || n.indexOf('απογευμ')!==-1 || n.indexOf('snack')!==-1) return 'snack';
+  if(n.indexOf('μεσημερ')!==-1) return 'lunch';
+  if(n.indexOf('βραδ')!==-1 || n.indexOf('δείπν')!==-1 || n.indexOf('δειπν')!==-1) return 'dinner';
+  return 'other';
+}
+
+// Stable signature of a meal (sorted food names) — used for variety penalty / dedup
+function mealSignature(foods){
+  if(!foods || !foods.length) return '';
+  return foods.map(function(f){return f.n||'';}).sort().join('|');
+}
+
+// ── CROSS-CLIENT TASTE LIBRARY ─────────────────────────────────────────────
+// Harvest real, dietitian-made meals from clients marked as ⭐ "taste templates".
+// Returns combo-shaped objects (same shape as saved combos) tagged with slot+diet,
+// so they flow through the existing findSavedComboMatch / genPlan pipeline.
+function harvestMealLibrary(excludeClientId){
+  var lib=[];
+  var seen={};
+  if(typeof clients==='undefined' || !clients || !clients.length) return lib;
+  clients.forEach(function(cl){
+    if(!cl || !cl.isMealTemplate || !cl.weekPlan) return;
+    if(excludeClientId && cl.id===excludeClientId) return;
+    var dietType=cl.dietType||'normal';
+    for(var d=0; d<7; d++){
+      var day=cl.weekPlan[d];
+      if(!day || !day.length) continue;
+      day.forEach(function(meal){
+        if(!meal || !meal.foods || !meal.foods.length) return;
+        var sig=mealSignature(meal.foods);
+        if(!sig || seen[sig]) return;   // dedup identical meals across days/clients
+        var kcal=calculateMealKcal(meal.foods);
+        if(kcal<50) return;             // skip empty / trivial meals
+        seen[sig]=true;
+        lib.push({
+          id:'lib_'+cl.id+'_'+sig.length+'_'+Math.round(kcal),
+          name:meal.name||'',
+          foods:deepClone(meal.foods),
+          kcal:Math.round(kcal),
+          mealTiming:meal.mealTiming||'regular',
+          slot:classifyMealSlot(meal.name),
+          dietType:dietType,
+          tags:['library','approved'],
+          source:cl.name||''
+        });
+      });
+    }
+  });
+  return lib;
+}
+
+// Find the best matching saved combo / library meal for a target.
+// Now slot- and diet-aware, with a variety penalty (usedSigs) to avoid repeats.
+function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, excl, slot, dietType, usedSigs) {
   if(!savedCombos || savedCombos.length === 0) return null;
-  tolerance = tolerance || 50; // ±50 kcal tolerance
+  tolerance = tolerance || 50; // base ±kcal tolerance
+  // Proportional band: meals get scaled afterward, so accept a generous range
+  var band = Math.max(tolerance, Math.round((targetKcal||0)*0.30));
 
   // Normalize exclusion list
   excl = excl || [];
@@ -10686,22 +10703,37 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
     return foods.some(function(food){
       var foodNameLower = (food.n||'').toLowerCase();
       return exclLower.some(function(excluded){
-        return foodNameLower.indexOf(excluded) !== -1;
+        return excluded && foodNameLower.indexOf(excluded) !== -1;
       });
     });
   }
-
-  for(var i = 0; i < savedCombos.length; i++) {
-    var combo = savedCombos[i];
-    var comboKcal = combo.kcal || 0;
-
-    // Check if kcal is within tolerance AND combo doesn't have excluded foods
-    if(Math.abs(comboKcal - targetKcal) <= tolerance && !comboHasExcludedFood(combo.foods)) {
-      return {foods: combo.foods, mealTiming: combo.mealTiming || 'regular'};
-    }
+  // Diet compatibility: a restrictive target diet only accepts same-diet sources;
+  // 'normal'/undefined target accepts anything. Legacy combos without diet info pass.
+  function dietOK(comboDiet){
+    if(!dietType || dietType==='normal') return true;
+    if(!comboDiet) return true;
+    return comboDiet===dietType;
   }
 
-  return null;
+  var best=null, bestScore=Infinity, bestSig=null;
+  for(var i = 0; i < savedCombos.length; i++) {
+    var combo = savedCombos[i];
+    if(!combo || !combo.foods || !combo.foods.length) continue;
+    var comboKcal = combo.kcal || 0;
+    if(Math.abs(comboKcal - targetKcal) > band) continue;
+    // Slot filter: skip only when both slots are known and differ
+    if(slot && combo.slot && combo.slot!=='other' && combo.slot!==slot) continue;
+    if(!dietOK(combo.dietType)) continue;
+    if(comboHasExcludedFood(combo.foods)) continue;
+    // Score: closeness to target + strong penalty for meals already used this week
+    var sig=mealSignature(combo.foods);
+    var usedCount=(usedSigs && usedSigs[sig])?usedSigs[sig]:0;
+    var score=Math.abs(comboKcal-targetKcal) + usedCount*100000;
+    if(score<bestScore){bestScore=score;best=combo;bestSig=sig;}
+  }
+  if(!best) return null;
+  if(usedSigs && bestSig!=null){usedSigs[bestSig]=(usedSigs[bestSig]||0)+1;}
+  return {foods: best.foods, mealTiming: best.mealTiming || 'regular'};
 }
 
 // Calculate kcal for a meal (foods array)
@@ -10863,8 +10895,8 @@ function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName,
     });
   }
 
-  // Priority 1: Check saved combos first (respecting food exclusions)
-  var mealFromSaved = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 60, excl);
+  // Priority 1: Check saved combos first (respecting food exclusions, slot & diet)
+  var mealFromSaved = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 60, excl, classifyMealSlot(mealName), dietType);
   if(mealFromSaved) {
     return mealFromSaved;
   }
@@ -11450,12 +11482,29 @@ function genPlan(){
 
   if(!isOrthodoxFasting && !isIntermittentFasting) {
     var savedCombos = getSavedCombos();
+    // ⭐ Cross-client taste library: real meals from clients marked as templates
+    var mealLibrary = harvestMealLibrary(c.id);
+    var usedComboSigs = {};  // variety tracker shared across library + combos this week
+    console.log('Taste library: '+mealLibrary.length+' meals harvested from ⭐ template clients');
     for(var d=0;d<7;d++){
       for(var mi=0;mi<tmplDays[d].length;mi++){
         var meal = tmplDays[d][mi];
         var targetKcal = eff[d].meals[mi].k;  // Per-meal calorie target
+        var mealSlot = classifyMealSlot(meal.name);
 
-        // ✨ Priority 0: Check Chef-Inspired Recipes (culinary-sensible combinations)
+        // ⭐ Priority 0: Taste library — real, dietitian-made meals from ⭐ clients
+        // (verbatim food combos; portions get scaled to target in PHASE 3D)
+        if(mealLibrary.length > 0){
+          var libMeal = findSavedComboMatch(mealLibrary, targetKcal, null, 80, excl, mealSlot, c.dietType, usedComboSigs);
+          if(libMeal && libMeal.foods && libMeal.foods.length > 0){
+            meal.foods = deepClone(libMeal.foods);
+            if(libMeal.mealTiming) meal.mealTiming = libMeal.mealTiming;
+            meal.fromLibrary = true;  // tag for UI/debug
+            continue;  // Use real approved meal from a template client
+          }
+        }
+
+        // ✨ Priority 1: Check Chef-Inspired Recipes (culinary-sensible combinations)
         var recipeMeal = findBestRecipe(c.dietType, targetKcal, meal.name, excl);
         if(recipeMeal && recipeMeal.foods && recipeMeal.foods.length > 0){
           meal.foods = deepClone(recipeMeal.foods);
@@ -11463,9 +11512,9 @@ function genPlan(){
           continue;  // Use chef-inspired recipe
         }
 
-        // Priority 1: Check saved combos (user-approved, fastest)
+        // Priority 2: Check saved combos (user-approved, slot/diet-aware)
         if(savedCombos && savedCombos.length > 0){
-          var savedMeal = findSavedComboMatch(savedCombos, targetKcal, null, 80, excl);
+          var savedMeal = findSavedComboMatch(savedCombos, targetKcal, null, 80, excl, mealSlot, c.dietType, usedComboSigs);
           if(savedMeal && savedMeal.foods && savedMeal.foods.length > 0){
             meal.foods = deepClone(savedMeal.foods);
             if(savedMeal.mealTiming) meal.mealTiming = savedMeal.mealTiming;
@@ -11473,7 +11522,7 @@ function genPlan(){
           }
         }
 
-        // Priority 2: Try smart generation with chef pairing rules
+        // Priority 3: Try smart generation with chef pairing rules
         // Pass meal.name for breakfast-specific constraints, excl for food exclusions, and dietType for diet compliance
         var smartMeal = generateSmartMeal(targetKcal, null, d, savedCombos, meal.name, excl, c.dietType);
         if(smartMeal && smartMeal.foods && smartMeal.foods.length > 0){
@@ -11818,7 +11867,7 @@ function renderWeekTable(){
   var summaryCard = '<div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1.5px solid #c8e6c9;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">👤 Πελάτης</span>'
-      +'<span style="font-size:13px;font-weight:700;color:#025857">' + c.name + '</span>'
+      +'<span style="font-size:13px;font-weight:700;color:#025857">' + esc(c.name) + '</span>'
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">📊 Μέτρα</span>'
@@ -13047,6 +13096,42 @@ function setSavedCombos(arr){
   safeStorageSet('dieto_combos', arr);
 }
 
+// ── Lightweight toast notification ─────────────────────────────────────────
+function dietoToast(msg, color){
+  try{
+    var t=document.createElement('div');
+    t.style.cssText='position:fixed;bottom:20px;right:20px;background:'+(color||'#4CAF50')+';color:#fff;padding:12px 16px;border-radius:8px;font-size:13px;z-index:10000;box-shadow:0 2px 8px rgba(0,0,0,0.25);max-width:340px';
+    t.textContent=msg;
+    document.body.appendChild(t);
+    setTimeout(function(){t.remove();},3200);
+  }catch(e){console.log(msg);}
+}
+
+// ── ⭐ Toggle: mark current client as a "taste template" source ─────────────
+// Their plan's meals feed the cross-client taste library used by genPlan.
+function toggleMealTemplate(){
+  var c=getC();if(!c)return;
+  var hasPlan=c.weekPlan && Object.keys(c.weekPlan).length>0;
+  if(!c.isMealTemplate && !hasPlan){
+    dietoToast('⚠️ Δεν υπάρχει πλάνο σε αυτόν τον πελάτη για να γίνει πρότυπο.', '#e65100');
+    return;
+  }
+  c.isMealTemplate=!c.isMealTemplate;
+  save();
+  var b=document.getElementById('star-tmpl-btn');
+  if(b){
+    b.style.background=c.isMealTemplate?'#ffb300':'#eee';
+    b.style.color=c.isMealTemplate?'#fff':'#555';
+    b.innerHTML=c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης';
+  }
+  if(c.isMealTemplate){
+    var n=harvestMealLibrary().length;
+    dietoToast('⭐ Προστέθηκε στα πρότυπα γεύσης. Βιβλιοθήκη: '+n+' μοναδικά γεύματα διαθέσιμα για νέα πλάνα.');
+  } else {
+    dietoToast('Αφαιρέθηκε από τα πρότυπα γεύσης.', '#757575');
+  }
+}
+
 /* ---- Auto-Backup System (Every 1 Hour) ---- */
 function autoBackupClients(){
   try{
@@ -13966,7 +14051,7 @@ function exportPDF(lang){
       +'.leg-item{display:flex;align-items:center;gap:4px;font-size:6pt;color:#555;}'
       +'.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}':'')
     // Section titles
-    +'.sec-title{font-size:9.5pt;font-weight:700;color:#025857;margin:10px 0 4px;padding-bottom:3px;border-bottom:2px solid #025857}'
+    +'.sec-title{font-size:9.5pt;font-weight:700;color:#025857;margin:10px 0 4px;padding-bottom:3px;border-bottom:2px solid #025857;page-break-after:avoid;break-after:avoid}'
     // Supplements table
     +'table.st{border-collapse:collapse;width:100%;margin-bottom:10px}'
     +'table.st th{background:#025857;color:#fff;padding:3px 8px;font-size:6.5pt;text-align:left;border:1px solid #013f3f}'
@@ -13990,7 +14075,7 @@ function exportPDF(lang){
     +'table.spt .fxname{white-space:nowrap}'
     // Shopping list (separate page)
     +'.shop-page{page-break-before:always;break-before:page;padding-top:4mm}'
-    +'.shop-note{font-size:5.5pt;color:#777;margin-bottom:8px}'
+    +'.shop-note{font-size:5.5pt;color:#777;margin-bottom:8px;page-break-after:avoid;break-after:avoid}'
     +'.sl2col{width:100%;border-collapse:collapse;table-layout:fixed}'
     +'.slcol{width:50%;vertical-align:top}'
     +'.slcol:first-child{padding-right:6px}'
@@ -14080,7 +14165,7 @@ function exportPDF(lang){
     +selectedSuppHtml
     +suppHtml
     +hydrationHtml
-    +'<div class="shop-page">'+fxHtml+spicesHtml+(shopHtml?shopHtml:'')
+    +'<div class="shop-page">'+fxHtml+spicesHtml+(shopHtml?'</div><div class="shop-page">'+shopHtml:'')
     +'<div class="footer">'
     +(isMinorPdf
       ?'<span class="footer-msg">🌟 Συνέχισε έτσι — κάθε γεύμα σε φέρνει πιο κοντά στον στόχο σου!</span><span style="color:#aaa">Feed Your Health © 2025</span>'
@@ -17654,58 +17739,16 @@ function addProgressEntry() {
   showSuccessToast('✅ Εγγραφή προόδου!');
 }
 
-// 3. Rate meal (feedback system)
-function rateMeal(dayIndex, mealIndex, rating) {
-  var c = getC();
-  if(!c) return;
+// NOTE: rateMeal() is defined earlier (writes ratings to TRACKING_DATA so the
+// Meal Stats dashboard can read them, and updates the 👍/👎 button colors).
+// A second, inferior duplicate used to live here (wrote to c.mealFeedback and
+// popped a prompt()); it overrode the real one and broke the dashboard feed, so
+// it was removed.
 
-  if(!c.mealFeedback) c.mealFeedback = {};
-
-  var key = dayIndex + '_' + mealIndex;
-  c.mealFeedback[key] = {
-    rating: rating,
-    date: new Date().toISOString(),
-    notes: prompt('Αναφορά (π.χ. "Πολύ αλμυρό"):') || ''
-  };
-
-  upd();
-  showSuccessToast(rating === 5 ? '⭐⭐⭐⭐⭐ Tέλειο!' : (rating === 1 ? '😞 Καταγράφηκε' : '👍 Σημειώθηκε'));
-}
-
-// 4. Generate shopping list from plan
-function generateShoppingList() {
-  var c = getC();
-  if(!c || !c.weekPlan) {
-    alert('Δεν υπάρχει πλάνο');
-    return;
-  }
-
-  var list = '🛒 ΛΙΣΤΑ ΑΓΟΡΩΝ - ' + c.name + '\n';
-  list += '═══════════════════════════\n\n';
-  list += 'ΠΡΩΤΕΪΝΕΣ:\n';
-  list += '☐ Κοτόπουλο (600g)\n';
-  list += '☐ Ψάρι (400g)\n';
-  list += '☐ Αυγά (12τμχ)\n\n';
-  list += 'ΛΑΧΑΝΙΚΑ:\n';
-  list += '☐ Ντομάτες (4τμχ)\n';
-  list += '☐ Μαρούλι (2τμχ)\n';
-  list += '☐ Σπανάκι (500g)\n\n';
-  list += 'ΔΗΜΗΤΡΙΑΚΑ:\n';
-  list += '☐ Ρύζι (1kg)\n';
-  list += '☐ Ζυμαρικά (500g)\n\n';
-  list += 'ΓΑΛΑΚΤΟΚΟΜΙΚΑ:\n';
-  list += '☐ Γάλα (1L)\n';
-  list += '☐ Τυρί (200g)\n\n';
-
-  var blob = new Blob([list], {type: 'text/plain'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = c.name + '_shopping_list.txt';
-  a.click();
-
-  showSuccessToast('📋 Λίστα λήφθηκε!');
-}
+// NOTE: The real weekly shopping list is generated inside the PDF/plan export
+// (computed from the actual weekPlan, with cooked→raw conversion). The old
+// standalone .txt generateShoppingList() here used hardcoded placeholder data
+// and was never wired to any button — removed to avoid confusion.
 
 // 5A. Auto-adjust based on feedback
 function getAutoAdjustmentHints(c) {
@@ -18386,7 +18429,7 @@ function renderAnalyticsDashboard() {
 
     var bgColor = idx % 2 === 0 ? '#fff' : '#F5F5F5';
     html += '<tr style="background:'+bgColor+';border-bottom:1px solid #ddd;">';
-    html += '<td style="padding:10px;"><strong>'+c.name+'</strong></td>';
+    html += '<td style="padding:10px;"><strong>'+esc(c.name)+'</strong></td>';
     html += '<td style="padding:10px;text-align:center;">'+c.age+'</td>';
     html += '<td style="padding:10px;text-align:center;">'+c.weight+'</td>';
     html += '<td style="padding:10px;text-align:center;">'+hasPlans+'</td>';
@@ -18551,25 +18594,6 @@ function initOnboarding(){
 }
 
 // ✅ IMPROVED UX: Smooth animations for client cards
-function renderSBImproved(){
-  var c = clients || [];
-  var html = '';
-
-  c.forEach(function(cl, idx){
-    var active = (currentClient === idx) ? ' active' : '';
-    html += '<div class="ci' + active + '" onclick="selectClient(' + idx + ')">'
-      + '<div class="ci-name">' + (cl.name || 'Πελάτης') + '</div>'
-      + '<div class="ci-info">' + (cl.age || '?') + ' ετών • ' + (cl.weight || '?') + 'kg</div>'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999">'
-      + '<span>' + ((cl.weekPlan && Object.keys(cl.weekPlan).length > 0) ? '📊 Ενεργό σχέδιο' : '⭕ Χωρίς σχέδιο') + '</span>'
-      + '<button class="cdel" onclick="event.stopPropagation();delClient(' + idx + ')">✕</button>'
-      + '</div>'
-      + '</div>';
-  });
-
-  document.getElementById('client-list').innerHTML = html;
-}
-
 // ✅ IMPROVED UX: Show onboarding on first load
 // ✅ SUPPLEMENT SELECTOR (Page 1)
 // ✅ NEW: Combined supplements modal (merges current + recommended)
@@ -19344,7 +19368,7 @@ function openValidationModal() {
 
   // DEBUG PANEL
   var debugHTML = '<div style="padding:10px;background:#fff;border-radius:4px;">';
-  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Name:</span><strong>'+c.name+'</strong></div>';
+  debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Name:</span><strong>'+esc(c.name)+'</strong></div>';
   debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>BMR:</span><strong>'+bmr.toFixed(0)+' kcal</strong></div>';
   debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Activity:</span><strong>'+actFactor.toFixed(2)+'x</strong></div>';
   debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>TDEE:</span><strong>'+adjTDEE.toFixed(0)+' kcal</strong></div>';
@@ -19592,26 +19616,32 @@ function openMedicalConditionsModal(){
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFCDD2;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-diabetes-modal" '+(c.medConditions?.diabetes?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🍬 Διαβήτης</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'diabetes\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFCDD2;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-hypertension-modal" '+(c.medConditions?.hypertension?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🩸 Υψηλή Πίεση</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hypertension\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFCDD2;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-cholesterol-modal" '+(c.medConditions?.cholesterol?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🩸 Υψηλή Χοληστερόλη</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'cholesterol\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFECB3;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-celiac-modal" '+(c.medConditions?.celiac?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🌾 Κοιλιοκάκη</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'celiac\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#C8E6C9;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-ibs-modal" '+(c.medConditions?.ibs?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🔄 IBS</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ibs\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#BBDEFB;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-lactose-modal" '+(c.medConditions?.lactose?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🥛 Δυσανεξία Λακτόζης</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'</div>'
     +'<div style="border-top:2px solid #ddd;padding-top:15px">'
@@ -19726,12 +19756,15 @@ function saveDietSettings(){
   var c=getC();if(!c)return;
 
   c.dietType=document.getElementById('dietType-modal').value;
-  // Use foodExclude from Food Picker Modal if available
-  var selectedExclusions=[];
-  document.querySelectorAll('[data-food-excl]:checked').forEach(function(cb){
-    selectedExclusions.push(cb.value);
-  });
-  c.foodExclude=selectedExclusions.length>0?selectedExclusions:[];
+  // ✅ FIX: Only sync exclusions when the Food Picker is actually open in the DOM.
+  // Otherwise the picker checkboxes don't exist, the query returns 0, and we would
+  // wipe c.foodExclude — destroying exclusions the user already saved via the picker.
+  var pickerBoxes=document.querySelectorAll('[data-food-excl]');
+  if(pickerBoxes.length){
+    var selectedExclusions=[];
+    pickerBoxes.forEach(function(cb){ if(cb.checked) selectedExclusions.push(cb.value); });
+    c.foodExclude=selectedExclusions;
+  }
   c.preferences=document.getElementById('preferences-modal').value;
 
   save();
