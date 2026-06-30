@@ -2,9 +2,16 @@
 <html lang="el">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#025857">
 <title>Feed Your Health — Το πλάνο μου</title>
+<!-- PWA / add-to-home-screen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Το πλάνο μου">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='118' font-family='Georgia,serif' font-size='84' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -15,7 +22,7 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5}
   #app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative}
 
   .hdr{background:var(--teal);color:#fff;padding:18px 18px 16px;position:sticky;top:0;z-index:20}
@@ -36,16 +43,20 @@
 
   .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   .stat{background:var(--tint2);border-radius:12px;padding:10px 6px;text-align:center}
-  .stat .l{font-size:11px;color:var(--teal-l)}
+  .stat .l{font-size:12px;color:var(--teal-l)}
   .stat .v{font-size:18px;font-weight:600;color:var(--teal-d)}
-  .stat .u{font-size:10px;color:var(--muted)}
+  .stat .u{font-size:11px;color:var(--muted)}
   .stat .u.ok{color:var(--ok)}
 
   .meal{display:flex;gap:10px;padding:9px 0;border-bottom:.5px solid var(--bord-l)}
   .meal:last-child{border-bottom:none}
-  .meal .t{font-size:11px;color:var(--faint);width:42px;flex-shrink:0;padding-top:1px}
-  .meal .nm{font-size:13px;color:var(--ink)}
-  .meal .mi{font-size:11px;color:var(--muted)}
+  .meal .t{font-size:12px;color:var(--faint);width:42px;flex-shrink:0;padding-top:1px}
+  .meal .nm{font-size:14px;color:var(--ink)}
+  .meal .mi{font-size:12px;color:var(--muted)}
+  .meal .mc{width:23px;height:23px;border:1.5px solid var(--bord);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;cursor:pointer;transition:transform .1s;margin-top:1px}
+  .meal .mc:active{transform:scale(.85)}
+  .meal.eaten .mc{background:var(--teal);border-color:var(--teal)}
+  .meal.eaten .nm{color:var(--faint);text-decoration:line-through}
   .food{display:flex;justify-content:space-between;padding:8px 0;border-bottom:.5px solid var(--bord-l);font-size:13px}
   .food:last-child{border-bottom:none}
   .food .q{font-weight:600;color:var(--teal)}
@@ -59,7 +70,7 @@
   .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .quick .card-pad{cursor:pointer}
   .quick .qt{font-size:13px;font-weight:600;color:var(--teal-d);margin-top:6px}
-  .quick .qs{font-size:11px;color:var(--muted)}
+  .quick .qs{font-size:12px;color:var(--muted)}
 
   .daypills{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
   .daypills::-webkit-scrollbar{display:none}
@@ -78,10 +89,58 @@
   .slrow .amt .raw{color:var(--muted);font-weight:400;font-size:11px}
 
   .prog{height:6px;background:#fff;border-radius:999px;margin-top:10px;overflow:hidden}
-  .prog>div{height:100%;background:var(--teal)}
+  .prog>div{height:100%;background:var(--teal);transition:width .25s}
+
+  /* updated badge in header */
+  .upd{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;color:#9fcabf;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:3px 9px;border-radius:999px}
+  .upd i{font-size:13px}
+
+  /* personal note from the dietitian */
+  .note-coach{background:linear-gradient(135deg,var(--tint2),#fff);border:.5px solid var(--bord);border-left:3px solid var(--teal);border-radius:14px;padding:12px 14px}
+  .note-coach .nh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal-d);margin-bottom:5px}
+  .note-coach .nb{font-size:13.5px;color:var(--ink);line-height:1.55;white-space:pre-wrap}
+
+  /* small legend line */
+  .legend{font-size:11px;color:var(--faint);padding:2px 2px 0;line-height:1.4}
+
+  /* supplement daily check-off */
+  .supp{padding:12px 0;border-bottom:.5px solid var(--bord-l)}
+  .supp:last-child{border-bottom:none}
+  .supp .sh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .supp .sn{font-size:14px;font-weight:600;color:var(--ink)}
+  .supp .sd{font-size:12px;color:var(--teal);font-weight:600;white-space:nowrap}
+  .supp .stm{font-size:11px;color:var(--faint);margin-top:1px}
+  .supp .days{display:flex;gap:5px;margin-top:10px}
+  .supp .day{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+  .supp .day .dn{font-size:10px;color:var(--faint)}
+  .supp .day .dc{width:27px;height:27px;border-radius:50%;border:1.5px solid var(--bord);display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;transition:transform .1s}
+  .supp .day.on .dc{background:var(--teal);border-color:var(--teal)}
+  .supp .day.today .dn{color:var(--teal);font-weight:700}
+  .supp .day.today .dc{border-color:var(--teal-l);box-shadow:0 0 0 2px var(--tint)}
+  .supp .day:active .dc{transform:scale(.85)}
+
+  /* contact dietitian — floating button + sheet */
+  .fab{position:fixed;right:16px;bottom:74px;z-index:30;background:var(--teal);color:#fff;border:none;border-radius:999px;padding:11px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;box-shadow:0 6px 18px rgba(2,88,87,.4);cursor:pointer}
+  .fab i{font-size:18px}
+  .fab:active{transform:scale(.96)}
+  .sheet-bg{position:fixed;inset:0;background:rgba(2,40,38,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+  .sheet{background:var(--card);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:18px 18px 26px;animation:up .2s ease}
+  @keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:translateY(0);opacity:1}}
+  .sheet h3{margin:0 0 4px;font-size:16px;color:var(--teal-d)}
+  .sheet .ssub{font-size:12px;color:var(--muted);margin-bottom:14px}
+  .sheet a.opt{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink);padding:12px 12px;border:.5px solid var(--bord);border-radius:12px;margin-bottom:9px;font-size:14px;font-weight:600}
+  .sheet a.opt i{font-size:20px;width:24px;text-align:center}
+  .sheet a.wa{color:#0e8a4f}.sheet a.tel{color:var(--teal)}.sheet a.mail{color:#b25b00}.sheet a.web{color:#1565C0}
+  .sheet .close{width:100%;background:var(--tint);border:none;border-radius:12px;padding:11px;font-size:13px;color:var(--teal-d);font-weight:600;cursor:pointer;margin-top:4px}
+  @media (min-width:880px){
+    .fab{bottom:24px}
+    .sheet-bg{align-items:center}
+    .sheet{border-radius:18px;max-width:400px}
+  }
 
   .nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;display:flex;justify-content:space-around;padding:9px 4px;border-top:.5px solid var(--bord);background:#fafdfc;z-index:20}
   .nav button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--faint);font-size:10px;cursor:pointer;flex:1;padding:2px}
+  .nav button{font-size:11px}
   .nav button i{font-size:21px}
   .nav button.on{color:var(--teal);font-weight:600}
 
@@ -229,6 +288,10 @@ const SPICES=[
   {n:'Μάραθος',ben:'Πέψη, αντιφλεγμονώδες',use:'1-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Χρήση σε βραστά'}
 ];
 
+// Επικοινωνία με το διαιτολογικό γραφείο (fallback αν δεν έρθει από το πλάνο).
+// ⬇️ Συμπλήρωσε WhatsApp/τηλέφωνο (διεθνής μορφή, π.χ. 306900000000) για να ενεργοποιηθεί το κουμπί.
+const COACH={ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' };
+
 let SNAP=null, curDay=0, sb=null;
 
 function $(s){return document.querySelector(s)}
@@ -244,6 +307,17 @@ function getWater(){try{const d=JSON.parse(localStorage.getItem(lk('water'))||'{
 function setWater(n){try{const d=JSON.parse(localStorage.getItem(lk('water'))||'{}');d[todayKey()]=n;localStorage.setItem(lk('water'),JSON.stringify(d))}catch(e){}}
 function getShop(){try{return JSON.parse(localStorage.getItem(lk('shop'))||'{}')}catch(e){return {}}}
 function setShop(o){try{localStorage.setItem(lk('shop'),JSON.stringify(o))}catch(e){}}
+function getMeals(){try{const d=JSON.parse(localStorage.getItem(lk('meals'))||'{}');return d[todayKey()]||{}}catch(e){return {}}}
+function setMeals(o){try{const d=JSON.parse(localStorage.getItem(lk('meals'))||'{}');d[todayKey()]=o;localStorage.setItem(lk('meals'),JSON.stringify(d))}catch(e){}}
+// supplement adherence: { 'YYYY-MM-DD': { '<supp name>': true } }
+function getSuppLog(){try{return JSON.parse(localStorage.getItem(lk('supps'))||'{}')}catch(e){return {}}}
+function setSuppLog(o){try{localStorage.setItem(lk('supps'),JSON.stringify(o))}catch(e){}}
+function dKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function weekDates(){ // Δευτέρα → Κυριακή της τρέχουσας εβδομάδας
+  const now=new Date(); const js=now.getDay(); const toMon=(js===0?-6:1-js);
+  const mon=new Date(now); mon.setDate(now.getDate()+toMon); mon.setHours(0,0,0,0);
+  const arr=[]; for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);arr.push(d);} return arr;
+}
 
 async function boot(){
   const t=token();
@@ -279,7 +353,8 @@ function render(){
     '<div class="hdr-top"><div class="brand"><span class="brand-logo">FY</span>Feed Your Health</div>'
     +'<button class="hdr-btn" onclick="doPrint()" title="Εκτύπωση ή αποθήκευση ως PDF"><i class="ti ti-printer"></i>PDF</button></div>'
     +'<h1>Γεια σου, '+esc((s.name||'').split(' ')[0]||'')+'</h1>'
-    +'<div class="sub" id="hdr-sub"></div>';
+    +'<div class="sub" id="hdr-sub"></div>'
+    +updatedBadge();
   app.appendChild(hdr);
 
   const scroll=el('div','scroll');
@@ -294,7 +369,61 @@ function render(){
     +tabBtn('spices','ti-leaf','Μπαχαρικά');
   app.appendChild(nav);
 
+  if(contactChannels().length){
+    const fab=el('button','fab');
+    fab.innerHTML='<i class="ti ti-message-circle"></i>Ρώτησέ με';
+    fab.onclick=openContact;
+    app.appendChild(fab);
+  }
+
+  injectManifest();
   go('home');
+}
+
+// Δείχνει πότε ενημερώθηκε τελευταία φορά το πλάνο.
+function updatedBadge(){
+  const iso=SNAP&&(SNAP._updated||SNAP.publishedAt);
+  if(!iso)return '';
+  let d; try{d=new Date(iso)}catch(e){return ''}
+  if(isNaN(d))return '';
+  const txt=d.toLocaleDateString('el-GR',{day:'numeric',month:'long',year:'numeric'});
+  return '<div class="upd"><i class="ti ti-refresh"></i>Ενημερώθηκε '+esc(txt)+'</div>';
+}
+
+// PWA: manifest που κρατάει το token (ώστε το «Πρόσθεσε στην οθόνη» να ανοίγει το σωστό πλάνο).
+function injectManifest(){
+  try{
+    const name=((SNAP&&SNAP.name||'').split(' ')[0])||'';
+    const m={name:'Feed Your Health — Το πλάνο μου',short_name:name?('Πλάνο '+name):'Το πλάνο μου',
+      start_url:location.href,display:'standalone',background_color:'#f4f8f6',theme_color:'#025857',
+      icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E",sizes:'180x180',type:'image/svg+xml',purpose:'any maskable'}]};
+    const blob=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});
+    const old=document.querySelector('link[rel="manifest"]'); if(old)old.remove();
+    const link=document.createElement('link'); link.rel='manifest'; link.href=URL.createObjectURL(blob);
+    document.head.appendChild(link);
+  }catch(e){}
+}
+
+// ── CONTACT (ρώτησε τη/τον διαιτολόγο σου) ───────────────────────────────────
+function contactInfo(){return (SNAP&&SNAP.contact)||COACH||{}}
+function contactChannels(){
+  const c=contactInfo(),out=[];
+  if(c.wa)out.push('wa'); if(c.tel)out.push('tel'); if(c.email)out.push('email'); if(c.web)out.push('web');
+  return out;
+}
+function openContact(){
+  const c=contactInfo();
+  const fname=((SNAP&&SNAP.name||'').split(' ')[0])||'';
+  const msg=encodeURIComponent('Γεια σας! Είμαι ο/η '+(fname||'πελάτης/πελάτισσα')+' και έχω μια ερώτηση για το πλάνο μου.');
+  const bg=el('div','sheet-bg'); bg.onclick=e=>{if(e.target===bg)bg.remove()};
+  let opts='';
+  if(c.wa)opts+='<a class="opt wa" href="https://wa.me/'+esc(String(c.wa).replace(/[^0-9]/g,''))+'?text='+msg+'" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i>WhatsApp</a>';
+  if(c.tel)opts+='<a class="opt tel" href="tel:'+esc(c.tel)+'"><i class="ti ti-phone"></i>Τηλεφώνησε</a>';
+  if(c.email)opts+='<a class="opt mail" href="mailto:'+esc(c.email)+'?subject='+encodeURIComponent('Ερώτηση για το πλάνο μου')+'"><i class="ti ti-mail"></i>Email</a>';
+  if(c.web)opts+='<a class="opt web" href="'+esc(c.web)+'" target="_blank" rel="noopener"><i class="ti ti-world"></i>Ιστοσελίδα</a>';
+  bg.innerHTML='<div class="sheet"><h3>Επικοινωνία</h3><div class="ssub">Ρώτησέ με ό,τι χρειάζεσαι για το πλάνο σου.</div>'
+    +opts+'<button class="close" onclick="this.closest(\'.sheet-bg\').remove()">Κλείσιμο</button></div>';
+  document.body.appendChild(bg);
 }
 function tabBtn(id,icon,label){return '<button data-tab="'+id+'" onclick="go(\''+id+'\')"><i class="ti '+icon+'"></i>'+label+'</button>'}
 
@@ -321,23 +450,46 @@ function viewHome(){
   const s=SNAP, v=el('div','view active');
   const tg=s.targets||{};
   const day=s.days&&s.days[curDay];
+  const h=s.hydration||{};
+
+  // personal note from the dietitian
+  if(s.coachNote){
+    const n=el('div','note-coach');
+    n.innerHTML='<div class="nh"><i class="ti ti-message-2"></i>Μήνυμα από τη διαιτολόγο σου</div><div class="nb">'+esc(s.coachNote)+'</div>';
+    v.appendChild(n);
+  }
+
+  // live water progress for the stat box
+  const per=h.glassMl||250;
+  const goalMl=(day&&day.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
+  const haveMl=getWater()*per;
 
   const stats=el('div','stats');
   stats.innerHTML=
     statBox('Στόχος',nfmt(tg.kcal||0),'kcal')
     +statBox('Πρωτεΐνη',nfmt(tg.p||0),'γρ')
-    +statBox('Υδάτωση',L(s.hydration?s.hydration.baseMl:0),'');
+    +statBox('Νερό σήμερα',(haveMl/1000).toFixed(1).replace('.',','),'/ '+L(goalMl));
   v.appendChild(stats);
 
-  // today meals
+  // today meals — with check-off
+  const meals=(day&&day.meals)||[];
+  const eaten=getMeals();
+  let done=0; meals.forEach((m,i)=>{if(eaten[i])done++;});
   const c=el('div','card'); const cp=el('div','card-pad');
-  cp.appendChild(el('div','card-hdr','<i class="ti ti-tools-kitchen-2"></i>Η διατροφή μου σήμερα'));
-  if(day&&day.meals&&day.meals.length){
-    day.meals.forEach(m=>{
-      const mm=el('div','meal');
-      mm.innerHTML='<div class="t">'+esc(m.time||'')+'</div><div style="flex:1"><div class="nm">'+esc(m.title||m.label||'Γεύμα')+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+'</div></div>';
+  cp.innerHTML='<div class="card-hdr" style="margin-bottom:8px"><i class="ti ti-tools-kitchen-2"></i>Η διατροφή μου σήμερα'
+    +(meals.length?'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+meals.length+'</span>':'')+'</div>'
+    +(meals.length?'<div class="prog" style="margin:0 0 4px"><div style="width:'+Math.round(done/meals.length*100)+'%"></div></div>':'');
+  if(meals.length){
+    meals.forEach((m,idx)=>{
+      const mm=el('div','meal'+(eaten[idx]?' eaten':''));
+      mm.style.cursor='pointer';
+      mm.innerHTML='<span class="mc">'+(eaten[idx]?'<i class="ti ti-check"></i>':'')+'</span>'
+        +'<div class="t">'+esc(m.time||'')+'</div>'
+        +'<div style="flex:1"><div class="nm">'+esc(m.title||m.label||'Γεύμα')+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+'</div></div>';
+      mm.onclick=()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);go('home');};
       cp.appendChild(mm);
     });
+    cp.appendChild(el('div','empty-glass-note','Πάτα ένα γεύμα όταν το ολοκληρώσεις.'));
   }else{cp.appendChild(el('div','mi','Δεν υπάρχει πλάνο για σήμερα.'));}
   c.appendChild(cp); v.appendChild(c);
 
@@ -558,6 +710,9 @@ function viewShop(){
 
   if(!cats.length){v.appendChild(el('div','mi','Δεν υπάρχει λίστα ακόμη.'));return v}
 
+  if(cats.some(c=>c.items.some(it=>it.raw)))
+    v.appendChild(el('div','legend','Η ποσότητα είναι αυτή που αγοράζεις · σε παρένθεση το ωμό/μη-μαγειρεμένο βάρος όπου διαφέρει.'));
+
   const c=el('div','card');const cp=el('div','card-pad');
   cats.forEach(cat=>{
     const sec=el('div','slcat');
@@ -596,14 +751,41 @@ function viewWater(){
 function viewSupps(){
   const s=SNAP, v=el('div','view active');
   if(s.supps&&s.supps.length){
+    const DN=['Δ','Τ','Τ','Π','Π','Σ','Κ'];
+    const week=weekDates(), todK=dKey(new Date());
+    const log=getSuppLog();
+    // πόσα πάρθηκαν σήμερα
+    let doneToday=0; s.supps.forEach(su=>{ if(log[todK]&&log[todK][su.name])doneToday++; });
+
     const c=el('div','card');const cp=el('div','card-pad');
-    cp.appendChild(el('div','card-hdr','<i class="ti ti-pill"></i>Τα συμπληρώματά μου'));
-    let t='<table class="stbl">';
-    s.supps.forEach(su=>{t+='<tr><td class="lab">'+esc(su.name)+(su.timing?' <span style="color:var(--faint)">· '+esc(su.timing)+'</span>':'')+'</td><td class="val">'+esc(su.dose||'')+'</td></tr>'});
-    t+='</table>';cp.innerHTML+=t;c.appendChild(cp);v.appendChild(c);
+    cp.innerHTML='<div class="card-hdr" style="margin-bottom:6px"><i class="ti ti-pill"></i>Τα συμπληρώματά μου'
+      +'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+doneToday+' / '+s.supps.length+' σήμερα</span></div>'
+      +'<div class="prog" style="margin:0 0 4px"><div style="width:'+Math.round(doneToday/s.supps.length*100)+'%"></div></div>';
+
+    s.supps.forEach(su=>{
+      const row=el('div','supp');
+      row.innerHTML='<div class="sh"><span class="sn">'+esc(su.name)+'</span>'+(su.dose?'<span class="sd">'+esc(su.dose)+'</span>':'')+'</div>'
+        +(su.timing?'<div class="stm">'+esc(su.timing)+'</div>':'');
+      const days=el('div','days');
+      week.forEach((d,i)=>{
+        const k=dKey(d), on=!!(log[k]&&log[k][su.name]), isTod=(k===todK);
+        const cell=el('div','day'+(on?' on':'')+(isTod?' today':''));
+        cell.innerHTML='<span class="dn">'+DN[i]+'</span><span class="dc">'+(on?'<i class="ti ti-check"></i>':'')+'</span>';
+        cell.onclick=()=>{
+          const lg=getSuppLog(); if(!lg[k])lg[k]={};
+          if(lg[k][su.name])delete lg[k][su.name]; else lg[k][su.name]=true;
+          setSuppLog(lg); go('supps');
+        };
+        days.appendChild(cell);
+      });
+      row.appendChild(days);
+      cp.appendChild(row);
+    });
+    c.appendChild(cp);v.appendChild(c);
+
     const tip=el('div',null);
     tip.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
-    tip.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Συμβουλή</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Λάβε τα συμπληρώματα στην ώρα που αναγράφεται, μαζί με το γεύμα εκτός αν σου έχει πει αλλιώς ο/η διαιτολόγος σου.</div>';
+    tip.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Συμβουλή</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Πάτα την ημέρα όταν πάρεις το συμπλήρωμα. Λάβε το στην ώρα που αναγράφεται, μαζί με το γεύμα — εκτός αν σου έχει πει αλλιώς ο/η διαιτολόγος σου.</div>';
     v.appendChild(tip);
   }else{
     v.appendChild(el('div','mi','Δεν έχουν οριστεί συμπληρώματα στο πλάνο σου.'));

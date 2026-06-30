@@ -13712,13 +13712,24 @@ function openPublishModal(){
     var ebody='Γεια σου '+fname+'!\n\nΕδώ είναι το προσωπικό σου διατροφικό πλάνο. Άνοιξέ το από το κινητό σου:\n\n'+url+'\n\nΘα βρεις το πλάνο διατροφής, τη λίστα για ψώνια, τα συμπληρώματα, την ενυδάτωση και την πρόοδό σου.\n\nΜε εκτίμηση,\nFeed Your Health';
     var mailto='mailto:'+encodeURIComponent(c.email||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(ebody);
     body.style.textAlign='left';
-    body.innerHTML='<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος πελάτη</div>'
+    body.innerHTML='<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">✍️ Προσωπικό μήνυμα στον πελάτη <span style="color:#9fb5b0">(προαιρετικό — φαίνεται στην Αρχική του)</span></div>'
+      +'<textarea id="portal-note" rows="2" placeholder="π.χ. Μπράβο για την πρόοδο! Εστίασε στο πρωινό αυτή την εβδομάδα." style="width:100%;box-sizing:border-box;font-size:13px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;resize:vertical;font-family:inherit;color:#1a3330;margin-bottom:8px">'+esc(c.portalNote||'')+'</textarea>'
+      +'<button id="portal-note-save" class="btn" style="width:100%;background:#E2EEE5;color:#014545;border:1px solid #c5ddd8;margin-bottom:16px">💾 Αποθήκευση μηνύματος</button>'
+      +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος πελάτη</div>'
       +'<div style="display:flex;gap:6px;margin-bottom:14px"><input id="publish-url" value="'+esc(url)+'" readonly style="flex:1;font-size:12px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;background:#f4f8f6;color:#014545" onclick="this.select()">'
       +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="copyPublishUrl(this)">Αντιγραφή</button></div>'
       +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📧 Αποστολή με Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
       +(c.email?'':'<div style="font-size:11px;color:#e08a00;margin:-4px 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα — θα ανοίξει κενό. Πρόσθεσέ το στα «Βασικά Στοιχεία».</div>')
       +'<a href="'+wa+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📱 WhatsApp'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
       +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5">Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα.</div>';
+    // Αποθήκευση προσωπικού μηνύματος → ξαναδημοσίευση ώστε να μπει στο snapshot
+    var noteSave=document.getElementById('portal-note-save'), noteEl=document.getElementById('portal-note');
+    if(noteSave&&noteEl){ noteSave.onclick=function(){
+      c.portalNote=noteEl.value;
+      noteSave.disabled=true; noteSave.textContent='Αποθήκευση…';
+      window.Cloud.publishPlan(c).then(function(){ noteSave.textContent='✓ Αποθηκεύτηκε'; setTimeout(function(){noteSave.disabled=false;noteSave.textContent='💾 Αποθήκευση μηνύματος';},1600); })
+        .catch(function(e){ noteSave.disabled=false; noteSave.textContent='💾 Αποθήκευση μηνύματος'; alert('Σφάλμα αποθήκευσης: '+(e.message||'')); });
+    };}
   }).catch(function(e){
     var body=document.getElementById('publish-body');
     if(body) body.innerHTML='<div style="color:#c0392b;font-size:13px">❌ '+esc(e.message||'Σφάλμα δημοσίευσης')+'</div>';
@@ -20121,6 +20132,9 @@ function saveFoodExclusions(){
     // ── 📲 ΔΗΜΟΣΙΕΥΣΗ ΠΛΑΝΟΥ (client portal) ────────────────────────────────
     // Η σταθερή διεύθυνση του portal (το link που στέλνεται στον πελάτη)
     PORTAL_BASE:'https://feedyourhealth.github.io/plan.html',
+    // Στοιχεία επικοινωνίας γραφείου που εμφανίζονται στο κουμπί «Ρώτησέ με» του πελάτη.
+    // ⬇️ Συμπλήρωσε WhatsApp/τηλέφωνο σε διεθνή μορφή (π.χ. 306900000000).
+    CLINIC:{ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' },
 
     publishPlan:function(c){
       var self=this;
@@ -20219,8 +20233,9 @@ function saveFoodExclusions(){
       var shopping=[];
       slCats.concat(['Άλλα']).forEach(function(cat){ if(byCat[cat]&&byCat[cat].length) shopping.push({cat:cat,items:byCat[cat]}); });
 
-      // ── Συμπληρώματα ──
-      var supps=[];
+      // ── Συμπληρώματα (ίδια λογική με το PDF: Page 1 c.supps + Page 2 c.selectedSupplements) ──
+      var supps=[], suppSeen={};
+      // Step 1: όσα λαμβάνει ήδη (από τα checkboxes, με ώρες λήψης)
       (c.supps||[]).forEach(function(id){
         var sx=null; if(typeof SUPPS!=='undefined') SUPPS.forEach(function(x){if(x.id===id)sx=x;});
         if(!sx)return;
@@ -20230,7 +20245,14 @@ function saveFoodExclusions(){
           times.push(ti.t); if(!dose&&ti.d)dose=ti.d;
         });
         if(!times.length)return;
-        supps.push({name:sx.name, dose:dose, timing:times.join(', ')});
+        suppSeen[sx.name]=1;
+        supps.push({name:sx.name, dose:dose||sx.dose||'', timing:times.join(', ')});
+      });
+      // Step 2: προτεινόμενα από την ανάλυση κενών (δεν υπάρχουν ώρες λήψης εδώ)
+      (c.selectedSupplements||[]).forEach(function(su){
+        var nm=su&&su.supplement; if(!nm||suppSeen[nm])return;
+        suppSeen[nm]=1;
+        supps.push({name:nm, dose:(su.dose||su.info||''), timing:''});
       });
 
       // ── Πρόοδος ──
@@ -20249,10 +20271,14 @@ function saveFoodExclusions(){
       var hb=t.hydBase||Math.round((c.weight||70)*35);
       var ht=t.hydTrain||(hb+500);
 
+      var clinic=this.CLINIC||{};
+      var hasContact=!!(clinic.wa||clinic.tel||clinic.email||clinic.web);
       return {
         v:1,
         name:c.name||'',
         publishedAt:new Date().toISOString(),
+        coachNote:(c.portalNote||'').trim(),
+        contact:hasContact?{wa:clinic.wa||'',tel:clinic.tel||'',email:clinic.email||'',web:clinic.web||''}:null,
         targets:{kcal:Math.round(t.target||0), p:Math.round(t.p||0), c:Math.round(t.carb||0), f:Math.round(t.f||0)},
         hydration:{baseMl:hb, trainMl:ht, glassMl:250},
         days:days,
