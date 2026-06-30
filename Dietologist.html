@@ -7487,6 +7487,7 @@ function renderMain(){
     +'<button class="btn secondary" onclick="exportGoogleDocs()">&#8659; Google Docs (.docx)</button>'
     +'<button class="btn secondary" onclick="exportPDF()">&#8659; PDF</button>'
     +'<button class="btn secondary" onclick="exportPDF(\'en\')">&#8659; PDF (English)</button>'
+    +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857" onclick="openPublishModal()" title="Δημιούργησε σύνδεσμο για να δει ο πελάτης το πλάνο στο κινητό του">&#128241; Στείλε στον πελάτη</button>'
     +'<button class="btn save-tmpl-btn" style="margin-left:auto" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button></div>'
     +'<div id="save-tmpl-panel" class="save-tmpl-panel" style="display:none">'
     +'<span class="save-tmpl-lbl">Όνομα:</span>'
@@ -13663,6 +13664,58 @@ var EN_CAT_NAMES={
   'Φρούτα':'Fruits','Ξηροί καρποί':'Nuts & Seeds','Λάδια':'Oils & Fats',
   'Συνταγές FYH':'FYH Recipes','Άλλα':'Other'
 };
+
+// ── 📲 ΔΗΜΟΣΙΕΥΣΗ ΠΛΑΝΟΥ ΣΤΟΝ ΠΕΛΑΤΗ ────────────────────────────────────────
+function openPublishModal(){
+  var c=getC();
+  if(!c){ alert('Διάλεξε πρώτα πελάτη.'); return; }
+  if(!c.weekPlan || !Object.keys(c.weekPlan).length){ alert('Δεν υπάρχει πλάνο για δημοσίευση.'); return; }
+  if(!window.Cloud || !window.Cloud.enabled || !window.Cloud.user){
+    alert('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις πλάνο στον πελάτη.\n(Κάνε αποσύνδεση και ξανασυνδέσου με email/κωδικό.)');
+    return;
+  }
+  // overlay
+  var ov=document.getElementById('publish-overlay');
+  if(ov) ov.remove();
+  ov=document.createElement('div');
+  ov.id='publish-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML='<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25)">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:24px">📲</span><div style="font-size:18px;font-weight:700;color:#014545">Αποστολή πλάνου</div></div>'
+    +'<div style="font-size:13px;color:#5a8a82;margin-bottom:16px">Δημιουργία συνδέσμου για τον/την <b>'+esc(c.name||'πελάτη')+'</b>. Ανοίγει στο κινητό — πλάνο, λίστα ψώνια, νερό, συμπληρώματα & πρόοδος.</div>'
+    +'<div id="publish-body" style="text-align:center;padding:14px 0"><div style="display:inline-block;width:30px;height:30px;border:3px solid #c5ddd8;border-top-color:#025857;border-radius:50%;animation:fyhspin 1s linear infinite"></div><div style="font-size:13px;color:#5a8a82;margin-top:10px">Δημοσίευση…</div></div>'
+    +'<div style="text-align:right;margin-top:8px"><button class="btn" onclick="document.getElementById(\'publish-overlay\').remove()">Κλείσιμο</button></div>'
+    +'</div>';
+  document.body.appendChild(ov);
+  if(!document.getElementById('fyhspin-style')){
+    var st=document.createElement('style'); st.id='fyhspin-style'; st.textContent='@keyframes fyhspin{to{transform:rotate(360deg)}}'; document.head.appendChild(st);
+  }
+
+  window.Cloud.publishPlan(c).then(function(url){
+    var body=document.getElementById('publish-body');
+    if(!body)return;
+    var wa='https://wa.me/?text='+encodeURIComponent('Γεια σου '+(c.name||'').split(' ')[0]+'! Εδώ είναι το διατροφικό σου πλάνο: '+url);
+    body.style.textAlign='left';
+    body.innerHTML='<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος πελάτη</div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:14px"><input id="publish-url" value="'+esc(url)+'" readonly style="flex:1;font-size:12px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;background:#f4f8f6;color:#014545" onclick="this.select()">'
+      +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="copyPublishUrl(this)">Αντιγραφή</button></div>'
+      +'<a href="'+wa+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">WhatsApp</a>'
+      +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5">Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα.</div>';
+  }).catch(function(e){
+    var body=document.getElementById('publish-body');
+    if(body) body.innerHTML='<div style="color:#c0392b;font-size:13px">❌ '+esc(e.message||'Σφάλμα δημοσίευσης')+'</div>';
+  });
+}
+function copyPublishUrl(btn){
+  var inp=document.getElementById('publish-url');
+  if(!inp)return;
+  inp.select();
+  var ok=false;
+  try{ ok=document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard){ navigator.clipboard.writeText(inp.value).then(function(){},function(){}); ok=true; }
+  if(ok && btn){ var o=btn.textContent; btn.textContent='✓ Αντιγράφηκε'; setTimeout(function(){btn.textContent=o;},1500); }
+}
 
 function exportPDF(lang){
   var isEn=lang==='en';
@@ -20046,6 +20099,146 @@ function saveFoodExclusions(){
       var pw=(document.getElementById('cloud-pw')||{}).value||'';
       if(this._authMode==='signup') this.signUp(email,pw);
       else this.signIn(email,pw);
+    },
+
+    // ── 📲 ΔΗΜΟΣΙΕΥΣΗ ΠΛΑΝΟΥ (client portal) ────────────────────────────────
+    // Η σταθερή διεύθυνση του portal (το link που στέλνεται στον πελάτη)
+    PORTAL_BASE:'https://feedyourhealth.github.io/plan.html',
+
+    publishPlan:function(c){
+      var self=this;
+      if(!this.enabled || !this.user){ return Promise.reject(new Error('Πρέπει να είσαι συνδεδεμένος στο cloud για να δημοσιεύσεις πλάνο.')); }
+      if(!c){ return Promise.reject(new Error('Δεν υπάρχει επιλεγμένος πελάτης.')); }
+      var snap;
+      try{ snap=this._buildSnapshot(c); }catch(e){ return Promise.reject(e); }
+      var tok=c.shareToken;
+      if(!tok){ tok=Date.now().toString(36)+Math.random().toString(36).slice(2,10); c.shareToken=tok; }
+      var row={token:tok, dietitian_id:this.user.id, snapshot:snap, client_name:c.name||'', updated_at:new Date().toISOString()};
+      return this.sb.from('shared_plans').upsert(row,{onConflict:'token'}).then(function(res){
+        if(res.error) throw res.error;
+        try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
+        return self.PORTAL_BASE+'?t='+tok;
+      });
+    },
+
+    unpublishPlan:function(c){
+      if(!this.enabled || !this.user || !c || !c.shareToken) return Promise.resolve();
+      var tok=c.shareToken, self=this;
+      return this.sb.from('shared_plans').delete().eq('token',tok).then(function(res){
+        if(res.error) throw res.error;
+        delete c.shareToken;
+        try{ if(typeof save==='function') save(); }catch(e){}
+      });
+    },
+
+    // Μετατρέπει τον πελάτη σε καθαρό read-only snapshot για το portal.
+    _buildSnapshot:function(c){
+      var t=(typeof calcTDEE==='function')?calcTDEE(c):{};
+      var DAYS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+      var TIMES={
+        'Πρωινό':(c.mealTimes&&c.mealTimes.breakfast)||'08:00',
+        'Ενδιάμεσο':(c.mealTimes&&c.mealTimes.snack)||'11:00',
+        'Δεκατιανό':(c.mealTimes&&c.mealTimes.snack)||'11:00',
+        'Μεσημεριανό':(c.mealTimes&&c.mealTimes.lunch)||'13:00',
+        'Απογευματινό':(c.mealTimes&&c.mealTimes.snack2)||'17:00',
+        'Βραδινό':(c.mealTimes&&c.mealTimes.dinner)||'20:00'
+      };
+      function shortName(n){return String(n||'').replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim();}
+      function macro(n,g){return (typeof cm==='function')?cm(n,g):{k:0,p:0,c:0,f:0};}
+
+      // ── Ημερήσια πλάνα ──
+      var wp=c.weekPlan||{};
+      var days=[];
+      for(var d=0; d<7; d++){
+        var dm=wp[d]||[];
+        var meals=[], dayK=0;
+        dm.forEach(function(meal){
+          var foods=[], mk=0,mp=0,mc=0,mf=0;
+          (meal.foods||[]).forEach(function(f){
+            var v=macro(f.n,f.g);
+            mk+=v.k; mp+=v.p; mc+=v.c; mf+=v.f;
+            foods.push({name:shortName(f.n), qty:Math.round(f.g)+' g'});
+          });
+          dayK+=mk;
+          var title=foods.map(function(x){return x.name;}).slice(0,3).join(', ')+(foods.length>3?'…':'');
+          meals.push({
+            label:meal.name||'Γεύμα',
+            time:TIMES[meal.name]||'',
+            title:title,
+            kcal:Math.round(mk),
+            macros:{p:Math.round(mp),c:Math.round(mc),f:Math.round(mf)},
+            foods:foods
+          });
+        });
+        days.push({
+          label:DAYS[d],
+          isTrain:!!(c.trainDays&&c.trainDays[d]),
+          kcal:Math.round(dayK),
+          meals:meals
+        });
+      }
+
+      // ── Λίστα ψώνια (ίδια λογική με το PDF) ──
+      function shopRound(g){if(g<100)return Math.ceil(g/10)*10;if(g<500)return Math.ceil(g/25)*25;if(g<1000)return Math.ceil(g/50)*50;return Math.ceil(g/100)*100;}
+      function shopDisp(g){if(g>=1000)return(Math.round(g/100)/10).toFixed(1).replace('.',',')+' kg';return g+' g';}
+      var totals={};
+      for(var sd=0; sd<7; sd++){ (wp[sd]||[]).forEach(function(m){(m.foods||[]).forEach(function(f){totals[f.n]=(totals[f.n]||0)+f.g;});}); }
+      var slCats=['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Δημητριακά','Όσπρια','Λαχανικά','Φρούτα','Ξηροί καρποί','Λάδια','Συνταγές FYH'];
+      var byCat={};
+      Object.keys(totals).forEach(function(name){
+        var cat=(typeof FOODS!=='undefined'&&FOODS[name]&&FOODS[name].cat)||'Άλλα';
+        var planG=Math.round(totals[name]);
+        var conv=(typeof COOKED_TO_RAW!=='undefined')?COOKED_TO_RAW[name]:null;
+        var buy,raw='';
+        if(conv&&conv.isEgg){ buy=Math.ceil(planG/55)+' τεμ.'; raw='('+planG+' g)'; }
+        else if(conv){ buy=shopDisp(shopRound(planG*conv.f)); raw=conv.label; }
+        else { buy=shopDisp(shopRound(planG)); }
+        (byCat[cat]=byCat[cat]||[]).push({name:shortName(name), buy:buy, raw:raw});
+      });
+      var shopping=[];
+      slCats.concat(['Άλλα']).forEach(function(cat){ if(byCat[cat]&&byCat[cat].length) shopping.push({cat:cat,items:byCat[cat]}); });
+
+      // ── Συμπληρώματα ──
+      var supps=[];
+      (c.supps||[]).forEach(function(id){
+        var sx=null; if(typeof SUPPS!=='undefined') SUPPS.forEach(function(x){if(x.id===id)sx=x;});
+        if(!sx)return;
+        var times=[], dose='';
+        (sx.timing||[]).forEach(function(ti){
+          if(c.suppExclude && c.suppExclude.indexOf(id+'|'+ti.t)>-1) return;
+          times.push(ti.t); if(!dose&&ti.d)dose=ti.d;
+        });
+        if(!times.length)return;
+        supps.push({name:sx.name, dose:dose, timing:times.join(', ')});
+      });
+
+      // ── Πρόοδος ──
+      var wl=(c.weightLog||[]).slice().sort(function(a,b){return a.date<b.date?-1:1;});
+      var log=wl.map(function(e){return {date:e.date, kg:e.weight};});
+      var lastE=wl.length?wl[wl.length-1]:null;
+      var progress={
+        start: log.length?log[0].kg:(c.weight||null),
+        current: log.length?log[log.length-1].kg:(c.weight||null),
+        goal: c.goalWeight||c.targetWeight||null,
+        log: log,
+        waist:(lastE&&lastE.waist)||null,
+        bodyfat:(lastE&&lastE.bf)||c.bf||null
+      };
+
+      var hb=t.hydBase||Math.round((c.weight||70)*35);
+      var ht=t.hydTrain||(hb+500);
+
+      return {
+        v:1,
+        name:c.name||'',
+        publishedAt:new Date().toISOString(),
+        targets:{kcal:Math.round(t.target||0), p:Math.round(t.p||0), c:Math.round(t.carb||0), f:Math.round(t.f||0)},
+        hydration:{baseMl:hb, trainMl:ht, glassMl:250},
+        days:days,
+        shopping:shopping,
+        supps:supps,
+        progress:progress
+      };
     },
 
     signUp:function(email,pw){

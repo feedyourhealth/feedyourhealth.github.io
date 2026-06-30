@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#025857">
+<title>Feed Your Health — Το πλάνο μου</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --teal:#025857; --teal-d:#014545; --teal-l:#037070;
+    --tint:#E2EEE5; --tint2:#E8F5E9; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#5a8a82; --faint:#9fb5b0; --ok:#2e7d32;
+    --bg:#f4f8f6; --card:#ffffff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+  #app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative}
+
+  .hdr{background:var(--teal);color:#fff;padding:18px 18px 16px;position:sticky;top:0;z-index:20}
+  .hdr-top{display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tint);letter-spacing:.3px}
+  .brand-logo{width:26px;height:26px;border-radius:50%;background:var(--tint);display:flex;align-items:center;justify-content:center;color:var(--teal);font-weight:700;font-size:14px}
+  .hdr h1{font-size:21px;font-weight:600;margin:12px 0 2px}
+  .hdr .sub{font-size:13px;color:#9fcabf}
+
+  .scroll{flex:1;overflow-y:auto;padding:14px 14px 90px}
+  .view{display:none;flex-direction:column;gap:12px}
+  .view.active{display:flex}
+
+  .card{background:var(--card);border:.5px solid var(--bord);border-radius:14px;overflow:hidden}
+  .card-pad{padding:12px 14px}
+  .card-hdr{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--teal-d);margin-bottom:10px}
+  .card-hdr i,.ic{color:var(--teal)}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .stat{background:var(--tint2);border-radius:12px;padding:10px 6px;text-align:center}
+  .stat .l{font-size:11px;color:var(--teal-l)}
+  .stat .v{font-size:18px;font-weight:600;color:var(--teal-d)}
+  .stat .u{font-size:10px;color:var(--muted)}
+  .stat .u.ok{color:var(--ok)}
+
+  .meal{display:flex;gap:10px;padding:9px 0;border-bottom:.5px solid var(--bord-l)}
+  .meal:last-child{border-bottom:none}
+  .meal .t{font-size:11px;color:var(--faint);width:42px;flex-shrink:0;padding-top:1px}
+  .meal .nm{font-size:13px;color:var(--ink)}
+  .meal .mi{font-size:11px;color:var(--muted)}
+  .food{display:flex;justify-content:space-between;padding:8px 0;border-bottom:.5px solid var(--bord-l);font-size:13px}
+  .food:last-child{border-bottom:none}
+  .food .q{font-weight:600;color:var(--teal)}
+
+  .water{background:var(--tint);border-radius:14px;padding:12px 14px}
+  .glasses{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .glass{font-size:30px;color:var(--faint);cursor:pointer;line-height:1;transition:transform .1s}
+  .glass.on{color:var(--teal)}
+  .glass:active{transform:scale(.85)}
+
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .quick .card-pad{cursor:pointer}
+  .quick .qt{font-size:13px;font-weight:600;color:var(--teal-d);margin-top:6px}
+  .quick .qs{font-size:11px;color:var(--muted)}
+
+  .daypills{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+  .daypills::-webkit-scrollbar{display:none}
+  .pill{flex:0 0 auto;padding:7px 13px;border-radius:999px;background:var(--card);border:.5px solid var(--bord);font-size:12px;color:var(--muted);cursor:pointer}
+  .pill.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+  .slcat{margin-bottom:12px}
+  .slcat-h{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .slrow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--bord-l);cursor:pointer}
+  .slrow:last-child{border-bottom:none}
+  .slrow .chk{width:20px;height:20px;border:1.5px solid var(--bord);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+  .slrow.done .chk{background:var(--teal);border-color:var(--teal)}
+  .slrow.done .nm{color:var(--faint);text-decoration:line-through}
+  .slrow .nm{flex:1;font-size:13px}
+  .slrow .amt{font-size:12px;color:var(--teal);font-weight:600}
+  .slrow .amt .raw{color:var(--muted);font-weight:400;font-size:11px}
+
+  .prog{height:6px;background:#fff;border-radius:999px;margin-top:10px;overflow:hidden}
+  .prog>div{height:100%;background:var(--teal)}
+
+  .nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;display:flex;justify-content:space-around;padding:9px 4px;border-top:.5px solid var(--bord);background:#fafdfc;z-index:20}
+  .nav button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--faint);font-size:10px;cursor:pointer;flex:1;padding:2px}
+  .nav button i{font-size:21px}
+  .nav button.on{color:var(--teal);font-weight:600}
+
+  .center{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;text-align:center;color:var(--muted)}
+  .spin{width:34px;height:34px;border:3px solid var(--bord);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .empty-glass-note{font-size:11px;color:var(--muted);margin-top:8px}
+  table{border-collapse:collapse;width:100%}
+  .stbl td{padding:6px 0;font-size:13px;border-bottom:.5px solid var(--bord-l)}
+  .stbl tr:last-child td{border-bottom:none}
+  .stbl .lab{color:var(--muted)}
+  .stbl .val{text-align:right;font-weight:600;color:var(--teal)}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
+</head>
+<body>
+<div id="app">
+  <div id="boot" class="center">
+    <div class="spin"></div>
+    <div>Φόρτωση του πλάνου σου…</div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://vqmzrmotdqqoswlgfgrn.supabase.co';
+const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+const DOW=['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
+const SLOT_ICON={'Πρωινό':'ti-coffee','Δεκατιανό':'ti-apple','Σνακ':'ti-apple','Μεσημεριανό':'ti-tools-kitchen-2','Απογευματινό':'ti-cheese','Βραδινό':'ti-moon','Προ προπόνησης':'ti-barbell','Μετά προπόνηση':'ti-barbell'};
+const CAT_ICON={'Κρέας':'ti-meat','Ψάρια':'ti-fish','Αυγά/Γαλακτ.':'ti-egg','Δημητριακά':'ti-wheat','Όσπρια':'ti-seeding','Λαχανικά':'ti-carrot','Φρούτα':'ti-apple','Ξηροί καρποί':'ti-seeding','Λάδια':'ti-droplet','Συνταγές FYH':'ti-tools-kitchen-2','Άλλα':'ti-package'};
+
+let SNAP=null, curDay=0, sb=null;
+
+function $(s){return document.querySelector(s)}
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
+function L(ml){return (ml/1000).toFixed(1).replace('.',',')+' L'}
+function nfmt(n){return (Math.round(n)).toLocaleString('el-GR')}
+function token(){const p=new URLSearchParams(location.search);return p.get('t')||p.get('plan')}
+
+// ── local persistence (per token, per day) ────────────────────────────────
+function lk(key){return 'fyh_portal_'+(token()||'x')+'_'+key}
+function todayKey(){return new Date().toISOString().slice(0,10)}
+function getWater(){try{const d=JSON.parse(localStorage.getItem(lk('water'))||'{}');return d[todayKey()]||0}catch(e){return 0}}
+function setWater(n){try{const d=JSON.parse(localStorage.getItem(lk('water'))||'{}');d[todayKey()]=n;localStorage.setItem(lk('water'),JSON.stringify(d))}catch(e){}}
+function getShop(){try{return JSON.parse(localStorage.getItem(lk('shop'))||'{}')}catch(e){return {}}}
+function setShop(o){try{localStorage.setItem(lk('shop'),JSON.stringify(o))}catch(e){}}
+
+async function boot(){
+  const t=token();
+  if(!t){return fail('Λείπει ο σύνδεσμος του πλάνου.','Ζήτησε από τον διαιτολόγο σου το σωστό link.')}
+  try{
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const {data,error}=await sb.from('shared_plans').select('snapshot,client_name,updated_at').eq('token',t).single();
+    if(error||!data){return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να αποσύρθηκε. Ζήτησε νέο link.')}
+    SNAP=data.snapshot; SNAP._updated=data.updated_at;
+    render();
+  }catch(e){fail('Πρόβλημα σύνδεσης.',e.message||'Δοκίμασε ξανά σε λίγο.')}
+}
+function fail(title,sub){
+  $('#app').innerHTML='<div class="center"><i class="ti ti-leaf" style="font-size:40px;color:var(--teal)"></i><div style="font-size:17px;font-weight:600;color:var(--teal-d)">'+title+'</div><div>'+sub+'</div></div>';
+}
+
+// pick the day index = today if present, else 0
+function defaultDay(){
+  const jsDay=new Date().getDay(); // 0=Sun..6=Sat
+  const map=[6,0,1,2,3,4,5]; // map JS(Sun..Sat) -> plan(Mon=0..Sun=6)
+  const idx=map[jsDay];
+  return (SNAP.days&&SNAP.days[idx])?idx:0;
+}
+
+function render(){
+  curDay=defaultDay();
+  const s=SNAP;
+  const app=$('#app');
+  app.innerHTML='';
+
+  const hdr=el('div','hdr');
+  hdr.innerHTML=
+    '<div class="hdr-top"><div class="brand"><span class="brand-logo">FY</span>Feed Your Health</div>'
+    +'<i class="ti ti-leaf" style="font-size:18px;color:var(--tint)"></i></div>'
+    +'<h1>Γεια σου, '+esc((s.name||'').split(' ')[0]||'')+'</h1>'
+    +'<div class="sub" id="hdr-sub"></div>';
+  app.appendChild(hdr);
+
+  const scroll=el('div','scroll');
+  scroll.id='scroll';
+  app.appendChild(scroll);
+
+  const nav=el('div','nav');
+  nav.innerHTML=tabBtn('home','ti-home','Αρχική')+tabBtn('plan','ti-calendar-week','Πλάνο')
+    +tabBtn('prog','ti-chart-line','Πρόοδος')+tabBtn('shop','ti-shopping-cart','Ψώνια')
+    +tabBtn('water','ti-droplet','Νερό');
+  app.appendChild(nav);
+
+  go('home');
+}
+function tabBtn(id,icon,label){return '<button data-tab="'+id+'" onclick="go(\''+id+'\')"><i class="ti '+icon+'"></i>'+label+'</button>'}
+
+function go(tab){
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  const sc=$('#scroll'); sc.scrollTop=0;
+  const fn={home:viewHome,plan:viewPlan,prog:viewProg,shop:viewShop,water:viewWater}[tab];
+  sc.innerHTML=''; sc.appendChild(fn());
+  const sub=$('#hdr-sub');
+  if(sub){
+    const labels={home:dayHeader(curDay),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση'};
+    sub.textContent=labels[tab]||'';
+  }
+}
+
+function dayHeader(i){
+  const d=SNAP.days&&SNAP.days[i];
+  if(!d)return '';
+  return (d.label||'')+(d.isTrain?' — ημέρα προπόνησης':'');
+}
+
+// ── HOME ──────────────────────────────────────────────────────────────────
+function viewHome(){
+  const s=SNAP, v=el('div','view active');
+  const tg=s.targets||{};
+  const day=s.days&&s.days[curDay];
+
+  const stats=el('div','stats');
+  stats.innerHTML=
+    statBox('Στόχος',nfmt(tg.kcal||0),'kcal')
+    +statBox('Πρωτεΐνη',nfmt(tg.p||0),'γρ')
+    +(s.progress&&s.progress.current?statBox('Βάρος',String(s.progress.current).replace('.',','),deltaU(s.progress)):statBox('Υδάτωση',L(s.hydration?s.hydration.baseMl:0),''));
+  v.appendChild(stats);
+
+  // today meals
+  const c=el('div','card'); const cp=el('div','card-pad');
+  cp.appendChild(el('div','card-hdr','<i class="ti ti-tools-kitchen-2"></i>Η διατροφή μου σήμερα'));
+  if(day&&day.meals&&day.meals.length){
+    day.meals.forEach(m=>{
+      const mm=el('div','meal');
+      mm.innerHTML='<div class="t">'+esc(m.time||'')+'</div><div style="flex:1"><div class="nm">'+esc(m.title||m.label||'Γεύμα')+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+'</div></div>';
+      cp.appendChild(mm);
+    });
+  }else{cp.appendChild(el('div','mi','Δεν υπάρχει πλάνο για σήμερα.'));}
+  c.appendChild(cp); v.appendChild(c);
+
+  // water mini
+  v.appendChild(waterCard(true));
+
+  // quick links
+  const q=el('div','quick');
+  q.appendChild(quickCard('shop','ti-shopping-cart','Λίστα ψώνια',shopProgressText()));
+  q.appendChild(quickCard('water','ti-pill','Συμπληρώματα',(s.supps&&s.supps.length?s.supps.length+' ημερήσια':'—')));
+  v.appendChild(q);
+  return v;
+}
+function statBox(l,v,u){const ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
+function deltaU(p){if(p.start&&p.current){const d=Math.round((p.current-p.start)*10)/10;return (d<=0?'−':'+')+Math.abs(d).toString().replace('.',',')+' kg'}return 'kg'}
+function quickCard(tab,icon,title,sub){const c=el('div','card');const p=el('div','card-pad');p.onclick=()=>go(tab);p.innerHTML='<i class="ti '+icon+'" style="font-size:18px"></i><div class="qt">'+title+'</div><div class="qs">'+esc(sub)+'</div>';c.appendChild(p);return c}
+
+// ── PLAN ──────────────────────────────────────────────────────────────────
+function viewPlan(){
+  const s=SNAP, v=el('div','view active');
+  const pills=el('div','daypills');
+  (s.days||[]).forEach((d,i)=>{
+    const p=el('div','pill'+(i===curDay?' on':''),shortDay(d.label));
+    p.onclick=()=>{curDay=i;go('plan')};
+    pills.appendChild(p);
+  });
+  v.appendChild(pills);
+
+  const day=s.days&&s.days[curDay];
+  const meta=el('div',null,'');
+  meta.style.cssText='display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 2px';
+  meta.innerHTML='<span>'+esc(dayHeader(curDay))+'</span><span>'+(day&&day.kcal?nfmt(day.kcal)+' kcal':'')+'</span>';
+  v.appendChild(meta);
+
+  if(day&&day.meals){
+    day.meals.forEach(m=>{
+      const c=el('div','card');
+      const icon=SLOT_ICON[m.label]||'ti-tools-kitchen-2';
+      const head=el('div',null);
+      head.style.cssText='background:var(--tint2);padding:11px 14px;display:flex;align-items:center;justify-content:space-between';
+      head.innerHTML='<div style="display:flex;align-items:center;gap:8px"><i class="ti '+icon+'" style="color:var(--teal);font-size:18px"></i><div><div style="font-size:11px;color:var(--teal-l)">'+esc((m.time?m.time+' · ':'')+(m.label||''))+'</div><div style="font-size:14px;font-weight:600;color:var(--teal-d)">'+esc(m.title||'Γεύμα')+'</div></div></div>'+(m.kcal?'<span style="font-size:12px;color:var(--teal-l)">'+nfmt(m.kcal)+' kcal</span>':'');
+      c.appendChild(head);
+      const body=el('div','card-pad');
+      (m.foods||[]).forEach(f=>{
+        body.appendChild(el('div','food','<span>'+esc(f.name)+'</span><span class="q">'+esc(f.qty)+'</span>'));
+      });
+      if(m.macros){
+        const mc=el('div',null);
+        mc.style.cssText='display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:.5px solid var(--bord-l);font-size:11px;color:var(--muted)';
+        mc.innerHTML='<span>Π '+nfmt(m.macros.p)+'g</span><span>Υ '+nfmt(m.macros.c)+'g</span><span>Λ '+nfmt(m.macros.f)+'g</span>';
+        body.appendChild(mc);
+      }
+      c.appendChild(body);
+      v.appendChild(c);
+    });
+  }else{v.appendChild(el('div','mi','Δεν υπάρχει πλάνο για αυτή την ημέρα.'));}
+  return v;
+}
+function shortDay(l){return (l||'').slice(0,3)}
+
+// ── PROGRESS ──────────────────────────────────────────────────────────────
+function viewProg(){
+  const s=SNAP, p=s.progress||{}, v=el('div','view active');
+  const stats=el('div','stats');
+  stats.innerHTML=statBox('Έναρξη',p.start?String(p.start).replace('.',','):'—','kg')
+    +statBox('Τώρα',p.current?String(p.current).replace('.',','):'—',deltaU(p))
+    +statBox('Στόχος',p.goal?String(p.goal).replace('.',','):'—','kg');
+  v.appendChild(stats);
+
+  const log=(p.log||[]).filter(x=>x&&x.kg);
+  if(log.length>=2){
+    const c=el('div','card');const cp=el('div','card-pad');
+    cp.appendChild(el('div',null,'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Βάρος (kg)</div>'));
+    cp.appendChild(sparkline(log,p.goal));
+    c.appendChild(cp);v.appendChild(c);
+  }
+  if(p.waist||p.bodyfat){
+    const c=el('div','card');const cp=el('div','card-pad');
+    cp.appendChild(el('div','card-hdr','<i class="ti ti-ruler-2"></i>Μετρήσεις'));
+    let t='<table class="stbl">';
+    if(p.waist)t+='<tr><td class="lab">Περιφέρεια μέσης</td><td class="val">'+esc(p.waist)+' cm</td></tr>';
+    if(p.bodyfat)t+='<tr><td class="lab">Λιπώδης μάζα</td><td class="val">'+esc(p.bodyfat)+'%</td></tr>';
+    t+='</table>';cp.innerHTML+=t;c.appendChild(cp);v.appendChild(c);
+  }
+  if(!log.length && !p.waist && !p.bodyfat){
+    v.appendChild(el('div','mi','Δεν υπάρχουν ακόμη μετρήσεις. Θα εμφανιστούν μετά τις συνεδρίες σου.'));
+  }
+  return v;
+}
+function sparkline(log,goal){
+  const W=300,H=120,padL=8,padB=18,padT=8;
+  const ys=log.map(x=>x.kg);let mn=Math.min(...ys),mx=Math.max(...ys);
+  if(goal){mn=Math.min(mn,goal);mx=Math.max(mx,goal)}
+  if(mx-mn<1){mx+=0.5;mn-=0.5}
+  const sx=i=>padL+ (i/(log.length-1))*(W-padL-8);
+  const sy=v=>padT+(1-(v-mn)/(mx-mn))*(H-padT-padB);
+  let pts=log.map((x,i)=>sx(i)+','+sy(x.kg)).join(' ');
+  let svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Γράφημα βάρους">';
+  if(goal){const gy=sy(goal);svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-8)+'" y2="'+gy+'" stroke="#9fcabf" stroke-width="1" stroke-dasharray="3 3"/><text x="'+(W-46)+'" y="'+(gy-3)+'" font-size="8" fill="var(--teal-l)">στόχος</text>'}
+  svg+='<polyline points="'+pts+'" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  svg+='<circle cx="'+sx(0)+'" cy="'+sy(log[0].kg)+'" r="3" fill="var(--teal)"/>';
+  svg+='<circle cx="'+sx(log.length-1)+'" cy="'+sy(log[log.length-1].kg)+'" r="4" fill="var(--teal)"/>';
+  svg+='</svg>';
+  const d=el('div');d.innerHTML=svg;return d;
+}
+
+// ── SHOPPING ──────────────────────────────────────────────────────────────
+function viewShop(){
+  const s=SNAP, v=el('div','view active');
+  const cats=s.shopping||[];
+  const checks=getShop();
+  let total=0,done=0;
+  cats.forEach(c=>c.items.forEach(it=>{total++;if(checks[it.name])done++}));
+
+  const head=el('div','card');const hp=el('div','card-pad');
+  hp.innerHTML='<div class="card-hdr" style="margin:0"><i class="ti ti-shopping-cart"></i>Λίστα για ψώνια<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+total+'</span></div><div class="prog"><div style="width:'+(total?Math.round(done/total*100):0)+'%"></div></div>';
+  head.appendChild(hp);v.appendChild(head);
+
+  if(!cats.length){v.appendChild(el('div','mi','Δεν υπάρχει λίστα ακόμη.'));return v}
+
+  const c=el('div','card');const cp=el('div','card-pad');
+  cats.forEach(cat=>{
+    const sec=el('div','slcat');
+    const icon=CAT_ICON[cat.cat]||'ti-package';
+    sec.appendChild(el('div','slcat-h','<i class="ti '+icon+'"></i>'+esc(cat.cat)));
+    cat.items.forEach(it=>{
+      const r=el('div','slrow'+(checks[it.name]?' done':''));
+      r.innerHTML='<span class="chk">'+(checks[it.name]?'<i class="ti ti-check"></i>':'')+'</span><span class="nm">'+esc(it.name)+'</span><span class="amt">'+esc(it.buy)+(it.raw?' <span class="raw">'+esc(it.raw)+'</span>':'')+'</span>';
+      r.onclick=()=>{const ch=getShop();ch[it.name]=!ch[it.name];setShop(ch);go('shop')};
+      sec.appendChild(r);
+    });
+    cp.appendChild(sec);
+  });
+  c.appendChild(cp);v.appendChild(c);
+  return v;
+}
+function shopProgressText(){
+  const cats=SNAP.shopping||[];const checks=getShop();let t=0,d=0;
+  cats.forEach(c=>c.items.forEach(it=>{t++;if(checks[it.name])d++}));
+  return t?(d+' από '+t+' ✓'):'—';
+}
+
+// ── WATER + SUPPS ─────────────────────────────────────────────────────────
+function viewWater(){
+  const s=SNAP, v=el('div','view active');
+  v.appendChild(waterCard(false));
+  // supps
+  if(s.supps&&s.supps.length){
+    const c=el('div','card');const cp=el('div','card-pad');
+    cp.appendChild(el('div','card-hdr','<i class="ti ti-pill"></i>Συμπληρώματα'));
+    let t='<table class="stbl">';
+    s.supps.forEach(su=>{t+='<tr><td class="lab">'+esc(su.name)+(su.timing?' <span style="color:var(--faint)">· '+esc(su.timing)+'</span>':'')+'</td><td class="val">'+esc(su.dose||'')+'</td></tr>'});
+    t+='</table>';cp.innerHTML+=t;c.appendChild(cp);v.appendChild(c);
+  }
+  // protocol note
+  const h=s.hydration||{};
+  const note=el('div',null);
+  note.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
+  note.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Πρωτόκολλο ενυδάτωσης</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Στόχος βάσει βάρους · +500 ml τις ημέρες προπόνησης · 1 ποτήρι πριν από κάθε γεύμα.</div>';
+  v.appendChild(note);
+  return v;
+}
+function waterCard(mini){
+  const s=SNAP, h=s.hydration||{};
+  const day=s.days&&s.days[curDay];
+  const goalMl=(day&&day.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
+  const per=h.glassMl||250;
+  const totalGlasses=Math.max(6,Math.round(goalMl/per));
+  const have=getWater();
+  const c=el('div','water');
+  const haveMl=have*per;
+  c.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><i class="ti ti-droplet" style="color:var(--teal);font-size:18px"></i><span style="font-size:14px;font-weight:600;color:var(--teal-d)">Ενυδάτωση</span></div><span style="font-size:12px;color:var(--teal-l)">'+L(haveMl)+' / '+L(goalMl)+'</span></div>';
+  const g=el('div','glasses');
+  for(let i=0;i<totalGlasses;i++){
+    const gl=el('span','glass'+(i<have?' on':''),i<have?'':''); // ti-glass-full / ti-glass (use class instead)
+    gl.className='glass'+(i<have?' on':'');
+    gl.innerHTML='<i class="ti '+(i<have?'ti-glass-full':'ti-glass')+'"></i>';
+    gl.onclick=()=>{const n=(i<have)?i:i+1;setWater(n);go(curTab())};
+    g.appendChild(gl);
+  }
+  c.appendChild(g);
+  if(!mini)c.appendChild(el('div','empty-glass-note','Πάτα ένα ποτήρι για να καταγράψεις πόσο νερό ήπιες σήμερα.'));
+  return c;
+}
+function curTab(){const b=document.querySelector('.nav button.on');return b?b.dataset.tab:'home'}
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+boot();
+</script>
+</body>
+</html>
