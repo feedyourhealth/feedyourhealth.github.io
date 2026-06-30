@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Εργαλείο Διαιτολόγου</title>
+<!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
+  window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a;-webkit-user-select:none;user-select:none}
@@ -1267,18 +1273,26 @@ body.dark-mode #keyboardHelpPanel {
       <p style="color:#999;font-size:14px;">Διαχείριση πελατών & σχεδιασμός διατροφής</p>
     </div>
 
-    <div style="margin-bottom:20px;">
-      <button onclick="goToApp()" style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+    <div style="margin-bottom:16px;">
+      <input id="cloud-email" type="email" placeholder="Email" autocomplete="username"
+        style="width:100%;padding:12px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;font-size:15px;">
+      <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter'){window.Cloud&&window.Cloud.signIn(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value);}"
+        style="width:100%;padding:12px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;font-size:15px;">
+      <button onclick="window.Cloud&&window.Cloud.signIn(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value)"
+        style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">
         ✓ Σύνδεση
       </button>
-      <button onclick="createNewAccount()" style="width:100%;padding:12px;background:#f0f0f0;color:#025857;border:1px solid #ddd;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
+      <button onclick="window.Cloud&&window.Cloud.signUp(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value)"
+        style="width:100%;padding:12px;background:#f0f0f0;color:#025857;border:1px solid #ddd;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
         + Δημιουργία Λογαριασμού
       </button>
+      <div id="cloud-login-msg" style="margin-top:12px;text-align:center;font-size:13px;min-height:18px;"></div>
     </div>
 
     <div style="text-align:center;color:#999;font-size:12px;">
-      <p>Τοπικό εργαλείο - Δεν απαιτείται κωδικός πρόσβασης</p>
-      <p style="margin-top:8px;">Όλα τα δεδομένα αποθηκεύονται τοπικά στον υπολογιστή σας</p>
+      <p>☁️ Τα δεδομένα σου αποθηκεύονται με ασφάλεια στο cloud</p>
+      <p style="margin-top:8px;">Μπες από οποιαδήποτε συσκευή με τον κωδικό σου</p>
     </div>
   </div>
 </div>
@@ -3516,6 +3530,7 @@ function _doSave(){
   safeStorageSet('fyh_custom_tmpls', customTemplates);
   try { _rollingSnapshot(); } catch(e){ console.warn('[BACKUP] snapshot hook', e && e.message); }
   try { _writeFileBackup(false); } catch(e){ console.warn('[BACKUP] file hook', e && e.message); }
+  try { if(window.Cloud) window.Cloud.save(); } catch(e){ console.warn('[CLOUD] save hook', e && e.message); }
   var t=document.getElementById('autosave-toast');
   if(t){t.style.opacity='1';clearTimeout(t._ft);t._ft=setTimeout(function(){t.style.opacity='0';},1600);}
 }
@@ -7146,6 +7161,8 @@ function updateUndoRedoUI(){
 }
 
 function logout(){
+  // ☁️ CLOUD: πραγματική αποσύνδεση (σβήνει το session, ξαναφορτώνει στο login)
+  if(window.Cloud && window.Cloud.enabled){ window.Cloud.signOut(); return; }
   // Clear current selection
   curId = null;
   // Hide app, show login
@@ -7182,8 +7199,12 @@ function initializeApp(){
     customTemplates = savedTemplates;
   }
 
-  // If localStorage has clients, start directly; otherwise show login
-  if(clients && clients.length > 0){
+  // ☁️ CLOUD: το login & η φόρτωση δεδομένων γίνονται μέσω Supabase.
+  // Cloud.init() ελέγχει αν υπάρχει ενεργή σύνδεση → φορτώνει cloud → app,
+  // αλλιώς δείχνει την οθόνη login. (Τα τοπικά clients μένουν σαν cache.)
+  if(window.Cloud){
+    window.Cloud.init();
+  } else if(clients && clients.length > 0){
     goToApp();
   } else {
     document.getElementById('login-page').style.display = 'flex';
@@ -19902,6 +19923,145 @@ function saveFoodExclusions(){
   closeFoodPickerModal();
   showSuccessToast('✅ Αποκλεισμοί τροφών αποθηκεύτηκαν! ('+(selected.length)+' τρόφιμα)');
 }
+</script>
+
+<!-- ☁️ Ένδειξη αποθήκευσης στο cloud -->
+<div id="cloud-save-toast" style="position:fixed;bottom:20px;right:20px;background:#025857;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;z-index:99999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.2);">☁️ Αποθηκεύτηκε στο cloud</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ☁️ CLOUD SYNC LAYER (Supabase)
+     Κάθε χρήστης έχει ΜΙΑ γραμμή στον πίνακα user_data (ένα jsonb "συρτάρι").
+     Όλα τα δεδομένα (clients, templates, tracking) πάνε σαν ένα πακέτο.
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  var Cloud = {
+    enabled:false, sb:null, user:null, _t:null, _loaded:false,
+
+    init:function(){
+      try{
+        if(!window.supabase || !window.SUPABASE_URL){ console.warn('[CLOUD] supabase-js δεν φορτώθηκε — τοπική λειτουργία'); this._fallback(); return; }
+        this.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
+        this.enabled = true;
+        var self = this;
+        this.sb.auth.getSession().then(function(res){
+          var session = (res && res.data) ? res.data.session : null;
+          if(session && session.user){ self.user = session.user; self.load().then(function(){ self._enterApp(); }); }
+          else { self._showLogin(); }
+        }).catch(function(e){ console.error('[CLOUD] getSession', e); self._showLogin(); });
+      }catch(e){ console.error('[CLOUD] init', e); this._fallback(); }
+    },
+
+    _fallback:function(){
+      if(window.clients && window.clients.length > 0){ if(typeof goToApp==='function') goToApp(); }
+      else { this._showLogin(); }
+    },
+
+    _showLogin:function(){
+      var lp=document.getElementById('login-page'), ac=document.getElementById('app-container');
+      if(lp) lp.style.display='flex';
+      if(ac) ac.style.display='none';
+    },
+
+    _enterApp:function(){ if(typeof goToApp==='function') goToApp(); },
+
+    _msg:function(text,isError){
+      var el=document.getElementById('cloud-login-msg');
+      if(el){ el.textContent=text||''; el.style.color=isError?'#c0392b':'#027a48'; }
+    },
+
+    signUp:function(email,pw){
+      var self=this;
+      if(!this.enabled){ this._msg('Το cloud δεν φόρτωσε. Έλεγξε το internet.',true); return; }
+      if(!email||!pw){ this._msg('Συμπλήρωσε email και κωδικό.',true); return; }
+      if(pw.length<6){ this._msg('Ο κωδικός θέλει τουλάχιστον 6 χαρακτήρες.',true); return; }
+      this._msg('Δημιουργία λογαριασμού...');
+      this.sb.auth.signUp({email:email,password:pw}).then(function(res){
+        if(res.error){ self._msg('Σφάλμα: '+res.error.message,true); return; }
+        if(res.data && res.data.session){ self.user=res.data.user; self._msg(''); self.load().then(function(){ self._enterApp(); }); }
+        else { self._msg('✅ Έλεγξε το email σου για επιβεβαίωση και μετά πάτα «Σύνδεση».'); }
+      });
+    },
+
+    signIn:function(email,pw){
+      var self=this;
+      if(!this.enabled){ this._msg('Το cloud δεν φόρτωσε. Έλεγξε το internet.',true); return; }
+      if(!email||!pw){ this._msg('Συμπλήρωσε email και κωδικό.',true); return; }
+      this._msg('Σύνδεση...');
+      this.sb.auth.signInWithPassword({email:email,password:pw}).then(function(res){
+        if(res.error){ self._msg('Σφάλμα: '+res.error.message,true); return; }
+        self.user=res.data.user; self._msg('');
+        self.load().then(function(){ self._enterApp(); });
+      });
+    },
+
+    signOut:function(){
+      var self=this;
+      if(this.sb){ this.sb.auth.signOut().then(function(){ self.user=null; location.reload(); }).catch(function(){ location.reload(); }); }
+      else { location.reload(); }
+    },
+
+    load:function(){
+      var self=this;
+      return new Promise(function(resolve){
+        if(!self.user){ resolve(); return; }
+        self.sb.from('user_data').select('data').eq('user_id',self.user.id).maybeSingle().then(function(res){
+          if(res.error){ console.error('[CLOUD] load', res.error); }
+          var row=(res && res.data)?res.data:null;
+          var d=(row && row.data)?row.data:null;
+          if(d && d.clients && d.clients.length){
+            try{
+              if(Array.isArray(d.clients)) window.clients=d.clients;
+              if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
+              if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
+              if(typeof safeStorageSet==='function'){
+                safeStorageSet('fyh_clients', window.clients);
+                safeStorageSet('fyh_custom_tmpls', window.customTemplates);
+              }
+            }catch(e){ console.error('[CLOUD] apply data', e); }
+            self._loaded=true; resolve();
+          } else {
+            // Cloud άδειο → πρώτη φορά: ανεβάζουμε τα τοπικά δεδομένα (migration)
+            self._loaded=true;
+            if(window.clients && window.clients.length){ self._pushNow().then(resolve); }
+            else { resolve(); }
+          }
+        });
+      });
+    },
+
+    _pushNow:function(){
+      var self=this;
+      return new Promise(function(resolve){
+        if(!self.user){ resolve(); return; }
+        var blob={
+          clients: window.clients||[],
+          customTemplates: window.customTemplates||[],
+          trackingData: (typeof window.TRACKING_DATA!=='undefined'?window.TRACKING_DATA:null),
+          updatedAt: new Date().toISOString()
+        };
+        self.sb.from('user_data').upsert({user_id:self.user.id, data:blob, updated_at:new Date().toISOString()}).then(function(res){
+          if(res.error){ console.error('[CLOUD] push', res.error); }
+          resolve();
+        });
+      });
+    },
+
+    // Καλείται από κάθε αποθήκευση. Φρουρά _loaded: ποτέ overwrite πριν φορτώσει το cloud.
+    save:function(){
+      var self=this;
+      if(!this.enabled || !this.user || !this._loaded) return;
+      clearTimeout(this._t);
+      this._t=setTimeout(function(){
+        self._pushNow().then(function(){
+          var t=document.getElementById('cloud-save-toast');
+          if(t){ t.style.opacity='1'; clearTimeout(t._ft); t._ft=setTimeout(function(){ t.style.opacity='0'; },1500); }
+        });
+      },1500);
+    }
+  };
+  window.Cloud = Cloud;
+})();
 </script>
 
 </body>
