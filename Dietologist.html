@@ -1265,34 +1265,56 @@ body.dark-mode #keyboardHelpPanel {
 <div id="autosave-toast">✓ Αποθηκεύτηκε</div>
 
 <!-- LOGIN / SIGNUP PAGE -->
-<div id="login-page" style="display:none;background:linear-gradient(135deg,#025857 0%,#037070 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;">
-  <div style="background:white;border-radius:12px;padding:40px;box-shadow:0 10px 40px rgba(0,0,0,0.2);max-width:400px;width:90%;">
-    <div style="text-align:center;margin-bottom:30px;">
-      <div style="font-size:48px;margin-bottom:15px;">🥗</div>
-      <h1 style="color:#025857;font-size:24px;margin-bottom:8px;">Εργαλείο Διαιτολόγου</h1>
-      <p style="color:#999;font-size:14px;">Διαχείριση πελατών & σχεδιασμός διατροφής</p>
+<div id="login-page" style="display:none;background:linear-gradient(135deg,#024a49 0%,#037070 55%,#0a8f86 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:18px;padding:38px 34px;box-shadow:0 18px 50px rgba(0,0,0,0.28);max-width:410px;width:100%;">
+    <div style="text-align:center;margin-bottom:26px;">
+      <div style="width:74px;height:74px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,#025857,#0a8f86);display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 6px 16px rgba(2,88,87,.35);">🥗</div>
+      <h1 style="color:#025857;font-size:23px;font-weight:800;letter-spacing:.3px;margin-bottom:4px;">Feed Your Health</h1>
+      <p style="color:#5a9b97;font-size:13px;font-weight:600;margin-bottom:6px;">Εργαλείο Διαιτολόγου</p>
+      <p style="color:#aaa;font-size:12.5px;">Διαχείριση πελατών &amp; σχεδιασμός διατροφής</p>
     </div>
 
-    <div style="margin-bottom:16px;">
+    <!-- Κανονική σύνδεση -->
+    <div id="cloud-login-section">
       <input id="cloud-email" type="email" placeholder="Email" autocomplete="username"
-        style="width:100%;padding:12px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;font-size:15px;">
-      <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter'){window.Cloud&&window.Cloud.signIn(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value);}"
-        style="width:100%;padding:12px;margin-bottom:10px;border:1px solid #ddd;border-radius:8px;font-size:15px;">
+        style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
+      <div style="position:relative;margin-bottom:11px;">
+        <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter'){window.Cloud&&window.Cloud.signIn(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value);}"
+          style="width:100%;padding:13px;padding-right:46px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
+        <button type="button" onclick="window.Cloud&&window.Cloud.togglePw()" title="Εμφάνιση/Απόκρυψη κωδικού"
+          style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:6px;opacity:.6;">👁️</button>
+      </div>
       <button onclick="window.Cloud&&window.Cloud.signIn(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value)"
-        style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+        style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 12px rgba(2,88,87,.25);">
         ✓ Σύνδεση
       </button>
       <button onclick="window.Cloud&&window.Cloud.signUp(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value)"
-        style="width:100%;padding:12px;background:#f0f0f0;color:#025857;border:1px solid #ddd;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
+        style="width:100%;padding:13px;background:#eef5f4;color:#025857;border:1px solid #cfe3e1;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">
         + Δημιουργία Λογαριασμού
       </button>
-      <div id="cloud-login-msg" style="margin-top:12px;text-align:center;font-size:13px;min-height:18px;"></div>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" onclick="window.Cloud&&window.Cloud.forgotPassword();return false;"
+          style="color:#0a8f86;font-size:13px;text-decoration:none;font-weight:600;">Ξέχασα τον κωδικό μου;</a>
+      </div>
+      <div id="cloud-login-msg" style="margin-top:12px;text-align:center;font-size:13px;min-height:18px;line-height:1.4;"></div>
     </div>
 
-    <div style="text-align:center;color:#999;font-size:12px;">
+    <!-- Ορισμός νέου κωδικού (μετά από reset μέσω email) -->
+    <div id="cloud-recovery-section" style="display:none;">
+      <p style="text-align:center;color:#025857;font-weight:700;font-size:15px;margin-bottom:14px;">🔑 Όρισε νέο κωδικό</p>
+      <input id="cloud-newpw" type="password" placeholder="Νέος κωδικός (6+ χαρακτήρες)"
+        style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
+      <button onclick="window.Cloud&&window.Cloud.setNewPassword(document.getElementById('cloud-newpw').value)"
+        style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">
+        ✓ Αποθήκευση κωδικού
+      </button>
+      <div id="cloud-recovery-msg" style="margin-top:12px;text-align:center;font-size:13px;min-height:18px;"></div>
+    </div>
+
+    <div style="text-align:center;color:#b3b3b3;font-size:11.5px;margin-top:22px;border-top:1px solid #f0f0f0;padding-top:16px;">
       <p>☁️ Τα δεδομένα σου αποθηκεύονται με ασφάλεια στο cloud</p>
-      <p style="margin-top:8px;">Μπες από οποιαδήποτε συσκευή με τον κωδικό σου</p>
+      <p style="margin-top:5px;">Μπες από οποιαδήποτε συσκευή με τον κωδικό σου</p>
     </div>
   </div>
 </div>
@@ -19944,7 +19966,13 @@ function saveFoodExclusions(){
         this.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
         this.enabled = true;
         var self = this;
+        // Ανίχνευση επαναφοράς κωδικού (ο χρήστης ήρθε από link στο email)
+        var isRecovery = (location.hash && location.hash.indexOf('type=recovery') !== -1);
+        this.sb.auth.onAuthStateChange(function(event){
+          if(event === 'PASSWORD_RECOVERY'){ self._recovery = true; self._showNewPassword(); }
+        });
         this.sb.auth.getSession().then(function(res){
+          if(self._recovery || isRecovery){ self._showNewPassword(); return; }  // μη μπεις στην app — όρισε κωδικό πρώτα
           var session = (res && res.data) ? res.data.session : null;
           if(session && session.user){ self.user = session.user; self.load().then(function(){ self._enterApp(); }); }
           else { self._showLogin(); }
@@ -19977,7 +20005,7 @@ function saveFoodExclusions(){
       if(pw.length<6){ this._msg('Ο κωδικός θέλει τουλάχιστον 6 χαρακτήρες.',true); return; }
       this._msg('Δημιουργία λογαριασμού...');
       this.sb.auth.signUp({email:email,password:pw}).then(function(res){
-        if(res.error){ self._msg('Σφάλμα: '+res.error.message,true); return; }
+        if(res.error){ self._msg(self._translateError(res.error.message),true); return; }
         if(res.data && res.data.session){ self.user=res.data.user; self._msg(''); self.load().then(function(){ self._enterApp(); }); }
         else { self._msg('✅ Έλεγξε το email σου για επιβεβαίωση και μετά πάτα «Σύνδεση».'); }
       });
@@ -19989,7 +20017,7 @@ function saveFoodExclusions(){
       if(!email||!pw){ this._msg('Συμπλήρωσε email και κωδικό.',true); return; }
       this._msg('Σύνδεση...');
       this.sb.auth.signInWithPassword({email:email,password:pw}).then(function(res){
-        if(res.error){ self._msg('Σφάλμα: '+res.error.message,true); return; }
+        if(res.error){ self._msg(self._translateError(res.error.message),true); return; }
         self.user=res.data.user; self._msg('');
         self.load().then(function(){ self._enterApp(); });
       });
@@ -19999,6 +20027,65 @@ function saveFoodExclusions(){
       var self=this;
       if(this.sb){ this.sb.auth.signOut().then(function(){ self.user=null; location.reload(); }).catch(function(){ location.reload(); }); }
       else { location.reload(); }
+    },
+
+    // 👁️ Εμφάνιση/απόκρυψη κωδικού
+    togglePw:function(){
+      var el=document.getElementById('cloud-pw');
+      if(el) el.type = (el.type==='password') ? 'text' : 'password';
+    },
+
+    // 🔑 Ξέχασα τον κωδικό → στέλνει email με link επαναφοράς
+    forgotPassword:function(){
+      var self=this;
+      if(!this.enabled){ this._msg('Το cloud δεν φόρτωσε. Έλεγξε το internet.',true); return; }
+      var email=(document.getElementById('cloud-email')||{}).value;
+      email=(email||'').trim();
+      if(!email){ this._msg('Γράψε πρώτα το email σου πάνω, μετά πάτα «Ξέχασα τον κωδικό».',true); return; }
+      this._msg('Αποστολή link επαναφοράς...');
+      this.sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }).then(function(res){
+        if(res.error){ self._msg(self._translateError(res.error.message),true); return; }
+        self._msg('✅ Σου στείλαμε email με link για νέο κωδικό. Έλεγξε τα εισερχόμενά σου (και τα spam).');
+      });
+    },
+
+    // Δείχνει τη φόρμα «νέος κωδικός» (όταν ο χρήστης έρθει από το email)
+    _showNewPassword:function(){
+      var lp=document.getElementById('login-page'), ac=document.getElementById('app-container');
+      if(lp) lp.style.display='flex';
+      if(ac) ac.style.display='none';
+      var ls=document.getElementById('cloud-login-section'), rs=document.getElementById('cloud-recovery-section');
+      if(ls) ls.style.display='none';
+      if(rs) rs.style.display='block';
+    },
+
+    // Αποθήκευση νέου κωδικού
+    setNewPassword:function(pw){
+      var self=this;
+      var rmsg=function(t,e){ var el=document.getElementById('cloud-recovery-msg'); if(el){ el.textContent=t||''; el.style.color=e?'#c0392b':'#027a48'; } };
+      if(!pw || pw.length<6){ rmsg('Ο κωδικός θέλει τουλάχιστον 6 χαρακτήρες.',true); return; }
+      rmsg('Αποθήκευση...');
+      this.sb.auth.updateUser({ password: pw }).then(function(res){
+        if(res.error){ rmsg(self._translateError(res.error.message),true); return; }
+        rmsg('✅ Ο κωδικός άλλαξε! Μπαίνεις...');
+        try{ history.replaceState(null,'',location.origin+location.pathname); }catch(e){}
+        if(res.data && res.data.user){ self.user=res.data.user; self.load().then(function(){ self._enterApp(); }); }
+        else { setTimeout(function(){ location.reload(); }, 900); }
+      });
+    },
+
+    // 🇬🇷 Μετάφραση συνηθισμένων σφαλμάτων Supabase στα ελληνικά
+    _translateError:function(msg){
+      msg = msg || 'Κάτι πήγε στραβά.';
+      var m = msg.toLowerCase();
+      if(m.indexOf('invalid login credentials')>=0) return 'Λάθος email ή κωδικός.';
+      if(m.indexOf('already registered')>=0 || m.indexOf('already been registered')>=0 || m.indexOf('user already')>=0) return 'Υπάρχει ήδη λογαριασμός με αυτό το email. Πάτα «Σύνδεση».';
+      if(m.indexOf('is invalid')>=0 || m.indexOf('invalid email')>=0 || m.indexOf('unable to validate email')>=0) return 'Μη έγκυρο email — έλεγξε ότι το έγραψες σωστά.';
+      if(m.indexOf('password should be at least')>=0 || m.indexOf('at least 6')>=0) return 'Ο κωδικός θέλει τουλάχιστον 6 χαρακτήρες.';
+      if(m.indexOf('email not confirmed')>=0) return 'Δεν έχεις επιβεβαιώσει το email σου. Έλεγξε τα εισερχόμενά σου.';
+      if(m.indexOf('rate limit')>=0 || m.indexOf('too many')>=0) return 'Πολλές προσπάθειες. Περίμενε λίγο και ξαναδοκίμασε.';
+      if(m.indexOf('network')>=0 || m.indexOf('failed to fetch')>=0) return 'Πρόβλημα σύνδεσης. Έλεγξε το internet σου.';
+      return 'Σφάλμα: ' + msg;
     },
 
     load:function(){
