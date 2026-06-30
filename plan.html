@@ -233,7 +233,7 @@ function render(){
 
   const nav=el('div','nav');
   nav.innerHTML=tabBtn('home','ti-home','Αρχική')+tabBtn('plan','ti-calendar-week','Πλάνο')
-    +tabBtn('prog','ti-chart-line','Πρόοδος')+tabBtn('shop','ti-shopping-cart','Ψώνια')
+    +tabBtn('shop','ti-shopping-cart','Ψώνια')
     +tabBtn('water','ti-droplet','Νερό');
   app.appendChild(nav);
 
@@ -269,7 +269,7 @@ function viewHome(){
   stats.innerHTML=
     statBox('Στόχος',nfmt(tg.kcal||0),'kcal')
     +statBox('Πρωτεΐνη',nfmt(tg.p||0),'γρ')
-    +(s.progress&&s.progress.current?statBox('Βάρος',String(s.progress.current).replace('.',','),deltaU(s.progress)):statBox('Υδάτωση',L(s.hydration?s.hydration.baseMl:0),''));
+    +statBox('Υδάτωση',L(s.hydration?s.hydration.baseMl:0),'');
   v.appendChild(stats);
 
   // today meals
