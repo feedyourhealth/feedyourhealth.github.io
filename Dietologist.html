@@ -1276,27 +1276,41 @@ body.dark-mode #keyboardHelpPanel {
 
     <!-- Κανονική σύνδεση -->
     <div id="cloud-login-section">
+      <!-- Καρτέλες: διάλεξε πρώτα τι θες να κάνεις -->
+      <div style="display:flex;background:#eef5f4;border-radius:10px;padding:4px;margin-bottom:18px;">
+        <button id="tab-signin" type="button" onclick="window.Cloud&&window.Cloud.setAuthMode('signin')"
+          style="flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:#025857;box-shadow:0 1px 3px rgba(0,0,0,.12);">Σύνδεση</button>
+        <button id="tab-signup" type="button" onclick="window.Cloud&&window.Cloud.setAuthMode('signup')"
+          style="flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;background:transparent;color:#7aa6a2;">Νέος λογαριασμός</button>
+      </div>
+
       <input id="cloud-email" type="email" placeholder="Email" autocomplete="username"
         style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
       <div style="position:relative;margin-bottom:11px;">
         <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
-          onkeydown="if(event.key==='Enter'){window.Cloud&&window.Cloud.signIn(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value);}"
+          onkeydown="if(event.key==='Enter'){window.Cloud&&window.Cloud.submit();}"
           style="width:100%;padding:13px;padding-right:46px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
         <button type="button" onclick="window.Cloud&&window.Cloud.togglePw()" title="Εμφάνιση/Απόκρυψη κωδικού"
           style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:6px;opacity:.6;">👁️</button>
       </div>
-      <button onclick="window.Cloud&&window.Cloud.signIn(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value)"
-        style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 12px rgba(2,88,87,.25);">
+
+      <!-- Ένα κουμπί — αλλάζει ανάλογα με την καρτέλα -->
+      <button id="cloud-primary-btn" onclick="window.Cloud&&window.Cloud.submit()"
+        style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(2,88,87,.25);">
         ✓ Σύνδεση
       </button>
-      <button onclick="window.Cloud&&window.Cloud.signUp(document.getElementById('cloud-email').value.trim(),document.getElementById('cloud-pw').value)"
-        style="width:100%;padding:13px;background:#eef5f4;color:#025857;border:1px solid #cfe3e1;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">
-        + Δημιουργία Λογαριασμού
-      </button>
-      <div style="text-align:center;margin-top:14px;">
+
+      <!-- Βοήθεια για νέους (μόνο στην καρτέλα «Νέος λογαριασμός») -->
+      <div id="signup-hint" style="display:none;text-align:center;margin-top:12px;font-size:12.5px;color:#7aa6a2;line-height:1.4;">
+        Διάλεξε email &amp; κωδικό (6+ χαρακτήρες) — θα μπεις αμέσως, χωρίς επιβεβαίωση.
+      </div>
+
+      <!-- Ξέχασα τον κωδικό (μόνο στην καρτέλα «Σύνδεση») -->
+      <div id="forgot-row" style="text-align:center;margin-top:14px;">
         <a href="#" onclick="window.Cloud&&window.Cloud.forgotPassword();return false;"
           style="color:#0a8f86;font-size:13px;text-decoration:none;font-weight:600;">Ξέχασα τον κωδικό μου;</a>
       </div>
+
       <div id="cloud-login-msg" style="margin-top:12px;text-align:center;font-size:13px;min-height:18px;line-height:1.4;"></div>
     </div>
 
@@ -19958,7 +19972,7 @@ function saveFoodExclusions(){
 <script>
 (function(){
   var Cloud = {
-    enabled:false, sb:null, user:null, _t:null, _loaded:false,
+    enabled:false, sb:null, user:null, _t:null, _loaded:false, _authMode:'signin',
 
     init:function(){
       try{
@@ -19998,6 +20012,42 @@ function saveFoodExclusions(){
       if(el){ el.textContent=text||''; el.style.color=isError?'#c0392b':'#027a48'; }
     },
 
+    // Εναλλαγή καρτέλας: 'signin' (σύνδεση) ή 'signup' (νέος λογαριασμός)
+    setAuthMode:function(mode){
+      this._authMode = mode;
+      this._msg('');
+      var base='flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;';
+      var active='background:#fff;color:#025857;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+      var inactive='background:transparent;color:#7aa6a2;box-shadow:none;';
+      var ti=document.getElementById('tab-signin'), tu=document.getElementById('tab-signup');
+      var btn=document.getElementById('cloud-primary-btn');
+      var hint=document.getElementById('signup-hint'), forgot=document.getElementById('forgot-row');
+      var pw=document.getElementById('cloud-pw');
+      if(mode==='signup'){
+        if(ti) ti.style.cssText=base+inactive;
+        if(tu) tu.style.cssText=base+active;
+        if(btn) btn.textContent='+ Δημιουργία Λογαριασμού';
+        if(hint) hint.style.display='block';
+        if(forgot) forgot.style.display='none';
+        if(pw) pw.setAttribute('autocomplete','new-password');
+      } else {
+        if(ti) ti.style.cssText=base+active;
+        if(tu) tu.style.cssText=base+inactive;
+        if(btn) btn.textContent='✓ Σύνδεση';
+        if(hint) hint.style.display='none';
+        if(forgot) forgot.style.display='block';
+        if(pw) pw.setAttribute('autocomplete','current-password');
+      }
+    },
+
+    // Το κουμπί/Enter: καλεί signIn ή signUp ανάλογα με την καρτέλα
+    submit:function(){
+      var email=((document.getElementById('cloud-email')||{}).value||'').trim();
+      var pw=(document.getElementById('cloud-pw')||{}).value||'';
+      if(this._authMode==='signup') this.signUp(email,pw);
+      else this.signIn(email,pw);
+    },
+
     signUp:function(email,pw){
       var self=this;
       if(!this.enabled){ this._msg('Το cloud δεν φόρτωσε. Έλεγξε το internet.',true); return; }
@@ -20017,7 +20067,12 @@ function saveFoodExclusions(){
       if(!email||!pw){ this._msg('Συμπλήρωσε email και κωδικό.',true); return; }
       this._msg('Σύνδεση...');
       this.sb.auth.signInWithPassword({email:email,password:pw}).then(function(res){
-        if(res.error){ self._msg(self._translateError(res.error.message),true); return; }
+        if(res.error){
+          var m=(res.error.message||'').toLowerCase();
+          if(m.indexOf('invalid login credentials')>=0){ self._msg('Λάθος email ή κωδικός. Πρώτη φορά εδώ; Πάτα «Νέος λογαριασμός» πάνω. ☝️',true); }
+          else { self._msg(self._translateError(res.error.message),true); }
+          return;
+        }
         self.user=res.data.user; self._msg('');
         self.load().then(function(){ self._enterApp(); });
       });
