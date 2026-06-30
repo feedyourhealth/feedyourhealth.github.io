@@ -128,32 +128,65 @@
     .plan-grid{grid-template-columns:1fr 1fr 1fr}
   }
 
-  /* ───────── PRINT / PDF ───────── */
+  /* ───────── PRINT / PDF (ίδια μορφή με το PDF της εφαρμογής) ───────── */
   #printable{display:none}
   @media print{
-    @page{margin:13mm}
+    @page{size:A4 landscape;margin:8mm}
     html,body{background:#fff!important}
     #app,.nav,.hdr-btn{display:none!important}
-    #printable{display:block!important;color:#000;font-size:11px;print-color-adjust:exact;-webkit-print-color-adjust:exact}
-    #printable *{print-color-adjust:exact;-webkit-print-color-adjust:exact}
-    .pr-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #025857;padding-bottom:9px;margin-bottom:12px}
-    .pr-brand{display:flex;gap:9px;align-items:center}
-    .pr-logo{width:32px;height:32px;border-radius:50%;background:#025857;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
-    .pr-bt{font-size:16px;font-weight:700;color:#025857}
-    .pr-bs{font-size:10px;color:#555}
-    .pr-meta{text-align:right;font-size:10px;color:#333;line-height:1.5}
-    .pr-day{break-inside:avoid;page-break-inside:avoid;margin-bottom:9px}
-    .pr-dh{background:#E2EEE5;color:#014545;font-weight:700;font-size:12.5px;padding:5px 9px;border-radius:4px;margin-bottom:5px;display:flex;justify-content:space-between}
-    .pr-dh span{font-weight:600;color:#037070}
-    .pr-meal{margin:0 0 5px 4px;break-inside:avoid;page-break-inside:avoid}
-    .pr-mh{font-size:10.5px;font-weight:700;color:#025857;margin-bottom:2px}
-    .pr-food{display:flex;justify-content:space-between;gap:14px;font-size:10.5px;padding:1.5px 0 1.5px 10px;border-bottom:.5px solid #eee}
-    .pr-food span:last-child{font-weight:600;color:#025857;white-space:nowrap}
-    .pr-sec{margin-top:13px;break-inside:avoid;page-break-inside:avoid}
-    .pr-sech{font-weight:700;color:#025857;font-size:13.5px;border-bottom:1px solid #025857;margin-bottom:6px;padding-bottom:2px}
-    .pr-cat{margin-bottom:7px}
-    .pr-cat>b{font-size:11px;color:#014545}
-    .pr-foot{margin-top:14px;text-align:center;font-size:9px;color:#888;border-top:.5px solid #ccc;padding-top:7px}
+    #printable{display:block!important;color:#1a1a1a;font-family:'Century Gothic','Trebuchet MS',sans-serif;font-size:6pt;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+    #printable *{print-color-adjust:exact;-webkit-print-color-adjust:exact;box-sizing:border-box}
+    .ph{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:5px;padding-bottom:4px;border-bottom:2px solid #025857}
+    .ph-l{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+    .ph-logo{width:42px;height:42px;border-radius:8px;background:#e5e5e5;color:#025857;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;font-family:Georgia,serif}
+    .ph-url{font-size:5pt;font-weight:700;color:#008080;letter-spacing:.5px;margin-top:1px}
+    .ph-r{text-align:right}
+    .ph-name{font-size:10.5pt;font-weight:700;color:#025857;line-height:1.2}
+    .ph-tgt{font-size:6.5pt;font-weight:700;color:#025857;margin-top:2px}
+    .ph-hyd{font-size:5.5pt;color:#1565C0;margin-top:1px}
+    table.pmt{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;margin-bottom:5px}
+    table.pmt th{padding:4px 3px;font-size:6.5pt;font-weight:900;border:1px solid #c5ddd8;text-align:center;vertical-align:middle}
+    th.pmt-corner{background:#025857;color:#fff;text-align:left;padding-left:5px;width:58px}
+    table.pmt th.pday{background:linear-gradient(160deg,#025857,#037a7a);color:#fff}
+    .ptb{background:#c8e6c9;color:#1b5e20;border-radius:3px;padding:0 2px;font-size:4.5pt;margin-left:2px}
+    td.pmlbl{padding:3px 5px;vertical-align:middle;text-align:center;white-space:nowrap;border:1px solid #c5ddd8;font-size:6.5pt;font-weight:800}
+    tr.m-b td.pmlbl{background:linear-gradient(90deg,#FFF3E0,#FFF9F5);border-left:3px solid #FF9800;color:#E65100}
+    tr.m-l td.pmlbl{background:linear-gradient(90deg,#E8F5E9,#F2FAF2);border-left:3px solid #43A047;color:#2E7D32}
+    tr.m-d td.pmlbl{background:linear-gradient(90deg,#E3F2FD,#EEF6FD);border-left:3px solid #1E88E5;color:#1565C0}
+    tr.m-s td.pmlbl{background:linear-gradient(90deg,#FFFDE7,#FEFEF5);border-left:3px solid #F9A825;color:#F57F17}
+    td.pdcell{padding:2px 3px;vertical-align:top;border:1px solid #dde8e6;font-size:6pt}
+    tr.m-b td.pdcell{background:#FFFAF5}
+    tr.m-l td.pdcell{background:#F7FBF7}
+    tr.m-d td.pdcell{background:#F5F9FF}
+    tr.m-s td.pdcell{background:#FFFEF0}
+    .pfr{line-height:1.22}
+    .pfn{color:#1a1a1a;font-weight:700}
+    .pfg{color:#025857;font-weight:700}
+    .pfh{color:#888;font-size:5pt;font-weight:400;margin-left:1px}
+    .pmk{font-size:5pt;color:#555;border-top:1px dotted #aac7bf;margin-top:2px;padding-top:1px}
+    tr.pmac td{background:#f5faf9;border:1px solid #c5ddd8;border-top:2px solid #025857;padding:3px 4px;font-size:5.5pt;text-align:center;color:#025857}
+    td.pmac-lbl{background:#e8f5f4;font-weight:700}
+    .psec{font-size:9.5pt;font-weight:700;color:#025857;margin:10px 0 4px;padding-bottom:3px;border-bottom:2px solid #025857;break-after:avoid}
+    table.pst{border-collapse:collapse;width:100%;margin-bottom:8px}
+    table.pst th{background:#025857;color:#fff;padding:3px 8px;font-size:6.5pt;text-align:left;border:1px solid #013f3f}
+    table.pst td{padding:3px 8px;border:1px solid #c5ddd8;font-size:6.5pt;vertical-align:middle}
+    table.pst tr.alt td{background:#E2EEE5}
+    .pst-t{font-weight:700;color:#025857;width:26%}
+    .pshop{break-before:page;page-break-before:always;padding-top:4mm}
+    .psl2{width:100%;border-collapse:collapse;table-layout:fixed}
+    .pslcol{width:50%;vertical-align:top}
+    .pslcol:first-child{padding-right:6px}.pslcol:last-child{padding-left:6px}
+    .pslcards{display:flex;flex-direction:column;gap:7px}
+    .pslcard{border:1px solid #b2d8d8;border-radius:7px;overflow:hidden;break-inside:avoid;page-break-inside:avoid}
+    .pslcard-h{background:#025857;color:#fff;padding:4px 10px;font-size:7pt;font-weight:700}
+    .pslrow{display:flex;align-items:baseline;padding:3px 9px;font-size:6.3pt;border-bottom:1px dotted #daeee9;gap:4px}
+    .pslrow:last-child{border-bottom:none}
+    .pslrow.alt{background:#f5fbf9}
+    .pslchk{color:#c5ddd8;font-size:7.5pt}
+    .pslnm{flex:1;font-weight:600;color:#1a1a1a}
+    .pslamt{font-weight:700;color:#025857;white-space:nowrap;font-size:7pt}
+    .psllbl{font-size:5pt;color:#77a;font-weight:400;margin-left:2px}
+    .pfoot{margin-top:8px;padding-top:4px;border-top:1px solid #c5ddd8;font-size:5.5pt;color:#025857;text-align:center}
   }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css">
@@ -326,7 +359,7 @@ function viewPlan(){
       c.appendChild(head);
       const body=el('div','card-pad');
       (m.foods||[]).forEach(f=>{
-        body.appendChild(el('div','food','<span>'+esc(f.name)+'</span><span class="q">'+esc(f.qty)+'</span>'));
+        body.appendChild(el('div','food','<span>'+esc(f.name)+'</span><span class="q">'+esc(f.qty)+(f.sub?' <span style="color:var(--faint);font-weight:400;font-size:11px">'+esc(f.sub)+'</span>':'')+'</span>'));
       });
       if(m.macros){
         const mc=el('div',null);
@@ -343,39 +376,96 @@ function viewPlan(){
 }
 function shortDay(l){return (l||'').slice(0,3)}
 
-// ── PRINT / PDF (whole week) ────────────────────────────────────────────────
+// ── PRINT / PDF (ίδια μορφή με το PDF της εφαρμογής: εβδομαδιαίος πίνακας) ─────
+function pMealType(label){
+  const n=(label||'').toLowerCase();
+  if(n.indexOf('πρω')>-1)return'b';
+  if(n.indexOf('μεσημ')>-1)return'l';
+  if(n.indexOf('βραδ')>-1)return'd';
+  return's';
+}
 function buildPrintHTML(){
-  const s=SNAP||{}, tg=s.targets||{};
+  const s=SNAP||{}, tg=s.targets||{}, hy=s.hydration||{};
+  const days=s.days||[];
+  // rows aligned by meal INDEX (like the app PDF) so duplicate labels (π.χ. 2× Ενδιάμεσο) stay distinct
+  const maxMeals=days.reduce((m,d)=>Math.max(m,(d.meals||[]).length),0);
+  const rowLabel=mi=>{ for(let i=0;i<days.length;i++){ const m=(days[i].meals||[])[mi]; if(m)return m.label||'Γεύμα'; } return 'Γεύμα'; };
   let h='';
-  h+='<div class="pr-head"><div class="pr-brand"><span class="pr-logo">FY</span>'
-    +'<div><div class="pr-bt">Feed Your Health</div><div class="pr-bs">Εβδομαδιαίο Διατροφικό Πλάνο</div></div></div>'
-    +'<div class="pr-meta"><div><b>'+esc(s.name||'')+'</b></div>'
-    +(tg.kcal?'<div>Στόχος: '+nfmt(tg.kcal)+' kcal</div><div>Π '+nfmt(tg.p||0)+'g · Υ '+nfmt(tg.c||0)+'g · Λ '+nfmt(tg.f||0)+'g</div>':'')
+  // header
+  h+='<div class="ph"><div class="ph-l"><div class="ph-logo">fyh</div><div class="ph-url">WWW.FEEDYOURHEALTH.ORG</div></div>'
+    +'<div class="ph-r"><div class="ph-name">'+esc(s.name||'')+'</div>'
+    +(tg.kcal?'<div class="ph-tgt">🎯 Στόχος: '+nfmt(tg.kcal)+' kcal · Π'+nfmt(tg.p||0)+' Λ'+nfmt(tg.f||0)+' Υ'+nfmt(tg.c||0)+'g</div>':'')
+    +(hy.baseMl?'<div class="ph-hyd">💧 Ενυδάτωση Ανάπαυση: '+hy.baseMl+'ml / Προπόνηση: '+(hy.trainMl||hy.baseMl)+'ml</div>':'')
     +'</div></div>';
-  (s.days||[]).forEach(d=>{
-    h+='<div class="pr-day"><div class="pr-dh"><span style="color:#014545">'+esc(d.label||'')+(d.isTrain?' — προπόνηση':'')+'</span>'+(d.kcal?'<span>'+nfmt(d.kcal)+' kcal</span>':'')+'</div>';
-    (d.meals||[]).forEach(m=>{
-      h+='<div class="pr-meal"><div class="pr-mh">'+esc((m.time?m.time+' · ':'')+(m.label||''))+(m.title&&m.title!==m.label?' — '+esc(m.title):'')+(m.kcal?' ('+nfmt(m.kcal)+' kcal)':'')+'</div>';
-      (m.foods||[]).forEach(f=>{ h+='<div class="pr-food"><span>'+esc(f.name)+'</span><span>'+esc(f.qty)+'</span></div>'; });
-      h+='</div>';
+  // main weekly table
+  h+='<table class="pmt"><thead><tr><th class="pmt-corner">Γεύμα</th>';
+  days.forEach(d=>{ h+='<th class="pday">'+esc(d.label||'')+(d.isTrain?'<span class="ptb">T</span>':'')+'</th>'; });
+  h+='</tr></thead><tbody>';
+  for(let mi=0; mi<maxMeals; mi++){
+    const lbl=rowLabel(mi);
+    const mt=pMealType(lbl);
+    h+='<tr class="m-'+mt+'"><td class="pmlbl">'+esc(lbl)+'</td>';
+    days.forEach(d=>{
+      const meal=(d.meals||[])[mi];
+      let cell='';
+      if(meal && meal.foods && meal.foods.length){
+        meal.foods.forEach(f=>{
+          cell+='<div class="pfr"><span class="pfn">'+esc(f.name)+'</span> <span class="pfg">'+esc(f.qty||'')+'</span>'+(f.sub?' <span class="pfh">'+esc(f.sub)+'</span>':'')+'</div>';
+        });
+        if(meal.kcal)cell+='<div class="pmk">'+nfmt(meal.kcal)+' kcal</div>';
+      } else { cell='&nbsp;'; }
+      h+='<td class="pdcell">'+cell+'</td>';
     });
-    h+='</div>';
+    h+='</tr>';
+  }
+  // totals row
+  h+='<tr class="pmac"><td class="pmac-lbl">Σύνολα</td>';
+  days.forEach(d=>{
+    const mac=d.macros||{};
+    h+='<td><b>'+nfmt(d.kcal||0)+' kcal</b><br>Π:'+nfmt(mac.p||0)+' Λ:'+nfmt(mac.f||0)+' Υ:'+nfmt(mac.c||0)+'g'
+      +(d.fiber!=null?'<br><span style="color:#795548">🌾 Ίνες:'+(Math.round(d.fiber*10)/10)+'g</span>':'')+'</td>';
   });
-  if(s.shopping&&s.shopping.length){
-    h+='<div class="pr-sec"><div class="pr-sech">Λίστα για ψώνια</div>';
-    s.shopping.forEach(cat=>{
-      h+='<div class="pr-cat"><b>'+esc(cat.cat)+'</b>';
-      (cat.items||[]).forEach(it=>{ h+='<div class="pr-food"><span>☐ '+esc(it.name)+'</span><span>'+esc(it.buy)+(it.raw?' ('+esc(it.raw)+')':'')+'</span></div>'; });
-      h+='</div>';
-    });
-    h+='</div>';
-  }
+  h+='</tr></tbody></table>';
+  // supplements
   if(s.supps&&s.supps.length){
-    h+='<div class="pr-sec"><div class="pr-sech">Συμπληρώματα</div>';
-    s.supps.forEach(su=>{ h+='<div class="pr-food"><span>'+esc(su.name)+(su.timing?' · '+esc(su.timing):'')+'</span><span>'+esc(su.dose||'')+'</span></div>'; });
-    h+='</div>';
+    h+='<div class="psec">Πρωτόκολλο Συμπληρωμάτων</div>';
+    h+='<table class="pst"><thead><tr><th class="pst-t">Χρόνος Λήψης</th><th>Συμπληρώματα &amp; Δοσολογία</th></tr></thead><tbody>';
+    const byT={}, order=[];
+    s.supps.forEach(su=>{const tk=su.timing||'—'; if(!byT[tk]){byT[tk]=[];order.push(tk);} byT[tk].push(su.name+(su.dose?' ('+su.dose+')':''));});
+    let alt=false;
+    order.forEach(tk=>{ h+='<tr'+(alt?' class="alt"':'')+'><td class="pst-t">'+esc(tk)+'</td><td>'+esc(byT[tk].join('   •   '))+'</td></tr>'; alt=!alt; });
+    h+='</tbody></table>';
   }
-  h+='<div class="pr-foot">Feed Your Health — Εργαλείο Διαιτολόγου · '+new Date().toLocaleDateString('el-GR')+'</div>';
+  // hydration
+  if(hy.baseMl){
+    h+='<div class="psec">💧 Πρωτόκολλο Ενυδάτωσης</div>';
+    h+='<table class="pst"><thead><tr><th class="pst-t">Χρόνος</th><th>Ποσότητα</th></tr></thead><tbody>';
+    h+='<tr><td class="pst-t">Ημερήσια βάση</td><td>'+hy.baseMl+' ml ('+L(hy.baseMl)+')</td></tr>';
+    h+='<tr class="alt"><td class="pst-t">Ημέρα προπόνησης</td><td>'+(hy.trainMl||hy.baseMl)+' ml ('+L(hy.trainMl||hy.baseMl)+')</td></tr>';
+    h+='</tbody></table>';
+  }
+  // shopping list (new page, 2 columns)
+  if(s.shopping&&s.shopping.length){
+    const cats=s.shopping;
+    const emoji={'Κρέας':'🥩','Ψάρια':'🐟','Αυγά/Γαλακτ.':'🥚','Δημητριακά':'🌾','Όσπρια':'🫘','Λαχανικά':'🥦','Φρούτα':'🍎','Ξηροί καρποί':'🥜','Λάδια':'🫒','Συνταγές FYH':'🍳','Άλλα':'📦'};
+    let total=0; cats.forEach(c=>total+=c.items.length);
+    const col1=[],col2=[]; let n1=0,sw=false;
+    cats.forEach(c=>{ if(!sw && n1>=Math.ceil(total/2) && col1.length){sw=true;} if(!sw){col1.push(c);n1+=c.items.length;}else col2.push(c); });
+    const card=cat=>{
+      let hh='<div class="pslcard"><div class="pslcard-h">'+(emoji[cat.cat]||'•')+' '+esc(cat.cat)+'</div>';
+      (cat.items||[]).forEach((it,i)=>{ hh+='<div class="pslrow'+(i%2?' alt':'')+'"><span class="pslchk">☐</span><span class="pslnm">'+esc(it.name)+'</span><span class="pslamt">'+esc(it.buy)+(it.raw?'<span class="psllbl"> '+esc(it.raw)+'</span>':'')+'</span></div>'; });
+      return hh+'</div>';
+    };
+    h+='<div class="pshop"><div class="psec">🛒 Λίστα Αγορών Εβδομάδας</div>';
+    h+='<table class="psl2"><tr><td class="pslcol"><div class="pslcards">';
+    col1.forEach(c=>h+=card(c));
+    h+='</div></td><td class="pslcol"><div class="pslcards">';
+    col2.forEach(c=>h+=card(c));
+    h+='</div></td></tr></table>';
+    h+='<div class="pfoot">Feed Your Health — Εργαλείο Διαιτολόγου · '+new Date().toLocaleDateString('el-GR')+'</div></div>';
+  } else {
+    h+='<div class="pfoot">Feed Your Health — Εργαλείο Διαιτολόγου · '+new Date().toLocaleDateString('el-GR')+'</div>';
+  }
   return h;
 }
 function doPrint(){
@@ -499,8 +589,7 @@ function waterCard(mini){
   const g=el('div','glasses');
   for(let i=0;i<totalGlasses;i++){
     const gl=el('span','glass'+(i<have?' on':''),i<have?'':''); // ti-glass-full / ti-glass (use class instead)
-    gl.className='glass'+(i<have?' on':'');
-    gl.innerHTML='<i class="ti '+(i<have?'ti-glass-full':'ti-glass')+'"></i>';
+    gl.innerHTML=glassSVG(i<have);
     gl.onclick=()=>{const n=(i<have)?i:i+1;setWater(n);go(curTab())};
     g.appendChild(gl);
   }
@@ -509,6 +598,16 @@ function waterCard(mini){
   return c;
 }
 function curTab(){const b=document.querySelector('.nav button.on');return b?b.dataset.tab:'home'}
+// clean water-glass (tumbler) icon — empty = outline, full = with water
+function glassSVG(on){
+  const stroke=on?'#025857':'#a9c2bc';
+  const water=on?'<path d="M7.25 11 L16.75 11 L15.7 19.3 Q15.55 20.6 14.2 20.6 L9.8 20.6 Q8.45 20.6 8.3 19.3 Z" fill="#7ec6bf"/>':'';
+  return '<svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true">'
+    +water
+    +'<path d="M5.4 3.6 L18.6 3.6 L16.9 19.4 Q16.7 21 14.9 21 L9.1 21 Q7.3 21 7.1 19.4 Z" fill="none" stroke="'+stroke+'" stroke-width="1.5" stroke-linejoin="round"/>'
+    +(on?'<line x1="7.4" y1="11" x2="16.6" y2="11" stroke="#025857" stroke-width="1.1" opacity="0.5"/>':'')
+    +'</svg>';
+}
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 

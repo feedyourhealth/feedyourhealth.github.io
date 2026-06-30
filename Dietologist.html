@@ -20165,19 +20165,21 @@ function saveFoodExclusions(){
 
       // ── Ημερήσια πλάνα ──
       var wp=c.weekPlan||{};
+      var fmtQ=(typeof fmtFoodQty==='function')?function(f){return fmtFoodQty(f,'γρ.',function(u){return u;});}:function(f){return {main:Math.round(f.g)+' γρ.',sub:''};};
       var days=[];
       for(var d=0; d<7; d++){
         var dm=wp[d]||[];
-        var meals=[], dayK=0;
+        var meals=[], dayK=0, dP=0,dC=0,dF=0,dFi=0;
         dm.forEach(function(meal){
-          var foods=[], mk=0,mp=0,mc=0,mf=0;
+          var foods=[], mk=0,mp=0,mc=0,mf=0,mfi=0;
           (meal.foods||[]).forEach(function(f){
             var v=macro(f.n,f.g);
-            mk+=v.k; mp+=v.p; mc+=v.c; mf+=v.f;
-            foods.push({name:shortName(f.n), qty:Math.round(f.g)+' g'});
+            mk+=v.k; mp+=v.p; mc+=v.c; mf+=v.f; mfi+=(v.fi||0);
+            var q=fmtQ(f);
+            foods.push({name:f.n, qty:q.main, sub:q.sub||''});
           });
-          dayK+=mk;
-          var title=foods.map(function(x){return x.name;}).slice(0,3).join(', ')+(foods.length>3?'…':'');
+          dayK+=mk; dP+=mp; dC+=mc; dF+=mf; dFi+=mfi;
+          var title=foods.map(function(x){return shortName(x.name);}).slice(0,3).join(', ')+(foods.length>3?'…':'');
           meals.push({
             label:meal.name||'Γεύμα',
             time:TIMES[meal.name]||'',
@@ -20191,6 +20193,8 @@ function saveFoodExclusions(){
           label:DAYS[d],
           isTrain:!!(c.trainDays&&c.trainDays[d]),
           kcal:Math.round(dayK),
+          macros:{p:Math.round(dP),c:Math.round(dC),f:Math.round(dF)},
+          fiber:Math.round(dFi*10)/10,
           meals:meals
         });
       }
