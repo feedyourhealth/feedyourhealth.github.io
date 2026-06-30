@@ -206,6 +206,28 @@ const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 const DOW=['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
 const SLOT_ICON={'Πρωινό':'ti-coffee','Δεκατιανό':'ti-apple','Σνακ':'ti-apple','Μεσημεριανό':'ti-tools-kitchen-2','Απογευματινό':'ti-cheese','Βραδινό':'ti-moon','Προ προπόνησης':'ti-barbell','Μετά προπόνηση':'ti-barbell'};
 const CAT_ICON={'Κρέας':'ti-meat','Ψάρια':'ti-fish','Αυγά/Γαλακτ.':'ti-egg','Δημητριακά':'ti-wheat','Όσπρια':'ti-seeding','Λαχανικά':'ti-carrot','Φρούτα':'ti-apple','Ξηροί καρποί':'ti-seeding','Λάδια':'ti-droplet','Συνταγές FYH':'ti-tools-kitchen-2','Άλλα':'ti-package'};
+const SPICES=[
+  {n:'Κουρκουμάς',ben:'Αντιφλεγμονώδες, αντιοξειδωτικό',use:'1-3 γρ./ημέρα (1 κ.γλ.)',note:'Με μαύρο πιπέρι για απορρόφηση'},
+  {n:'Μαύρο πιπέρι',ben:'Βελτίωση απορρόφησης θρεπτικών, αντιμικροβιακό',use:'1-2 γρ./ημέρα',note:'Συνδυάζεται με κουρκουμά'},
+  {n:'Κανέλα',ben:'Ρύθμιση σακχάρου, αντιοξειδωτικό',use:'1-4 γρ./ημέρα (1 κ.γλ.)',note:'Προτιμήστε Κεϋλάνης για ασφάλεια'},
+  {n:'Τζίντζερ',ben:'Αντιφλεγμονώδες, πέψη, ναυτία',use:'2-5 γρ./ημέρα (1-2 κ.γλ.)',note:'Φρέσκο ή σκόνη'},
+  {n:'Σκόρδο',ben:'Καρδιοπροστασία, αντιμικροβιακό',use:'1-2 σκελίδες/ημέρα',note:'Καλύτερο ωμό'},
+  {n:'Ρίγανη',ben:'Αντιμικροβιακό, αντιοξειδωτικό',use:'1-2 γρ./ημέρα (1 κ.γλ.)',note:'Ρίγανη ελληνική ισχυρή'},
+  {n:'Δεντρολίβανο',ben:'Γνωστική λειτουργία, αντιοξειδωτικό',use:'1-2 γρ./ημέρα (1 κ.γλ.)',note:'Φρέσκο ή αποξηραμένο'},
+  {n:'Θυμάρι',ben:'Αντιμικροβιακό, αναπνευστική υγεία',use:'1-2 γρ./ημέρα',note:'Χρήση σε ροφήματα'},
+  {n:'Βασιλικός',ben:'Αντιφλεγμονώδες, καρδιαγγειακή υγεία',use:'2-5 γρ./ημέρα (φρέσκα φύλλα)',note:'Προτιμήστε φρέσκο'},
+  {n:'Δυόσμος',ben:'Πέψη, αναπνευστικό',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Ανακουφίζει από φούσκωμα'},
+  {n:'Φασκόμηλο',ben:'Μνήμη, αντιφλεγμονώδες',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Σε γυναίκες βοηθά και στην εμμηνόπαυση'},
+  {n:'Κουμίν',ben:'Πέψη, αντιοξειδωτικό',use:'1-3 γρ./ημέρα (1 κ.γλ.)',note:'Συνήθως με φακές/όσπρια'},
+  {n:'Γλυκάνισος',ben:'Αναπνευστικό, πέψη',use:'1-2 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Χρήση σε ροφήματα'},
+  {n:'Κορίανδρος',ben:'Ρύθμιση σακχάρου, πέψη',use:'1-3 γρ./ημέρα',note:'Φρέσκο ή σπόροι'},
+  {n:'Τσίλι/Καυτερή πιπ.',ben:'Μεταβολισμός, αντιφλεγμονώδες',use:'0.5-1 γρ./ημέρα (1/4 κ.γλ.)',note:'Προσοχή σε στομάχι'},
+  {n:'Κάρδαμο',ben:'Πέψη, αντιοξειδωτικό',use:'1-2 γρ./ημέρα',note:'Χρήση σε τσάι'},
+  {n:'Μοσχοκάρυδο',ben:'Χαλάρωση, πέψη',use:'Μικρή ποσότητα (0.5-1 γρ.)',note:'Υπερβολή → τοξικό'},
+  {n:'Γαρύφαλλο',ben:'Αντιμικροβιακό, αντιοξειδωτικό',use:'0.5-1 γρ./ημέρα (1/4-1/2 κ.γλ.)',note:'Ισχυρή δράση'},
+  {n:'Σαφράνι',ben:'Διάθεση, αντιοξειδωτικό',use:'30-50 mg/ημέρα',note:'Ακριβό, μικρή δόση'},
+  {n:'Μάραθος',ben:'Πέψη, αντιφλεγμονώδες',use:'1-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Χρήση σε βραστά'}
+];
 
 let SNAP=null, curDay=0, sb=null;
 
@@ -267,7 +289,9 @@ function render(){
   const nav=el('div','nav');
   nav.innerHTML=tabBtn('home','ti-home','Αρχική')+tabBtn('plan','ti-calendar-week','Πλάνο')
     +tabBtn('shop','ti-shopping-cart','Ψώνια')
-    +tabBtn('water','ti-droplet','Νερό');
+    +tabBtn('water','ti-droplet','Νερό')
+    +tabBtn('supps','ti-pill','Συμπλ.')
+    +tabBtn('spices','ti-leaf','Μπαχαρικά');
   app.appendChild(nav);
 
   go('home');
@@ -277,11 +301,11 @@ function tabBtn(id,icon,label){return '<button data-tab="'+id+'" onclick="go(\''
 function go(tab){
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   const sc=$('#scroll'); sc.scrollTop=0;
-  const fn={home:viewHome,plan:viewPlan,prog:viewProg,shop:viewShop,water:viewWater}[tab];
+  const fn={home:viewHome,plan:viewPlan,prog:viewProg,shop:viewShop,water:viewWater,supps:viewSupps,spices:viewSpices}[tab];
   sc.innerHTML=''; sc.appendChild(fn());
   const sub=$('#hdr-sub');
   if(sub){
-    const labels={home:dayHeader(curDay),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση'};
+    const labels={home:dayHeader(curDay),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση',supps:'Τα συμπληρώματά μου',spices:'Μπαχαρικά & βότανα'};
     sub.textContent=labels[tab]||'';
   }
 }
@@ -323,7 +347,7 @@ function viewHome(){
   // quick links
   const q=el('div','quick');
   q.appendChild(quickCard('shop','ti-shopping-cart','Λίστα ψώνια',shopProgressText()));
-  q.appendChild(quickCard('water','ti-pill','Συμπληρώματα',(s.supps&&s.supps.length?s.supps.length+' ημερήσια':'—')));
+  q.appendChild(quickCard('supps','ti-pill','Συμπληρώματα',(s.supps&&s.supps.length?s.supps.length+' ημερήσια':'—')));
   v.appendChild(q);
   return v;
 }
@@ -556,24 +580,54 @@ function shopProgressText(){
   return t?(d+' από '+t+' ✓'):'—';
 }
 
-// ── WATER + SUPPS ─────────────────────────────────────────────────────────
+// ── WATER ───────────────────────────────────────────────────────────────────
 function viewWater(){
   const s=SNAP, v=el('div','view active');
   v.appendChild(waterCard(false));
-  // supps
-  if(s.supps&&s.supps.length){
-    const c=el('div','card');const cp=el('div','card-pad');
-    cp.appendChild(el('div','card-hdr','<i class="ti ti-pill"></i>Συμπληρώματα'));
-    let t='<table class="stbl">';
-    s.supps.forEach(su=>{t+='<tr><td class="lab">'+esc(su.name)+(su.timing?' <span style="color:var(--faint)">· '+esc(su.timing)+'</span>':'')+'</td><td class="val">'+esc(su.dose||'')+'</td></tr>'});
-    t+='</table>';cp.innerHTML+=t;c.appendChild(cp);v.appendChild(c);
-  }
   // protocol note
-  const h=s.hydration||{};
   const note=el('div',null);
   note.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
   note.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Πρωτόκολλο ενυδάτωσης</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Στόχος βάσει βάρους · +500 ml τις ημέρες προπόνησης · 1 ποτήρι πριν από κάθε γεύμα.</div>';
   v.appendChild(note);
+  return v;
+}
+
+// ── SUPPLEMENTS ──────────────────────────────────────────────────────────────
+function viewSupps(){
+  const s=SNAP, v=el('div','view active');
+  if(s.supps&&s.supps.length){
+    const c=el('div','card');const cp=el('div','card-pad');
+    cp.appendChild(el('div','card-hdr','<i class="ti ti-pill"></i>Τα συμπληρώματά μου'));
+    let t='<table class="stbl">';
+    s.supps.forEach(su=>{t+='<tr><td class="lab">'+esc(su.name)+(su.timing?' <span style="color:var(--faint)">· '+esc(su.timing)+'</span>':'')+'</td><td class="val">'+esc(su.dose||'')+'</td></tr>'});
+    t+='</table>';cp.innerHTML+=t;c.appendChild(cp);v.appendChild(c);
+    const tip=el('div',null);
+    tip.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
+    tip.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Συμβουλή</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Λάβε τα συμπληρώματα στην ώρα που αναγράφεται, μαζί με το γεύμα εκτός αν σου έχει πει αλλιώς ο/η διαιτολόγος σου.</div>';
+    v.appendChild(tip);
+  }else{
+    v.appendChild(el('div','mi','Δεν έχουν οριστεί συμπληρώματα στο πλάνο σου.'));
+  }
+  return v;
+}
+
+// ── SPICES & HERBS (στατικός οδηγός — ίδιος με το PDF) ────────────────────────
+function viewSpices(){
+  const v=el('div','view active');
+  const intro=el('div',null);
+  intro.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
+  intro.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-leaf" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Οδηγός Μπαχαρικών &amp; Βοτάνων</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Θεραπευτικά μπαχαρικά &amp; βότανα — ενδεικτική ημερήσια χρήση. Δεν υποκαθιστά ιατρική συμβουλή.</div>';
+  v.appendChild(intro);
+  SPICES.forEach(sp=>{
+    const c=el('div','card');const cp=el('div','card-pad');
+    cp.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--teal-d);margin-bottom:6px">🌿 '+esc(sp.n)+'</div>'
+      +'<table class="stbl">'
+      +'<tr><td class="lab" style="width:38%">Οφέλη</td><td style="font-size:13px">'+esc(sp.ben)+'</td></tr>'
+      +'<tr><td class="lab">Χρήση</td><td style="font-size:13px;color:var(--teal);font-weight:600">'+esc(sp.use)+'</td></tr>'
+      +'<tr><td class="lab">Σημείωση</td><td style="font-size:13px">'+esc(sp.note)+'</td></tr>'
+      +'</table>';
+    c.appendChild(cp);v.appendChild(c);
+  });
   return v;
 }
 function waterCard(mini){
