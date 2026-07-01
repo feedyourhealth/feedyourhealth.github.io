@@ -42,6 +42,7 @@
   .card-hdr i,.ic{color:var(--teal)}
 
   .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .stats-4{grid-template-columns:1fr 1fr 1fr 1fr}
   .stat{background:var(--tint2);border-radius:12px;padding:10px 6px;text-align:center}
   .stat .l{font-size:12px;color:var(--teal-l)}
   .stat .v{font-size:18px;font-weight:600;color:var(--teal-d)}
@@ -460,16 +461,16 @@ function viewHome(){
     v.appendChild(n);
   }
 
-  // live water progress for the stat box
-  const per=h.glassMl||250;
-  const goalMl=(day&&day.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
-  const haveMl=getWater()*per;
+  // at-a-glance: εβδομαδιαίο σκορ / σερί / βάρος (tap → Πρόοδος)
+  const glance=glanceCard();
+  if(glance)v.appendChild(glance);
 
-  const stats=el('div','stats');
+  const stats=el('div','stats stats-4');
   stats.innerHTML=
     statBox('Στόχος',nfmt(tg.kcal||0),'kcal')
     +statBox('Πρωτεΐνη',nfmt(tg.p||0),'γρ')
-    +statBox('Νερό σήμερα',(haveMl/1000).toFixed(1).replace('.',','),'/ '+L(goalMl));
+    +statBox('Υδατ/κες',nfmt(tg.c||0),'γρ')
+    +statBox('Λιπαρά',nfmt(tg.f||0),'γρ');
   v.appendChild(stats);
 
   // today meals — with check-off
@@ -500,13 +501,41 @@ function viewHome(){
   // quick links
   const q=el('div','quick');
   q.appendChild(quickCard('shop','ti-shopping-cart','Λίστα ψώνια',shopProgressText()));
-  q.appendChild(quickCard('supps','ti-pill','Συμπληρώματα',(s.supps&&s.supps.length?s.supps.length+' ημερήσια':'—')));
+  q.appendChild(quickCard('supps','ti-pill','Συμπληρώματα',suppsProgressText()));
   v.appendChild(q);
   return v;
 }
 function statBox(l,v,u){const ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
 function deltaU(p){if(p.start&&p.current){const d=Math.round((p.current-p.start)*10)/10;return (d<=0?'−':'+')+Math.abs(d).toString().replace('.',',')+' kg'}return 'kg'}
 function quickCard(tab,icon,title,sub){const c=el('div','card');const p=el('div','card-pad');p.onclick=()=>go(tab);p.innerHTML='<i class="ti '+icon+'" style="font-size:18px"></i><div class="qt">'+title+'</div><div class="qs">'+esc(sub)+'</div>';c.appendChild(p);return c}
+function suppsProgressText(){
+  const s=SNAP;
+  if(!s.supps||!s.supps.length)return '—';
+  const log=getSuppLog(), todK=dKey(new Date());
+  let done=0; s.supps.forEach(su=>{ if(log[todK]&&log[todK][su.name])done++; });
+  return done+' από '+s.supps.length+' σήμερα';
+}
+// Widget «με μια ματιά»: σκορ εβδομάδας / σερί / βάρος — tap πάει στην Πρόοδο.
+// Κρύβεται εντελώς αν δεν υπάρχει καμία καταγραφή ή μέτρηση βάρους ακόμη (νέος πελάτης).
+function glanceCard(){
+  const s=SNAP, p=s.progress||{};
+  const cur=pillarStats(weekDatesOffset(0),{upToToday:true});
+  const score=cur.anyData?overallScore(cur):null;
+  const streak=streakDays();
+  const hasWeight=!!(p.start&&p.current);
+  if(!cur.anyData && !streak && !hasWeight)return null;
+  const wDelta=hasWeight?deltaU(p).replace(' kg',''):null;
+  const cell=(v,l)=>'<div style="flex:1;text-align:center"><div style="font-size:19px;font-weight:700;color:var(--teal-d)">'+v+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+l+'</div></div>';
+  const div='<div style="width:.5px;height:32px;background:var(--bord-l)"></div>';
+  const c=el('div','card'); c.style.cursor='pointer'; c.onclick=()=>go('prog');
+  const cp=el('div','card-pad');
+  cp.style.cssText='display:flex;align-items:center;gap:4px';
+  cp.innerHTML=
+    cell(score==null?'—':score+'%','σκορ εβδ.')
+    +div+cell(streak>0?streak+' 🔥':'0','σερί')
+    +div+cell(hasWeight?wDelta:'—','βάρος kg');
+  c.appendChild(cp); return c;
+}
 
 // ── PLAN ──────────────────────────────────────────────────────────────────
 function viewPlan(){
