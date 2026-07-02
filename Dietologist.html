@@ -802,10 +802,19 @@ if(window.location.search.includes('debug=a11y')) {
 
 // ✅ BUSINESS SUITE: CLIENT PORTAL + PROGRESS + FEEDBACK + SHOPPING LIST
 
+// Κρυπτογραφικά ασφαλές token (χρησιμοποιείται στα shareable links του client portal —
+// είναι η μόνη προστασία δεδομένων υγείας πελάτη εκεί, οπότε ΔΕΝ πρέπει να παράγεται με Math.random()).
+function genSecureToken(bytes) {
+  var arr = new Uint8Array(bytes || 24);
+  crypto.getRandomValues(arr);
+  var s = ''; for (var i = 0; i < arr.length; i++) s += String.fromCharCode(arr[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 // 1. Get client share link for portal
 function getClientShareLink(c) {
   if(!c.shareToken) {
-    c.shareToken = 'share_' + Math.random().toString(36).substr(2, 9);
+    c.shareToken = genSecureToken();
     upd();
   }
   var url = window.location.protocol + '//' + window.location.host + window.location.pathname + '?view=client&token=' + c.shareToken;
@@ -3120,7 +3129,7 @@ function saveFoodExclusions(){
       var snap;
       try{ snap=this._buildSnapshot(c); }catch(e){ return Promise.reject(e); }
       var tok=c.shareToken;
-      if(!tok){ tok=Date.now().toString(36)+Math.random().toString(36).slice(2,10); c.shareToken=tok; }
+      if(!tok){ tok=genSecureToken(); c.shareToken=tok; }
       var expiresAt=new Date(Date.now()+this.LINK_EXPIRE_DAYS*86400000).toISOString();
       var row={token:tok, dietitian_id:this.user.id, snapshot:snap, client_name:c.name||'', updated_at:new Date().toISOString(), expires_at:expiresAt};
       return this.sb.from('shared_plans').upsert(row,{onConflict:'token'}).then(function(res){
