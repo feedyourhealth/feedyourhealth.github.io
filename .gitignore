@@ -1,0 +1,48 @@
+# Safety net: this git repo lives in the same folder as personal/client
+# files on the Desktop. Nothing below should ever end up on the public
+# GitHub Pages repo. This does NOT untrack files already committed —
+# it only stops *new* files of these kinds from being added by accident.
+
+# Client & personal documents
+*.docx
+*.xlsx
+*.xlsm
+*.csv
+*.tsv
+*.pdf
+*.pptx
+*.rtf
+
+# Client data exports / backups (weight logs, restores, ergometric results, etc.)
+*.json
+*.log
+
+# Photos / screenshots
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# App backup copies (timestamped snapshots made before edits)
+*.backup
+*.backup-*.html
+*backup*.html
+Dietologist.backup*
+plan.backup*
+
+# Known client-data / backup folders used by the app
+Dietologist_App/backups/
+Dietologist_App/data/
+_CLOUD_MIGRATION_SAFE/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Installers / binaries
+*.exe
+
+# OS / editor cruft
+desktop.ini
+.DS_Store
