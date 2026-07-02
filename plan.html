@@ -335,13 +335,12 @@ function pushCheckin(){
     let sDone=0; (s.supps||[]).forEach(su=>{if(suppDay[su.name])sDone++;});
     const goalMl=(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
     const waterGoal=Math.max(6,Math.round(goalMl/per));
-    sb.from('checkins').upsert({
-      token:tok, date:todK,
-      meals_done:mDone, meals_total:mealsN,
-      water_glasses:getWater(), water_goal:waterGoal,
-      supps_done:sDone, supps_total:supCount,
-      updated_at:new Date().toISOString()
-    },{onConflict:'token,date'}).then(()=>{}).catch(()=>{});
+    sb.rpc('submit_checkin',{
+      p_token:tok, p_date:todK,
+      p_meals_done:mDone, p_meals_total:mealsN,
+      p_water_glasses:getWater(), p_water_goal:waterGoal,
+      p_supps_done:sDone, p_supps_total:supCount
+    }).then(()=>{}).catch(()=>{});
   }catch(e){}
 }
 
@@ -350,7 +349,7 @@ async function boot(){
   if(!t){return fail('Λείπει ο σύνδεσμος του πλάνου.','Ζήτησε από τον διαιτολόγο σου το σωστό link.')}
   try{
     sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const {data,error}=await sb.from('shared_plans').select('snapshot,client_name,updated_at,expires_at').eq('token',t).single();
+    const {data,error}=await sb.rpc('get_shared_plan',{p_token:t}).single();
     if(error||!data){return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να έληξε ή να αποσύρθηκε. Ζήτησε νέο link από τον διαιτολόγο σου.')}
     if(data.expires_at && new Date(data.expires_at)<new Date()){return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο σου να στείλει νέο link.')}
     SNAP=data.snapshot; SNAP._updated=data.updated_at;
