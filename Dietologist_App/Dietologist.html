@@ -1342,6 +1342,8 @@ body.dark-mode #keyboardHelpPanel {
   <div id="client-list"></div>
   <button class="add-btn" onclick="addClient()">+ Νέος πελάτης</button>
   <div class="sb-sep"></div>
+  <button class="tmpl-sb-btn" onclick="showPracticeAnalytics()">📊 Επισκόπηση πρακτικής</button>
+  <div class="sb-sep"></div>
   <button class="backup-btn export-btn" style="color:#0277bd;border-color:#01579b" onclick="exportClientsJSON()">☁️ Κατεβάσμε πελάτες (Google Drive)</button>
   <button class="backup-btn" style="color:#0277bd;border-color:#01579b" onclick="importClientsJSON()">☁️ Ανεβάσμε πελάτες (Google Drive)</button>
   <div class="sb-sep"></div>
@@ -1465,6 +1467,7 @@ var FOODS={
 'Χοιρινός κιμάς (μαγ.)':{k:263,p:21,c:0,f:19,fi:0,cat:'Κρέας'},
 'Ελεύθερο γεύμα':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'},
 'Μέλι άβραστο':{k:304,p:0.3,c:82,f:0,fi:0.2,cat:'Άλλα'},
+'Μαρμελάδα φράουλας':{k:251,p:0.3,c:62,f:0.1,fi:0.9,cat:'Άλλα'},
 'Σάλτσα σόγιας (μειωμένο αλάτι)':{k:60,p:2.4,c:12.7,f:0.1,fi:0,cat:'Άλλα'},
 /* Ψάρια — fi=0 */
 'Σολομός (ψητός)':{k:206,p:22,c:0,f:13,fi:0,cat:'Ψάρια'},
@@ -1564,6 +1567,7 @@ var FOODS={
 'Κουνουπίδι':{k:25,p:1.9,c:5,f:0.3,fi:2.0,cat:'Λαχανικά'},
 'Μανιτάρια':{k:22,p:3.1,c:3.3,f:0.3,fi:1.0,cat:'Λαχανικά'},
 'Μαρούλι':{k:15,p:1.4,c:2.9,f:0.2,fi:1.3,cat:'Λαχανικά'},
+'Μπιζέλια (βραστά/ατμού)':{k:81,p:5.4,c:14.5,f:0.4,fi:5.5,cat:'Λαχανικά'},
 'Μελιτζάνες':{k:25,p:1,c:5.9,f:0.2,fi:3.0,cat:'Λαχανικά'},
 'Μπρόκολο':{k:34,p:2.8,c:6.6,f:0.4,fi:2.6,cat:'Λαχανικά'},
 'Πατάτες':{k:87,p:2,c:20,f:0.1,fi:2.2,cat:'Λαχανικά'},
@@ -1707,6 +1711,7 @@ var FOODS={
 'Καβούρι (βρ.)':{k:89,p:19,c:0,f:0.7,fi:0,cat:'Ψάρια'},
 'Καλαμαράκια (ψητά)':{k:92,p:15.6,c:3.1,f:1.4,fi:0,cat:'Ψάρια'},
 'Φιδάκι (ψητό)':{k:116,p:24,c:1.2,f:1,fi:0,cat:'Ψάρια'},
+'Λούτζα':{k:243,p:24,c:0.5,f:16,fi:0,cat:'Κρέας'},
 'Moving Mountains Burger':{k:270,p:14.3,c:6.1,f:19.8,fi:5,cat:'Κρέας'},
 /* Τρόφιμα/καρυκεύματα από συνταγές & αποθηκευμένα πλάνα — τιμές USDA ανά 100g */
 'Βούτυρο':{k:717,p:0.9,c:0.1,f:81,fi:0,cat:'Λάδια'},
@@ -2107,6 +2112,7 @@ var FOOD_UNITS={
   'Αβοκάντο':{g:200,u:'τεμ.'},
   'Ελαιόλαδο':{g:10,u:'κ.σ.'},
   'Μέλι άβραστο':{g:7,u:'κ.γ.'},
+  'Μαρμελάδα φράουλας':{g:20,u:'κ.σ.'},
   'Edamame (βρ.)':{g:80,u:'φλ.'},
   // Σαλάτα
   'Σαλάτα εποχής':{g:100,u:'φλ.'},
@@ -2595,6 +2601,7 @@ var PORTIONS={
 // Final 4 vegetables for 100% coverage
 'Μανιτάρια':[{n:'1 Κ.',g:10},{n:'½ φλ.',g:85},{n:'1 φλ.',g:170},{n:'1 μπολ',g:200}],
 'Μπρόκολο':[{n:'1 κεφάλι μικρό',g:150},{n:'½ φλ. κομμένο',g:85},{n:'1 φλ. κομμένο',g:170}],
+'Μπιζέλια (βραστά/ατμού)':[{n:'2 κ.σ.',g:30},{n:'½ φλ.',g:80},{n:'1 φλ.',g:160}],
 'Σπανάκι':[{n:'2 φλ. ωμό',g:100},{n:'½ φλ. σιγοψημένο',g:60},{n:'1 φλ. σιγοψημένο',g:120}],
 'Παντζάρι (βραστό)':[{n:'1 μεσαίο',g:80},{n:'½ φλ. κύβοι',g:85},{n:'1 φλ. κύβοι',g:170}],
 'Παντζάρι (ωμό)':[{n:'1 μεσαίο',g:80},{n:'½ φλ. τριμμένο',g:70},{n:'1 φλ. τριμμένο',g:140}],
@@ -2653,7 +2660,9 @@ var MET_ACTIVITIES=[
     {id:'rowing_vig',name:'Κωπηλατικό ergometer έντονο',met:7.0},
     {id:'rope_skip',name:'Σκακιστά σχοινί (γενικό)',met:12.3},
     {id:'rope_skip_slow',name:'Σκακιστά σχοινί αργό (<100/min)',met:8.8},
-    {id:'health_club',name:'Γυμναστήριο γενικό',met:5.5}
+    {id:'health_club',name:'Γυμναστήριο γενικό',met:5.5},
+    {id:'gym_artistic',name:'Ενόργανη γυμναστική',met:4.5},
+    {id:'gym_rhythmic',name:'Ρυθμική γυμναστική',met:4.5}
   ]},
   {cat:'🧘 Pilates / Yoga',items:[
     {id:'pilates_mat',name:'Pilates mat (γενικό)',met:3.0},
@@ -3117,6 +3126,7 @@ var MICRONUTRIENTS={
   // Vegetables & Fruits
   'Σπανάκι (ωμό)':{Fe:2.71,Zn:0.53,Mg:79,Ca:99,B1:0.08,B2:0.19,B3:0.72,B6:0.39,B12:0,Folate:194,Omega3:0.34,Omega6:0.2},
   'Μπρόκολο':{Fe:0.73,Zn:0.63,Mg:21,Ca:47,B1:0.07,B2:0.12,B3:0.64,B6:0.18,B12:0,Folate:63,Omega3:0.09,Omega6:0.1},
+  'Μπιζέλια (βραστά/ατμού)':{Fe:1.47,Zn:1.19,Mg:33,Ca:27,B1:0.25,B2:0.13,B3:2.09,B6:0.17,B12:0,Folate:65,Omega3:0.04,Omega6:0.08},
   'Ντομάτα':{Fe:0.27,Zn:0.17,Mg:10,Ca:12,B1:0.04,B2:0.02,B3:0.59,B6:0.08,B12:0,Folate:15,Omega3:0.05,Omega6:0.2},
   'Λεμόνι':{Fe:0.6,Zn:0.1,Mg:8,Ca:26,B1:0.04,B2:0.02,B3:0.1,B6:0.08,B12:0,Folate:11,Omega3:0.03,Omega6:0.02},
   // Legumes
@@ -3564,6 +3574,7 @@ var _saveTimer=null;
 function _doSave(){
   safeStorageSet('fyh_clients', clients);
   safeStorageSet('fyh_custom_tmpls', customTemplates);
+  try { localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); } catch(e){}
   try { _rollingSnapshot(); } catch(e){ console.warn('[BACKUP] snapshot hook', e && e.message); }
   try { _writeFileBackup(false); } catch(e){ console.warn('[BACKUP] file hook', e && e.message); }
   try { if(window.Cloud) window.Cloud.save(); } catch(e){ console.warn('[CLOUD] save hook', e && e.message); }
@@ -3650,6 +3661,35 @@ function restoreFromSnapshot(){
   if(typeof renderSB === 'function') renderSB();
   if(typeof renderMain === 'function') renderMain();
   alert('✅ Επαναφορά ολοκληρώθηκε: ' + clients.length + ' πελάτες.');
+}
+
+// Στοχευμένη ανάκτηση: ψάχνει ΜΟΝΟ τα savedPlans ενός πελάτη μέσα στα τοπικά snapshots
+// και τα προσθέτει πίσω, χωρίς να πειράξει κανέναν άλλο πελάτη ή δεδομένο (σε αντίθεση
+// με το restoreFromSnapshot() που αντικαθιστά τα πάντα).
+function recoverSavedPlansFor(clientId){
+  var snaps=[];
+  try{ snaps=JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY))||[]; }catch(e){ snaps=[]; }
+  if(!snaps.length){ alert('Δεν βρέθηκαν τοπικά snapshots σε αυτόν τον υπολογιστή/browser.'); return; }
+  var rev=snaps.slice().reverse(); // πιο πρόσφατο πρώτα
+  var found=null;
+  for(var i=0;i<rev.length;i++){
+    var snapClients=(rev[i].data&&rev[i].data.clients)||[];
+    var sc=null;
+    for(var j=0;j<snapClients.length;j++){ if(snapClients[j].id===clientId){ sc=snapClients[j]; break; } }
+    if(sc && sc.savedPlans && sc.savedPlans.length){ found={snap:rev[i],client:sc}; break; }
+  }
+  if(!found){ alert('Ελέγχθηκαν '+snaps.length+' τοπικά snapshots — κανένα δεν έχει αποθηκευμένα πλάνα για αυτόν τον πελάτη.\n\n(Τα snapshots κρατούν μόνο τις τελευταίες 5 αλλαγές, οπότε αν έγιναν πολλές άλλες αλλαγές μετά, μπορεί να έχουν "σπρωχτεί έξω".)'); return; }
+  var c=getC();
+  if(!c||c.id!==clientId){ alert('Σφάλμα: δεν βρέθηκε ο τρέχων πελάτης.'); return; }
+  var existing=c.savedPlans||[];
+  var existingIds={}; existing.forEach(function(p){existingIds[p.id]=true;});
+  var toAdd=found.client.savedPlans.filter(function(p){return !existingIds[p.id];});
+  if(!toAdd.length){ alert('Βρέθηκε snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+', αλλά δεν έχει επιπλέον πλάνα από όσα ήδη υπάρχουν.'); return; }
+  if(!confirm('Βρέθηκαν '+toAdd.length+' αποθηκευμένα πλάνα σε τοπικό snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+' που λείπουν τώρα από τον πελάτη.\n\nΝα προστεθούν πίσω (δεν πειράζεται τίποτα άλλο σε κανέναν πελάτη);'))return;
+  c.savedPlans=existing.concat(toAdd).sort(function(a,b){return (a.number||0)-(b.number||0);});
+  save();
+  var s4=document.getElementById('s4'); if(s4) s4.innerHTML=buildPlanHistoryHtml(c);
+  alert('✅ Επαναφέρθηκαν '+toAdd.length+' πλάνα από το snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+'.');
 }
 
 // ── Layer 2: Silent backups to a real disk folder (File System Access API) ──────────
@@ -6055,7 +6095,7 @@ function showValidationErrors(errors) {
     message += '• ' + (VALIDATION_MESSAGES_GR[err] || err) + '\n';
   });
 
-  showErrorToast(message.split('\n')[0]);
+  showErrorToast(message);
   console.warn('Validation errors:', errors);
   return false;
 }
@@ -6065,16 +6105,17 @@ function showErrorToast(message) {
   if(!errorToast) {
     errorToast = document.createElement('div');
     errorToast.id = 'errorToast';
-    errorToast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#c62828;color:white;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:9999;font-weight:600;font-size:14px;animation:slideIn 0.3s ease-out;max-width:300px;';
+    errorToast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#c62828;color:white;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:9999;font-weight:600;font-size:14px;animation:slideIn 0.3s ease-out;white-space:pre-line;max-width:320px;';
     document.body.appendChild(errorToast);
   }
 
   errorToast.textContent = message;
   errorToast.style.display = 'block';
 
-  setTimeout(function() {
+  clearTimeout(errorToast._hideTimer);
+  errorToast._hideTimer = setTimeout(function() {
     errorToast.style.display = 'none';
-  }, 4000);
+  }, 7000);
 }
 
 // ✅ Toggle Sidebar (Collapsible)
@@ -6098,7 +6139,7 @@ window.addEventListener('load', function(){
 function addClient(){
   try {
     var id='c'+Date.now();
-    var newClient={id:id,name:'',sex:'M',age:30,weight:80,height:175,bf:0,leanmass:0,activity:'mod',goal:'loss',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
+    var newClient={id:id,name:'',sex:'',age:null,weight:null,height:null,bf:0,leanmass:0,activity:'',goal:'',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
 
     if(window.undoRedoManager && typeof CreateClientCommand !== 'undefined'){
       var cmd = new CreateClientCommand(newClient);
@@ -6239,6 +6280,18 @@ function loadTestClientBasilina(){
   alert('✅ Βασιλίνα Περίσιου φορτώθηκε με επιτυχία!');
 }
 
+// Μικρό badge κατάστασης δίπλα σε κάθε πελάτη στη λίστα (βασισμένο στα cloud checkins από το portal).
+function progressBadge(c){
+  if(!c.shareToken) return '';
+  var rows=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
+  if(!rows.length) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Δεν έχει ξεκινήσει</span>';
+  var gap=ckDaysSinceLast(rows);
+  if(gap>=2) return '<span style="background:#FCEBEB;color:#791F1F;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">⚠ '+gap+'ημ. χωρίς check-in</span>';
+  var byDate=ckRowsByDate(rows), score=ckWeekScore(byDate,0);
+  if(score==null) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Δεν έχει ξεκινήσει</span>';
+  var ok=score>=85;
+  return '<span style="background:'+(ok?'#E8F5E9':'#FAEEDA')+';color:'+(ok?'#1E5E24':'#633806')+';font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">'+score+'%</span>';
+}
 function renderSB(){
   var term=_clientSearchTerm;
   // ✅ FILTER: Exclude deleted clients from main list
@@ -6254,8 +6307,9 @@ function renderSB(){
       html+='<div class="ci'+(c.id===curId?' active':'')+'" onclick="selectClient(\''+c.id+'\')">'
         +'<div class="ci-name">'+(c.name||'Νέος πελάτης')+'</div>'
         +'<div class="ci-info">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg</div>'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999;gap:6px">'
         +'<span>'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
+        +progressBadge(c)
         +'<button class="cdel" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
         +'</div>'
         +'</div>';
@@ -6969,8 +7023,8 @@ function generateImprovementTips(c){
 
 function calculatePlanStats(plans){
   if(!plans||plans.length===0)return{count:0,avgK:0,minK:0,maxK:0,avgP:0,minP:0,maxP:0};
-  var ks=plans.map(p=>p.macros.k);
-  var ps=plans.map(p=>p.macros.p);
+  var ks=plans.map(p=>(p.macros&&p.macros.k)||0);
+  var ps=plans.map(p=>(p.macros&&p.macros.p)||0);
   return{
     count:plans.length,
     avgK:Math.round(ks.reduce((a,b)=>a+b)/ks.length),
@@ -7026,10 +7080,23 @@ function duplicatePlan(planIndex){
 }
 
 function buildPlanHistoryHtml(c){
+  console.log('[PLAN HISTORY DEBUG] client=',c&&c.name,'savedPlans=',c&&c.savedPlans,'length=',c&&c.savedPlans?c.savedPlans.length:'N/A');
+  var dbg='<div style="background:#fff3cd;border:1px solid #ffc107;padding:6px 10px;font-size:11px;color:#856404;margin:8px 20px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
+    +'<span>🔍 DEBUG: βρέθηκαν '+((c&&c.savedPlans)?c.savedPlans.length:0)+' αποθηκευμένα πλάνα για '+esc((c&&c.name)||'?')+'</span>'
+    +'<button onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" style="background:#856404;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
+    +'</div>';
   if(!c.savedPlans||c.savedPlans.length===0){
-    return '<div style="padding:20px;text-align:center;color:#999"><div style="font-size:16px;font-weight:600;margin-bottom:10px">📊 Ιστορικό Πλάνων</div><p>Δεν υπάρχουν αποθηκευμένα πλάνα.<br>Πάτησε "Αποθήκευση Διατροφής" για να αποθηκεύσεις το πλάνο</p></div>';
+    return dbg+'<div style="padding:20px;text-align:center;color:#999"><div style="font-size:16px;font-weight:600;margin-bottom:10px">📊 Ιστορικό Πλάνων</div><p>Δεν υπάρχουν αποθηκευμένα πλάνα.<br>Πάτησε "Αποθήκευση Διατροφής" για να αποθηκεύσεις το πλάνο</p></div>';
   }
+  try{
+  return dbg+buildPlanHistoryHtmlInner(c);
+  }catch(e){
+    console.error('[PLAN HISTORY] Render failed:',e);
+    return dbg+'<div style="padding:20px;text-align:center;color:#c62828"><div style="font-size:16px;font-weight:600;margin-bottom:10px">⚠️ Σφάλμα εμφάνισης ιστορικού πλάνων</div><p style="font-size:12px;color:#666">'+esc(e.message)+'</p></div>';
+  }
+}
 
+function buildPlanHistoryHtmlInner(c){
   var html='<div style="padding:16px 20px"><h2 style="color:#025857;margin-top:0">📊 Ιστορικό Πλάνων ('+c.savedPlans.length+')</h2>';
 
   // Calculate stats
@@ -7047,8 +7114,8 @@ function buildPlanHistoryHtml(c){
 
   // Comparison section
   if(c.savedPlans.length>1){
-    var first=c.savedPlans[0].macros;
-    var last=c.savedPlans[c.savedPlans.length-1].macros;
+    var first=c.savedPlans[0].macros||{k:0,p:0,f:0,c:0};
+    var last=c.savedPlans[c.savedPlans.length-1].macros||{k:0,p:0,f:0,c:0};
     var kDiff=last.k-first.k;
     var pDiff=last.p-first.p;
     var fDiff=last.f-first.f;
@@ -7067,7 +7134,8 @@ function buildPlanHistoryHtml(c){
     +'<div style="font-size:11px;line-height:1.6">';
   for(var i=0;i<c.savedPlans.length;i++){
     var plan=c.savedPlans[i];
-    var barWidth=Math.round((plan.macros.k/stats.maxK)*100);
+    plan.macros=plan.macros||{k:0,p:0,f:0,c:0};
+    var barWidth=stats.maxK?Math.round((plan.macros.k/stats.maxK)*100):0;
     html+='<div style="margin-bottom:6px">'
       +'<div style="display:flex;justify-content:space-between;margin-bottom:2px">'
       +'<span>Πλάνο #'+plan.number+':</span>'
@@ -7152,6 +7220,7 @@ function goToApp(){
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     renderSB();  // Load client list
+    if(window.Cloud && typeof window.Cloud.refreshCheckinsCache==='function') window.Cloud.refreshCheckinsCache();
   } catch(e) {
     console.error('Error in goToApp():', e.message);
     showErrorToast('Σφάλμα: ' + e.message);
@@ -7300,7 +7369,7 @@ function renderMain(){
     }
     avgTarget=Math.round(totalKcal/7);
   }
-  var sOpts='<option value="M"'+(c.sex==='M'?' selected':'')+'>Άνδρας</option><option value="F"'+(c.sex==='F'?' selected':'')+'>Γυναίκα</option>';
+  var sOpts='<option value=""'+(c.sex?'':' selected')+' disabled>-- Επιλέξτε --</option><option value="M"'+(c.sex==='M'?' selected':'')+'>Άνδρας</option><option value="F"'+(c.sex==='F'?' selected':'')+'>Γυναίκα</option>';
   var aOpts='<option value="sed"'+(c.activity==='sed'?' selected':'')+'>Καθιστικός</option><option value="light"'+(c.activity==='light'?' selected':'')+'>Ελαφρά ενεργός (1-3x)</option><option value="mod"'+(c.activity==='mod'?' selected':'')+'>Μέτρια ενεργός (3-5x)</option><option value="active"'+(c.activity==='active'?' selected':'')+'>Έντονα ενεργός (6-7x)</option>';
   // ✅ NEW: Goal stored as numeric calorie adjustment (-500 to +500)
   var goalCalAdj = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : (c.goal==='loss'?-500:c.goal==='gain'?300:0);
@@ -7318,7 +7387,7 @@ function renderMain(){
   var hydBase=t.hydBase||Math.round(c.weight*35);
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
-    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button><button class="stab" id="t5" onclick="swTab(5)">📈 Analytics</button></div>'
+    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
     +'<div id="s1">'
 
     // ✅ GOAL SELECTION REMINDER (Only show if goal not set)
@@ -7383,10 +7452,11 @@ function renderMain(){
     +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
     // ✅ Activity Level — manually selected by dietitian (reflects job + daily life, not just sport)
     +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>⚡ Επίπεδο Δραστηριότητας Ημέρας'+(t.usedMET?' (NEAT baseline)':'')+'</label><select id="inp-activity">'
-    +'<option value="sed"'+((c.activity||'mod')==='sed'?' selected':'')+'>Καθιστικός (γραφείο, λίγη κίνηση)</option>'
-    +'<option value="light"'+((c.activity||'mod')==='light'?' selected':'')+'>Ελαφρά ενεργός (όρθια εργασία, περπάτημα)</option>'
-    +'<option value="mod"'+((c.activity||'mod')==='mod'?' selected':'')+'>Μέτρια ενεργός (εργασία με κίνηση)</option>'
-    +'<option value="active"'+((c.activity||'mod')==='active'?' selected':'')+'>Έντονα ενεργός (χειρωνακτική π.χ. οικοδόμος)</option>'
+    +'<option value=""'+(c.activity?'':' selected')+' disabled>-- Επιλέξτε --</option>'
+    +'<option value="sed"'+(c.activity==='sed'?' selected':'')+'>Καθιστικός (γραφείο, λίγη κίνηση)</option>'
+    +'<option value="light"'+(c.activity==='light'?' selected':'')+'>Ελαφρά ενεργός (όρθια εργασία, περπάτημα)</option>'
+    +'<option value="mod"'+(c.activity==='mod'?' selected':'')+'>Μέτρια ενεργός (εργασία με κίνηση)</option>'
+    +'<option value="active"'+(c.activity==='active'?' selected':'')+'>Έντονα ενεργός (χειρωνακτική π.χ. οικοδόμος)</option>'
     +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic">Ορίστε με βάση τη δουλειά & καθημερινότητα — όχι μόνο το άθλημα.</div></div></div>'
     // ✅ Sport-Specific Supplement Recommendations (PHASE 4)
     +(c.sport && SPORT_PROTOCOLS[c.sport] ?
@@ -7510,16 +7580,14 @@ function renderMain(){
     +'<div id="lib-list"></div></div></div>'
     +'<div id="supp-notes"></div></div>'
     +'<div id="s3" style="display:none">'+buildTrackerHtml(c)+'</div>'
-    +'<div id="s4" style="display:none">'+buildPlanHistoryHtml(c)+'</div>'
-    // ✅ PHASE 5: ANALYTICS CONTENT AREA
-    +'<div id="analyticsContent" style="display:none;padding:0;background:#f9f9f9;min-height:600px;overflow-y:auto;"></div>';
+    +'<div id="s4" style="display:none">'+buildPlanHistoryHtml(c)+'</div>';
   document.getElementById('main').innerHTML=html;
 
   // ✅ UPDATE ALL INPUT FIELDS WITH CURRENT CLIENT DATA
   document.getElementById('inp-name').value=c.name||'';
   var _inpEmail=document.getElementById('inp-email');if(_inpEmail)_inpEmail.value=c.email||'';
   var _inpPhone=document.getElementById('inp-phone');if(_inpPhone)_inpPhone.value=c.phone||'';
-  document.getElementById('inp-sex').value=c.sex||'M';
+  document.getElementById('inp-sex').value=c.sex||'';
   initBirthdateSelects(c);
   updateAgeDisplay();
   document.getElementById('inp-weight').value=c.weight||'';
@@ -8244,19 +8312,64 @@ function setMacroCustom(key,val){
   onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 
+// Πρόοδος πελάτη από το portal (checkins που στέλνει το plan.html στο Supabase).
+function buildClientProgressHtml(c){
+  if(!c.shareToken) return '';
+  var rows=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
+  if(!rows.length){
+    return '<div class="tracker-section"><div class="tracker-head">📲 Πρόοδος πελάτη (portal)</div>'
+      +'<div style="font-size:12px;color:#888;padding:6px 0">Ο πελάτης δεν έχει κάνει ακόμα check-in στο πλάνο του.</div></div>';
+  }
+  var byDate=ckRowsByDate(rows);
+  var score=ckWeekScore(byDate,0);
+  var streak=ckStreak(byDate);
+  var st=ckPillarStats(ckWeekDates(0).map(function(k){return byDate[k];}).filter(Boolean));
+  var gap=ckDaysSinceLast(rows);
+  var lastTxt=gap===0?'σήμερα':gap===1?'χθες':gap+' μέρες πριν';
+
+  function bar(label,done,tot){
+    if(!tot) return '';
+    var pct=Math.round(done/tot*100);
+    return '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>'+label+'</span><span style="color:#6B756F">'+done+'/'+tot+' μέρες</span></div>'
+      +'<div style="height:6px;border-radius:3px;background:#E2EEE5;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:#0F6E56"></div></div></div>';
+  }
+  var hist='';
+  for(var w=-3; w<=0; w++){
+    var ws=ckWeekScore(byDate,w);
+    var hh=ws==null?4:Math.max(4,Math.round(ws*0.28));
+    hist+='<div style="width:14px;height:'+hh+'px;background:'+(ws==null?'#E2EEE5':(ws>=85?'#0F6E56':ws>=60?'#5DCAA5':'#9FE1CB'))+';border-radius:2px" title="Εβδ. '+(w+4)+': '+(ws==null?'—':ws+'%')+'"></div>';
+  }
+
+  return '<div class="tracker-section">'
+    +'<div class="tracker-head" style="margin-bottom:10px">📲 Πρόοδος πελάτη (portal)</div>'
+    +'<div style="display:flex;gap:18px;align-items:center;margin-bottom:14px;flex-wrap:wrap">'
+    +'<div style="font-size:13px"><b style="font-size:20px;color:#025857">'+(score==null?'—':score+'%')+'</b> σκορ εβδομάδας</div>'
+    +'<div style="font-size:13px">🔥 <b>'+streak+'</b> μέρες σερί</div>'
+    +'<div style="font-size:12px;color:#888">Τελευταίο check-in: '+lastTxt+'</div>'
+    +'</div>'
+    +bar('Διατροφή',st.dietDone,st.dietTot)
+    +bar('Νερό',st.watDone,st.watTot)
+    +bar('Συμπληρώματα',st.supDone,st.supTot)
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span style="font-size:11px;color:#888">4 εβδ.:</span><div style="display:flex;gap:4px;align-items:flex-end;height:28px">'+hist+'</div></div>'
+    +'</div>';
+}
+
 /* ── Body Composition & Consultation Tracker ────────────────────────────── */
 function buildTrackerHtml(c){
   if(!c.weightLog)c.weightLog=[];
   if(!c.consultLog)c.consultLog=[];
+  if(migrateClientSkinfoldBF(c))save();
   var today=new Date().toISOString().slice(0,10);
 
   // Weight / body composition section
   var isMinorC=(c.age||0)<18;
-  var defaultProto=isMinorC?'slaughter':'jp5';
-  var wHtml='<div class="tracker-section">'
+  var defaultProto=isMinorC?'slaughter':'jp4';
+  var wHtml=buildClientProgressHtml(c)+'<div class="tracker-section">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     +'<div class="tracker-head" style="margin-bottom:0">📐 Ανθρωπομετρία &amp; Σωματική Σύνθεση</div>'
     +'<div style="display:flex;gap:6px">'
+    +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#6a1b9a;color:#fff;border:none" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV (εργομετρικά)</button>'
+    +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">'
     +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης</button>'
     +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#1565C0;color:#fff;border:none" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':'')
     +'</div>'
@@ -8272,7 +8385,7 @@ function buildTrackerHtml(c){
     +'<div class="tracker-add-row" style="gap:6px;margin-bottom:8px;align-items:center">'
     +'<label style="font-size:10px;color:#666">Πρωτόκολλο:</label>'
     +'<select id="sf-proto" class="tracker-inp" style="width:210px;font-size:11px" onchange="updateSkinfoldFields()">'
-    +'<option value="jp5"'+(defaultProto==='jp5'?' selected':'')+'>JP 5-site ★ (Τρικ./Υποπλ./Κοιλ./Υπλγ./Μηρός)</option>'
+    +'<option value="jp4"'+(defaultProto==='jp4'?' selected':'')+'>JP 4-site ★ (Κοιλ./Υπλγ./Τρικ./Μηρός)</option>'
     +'<option value="jp3"'+(defaultProto==='jp3'?' selected':'')+'>JP 3-site (κλασικό)</option>'
     +'<option value="jp7"'+(defaultProto==='jp7'?' selected':'')+'>JP 7-site (πλήρες)</option>'
     +'<option value="slaughter"'+(defaultProto==='slaughter'?' selected':'')+'>Slaughter (1988) — παιδιά/έφηβοι</option>'
@@ -8387,10 +8500,10 @@ function buildTrackerHtml(c){
           +'<div style="font-size:9px;color:#666;margin-bottom:3px">Σύσταση σώματος (τελευταία):</div>'
           +'<div style="display:flex;gap:1px;height:18px;border-radius:3px;overflow:hidden;background:#eee">'
           +'<div style="width:'+(lastLBM/last.weight*100)+'%;background:#1565C0;display:flex;align-items:center;justify-content:center">'
-          +(lastLBM/last.weight*100>15?'<span style="color:#fff;font-size:8px;font-weight:700">'+lastLBM+'kg</span>':'')+
+          +(lastLBM/last.weight*100>15?'<span style="color:#fff;font-size:8px;font-weight:700">'+lastLBM+'kg</span>':'')
           +'</div>'
           +'<div style="width:'+(lastFM/last.weight*100)+'%;background:#ff9999;display:flex;align-items:center;justify-content:center">'
-          +(lastFM/last.weight*100>15?'<span style="color:#fff;font-size:8px;font-weight:700">'+lastFM+'kg</span>':'')+
+          +(lastFM/last.weight*100>15?'<span style="color:#fff;font-size:8px;font-weight:700">'+lastFM+'kg</span>':'')
           +'</div>'
           +'</div>'
           +'<div style="display:flex;gap:15px;font-size:9px;margin-top:4px">'
@@ -8418,7 +8531,7 @@ function buildTrackerHtml(c){
       var lbm=(e.bf>0)?+(e.weight*(1-e.bf/100)).toFixed(1):'—';
       var sleepStars=e.sleep?'⭐'.repeat(e.sleep):'—';
       var energyBolts=e.energy?'⚡'.repeat(e.energy):'—';
-      var sfProtoLabel={jp5:'JP5',jp3:'JP3',jp7:'JP7',slaughter:'SL'};
+      var sfProtoLabel={jp4:'JP4',jp3:'JP3',jp7:'JP7',slaughter:'SL'};
       var sfBadge=e.sfProtocol?'<span title="Μέτρηση με δερματοπτυχόμετρο ('+e.sfProtocol.toUpperCase()+')" style="font-size:8px;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 4px;margin-left:3px;font-weight:700;cursor:default">📐'+(sfProtoLabel[e.sfProtocol]||e.sfProtocol)+'</span>':'';
       wHtml+='<tr>'
         +'<td style="white-space:nowrap">'+e.date+'</td>'
@@ -8621,14 +8734,13 @@ function buildWeightChart(log){
 /* ── Skinfold Calculator ─────────────────────────────────────────────────── */
 function calcSkinfoldBF(protocol,sex,age,fields){
   var bf=null,bd=null,sum=0;
-  if(protocol==='jp5'){
-    // JP 5-site: τρικέφαλος + υποπλάτιο + κοιλιά + υπερλαγόνιο + μηρός
-    // Jackson & Pollock (1978/1980) — regression BD → Siri %BF
-    sum=(fields.tricep||0)+(fields.subscapular||0)+(fields.abdomen||0)+(fields.suprailiac||0)+(fields.thigh||0);
+  if(protocol==='jp4'){
+    // JP 4-site: κοιλιά + υπερλαγόνιο + τρικέφαλος + μηρός — δίνει απευθείας %BF (όχι μέσω BD/Siri)
+    // Jackson & Pollock (1985) "Practical assessment of body composition." Physician and Sportsmedicine 13:76-90
+    sum=(fields.abdomen||0)+(fields.suprailiac||0)+(fields.tricep||0)+(fields.thigh||0);
     if(sum>0){
-      if(sex==='M') bd=1.112-0.00043499*sum+0.00000055*sum*sum-0.00028826*age;
-      else bd=1.097-0.00046971*sum+0.00000056*sum*sum-0.00012828*age;
-      bf=(4.95/bd-4.50)*100;
+      if(sex==='M') bf=0.29288*sum-0.0005*sum*sum+0.15845*age-5.76377;
+      else bf=0.29669*sum-0.00043*sum*sum+0.02963*age+1.4072;
     }
   } else if(protocol==='jp3'){
     if(sex==='M') sum=(fields.chest||0)+(fields.abdomen||0)+(fields.thigh||0);
@@ -8677,14 +8789,13 @@ function updateSkinfoldFields(){
   if(!fieldsDiv)return;
   var defs=[];
   var ref='';
-  if(p==='jp5'){
-    ref='Jackson & Pollock, 1978/1980 — 5 σημεία';
+  if(p==='jp4'){
+    ref='Jackson & Pollock, 1985 — 4 σημεία';
     defs=[
-      {k:'tricep',    lbl:'1. Τρικέφαλος mm'},
-      {k:'subscapular',lbl:'2. Υποπλάτιο mm'},
-      {k:'abdomen',   lbl:'3. Κοιλιά mm'},
-      {k:'suprailiac',lbl:'4. Υπερλαγόνιο mm'},
-      {k:'thigh',     lbl:'5. Μηρός (τετρακέφαλος) mm'}
+      {k:'abdomen',   lbl:'1. Κοιλιά mm'},
+      {k:'suprailiac',lbl:'2. Υπερλαγόνιο mm'},
+      {k:'tricep',    lbl:'3. Τρικέφαλος mm'},
+      {k:'thigh',     lbl:'4. Μηρός (τετρακέφαλος) mm'}
     ];
   } else if(p==='jp3'){
     ref='Jackson & Pollock, 1978/1980';
@@ -8766,6 +8877,206 @@ function getSkinfoldEntry(){
   });
   if(!any)return null;
   return{protocol:p,fields:fields};
+}
+
+/* ── Ergometric CSV Import ──────────────────────────────────────────────────
+   Reads a CSV exported from the ergometric device (Weight, Height, DoB,
+   Skinfold Tricep/Subscapular/Abdominal/Supraspinale/Front Thigh, ...) and
+   pre-fills the tracker entry + skinfold panel (JP 4-site). Supraspinale is
+   treated as equivalent to the suprailiac/JP4 site; Subscapular is kept in
+   sfFields for the record but isn't used by the JP4 formula. */
+function triggerErgoCSVImport(){
+  var inp=document.getElementById('ergo-csv-input');
+  if(inp)inp.click();
+}
+
+function parseErgoCSVRows(text){
+  var lines=text.split(/\r\n|\n|\r/).filter(function(l){return l.trim().length>0;});
+  if(lines.length<2)return[];
+  var headers=lines[0].split(',').map(function(h){return h.trim();});
+  var num=function(v){var n=parseFloat(v);return isNaN(n)?null:n;};
+  var isoDate=function(v){return v&&/^\d{4}-\d{2}-\d{2}$/.test(v)?v:null;};
+  return lines.slice(1).map(function(line){
+    var cells=line.split(',');
+    var row={};
+    headers.forEach(function(h,i){row[h]=(cells[i]||'').trim();});
+    var height=num(row['Height']);
+    if(height!=null&&height<=3)height=+(height*100).toFixed(1); // meters -> cm
+    return{
+      testDate:isoDate(row['Test Date']),
+      weight:num(row['Weight']),
+      height:height,
+      birthDate:isoDate(row['DoB']),
+      tricep:num(row['Skinfold Tricep']),
+      subscapular:num(row['Skinfold Subscapular']),
+      abdomen:num(row['Skinfold Abdominal']),
+      suprailiac:num(row['Skinfold Supraspinale']),
+      thigh:num(row['Skinfold Front Thigh'])
+    };
+  }).filter(function(r){return r.testDate&&r.weight!=null;});
+}
+
+function parseErgoCSV(text){
+  var rows=parseErgoCSVRows(text);
+  if(!rows.length)return null;
+  rows.sort(function(a,b){return a.testDate<b.testDate?-1:a.testDate>b.testDate?1:0;});
+  return rows[rows.length-1];
+}
+
+function ageAtDate(birthDate,atDateStr){
+  if(!birthDate)return null;
+  var b=new Date(birthDate);if(isNaN(b.getTime()))return null;
+  var t=atDateStr?new Date(atDateStr):new Date();
+  if(isNaN(t.getTime()))t=new Date();
+  var a=t.getFullYear()-b.getFullYear();
+  var m=t.getMonth()-b.getMonth();
+  if(m<0||(m===0&&t.getDate()<b.getDate()))a--;
+  return (a>=0&&a<=150)?a:null;
+}
+
+/* One-time, idempotent fix for the old "JP5" protocol, which wrongly applied the
+   JP7 (7-site) regression coefficients to a 5-site skinfold sum and systematically
+   underestimated %BF. Recomputes bf from the raw sfFields already stored on each
+   weightLog entry using the correct JP4 (Jackson & Pollock 1985) formula — no
+   re-measurement needed. Uses age-at-measurement-date via ageAtDate when birthDate
+   is known, falling back to the client's current age otherwise. */
+function migrateClientSkinfoldBF(c){
+  if(!c||!c.weightLog||!c.weightLog.length)return false;
+  var changed=false;
+  c.weightLog.forEach(function(e){
+    if(e.sfProtocol==='jp5'&&e.sfFields){
+      var age=ageAtDate(c.birthDate,e.date)||c.age||25;
+      var res=calcSkinfoldBF('jp4',c.sex||'M',age,e.sfFields);
+      if(res.bf!=null)e.bf=res.bf;
+      e.sfProtocol='jp4';
+      changed=true;
+    }
+  });
+  if(changed){
+    var latest=c.weightLog[c.weightLog.length-1];
+    if(latest&&latest.bf>0){c.bf=latest.bf;c.lbm=+(latest.weight*(1-latest.bf/100)).toFixed(1);}
+  }
+  return changed;
+}
+
+function applyErgoCSVData(data){
+  var c=getC();if(!c)return;
+  var profileChanged=false;
+  if(data.height!=null&&!c.height){c.height=data.height;profileChanged=true;}
+  if(data.birthDate&&!c.birthDate&&!c.age){
+    c.birthDate=data.birthDate;
+    var a=calcAgeFromBirthdate(data.birthDate);
+    if(a!=null)c.age=a;
+    profileChanged=true;
+  }
+  if(profileChanged)save();
+
+  var s3=document.getElementById('s3');
+  if(s3)s3.innerHTML=buildTrackerHtml(c);
+
+  var dateInp=document.getElementById('tr-date');
+  if(dateInp&&data.testDate)dateInp.value=data.testDate;
+  var wInp=document.getElementById('tr-weight');
+  if(wInp&&data.weight!=null)wInp.value=data.weight;
+
+  toggleSkinfoldPanel();
+  var protoEl=document.getElementById('sf-proto');
+  if(protoEl){protoEl.value='jp4';updateSkinfoldFields();}
+  ['tricep','subscapular','abdomen','suprailiac','thigh'].forEach(function(k){
+    var el=document.getElementById('sf-'+k);
+    if(el&&data[k]!=null)el.value=data[k];
+  });
+  updateSkinfoldCalc();
+  applySkinfoldBF();
+
+  var hEl=document.getElementById('inp-height');
+  if(hEl&&c.height)hEl.value=c.height;
+  updateAgeDisplay();
+
+  alert('✅ Εισήχθησαν δεδομένα από το CSV. Έλεγξε τις τιμές και πάτησε "+ Προσθήκη" για να αποθηκευτούν.');
+}
+
+function handleErgoCSVFile(evt){
+  var files=evt.target.files;
+  if(!files||!files.length)return;
+  if(files.length===1){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var data=parseErgoCSV(e.target.result);
+        if(!data){alert('Δεν βρέθηκαν αναγνωρίσιμα δεδομένα στο CSV.');return;}
+        applyErgoCSVData(data);
+      }catch(err){alert('Σφάλμα ανάγνωσης CSV: '+err.message);}
+      evt.target.value='';
+    };
+    reader.readAsText(files[0],'UTF-8');
+    return;
+  }
+  // ✅ Batch import — multiple older CSVs at once, merged into history by Test Date
+  var texts=new Array(files.length);
+  var pending=files.length;
+  Array.prototype.forEach.call(files,function(file,i){
+    var r=new FileReader();
+    r.onload=function(e){texts[i]=e.target.result;if(--pending===0)finishBatchErgoImport(texts);};
+    r.onerror=function(){if(--pending===0)finishBatchErgoImport(texts);};
+    r.readAsText(file,'UTF-8');
+  });
+  evt.target.value='';
+}
+
+function finishBatchErgoImport(texts){
+  var c=getC();if(!c)return;
+  var allRows=[];
+  texts.forEach(function(t){if(t)allRows=allRows.concat(parseErgoCSVRows(t));});
+  if(!allRows.length){alert('Δεν βρέθηκαν αναγνωρίσιμα δεδομένα στα CSV.');return;}
+  var byDate={};
+  allRows.forEach(function(r){byDate[r.testDate]=r;}); // later file wins on same date
+  var rows=Object.keys(byDate).map(function(d){return byDate[d];}).sort(function(a,b){return a.testDate<b.testDate?-1:1;});
+
+  if(!c.weightLog)c.weightLog=[];
+  var existingDates={};
+  c.weightLog.forEach(function(e){existingDates[e.date]=true;});
+  var toAdd=rows.filter(function(r){return !existingDates[r.testDate];});
+  var skipped=rows.length-toAdd.length;
+  if(!toAdd.length){alert('Όλες οι ημερομηνίες υπάρχουν ήδη στο ιστορικό ('+skipped+' παραλείφθηκαν).');return;}
+
+  var summary=toAdd.map(function(r){return r.testDate+' — '+r.weight+'kg';}).join('\n');
+  var msg='Θα προστεθούν '+toAdd.length+' μετρήσεις στο ιστορικό (ταξινομημένες κατά ημερομηνία):\n\n'+summary
+    +(skipped?'\n\n('+skipped+' παραλείφθηκαν — υπάρχουν ήδη ίδιες ημερομηνίες στο ιστορικό)':'')
+    +'\n\nΣυνέχεια;';
+  if(!confirm(msg))return;
+
+  var profileChanged=false;
+  var withHeight=rows.filter(function(r){return r.height!=null;})[0];
+  if(withHeight&&!c.height){c.height=withHeight.height;profileChanged=true;}
+  var withDob=rows.filter(function(r){return r.birthDate;})[0];
+  if(withDob&&!c.birthDate&&!c.age){
+    c.birthDate=withDob.birthDate;
+    var a0=calcAgeFromBirthdate(withDob.birthDate);
+    if(a0!=null)c.age=a0;
+    profileChanged=true;
+  }
+
+  toAdd.forEach(function(r){
+    var age=ageAtDate(c.birthDate||r.birthDate,r.testDate)||c.age||25;
+    var fields={tricep:r.tricep||0,subscapular:r.subscapular||0,abdomen:r.abdomen||0,suprailiac:r.suprailiac||0,thigh:r.thigh||0};
+    var res=calcSkinfoldBF('jp4',c.sex||'M',age,fields);
+    c.weightLog.push({date:r.testDate,weight:r.weight,bf:res.bf||0,waist:0,hip:0,arm:0,sleep:0,energy:0,compliance:0,notes:'',sfProtocol:'jp4',sfFields:fields});
+  });
+  c.weightLog.sort(function(a,b){return a.date<b.date?-1:1;});
+
+  var latest=c.weightLog[c.weightLog.length-1];
+  if(latest.bf>0){c.lbm=+(latest.weight*(1-latest.bf/100)).toFixed(1);c.bf=latest.bf;}
+  c.weight=latest.weight;
+  profileChanged=true;
+
+  save();
+  var s3=document.getElementById('s3');
+  if(s3)s3.innerHTML=buildTrackerHtml(c);
+  var hEl=document.getElementById('inp-height');if(hEl&&c.height)hEl.value=c.height;
+  updateAgeDisplay();
+
+  alert('✅ Προστέθηκαν '+toAdd.length+' μετρήσεις στο ιστορικό.'+(skipped?' ('+skipped+' παραλείφθηκαν λόγω ίδιας ημερομηνίας)':''));
 }
 
 function addWeightEntry(){
@@ -9272,7 +9583,6 @@ function swTab(n){
   var t2=document.getElementById('t2');if(t2)t2.classList.toggle('active',n===2);
   var t3=document.getElementById('t3');if(t3)t3.classList.toggle('active',n===3);
   var t4=document.getElementById('t4');if(t4)t4.classList.toggle('active',n===4);
-  var t5=document.getElementById('t5');if(t5)t5.classList.toggle('active',n===5);
 
   // ✅ HIDE ALL PAGES FIRST
   var s1=document.getElementById('s1');if(s1)s1.style.display='none';
@@ -9311,24 +9621,6 @@ function swTab(n){
   if(hint2x)hint2x.style.display=n===1?'':'none';
   var genPlanRow=document.getElementById('genplan-row');
   if(genPlanRow)genPlanRow.style.display=n===1?'':'none';
-
-  // ✅ PHASE 5: ANALYTICS TAB SUPPORT
-  var analyticsDiv = document.getElementById('analyticsContent');
-  if(analyticsDiv){
-    analyticsDiv.style.display=n===5?'block':'none';
-    if(n===5){
-      if(typeof renderAnalyticsDashboard === 'function'){
-        try{
-          renderAnalyticsDashboard();
-        } catch(e){
-          console.error('[ANALYTICS] Error rendering dashboard:', e);
-          analyticsDiv.innerHTML='<div style="padding:20px;color:red;">Σφάλμα φόρτωσης αναλυτικών. Δείτε την κονσόλα.</div>';
-        }
-      } else {
-        analyticsDiv.innerHTML='<div style="padding:20px;color:red;">Ενότητα αναλυτικών δεν φορτώθηκε. Ελέγξτε τη φόρτωση των αρχείων.</div>';
-      }
-    }
-  }
 
   if(n===1){setupFormEventListeners();}  // ← SET UP EVENT LISTENERS
   if(n===2){renderFoodLib('');var c=getC();if(c){initializeMealTiming(c);}renderWeekTable();renderSuppNotes();}
@@ -11409,6 +11701,8 @@ function displayFoodDistributionResults(validation) {
 // ✅ PHASE 4: GENERATE PLAN WITH UNDO/REDO WRAPPER
 function genPlanWithUndo(){
   var c=getC();if(!c)return;
+  var errors=validateClientData(c);
+  if(errors.length>0){ showValidationErrors(errors); return; }
   var oldPlan = deepClone(c.weekPlan);
 
   if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
@@ -13633,6 +13927,7 @@ var EN_FOOD_NAMES={
   'Αγγούρι':'Cucumber','Γλυκοπατάτα':'Sweet Potato','Καρότα':'Carrots',
   'Κολοκυθάκια':'Zucchini','Κουνουπίδι':'Cauliflower','Μανιτάρια':'Mushrooms',
   'Μαρούλι':'Lettuce','Μελιτζάνες':'Eggplant','Μπρόκολο':'Broccoli',
+  'Μπιζέλια (βραστά/ατμού)':'Green Peas (boiled/steamed)',
   'Πατάτες':'Potatoes','Πιπεριές':'Bell Peppers','Σπανάκι':'Spinach','Παντζάρι (βραστό)':'Beetroot','Παντζάρι (ωμό)':'Beetroot (raw)',
   'Σπαράγγια':'Asparagus','Τομάτες':'Tomatoes','Φασολάκια':'Green Beans',
   'Σαλάτα εποχής':'Seasonal Salad',
@@ -13698,9 +13993,11 @@ function openPublishModal(){
     var st=document.createElement('style'); st.id='fyhspin-style'; st.textContent='@keyframes fyhspin{to{transform:rotate(360deg)}}'; document.head.appendChild(st);
   }
 
-  window.Cloud.publishPlan(c).then(function(url){
+  window.Cloud.publishPlan(c).then(function(res){
+    var url=res.url;
     var body=document.getElementById('publish-body');
     if(!body)return;
+    var expTxt=new Date(res.expiresAt).toLocaleDateString('el-GR',{day:'numeric',month:'long',year:'numeric'});
     var fname=(c.name||'').split(' ')[0];
     var msg='Γεια σου '+fname+'! Εδώ είναι το διατροφικό σου πλάνο: '+url;
     // WhatsApp: αν υπάρχει τηλέφωνο, στείλε κατευθείαν σε αυτό
@@ -13714,21 +14011,31 @@ function openPublishModal(){
     body.style.textAlign='left';
     body.innerHTML='<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">✍️ Προσωπικό μήνυμα στον πελάτη <span style="color:#9fb5b0">(προαιρετικό — φαίνεται στην Αρχική του)</span></div>'
       +'<textarea id="portal-note" rows="2" placeholder="π.χ. Μπράβο για την πρόοδο! Εστίασε στο πρωινό αυτή την εβδομάδα." style="width:100%;box-sizing:border-box;font-size:13px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;resize:vertical;font-family:inherit;color:#1a3330;margin-bottom:8px">'+esc(c.portalNote||'')+'</textarea>'
-      +'<button id="portal-note-save" class="btn" style="width:100%;background:#E2EEE5;color:#014545;border:1px solid #c5ddd8;margin-bottom:16px">💾 Αποθήκευση μηνύματος</button>'
+      +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">🎯 Στόχοι για την καρτέλα Πρόοδος <span style="color:#9fb5b0">(προαιρετικό)</span></div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:8px">'
+      +'<div style="flex:1"><label style="font-size:11px;color:#5a8a82">Στόχος βάρους (kg)</label><input type="number" id="portal-goalweight" value="'+(c.goalWeight||'')+'" placeholder="π.χ. 75" step="0.1" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #c5ddd8;border-radius:8px;font-family:inherit"></div>'
+      +'<div style="flex:1"><label style="font-size:11px;color:#5a8a82">Στόχος % λίπους</label><input type="number" id="portal-goalbf" value="'+(c.goalBF||'')+'" placeholder="π.χ. 15" step="0.1" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #c5ddd8;border-radius:8px;font-family:inherit"></div>'
+      +'</div>'
+      +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#1a3330;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="portal-showbfbands"'+(c.portalShowBFBands?' checked':'')+'> Εμφάνιση ζωνών αναφοράς λίπους (ACSM) στον πελάτη</label>'
+      +'<button id="portal-note-save" class="btn" style="width:100%;background:#E2EEE5;color:#014545;border:1px solid #c5ddd8;margin-bottom:16px">💾 Αποθήκευση ρυθμίσεων</button>'
       +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος πελάτη</div>'
       +'<div style="display:flex;gap:6px;margin-bottom:14px"><input id="publish-url" value="'+esc(url)+'" readonly style="flex:1;font-size:12px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;background:#f4f8f6;color:#014545" onclick="this.select()">'
       +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="copyPublishUrl(this)">Αντιγραφή</button></div>'
       +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📧 Αποστολή με Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
       +(c.email?'':'<div style="font-size:11px;color:#e08a00;margin:-4px 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα — θα ανοίξει κενό. Πρόσθεσέ το στα «Βασικά Στοιχεία».</div>')
       +'<a href="'+wa+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📱 WhatsApp'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
-      +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5">Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα.</div>';
+      +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5">⏳ Ο σύνδεσμος λήγει στις <b>'+expTxt+'</b> ('+window.Cloud.LINK_EXPIRE_DAYS+' μέρες). Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα και η λήξη ανανεώνεται.</div>';
     // Αποθήκευση προσωπικού μηνύματος → ξαναδημοσίευση ώστε να μπει στο snapshot
     var noteSave=document.getElementById('portal-note-save'), noteEl=document.getElementById('portal-note');
     if(noteSave&&noteEl){ noteSave.onclick=function(){
       c.portalNote=noteEl.value;
+      var gwEl=document.getElementById('portal-goalweight'), gbfEl=document.getElementById('portal-goalbf'), bandsEl=document.getElementById('portal-showbfbands');
+      c.goalWeight=(gwEl&&gwEl.value)?parseFloat(gwEl.value):null;
+      c.goalBF=(gbfEl&&gbfEl.value)?parseFloat(gbfEl.value):null;
+      c.portalShowBFBands=!!(bandsEl&&bandsEl.checked);
       noteSave.disabled=true; noteSave.textContent='Αποθήκευση…';
-      window.Cloud.publishPlan(c).then(function(){ noteSave.textContent='✓ Αποθηκεύτηκε'; setTimeout(function(){noteSave.disabled=false;noteSave.textContent='💾 Αποθήκευση μηνύματος';},1600); })
-        .catch(function(e){ noteSave.disabled=false; noteSave.textContent='💾 Αποθήκευση μηνύματος'; alert('Σφάλμα αποθήκευσης: '+(e.message||'')); });
+      window.Cloud.publishPlan(c).then(function(){ noteSave.textContent='✓ Αποθηκεύτηκε'; setTimeout(function(){noteSave.disabled=false;noteSave.textContent='💾 Αποθήκευση ρυθμίσεων';},1600); })
+        .catch(function(e){ noteSave.disabled=false; noteSave.textContent='💾 Αποθήκευση ρυθμίσεων'; alert('Σφάλμα αποθήκευσης: '+(e.message||'')); });
     };}
   }).catch(function(e){
     var body=document.getElementById('publish-body');
@@ -14186,7 +14493,7 @@ function exportPDF(lang){
     +'.fr{line-height:1.22}'
     +'.fn{color:#1a1a1a;font-weight:700}'
     +'.fg{color:#025857;font-weight:700}'
-    +'.fghint{color:#888;font-size:5pt;font-weight:400;margin-left:1px}'
+    +'.fghint{color:#000;font-size:5pt;font-weight:400;margin-left:1px}'
     +'.mt2{font-size:5pt;color:#555;border-top:1px dotted #aac7bf;margin-top:2px;padding-top:1px}'
     +'.free{color:#f57f17;font-weight:700}'
     +'tr.macrow td{background:#f5faf9;border-top:2px solid #025857;border:1px solid #c5ddd8;padding:3px 4px;font-size:5.5pt;text-align:center;color:#025857}'
@@ -14378,7 +14685,7 @@ function exportLipometriaPDF(){
   var sfProto=entry&&entry.sfProtocol?entry.sfProtocol:null;
   var sfFields=entry&&entry.sfFields?entry.sfFields:{};
   var sfSum=sfProto?Object.values(sfFields).reduce(function(s,v){return s+v;},0):null;
-  var sfProtoLabel={jp5:'Jackson & Pollock 5-site',jp3:'Jackson & Pollock 3-site',jp7:'Jackson & Pollock 7-site',slaughter:'Slaughter (1988)'};
+  var sfProtoLabel={jp4:'Jackson & Pollock 4-site (1985)',jp3:'Jackson & Pollock 3-site',jp7:'Jackson & Pollock 7-site',slaughter:'Slaughter (1988)'};
   var sfNames={tricep:'Τρικέφαλος',subscapular:'Υποπλάτιο',abdomen:'Κοιλιά',suprailiac:'Υπερλαγόνιο',thigh:'Μηρός',chest:'Στήθος',midaxillary:'Μεσομάσχαλο',calf:'Γαστροκνήμιος'};
 
   // BF% category (ACSM)
@@ -14452,9 +14759,9 @@ function exportLipometriaPDF(){
       +'<div class="sf-item"><span class="sf-lbl" style="font-weight:700">Σύνολο</span><span class="sf-val" style="color:#111">'+Math.round(sfSum)+' mm</span></div>'
       +'</div></div>'
     :
-      '<div class="sec"><div class="sec-hdr">ΔΕΡΜΑΤΟΠΤΥΧΕΣ — Jackson &amp; Pollock 5-site</div>'
+      '<div class="sec"><div class="sec-hdr">ΔΕΡΜΑΤΟΠΤΥΧΕΣ — Jackson &amp; Pollock 4-site (1985)</div>'
       +'<div class="sf-grid">'
-      +['1. Τρικέφαλος','2. Υποπλάτιο','3. Κοιλιά','4. Υπερλαγόνιο','5. Μηρός'].map(function(s){
+      +['1. Κοιλιά','2. Υπερλαγόνιο','3. Τρικέφαλος','4. Μηρός'].map(function(s){
         return '<div class="sf-item"><span class="sf-lbl">'+s+'</span><span class="sf-val" style="color:#ccc">_____ mm</span></div>';
       }).join('')
       +'<div class="sf-item"><span class="sf-lbl" style="font-weight:700">Σύνολο</span><span class="sf-val" style="color:#ccc">_____</span></div>'
@@ -14495,7 +14802,7 @@ function exportLipometriaPDF(){
     +'<div class="notes-area"><div class="notes-line"></div><div class="notes-line"></div><div class="notes-line"></div></div></div>'
     // Footer
     +'<div class="footer">'
-    +'<span>Feed Your Health &mdash; Έντυπο Λιπομέτρησης &nbsp;|&nbsp; Jackson &amp; Pollock (1978/1980) &nbsp;|&nbsp; ACSM Reference Ranges</span>'
+    +'<span>Feed Your Health &mdash; Έντυπο Λιπομέτρησης &nbsp;|&nbsp; Jackson &amp; Pollock (1985) &nbsp;|&nbsp; ACSM Reference Ranges</span>'
     +'<span>'+esc(c.name||'')+'&nbsp;&nbsp;Επόμενο ραντεβού: ________________</span>'
     +'</div></body></html>';
 
@@ -14583,7 +14890,7 @@ function exportBodyCompPDF(){
   var chartHtml='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;height:130px;border:1px solid #e0e0e0;border-radius:6px;background:#fafffe">'+svgContent+'</svg>';
 
   // ── History table ────────────────────────────────────────────────────────
-  var protoLabel={jp5:'JP 5-site',jp3:'JP 3-site',jp7:'JP 7-site',slaughter:'Slaughter'};
+  var protoLabel={jp4:'JP 4-site',jp3:'JP 3-site',jp7:'JP 7-site',slaughter:'Slaughter'};
   var sfFieldLabels={chest:'Στήθος',abdomen:'Κοιλιά',thigh:'Μηρός',tricep:'Τρικέφαλος',suprailiac:'Υπερλαγόνιο',midaxillary:'Μεσομάσχαλο',subscapular:'Υποπλάτιο',calf:'Γαστροκν.'};
   var tblRows='';
   sorted.slice().reverse().forEach(function(e,ri){
@@ -14685,7 +14992,7 @@ function exportBodyCompPDF(){
     +'<div class="sec-title">Ιστορικό Μετρήσεων</div>'
     +'<table><thead><tr><th>Ημερομηνία</th><th>Βάρος</th><th>%BF</th><th>LBM</th><th>FM</th><th>Μέση</th><th>Γοφοί</th></tr></thead>'
     +'<tbody>'+tblRows+'</tbody></table>'
-    +'<div style="font-size:6.5pt;color:#aaa;margin-top:4px">📐 = μέτρηση με δερματοπτυχόμετρο · JP 3-site / JP 7-site: Jackson &amp; Pollock (1978/1980) · Slaughter: Slaughter et al. (1988)</div>'
+    +'<div style="font-size:6.5pt;color:#aaa;margin-top:4px">📐 = μέτρηση με δερματοπτυχόμετρο · JP 4-site: Jackson &amp; Pollock (1985) · JP 3-site / JP 7-site: Jackson &amp; Pollock (1978/1980) · Slaughter: Slaughter et al. (1988)</div>'
     // Footer
     +'<div class="footer"><span>Feed Your Health — Εργαλείο Διαιτολόγου</span><span>'+esc(c.name||'')+'  ·  Εκτυπώθηκε: '+today+'</span></div>'
     +'</body></html>';
@@ -14770,7 +15077,7 @@ function showReferences(){
     {cat:'📐 Σωματική Σύνθεση',items:[
       {label:'Jackson & Pollock (1978) — Άνδρες',desc:'JP3 & JP7 — εξισώσεις δερματοπτυχόμετρου για άνδρες',citation:'Jackson AS, Pollock ML. "Generalized equations for predicting body density of men." <i>Br J Nutr</i> 1978;40(3):497-504.',url:'https://pubmed.ncbi.nlm.nih.gov/718832/'},
       {label:'Jackson, Pollock & Ward (1980) — Γυναίκες',desc:'JP3 & JP7 — εξισώσεις για γυναίκες',citation:'Jackson AS, Pollock ML, Ward A. "Generalized equations for predicting body density of women." <i>Med Sci Sports Exerc</i> 1980;12(3):175-181.',url:'https://pubmed.ncbi.nlm.nih.gov/7402053/'},
-      {label:'JP5 — 5 σημεία ⚠️',desc:'Χρησιμοποιούμε JP7 coefficients με 5 σημεία. Δεν υπάρχει ανεξάρτητη δημοσιευμένη validation για αυτό τον συνδυασμό.',citation:'Derived from Jackson & Pollock (1978/1980). Χρησιμοποιείται ευρέως κλινικά αλλά <b>δεν έχει αυτόνομη RCT επαλήθευση</b>.',url:''},
+      {label:'Jackson & Pollock (1985) — JP4',desc:'JP4 — 4 σημεία (κοιλιά/υπερλαγόνιο/τρικέφαλος/μηρός), απευθείας %BF χωρίς ενδιάμεσο βήμα BD/Siri',citation:'Jackson AS, Pollock ML. "Practical assessment of body composition." <i>Physician and Sportsmedicine</i> 1985;13(5):76-90.',url:''},
       {label:'Slaughter et al. (1988)',desc:'Δερματοπτυχόμετρο για παιδιά & εφήβους (τρικέφαλος + γαστροκνήμιο)',citation:'Slaughter MH et al. "Skinfold equations for estimation of body fatness in children and youth." <i>Hum Biol</i> 1988;60(5):709-723.',url:'https://pubmed.ncbi.nlm.nih.gov/3224965/'},
       {label:'Siri Equation (1956)',desc:'Μετατροπή σωματικής πυκνότητας σε %ΛΣ: (4.95/BD − 4.50) × 100',citation:'Siri WE. "Body composition from fluid spaces and density: Analysis of methods." <i>Univ Calif Berkeley Donner Lab Med Physics Rep</i> 1956.',url:''},
       {label:'ACSM Body Fat Norms',desc:'Κατηγορίες %ΛΣ (Essential/Athletic/Fitness/Average/Obese)',citation:'American College of Sports Medicine. <i>ACSM&#39;s Guidelines for Exercise Testing and Prescription</i>, 11th ed. 2021. Wolters Kluwer.',url:'https://www.acsm.org/'}
@@ -14799,8 +15106,7 @@ function showReferences(){
     +'<button onclick="document.getElementById(\'ref-modal\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#888;padding:4px">✕</button>'
     +'</div>'
     +'<div style="font-size:11px;color:#888;margin-bottom:16px;padding:8px 12px;background:#f8f9fa;border-radius:7px;border-left:3px solid #025857">'
-    +'Όλοι οι τύποι, στόχοι και τιμές αναφοράς βασίζονται σε peer-reviewed επιστημονικές δημοσιεύσεις. '
-    +'Το <b style="color:#e67e22">⚠️ JP5</b> αποτελεί κλινική προσαρμογή χωρίς αυτόνομη επαλήθευση.</div>';
+    +'Όλοι οι τύποι, στόχοι και τιμές αναφοράς βασίζονται σε peer-reviewed επιστημονικές δημοσιεύσεις.</div>';
   refs.forEach(function(sec){
     h+='<div style="margin-bottom:18px"><div style="font-size:13px;font-weight:700;color:#025857;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #e0f2f1">'+sec.cat+'</div>';
     h+='<div style="display:flex;flex-direction:column;gap:7px">';
@@ -15627,6 +15933,7 @@ function getStorageKey(baseKey) {
       if(!c.metActivities)c.metActivities=[];
       if(!c.weightLog)c.weightLog=[];
       if(!c.consultLog)c.consultLog=[];
+      migrateClientSkinfoldBF(c);
       if(c.macroP==null)c.macroP=25;
       if(c.macroF==null)c.macroF=25;
       if(c.macroC==null)c.macroC=50;
@@ -15652,6 +15959,7 @@ function loadCloudData() {
       if(!c.metActivities)c.metActivities=[];
       if(!c.weightLog)c.weightLog=[];
       if(!c.consultLog)c.consultLog=[];
+      migrateClientSkinfoldBF(c);
       if(c.macroP==null)c.macroP=25;
       if(c.macroF==null)c.macroF=25;
       if(c.macroC==null)c.macroC=50;
@@ -18308,7 +18616,7 @@ function loadChartJS() {
 
 // 6B. Calculate analytics statistics
 function calculateAnalyticsStats() {
-  var clients = DATA.clients || [];
+  var clients = window.clients || [];
   var stats = {
     totalClients: clients.length,
     clientsWithPlans: clients.filter(function(c) { return c.weekPlan && c.weekPlan.length > 0; }).length,
@@ -18481,9 +18789,29 @@ function renderSuccessRateChart() {
   });
 }
 
-// 6F. Analytics Dashboard Rendering with Charts
+// 6F. Practice-wide analytics modal (accessible from the sidebar, not tied to a client)
+function showPracticeAnalytics(){
+  var existing=document.getElementById('practice-analytics-modal');
+  if(existing){existing.remove();return;}
+
+  var modal=document.createElement('div');
+  modal.id='practice-analytics-modal';
+  modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:99999;overflow-y:auto;';
+
+  var content=document.createElement('div');
+  content.style.cssText='background:#fafafa;max-width:1000px;margin:20px auto;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);position:relative;';
+  content.innerHTML='<button onclick="document.getElementById(\'practice-analytics-modal\').remove()" style="position:absolute;top:12px;right:12px;background:#999;color:#fff;border:none;border-radius:4px;padding:6px 12px;cursor:pointer;z-index:1;">✕ Κλείσιμο</button><div id="analyticsContent"></div>';
+
+  modal.appendChild(content);
+  modal.onclick=function(e){if(e.target===modal)modal.remove();};
+  document.body.appendChild(modal);
+
+  renderAnalyticsDashboard();
+}
+
+// 6G. Analytics Dashboard Rendering with Charts
 function renderAnalyticsDashboard() {
-  var clients = DATA.clients || [];
+  var clients = window.clients || [];
   if(clients.length === 0) {
     document.getElementById('analyticsContent').innerHTML = '<div style="padding:20px;color:#666;">Δεν υπάρχουν πελάτες ακόμα.</div>';
     return;
@@ -20132,6 +20460,8 @@ function saveFoodExclusions(){
     // ── 📲 ΔΗΜΟΣΙΕΥΣΗ ΠΛΑΝΟΥ (client portal) ────────────────────────────────
     // Η σταθερή διεύθυνση του portal (το link που στέλνεται στον πελάτη)
     PORTAL_BASE:'https://feedyourhealth.github.io/plan.html',
+    // Πόσες μέρες μένει ενεργός ο σύνδεσμος πριν λήξει αυτόματα (κάθε ξαναδημοσίευση τον ανανεώνει).
+    LINK_EXPIRE_DAYS:50,
     // Στοιχεία επικοινωνίας γραφείου που εμφανίζονται στο κουμπί «Ρώτησέ με» του πελάτη.
     // ⬇️ Συμπλήρωσε WhatsApp/τηλέφωνο σε διεθνή μορφή (π.χ. 306900000000).
     CLINIC:{ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' },
@@ -20144,11 +20474,12 @@ function saveFoodExclusions(){
       try{ snap=this._buildSnapshot(c); }catch(e){ return Promise.reject(e); }
       var tok=c.shareToken;
       if(!tok){ tok=Date.now().toString(36)+Math.random().toString(36).slice(2,10); c.shareToken=tok; }
-      var row={token:tok, dietitian_id:this.user.id, snapshot:snap, client_name:c.name||'', updated_at:new Date().toISOString()};
+      var expiresAt=new Date(Date.now()+this.LINK_EXPIRE_DAYS*86400000).toISOString();
+      var row={token:tok, dietitian_id:this.user.id, snapshot:snap, client_name:c.name||'', updated_at:new Date().toISOString(), expires_at:expiresAt};
       return this.sb.from('shared_plans').upsert(row,{onConflict:'token'}).then(function(res){
         if(res.error) throw res.error;
         try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
-        return self.PORTAL_BASE+'?t='+tok;
+        return {url:self.PORTAL_BASE+'?t='+tok, expiresAt:expiresAt};
       });
     },
 
@@ -20257,15 +20588,23 @@ function saveFoodExclusions(){
 
       // ── Πρόοδος ──
       var wl=(c.weightLog||[]).slice().sort(function(a,b){return a.date<b.date?-1:1;});
-      var log=wl.map(function(e){return {date:e.date, kg:e.weight};});
+      var log=wl.map(function(e){
+        var bf=e.bf>0?e.bf:null;
+        var lbm=bf?+(e.weight*(1-bf/100)).toFixed(1):null;
+        return {date:e.date, kg:e.weight, bf:bf, lbm:lbm};
+      });
       var lastE=wl.length?wl[wl.length-1]:null;
+      var lastLog=log.length?log[log.length-1]:null;
       var progress={
         start: log.length?log[0].kg:(c.weight||null),
         current: log.length?log[log.length-1].kg:(c.weight||null),
         goal: c.goalWeight||c.targetWeight||null,
+        goalBF: c.goalBF||null,
         log: log,
         waist:(lastE&&lastE.waist)||null,
-        bodyfat:(lastE&&lastE.bf)||c.bf||null
+        bodyfat:(lastLog&&lastLog.bf)||c.bf||null,
+        lbm:(lastLog&&lastLog.lbm)||c.lbm||null,
+        showBFBands: !!c.portalShowBFBands
       };
 
       var hb=t.hydBase||Math.round((c.weight||70)*35);
@@ -20276,6 +20615,7 @@ function saveFoodExclusions(){
       return {
         v:1,
         name:c.name||'',
+        sex:c.sex||'M',
         publishedAt:new Date().toISOString(),
         coachNote:(c.portalNote||'').trim(),
         contact:hasContact?{wa:clinic.wa||'',tel:clinic.tel||'',email:clinic.email||'',web:clinic.web||''}:null,
@@ -20392,6 +20732,18 @@ function saveFoodExclusions(){
           var row=(res && res.data)?res.data:null;
           var d=(row && row.data)?row.data:null;
           if(d && d.clients && d.clients.length){
+            // 🛡️ Μην αντικαταστήσεις τοπικά δεδομένα που είναι πιο πρόσφατα από το cloud —
+            // π.χ. αν το προηγούμενο push (δουλεύει με καθυστέρηση/debounce) δεν πρόλαβε να
+            // ολοκληρωθεί πριν κλείσει/ανανεωθεί η σελίδα. Χωρίς αυτό, ένα stale cloud read
+            // σβήνει σιωπηλά πρόσφατες τοπικές αλλαγές (π.χ. ένα μόλις αποθηκευμένο πλάνο).
+            var _localTs=null;
+            try{ _localTs=localStorage.getItem('fyh_local_updated_at'); }catch(e){}
+            if(_localTs && d.updatedAt && _localTs>d.updatedAt && window.clients && window.clients.length){
+              console.warn('[CLOUD] Τοπικά δεδομένα ('+_localTs+') πιο πρόσφατα από το cloud ('+d.updatedAt+') — τα διατηρώ και τα ανεβάζω αντί να τα αντικαταστήσω.');
+              self._loaded=true;
+              self._pushNow().then(resolve);
+              return;
+            }
             try{
               if(Array.isArray(d.clients)) window.clients=d.clients;
               if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
@@ -20423,9 +20775,9 @@ function saveFoodExclusions(){
           updatedAt: new Date().toISOString()
         };
         self.sb.from('user_data').upsert({user_id:self.user.id, data:blob, updated_at:new Date().toISOString()}).then(function(res){
-          if(res.error){ console.error('[CLOUD] push', res.error); }
-          resolve();
-        });
+          if(res.error){ console.error('[CLOUD] push', res.error); resolve({ok:false,error:res.error}); }
+          else { resolve({ok:true}); }
+        }).catch(function(err){ console.error('[CLOUD] push', err); resolve({ok:false,error:err}); });
       });
     },
 
@@ -20435,15 +20787,126 @@ function saveFoodExclusions(){
       if(!this.enabled || !this.user || !this._loaded) return;
       clearTimeout(this._t);
       this._t=setTimeout(function(){
-        self._pushNow().then(function(){
+        self._pushNow().then(function(result){
+          if(result && result.ok===false){
+            self._syncFailed=true;
+            self._showSyncError();
+            return;
+          }
+          self._syncFailed=false;
+          self._hideSyncError();
           var t=document.getElementById('cloud-save-toast');
           if(t){ t.style.opacity='1'; clearTimeout(t._ft); t._ft=setTimeout(function(){ t.style.opacity='0'; },1500); }
         });
       },1500);
+    },
+
+    // ⚠️ Εμφανίζεται ΜΟΝΙΜΑ (όχι σαν φευγαλέο toast) όσο η τελευταία αποθήκευση στο cloud αποτυγχάνει —
+    // ώστε ο διαιτολόγος να μην πιστεύει ότι οι αλλαγές είναι ασφαλείς ενώ έμειναν μόνο τοπικά.
+    _showSyncError:function(){
+      var el=document.getElementById('cloud-sync-error');
+      if(!el){
+        el=document.createElement('div');
+        el.id='cloud-sync-error';
+        el.style.cssText='position:fixed;bottom:20px;right:20px;background:#c62828;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:280px;line-height:1.4;';
+        el.textContent='⚠️ Δεν συγχρονίστηκε με το cloud — οι αλλαγές είναι προς το παρόν μόνο σε αυτόν τον υπολογιστή';
+        document.body.appendChild(el);
+      }
+      el.style.display='block';
+    },
+    _hideSyncError:function(){
+      var el=document.getElementById('cloud-sync-error');
+      if(el) el.style.display='none';
+    },
+
+    // ── 📈 ΠΡΟΟΔΟΣ ΠΕΛΑΤΗ (διάβασμα των checkins που στέλνει το plan.html) ──
+    _checkinsCache:{},
+    // Μία κλήση για όλους τους πελάτες μαζί (πιο γρήγορο από μία-μία).
+    fetchAllCheckins:function(tokens){
+      var self=this;
+      if(!this.enabled || !this.user || !tokens || !tokens.length) return Promise.resolve({});
+      return this.sb.from('checkins')
+        .select('token,date,meals_done,meals_total,water_glasses,water_goal,supps_done,supps_total')
+        .in('token',tokens).order('date',{ascending:true}).then(function(res){
+          if(res.error){ console.error('[CLOUD] fetchAllCheckins', res.error); return {}; }
+          var byToken={};
+          (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
+          return byToken;
+        });
+    },
+    // Ξαναφορτώνει το cache και ξανασχεδιάζει τη λίστα πελατών (badges).
+    refreshCheckinsCache:function(){
+      var self=this;
+      var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
+      if(!tokens.length) return Promise.resolve();
+      return this.fetchAllCheckins(tokens).then(function(byToken){
+        self._checkinsCache=byToken;
+        if(typeof renderSB==='function') renderSB();
+        var s3=document.getElementById('s3');
+        if(s3 && typeof getC==='function' && typeof buildTrackerHtml==='function'){
+          var cur=getC(); if(cur) s3.innerHTML=buildTrackerHtml(cur);
+        }
+      });
+    },
+    // Τα checkins ενός συγκεκριμένου πελάτη (από το cache — refreshCheckinsCache πρέπει να έχει τρέξει πρώτα).
+    checkinsFor:function(c){
+      return (c && c.shareToken && this._checkinsCache[c.shareToken]) || [];
     }
   };
   window.Cloud = Cloud;
 })();
+
+// ── Βοηθητικές συναρτήσεις για το σκορ/σερί προόδου πελάτη από τα checkins ──
+function ckDayKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function ckWeekDates(offset){
+  var now=new Date(); var js=now.getDay(); var toMon=(js===0?-6:1-js);
+  var mon=new Date(now); mon.setDate(now.getDate()+toMon+(offset||0)*7); mon.setHours(0,0,0,0);
+  var arr=[]; for(var i=0;i<7;i++){var d=new Date(mon);d.setDate(mon.getDate()+i);arr.push(ckDayKey(d));}
+  return arr;
+}
+function ckRowsByDate(rows){
+  var m={}; (rows||[]).forEach(function(r){m[r.date]=r;}); return m;
+}
+function ckPillarStats(rows){
+  var dietDone=0,dietTot=0,supDone=0,supTot=0,watDone=0,watTot=0,any=false;
+  (rows||[]).forEach(function(r){
+    if(r.meals_total){dietTot++; if(r.meals_done>=r.meals_total)dietDone++;}
+    if(r.supps_total){supTot++; if(r.supps_done>=r.supps_total)supDone++;}
+    if(r.water_goal){watTot++; if(r.water_glasses>=r.water_goal)watDone++;}
+    if(r.meals_done>0||r.supps_done>0||r.water_glasses>0)any=true;
+  });
+  return {dietDone:dietDone,dietTot:dietTot,supDone:supDone,supTot:supTot,watDone:watDone,watTot:watTot,anyData:any};
+}
+function ckOverallScore(st){
+  var ps=[]; if(st.dietTot)ps.push(st.dietDone/st.dietTot); if(st.supTot)ps.push(st.supDone/st.supTot); if(st.watTot)ps.push(st.watDone/st.watTot);
+  if(!ps.length)return null; return Math.round(ps.reduce(function(a,b){return a+b;},0)/ps.length*100);
+}
+function ckWeekScore(byDate,offset){
+  var rows=ckWeekDates(offset).map(function(k){return byDate[k];}).filter(Boolean);
+  var st=ckPillarStats(rows);
+  return st.anyData?ckOverallScore(st):null;
+}
+function ckStreak(byDate){
+  function good(k){
+    var r=byDate[k]; if(!r) return false;
+    if(r.meals_total && r.meals_done<r.meals_total) return false;
+    if(r.supps_total && r.supps_done<r.supps_total) return false;
+    if(r.water_goal && r.water_glasses<r.water_goal) return false;
+    return true;
+  }
+  var n=0, d=new Date(); d.setHours(0,0,0,0);
+  if(!good(ckDayKey(d))) d.setDate(d.getDate()-1);
+  var guard=0;
+  while(good(ckDayKey(d))){ n++; d.setDate(d.getDate()-1); guard++; if(guard>365)break; }
+  return n;
+}
+// Μέρες από το τελευταίο check-in (Infinity αν δεν υπάρχει κανένα).
+function ckDaysSinceLast(rows){
+  if(!rows || !rows.length) return Infinity;
+  var last=rows[rows.length-1].date;
+  var d0=new Date(last+'T00:00:00'), d1=new Date(); d1.setHours(0,0,0,0);
+  return Math.round((d1-d0)/86400000);
+}
 </script>
 
 </body>

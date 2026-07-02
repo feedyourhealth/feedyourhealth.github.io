@@ -222,7 +222,7 @@
     .pfr{line-height:1.22}
     .pfn{color:#1a1a1a;font-weight:700}
     .pfg{color:#025857;font-weight:700}
-    .pfh{color:#888;font-size:5pt;font-weight:400;margin-left:1px}
+    .pfh{color:#000;font-size:5pt;font-weight:400;margin-left:1px}
     .pmk{font-size:5pt;color:#555;border-top:1px dotted #aac7bf;margin-top:2px;padding-top:1px}
     tr.pmac td{background:#f5faf9;border:1px solid #c5ddd8;border-top:2px solid #025857;padding:3px 4px;font-size:5.5pt;text-align:center;color:#025857}
     td.pmac-lbl{background:#e8f5f4;font-weight:700}
@@ -303,7 +303,7 @@ function token(){const p=new URLSearchParams(location.search);return p.get('t')|
 
 // ── local persistence (per token, per day) ────────────────────────────────
 function lk(key){return 'fyh_portal_'+(token()||'x')+'_'+key}
-function todayKey(){return new Date().toISOString().slice(0,10)}
+function todayKey(){return dKey(new Date())}
 function getWater(){try{const d=JSON.parse(localStorage.getItem(lk('water'))||'{}');return d[todayKey()]||0}catch(e){return 0}}
 function setWater(n){try{const d=JSON.parse(localStorage.getItem(lk('water'))||'{}');d[todayKey()]=n;localStorage.setItem(lk('water'),JSON.stringify(d))}catch(e){}}
 function getShop(){try{return JSON.parse(localStorage.getItem(lk('shop'))||'{}')}catch(e){return {}}}
@@ -319,14 +319,40 @@ function weekDates(){ // Δευτέρα → Κυριακή της τρέχουσ
   const mon=new Date(now); mon.setDate(now.getDate()+toMon); mon.setHours(0,0,0,0);
   const arr=[]; for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);arr.push(d);} return arr;
 }
+// Στέλνει σήμερα's σύνοψη adherence στο Supabase (checkins table) ώστε ο διαιτολόγος να τη δει.
+// Best-effort: αν αποτύχει (offline κτλ) δεν πειράζει, τα localStorage δεδομένα μένουν πάντα η πηγή αλήθειας.
+function pushCheckin(){
+  if(!sb || !SNAP)return;
+  const tok=token(); if(!tok)return;
+  try{
+    const pd=planForDate(new Date()); if(!pd)return;
+    const s=SNAP, h=s.hydration||{}, per=h.glassMl||250;
+    const mealsN=(pd.meals||[]).length;
+    const eaten=getMeals(); let mDone=0; for(let j=0;j<mealsN;j++)if(eaten[j])mDone++;
+    const supCount=(s.supps||[]).length;
+    const todK=dKey(new Date());
+    const suppDay=(getSuppLog()[todK])||{};
+    let sDone=0; (s.supps||[]).forEach(su=>{if(suppDay[su.name])sDone++;});
+    const goalMl=(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
+    const waterGoal=Math.max(6,Math.round(goalMl/per));
+    sb.from('checkins').upsert({
+      token:tok, date:todK,
+      meals_done:mDone, meals_total:mealsN,
+      water_glasses:getWater(), water_goal:waterGoal,
+      supps_done:sDone, supps_total:supCount,
+      updated_at:new Date().toISOString()
+    },{onConflict:'token,date'}).then(()=>{}).catch(()=>{});
+  }catch(e){}
+}
 
 async function boot(){
   const t=token();
   if(!t){return fail('Λείπει ο σύνδεσμος του πλάνου.','Ζήτησε από τον διαιτολόγο σου το σωστό link.')}
   try{
     sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const {data,error}=await sb.from('shared_plans').select('snapshot,client_name,updated_at').eq('token',t).single();
-    if(error||!data){return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να αποσύρθηκε. Ζήτησε νέο link.')}
+    const {data,error}=await sb.from('shared_plans').select('snapshot,client_name,updated_at,expires_at').eq('token',t).single();
+    if(error||!data){return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να έληξε ή να αποσύρθηκε. Ζήτησε νέο link από τον διαιτολόγο σου.')}
+    if(data.expires_at && new Date(data.expires_at)<new Date()){return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο σου να στείλει νέο link.')}
     SNAP=data.snapshot; SNAP._updated=data.updated_at;
     render();
   }catch(e){fail('Πρόβλημα σύνδεσης.',e.message||'Δοκίμασε ξανά σε λίγο.')}
@@ -488,7 +514,7 @@ function viewHome(){
       mm.innerHTML='<span class="mc">'+(eaten[idx]?'<i class="ti ti-check"></i>':'')+'</span>'
         +'<div class="t">'+esc(m.time||'')+'</div>'
         +'<div style="flex:1"><div class="nm">'+esc(m.title||m.label||'Γεύμα')+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+'</div></div>';
-      mm.onclick=()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);go('home');};
+      mm.onclick=()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);pushCheckin();go('home');};
       cp.appendChild(mm);
     });
     cp.appendChild(el('div','empty-glass-note','Πάτα ένα γεύμα όταν το ολοκληρώσεις.'));
@@ -838,9 +864,9 @@ function viewProg(){
   });
   hh+='</div>'; hcp.innerHTML=hh; hc.appendChild(hcp); v.appendChild(hc);
 
-  // ── βάρος & μετρήσεις από τον/την διαιτολόγο (αν υπάρχουν) ──
+  // ── βάρος, σωματική σύνθεση & μετρήσεις από τον/την διαιτολόγο (αν υπάρχουν) ──
   const p=s.progress||{}, log=(p.log||[]).filter(x=>x&&x.kg);
-  if(log.length>=2 || p.waist || p.bodyfat || p.start || p.current || p.goal){
+  if(log.length>=2 || p.waist || p.bodyfat || p.lbm || p.start || p.current || p.goal){
     const stats=el('div','stats');
     stats.innerHTML=statBox('Έναρξη',p.start?String(p.start).replace('.',','):'—','kg')
       +statBox('Τώρα',p.current?String(p.current).replace('.',','):'—',deltaU(p))
@@ -849,33 +875,103 @@ function viewProg(){
     if(log.length>=2){
       const c=el('div','card');const cp=el('div','card-pad');
       cp.appendChild(el('div',null,'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Βάρος (kg)</div>'));
-      cp.appendChild(sparkline(log,p.goal));
+      cp.appendChild(sparklineKey(log,'kg',p.goal,'var(--teal)'));
       c.appendChild(cp);v.appendChild(c);
     }
-    if(p.waist||p.bodyfat){
+    const bfLog=(p.log||[]).filter(x=>x&&x.bf!=null);
+    if(bfLog.length>=2){
       const c=el('div','card');const cp=el('div','card-pad');
-      cp.appendChild(el('div','card-hdr','<i class="ti ti-ruler-2"></i>Μετρήσεις'));
+      cp.appendChild(chartHeader('Σωματικό λίπος (%)',bfLog[bfLog.length-1].bf,'%',bfLog[0].bf,-1));
+      const bands=(p.showBFBands&&s.sex)?bfBands(s.sex):null;
+      cp.appendChild(sparklineKey(bfLog,'bf',p.goalBF,'#c77d11',{bands:bands}));
+      if(bands)cp.appendChild(bfBandsLegend(s.sex));
+      c.appendChild(cp);v.appendChild(c);
+    }else if(p.bodyfat!=null){
+      const c=el('div','card');const cp=el('div','card-pad');
+      cp.innerHTML='<div style="font-size:12px;color:var(--muted)">Σωματικό λίπος (%)</div><div class="empty-glass-note">Χρειάζονται τουλάχιστον 2 μετρήσεις για γράφημα εξέλιξης.</div>';
+      c.appendChild(cp);v.appendChild(c);
+    }
+    const lbmLog=(p.log||[]).filter(x=>x&&x.lbm!=null);
+    if(lbmLog.length>=2){
+      const c=el('div','card');const cp=el('div','card-pad');
+      cp.appendChild(chartHeader('Άλιπη μάζα (kg)',lbmLog[lbmLog.length-1].lbm,' kg',lbmLog[0].lbm,1));
+      cp.appendChild(sparklineKey(lbmLog,'lbm',null,'#1565C0'));
+      c.appendChild(cp);v.appendChild(c);
+    }else if(p.lbm!=null){
+      const c=el('div','card');const cp=el('div','card-pad');
+      cp.innerHTML='<div style="font-size:12px;color:var(--muted)">Άλιπη μάζα (kg)</div><div class="empty-glass-note">Χρειάζονται τουλάχιστον 2 μετρήσεις για γράφημα εξέλιξης.</div>';
+      c.appendChild(cp);v.appendChild(c);
+    }
+    if(p.waist||p.bodyfat||p.lbm){
+      const c=el('div','card');const cp=el('div','card-pad');
+      cp.appendChild(el('div','card-hdr','<i class="ti ti-ruler-2"></i>Τελευταία μέτρηση'));
       let t='<table class="stbl">';
       if(p.waist)t+='<tr><td class="lab">Περιφέρεια μέσης</td><td class="val">'+esc(p.waist)+' cm</td></tr>';
-      if(p.bodyfat)t+='<tr><td class="lab">Λιπώδης μάζα</td><td class="val">'+esc(p.bodyfat)+'%</td></tr>';
+      if(p.bodyfat)t+='<tr><td class="lab">Σωματικό λίπος</td><td class="val">'+esc(p.bodyfat)+'%</td></tr>';
+      if(p.lbm)t+='<tr><td class="lab">Άλιπη μάζα</td><td class="val">'+esc(p.lbm)+' kg</td></tr>';
       t+='</table>';cp.innerHTML+=t;c.appendChild(cp);v.appendChild(c);
     }
   }
   return v;
 }
-function sparkline(log,goal){
+// Headline value + Δ από την αρχή, πάνω από κάθε γράφημα σωματικής σύνθεσης.
+// goodDir: -1 = η μείωση είναι θετική (λίπος), +1 = η αύξηση είναι θετική (άλιπη μάζα).
+function chartHeader(title,curVal,unit,startVal,goodDir){
+  const big='<span style="font-size:18px;font-weight:600;color:var(--teal-d)">'+(curVal!=null?String(curVal).replace('.',','):'—')+unit+'</span>';
+  let deltaTxt='';
+  if(startVal!=null&&curVal!=null){
+    const d=Math.round((curVal-startVal)*10)/10;
+    if(d!==0){
+      const down=d<0;
+      const good=(goodDir<0&&down)||(goodDir>0&&!down);
+      deltaTxt='<span style="font-size:11px;color:'+(good?'var(--ok)':'var(--muted)')+';margin-left:6px">'+(down?'▼':'▲')+' '+Math.abs(d).toString().replace('.',',')+unit+' από την αρχή</span>';
+    }
+  }
+  return el('div',null,'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">'+title+'</span><span>'+big+deltaTxt+'</span></div>');
+}
+// Ζώνες αναφοράς %BF (ACSM) — ίδιες τιμές με το έντυπο λιπομέτρησης της διαιτολόγου.
+function bfBands(sex){
+  return sex==='F'
+    ?[{lo:10,hi:13,col:'#1565C0'},{lo:14,hi:20,col:'#2e7d32'},{lo:21,hi:24,col:'#558b2f'},{lo:25,hi:31,col:'#f57c00'},{lo:32,hi:60,col:'#c62828'}]
+    :[{lo:2,hi:5,col:'#1565C0'},{lo:6,hi:13,col:'#2e7d32'},{lo:14,hi:17,col:'#558b2f'},{lo:18,hi:24,col:'#f57c00'},{lo:25,hi:60,col:'#c62828'}];
+}
+function bfBandsLegend(sex){
+  const labels=['Απαραίτητο','Αθλητικό','Φυσιολογικό','Αποδεκτό','Παχυσαρκία'];
+  const bands=bfBands(sex);
+  let items='';
+  bands.forEach((b,i)=>{items+='<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><span style="width:8px;height:8px;border-radius:2px;background:'+b.col+';display:inline-block"></span>'+labels[i]+'</span>';});
+  return el('div',null,'<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8">'+items+'<div style="margin-top:2px">Τιμές αναφοράς ACSM</div></div>');
+}
+function fmtDateShort(iso){
+  if(!iso)return '';
+  const d=new Date(iso); if(isNaN(d))return '';
+  return d.getDate()+'/'+(d.getMonth()+1);
+}
+function sparklineKey(log,key,goal,color,opts){
+  opts=opts||{};
   const W=300,H=120,padL=8,padB=18,padT=8;
-  const ys=log.map(x=>x.kg);let mn=Math.min(...ys),mx=Math.max(...ys);
-  if(goal){mn=Math.min(mn,goal);mx=Math.max(mx,goal)}
+  const ys=log.map(x=>x[key]);let mn=Math.min(...ys),mx=Math.max(...ys);
+  if(goal!=null){mn=Math.min(mn,goal);mx=Math.max(mx,goal)}
   if(mx-mn<1){mx+=0.5;mn-=0.5}
+  const vpad=(mx-mn)*0.15; mn-=vpad; mx+=vpad;
   const sx=i=>padL+ (i/(log.length-1))*(W-padL-8);
   const sy=v=>padT+(1-(v-mn)/(mx-mn))*(H-padT-padB);
-  let pts=log.map((x,i)=>sx(i)+','+sy(x.kg)).join(' ');
-  let svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Γράφημα βάρους">';
-  if(goal){const gy=sy(goal);svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-8)+'" y2="'+gy+'" stroke="#9fcabf" stroke-width="1" stroke-dasharray="3 3"/><text x="'+(W-46)+'" y="'+(gy-3)+'" font-size="8" fill="var(--teal-l)">στόχος</text>'}
-  svg+='<polyline points="'+pts+'" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
-  svg+='<circle cx="'+sx(0)+'" cy="'+sy(log[0].kg)+'" r="3" fill="var(--teal)"/>';
-  svg+='<circle cx="'+sx(log.length-1)+'" cy="'+sy(log[log.length-1].kg)+'" r="4" fill="var(--teal)"/>';
+  let svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Γράφημα">';
+  if(opts.bands){
+    opts.bands.forEach(b=>{
+      const lo=Math.max(b.lo,mn), hi=Math.min(b.hi,mx);
+      if(hi<=lo)return;
+      const y1=sy(hi), y2=sy(lo);
+      svg+='<rect x="'+padL+'" y="'+y1+'" width="'+(W-padL-8)+'" height="'+(y2-y1)+'" fill="'+b.col+'" opacity="0.12"/>';
+    });
+  }
+  if(goal!=null){const gy=sy(goal);svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-8)+'" y2="'+gy+'" stroke="#9fcabf" stroke-width="1" stroke-dasharray="3 3"/><text x="'+(W-46)+'" y="'+(gy-3)+'" font-size="8" fill="var(--teal-l)">στόχος</text>'}
+  let pts=log.map((x,i)=>sx(i)+','+sy(x[key])).join(' ');
+  svg+='<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  svg+='<circle cx="'+sx(0)+'" cy="'+sy(log[0][key])+'" r="3" fill="'+color+'"/>';
+  svg+='<circle cx="'+sx(log.length-1)+'" cy="'+sy(log[log.length-1][key])+'" r="4" fill="'+color+'"/>';
+  svg+='<text x="'+padL+'" y="'+(H-4)+'" font-size="9" fill="var(--faint)">'+fmtDateShort(log[0].date)+'</text>';
+  svg+='<text x="'+(W-8)+'" y="'+(H-4)+'" font-size="9" fill="var(--faint)" text-anchor="end">'+fmtDateShort(log[log.length-1].date)+'</text>';
   svg+='</svg>';
   const d=el('div');d.innerHTML=svg;return d;
 }
@@ -958,7 +1054,7 @@ function viewSupps(){
         cell.onclick=()=>{
           const lg=getSuppLog(); if(!lg[k])lg[k]={};
           if(lg[k][su.name])delete lg[k][su.name]; else lg[k][su.name]=true;
-          setSuppLog(lg); go('supps');
+          setSuppLog(lg); if(isTod)pushCheckin(); go('supps');
         };
         days.appendChild(cell);
       });
@@ -1010,7 +1106,7 @@ function waterCard(mini){
   for(let i=0;i<totalGlasses;i++){
     const gl=el('span','glass'+(i<have?' on':''),i<have?'':''); // ti-glass-full / ti-glass (use class instead)
     gl.innerHTML=glassSVG(i<have);
-    gl.onclick=()=>{const n=(i<have)?i:i+1;setWater(n);go(curTab())};
+    gl.onclick=()=>{const n=(i<have)?i:i+1;setWater(n);pushCheckin();go(curTab())};
     g.appendChild(gl);
   }
   c.appendChild(g);
