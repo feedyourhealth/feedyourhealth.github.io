@@ -1112,9 +1112,15 @@ function showPlanRegenerationPrompt(c){
     +'Θέλεις να αναδημιουργηθεί το πλάνο με τις νέες τιμές;';
 
   if(confirm(msg)){
-    c.weekPlan={};  // Clear old plan
     c._lastRecalcTime=null;  // Reset recalc time so it doesn't ask again
-    genPlan();
+    var oldPlan = deepClone(c.weekPlan);
+    if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
+      var cmd = new GeneratePlanCommand(c, oldPlan);
+      window.undoRedoManager.execute(cmd);
+    } else {
+      c.weekPlan={};  // Clear old plan
+      genPlan();
+    }
   }
 }
 
@@ -2349,6 +2355,32 @@ function restoreClient(id){
   renderSB();
 }
 
+// ✅ ARCHIVE: separate from soft-delete — hides a client from the active list without marking it for deletion
+function archiveClient(id){
+  var c = clients.find(function(x){return x.id===id;});
+  if(!c) return;
+  c.archived = true;
+  c.archivedAt = new Date().toISOString();
+
+  if(curId===id){
+    curId=null;
+    document.getElementById('main').innerHTML='<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';
+  }
+
+  save();
+  renderSB();
+}
+
+function unarchiveClient(id){
+  var c = clients.find(function(x){return x.id===id;});
+  if(!c) return;
+  c.archived = false;
+  delete c.archivedAt;
+
+  save();
+  renderSB();
+}
+
 function permanentlyDeleteClient(id){
   if(!confirm('Διαγραφή ΜΟΝΙΜΑ; Δεν θα μπορείς να ανακτήσεις τα δεδομένα!')) return;
 
@@ -2399,6 +2431,13 @@ function getC(){return clients.filter(function(c){return c.id===curId;})[0];}
 
 var _clientSearchTerm='';
 function filterClients(val){_clientSearchTerm=(val||'').toLowerCase().trim();renderSB();}
+var _clientFilterGoal='';
+var _clientFilterSport='';
+function setClientFilter(type,val){
+  if(type==='goal') _clientFilterGoal=val;
+  else if(type==='sport') _clientFilterSport=val;
+  renderSB();
+}
 function loadTestClientBasilina(){
   var basilina = {
     id: 'basilina-perisiou-' + Date.now(),
@@ -2453,12 +2492,18 @@ function progressBadge(c){
 }
 function renderSB(){
   var term=_clientSearchTerm;
-  // ✅ FILTER: Exclude deleted clients from main list
-  var list=term?clients.filter(function(c){return !c.deleted && (c.name||'Νέος πελάτης').toLowerCase().indexOf(term)>-1;}):clients.filter(function(c){return !c.deleted;});
+  // ✅ FILTER: Exclude deleted + archived clients from the main list
+  var base=clients.filter(function(c){return !c.deleted && !c.archived;});
+  var list=base.filter(function(c){
+    if(term && (c.name||'Νέος πελάτης').toLowerCase().indexOf(term)===-1) return false;
+    if(_clientFilterGoal && c.goal!==_clientFilterGoal) return false;
+    if(_clientFilterSport && c.sport!==_clientFilterSport) return false;
+    return true;
+  });
   // ✅ Sort by lastAccess (most recent first)
   list.sort(function(a,b){return(b.lastAccess||0)-(a.lastAccess||0);});
   var html='';
-  if(term&&list.length===0){
+  if((term||_clientFilterGoal||_clientFilterSport)&&list.length===0){
     html='<div style="font-size:11px;color:#bbb;padding:6px 10px;font-style:italic">Κανένα αποτέλεσμα</div>';
   } else {
     list.forEach(function(c){
@@ -2469,10 +2514,29 @@ function renderSB(){
         +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999;gap:6px">'
         +'<span>'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
         +progressBadge(c)
-        +'<button class="cdel" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
+        +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
+        +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
         +'</div>'
         +'</div>';
     });
+  }
+
+  // ✅ ARCHIVE SECTION: Show archived (but not deleted) clients
+  var archivedClients = clients.filter(function(c){return c.archived && !c.deleted;});
+  if(archivedClients.length > 0 && !term){
+    html+='<div style="border-top:1px solid #f0f0f0;margin-top:10px;padding-top:10px;">';
+    html+='<div style="font-size:10px;font-weight:700;color:#999;padding:6px 10px;text-transform:uppercase;letter-spacing:0.5px">📦 Αρχειοθετημένοι ('+archivedClients.length+')</div>';
+    archivedClients.forEach(function(c){
+      html+='<div class="ci" style="background:#fafafa;opacity:0.7;padding:8px;">'
+        +'<div class="ci-name" style="color:#999;">'+(c.name||'Νέος πελάτης')+'</div>'
+        +'<div class="ci-info" style="color:#bbb;font-size:9px;">Αρχειοθετήθηκε</div>'
+        +'<div style="display:flex;gap:4px;margin-top:6px;">'
+        +'<button style="flex:1;padding:5px;font-size:10px;background:#4CAF50;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:600;" onclick="event.stopPropagation();unarchiveClient(\''+c.id+'\');renderSB()">↶ Επαναφορά</button>'
+        +'<button style="flex:1;padding:5px;font-size:10px;background:#c62828;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:600;" onclick="event.stopPropagation();deleteClient(\''+c.id+'\');renderSB()">🗑️ Διαγραφή</button>'
+        +'</div>'
+        +'</div>';
+    });
+    html+='</div>';
   }
 
   // ✅ TRASH SECTION: Show deleted clients
@@ -2493,8 +2557,8 @@ function renderSB(){
     html+='</div>';
   }
 
-  if(!term&&clients.filter(function(c){return !c.deleted;}).length>0){
-    html+='<div style="font-size:9px;color:#999;padding:6px 10px;text-align:center;margin-top:8px;font-weight:500;">'+clients.filter(function(c){return !c.deleted;}).length+' πελάτες</div>';
+  if(!term&&base.length>0){
+    html+='<div style="font-size:9px;color:#999;padding:6px 10px;text-align:center;margin-top:8px;font-weight:500;">'+list.length+(list.length!==base.length?' / '+base.length:'')+' πελάτες</div>';
   }
   document.getElementById('client-list').innerHTML=html;
 
@@ -2613,7 +2677,7 @@ function renderTmplTable(){
           +'</div>'
           +'<input class="chip-g" type="number" min="0" step="'+(tDisplayUnit==='g'||!tfu?'1':'0.1')+'" max="'+tMax+'" value="'+tVal+'" onchange="'+tChg+'">'
           +'<span class="chip-unit">'+tUnit+'</span>'
-          +'<button class="chip-del" onclick="tmplDelF('+d+','+mi+','+fi+')">&#10005;</button>'
+          +'<button class="chip-del" onclick="tmplDelF('+d+','+mi+','+fi+')" aria-label="Διαγραφή τροφίμου">&#10005;</button>'
           +'</div>';
       });
       html+='<button class="chip-add" onclick="tmplAddF('+d+','+mi+')">+</button></td>';

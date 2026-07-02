@@ -1084,6 +1084,7 @@ function genPlan(){
             meal.foods = deepClone(libMeal.foods);
             if(libMeal.mealTiming) meal.mealTiming = libMeal.mealTiming;
             meal.fromLibrary = true;  // tag for UI/debug
+            meal.source = 'library';  // for the meal-source badge in renderWeekTable
             continue;  // Use real approved meal from a template client
           }
         }
@@ -1093,6 +1094,7 @@ function genPlan(){
         if(recipeMeal && recipeMeal.foods && recipeMeal.foods.length > 0){
           meal.foods = deepClone(recipeMeal.foods);
           meal.recipeId = recipeMeal.recipeId;  // Track which recipe was used
+          meal.source = 'recipe';
           continue;  // Use chef-inspired recipe
         }
 
@@ -1102,6 +1104,7 @@ function genPlan(){
           if(savedMeal && savedMeal.foods && savedMeal.foods.length > 0){
             meal.foods = deepClone(savedMeal.foods);
             if(savedMeal.mealTiming) meal.mealTiming = savedMeal.mealTiming;
+            meal.source = 'saved';
             continue;  // Use saved combo
           }
         }
@@ -1112,12 +1115,14 @@ function genPlan(){
         if(smartMeal && smartMeal.foods && smartMeal.foods.length > 0){
           meal.foods = deepClone(smartMeal.foods);
           if(smartMeal.mealTiming) meal.mealTiming = smartMeal.mealTiming;
+          meal.source = 'generated';
           continue;  // Use smart meal
         }
 
         // Priority 3: Keep template meal (graceful fallback, always works)
         // Template meals are already good (Mediterranean rules applied above)
         // So no action needed - just use the original template meal
+        meal.source = 'template';
       }
     }
   }
@@ -1413,6 +1418,40 @@ function getSupplementRecommendations(c){
   return rec;
 }
 
+// Ποιο "tier" παρήγαγε το γεύμα (πρόγραμμα Priority 0-3 στο genPlan) — μικρό badge ενημέρωσης, όχι λειτουργικό
+function mealSourceBadge(meal){
+  if(!meal) return '';
+  var src = meal.source || (meal.fromLibrary ? 'library' : (meal.recipeId ? 'recipe' : null));
+  if(!src) return '';
+  var MAP = {
+    library:   {icon:'⭐', label:'Πρότυπο γεύσης', bg:'#fff8e1', color:'#f9a825'},
+    recipe:    {icon:'👨‍🍳', label:'Recipe', bg:'#e3f2fd', color:'#1565C0'},
+    saved:     {icon:'💾', label:'Αποθηκευμένο', bg:'#e8f5e9', color:'#2e7d32'},
+    generated: {icon:'✨', label:'Δημιουργήθηκε', bg:'#f3e5f5', color:'#8e24aa'},
+    template:  {icon:'📋', label:'Πρότυπο', bg:'#f5f5f5', color:'#757575'}
+  };
+  var m = MAP[src];
+  if(!m) return '';
+  return '<span class="meal-source-badge" style="display:block;font-size:8px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:3px;background:'+m.bg+';color:'+m.color+';width:fit-content" title="Πηγή γεύματος: '+m.label+'">'+m.icon+' '+m.label+'</span>';
+}
+
+// Ξαναδημιουργεί ΜΟΝΟ μία ημέρα (όχι όλη την εβδομάδα) — τρέχει το κανονικό genPlan εσωτερικά
+// και κρατάει μόνο το αποτέλεσμα της ζητούμενης ημέρας, επαναφέροντας τις υπόλοιπες όπως ήταν.
+function regenerateDay(dayIndex){
+  var c=getC();
+  if(!c || !c.weekPlan || !Object.keys(c.weekPlan).length) return;
+  if(!confirm('Αναδημιουργία μόνο της ημέρας «'+DAYS[dayIndex]+'»;')) return;
+
+  var oldPlan = deepClone(c.weekPlan);
+  genPlan();
+  var newDay = deepClone(c.weekPlan[dayIndex]);
+  c.weekPlan = deepClone(oldPlan);
+  c.weekPlan[dayIndex] = newDay;
+  save();
+  renderWeekTable();
+  showSuccessToast('🔄 Η ημέρα «'+DAYS[dayIndex]+'» αναδημιουργήθηκε!');
+}
+
 function renderWeekTable(){
   var c=getC();var con=document.getElementById('week-con');if(!con)return;
   if(!c||!Object.keys(c.weekPlan).length){con.innerHTML='<div style="padding:20px;color:#bbb;font-size:12px">Δεν υπάρχει πλάνο — πάτα «Δημιουργία πλάνου»</div>';return;}
@@ -1495,8 +1534,9 @@ function renderWeekTable(){
     if(trainD[di]&&c.sport){
       sportStr='<div class="sport-header-dietitian" style="font-size:9px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
     }
-    var copyBtn='<button class="day-copy-btn" onclick="copyDayPrompt(this,'+di+')" title="Αντιγραφή ημέρας σε άλλες">📋</button>';
-    html+='<th>'+d+badge+timeStr+sportStr+copyBtn+'</th>';
+    var copyBtn='<button class="day-copy-btn" onclick="copyDayPrompt(this,'+di+')" title="Αντιγραφή ημέρας σε άλλες" aria-label="Αντιγραφή ημέρας σε άλλες">📋</button>';
+    var regenDayBtn='<button class="day-regen-btn" onclick="regenerateDay('+di+')" title="Αναδημιουργία μόνο αυτής της ημέρας" aria-label="Αναδημιουργία μόνο αυτής της ημέρας">🔄</button>';
+    html+='<th>'+d+badge+timeStr+sportStr+copyBtn+regenDayBtn+'</th>';
   });
   html+='</tr></thead><tbody>';
 
@@ -1516,8 +1556,8 @@ function renderWeekTable(){
     html+='<tr style="background:linear-gradient(90deg, #f8f8f8 0%, #f0f0f0 100%);box-shadow:0 2px 4px rgba(0,0,0,0.05)"><td colspan="8" class="meal-section-header" data-timing-info="'+timingInfo+'">'
       +'<span style="font-weight:700;color:#025857;font-size:12px">'+timingProf.icon+' '+mealNames[mi]+'</span>'
       +timingBadge
-      +'<button onclick="renameMealSlot('+mi+')" title="Μετονομασία γεύματος" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:0.55;margin-left:6px" class="meal-slot-ctl">✏️</button>'
-      +'<button onclick="deleteMealSlot('+mi+')" title="Διαγραφή γεύματος (όλες τις ημέρες)" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:0.55" class="meal-slot-ctl">🗑️</button>'
+      +'<button onclick="renameMealSlot('+mi+')" title="Μετονομασία γεύματος" aria-label="Μετονομασία γεύματος" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:0.55;margin-left:6px" class="meal-slot-ctl">✏️</button>'
+      +'<button onclick="deleteMealSlot('+mi+')" title="Διαγραφή γεύματος (όλες τις ημέρες)" aria-label="Διαγραφή γεύματος (όλες τις ημέρες)" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:0.55" class="meal-slot-ctl">🗑️</button>'
       +'</td></tr>';
     var rowBg=(mi%2===0)?'background:#fafafa':'background:#fff';
     html+='<tr style="'+rowBg+'"><td class="meal-label" style="visibility:hidden"></td>';
@@ -1529,12 +1569,13 @@ function renderWeekTable(){
         dayMealTiming=c.weekPlan[d][mi].mealTiming;
       }
       html+='<td class="day-cell" data-d="'+d+'" data-mi="'+mi+'" data-meal-timing="'+dayMealTiming+'" style="'+rowBg+'">';
+      html+=mealSourceBadge(c.weekPlan[d]&&c.weekPlan[d][mi]);
       foods.forEach(function(food,fi){
         // Free meal special display
         if(food.n===FREE_MEAL_MARKER){
           html+='<div style="text-align:center;padding:6px 4px;background:#fff8e1;border:1px dashed #f9a825;border-radius:7px;margin-bottom:2px">'
             +'<span style="font-size:11px;font-weight:700;color:#f57f17">🎉 Ελεύθερο γεύμα</span>'
-            +'<button class="chip-del" onclick="delF('+d+','+mi+','+fi+')" style="margin-left:4px;color:#f9a825">&#10005;</button>'
+            +'<button class="chip-del" onclick="delF('+d+','+mi+','+fi+')" aria-label="Διαγραφή τροφίμου" style="margin-left:4px;color:#f9a825">&#10005;</button>'
             +'</div>';
           return;
         }
@@ -1555,8 +1596,8 @@ function renderWeekTable(){
           chipChg = 'updG('+d+','+mi+','+fi+',this.value*'+fu.g+')';
         }
         var chipUnit = pluralUnit(displayUnit, chipVal);
-        var hasIng=((FOODS[food.n]&&FOODS[food.n].ingredients)||(typeof FYH_RECIPE_EXPAND!=='undefined'&&FYH_RECIPE_EXPAND[food.n]))?'<button class="chip-srv" onclick="showRecipeModal(\''+food.n.replace(/'/g,"\\'")+'\')" title="Δείτε τα συστατικά">📖</button>':'';
-        var hasExpand=FYH_RECIPE_EXPAND[food.n]?'<button class="chip-srv" onclick="expandRecipeInPlan('+d+','+mi+','+fi+')" title="Άνοιγμα υλικών — επεξεργασία ποσοτήτων">🔽</button>':'';
+        var hasIng=((FOODS[food.n]&&FOODS[food.n].ingredients)||(typeof FYH_RECIPE_EXPAND!=='undefined'&&FYH_RECIPE_EXPAND[food.n]))?'<button class="chip-srv" onclick="showRecipeModal(\''+food.n.replace(/'/g,"\\'")+'\')" title="Δείτε τα συστατικά" aria-label="Δείτε τα συστατικά">📖</button>':'';
+        var hasExpand=FYH_RECIPE_EXPAND[food.n]?'<button class="chip-srv" onclick="expandRecipeInPlan('+d+','+mi+','+fi+')" title="Άνοιγμα υλικών — επεξεργασία ποσοτήτων" aria-label="Άνοιγμα υλικών — επεξεργασία ποσοτήτων">🔽</button>':'';
         var borderColor=getFoodColorHex(food.n);
         html+='<div class="food-chip">'
           +'<div class="chip-r1">'
@@ -1570,12 +1611,12 @@ function renderWeekTable(){
           +'<div class="chip-r2">'
           +hasIng
           +hasExpand
-          +(hasSrv?'<button class="chip-srv" onmousedown="event.preventDefault();showPortions(this,'+d+','+mi+','+fi+')">&#8801;</button>':'')
+          +(hasSrv?'<button class="chip-srv" onmousedown="event.preventDefault();showPortions(this,'+d+','+mi+','+fi+')" aria-label="Μερίδες">&#8801;</button>':'')
           +'<input class="chip-g" type="number" min="0" step="'+(displayUnit==='g'||!fu?'1':'0.1')+'" max="'+chipMax+'" value="'+chipVal+'" onchange="'+chipChg+'">'
-          +'<button class="chip-unit-btn" onclick="cycleUnit('+d+','+mi+','+fi+')" title="Αλλαγή μονάδας">'+chipUnit+'</button>'
+          +'<button class="chip-unit-btn" onclick="cycleUnit('+d+','+mi+','+fi+')" title="Αλλαγή μονάδας" aria-label="Αλλαγή μονάδας">'+chipUnit+'</button>'
           +(fu&&fu.u==='μερίδ.'?'<span class="chip-ghint">('+food.g+'g)</span>':'')
-          +'<button class="chip-swap-btn" onclick="swapMealAlternative('+d+','+mi+')" title="Εναλλακτικό γεύμα">🔄</button>'
-          +'<button class="chip-del" onclick="delF('+d+','+mi+','+fi+')">&#10005;</button>'
+          +'<button class="chip-swap-btn" onclick="showMealAlternatives('+d+','+mi+')" title="Εναλλακτικό γεύμα" aria-label="Εναλλακτικό γεύμα">🔄</button>'
+          +'<button class="chip-del" onclick="delF('+d+','+mi+','+fi+')" aria-label="Διαγραφή τροφίμου">&#10005;</button>'
           +'</div>'
           +'</div>';
         // Recipe ingredients — visible only in print/PDF

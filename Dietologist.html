@@ -89,9 +89,32 @@
 <!-- APP -->
 <div class="app" style="display:none;" id="app-container">
 <div class="sb" id="sidebar">
-  <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" title="Ανοίγ/Κλείσιμο">☰</button>
+  <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" title="Ανοίγ/Κλείσιμο" aria-label="Άνοιγμα/Κλείσιμο πλαϊνής μπάρας">☰</button>
   <div class="sb-title">Πελάτες</div>
-  <input type="text" id="client-search" class="client-search-inp" placeholder="🔍 Αναζήτηση πελάτη..." oninput="filterClients(this.value)">
+  <input type="text" id="client-search" class="client-search-inp" placeholder="🔍 Αναζήτηση πελάτη..." aria-label="Αναζήτηση πελάτη" oninput="filterClients(this.value)">
+  <div style="display:flex;gap:4px;margin:4px 0 6px;">
+    <select id="client-filter-goal" aria-label="Φίλτρο στόχου" onchange="setClientFilter('goal',this.value)" style="flex:1;font-size:10px;padding:3px 2px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">
+      <option value="">Όλοι οι στόχοι</option>
+      <option value="loss">Απώλεια βάρους</option>
+      <option value="mild">Ήπια απώλεια</option>
+      <option value="maintain">Διατήρηση</option>
+      <option value="gain">Αύξηση μάζας</option>
+    </select>
+    <select id="client-filter-sport" aria-label="Φίλτρο αθλήματος" onchange="setClientFilter('sport',this.value)" style="flex:1;font-size:10px;padding:3px 2px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">
+      <option value="">Όλα τα αθλήματα</option>
+      <option value="bjj">🥋 BJJ</option>
+      <option value="boxing">🥊 Boxing</option>
+      <option value="mma">🤼 MMA</option>
+      <option value="football">⚽ Ποδόσφαιρο</option>
+      <option value="basketball">🏀 Μπάσκετ</option>
+      <option value="weightlifting">🏋️ Weightlifting</option>
+      <option value="cycling">🚴 Ποδηλασία</option>
+      <option value="running">🏃 Τρέξιμο</option>
+      <option value="swimming">🏊 Κολύμβηση</option>
+      <option value="crossfit">⚡ CrossFit</option>
+      <option value="custom">✏️ Προσαρμοσμένο</option>
+    </select>
+  </div>
   <div id="client-list"></div>
   <button class="add-btn" onclick="addClient()">+ Νέος πελάτης</button>
   <div class="sb-sep"></div>
@@ -2131,152 +2154,6 @@ function getDayStatus(dayTotals, targetTotals){
   }
 }
 
-function swapMealAlternative(dayIndex, mealIndex){
-  // Quick meal swap - find alternative of same calorie range
-  var c = getC();
-  if(!c || !c.weekPlan || !c.weekPlan[dayIndex]) return;
-
-  var currentMeal = c.weekPlan[dayIndex][mealIndex];
-  if(!currentMeal) return;
-
-  // Calculate current meal calories
-  var currentKcal = 0;
-  if(currentMeal.foods){
-    currentMeal.foods.forEach(function(food){
-      var v = cm(food.n, food.g || 0);
-      if(v){ currentKcal += v.k; }
-    });
-  }
-
-  // Try to generate alternative with same calorie target
-  if(typeof generateSmartMeal === 'function'){
-    var altMeal = generateSmartMeal(Math.round(currentKcal), null, dayIndex);
-    if(altMeal && altMeal.foods && altMeal.foods.length > 0){
-      currentMeal.foods = altMeal.foods;
-      upd();
-      renderWeekTable();
-      showSuccessToast('🔄 Γεύμα ανταλλάχθηκε!');
-      return;
-    }
-  }
-
-  showErrorToast('❌ Δεν μπορέσαμε να βρούμε εναλλακτική');
-}
-
-// ✅ MEAL ALTERNATIVES - Show 3-4 alternative meals with same macros
-function showMealAlternativesModal(mealIndex){
-  var c = getC();
-  if(!c || !c.weekPlan || c.weekPlan.length === 0) return;
-
-  // Get first day's meal as reference
-  var refMeal = c.weekPlan[0][mealIndex];
-  if(!refMeal || !refMeal.foods) return;
-
-  // Calculate reference meal macros
-  var refMacros = { k: 0, p: 0, f: 0, c: 0 };
-  refMeal.foods.forEach(function(f){
-    var v = cm(f.n, f.g);
-    refMacros.k += v.k;
-    refMacros.p += v.p;
-    refMacros.f += v.f;
-    refMacros.c += v.c;
-  });
-
-  // Get alternatives using correct function call
-  var excl = c.foodExclusions || [];
-  var alternatives = generateDiverseAlternatives(Math.round(refMacros.k), 0, excl, refMeal.name, 3, { k: refMacros.k, p: refMacros.p, f: refMacros.f, c: refMacros.c });
-
-  // Create modal
-  var modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:white;border-radius:12px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:500px;width:95%;max-height:70vh;overflow-y:auto';
-
-  var mealName = (c.weekPlan[0][mealIndex] && c.weekPlan[0][mealIndex].name) ? c.weekPlan[0][mealIndex].name : 'Γεύμα';
-
-  var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #2196F3;padding-bottom:10px;">';
-  html += '<h2 style="color:#2196F3;margin:0;font-size:14px;">🔄 Εναλλακτικά ' + mealName + '</h2>';
-  html += '<button onclick="this.closest(\'div\').parentElement.remove()" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>';
-  html += '</div>';
-
-  html += '<div style="margin-bottom:10px;padding:10px;background:#e3f2fd;border-left:4px solid #2196F3;border-radius:4px;font-size:11px;color:#1565C0;">';
-  html += '<b>Τρέχον γεύμα:</b> P:' + Math.round(refMacros.p) + 'g | F:' + Math.round(refMacros.f) + 'g | C:' + Math.round(refMacros.c) + 'g | <b>' + Math.round(refMacros.k) + ' kcal</b>';
-  html += '</div>';
-
-  html += '<div style="display:flex;flex-direction:column;gap:10px;">';
-
-  (alternatives || []).slice(0, 3).forEach(function(alt, idx){
-    if(!alt || !alt.foods) return;
-
-    var altMacros = { k: 0, p: 0, f: 0, c: 0 };
-    alt.foods.forEach(function(f){
-      var v = cm(f.n, f.g);
-      altMacros.k += v.k;
-      altMacros.p += v.p;
-      altMacros.f += v.f;
-      altMacros.c += v.c;
-    });
-
-    var diffK = Math.round(altMacros.k - refMacros.k);
-    var diffLabel = diffK > 0 ? '+' + diffK : '' + diffK;
-
-    html += '<button onclick="replaceMealAllDays(' + mealIndex + ', ' + idx + ');this.closest(\'div\').parentElement.remove();" ';
-    html += 'style="padding:12px;background:#f9f9f9;border:1.5px solid #e0e0e0;border-radius:6px;cursor:pointer;text-align:left;transition:all 0.2s ease;" ';
-    html += 'onmouseover="this.style.background=\'#e3f2fd\';this.style.borderColor=\'#2196F3\';" ';
-    html += 'onmouseout="this.style.background=\'#f9f9f9\';this.style.borderColor=\'#e0e0e0\';">';
-
-    // Foods list
-    var foodsList = alt.foods.map(function(f){ return f.n + ' (' + f.g + 'g)'; }).join(', ');
-    html += '<div style="font-weight:600;color:#025857;margin-bottom:4px;font-size:11px;">📍 ' + foodsList + '</div>';
-    html += '<div style="font-size:10px;color:#666;"><b>P:</b>' + Math.round(altMacros.p) + 'g | <b>F:</b>' + Math.round(altMacros.f) + 'g | <b>C:</b>' + Math.round(altMacros.c) + 'g | <b style="color:#E65100">' + Math.round(altMacros.k) + ' kcal</b> <span style="color:' + (diffK > 0 ? '#c62828' : '#2e7d32') + '">' + diffLabel + '</span></div>';
-    html += '</button>';
-  });
-
-  html += '</div>';
-  html += '<div style="margin-top:15px;padding-top:15px;border-top:1px solid #e0e0e0;">';
-  html += '<button onclick="this.closest(\'div\').parentElement.remove()" style="width:100%;padding:10px;background:#ddd;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Κλείσιμο</button>';
-  html += '</div>';
-
-  modal.innerHTML = html;
-  document.body.appendChild(modal);
-
-  // Close on background click
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:999';
-  overlay.onclick = function(){ modal.remove(); overlay.remove(); };
-  document.body.insertBefore(overlay, modal);
-}
-
-function replaceMealAllDays(mealIndex, altIndex){
-  var c = getC();
-  if(!c || !c.weekPlan) return;
-
-  // Get reference meal macros
-  var refMeal = c.weekPlan[0][mealIndex];
-  var refMacros = { k: 0, p: 0, f: 0, c: 0 };
-  refMeal.foods.forEach(function(f){
-    var v = cm(f.n, f.g);
-    refMacros.k += v.k;
-    refMacros.p += v.p;
-    refMacros.f += v.f;
-    refMacros.c += v.c;
-  });
-
-  // Get alternative with correct parameters
-  var excl = c.foodExclusions || [];
-  var alternatives = generateDiverseAlternatives(Math.round(refMacros.k), 0, excl, refMeal.name, 3, { k: refMacros.k, p: refMacros.p, f: refMacros.f, c: refMacros.c });
-  var altMeal = alternatives && alternatives[altIndex] ? alternatives[altIndex] : null;
-
-  if(!altMeal) return;
-
-  // Replace in all 7 days
-  for(var d = 0; d < 7; d++){
-    c.weekPlan[d][mealIndex] = deepClone(altMeal);
-  }
-
-  save();
-  renderWeekTable();
-  showSuccessToast('✅ Γεύμα αντικαταστάθηκε σε όλες τις ημέρες!');
-}
-
 function deleteMealAllDays(mealIndex){
   if(!confirm('Σίγουρα θέλετε να διαγράψετε αυτό το γεύμα από όλες τις ημέρες;')) return;
 
@@ -3134,6 +3011,7 @@ function saveFoodExclusions(){
       var row={token:tok, dietitian_id:this.user.id, snapshot:snap, client_name:c.name||'', updated_at:new Date().toISOString(), expires_at:expiresAt};
       return this.sb.from('shared_plans').upsert(row,{onConflict:'token'}).then(function(res){
         if(res.error) throw res.error;
+        c._publishedPlanHash=self._hashPlan(c.weekPlan);   // ώστε να ξέρουμε αν ο σύνδεσμος «μπαγιατεύει» μετά από επόμενη επεξεργασία
         try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
         return {url:self.PORTAL_BASE+'?t='+tok, expiresAt:expiresAt};
       });
@@ -3145,8 +3023,21 @@ function saveFoodExclusions(){
       return this.sb.from('shared_plans').delete().eq('token',tok).then(function(res){
         if(res.error) throw res.error;
         delete c.shareToken;
+        delete c._publishedPlanHash;
         try{ if(typeof save==='function') save(); }catch(e){}
       });
+    },
+
+    // Απλό, μη κρυπτογραφικό hash — μόνο για να εντοπίζουμε ότι το πλάνο άλλαξε μετά τη δημοσίευση, χωρίς να διπλασιάζουμε το αποθηκευμένο μέγεθος με ολόκληρο clone.
+    _hashPlan:function(weekPlan){
+      var str=JSON.stringify(weekPlan||{}), h=0;
+      for(var i=0;i<str.length;i++){ h=(Math.imul(31,h)+str.charCodeAt(i))|0; }
+      return h;
+    },
+
+    // Το πλάνο δημοσιεύτηκε αλλά έχει επεξεργαστεί έκτοτε — ο σύνδεσμος του πελάτη δείχνει παλιά δεδομένα.
+    isStale:function(c){
+      return !!(c && c.shareToken && c._publishedPlanHash!=null && this._hashPlan(c.weekPlan)!==c._publishedPlanHash);
     },
 
     // Μετατρέπει τον πελάτη σε καθαρό read-only snapshot για το portal.

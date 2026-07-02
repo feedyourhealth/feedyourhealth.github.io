@@ -350,6 +350,7 @@ function renderMain(){
     +'<button class="btn secondary" onclick="exportPDF()">&#8659; PDF</button>'
     +'<button class="btn secondary" onclick="exportPDF(\'en\')">&#8659; PDF (English)</button>'
     +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857" onclick="openPublishModal()" title="Δημιούργησε σύνδεσμο για να δει ο πελάτης το πλάνο στο κινητό του">&#128241; Στείλε στον πελάτη</button>'
+    +((window.Cloud && window.Cloud.isStale(c))?'<span style="background:#fff3e0;color:#e65100;border:1px solid #ffb300;border-radius:12px;padding:5px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;" title="Το πλάνο άλλαξε μετά την τελευταία δημοσίευση. Πάτα «Στείλε στον πελάτη» ξανά για να ενημερωθεί ο σύνδεσμος του πελάτη.">&#9888;&#65039; Ο σύνδεσμος πελάτη είναι ξεπερασμένος</span>':'')
     +'<button class="btn save-tmpl-btn" style="margin-left:auto" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button></div>'
     +'<div id="save-tmpl-panel" class="save-tmpl-panel" style="display:none">'
     +'<span class="save-tmpl-lbl">Όνομα:</span>'

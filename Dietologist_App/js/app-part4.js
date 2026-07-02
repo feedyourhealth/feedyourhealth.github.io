@@ -2342,8 +2342,14 @@ function regeneratePlan(){
   var lastPlanIndex = TRACKING_DATA.plans.length - 1;
   logRegenerate(lastPlanIndex);
 
-  // Generate new plan
-  genPlan();
+  // Generate new plan (through undo/redo so this regeneration can be undone too)
+  var oldPlan = deepClone(c.weekPlan);
+  if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
+    var cmd = new GeneratePlanCommand(c, oldPlan);
+    window.undoRedoManager.execute(cmd);
+  } else {
+    genPlan();
+  }
   alert('Το σχέδιο δημιουργήθηκε ξανά. Το σύστημα θα μάθει από αυτό!');
 }
 
