@@ -1575,7 +1575,15 @@ function renderWeekTable(){
         var hasIng=((FOODS[food.n]&&FOODS[food.n].ingredients)||(typeof FYH_RECIPE_EXPAND!=='undefined'&&FYH_RECIPE_EXPAND[food.n]))?'<button class="chip-srv" onclick="showRecipeModal(\''+food.n.replace(/'/g,"\\'")+'\')" title="Δείτε τα συστατικά" aria-label="Δείτε τα συστατικά">📖</button>':'';
         var hasExpand=FYH_RECIPE_EXPAND[food.n]?'<button class="chip-srv" onclick="expandRecipeInPlan('+d+','+mi+','+fi+')" title="Άνοιγμα υλικών — επεξεργασία ποσοτήτων" aria-label="Άνοιγμα υλικών — επεξεργασία ποσοτήτων">🔽</button>':'';
         var borderColor=getFoodColorHex(food.n);
+        var rvTip=cm(food.n,food.g);
+        var macroTip='<div class="chip-macro-tip">'
+          +'<span style="color:#1565C0">P '+Math.round(rvTip.p)+'</span> '
+          +'<span style="color:#B71C1C">F '+Math.round(rvTip.f)+'</span> '
+          +'<span style="color:#2E7D32">C '+Math.round(rvTip.c)+'</span> '
+          +'<span style="color:#E65100;font-weight:700">&middot; '+Math.round(rvTip.k)+' kcal</span>'
+          +'</div>';
         html+='<div class="food-chip">'
+          +macroTip
           +'<div class="chip-r1">'
           +'<span class="food-dot" style="background:'+borderColor+'" title="Ομάδα τροφίμου"></span>'
           +'<div class="chip-name-wrap">'

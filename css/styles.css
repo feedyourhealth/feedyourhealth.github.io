@@ -203,6 +203,8 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 /* ✅ Action buttons appear on hover only (cleaner cells) */
 .food-chip .chip-swap-btn,.food-chip .chip-del,.food-chip .chip-srv{opacity:0;transition:opacity .12s ease}
 .food-chip:hover .chip-swap-btn,.food-chip:hover .chip-del,.food-chip:hover .chip-srv{opacity:1}
+.chip-macro-tip{position:absolute;left:2px;bottom:calc(100% + 4px);background:#fff;border:1px solid #ddd;border-radius:5px;padding:3px 7px;font-size:10px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.15);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .12s ease;z-index:60}
+.food-chip:hover .chip-macro-tip{opacity:1;visibility:visible}
 .food-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .chip-r1{display:flex;align-items:center;gap:5px}
 .chip-r2{display:flex;align-items:center;gap:4px;justify-content:flex-end}
