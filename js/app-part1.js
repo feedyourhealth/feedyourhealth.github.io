@@ -2154,6 +2154,8 @@ function validateClientData(client) {
 function showValidationErrors(errors) {
   if(errors.length === 0) return true;
 
+  if(typeof revealSectionsForErrors==='function') revealSectionsForErrors(errors);
+
   var message = 'Παρακαλώ διορθώστε τα εξής σφάλματα:\n\n';
   errors.forEach(function(err) {
     message += '• ' + (VALIDATION_MESSAGES_GR[err] || err) + '\n';
