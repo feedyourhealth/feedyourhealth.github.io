@@ -3235,17 +3235,17 @@ function buildPlanHistoryHtmlInner(c){
 
   // Comparison section
   if(c.savedPlans.length>1){
-    var first=c.savedPlans[0].macros||{k:0,p:0,f:0,c:0};
+    var prev=c.savedPlans[c.savedPlans.length-2].macros||{k:0,p:0,f:0,c:0};
     var last=c.savedPlans[c.savedPlans.length-1].macros||{k:0,p:0,f:0,c:0};
-    var kDiff=last.k-first.k;
-    var pDiff=last.p-first.p;
-    var fDiff=last.f-first.f;
+    var kDiff=last.k-prev.k;
+    var pDiff=last.p-prev.p;
+    var fDiff=last.f-prev.f;
     html+='<div style="background:#f0f8ff;border:1px solid #b3e5fc;border-radius:8px;padding:12px;margin-bottom:16px">'
-      +'<div style="font-weight:600;color:#0277bd;margin-bottom:8px">📊 Σύγκριση Πρώτου vs Τελευταίου:</div>'
+      +'<div style="font-weight:600;color:#0277bd;margin-bottom:8px">📊 Σύγκριση Τελευταίων 2 Πλάνων:</div>'
       +'<div style="font-size:12px;line-height:1.8;display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-      +'<div>Kcal: '+first.k+' → '+last.k+' <span style="color:'+(kDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(kDiff>0?'+':'')+kDiff+')</span></div>'
-      +'<div>Πρωτεΐνες: '+first.p+'g → '+last.p+'g <span style="color:'+(pDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(pDiff>0?'+':'')+pDiff+'g)</span></div>'
-      +'<div>Λίπος: '+first.f+'g → '+last.f+'g <span style="color:'+(fDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(fDiff>0?'+':'')+fDiff+'g)</span></div>'
+      +'<div>Kcal: '+prev.k+' → '+last.k+' <span style="color:'+(kDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(kDiff>0?'+':'')+kDiff+')</span></div>'
+      +'<div>Πρωτεΐνες: '+prev.p+'g → '+last.p+'g <span style="color:'+(pDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(pDiff>0?'+':'')+pDiff+'g)</span></div>'
+      +'<div>Λίπος: '+prev.f+'g → '+last.f+'g <span style="color:'+(fDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(fDiff>0?'+':'')+fDiff+'g)</span></div>'
       +'</div></div>';
   }
 
