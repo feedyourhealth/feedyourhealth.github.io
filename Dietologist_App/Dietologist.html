@@ -2924,8 +2924,11 @@ function saveFoodExclusions(){
         var self = this;
         // Ανίχνευση επαναφοράς κωδικού (ο χρήστης ήρθε από link στο email)
         var isRecovery = (location.hash && location.hash.indexOf('type=recovery') !== -1);
-        this.sb.auth.onAuthStateChange(function(event){
-          if(event === 'PASSWORD_RECOVERY'){ self._recovery = true; self._showNewPassword(); }
+        this.sb.auth.onAuthStateChange(function(event,session){
+          if(event === 'PASSWORD_RECOVERY'){ self._recovery = true; self._showNewPassword(); return; }
+          // Κράτα το self.user συγχρονισμένο με το πραγματικό session (το SDK ανανεώνει το token μόνο του στο παρασκήνιο).
+          if(event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN'){ if(session && session.user) self.user = session.user; return; }
+          if(event === 'SIGNED_OUT'){ self.user = null; return; }
         });
         this.sb.auth.getSession().then(function(res){
           if(self._recovery || isRecovery){ self._showNewPassword(); return; }  // μη μπεις στην app — όρισε κωδικό πρώτα
@@ -3005,15 +3008,43 @@ function saveFoodExclusions(){
       if(!c){ return Promise.reject(new Error('Δεν υπάρχει επιλεγμένος πελάτης.')); }
       var snap;
       try{ snap=this._buildSnapshot(c); }catch(e){ return Promise.reject(e); }
-      var tok=c.shareToken;
-      if(!tok){ tok=genSecureToken(); c.shareToken=tok; }
-      var expiresAt=new Date(Date.now()+this.LINK_EXPIRE_DAYS*86400000).toISOString();
-      var row={token:tok, dietitian_id:this.user.id, snapshot:snap, client_name:c.name||'', updated_at:new Date().toISOString(), expires_at:expiresAt};
-      return this.sb.from('shared_plans').upsert(row,{onConflict:'token'}).then(function(res){
-        if(res.error) throw res.error;
-        c._publishedPlanHash=self._hashPlan(c.weekPlan);   // ώστε να ξέρουμε αν ο σύνδεσμος «μπαγιατεύει» μετά από επόμενη επεξεργασία
-        try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
-        return {url:self.PORTAL_BASE+'?t='+tok, expiresAt:expiresAt};
+      // Ξαναέλεγξε το session ΠΡΙΝ γράψεις — αν έχει λήξει στο παρασκήνιο (π.χ. καρτέλα ανοιχτή πολλή ώρα),
+      // εδώ το πιάνουμε και δίνουμε καθαρό μήνυμα αντί για ακατανόητο σφάλμα RLS από τη βάση.
+      return this.sb.auth.getSession().then(function(res){
+        var session=(res&&res.data)?res.data.session:null;
+        if(!session || !session.user){
+          self.user=null; self._showLogin();
+          throw new Error('Η σύνδεσή σου στο cloud έχει λήξει. Συνδέσου ξανά και ξαναπροσπάθησε.');
+        }
+        self.user=session.user;
+        var doWrite=function(tok,isRetry){
+          var expiresAt=new Date(Date.now()+self.LINK_EXPIRE_DAYS*86400000).toISOString();
+          var row={token:tok, dietitian_id:session.user.id, snapshot:snap, client_name:c.name||'', updated_at:new Date().toISOString(), expires_at:expiresAt};
+          return self.sb.from('shared_plans').upsert(row,{onConflict:'token'}).then(function(res2){
+            if(res2.error){
+              var isRlsErr=/row-level security/i.test(res2.error.message||'');
+              // Αν αποτύχει λόγω κανόνα ασφαλείας ΚΑΙ δεν έχουμε ξαναδοκιμάσει ήδη: ίσως το υπάρχον token
+              // δείχνει σε γραμμή που δημιουργήθηκε από ΑΛΛΟΝ λογαριασμό (π.χ. παλιό/δοκιμαστικό) — δοκίμασε
+              // με ΝΕΟ token ώστε να γίνει καθαρή νέα εγγραφή αντί για update πάνω σε ξένη γραμμή.
+              if(isRlsErr && !isRetry){
+                var newTok=genSecureToken();
+                c.shareToken=newTok;
+                return doWrite(newTok,true);
+              }
+              if(isRlsErr){
+                var detail=[res2.error.code,res2.error.details,res2.error.hint].filter(Boolean).join(' — ');
+                throw new Error('Δεν επιτρέπεται η αποθήκευση του συνδέσμου (κανόνας ασφαλείας της βάσης). Χρειάζεται έλεγχος στο Supabase.'+(detail?' ['+detail+']':''));
+              }
+              throw res2.error;
+            }
+            c._publishedPlanHash=self._hashPlan(c.weekPlan);   // ώστε να ξέρουμε αν ο σύνδεσμος «μπαγιατεύει» μετά από επόμενη επεξεργασία
+            try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
+            return {url:self.PORTAL_BASE+'?t='+tok, expiresAt:expiresAt};
+          });
+        };
+        var tok=c.shareToken;
+        if(!tok){ tok=genSecureToken(); c.shareToken=tok; }
+        return doWrite(tok,false);
       });
     },
 
