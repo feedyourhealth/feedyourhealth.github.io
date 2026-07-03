@@ -10,6 +10,7 @@ function goToApp(){
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     renderSB();  // Load client list
+    if(typeof renderHome==='function') renderHome();
     if(window.Cloud && typeof window.Cloud.refreshCheckinsCache==='function') window.Cloud.refreshCheckinsCache();
   } catch(e) {
     console.error('Error in goToApp():', e.message);
@@ -113,13 +114,7 @@ function initializeApp(){
 // NAVIGATION: Back to Clients List (Logout)
 // ═══════════════════════════════════════════════════════════════
 function backToClientsList(){
-  curId = null;  // Clear selected client
-  renderSB();    // Re-render sidebar with client list
-  var empty = '<div class="empty" style="padding:20px;text-align:center;color:#999;">';
-  empty += '<div style="font-size:15px;font-weight:600;margin-bottom:10px;">Κανένας πελάτης επιλεγμένος</div>';
-  empty += '<p style="font-size:12px;color:#bbb;">Επιλέξτε έναν πελάτη από την αριστερή στήλη</p>';
-  empty += '</div>';
-  document.getElementById('main').innerHTML = empty;
+  if(typeof renderHome==='function') renderHome();
   save();  // Save state to localStorage
 }
 
@@ -2394,6 +2389,7 @@ function setupFormEventListeners(){
 }
 
 function swTab(n){
+  if(n===0){ if(typeof renderHome==='function') renderHome(); return; }
   var t1=document.getElementById('t1');if(t1)t1.classList.toggle('active',n===1);
   var t2=document.getElementById('t2');if(t2)t2.classList.toggle('active',n===2);
   var t3=document.getElementById('t3');if(t3)t3.classList.toggle('active',n===3);

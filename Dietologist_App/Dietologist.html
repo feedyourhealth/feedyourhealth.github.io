@@ -90,6 +90,8 @@
 <div class="app" style="display:none;" id="app-container">
 <div class="sb" id="sidebar">
   <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" title="Ανοίγ/Κλείσιμο" aria-label="Άνοιγμα/Κλείσιμο πλαϊνής μπάρας">☰</button>
+  <button type="button" class="hm-nav-btn" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική</button>
+  <div class="sb-sep"></div>
   <div class="sb-title">Πελάτες</div>
 
   <!-- Γρήγορες ενέργειες: πάντα διαθέσιμες, ανεξάρτητα από τον επιλεγμένο πελάτη -->
@@ -212,8 +214,8 @@
 <!-- ✅ BOTTOM NAVIGATION BAR (Mobile) -->
 <div class="bottom-nav">
   <button onclick="swTab(0)" class="bottom-nav-btn active" data-tab="0">
-    <span>👥</span>
-    <span>Πελάτες</span>
+    <span>🏠</span>
+    <span>Αρχική</span>
   </button>
   <button onclick="swTab(1)" class="bottom-nav-btn" data-tab="1">
     <span>📋</span>
@@ -234,6 +236,7 @@
 <script src="js/app-part2.js"></script>
 <script src="js/app-part3.js"></script>
 <script src="js/app-part4.js"></script>
+<script src="js/app-part5-home.js"></script>
 <!-- ✅ CHARTS LIBRARY -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -3441,6 +3444,7 @@ function saveFoodExclusions(){
       return this.fetchAllCheckins(tokens).then(function(byToken){
         self._checkinsCache=byToken;
         if(typeof renderSB==='function') renderSB();
+        if(curId===null && typeof renderHome==='function') renderHome();
         var s3=document.getElementById('s3');
         if(s3 && typeof getC==='function' && typeof buildTrackerHtml==='function'){
           var cur=getC(); if(cur) s3.innerHTML=buildTrackerHtml(cur);

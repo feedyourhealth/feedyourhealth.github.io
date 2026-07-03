@@ -67,6 +67,32 @@ body.dark-mode .qa-panel{background:#1a1a1a;border-color:#444}
 body.dark-mode .qa-input{background:#242424;border-color:#444;color:#e0e0e0}
 body.dark-mode .qa-row:hover{background:#333}
 body.dark-mode .qa-row-sub{color:#888}
+.hm-nav-btn{display:block;width:calc(100% - 16px);margin:8px 8px 4px;padding:9px 12px;background:#025857;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;text-align:left}
+.hm-nav-btn:hover{background:#037070}
+.hm-wrap{padding:20px 24px}
+.hm-title{font-size:20px;font-weight:700;color:#025857;margin-bottom:16px}
+.hm-stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.hm-stat{background:#f0f7f7;border:1px solid #b2d8d8;border-radius:8px;padding:14px 20px;text-align:center;min-width:110px}
+.hm-stat-num{font-size:26px;font-weight:700;color:#025857}
+.hm-stat-lbl{font-size:11px;color:#666;margin-top:2px}
+.hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.hm-card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:14px 16px}
+.hm-card-title{font-size:13px;font-weight:700;color:#025857;margin-bottom:10px}
+.hm-row{display:flex;justify-content:space-between;align-items:center;padding:7px 4px;border-bottom:1px solid #f5f5f5;cursor:pointer;font-size:12px;gap:8px}
+.hm-row:last-child{border-bottom:none}
+.hm-row:hover{background:#fafcfc}
+.hm-row-name{font-weight:600;color:#333}
+.hm-row-sub{font-size:10.5px;color:#999;white-space:nowrap}
+.hm-empty{font-size:11.5px;color:#999;padding:8px 4px;font-style:italic}
+.hm-more{font-size:10.5px;color:#025857;text-align:center;padding-top:6px;font-weight:600}
+body.dark-mode .hm-stat{background:#1a1a1a;border-color:#444}
+body.dark-mode .hm-stat-num{color:#4fc3f7}
+body.dark-mode .hm-stat-lbl{color:#aaa}
+body.dark-mode .hm-card{background:#242424;border-color:#444}
+body.dark-mode .hm-card-title{color:#4fc3f7}
+body.dark-mode .hm-row{border-color:#333}
+body.dark-mode .hm-row:hover{background:#2a2a2a}
+body.dark-mode .hm-row-name{color:#e0e0e0}
 /* ✅ BOTTOM NAVIGATION BAR (Mobile) */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e0e0e0;z-index:99;flex-direction:row;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
 .bottom-nav button{flex:1;background:none;border:none;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#999;transition:all .2s}

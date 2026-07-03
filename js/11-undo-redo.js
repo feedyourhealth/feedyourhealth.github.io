@@ -86,7 +86,7 @@ class CreateClientCommand {
     clients = clients.filter(c => c.id !== this.client.id);
     if (curId === this.client.id) {
       curId = null;
-      document.getElementById('main').innerHTML = '<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';
+      if(typeof renderHome==='function') renderHome();
     }
     renderSB();
     console.log('✗ Client deleted (undo):', this.client.name);
@@ -106,7 +106,7 @@ class DeleteClientCommand {
     clients = clients.filter(c => c.id !== this.client.id);
     if (curId === this.client.id) {
       curId = null;
-      document.getElementById('main').innerHTML = '<div class="empty"><div style="font-size:15px;font-weight:600">Κανένας πελάτης επιλεγμένος</div></div>';
+      if(typeof renderHome==='function') renderHome();
     }
     renderSB();
     console.log('✗ Client deleted:', this.client.name);
