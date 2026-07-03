@@ -100,6 +100,13 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .section-header.medical{color:#E91E63}
 .section-header.budget{color:#2196F3}
 .section-icon{font-size:18px;line-height:1}
+.sec-collapse-hd{cursor:pointer;justify-content:space-between;margin-bottom:0;border-bottom:none;padding-bottom:0}
+.sec-collapse-hd:hover{opacity:0.75}
+.sec-collapse-preview{font-size:11px;font-weight:400;color:#888;margin-top:3px;text-transform:none;letter-spacing:0}
+.sec-chevron{font-size:12px;color:#aaa;transition:transform 0.2s ease;flex-shrink:0}
+.sec-chevron.open{transform:rotate(90deg)}
+#sec-basic-body,#sec-sport-body{padding-top:12px;margin-top:12px;border-top:2px solid #f0f0f0}
+#genplan-row{position:sticky;bottom:0;background:#fff;padding:10px 0;margin-top:4px;box-shadow:0 -4px 10px rgba(0,0,0,.08);z-index:5}
 .tdee-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;background:#E2EEE5;border-radius:10px;padding:12px;border:1px solid #c5ddd8}
 .ti .tl{font-size:10px;color:#555;font-weight:500}
 .ti .tv{font-size:15px;font-weight:700;margin-top:3px;color:#025857}

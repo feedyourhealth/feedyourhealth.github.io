@@ -176,6 +176,13 @@ function renderMain(){
   var numTrainDays=(c.trainDays||[]).filter(function(x){return x;}).length;
   var hydBase=t.hydBase||Math.round(c.weight*35);
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
+  // ✅ Collapsible section state (Βασικά Στοιχεία / Άθλημα) — see getSecState()
+  var secState=getSecState(c);
+  var ageForPreview=c.birthDate?calcAgeFromBirthdate(c.birthDate):c.age;
+  var basicPreview=[c.name||'—', c.sex==='M'?'Άνδρας':(c.sex==='F'?'Γυναίκα':''), (ageForPreview!=null&&!isNaN(ageForPreview))?(ageForPreview+' ετών'):''].filter(function(x){return x;}).join(' · ');
+  var sportPreview=[c.sport&&SPORT_PROFILES[c.sport]?SPORT_PROFILES[c.sport].name:'',{sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'}[c.activity]||''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
+  var anthroPreview=[c.weight?c.weight+'kg':'', c.height?c.height+'cm':'', (c.weight&&c.height)?('BMI '+(Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10)):''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
+  var goalPreview=(c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'}[c.goalMain]||c.goalMain):'Χωρίς στόχο')+' · '+(goalCalAdj>=0?'+':'')+goalCalAdj+' kcal';
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
     +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
     +'<div id="s1">'
@@ -205,19 +212,22 @@ function renderMain(){
     +'</div>'
     +'</div>'
 
-    // ✅ SECTION 1: ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ (Όνομα, Φύλο, Ηλικία)
+    // ✅ SECTION 1: ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ (Όνομα, Φύλο, Ηλικία) — collapsible, collapsed by default once filled in
     +'<div class="section-card basic">'
-    +'<div class="section-header basic"><span class="section-icon">👤</span>Βασικά Στοιχεία</div>'
+    +'<div class="section-header basic sec-collapse-hd" onclick="toggleSec(\'basic\')"><div><span class="section-icon">👤</span>Βασικά Στοιχεία'+(secState.basic?'<div class="sec-collapse-preview">'+esc(basicPreview)+'</div>':'')+'</div><span class="sec-chevron'+(secState.basic?'':' open')+'">▸</span></div>'
+    +'<div id="sec-basic-body" style="display:'+(secState.basic?'none':'block')+'">'
     +'<div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος" value="'+(c.name||'')+'"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div>'
     +'<div class="fgrp"><label>Ημερομηνία Γέννησης <span id="age-display" style="color:#025857;font-weight:600;font-size:12px"></span></label><div style="display:flex;gap:6px"><select id="inp-bday" style="flex:0.9"></select><select id="inp-bmonth" style="flex:1.4"></select><select id="inp-byear" style="flex:1.1"></select></div></div></div>'
     +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+(c.email||'')+'"></div>'
     +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+(c.phone||'')+'"></div></div>'
     +'</div>'
+    +'</div>'
 
     // ✅ SECTION 2: ΑΝΘΡΩΠΟΜΕΤΡΙΑ (Ενοποιημένη - Βάρος, Ύψος, BMI, Λίπος, Lean Mass)
     +'<div class="section-card anthropometry" id="sec-anthropometry">'
-    +'<div class="section-header anthropometry"><span class="section-icon">📏</span>Ανθρωπομετρία</div>'
+    +'<div class="section-header anthropometry sec-collapse-hd" onclick="toggleSec(\'anthro\')"><div><span class="section-icon">📏</span>Ανθρωπομετρία'+(secState.anthro?'<div class="sec-collapse-preview">'+esc(anthroPreview)+'</div>':'')+'</div><span class="sec-chevron'+(secState.anthro?'':' open')+'">▸</span></div>'
+    +'<div id="sec-anthro-body" style="display:'+(secState.anthro?'none':'block')+'">'
     +'<div class="fg fg3"><div class="fgrp"><label>Βάρος (kg)</label><input type="number" id="inp-weight" value="'+(c.weight||'')+'" min="25" max="300" step="0.1"></div>'
     +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+(c.height||'')+'" min="100" max="250"></div>'
     +'<div class="fgrp"><label>% Σώμ. Λίπος</label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div></div>'
@@ -233,9 +243,11 @@ function renderMain(){
     ')</span></div>':'')
     +'</div>'
     +'</div>'
-    // ✅ SECTION 3: ΑΘΛΗΜΑ (Sport Auto-Sets Activity Level)
+    +'</div>'
+    // ✅ SECTION 3: ΑΘΛΗΜΑ (Sport Auto-Sets Activity Level) — collapsible, collapsed by default once filled in
     +'<div class="section-card activity" id="sec-activity">'
-    +'<div class="section-header activity"><span class="section-icon">🏅</span>Άθλημα</div>'
+    +'<div class="section-header activity sec-collapse-hd" onclick="toggleSec(\'sport\')"><div><span class="section-icon">🏅</span>Άθλημα'+(secState.sport?'<div class="sec-collapse-preview">'+esc(sportPreview)+'</div>':'')+'</div><span class="sec-chevron'+(secState.sport?'':' open')+'">▸</span></div>'
+    +'<div id="sec-sport-body" style="display:'+(secState.sport?'none':'block')+'">'
     +'<div class="fg"><div class="fgrp"><label>Επιλογή Αθλήματος</label><select id="inp-sport" onchange="updateActivityFromSport(this.value)">'
     +'<option value="">-- Επιλέξτε άθλημα --</option>'
     +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
@@ -266,10 +278,12 @@ function renderMain(){
     : '')
     // ✅ MET ACTIVITIES - NOW IN MODAL (moved to buttons section)
     +'</div>'
+    +'</div>'
 
     // ✅ SECTION 4: ΣΤΟΧΟΣ & ΠΡΟΣΑΡΜΟΓΗ (Goal Selection + Adjustment + Formula)
     +'<div class="section-card goal" id="sec-goal">'
-    +'<div class="section-header goal"><span class="section-icon">⚡</span>Στόχος & Προσαρμογή</div>'
+    +'<div class="section-header goal sec-collapse-hd" onclick="toggleSec(\'goal\')"><div><span class="section-icon">⚡</span>Στόχος &amp; Προσαρμογή'+(secState.goal?'<div class="sec-collapse-preview">'+esc(goalPreview)+'</div>':'')+'</div><span class="sec-chevron'+(secState.goal?'':' open')+'">▸</span></div>'
+    +'<div id="sec-goal-body" style="display:'+(secState.goal?'none':'block')+'">'
     // ✅ GOAL SELECTION (NEW) - COMPACT VERSION
     +'<div class="fg"><div class="fgrp"><label style="font-weight:700;color:#025857;font-size:12px;">🎯 Κύριος Στόχος:</label>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">'
@@ -312,6 +326,7 @@ function renderMain(){
     })()
     +'</div>'
     +'</div>'
+    +'</div>'
 
     // ✅ SECTION 4b: ΚΑΤΑΝΟΜΗ ΜΑΚΡΟΘΡΕΠΤΙΚΩΝ (macro presets)
     +buildMacroDistributionHtml(c,t)
@@ -329,8 +344,13 @@ function renderMain(){
     +'<div id="hint-2x-training" style="background:#E8F5E9;padding:8px 12px;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:15px;border-left:3px solid #025857;">💡 Για 2 προπονήσεις την ίδια ημέρα, πρόσθεσε 2 δραστηριότητες στις «🏃 Προπονήσεις (MET)» με διαφορετική ώρα.</div>'
 
     // ✅ MET Activities table moved inside SECTION 3
-    // ✅ Day targets table with macros per day (with T/R badges) — S1 ONLY
+    // ✅ Day targets table with macros per day (with T/R badges) — S1 ONLY, collapsible (derived from TDEE, rarely hand-edited)
+    +'<div class="section-card" id="sec-daytgt" style="margin-top:12px;">'
+    +'<div class="section-header sec-collapse-hd" onclick="toggleSec(\'daytgt\')"><div><span class="section-icon">📊</span>Ημερήσιοι Στόχοι ανά Ημέρα'+(secState.daytgt?'<div class="sec-collapse-preview">~'+avgTarget+' kcal/ημέρα (μέσος όρος)</div>':'')+'</div><span class="sec-chevron'+(secState.daytgt?'':' open')+'">▸</span></div>'
+    +'<div id="sec-daytgt-body" style="display:'+(secState.daytgt?'none':'block')+'">'
     +buildDayTgtHtml(c,t)
+    +'</div>'
+    +'</div>'
     // +buildSuppHtml(c)
     // +buildExcludeHtml(c)
     // +buildAlertsAndTipsHtml(c)
@@ -383,7 +403,7 @@ function renderMain(){
   updateAgeDisplay();
   document.getElementById('inp-weight').value=c.weight||'';
   document.getElementById('inp-height').value=c.height||'';
-  document.getElementById('inp-activity').value=c.activity||'mod';
+  document.getElementById('inp-activity').value=c.activity||'';
   // ✅ Update goal display (numeric adjuster)
   var goalVal = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : 0;
   document.getElementById('inp-goal').value=goalVal;
@@ -994,8 +1014,11 @@ function removeMetActivity(idx){
 // ✅ Focused macro-distribution block for Page 1 (presets + split bar only — diet type lives in its own modal)
 function buildMacroDistributionHtml(c,t){
   var preset=c.macroPreset||'balanced';
+  var secState=getSecState(c);
+  var macroPreview=(MACRO_PRESETS[preset]?MACRO_PRESETS[preset].label:preset)+' · Π'+t.pPct+'% Λ'+t.fPct+'% Υ'+t.cPct+'%';
   var html='<div class="section-card" id="sec-macros" style="margin-top:12px;">'
-    +'<div class="section-header"><span class="section-icon">🎯</span>Κατανομή Μακροθρεπτικών</div>'
+    +'<div class="section-header sec-collapse-hd" onclick="toggleSec(\'macros\')"><div><span class="section-icon">🎯</span>Κατανομή Μακροθρεπτικών'+(secState.macros?'<div class="sec-collapse-preview">'+esc(macroPreview)+'</div>':'')+'</div><span class="sec-chevron'+(secState.macros?'':' open')+'">▸</span></div>'
+    +'<div id="sec-macros-body" style="display:'+(secState.macros?'none':'block')+'">'
     +'<div class="macro-preset-btns">';
   Object.keys(MACRO_PRESETS).forEach(function(k){
     var pr=MACRO_PRESETS[k];
@@ -1020,6 +1043,7 @@ function buildMacroDistributionHtml(c,t){
     +'<span class="macro-c-val">Υδατ/κες: '+t.carb+'g&nbsp;&nbsp;('+t.cPct+'%)</span>'
     +'</div>'
     +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Προσαρμόζεται αυτόματα από το άθλημα — αλλάξτε ελεύθερα χειροκίνητα.</div>'
+    +'</div>'
     +'</div>';
   return html;
 }
@@ -2680,6 +2704,55 @@ function updateAgeDisplay(){
   var c=getC();if(!c){el.textContent='';return;}
   var a=c.birthDate?calcAgeFromBirthdate(c.birthDate):c.age;
   el.textContent=(a!=null&&!isNaN(a))?'('+a+' ετών)':'';
+}
+
+// ✅ Collapsible "Βασικά Στοιχεία" / "Άθλημα" sections — collapsed by default once a
+// client already has that data filled in (nothing new to look at every visit), left
+// open for a brand-new client so the dietitian sees the empty fields right away.
+// State lives per-client for the session; toggling doesn't get reset by re-renders.
+window._secState = window._secState || {};
+function getSecState(c){
+  if(!window._secState[c.id]){
+    window._secState[c.id] = {
+      // ✅ Only collapse once every field inside is actually filled in — collapsing
+      // while something's still missing (e.g. sport set but activity level not) would
+      // hide the very field the dietitian needs to fix.
+      basic: !!(c.name && c.sex && c.age),
+      sport: !!(c.sport && c.activity),
+      macros: (c.macroPreset||'balanced')!=='custom',
+      daytgt: true,
+      // ✅ Ανθρωπομετρία / Στόχος stay open by default (edited on most visits) —
+      // still toggleable like every other section, for when they're not needed.
+      anthro: false,
+      goal: false
+    };
+  }
+  return window._secState[c.id];
+}
+function toggleSec(sec){
+  var c=getC();if(!c)return;
+  var st=getSecState(c);
+  st[sec]=!st[sec];
+  renderMain();
+}
+// ✅ Safety net: if plan-generation validation fails on a field that lives inside a
+// collapsed accordion (Βασικά Στοιχεία / Άθλημα / Κατανομή Μακρο), force it open so the
+// error is actually visible instead of the dietitian hunting for a hidden input.
+var SEC_FOR_ERROR={
+  name_required:'basic', name_short:'basic', name_long:'basic',
+  age_required:'basic', age_invalid:'basic', sex_required:'basic',
+  activity_required:'sport',
+  macros_invalid:'macros'
+};
+function revealSectionsForErrors(errors){
+  var c=getC();if(!c)return;
+  var st=getSecState(c);
+  var changed=false;
+  (errors||[]).forEach(function(err){
+    var sec=SEC_FOR_ERROR[err];
+    if(sec && st[sec]){ st[sec]=false; changed=true; }
+  });
+  if(changed) renderMain();
 }
 
 function upd(k,v){
