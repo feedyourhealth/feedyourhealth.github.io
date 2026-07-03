@@ -47,6 +47,26 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .add-btn:hover{background:#f5f5f5;border-color:#025857;color:#025857}
 .client-search-inp{width:100%;padding:5px 9px;border:1px solid #e0e0e0;border-radius:7px;font-size:11px;background:#f9f9f9;margin-bottom:6px;font-family:inherit}
 .client-search-inp:focus{outline:none;border-color:#025857;background:#fff}
+/* ✅ Sidebar quick actions: Νέο πλάνο / Γρήγορη μέτρηση */
+.qa-btn{display:flex;justify-content:space-between;align-items:center;width:calc(100% - 16px);margin:4px 8px;padding:10px 12px;background:#f0f7f7;border:1px solid #b2d8d8;border-radius:6px;font-size:12px;color:#025857;font-weight:600;cursor:pointer;text-align:left;min-height:36px}
+.qa-btn:hover{background:#025857;color:#fff;border-color:#025857}
+.qa-panel{margin:2px 8px 8px;padding:8px;background:#fafcfc;border:1px solid #e0e0e0;border-radius:6px}
+.qa-instant-btn{width:100%;padding:8px;margin-bottom:6px;background:#025857;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center}
+.qa-instant-btn:hover{background:#037070}
+.qa-panel-or{font-size:9.5px;color:#999;text-align:center;margin:2px 0 6px}
+.qa-input{width:100%;padding:6px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:11px;background:#fff;margin-bottom:6px;font-family:inherit;box-sizing:border-box}
+.qa-input:focus{outline:none;border-color:#025857}
+.qa-results{max-height:220px;overflow-y:auto}
+.qa-row{padding:7px 8px;border-radius:5px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.qa-row:hover{background:#E2EEE5}
+.qa-row-sub{font-size:9.5px;color:#999;white-space:nowrap}
+.qa-row-new{color:#025857;font-weight:600;border-top:1px solid #f0f0f0;margin-top:4px;padding-top:8px}
+body.dark-mode .qa-btn{background:#2a2a2a;border-color:#444;color:#4fc3f7}
+body.dark-mode .qa-btn:hover{background:#025857;color:#fff}
+body.dark-mode .qa-panel{background:#1a1a1a;border-color:#444}
+body.dark-mode .qa-input{background:#242424;border-color:#444;color:#e0e0e0}
+body.dark-mode .qa-row:hover{background:#333}
+body.dark-mode .qa-row-sub{color:#888}
 /* ✅ BOTTOM NAVIGATION BAR (Mobile) */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e0e0e0;z-index:99;flex-direction:row;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
 .bottom-nav button{flex:1;background:none;border:none;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#999;transition:all .2s}

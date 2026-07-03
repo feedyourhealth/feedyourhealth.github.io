@@ -91,6 +91,27 @@
 <div class="sb" id="sidebar">
   <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" title="Ανοίγ/Κλείσιμο" aria-label="Άνοιγμα/Κλείσιμο πλαϊνής μπάρας">☰</button>
   <div class="sb-title">Πελάτες</div>
+
+  <!-- Γρήγορες ενέργειες: πάντα διαθέσιμες, ανεξάρτητα από τον επιλεγμένο πελάτη -->
+  <button type="button" class="qa-btn" id="qa-toggle-newplan" onclick="toggleQA('qa-newplan')" aria-expanded="false" aria-controls="qa-newplan">
+    <span>+ Νέο πλάνο</span><span aria-hidden="true">▾</span>
+  </button>
+  <div class="qa-panel" id="qa-newplan" style="display:none">
+    <button type="button" class="qa-instant-btn" onclick="qaCreateAndPlan('')">⚡ Ξεκίνα πλάνο τώρα</button>
+    <div class="qa-panel-or">ή επίλεξε πελάτη</div>
+    <input type="text" class="qa-input" id="qa-newplan-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για νέο πλάνο" oninput="renderQANewPlan(this.value)">
+    <div class="qa-results" id="qa-newplan-results"></div>
+  </div>
+
+  <button type="button" class="qa-btn" id="qa-toggle-quickmeasure" onclick="toggleQA('qa-quickmeasure')" aria-expanded="false" aria-controls="qa-quickmeasure">
+    <span>📏 Γρήγορη μέτρηση</span><span aria-hidden="true">▾</span>
+  </button>
+  <div class="qa-panel" id="qa-quickmeasure" style="display:none">
+    <input type="text" class="qa-input" id="qa-quickmeasure-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για γρήγορη μέτρηση" oninput="renderQAQuickMeasure(this.value)">
+    <div class="qa-results" id="qa-quickmeasure-results"></div>
+  </div>
+  <div class="sb-sep"></div>
+
   <input type="text" id="client-search" class="client-search-inp" placeholder="🔍 Αναζήτηση πελάτη..." aria-label="Αναζήτηση πελάτη" oninput="filterClients(this.value)">
   <div style="display:flex;gap:4px;margin:4px 0 6px;">
     <select id="client-filter-goal" aria-label="Φίλτρο στόχου" onchange="setClientFilter('goal',this.value)" style="flex:1;font-size:10px;padding:3px 2px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">

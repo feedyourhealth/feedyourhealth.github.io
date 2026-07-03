@@ -2202,10 +2202,10 @@ window.addEventListener('load', function(){
   }
 });
 
-function addClient(){
+function addClient(prefillName){
   try {
     var id='c'+Date.now();
-    var newClient={id:id,name:'',sex:'',age:null,weight:null,height:null,bf:0,leanmass:0,activity:'',goal:'',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
+    var newClient={id:id,name:(prefillName||'').trim(),sex:'',age:null,weight:null,height:null,bf:0,leanmass:0,activity:'',goal:'',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
 
     if(window.undoRedoManager && typeof CreateClientCommand !== 'undefined'){
       var cmd = new CreateClientCommand(newClient);
@@ -2329,6 +2329,86 @@ function selectClient(id){
   }
 }
 function getC(){return clients.filter(function(c){return c.id===curId;})[0];}
+
+/* ===== Γρήγορες ενέργειες πλαϊνής μπάρας: Νέο πλάνο / Γρήγορη μέτρηση ===== */
+function closeAllQA(){
+  ['qa-newplan','qa-quickmeasure'].forEach(function(p){
+    var panel=document.getElementById(p);
+    var btn=document.getElementById('qa-toggle-'+p.replace('qa-',''));
+    if(panel) panel.style.display='none';
+    if(btn) btn.setAttribute('aria-expanded','false');
+  });
+}
+
+function toggleQA(id){
+  var panel=document.getElementById(id);
+  var wasOpen = panel && panel.style.display==='block';
+  closeAllQA();
+  if(!wasOpen && panel){
+    panel.style.display='block';
+    var btn=document.getElementById('qa-toggle-'+id.replace('qa-',''));
+    if(btn) btn.setAttribute('aria-expanded','true');
+    var inp=document.getElementById(id+'-input');
+    if(inp){ inp.value=''; inp.focus(); }
+    if(id==='qa-newplan') renderQANewPlan('');
+    else renderQAQuickMeasure('');
+  }
+}
+
+function qaMatchingClients(q){
+  q=(q||'').toLowerCase().trim();
+  return clients.filter(function(c){
+    return !c.deleted && !c.archived && (!q || (c.name||'').toLowerCase().indexOf(q)>-1);
+  }).sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','el'); });
+}
+
+function qaPlanStatusText(c){
+  if(!c.weekPlan || !Object.keys(c.weekPlan).length) return 'χωρίς πλάνο';
+  if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) return 'ο σύνδεσμος είναι ξεπερασμένος';
+  return 'έχει ενεργό πλάνο';
+}
+
+function renderQANewPlan(q){
+  var results=document.getElementById('qa-newplan-results'); if(!results) return;
+  var list=qaMatchingClients(q), html='';
+  list.forEach(function(c){
+    html+='<div class="qa-row" onclick="qaStartPlan(\''+c.id+'\')"><span>'+(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+qaPlanStatusText(c)+'</span></div>';
+  });
+  html+='<div class="qa-row qa-row-new" onclick="qaCreateAndPlan(document.getElementById(\'qa-newplan-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+q+'»':'')+'</div>';
+  results.innerHTML=html;
+}
+
+function renderQAQuickMeasure(q){
+  var results=document.getElementById('qa-quickmeasure-results'); if(!results) return;
+  var list=qaMatchingClients(q), html='';
+  list.forEach(function(c){
+    var sub = (c.weightLog && c.weightLog.length) ? ('τελ. μέτρηση '+c.weightLog[c.weightLog.length-1].date) : 'καμία μέτρηση ακόμα';
+    html+='<div class="qa-row" onclick="qaStartMeasure(\''+c.id+'\')"><span>'+(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
+  });
+  html+='<div class="qa-row qa-row-new" onclick="qaCreateAndMeasure(document.getElementById(\'qa-quickmeasure-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+q+'»':'')+'</div>';
+  results.innerHTML=html;
+}
+
+function qaStartPlan(id){
+  selectClient(id);
+  genPlanWithUndo();
+  closeAllQA();
+}
+function qaCreateAndPlan(name){
+  addClient(name);
+  genPlanWithUndo();
+  closeAllQA();
+}
+function qaStartMeasure(id){
+  selectClient(id);
+  swTab(3);
+  closeAllQA();
+}
+function qaCreateAndMeasure(name){
+  addClient(name);
+  swTab(3);
+  closeAllQA();
+}
 
 var _clientSearchTerm='';
 function filterClients(val){_clientSearchTerm=(val||'').toLowerCase().trim();renderSB();}
