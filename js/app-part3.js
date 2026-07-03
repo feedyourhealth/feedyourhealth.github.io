@@ -1027,30 +1027,6 @@ function genPlan(){
   var eff=getDayTgtEff(c,t);
   console.log('getDayTgtEff returned:', eff, 'is Array?', Array.isArray(eff));
 
-  // ✅ TRAINING-DAY VS REST-DAY MACRO ADJUSTMENT
-  // Check if training schedule is defined (at least one training day marked)
-  var hasTrainingSchedule = c.trainDays && c.trainDays.some(function(x){return x;});
-  if(hasTrainingSchedule){
-    // Apply intelligent macro adjustments based on training days
-    // Pass ENTIRE eff array (all 7 days), not just eff[0]
-    var adjustedMacros = applyTrainingDayMacroAdjustment(eff, c);
-    if(adjustedMacros && adjustedMacros.byDay && adjustedMacros.byDay.length===7){
-      // Update each day's macros based on training schedule
-      for(var daj=0; daj<7; daj++){
-        if(eff[daj] && adjustedMacros.byDay[daj]){
-          var dayAdj = adjustedMacros.byDay[daj];
-          eff[daj].p = dayAdj.p;
-          eff[daj].f = dayAdj.f;
-          eff[daj].carb = dayAdj.c;
-          eff[daj].trainDayAdjusted = dayAdj.trainDay;
-          eff[daj].pPct = Math.round((dayAdj.p*4/dayAdj.k)*100);
-          eff[daj].fPct = Math.round((dayAdj.f*9/dayAdj.k)*100);
-          eff[daj].cPct = Math.round((dayAdj.c*4/dayAdj.k)*100);
-        }
-      }
-    }
-  }
-
   // ✅ PHASE 3A: HYBRID SYSTEM — Allocate per-meal targets from daily totals
   console.log('PHASE 3A: About to allocate meal targets. eff=', eff);
   for(var d=0;d<7;d++){
