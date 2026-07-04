@@ -22,6 +22,19 @@ function homeStaleLinks(){
   return clients.filter(function(c){return !c.deleted && !c.archived && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c);});
 }
 
+function fmtDateLocal(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// Πελάτες που καταχώρησαν μέτρηση σήμερα (τοπική ημερομηνία).
+function homeMeasuredToday(){
+  var today=fmtDateLocal(new Date());
+  return clients.filter(function(c){return !c.deleted && !c.archived;})
+    .filter(function(c){
+      var wl=c.weightLog||[];
+      return wl.length && wl[wl.length-1].date===today;
+    });
+}
+
 // Πελάτες με πρόσφατο check-in στο portal, ταξινομημένοι με το πιο πρόσφατο πρώτα.
 function homePortalActivity(){
   if(!window.Cloud || !window.Cloud.checkinsFor) return [];
@@ -84,9 +97,13 @@ function renderHome(){
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
 
+  var measuredToday=homeMeasuredToday();
   html+='<div class="hm-stats">'
     +'<div class="hm-stat"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
     +'<div class="hm-stat"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
+    +'<div class="hm-stat"><div class="hm-stat-num">'+measuredToday.length+'</div><div class="hm-stat-lbl">Μετρήσεις σήμερα</div>'
+    +(measuredToday.length?'<div class="hm-stat-names">'+measuredToday.map(function(c){return esc(c.name||'');}).join(', ')+'</div>':'')
+    +'</div>'
     +'</div>';
 
   html+='<div class="hm-grid">';
@@ -122,11 +139,34 @@ function dietsHistory(){
   return clients.filter(function(c){return !c.deleted && c.archived && dietsHasPlan(c);});
 }
 
-function dietsRow(c,sub){
+function dietsRow(c,sub,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\');swTab(2)">'
     +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
     +'<span class="hm-row-sub">'+sub+'</span>'
+    +(actionHtml||'')
     +'</div>';
+}
+
+// Δημιουργεί πλάνο απευθείας από τη λίστα "Χρειάζονται ενέργεια" — ίδιο μονοπάτι με το "Ξεκίνα πλάνο τώρα" (Phase 1):
+// πάει στον πελάτη και προσπαθεί να γεννήσει πλάνο, ώστε η υπάρχουσα επικύρωση/toast να συνεχίσει να ισχύει.
+function dietsQuickCreatePlan(clientId){
+  selectClient(clientId);
+  genPlanWithUndo();
+}
+
+// Ξαναδημοσιεύει το πλάνο ενός πελάτη χωρίς να φύγουμε από τη λίστα Διατροφές.
+function dietsQuickRepublish(clientId,btn){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  if(!window.Cloud || !window.Cloud.publishPlan){ alert('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
+  var orig=btn.textContent;
+  btn.disabled=true; btn.textContent='Δημοσίευση...';
+  window.Cloud.publishPlan(c).then(function(){
+    renderDiets();
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent=orig;
+    alert('Σφάλμα δημοσίευσης: '+(e.message||''));
+  });
 }
 
 function dietsSection(title,items,rowFn,emptyText){
@@ -147,7 +187,10 @@ function renderDiets(){
 
   html+=dietsSection('🔴 Χρειάζονται ενέργεια', dietsNeedsAction(), function(c){
     var stale=window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c);
-    return dietsRow(c, stale?'ο σύνδεσμος δείχνει παλιό πλάνο':'χωρίς πλάνο ακόμα');
+    if(stale){
+      return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
+    }
+    return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>');
   }, 'Όλοι είναι εντάξει 👍');
 
   html+=dietsSection('🟢 Ενεργά', dietsActive(), function(c){
