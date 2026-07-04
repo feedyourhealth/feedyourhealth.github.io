@@ -438,13 +438,28 @@ function findBestRecipe(dietType, targetKcal, mealType, excl){
     });
   }
 
-  // Find recipes that match diet type AND are close to target calories (within 80-120%) AND don't contain excluded foods
-  var candidates=recipeDB.filter(function(recipe){
+  // ✅ MEAL-TIME CATEGORY: which of the 4 dietitian-assigned categories this slot needs (null = not recognized, no constraint).
+  var mealCategory = (typeof mealTypeToCategory==='function') ? mealTypeToCategory(mealType) : null;
+  function matchesBase(recipe){
     var dietMatch = isSnack ? true : (dietTags.some(function(tag){return recipe.tags.indexOf(tag)!==-1;}));
     var calMatch=(recipe.kcal >= targetKcal*0.80) && (recipe.kcal <= targetKcal*1.20);
     var noExcludedFoods = !recipeHasExcludedFood(recipe);
     return dietMatch && calMatch && noExcludedFoods;
-  });
+  }
+  // Untagged recipes (the vast majority, today) count as "any meal" — no regression for anyone who hasn't categorized recipes yet.
+  function matchesMealTime(recipe){
+    if(!mealCategory) return true;
+    var mt=(typeof getRecipeMealTimes==='function') ? getRecipeMealTimes(recipe) : (recipe.mealTimes||[]);
+    return !mt.length || mt.indexOf(mealCategory)>-1;
+  }
+
+  // Find recipes that match diet type AND are close to target calories (within 80-120%) AND don't contain excluded foods AND fit the meal-time slot
+  var candidates=recipeDB.filter(function(recipe){ return matchesBase(recipe) && matchesMealTime(recipe); });
+
+  // Safety net: if meal-time tagging leaves nothing for this slot (e.g. too narrow for this diet+calorie bracket), fall back to ignoring it rather than returning no recipe at all.
+  if(!candidates.length){
+    candidates=recipeDB.filter(matchesBase);
+  }
 
   if(!candidates.length)return null;
 

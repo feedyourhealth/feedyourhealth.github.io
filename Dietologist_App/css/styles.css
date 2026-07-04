@@ -96,6 +96,36 @@ body.dark-mode .hm-card-title{color:#4fc3f7}
 body.dark-mode .hm-row{border-color:#333}
 body.dark-mode .hm-row:hover{background:#2a2a2a}
 body.dark-mode .hm-row-name{color:#e0e0e0}
+.rcp-search{width:100%;max-width:400px;padding:8px 10px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;margin-bottom:10px;box-sizing:border-box;font-family:inherit}
+.rcp-search:focus{outline:none;border-color:#025857}
+.rcp-filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.rcp-filter-chip{padding:5px 12px;border-radius:14px;border:1px solid #b2d8d8;background:#fff;color:#025857;font-size:11px;font-weight:600;cursor:pointer}
+.rcp-filter-chip:hover{background:#f0f7f7}
+.rcp-filter-chip.active{background:#025857;color:#fff;border-color:#025857}
+.rcp-count{font-size:10.5px;color:#999;margin-bottom:8px}
+.rcp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.rcp-row{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:10px 12px}
+.rcp-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.rcp-name{font-weight:600;font-size:12.5px;color:#333}
+.rcp-star{background:none;border:none;cursor:pointer;font-size:14px;opacity:.3;padding:0;line-height:1}
+.rcp-star.active{opacity:1}
+.rcp-sub{font-size:10.5px;color:#999;margin:4px 0 8px}
+.rcp-chips{display:flex;flex-wrap:wrap;gap:4px}
+.rcp-chip{padding:3px 8px;border-radius:10px;border:1px solid #ddd;background:#fafafa;color:#888;font-size:9.5px;font-weight:600;cursor:pointer}
+.rcp-chip:hover{border-color:#025857}
+.rcp-chip.active{background:#E2EEE5;border-color:#025857;color:#025857}
+.rcp-chip-hint{font-size:9.5px;color:#bbb;font-style:italic;padding:3px 0}
+body.dark-mode .rcp-search{background:#242424;border-color:#444;color:#e0e0e0}
+body.dark-mode .rcp-filter-chip{background:#1a1a1a;border-color:#444;color:#4fc3f7}
+body.dark-mode .rcp-filter-chip.active{background:#025857;color:#fff}
+body.dark-mode .rcp-row{background:#242424;border-color:#444}
+body.dark-mode .rcp-name{color:#e0e0e0}
+body.dark-mode .rcp-chip{background:#1a1a1a;border-color:#444;color:#aaa}
+body.dark-mode .rcp-chip.active{background:#025857;border-color:#025857;color:#fff}
+@media(max-width:768px){
+  /* Keep these compact pills inline instead of the site-wide mobile "button{width:100%}" rule */
+  .rcp-filter-chip,.rcp-chip,.rcp-star{width:auto}
+}
 /* ✅ BOTTOM NAVIGATION BAR (Mobile) */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e0e0e0;z-index:99;flex-direction:row;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
 .bottom-nav button{flex:1;background:none;border:none;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#999;transition:all .2s}
