@@ -69,6 +69,9 @@ body.dark-mode .qa-row:hover{background:#333}
 body.dark-mode .qa-row-sub{color:#888}
 .hm-nav-btn{display:block;width:calc(100% - 16px);margin:8px 8px 4px;padding:9px 12px;background:#025857;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;text-align:left}
 .hm-nav-btn:hover{background:#037070}
+.hm-nav-btn-alt{background:#f0f7f7;color:#025857;border:1px solid #b2d8d8;margin-top:0}
+.hm-nav-btn-alt:hover{background:#E2EEE5}
+body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f7}
 .hm-wrap{padding:20px 24px}
 .hm-title{font-size:20px;font-weight:700;color:#025857;margin-bottom:16px}
 .hm-stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}

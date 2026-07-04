@@ -100,3 +100,66 @@ function renderHome(){
   main.innerHTML=html;
   renderSB();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ΔΙΑΤΡΟΦΕΣ — cross-client plan overview (Phase 4)
+// ═══════════════════════════════════════════════════════════════
+
+function dietsHasPlan(c){ return !!(c.weekPlan && Object.keys(c.weekPlan).length>0); }
+
+// Χωρίς πλάνο ακόμα, ή με δημοσιευμένο σύνδεσμο που δείχνει ξεπερασμένο πλάνο.
+function dietsNeedsAction(){
+  return clients.filter(function(c){return !c.deleted && !c.archived;})
+    .filter(function(c){ return !dietsHasPlan(c) || (window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)); });
+}
+// Ενεργός πελάτης με τρέχον πλάνο που δεν χρειάζεται ενέργεια.
+function dietsActive(){
+  return clients.filter(function(c){return !c.deleted && !c.archived;})
+    .filter(function(c){ return dietsHasPlan(c) && !(window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)); });
+}
+// Αρχειοθετημένοι πελάτες που έχουν πλάνο — κρατιέται ως ιστορικό αναφοράς.
+function dietsHistory(){
+  return clients.filter(function(c){return !c.deleted && c.archived && dietsHasPlan(c);});
+}
+
+function dietsRow(c,sub){
+  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\');swTab(2)">'
+    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-row-sub">'+sub+'</span>'
+    +'</div>';
+}
+
+function dietsSection(title,items,rowFn,emptyText){
+  var html='<div class="hm-card" style="margin-bottom:16px"><div class="hm-card-title">'+esc(title)+' ('+items.length+')</div>';
+  if(!items.length){ html+='<div class="hm-empty">'+emptyText+'</div>'; }
+  else { items.forEach(function(c){ html+=rowFn(c); }); }
+  html+='</div>';
+  return html;
+}
+
+function renderDiets(){
+  curId=null;
+  var main=document.getElementById('main');
+  if(!main) return;
+
+  var html='<div class="hm-wrap">';
+  html+='<div class="hm-title">📊 Διατροφές</div>';
+
+  html+=dietsSection('🔴 Χρειάζονται ενέργεια', dietsNeedsAction(), function(c){
+    var stale=window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c);
+    return dietsRow(c, stale?'ο σύνδεσμος δείχνει παλιό πλάνο':'χωρίς πλάνο ακόμα');
+  }, 'Όλοι είναι εντάξει 👍');
+
+  html+=dietsSection('🟢 Ενεργά', dietsActive(), function(c){
+    return dietsRow(c, 'τελ. ενημέρωση '+fmtLastAccess(c.lastAccess));
+  }, 'Κανένας πελάτης με ενεργό πλάνο ακόμα');
+
+  html+=dietsSection('📁 Ιστορικό', dietsHistory(), function(c){
+    return dietsRow(c, c.archivedAt?('αρχειοθετήθηκε '+fmtLastAccess(new Date(c.archivedAt).getTime())):'αρχειοθετημένος');
+  }, 'Κανένας αρχειοθετημένος πελάτης με πλάνο');
+
+  html+='</div>';
+
+  main.innerHTML=html;
+  renderSB();
+}
