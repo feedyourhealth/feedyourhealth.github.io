@@ -3126,10 +3126,8 @@ function duplicatePlan(planIndex){
 }
 
 function buildPlanHistoryHtml(c){
-  console.log('[PLAN HISTORY DEBUG] client=',c&&c.name,'savedPlans=',c&&c.savedPlans,'length=',c&&c.savedPlans?c.savedPlans.length:'N/A');
-  var dbg='<div style="background:#fff3cd;border:1px solid #ffc107;padding:6px 10px;font-size:11px;color:#856404;margin:8px 20px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
-    +'<span>🔍 DEBUG: βρέθηκαν '+((c&&c.savedPlans)?c.savedPlans.length:0)+' αποθηκευμένα πλάνα για '+esc((c&&c.name)||'?')+'</span>'
-    +'<button onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" style="background:#856404;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
+  var dbg='<div style="margin:8px 20px 0;display:flex;justify-content:flex-end">'
+    +'<button class="btn tertiary" style="padding:5px 10px;font-size:11px" onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" title="Ελέγχει αν υπάρχουν πλάνα σε τοπικό backup που λείπουν από το ιστορικό αυτού του πελάτη">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
     +'</div>';
   if(!c.savedPlans||c.savedPlans.length===0){
     return dbg+'<div style="padding:20px;text-align:center;color:#999"><div style="font-size:16px;font-weight:600;margin-bottom:10px">📊 Ιστορικό Πλάνων</div><p>Δεν υπάρχουν αποθηκευμένα πλάνα.<br>Πάτησε "Αποθήκευση Διατροφής" για να αποθηκεύσεις το πλάνο</p></div>';

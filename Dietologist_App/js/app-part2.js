@@ -1187,10 +1187,10 @@ function buildTrackerHtml(c){
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     +'<div class="tracker-head" style="margin-bottom:0">📐 Ανθρωπομετρία &amp; Σωματική Σύνθεση</div>'
     +'<div style="display:flex;gap:6px">'
-    +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#6a1b9a;color:#fff;border:none" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV (εργομετρικά)</button>'
+    +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV (εργομετρικά)</button>'
     +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">'
     +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης</button>'
-    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#1565C0;color:#fff;border:none" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':'')
+    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':'')
     +'</div>'
     +'</div>'
     // ── Skinfold panel ────────────────────────────────────────────────────────
