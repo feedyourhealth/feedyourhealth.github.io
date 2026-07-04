@@ -47,15 +47,25 @@ function homePortalActivity(){
     .sort(function(a,b){return a.gap-b.gap;});
 }
 
-function homeRow(c,sub){
+// Αρχικά ενός ονόματος για το avatar κάθε γραμμής (π.χ. "Γιώργος Παπαδόπουλος" → "ΓΠ").
+function initials(name){
+  var parts=(name||'').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '?';
+  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0]+parts[1][0]).toUpperCase();
+}
+
+function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
+    +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
     +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
     +'<span class="hm-row-sub">'+sub+'</span>'
+    +(actionHtml||'')
     +'</div>';
 }
 
-function homeCard(title,items,emptyText,moreLabel){
-  var html='<div class="hm-card"><div class="hm-card-title">'+title+'</div>';
+function homeCard(title,items,emptyText,moreLabel,variant){
+  var html='<div class="hm-card hm-card-'+variant+'"><div class="hm-card-title">'+title+'</div>';
   if(!items.length){
     html+='<div class="hm-empty">'+emptyText+'</div>';
   } else {
@@ -64,6 +74,21 @@ function homeCard(title,items,emptyText,moreLabel){
   }
   html+='</div>';
   return html;
+}
+
+// Ξαναδημοσιεύει το πλάνο ενός πελάτη απευθείας από την Αρχική, χωρίς να φύγουμε από τη σελίδα.
+function homeQuickRepublish(clientId,btn){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  if(!window.Cloud || !window.Cloud.publishPlan){ alert('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
+  var orig=btn.textContent;
+  btn.disabled=true; btn.textContent='Δημοσίευση...';
+  window.Cloud.publishPlan(c).then(function(){
+    renderHome();
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent=orig;
+    alert('Σφάλμα δημοσίευσης: '+(e.message||''));
+  });
 }
 
 function renderHome(){
@@ -84,14 +109,15 @@ function renderHome(){
 
   var metrics=(typeof ANALYTICS!=='undefined'&&ANALYTICS.getClientMetrics)?ANALYTICS.getClientMetrics():{total:clients.length,active:0};
   var attentionRows=homeClientsNeedingAttention().map(function(x){
-    return homeRow(x.c, isFinite(x.days)?(x.days+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα');
+    return homeRow(x.c, isFinite(x.days)?(x.days+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα', 'red');
   });
   var staleRows=homeStaleLinks().map(function(c){
-    return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο');
+    return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
+      '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
   });
   var activityRows=homePortalActivity().map(function(x){
     var sub=x.gap===0?'σήμερα':(x.gap===1?'χθες':'πριν '+x.gap+' ημέρες');
-    return homeRow(x.c,sub);
+    return homeRow(x.c,sub,'teal');
   });
 
   var html='<div class="hm-wrap">';
@@ -107,9 +133,9 @@ function renderHome(){
     +'</div>';
 
   html+='<div class="hm-grid">';
-  html+=homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'Όλοι οι πελάτες έχουν πρόσφατη μέτρηση 👍', 'ακόμα');
-  html+=homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'Κανένας σύνδεσμος δεν χρειάζεται ανανέωση 👍', 'ακόμα');
-  html+=homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'Καμία πρόσφατη δραστηριότητα από το portal', 'ακόμα');
+  html+=homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'Όλοι οι πελάτες έχουν πρόσφατη μέτρηση 👍', 'ακόμα', 'danger');
+  html+=homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'Κανένας σύνδεσμος δεν χρειάζεται ανανέωση 👍', 'ακόμα', 'warning');
+  html+=homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'Καμία πρόσφατη δραστηριότητα από το portal', 'ακόμα', 'info');
   html+='</div>';
 
   html+='</div>';
@@ -146,8 +172,9 @@ function dietsHistory(){
   return clients.filter(function(c){return !c.deleted && c.archived && dietsHasPlan(c);});
 }
 
-function dietsRow(c,sub,actionHtml){
+function dietsRow(c,sub,actionHtml,accent){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\');swTab(2)">'
+    +'<div class="hm-avatar'+(accent?' hm-avatar-'+accent:'')+'">'+initials(c.name)+'</div>'
     +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
     +'<span class="hm-row-sub">'+sub+'</span>'
     +(actionHtml||'')
@@ -176,8 +203,8 @@ function dietsQuickRepublish(clientId,btn){
   });
 }
 
-function dietsSection(title,items,rowFn,emptyText){
-  var html='<div class="hm-card" style="margin-bottom:16px"><div class="hm-card-title">'+esc(title)+' ('+items.length+')</div>';
+function dietsSection(title,items,rowFn,emptyText,variant){
+  var html='<div class="hm-card'+(variant?' hm-card-'+variant:'')+'" style="margin-bottom:16px"><div class="hm-card-title">'+esc(title)+' ('+items.length+')</div>';
   if(!items.length){ html+='<div class="hm-empty">'+emptyText+'</div>'; }
   else { items.forEach(function(c){ html+=rowFn(c); }); }
   html+='</div>';
@@ -197,18 +224,18 @@ function renderDiets(){
     // με άδειο weekPlan αλλά παλιό δημοσιευμένο hash θα δείξει isStale()=true κι αυτός, αλλά χρειάζεται
     // νέο πλάνο πρώτα, όχι απλή επαναδημοσίευση του κενού.
     if(!dietsHasPlan(c)){
-      return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>');
+      return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>', 'red');
     }
     if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)){
-      return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
+      return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>', 'red');
     }
     var daysOld=Math.floor((Date.now()-c.planGeneratedAt)/86400000);
-    return dietsRow(c, 'το πλάνο έγινε πριν '+daysOld+' ημέρες', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>');
-  }, 'Όλοι είναι εντάξει 👍');
+    return dietsRow(c, 'το πλάνο έγινε πριν '+daysOld+' ημέρες', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>', 'red');
+  }, 'Όλοι είναι εντάξει 👍', 'danger');
 
   html+=dietsSection('🟢 Ενεργά', dietsActive(), function(c){
-    return dietsRow(c, 'τελ. ενημέρωση '+fmtLastAccess(c.lastAccess));
-  }, 'Κανένας πελάτης με ενεργό πλάνο ακόμα');
+    return dietsRow(c, 'τελ. ενημέρωση '+fmtLastAccess(c.lastAccess), null, 'green');
+  }, 'Κανένας πελάτης με ενεργό πλάνο ακόμα', 'success');
 
   html+=dietsSection('📁 Ιστορικό', dietsHistory(), function(c){
     return dietsRow(c, c.archivedAt?('αρχειοθετήθηκε '+fmtLastAccess(new Date(c.archivedAt).getTime())):'αρχειοθετημένος');
@@ -227,6 +254,21 @@ function renderDiets(){
 
 function sel(current,value){ return current===value?' selected':''; }
 
+// Κοινός χάρτης αθλημάτων: χρησιμοποιείται τόσο στο φίλτρο της σελίδας Πελάτες όσο και στην κάρτα κάθε πελάτη.
+var SPORT_INFO={
+  bjj:{icon:'🥋',label:'BJJ'},
+  boxing:{icon:'🥊',label:'Boxing'},
+  mma:{icon:'🤼',label:'MMA'},
+  football:{icon:'⚽',label:'Ποδόσφαιρο'},
+  basketball:{icon:'🏀',label:'Μπάσκετ'},
+  weightlifting:{icon:'🏋️',label:'Weightlifting'},
+  cycling:{icon:'🚴',label:'Ποδηλασία'},
+  running:{icon:'🏃',label:'Τρέξιμο'},
+  swimming:{icon:'🏊',label:'Κολύμβηση'},
+  crossfit:{icon:'⚡',label:'CrossFit'},
+  custom:{icon:'✏️',label:'Προσαρμοσμένο'}
+};
+
 function renderClients(){
   curId=null;
   var main=document.getElementById('main');
@@ -237,38 +279,26 @@ function renderClients(){
 
   html+='<div class="clients-toolbar">';
   html+='<input type="text" id="client-search" class="client-search-inp" placeholder="🔍 Αναζήτηση πελάτη..." aria-label="Αναζήτηση πελάτη" value="'+esc(_clientSearchTerm)+'" oninput="filterClients(this.value)">';
-  html+='<div style="display:flex;gap:6px;margin:8px 0">';
-  html+='<select id="client-filter-goal" aria-label="Φίλτρο στόχου" onchange="setClientFilter(\'goal\',this.value)" style="flex:1;font-size:11px;padding:5px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">'
+  html+='<select id="client-filter-goal" class="clients-toolbar-select" aria-label="Φίλτρο στόχου" onchange="setClientFilter(\'goal\',this.value)">'
     +'<option value=""'+sel(_clientFilterGoal,'')+'>Όλοι οι στόχοι</option>'
     +'<option value="loss"'+sel(_clientFilterGoal,'loss')+'>Απώλεια βάρους</option>'
     +'<option value="mild"'+sel(_clientFilterGoal,'mild')+'>Ήπια απώλεια</option>'
     +'<option value="maintain"'+sel(_clientFilterGoal,'maintain')+'>Διατήρηση</option>'
     +'<option value="gain"'+sel(_clientFilterGoal,'gain')+'>Αύξηση μάζας</option>'
     +'</select>';
-  html+='<select id="client-filter-sport" aria-label="Φίλτρο αθλήματος" onchange="setClientFilter(\'sport\',this.value)" style="flex:1;font-size:11px;padding:5px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">'
-    +'<option value=""'+sel(_clientFilterSport,'')+'>Όλα τα αθλήματα</option>'
-    +'<option value="bjj"'+sel(_clientFilterSport,'bjj')+'>🥋 BJJ</option>'
-    +'<option value="boxing"'+sel(_clientFilterSport,'boxing')+'>🥊 Boxing</option>'
-    +'<option value="mma"'+sel(_clientFilterSport,'mma')+'>🤼 MMA</option>'
-    +'<option value="football"'+sel(_clientFilterSport,'football')+'>⚽ Ποδόσφαιρο</option>'
-    +'<option value="basketball"'+sel(_clientFilterSport,'basketball')+'>🏀 Μπάσκετ</option>'
-    +'<option value="weightlifting"'+sel(_clientFilterSport,'weightlifting')+'>🏋️ Weightlifting</option>'
-    +'<option value="cycling"'+sel(_clientFilterSport,'cycling')+'>🚴 Ποδηλασία</option>'
-    +'<option value="running"'+sel(_clientFilterSport,'running')+'>🏃 Τρέξιμο</option>'
-    +'<option value="swimming"'+sel(_clientFilterSport,'swimming')+'>🏊 Κολύμβηση</option>'
-    +'<option value="crossfit"'+sel(_clientFilterSport,'crossfit')+'>⚡ CrossFit</option>'
-    +'<option value="custom"'+sel(_clientFilterSport,'custom')+'>✏️ Προσαρμοσμένο</option>'
-    +'</select>';
-  html+='</div>';
-  html+='<div style="display:flex;gap:6px;align-items:center">';
-  html+='<select id="client-sort" aria-label="Ταξινόμηση πελατών" onchange="setClientSort(this.value)" style="flex:1;font-size:11px;padding:5px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">'
+  html+='<select id="client-filter-sport" class="clients-toolbar-select" aria-label="Φίλτρο αθλήματος" onchange="setClientFilter(\'sport\',this.value)">'
+    +'<option value=""'+sel(_clientFilterSport,'')+'>Όλα τα αθλήματα</option>';
+  Object.keys(SPORT_INFO).forEach(function(key){
+    html+='<option value="'+key+'"'+sel(_clientFilterSport,key)+'>'+SPORT_INFO[key].icon+' '+SPORT_INFO[key].label+'</option>';
+  });
+  html+='</select>';
+  html+='<select id="client-sort" class="clients-toolbar-select" aria-label="Ταξινόμηση πελατών" onchange="setClientSort(this.value)">'
     +'<option value="recent"'+sel(_clientSortMode,'recent')+'>🕐 Πρόσφατη επίσκεψη πρώτα</option>'
     +'<option value="oldest"'+sel(_clientSortMode,'oldest')+'>⏳ Παλαιότερη επίσκεψη πρώτα</option>'
     +'<option value="name"'+sel(_clientSortMode,'name')+'>🔤 Όνομα (Α-Ω)</option>'
     +'<option value="stale"'+sel(_clientSortMode,'stale')+'>⚠️ Μπαγιατεμένο πλάνο πρώτα</option>'
     +'</select>';
-  html+='<button class="add-btn" style="width:auto;white-space:nowrap" onclick="addClient()">+ Νέος πελάτης</button>';
-  html+='</div>';
+  html+='<button class="add-btn add-btn-toolbar" onclick="addClient()">+ Νέος πελάτης</button>';
   html+='</div>';
 
   html+='<div id="client-list" class="clients-list-page"></div>';

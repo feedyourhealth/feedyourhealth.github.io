@@ -2509,35 +2509,47 @@ function renderSB(){
   }
   var html='';
   if((term||_clientFilterGoal||_clientFilterSport)&&list.length===0){
-    html='<div style="font-size:11px;color:#bbb;padding:6px 10px;font-style:italic">Κανένα αποτέλεσμα</div>';
+    html='<div style="font-size:12px;color:#bbb;padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
   } else {
+    html+='<div class="clients-grid">';
     list.forEach(function(c){
       var hasActive = c.weekPlan && Object.keys(c.weekPlan).length > 0;
-      html+='<div class="ci'+(c.id===curId?' active':'')+'" onclick="selectClient(\''+c.id+'\')">'
-        +'<div class="ci-name">'+(c.name||'Νέος πελάτης')+'</div>'
-        +'<div class="ci-info">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg • '+fmtLastAccess(c.lastAccess)+'</div>'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999;gap:6px">'
-        +'<span>'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
-        +progressBadge(c)
+      var sportInfo=(typeof SPORT_INFO!=='undefined')?SPORT_INFO[c.sport]:null;
+      var sport=sportInfo?(' • '+sportInfo.icon+' '+sportInfo.label):'';
+      html+='<div class="client-card" onclick="selectClient(\''+c.id+'\')">'
+        +'<div class="cc-top">'
+        +'<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'
+        +'<div class="cc-headtext">'
+        +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+'</div>'
+        +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+'</div>'
+        +'</div>'
+        +'<div class="cc-actions">'
         +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
         +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
         +'</div>'
+        +'</div>'
+        +'<div class="cc-bottom">'
+        +'<span class="cc-status '+(hasActive?'cc-status-active':'cc-status-none')+'">'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
+        +progressBadge(c)
+        +'<span class="cc-lastaccess">'+fmtLastAccess(c.lastAccess)+'</span>'
+        +'</div>'
         +'</div>';
     });
+    html+='</div>';
   }
 
   // ✅ ARCHIVE SECTION: Show archived (but not deleted) clients
   var archivedClients = clients.filter(function(c){return c.archived && !c.deleted;});
   if(archivedClients.length > 0 && !term){
-    html+='<div style="border-top:1px solid #f0f0f0;margin-top:10px;padding-top:10px;">';
-    html+='<div style="font-size:10px;font-weight:700;color:#999;padding:6px 10px;text-transform:uppercase;letter-spacing:0.5px">📦 Αρχειοθετημένοι ('+archivedClients.length+')</div>';
+    html+='<div class="clients-section-title">📦 Αρχειοθετημένοι ('+archivedClients.length+')</div>';
+    html+='<div class="clients-grid">';
     archivedClients.forEach(function(c){
-      html+='<div class="ci" style="background:#fafafa;opacity:0.7;padding:8px;">'
-        +'<div class="ci-name" style="color:#999;">'+(c.name||'Νέος πελάτης')+'</div>'
-        +'<div class="ci-info" style="color:#bbb;font-size:9px;">Αρχειοθετήθηκε</div>'
-        +'<div style="display:flex;gap:4px;margin-top:6px;">'
-        +'<button style="flex:1;padding:5px;font-size:10px;background:#4CAF50;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:600;" onclick="event.stopPropagation();unarchiveClient(\''+c.id+'\');renderSB()">↶ Επαναφορά</button>'
-        +'<button style="flex:1;padding:5px;font-size:10px;background:#c62828;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:600;" onclick="event.stopPropagation();deleteClient(\''+c.id+'\');renderSB()">🗑️ Διαγραφή</button>'
+      html+='<div class="client-card cc-muted">'
+        +'<div class="cc-name cc-muted-name">'+esc(c.name||'Νέος πελάτης')+'</div>'
+        +'<div class="cc-sub cc-muted-sub">Αρχειοθετήθηκε</div>'
+        +'<div class="cc-muted-actions">'
+        +'<button class="cc-restore" onclick="event.stopPropagation();unarchiveClient(\''+c.id+'\');renderSB()">↶ Επαναφορά</button>'
+        +'<button class="cc-permadelete" onclick="event.stopPropagation();deleteClient(\''+c.id+'\');renderSB()">🗑️ Διαγραφή</button>'
         +'</div>'
         +'</div>';
     });
@@ -2547,15 +2559,15 @@ function renderSB(){
   // ✅ TRASH SECTION: Show deleted clients
   var deletedClients = clients.filter(function(c){return c.deleted;});
   if(deletedClients.length > 0 && !term){
-    html+='<div style="border-top:1px solid #f0f0f0;margin-top:10px;padding-top:10px;">';
-    html+='<div style="font-size:10px;font-weight:700;color:#999;padding:6px 10px;text-transform:uppercase;letter-spacing:0.5px">🗑️ Διαγραμμένοι ('+deletedClients.length+')</div>';
+    html+='<div class="clients-section-title">🗑️ Διαγραμμένοι ('+deletedClients.length+')</div>';
+    html+='<div class="clients-grid">';
     deletedClients.forEach(function(c){
-      html+='<div class="ci" style="background:#fafafa;opacity:0.7;padding:8px;">'
-        +'<div class="ci-name" style="color:#999;">'+(c.name||'Νέος πελάτης')+'</div>'
-        +'<div class="ci-info" style="color:#bbb;font-size:9px;">Διαγράφηκε</div>'
-        +'<div style="display:flex;gap:4px;margin-top:6px;">'
-        +'<button style="flex:1;padding:5px;font-size:10px;background:#4CAF50;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:600;" onclick="event.stopPropagation();restoreClient(\''+c.id+'\');renderSB()">↶ Ανάκτηση</button>'
-        +'<button style="flex:1;padding:5px;font-size:10px;background:#c62828;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:600;" onclick="event.stopPropagation();permanentlyDeleteClient(\''+c.id+'\');renderSB()">🗑️ Μόνιμα</button>'
+      html+='<div class="client-card cc-muted">'
+        +'<div class="cc-name cc-muted-name">'+esc(c.name||'Νέος πελάτης')+'</div>'
+        +'<div class="cc-sub cc-muted-sub">Διαγράφηκε</div>'
+        +'<div class="cc-muted-actions">'
+        +'<button class="cc-restore" onclick="event.stopPropagation();restoreClient(\''+c.id+'\');renderSB()">↶ Ανάκτηση</button>'
+        +'<button class="cc-permadelete" onclick="event.stopPropagation();permanentlyDeleteClient(\''+c.id+'\');renderSB()">🗑️ Μόνιμα</button>'
         +'</div>'
         +'</div>';
     });
