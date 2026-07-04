@@ -107,7 +107,7 @@ body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f
 .hm-stat-lbl{font-size:11px;color:#666;margin-top:2px}
 .hm-stat-names{font-size:9.5px;color:#999;margin-top:4px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-.hm-card{background:#fff;border:1px solid #e0e0e0;border-left:4px solid #e0e0e0;border-radius:10px;padding:14px 16px}
+.hm-card{background:#fff;border:1px solid #e0e0e0;border-left:4px solid #e0e0e0;border-radius:10px;padding:14px 16px;container-type:inline-size}
 .hm-card-danger{border-left-color:#E24B4A}
 .hm-card-warning{border-left-color:#EF9F27}
 .hm-card-info{border-left-color:#025857}
@@ -130,9 +130,17 @@ body.dark-mode .hm-avatar-green{background:#14301a;color:#8bc98f}
 .hm-row-sub{font-size:10.5px;color:#999;white-space:nowrap;flex-shrink:0}
 .hm-empty{font-size:11.5px;color:#999;padding:8px 4px;font-style:italic}
 .hm-more{font-size:10.5px;color:#025857;text-align:center;padding-top:6px;font-weight:600}
-.hm-action-btn{padding:5px 10px;border-radius:6px;border:none;background:#025857;color:#fff;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.hm-action-btn{padding:5px 10px;border-radius:6px;border:none;background:#025857;color:#fff;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;width:auto}
 .hm-action-btn:hover{background:#037070}
 .hm-action-btn:disabled{opacity:.6;cursor:default}
+/* .hm-card is a query container (see container-type above): when it's too narrow
+   for avatar+name+sub-text+action button on one line — happens both on mobile
+   viewports AND on desktop in the 2-column Αρχική grid — drop the button to its
+   own line instead of squeezing the client name down to 0px width. */
+@container (max-width:420px){
+  .hm-row{flex-wrap:wrap}
+  .hm-row .hm-action-btn{flex-basis:100%;margin-top:4px}
+}
 body.dark-mode .hm-stat{background:#1a1a1a;border-color:#444}
 body.dark-mode .hm-stat-num{color:#4fc3f7}
 body.dark-mode .hm-stat-lbl{color:#aaa}
