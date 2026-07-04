@@ -46,3 +46,22 @@ _CLOUD_MIGRATION_SAFE/
 # OS / editor cruft
 desktop.ini
 .DS_Store
+
+# Internal dev/audit docs & deploy scripts — these sat tracked at repo root,
+# which GitHub Pages serves publicly (feedyourhealth.github.io/<name>).
+# Untracked 2026-07-04; listed by exact name (not a *.md wildcard) since
+# README.md is meant to stay public.
+ACCURACY_TEST_PLAN.md
+CALCULATIONS_AUDIT.md
+CODE_ANALYSIS_REPORT.md
+FINAL_COMPLETION_SUMMARY.md
+FULL_TEST_REPORT.md
+HOW_TO_UPDATE.md
+LIVE_TEST_SESSION.md
+MEDITERRANEAN_AUDIT.md
+POTENTIAL_BUGS_ANALYSIS.md
+QUICK_TEST_CHECKLIST.txt
+TEST_SUMMARY.md
+SETUP_GITHUB.sh
+update.bat
+update.sh
