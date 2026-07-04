@@ -1233,7 +1233,19 @@ function cm(n,g){
     rx.ing.forEach(function(ing){var v=cm(ing.n,ing.g*scale);R.k+=v.k;R.p+=v.p;R.f+=v.f;R.c+=v.c;R.fi+=v.fi;});
     return{k:+R.k.toFixed(1),p:+R.p.toFixed(1),f:+R.f.toFixed(1),c:+R.c.toFixed(1),fi:+R.fi.toFixed(1)};
   }
-  var key=resolveFood(n);var f=FOODS[key];if(!f){if(typeof console!=='undefined'&&console.warn)console.warn('[cm] Τρόφιμο χωρίς μακροθρεπτικά (δεν βρέθηκε στο FOODS):',n);f={k:0,p:0,c:0,f:0,fi:0};}return{k:+(g/100*f.k).toFixed(1),p:+(g/100*f.p).toFixed(1),f:+(g/100*f.f).toFixed(1),c:+(g/100*f.c).toFixed(1),fi:+(g/100*(f.fi||0)).toFixed(1)};}
+  var key=resolveFood(n);var f=FOODS[key];
+  if(!f){
+    if(typeof console!=='undefined'&&console.warn)console.warn('[cm] Τρόφιμο χωρίς μακροθρεπτικά (δεν βρέθηκε στο FOODS):',n);
+    if(typeof window!=='undefined'){
+      window._missingFoodWarned=window._missingFoodWarned||{};
+      if(!window._missingFoodWarned[n]){
+        window._missingFoodWarned[n]=true;
+        if(typeof showErrorToast==='function')showErrorToast('⚠️ Η τροφή "'+n+'" δεν βρέθηκε στη βάση τροφίμων — υπολογίζεται ως 0 θερμίδες. Ενημέρωσε τον προγραμματιστή.');
+      }
+    }
+    f={k:0,p:0,c:0,f:0,fi:0};
+  }
+  return{k:+(g/100*f.k).toFixed(1),p:+(g/100*f.p).toFixed(1),f:+(g/100*f.f).toFixed(1),c:+(g/100*f.c).toFixed(1),fi:+(g/100*(f.fi||0)).toFixed(1)};}
 
 /* ✅ Get food color HEX value based on category - RETURNS HEX COLOR */
 function getFoodColorHex(foodName){
