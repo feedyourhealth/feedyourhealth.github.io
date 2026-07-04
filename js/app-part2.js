@@ -356,17 +356,26 @@ function renderMain(){
     +'</div>'
     // ✅ S2: MEAL PLAN VIEW ONLY
     +'<div id="s2" style="display:none">'
-    +'<div class="brow"><button class="btn" onclick="swTab(1)">&#8592; Στοιχεία</button>'
-    +'<button class="btn" onclick="regeneratePlan()">&#8635; Αναδημιουργία (δεν μου αρέσει)</button>'
-    +'<button class="btn" id="star-tmpl-btn" style="background:'+(c.isMealTemplate?'#ffb300':'#fff')+';color:'+(c.isMealTemplate?'#fff':'#1a1a1a')+';border:1px solid '+(c.isMealTemplate?'#ffb300':'#e0e0e0')+';" onclick="toggleMealTemplate()" title="Χρήση των γευμάτων αυτού του πελάτη ως έμπνευση σε νέα πλάνα">'+(c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης')+'</button>'
-    +'<button class="btn primary" onclick="showSavePlanPanel()">💾 Αποθήκευση Διατροφής</button>'
-    +'<button class="btn secondary" onclick="exportWord()">&#8659; Word (.rtf)</button>'
-    +'<button class="btn secondary" onclick="exportGoogleDocs()">&#8659; Google Docs (.docx)</button>'
-    +'<button class="btn secondary" onclick="exportPDF()">&#8659; PDF</button>'
-    +'<button class="btn secondary" onclick="exportPDF(\'en\')">&#8659; PDF (English)</button>'
-    +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857" onclick="openPublishModal()" title="Δημιούργησε σύνδεσμο για να δει ο πελάτης το πλάνο στο κινητό του">&#128241; Στείλε στον πελάτη</button>'
-    +((window.Cloud && window.Cloud.isStale(c))?'<span style="background:#fff3e0;color:#e65100;border:1px solid #ffb300;border-radius:12px;padding:5px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;" title="Το πλάνο άλλαξε μετά την τελευταία δημοσίευση. Πάτα «Στείλε στον πελάτη» ξανά για να ενημερωθεί ο σύνδεσμος του πελάτη.">&#9888;&#65039; Ο σύνδεσμος πελάτη είναι ξεπερασμένος</span>':'')
-    +'<button class="btn save-tmpl-btn" style="margin-left:auto" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button></div>'
+    +'<div class="plan-actions-primary">'
+      +'<button class="btn primary" onclick="showSavePlanPanel()">&#128190; Αποθήκευση Διατροφής</button>'
+      +'<button class="btn secondary" onclick="openPublishModal()" title="Δημιούργησε σύνδεσμο για να δει ο πελάτης το πλάνο στο κινητό του">&#128241; Στείλε στον πελάτη</button>'
+    +'</div>'
+    +((window.Cloud && window.Cloud.isStale(c))?'<div class="plan-stale-warning" title="Το πλάνο άλλαξε μετά την τελευταία δημοσίευση. Πάτα «Στείλε στον πελάτη» ξανά για να ενημερωθεί ο σύνδεσμος του πελάτη.">&#9888;&#65039; Ο σύνδεσμος πελάτη είναι ξεπερασμένος</div>':'')
+    +'<div class="plan-links-row">'
+      +'<button class="btn tertiary" onclick="swTab(1)">&#8592; Στοιχεία</button>'
+      +'<button class="btn tertiary" onclick="regeneratePlan()">&#8635; Αναδημιουργία</button>'
+      +'<button class="btn tertiary" id="star-tmpl-btn" onclick="toggleMealTemplate()" title="Χρήση των γευμάτων αυτού του πελάτη ως έμπνευση σε νέα πλάνα">'+(c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης')+'</button>'
+      +'<button class="btn tertiary save-tmpl-btn" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button>'
+    +'</div>'
+    +'<div class="plan-export-dropdown">'
+      +'<button class="btn plan-export-btn" onclick="togglePlanExportMenu(this)">&#8659; Εξαγωγή &#9662;</button>'
+      +'<div class="plan-export-menu" id="plan-export-menu">'
+        +'<button onclick="closePlanExportMenu();exportWord()">Word (.rtf)</button>'
+        +'<button onclick="closePlanExportMenu();exportGoogleDocs()">Google Docs (.docx)</button>'
+        +'<button onclick="closePlanExportMenu();exportPDF()">PDF</button>'
+        +'<button onclick="closePlanExportMenu();exportPDF(\'en\')">PDF (English)</button>'
+      +'</div>'
+    +'</div>'
     +'<div id="save-tmpl-panel" class="save-tmpl-panel" style="display:none">'
     +'<span class="save-tmpl-lbl">Όνομα:</span>'
     +'<input type="text" id="save-tmpl-name" class="save-tmpl-inp" placeholder="π.χ. Πλάνο Muay Thai 1800kcal...">'
@@ -3361,3 +3370,17 @@ function ensureOmega3FishIntake(days){
 
   return result;
 }
+
+function togglePlanExportMenu(btn){
+  var menu=document.getElementById('plan-export-menu');
+  if(!menu) return;
+  menu.classList.toggle('open');
+}
+function closePlanExportMenu(){
+  var menu=document.getElementById('plan-export-menu');
+  if(menu) menu.classList.remove('open');
+}
+document.addEventListener('click',function(e){
+  var dd=document.querySelector('.plan-export-dropdown');
+  if(dd && !dd.contains(e.target)) closePlanExportMenu();
+});

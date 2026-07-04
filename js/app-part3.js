@@ -1788,36 +1788,41 @@ function renderWeekTable(){
   // Enable drag & drop for meals
   enableMealDragDrop();
 
-  // Add buttons container for micronutrients and supplement modals
+  // Small neutral icon row for the analysis tools (previously 4 equally-loud colored
+  // buttons competing with the primary save/send actions above the plan)
   var btnContainer=document.createElement('div');
-  btnContainer.style.cssText='display:flex;gap:10px;margin-top:15px;';
+  btnContainer.className='plan-tools-row';
   con.appendChild(btnContainer);
 
   // Add micronutrients button
   var microBtn=document.createElement('button');
-  microBtn.innerHTML='📊 Μικροθρεπτικά & Κρίσιμες Στόχοι ('+c.weekPlan.length+')';
-  microBtn.style.cssText='background:#025857;color:white;padding:10px 15px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:13px;flex:1;';
+  microBtn.className='plan-tool-btn';
+  microBtn.innerHTML='📊';
+  microBtn.title='Μικροθρεπτικά & Κρίσιμοι Στόχοι ('+Object.keys(c.weekPlan||{}).length+')';
   microBtn.onclick=openMicroModal;
   btnContainer.appendChild(microBtn);
 
   // Add supplement suggestions button
   var suppBtn=document.createElement('button');
-  suppBtn.innerHTML='💊 Προτάσεις Συμπληρωμάτων';
-  suppBtn.style.cssText='background:#e65100;color:white;padding:10px 15px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:13px;flex:1;';
+  suppBtn.className='plan-tool-btn';
+  suppBtn.innerHTML='💊';
+  suppBtn.title='Προτάσεις Συμπληρωμάτων';
   suppBtn.onclick=openSupplementModal;
   btnContainer.appendChild(suppBtn);
 
   // Add gap analysis button
   var gapBtn=document.createElement('button');
-  gapBtn.innerHTML='🔬 Ανάλυση Κενών';
-  gapBtn.style.cssText='background:#1976d2;color:white;padding:10px 15px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:13px;flex:1;';
+  gapBtn.className='plan-tool-btn';
+  gapBtn.innerHTML='🔬';
+  gapBtn.title='Ανάλυση Κενών';
   gapBtn.onclick=openGapAnalysisModal;
   btnContainer.appendChild(gapBtn);
 
   // Add validation audit button
   var valBtn=document.createElement('button');
-  valBtn.innerHTML='🔍 Validate Plan';
-  valBtn.style.cssText='background:#7cb342;color:white;padding:10px 15px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:13px;flex:1;';
+  valBtn.className='plan-tool-btn';
+  valBtn.innerHTML='🔍';
+  valBtn.title='Validate Plan';
   valBtn.onclick=openValidationModal;
   btnContainer.appendChild(valBtn);
 
