@@ -51,7 +51,10 @@ class UndoRedoManager {
 
     this.currentIndex++;
     const command = this.history[this.currentIndex];
-    if (command && typeof command.execute === 'function') {
+    if (command && typeof command.redo === 'function') {
+      command.redo();
+      console.log('↷ Redo:', command.constructor.name);
+    } else if (command && typeof command.execute === 'function') {
       command.execute();
       console.log('↷ Redo:', command.constructor.name);
     }
@@ -162,6 +165,7 @@ class GeneratePlanCommand {
 
   execute() {
     genPlan();
+    this.newPlan = JSON.parse(JSON.stringify(this.client.weekPlan));
     console.log('📋 Plan generated');
   }
 
@@ -170,6 +174,13 @@ class GeneratePlanCommand {
     save();
     renderWeekTable();
     console.log('📋 Plan reverted to previous version');
+  }
+
+  redo() {
+    this.client.weekPlan = JSON.parse(JSON.stringify(this.newPlan));
+    save();
+    renderWeekTable();
+    console.log('📋 Plan redone (restored generated version)');
   }
 }
 
