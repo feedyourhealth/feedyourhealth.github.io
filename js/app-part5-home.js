@@ -207,3 +207,61 @@ function renderDiets(){
   main.innerHTML=html;
   renderSB();
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ΠΕΛΑΤΕΣ — client browsing page (moved out of the sidebar so the
+// sidebar stays just navigation + quick actions, matching the design)
+// ═══════════════════════════════════════════════════════════════
+
+function sel(current,value){ return current===value?' selected':''; }
+
+function renderClients(){
+  curId=null;
+  var main=document.getElementById('main');
+  if(!main) return;
+
+  var html='<div class="hm-wrap">';
+  html+='<div class="hm-title">👥 Πελάτες</div>';
+
+  html+='<div class="clients-toolbar">';
+  html+='<input type="text" id="client-search" class="client-search-inp" placeholder="🔍 Αναζήτηση πελάτη..." aria-label="Αναζήτηση πελάτη" value="'+esc(_clientSearchTerm)+'" oninput="filterClients(this.value)">';
+  html+='<div style="display:flex;gap:6px;margin:8px 0">';
+  html+='<select id="client-filter-goal" aria-label="Φίλτρο στόχου" onchange="setClientFilter(\'goal\',this.value)" style="flex:1;font-size:11px;padding:5px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">'
+    +'<option value=""'+sel(_clientFilterGoal,'')+'>Όλοι οι στόχοι</option>'
+    +'<option value="loss"'+sel(_clientFilterGoal,'loss')+'>Απώλεια βάρους</option>'
+    +'<option value="mild"'+sel(_clientFilterGoal,'mild')+'>Ήπια απώλεια</option>'
+    +'<option value="maintain"'+sel(_clientFilterGoal,'maintain')+'>Διατήρηση</option>'
+    +'<option value="gain"'+sel(_clientFilterGoal,'gain')+'>Αύξηση μάζας</option>'
+    +'</select>';
+  html+='<select id="client-filter-sport" aria-label="Φίλτρο αθλήματος" onchange="setClientFilter(\'sport\',this.value)" style="flex:1;font-size:11px;padding:5px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">'
+    +'<option value=""'+sel(_clientFilterSport,'')+'>Όλα τα αθλήματα</option>'
+    +'<option value="bjj"'+sel(_clientFilterSport,'bjj')+'>🥋 BJJ</option>'
+    +'<option value="boxing"'+sel(_clientFilterSport,'boxing')+'>🥊 Boxing</option>'
+    +'<option value="mma"'+sel(_clientFilterSport,'mma')+'>🤼 MMA</option>'
+    +'<option value="football"'+sel(_clientFilterSport,'football')+'>⚽ Ποδόσφαιρο</option>'
+    +'<option value="basketball"'+sel(_clientFilterSport,'basketball')+'>🏀 Μπάσκετ</option>'
+    +'<option value="weightlifting"'+sel(_clientFilterSport,'weightlifting')+'>🏋️ Weightlifting</option>'
+    +'<option value="cycling"'+sel(_clientFilterSport,'cycling')+'>🚴 Ποδηλασία</option>'
+    +'<option value="running"'+sel(_clientFilterSport,'running')+'>🏃 Τρέξιμο</option>'
+    +'<option value="swimming"'+sel(_clientFilterSport,'swimming')+'>🏊 Κολύμβηση</option>'
+    +'<option value="crossfit"'+sel(_clientFilterSport,'crossfit')+'>⚡ CrossFit</option>'
+    +'<option value="custom"'+sel(_clientFilterSport,'custom')+'>✏️ Προσαρμοσμένο</option>'
+    +'</select>';
+  html+='</div>';
+  html+='<div style="display:flex;gap:6px;align-items:center">';
+  html+='<select id="client-sort" aria-label="Ταξινόμηση πελατών" onchange="setClientSort(this.value)" style="flex:1;font-size:11px;padding:5px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">'
+    +'<option value="recent"'+sel(_clientSortMode,'recent')+'>🕐 Πρόσφατη επίσκεψη πρώτα</option>'
+    +'<option value="oldest"'+sel(_clientSortMode,'oldest')+'>⏳ Παλαιότερη επίσκεψη πρώτα</option>'
+    +'<option value="name"'+sel(_clientSortMode,'name')+'>🔤 Όνομα (Α-Ω)</option>'
+    +'<option value="stale"'+sel(_clientSortMode,'stale')+'>⚠️ Μπαγιατεμένο πλάνο πρώτα</option>'
+    +'</select>';
+  html+='<button class="add-btn" style="width:auto;white-space:nowrap" onclick="addClient()">+ Νέος πελάτης</button>';
+  html+='</div>';
+  html+='</div>';
+
+  html+='<div id="client-list" class="clients-list-page"></div>';
+  html+='</div>';
+
+  main.innerHTML=html;
+  renderSB();
+}

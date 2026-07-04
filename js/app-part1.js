@@ -2565,7 +2565,8 @@ function renderSB(){
   if(!term&&base.length>0){
     html+='<div style="font-size:9px;color:#999;padding:6px 10px;text-align:center;margin-top:8px;font-weight:500;">'+list.length+(list.length!==base.length?' / '+base.length:'')+' πελάτες</div>';
   }
-  document.getElementById('client-list').innerHTML=html;
+  var clientListEl=document.getElementById('client-list');
+  if(clientListEl) clientListEl.innerHTML=html;
 
   // ✅ Update breadcrumbs after rendering
   if(typeof updateBreadcrumbs === 'function') updateBreadcrumbs();

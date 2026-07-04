@@ -91,10 +91,10 @@
 <div class="sb" id="sidebar">
   <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" title="Ανοίγ/Κλείσιμο" aria-label="Άνοιγμα/Κλείσιμο πλαϊνής μπάρας">☰</button>
   <button type="button" class="hm-nav-btn" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική</button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(7)" aria-label="Πελάτες">👥 Πελάτες</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(6)" aria-label="Συνταγές">🍽️ Συνταγές</button>
   <div class="sb-sep"></div>
-  <div class="sb-title">Πελάτες</div>
 
   <!-- Γρήγορες ενέργειες: πάντα διαθέσιμες, ανεξάρτητα από τον επιλεγμένο πελάτη -->
   <button type="button" class="qa-btn" id="qa-toggle-newplan" onclick="toggleQA('qa-newplan')" aria-expanded="false" aria-controls="qa-newplan">
@@ -116,39 +116,6 @@
   </div>
   <div class="sb-sep"></div>
 
-  <input type="text" id="client-search" class="client-search-inp" placeholder="🔍 Αναζήτηση πελάτη..." aria-label="Αναζήτηση πελάτη" oninput="filterClients(this.value)">
-  <div style="display:flex;gap:4px;margin:4px 0 6px;">
-    <select id="client-filter-goal" aria-label="Φίλτρο στόχου" onchange="setClientFilter('goal',this.value)" style="flex:1;font-size:10px;padding:3px 2px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">
-      <option value="">Όλοι οι στόχοι</option>
-      <option value="loss">Απώλεια βάρους</option>
-      <option value="mild">Ήπια απώλεια</option>
-      <option value="maintain">Διατήρηση</option>
-      <option value="gain">Αύξηση μάζας</option>
-    </select>
-    <select id="client-filter-sport" aria-label="Φίλτρο αθλήματος" onchange="setClientFilter('sport',this.value)" style="flex:1;font-size:10px;padding:3px 2px;border-radius:5px;border:1px solid #e0e0e0;color:#666;">
-      <option value="">Όλα τα αθλήματα</option>
-      <option value="bjj">🥋 BJJ</option>
-      <option value="boxing">🥊 Boxing</option>
-      <option value="mma">🤼 MMA</option>
-      <option value="football">⚽ Ποδόσφαιρο</option>
-      <option value="basketball">🏀 Μπάσκετ</option>
-      <option value="weightlifting">🏋️ Weightlifting</option>
-      <option value="cycling">🚴 Ποδηλασία</option>
-      <option value="running">🏃 Τρέξιμο</option>
-      <option value="swimming">🏊 Κολύμβηση</option>
-      <option value="crossfit">⚡ CrossFit</option>
-      <option value="custom">✏️ Προσαρμοσμένο</option>
-    </select>
-  </div>
-  <select id="client-sort" aria-label="Ταξινόμηση πελατών" onchange="setClientSort(this.value)" style="width:100%;font-size:10px;padding:3px 2px;border-radius:5px;border:1px solid #e0e0e0;color:#666;margin-bottom:6px;box-sizing:border-box">
-    <option value="recent">🕐 Πρόσφατη επίσκεψη πρώτα</option>
-    <option value="oldest">⏳ Παλαιότερη επίσκεψη πρώτα</option>
-    <option value="name">🔤 Όνομα (Α-Ω)</option>
-    <option value="stale">⚠️ Μπαγιατεμένο πλάνο πρώτα</option>
-  </select>
-  <div id="client-list"></div>
-  <button class="add-btn" onclick="addClient()">+ Νέος πελάτης</button>
-  <div class="sb-sep"></div>
   <button class="backup-btn" onclick="toggleSettingsPanel()" style="color:#025857;border-color:#025857">⚙️ Ρυθμίσεις</button>
 </div>
 <div class="main" id="main">

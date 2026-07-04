@@ -36,6 +36,8 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
   border:none;
 }
 .sb-title{font-size:10px;font-weight:700;color:#999;padding:0 10px 10px;text-transform:uppercase;letter-spacing:.5px}
+.clients-toolbar{max-width:640px}
+.clients-list-page{max-width:640px}
 .ci{padding:6px 8px;border-radius:8px;cursor:pointer;font-size:11px;margin-bottom:4px;display:flex;flex-direction:column;gap:2px;border:1px solid #f0f0f0;background:#f9f9f9;transition:all .2s}
 .ci:hover{background:#f0f7f7;border-color:#c5ddd8;transform:translateY(-2px);box-shadow:0 4px 12px rgba(2,88,87,.08)}
 .ci.active{background:#E2EEE5;color:#025857;font-weight:600;border-color:#c5ddd8;box-shadow:0 4px 12px rgba(2,88,87,.15)}
@@ -892,8 +894,6 @@ html{font-size:16px}
   .empty{padding:20px 10px}
 
   /* Menu items */
-  .ci{display:flex;align-items:center;justify-content:space-between}
-  .ci span{flex:1;word-break:break-word}
   .cdel{padding:4px 8px;font-size:12px}
 }
 

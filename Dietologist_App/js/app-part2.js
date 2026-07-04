@@ -2392,6 +2392,7 @@ function swTab(n){
   if(n===0){ if(typeof renderHome==='function') renderHome(); return; }
   if(n===5){ if(typeof renderDiets==='function') renderDiets(); return; }
   if(n===6){ if(typeof renderRecipes==='function') renderRecipes(); return; }
+  if(n===7){ if(typeof renderClients==='function') renderClients(); return; }
   var t1=document.getElementById('t1');if(t1)t1.classList.toggle('active',n===1);
   var t2=document.getElementById('t2');if(t2)t2.classList.toggle('active',n===2);
   var t3=document.getElementById('t3');if(t3)t3.classList.toggle('active',n===3);
