@@ -149,20 +149,7 @@
   <div id="client-list"></div>
   <button class="add-btn" onclick="addClient()">+ Νέος πελάτης</button>
   <div class="sb-sep"></div>
-  <button class="tmpl-sb-btn" onclick="showPracticeAnalytics()">📊 Επισκόπηση πρακτικής</button>
-  <div class="sb-sep"></div>
-  <button class="backup-btn export-btn" style="color:#0277bd;border-color:#01579b" onclick="exportClientsJSON()">☁️ Κατεβάσμε πελάτες (Google Drive)</button>
-  <button class="backup-btn" style="color:#0277bd;border-color:#01579b" onclick="importClientsJSON()">☁️ Ανεβάσμε πελάτες (Google Drive)</button>
-  <div class="sb-sep"></div>
-  <button class="tmpl-sb-btn" id="tmpl-sb-btn" onclick="selectTmpl()">&#9998; Πρότυπα πλάνων</button>
-  <div class="sb-sep"></div>
-  <button class="backup-btn export-btn" onclick="exportBackup()">&#9660; Αντίγραφο ασφαλείας (.json)</button>
-  <button class="backup-btn" onclick="importBackup()">&#9650; Εισαγωγή αντιγράφου</button>
-  <button class="backup-btn" onclick="chooseBackupFolder()" style="color:#2e7d32;border-color:#66bb6a">📂 Αυτόματο backup σε φάκελο</button>
-  <button class="backup-btn" onclick="restoreFromSnapshot()" style="color:#e65100;border-color:#ffb74d">↩️ Επαναφορά (snapshot)</button>
-  <div class="sb-sep"></div>
-  <button class="backup-btn" onclick="showReferences()" style="color:#5d4037;border-color:#bcaaa4">📚 Βιβλιογραφία &amp; Πηγές</button>
-  <button class="backup-btn" onclick="showDebugPanel()" style="color:#666;border-color:#ccc">🔧 Σφάλματα &amp; Αναφορά</button>
+  <button class="backup-btn" onclick="toggleSettingsPanel()" style="color:#025857;border-color:#025857">⚙️ Ρυθμίσεις</button>
 </div>
 <div class="main" id="main">
   <!-- ✅ Breadcrumbs Navigation -->
@@ -398,6 +385,23 @@
         <button onclick="createManualBackup()" style="width:100%;padding:10px 16px;background:#2196F3;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">💾 Δημιουργία Εφεδρικού Αντιγράφου Τώρα</button>
         <button onclick="exportAllDataAsJSON()" style="width:100%;padding:10px 16px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">📥 Εξαγωγή Όλων των Δεδομένων</button>
         <button onclick="showClearCacheConfirm()" style="width:100%;padding:10px 16px;background:#FF9800;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">🗑️ Διαγραφή Προσωρινής Μνήμης</button>
+      </div>
+    </div>
+
+    <!-- Λοιπές λειτουργίες (μετακινήθηκαν εδώ από την πλαϊνή μπάρα για να μείνει καθαρή) -->
+    <div style="margin-bottom:24px;">
+      <h3 style="color:#333;font-size:16px;margin:0 0 12px 0;font-weight:600;">🔧 Λοιπές λειτουργίες</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button onclick="closeSettingsPanel();showPracticeAnalytics()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">📊 Επισκόπηση πρακτικής</button>
+        <button onclick="closeSettingsPanel();selectTmpl()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">✎ Πρότυπα πλάνων</button>
+        <button onclick="closeSettingsPanel();exportClientsJSON()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">☁️ Κατεβάσμε πελάτες (Google Drive)</button>
+        <button onclick="closeSettingsPanel();importClientsJSON()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">☁️ Ανεβάσμε πελάτες (Google Drive)</button>
+        <button onclick="closeSettingsPanel();exportBackup()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">▼ Αντίγραφο ασφαλείας (.json)</button>
+        <button onclick="closeSettingsPanel();importBackup()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">▲ Εισαγωγή αντιγράφου</button>
+        <button onclick="closeSettingsPanel();chooseBackupFolder()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">📂 Αυτόματο backup σε φάκελο</button>
+        <button onclick="closeSettingsPanel();restoreFromSnapshot()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">↩️ Επαναφορά (snapshot)</button>
+        <button onclick="closeSettingsPanel();showReferences()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">📚 Βιβλιογραφία &amp; Πηγές</button>
+        <button onclick="closeSettingsPanel();showDebugPanel()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">🔧 Σφάλματα &amp; Αναφορά</button>
       </div>
     </div>
 
