@@ -235,7 +235,7 @@
     <div style="text-align:center;margin-bottom:24px;">
       <div id="confirmIcon" style="font-size:48px;margin-bottom:12px;">⚠️</div>
       <h3 id="confirmTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Επιβεβαίωση</h3>
-      <p id="confirmMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;"></p>
+      <p id="confirmMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;"></p>
     </div>
     <div style="display:flex;gap:12px;justify-content:center;">
       <button onclick="closeConfirmDialog()" aria-label="Ακύρωση διαλόγου" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
@@ -469,7 +469,7 @@ deleteClient = function(id) {
   if(client) {
     showConfirmDialog(
       'Διαγραφή Πελάτη',
-      'Είστε σίγουρο ότι θέλετε να διαγράψετε τον πελάτη "' + (client.name || 'Unnamed') + '";\\nΑυτή η ενέργεια δεν μπορεί να αναιρεθεί.',
+      'Είστε σίγουρο ότι θέλετε να διαγράψετε τον πελάτη "' + (client.name || 'Unnamed') + '";\nΘα μεταφερθεί στους «Διαγραμμένοι» απ\' όπου μπορείς να τον ανακτήσεις όποτε θες.',
       '🗑️',
       function() {
         _originalDeleteClient(id);

@@ -2319,7 +2319,7 @@ function updateMealTime(mealType, timeValue){
   c.mealTimes[mealType]=timeValue;
   save();
   // Recalculate meal timings if plan exists
-  if(c.weekPlan&&c.weekPlan.length>0){
+  if(c.weekPlan&&Object.keys(c.weekPlan).length>0){
     initializeMealTiming(c);
     renderWeekTable();
   }
@@ -2374,7 +2374,7 @@ function updateWeeklyTraining(dayIndex, hasTraining, time, duration){
 
   save();
   // Recalculate if plan exists
-  if(c.weekPlan&&c.weekPlan.length>0){
+  if(c.weekPlan&&Object.keys(c.weekPlan).length>0){
     initializeMealTiming(c);
     renderWeekTable();
   }
@@ -2422,7 +2422,7 @@ function updateSecondTraining(dayIndex, hasTraining, time, duration){
   document.getElementById('second-train-duration-'+dayIndex).disabled=!hasTraining;
 
   save();
-  if(c.weekPlan&&c.weekPlan.length>0){
+  if(c.weekPlan&&Object.keys(c.weekPlan).length>0){
     initializeMealTiming(c);
     renderWeekTable();
   }
