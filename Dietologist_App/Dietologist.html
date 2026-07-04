@@ -2918,11 +2918,26 @@ function saveFoodExclusions(){
 <script>
 (function(){
   var Cloud = {
-    enabled:false, sb:null, user:null, _t:null, _loaded:false, _authMode:'signin',
+    enabled:false, sb:null, user:null, _t:null, _loaded:false, _authMode:'signin', _loadRetries:0,
 
     init:function(){
+      var self=this;
       try{
         if(!window.supabase || !window.SUPABASE_URL){
+          // Συνήθως στιγμιαίο πρόβλημα internet ακριβώς όταν άνοιξε η σελίδα (π.χ. το wifi συνδέεται ακόμα) —
+          // ξαναπροσπάθησε μόνο του μέχρι 3 φορές με αυξανόμενη καθυστέρηση πριν δείξουμε λάθος στον χρήστη.
+          if(window.SUPABASE_URL && this._loadRetries<3){
+            this._loadRetries++;
+            console.warn('[CLOUD] supabase-js δεν φορτώθηκε, νέα προσπάθεια '+this._loadRetries+'/3...');
+            setTimeout(function(){
+              var s=document.createElement('script');
+              s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+              s.onload=function(){ self.init(); };
+              s.onerror=function(){ self.init(); };
+              document.head.appendChild(s);
+            }, 1200*this._loadRetries);
+            return;
+          }
           console.warn('[CLOUD] supabase-js δεν φορτώθηκε — τοπική λειτουργία');
           this._showLoadError();
           this._fallback();
@@ -2930,7 +2945,6 @@ function saveFoodExclusions(){
         }
         this.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_KEY);
         this.enabled = true;
-        var self = this;
         // Ανίχνευση επαναφοράς κωδικού (ο χρήστης ήρθε από link στο email)
         var isRecovery = (location.hash && location.hash.indexOf('type=recovery') !== -1);
         this.sb.auth.onAuthStateChange(function(event,session){
@@ -2977,6 +2991,7 @@ function saveFoodExclusions(){
       }
     },
     retryLoad:function(){
+      this._loadRetries=0;
       this._msg('Επανασύνδεση...');
       this.init();
     },
