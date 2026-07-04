@@ -2419,6 +2419,17 @@ function setClientFilter(type,val){
   else if(type==='sport') _clientFilterSport=val;
   renderSB();
 }
+var _clientSortMode='recent'; // 'recent' | 'oldest' | 'name' | 'stale'
+function setClientSort(val){ _clientSortMode=val; renderSB(); }
+
+// Πόσο καιρό πριν άνοιξε τελευταία φορά ο φάκελος αυτού του πελάτη.
+function fmtLastAccess(ts){
+  if(!ts) return 'ποτέ';
+  var days=Math.floor((Date.now()-ts)/86400000);
+  if(days<=0) return 'σήμερα';
+  if(days===1) return 'χθες';
+  return 'πριν '+days+' ημέρες';
+}
 function loadTestClientBasilina(){
   var basilina = {
     id: 'basilina-perisiou-' + Date.now(),
@@ -2481,8 +2492,21 @@ function renderSB(){
     if(_clientFilterSport && c.sport!==_clientFilterSport) return false;
     return true;
   });
-  // ✅ Sort by lastAccess (most recent first)
-  list.sort(function(a,b){return(b.lastAccess||0)-(a.lastAccess||0);});
+  // ✅ Sort according to the selected mode (default: most recent visit first)
+  if(_clientSortMode==='name'){
+    list.sort(function(a,b){return (a.name||'').localeCompare(b.name||'','el');});
+  } else if(_clientSortMode==='oldest'){
+    list.sort(function(a,b){return (a.lastAccess||0)-(b.lastAccess||0);});
+  } else if(_clientSortMode==='stale'){
+    list.sort(function(a,b){
+      var sa=(window.Cloud&&window.Cloud.isStale)?window.Cloud.isStale(a):false;
+      var sb=(window.Cloud&&window.Cloud.isStale)?window.Cloud.isStale(b):false;
+      if(sa!==sb) return sa?-1:1;
+      return (b.lastAccess||0)-(a.lastAccess||0);
+    });
+  } else {
+    list.sort(function(a,b){return(b.lastAccess||0)-(a.lastAccess||0);});
+  }
   var html='';
   if((term||_clientFilterGoal||_clientFilterSport)&&list.length===0){
     html='<div style="font-size:11px;color:#bbb;padding:6px 10px;font-style:italic">Κανένα αποτέλεσμα</div>';
@@ -2491,7 +2515,7 @@ function renderSB(){
       var hasActive = c.weekPlan && Object.keys(c.weekPlan).length > 0;
       html+='<div class="ci'+(c.id===curId?' active':'')+'" onclick="selectClient(\''+c.id+'\')">'
         +'<div class="ci-name">'+(c.name||'Νέος πελάτης')+'</div>'
-        +'<div class="ci-info">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg</div>'
+        +'<div class="ci-info">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg • '+fmtLastAccess(c.lastAccess)+'</div>'
         +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#999;gap:6px">'
         +'<span>'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
         +progressBadge(c)

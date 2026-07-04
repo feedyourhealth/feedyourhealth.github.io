@@ -138,6 +138,12 @@
       <option value="custom">✏️ Προσαρμοσμένο</option>
     </select>
   </div>
+  <select id="client-sort" aria-label="Ταξινόμηση πελατών" onchange="setClientSort(this.value)" style="width:100%;font-size:10px;padding:3px 2px;border-radius:5px;border:1px solid #e0e0e0;color:#666;margin-bottom:6px;box-sizing:border-box">
+    <option value="recent">🕐 Πρόσφατη επίσκεψη πρώτα</option>
+    <option value="oldest">⏳ Παλαιότερη επίσκεψη πρώτα</option>
+    <option value="name">🔤 Όνομα (Α-Ω)</option>
+    <option value="stale">⚠️ Μπαγιατεμένο πλάνο πρώτα</option>
+  </select>
   <div id="client-list"></div>
   <button class="add-btn" onclick="addClient()">+ Νέος πελάτης</button>
   <div class="sb-sep"></div>
