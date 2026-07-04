@@ -982,6 +982,7 @@ function genPlan(){
           c.weekPlan[d]=scalePlan(c.weekPlan[d],eff[d]);
         }
       }
+      c.planGeneratedAt=Date.now();  // ✅ ώστε να ξέρουμε πότε "λήγει" (χρειάζεται ανανέωση) το πλάνο
       saveNow();  // Save immediately, not delayed
       renderWeekTable();
       swTab(2);
@@ -1245,6 +1246,7 @@ function genPlan(){
   // ✅ LOG PLAN TO TRACKING SYSTEM
   logPlanGeneration(c, c.weekPlan);
 
+  c.planGeneratedAt=Date.now();  // ✅ ώστε να ξέρουμε πότε "λήγει" (χρειάζεται ανανέωση) το πλάνο
   save();swTab(2);renderWeekTable();
   }catch(e){
     console.error('GENPLAN ERROR:', e.message);

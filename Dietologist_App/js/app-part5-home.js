@@ -124,15 +124,22 @@ function renderHome(){
 
 function dietsHasPlan(c){ return !!(c.weekPlan && Object.keys(c.weekPlan).length>0); }
 
-// Χωρίς πλάνο ακόμα, ή με δημοσιευμένο σύνδεσμο που δείχνει ξεπερασμένο πλάνο.
+// Οι πραγματικοί πελάτες ξαναέρχονται για νέο πλάνο κάθε ~30-40 μέρες — μετά τις 30 το πλάνο
+// θεωρείται προς ανανέωση. Άγνωστη ημερομηνία δημιουργίας (πλάνα από πριν αυτό το feature) = δεν επισημαίνεται.
+var PLAN_RENEWAL_DAYS=30;
+function dietsNeedsRenewal(c){
+  return !!(c.planGeneratedAt && (Date.now()-c.planGeneratedAt)/86400000>=PLAN_RENEWAL_DAYS);
+}
+
+// Χωρίς πλάνο ακόμα, ή με δημοσιευμένο σύνδεσμο που δείχνει ξεπερασμένο πλάνο, ή πλάνο που χρειάζεται ανανέωση.
 function dietsNeedsAction(){
   return clients.filter(function(c){return !c.deleted && !c.archived;})
-    .filter(function(c){ return !dietsHasPlan(c) || (window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)); });
+    .filter(function(c){ return !dietsHasPlan(c) || (window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)) || dietsNeedsRenewal(c); });
 }
 // Ενεργός πελάτης με τρέχον πλάνο που δεν χρειάζεται ενέργεια.
 function dietsActive(){
   return clients.filter(function(c){return !c.deleted && !c.archived;})
-    .filter(function(c){ return dietsHasPlan(c) && !(window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)); });
+    .filter(function(c){ return dietsHasPlan(c) && !(window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)) && !dietsNeedsRenewal(c); });
 }
 // Αρχειοθετημένοι πελάτες που έχουν πλάνο — κρατιέται ως ιστορικό αναφοράς.
 function dietsHistory(){
@@ -186,12 +193,17 @@ function renderDiets(){
   html+='<div class="hm-title">📊 Διατροφές</div>';
 
   html+=dietsSection('🔴 Χρειάζονται ενέργεια', dietsNeedsAction(), function(c){
-    // "Χωρίς πλάνο" έχει προτεραιότητα: ένας πελάτης με άδειο weekPlan αλλά παλιό δημοσιευμένο hash θα
-    // δείξει isStale()=true κι αυτός, αλλά χρειάζεται νέο πλάνο πρώτα — όχι απλή επαναδημοσίευση του κενού.
+    // Προτεραιότητα: "χωρίς πλάνο" > "ξεπερασμένος σύνδεσμος" > "χρειάζεται ανανέωση" — ένας πελάτης
+    // με άδειο weekPlan αλλά παλιό δημοσιευμένο hash θα δείξει isStale()=true κι αυτός, αλλά χρειάζεται
+    // νέο πλάνο πρώτα, όχι απλή επαναδημοσίευση του κενού.
     if(!dietsHasPlan(c)){
       return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>');
     }
-    return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
+    if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)){
+      return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
+    }
+    var daysOld=Math.floor((Date.now()-c.planGeneratedAt)/86400000);
+    return dietsRow(c, 'το πλάνο έγινε πριν '+daysOld+' ημέρες', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>');
   }, 'Όλοι είναι εντάξει 👍');
 
   html+=dietsSection('🟢 Ενεργά', dietsActive(), function(c){
