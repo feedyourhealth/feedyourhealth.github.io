@@ -2569,29 +2569,6 @@ function renderSB(){
 
   // ✅ Update breadcrumbs after rendering
   if(typeof updateBreadcrumbs === 'function') updateBreadcrumbs();
-
-  // ✅ PHASE 5: ADD ANALYTICS BUTTON
-  var sideBar = document.getElementById('sideBar');
-  if(sideBar){
-    var existingAnalyticsBtn = document.getElementById('analyticsBtn');
-    if(!existingAnalyticsBtn){
-      var analyticsBtn = document.createElement('button');
-      analyticsBtn.id = 'analyticsBtn';
-      analyticsBtn.innerHTML = '📊 Αναλυτικά';
-      analyticsBtn.style.cssText = 'width: 90%; padding: 10px; margin: 5px auto; background: #025857; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px; transition: background 0.3s; display: block;';
-      analyticsBtn.onmouseover = function() { this.style.background = '#034848'; };
-      analyticsBtn.onmouseout = function() { this.style.background = '#025857'; };
-      analyticsBtn.onclick = function() {
-        swTab(5);
-        if (typeof renderAnalyticsDashboard === 'function') {
-          renderAnalyticsDashboard();
-        } else {
-          console.warn('[ANALYTICS] renderAnalyticsDashboard not found');
-        }
-      };
-      sideBar.appendChild(analyticsBtn);
-    }
-  }
 }
 
 /* ======== TEMPLATE EDITOR ======== */

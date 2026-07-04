@@ -186,11 +186,12 @@ function renderDiets(){
   html+='<div class="hm-title">📊 Διατροφές</div>';
 
   html+=dietsSection('🔴 Χρειάζονται ενέργεια', dietsNeedsAction(), function(c){
-    var stale=window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c);
-    if(stale){
-      return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
+    // "Χωρίς πλάνο" έχει προτεραιότητα: ένας πελάτης με άδειο weekPlan αλλά παλιό δημοσιευμένο hash θα
+    // δείξει isStale()=true κι αυτός, αλλά χρειάζεται νέο πλάνο πρώτα — όχι απλή επαναδημοσίευση του κενού.
+    if(!dietsHasPlan(c)){
+      return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>');
     }
-    return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>');
+    return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
   }, 'Όλοι είναι εντάξει 👍');
 
   html+=dietsSection('🟢 Ενεργά', dietsActive(), function(c){
