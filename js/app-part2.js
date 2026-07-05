@@ -69,6 +69,34 @@ function logout(){
   // save();
 }
 
+// Ανανεώνει το shareToken ΚΑΘΕ πελάτη που έχει δημοσιευμένο σύνδεσμο portal — διαγράφει την παλιά
+// εγγραφή στο shared_plans (ώστε ο παλιός σύνδεσμος να σταματήσει να δουλεύει αμέσως) και δημοσιεύει
+// ξανά με νέο, ισχυρό token. Χρήσιμο μετά από πιθανή έκθεση συνδέσμων (π.χ. RLS fix).
+function rotateAllShareTokens(){
+  if(!window.Cloud || !window.Cloud.enabled){ alert('Χρειάζεται σύνδεση στο cloud για αυτή την ενέργεια.'); return; }
+  var toRotate=clients.filter(function(c){ return c.shareToken && !c.deleted; });
+  if(!toRotate.length){ alert('Κανένας πελάτης δεν έχει δημοσιευμένο σύνδεσμο portal αυτή τη στιγμή.'); return; }
+  if(!confirm('Θα ανανεωθούν οι σύνδεσμοι portal για '+toRotate.length+' πελάτ'+(toRotate.length===1?'η':'ες')+'. Οι ΠΑΛΙΟΙ σύνδεσμοι θα σταματήσουν να δουλεύουν αμέσως — θα χρειαστεί να στείλεις τον νέο σύνδεσμο σε κάθε πελάτη ξανά.\n\nΣυνέχεια;')) return;
+  if(typeof closeSettingsPanel==='function') closeSettingsPanel();
+  var done=0, failed=[];
+  function next(i){
+    if(i>=toRotate.length){
+      alert('Ολοκληρώθηκε: '+done+' / '+toRotate.length+' σύνδεσμοι ανανεώθηκαν.'+(failed.length?'\n\nΑπέτυχαν: '+failed.join(', '):''));
+      return;
+    }
+    var c=toRotate[i];
+    window.Cloud.unpublishPlan(c).then(function(){
+      c.shareToken=genSecureToken();
+      return window.Cloud.publishPlan(c);
+    }).then(function(){
+      done++; next(i+1);
+    }).catch(function(){
+      failed.push(c.name||'άγνωστος πελάτης'); next(i+1);
+    });
+  }
+  next(0);
+}
+
 // Check if app should start
 function initializeApp(){
   // Load clients from localStorage if they exist
@@ -164,7 +192,7 @@ function renderMain(){
   if(!c.medConditions) c.medConditions = {};
   if(!c.progressLog) c.progressLog = [];
   if(!c.mealFeedback) c.mealFeedback = {};
-  if(!c.shareToken) c.shareToken = 'share_' + Math.random().toString(36).substr(2, 9);
+  if(!c.shareToken) c.shareToken = genSecureToken();
   var dOpts='<option value="normal"'+(c.dietType==='normal'?' selected':'')+'>🍗 Κανονική διατροφή</option><option value="vegetarian"'+(c.dietType==='vegetarian'?' selected':'')+'>🥬 Χορτοφαγική</option><option value="vegan"'+(c.dietType==='vegan'?' selected':'')+'>🌱 Веганι</option><option value="keto"'+(c.dietType==='keto'?' selected':'')+'>⚡ Κετογονική</option><option value="orthodox_fasting"'+(c.dietType==='orthodox_fasting'?' selected':'')+'>✝️ Ορθόδοξη Νηστεία</option><option value="intermittent_fasting"'+(c.dietType==='intermittent_fasting'?' selected':'')+'>⏰ Διαλείπουσα Νηστεία</option><option value="bodybuilding_clean"'+(c.dietType==='bodybuilding_clean'?' selected':'')+'>🏋️ Bodybuilding Clean</option><option value="kids_10_14"'+(c.dietType==='kids_10_14'?' selected':'')+'>👧 Παιδιά 10-14 ετών</option>';
   var fOpts='<option value="mifflin"'+(c.formula==='mifflin'||!c.formula?' selected':'')+'>Mifflin-St Jeor</option><option value="cunningham"'+(c.formula==='cunningham'?' selected':'')+'>Cunningham (αθλητές)</option>';
   var isCunn=c.formula==='cunningham';

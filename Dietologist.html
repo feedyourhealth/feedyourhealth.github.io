@@ -367,6 +367,7 @@
         <button onclick="closeSettingsPanel();restoreFromSnapshot()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">↩️ Επαναφορά (snapshot)</button>
         <button onclick="closeSettingsPanel();showReferences()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">📚 Βιβλιογραφία &amp; Πηγές</button>
         <button onclick="closeSettingsPanel();showDebugPanel()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">🔧 Σφάλματα &amp; Αναφορά</button>
+        <button onclick="rotateAllShareTokens()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">🔐 Ανανέωση συνδέσμων portal (όλων των πελατών)</button>
       </div>
     </div>
 
@@ -375,6 +376,11 @@
       <div style="margin-bottom:4px;"><strong>Εργαλείο Διαιτολόγου v3.0</strong></div>
       <div>Τελευταία ενημέρωση: Ιούνιος 2026</div>
       <div style="margin-top:8px;font-size:11px;color:#999;">Όλα τα δεδομένα αποθηκεύονται τοπικά στον υπολογιστή σας</div>
+    </div>
+
+    <!-- Λογαριασμός -->
+    <div style="margin-top:16px;">
+      <button onclick="closeSettingsPanel();logout()" style="width:100%;padding:10px 16px;background:#fff;color:#c0392b;border:1px solid #c0392b;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">🚪 Αποσύνδεση</button>
     </div>
   </div>
 </div>
