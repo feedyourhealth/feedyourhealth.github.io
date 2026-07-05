@@ -2431,7 +2431,7 @@ function setClientFilter(type,val){
   else if(type==='sport') _clientFilterSport=val;
   renderSB();
 }
-var _clientSortMode='recent'; // 'recent' | 'oldest' | 'name' | 'stale'
+var _clientSortMode='recent'; // 'recent' | 'oldest' | 'name' | 'stale' | 'attention'
 function setClientSort(val){ _clientSortMode=val; renderSB(); }
 
 // Πόσο καιρό πριν άνοιξε τελευταία φορά ο φάκελος αυτού του πελάτη.
@@ -2483,16 +2483,33 @@ function loadTestClientBasilina(){
 }
 
 // Μικρό badge κατάστασης δίπλα σε κάθε πελάτη στη λίστα (βασισμένο στα cloud checkins από το portal).
+// Σκόπιμα διαφορετικό λεξιλόγιο από το "Ενεργό/Χωρίς σχέδιο" cc-status badge δίπλα του — αυτό εδώ αφορά
+// αποκλειστικά τη δραστηριότητα check-in στο portal, όχι αν υπάρχει πλάνο, ώστε τα δύο badges να μη
+// διαβάζονται σαν αντιφατικά (π.χ. "Ενεργό σχέδιο" + "Δεν έχει ξεκινήσει" δίπλα-δίπλα ήταν μπερδεμένο).
 function progressBadge(c){
   if(!c.shareToken) return '';
   var rows=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
-  if(!rows.length) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Δεν έχει ξεκινήσει</span>';
+  if(!rows.length) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Χωρίς check-in ακόμα</span>';
   var gap=ckDaysSinceLast(rows);
   if(gap>=2) return '<span style="background:#FCEBEB;color:#791F1F;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">⚠ '+gap+'ημ. χωρίς check-in</span>';
   var byDate=ckRowsByDate(rows), score=ckWeekScore(byDate,0);
-  if(score==null) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Δεν έχει ξεκινήσει</span>';
+  if(score==null) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Χωρίς check-in ακόμα</span>';
   var ok=score>=85;
   return '<span style="background:'+(ok?'#E8F5E9':'#FAEEDA')+';color:'+(ok?'#1E5E24':'#633806')+';font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">'+score+'%</span>';
+}
+
+// Ένας πελάτης "χρειάζεται προσοχή" αν: δεν έχει καθόλου πλάνο, ή το δημοσιευμένο portal link του είναι
+// ξεπερασμένο, ή το πλάνο του είναι 30+ ημερών (ίδια κριτήρια με το Διατροφές "needs action"), ή έχει
+// δημοσιευμένο portal αλλά 2+ μέρες χωρίς check-in.
+function clientNeedsAttention(c){
+  if(typeof dietsHasPlan==='function' && !dietsHasPlan(c)) return true;
+  if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) return true;
+  if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)) return true;
+  if(c.shareToken && window.Cloud && window.Cloud.checkinsFor){
+    var rows=window.Cloud.checkinsFor(c);
+    if(rows.length && ckDaysSinceLast(rows)>=2) return true;
+  }
+  return false;
 }
 function renderSB(){
   var term=_clientSearchTerm;
@@ -2514,6 +2531,12 @@ function renderSB(){
       var sa=(window.Cloud&&window.Cloud.isStale)?window.Cloud.isStale(a):false;
       var sb=(window.Cloud&&window.Cloud.isStale)?window.Cloud.isStale(b):false;
       if(sa!==sb) return sa?-1:1;
+      return (b.lastAccess||0)-(a.lastAccess||0);
+    });
+  } else if(_clientSortMode==='attention'){
+    list.sort(function(a,b){
+      var na=clientNeedsAttention(a), nb=clientNeedsAttention(b);
+      if(na!==nb) return na?-1:1;
       return (b.lastAccess||0)-(a.lastAccess||0);
     });
   } else {
