@@ -57,21 +57,24 @@ setTimeout(function(){
           style="flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;background:transparent;color:#7aa6a2;">Νέος λογαριασμός</button>
       </div>
 
-      <input id="cloud-email" type="email" placeholder="Email" autocomplete="username"
-        style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
-      <div style="position:relative;margin-bottom:11px;">
-        <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
-          onkeydown="if(event.key==='Enter'){window.Cloud&&window.Cloud.submit();}"
-          style="width:100%;padding:13px;padding-right:46px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
-        <button type="button" onclick="window.Cloud&&window.Cloud.togglePw()" title="Εμφάνιση/Απόκρυψη κωδικού"
-          style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:6px;opacity:.6;">👁️</button>
-      </div>
+      <!-- Πραγματικό <form> (όχι μεμονωμένα inputs) ώστε ο browser να μπορεί να προσφέρει
+           αποθήκευση/αυτόματη συμπλήρωση κωδικού — τα SPA-style onclick χωρίς φόρμα δεν το επιτρέπουν αξιόπιστα. -->
+      <form id="cloud-login-form" onsubmit="event.preventDefault();window.Cloud&&window.Cloud.submit();">
+        <input id="cloud-email" type="email" placeholder="Email" autocomplete="username"
+          style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
+        <div style="position:relative;margin-bottom:11px;">
+          <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
+            style="width:100%;padding:13px;padding-right:46px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
+          <button type="button" onclick="window.Cloud&&window.Cloud.togglePw()" title="Εμφάνιση/Απόκρυψη κωδικού"
+            style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:6px;opacity:.6;">👁️</button>
+        </div>
 
-      <!-- Ένα κουμπί — αλλάζει ανάλογα με την καρτέλα -->
-      <button id="cloud-primary-btn" onclick="window.Cloud&&window.Cloud.submit()"
-        style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(2,88,87,.25);">
-        ✓ Σύνδεση
-      </button>
+        <!-- Ένα κουμπί — αλλάζει ανάλογα με την καρτέλα -->
+        <button id="cloud-primary-btn" type="submit"
+          style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(2,88,87,.25);">
+          ✓ Σύνδεση
+        </button>
+      </form>
 
       <!-- Βοήθεια για νέους (μόνο στην καρτέλα «Νέος λογαριασμός») -->
       <div id="signup-hint" style="display:none;text-align:center;margin-top:12px;font-size:12.5px;color:#7aa6a2;line-height:1.4;">
