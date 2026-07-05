@@ -17,8 +17,28 @@
 <!-- Autosave indicator -->
 <div id="autosave-toast">✓ Αποθηκεύτηκε</div>
 
+<!-- Εμφανίζεται πρώτο, όσο ελέγχουμε αν υπάρχει ήδη αποθηκευμένη σύνδεση (Cloud.init()/getSession()) —
+     έτσι όποιος είναι ήδη συνδεδεμένος δεν βλέπει μια στιγμιαία «αναλαμπή» της οθόνης σύνδεσης πριν μπει
+     κατευθείαν στην εφαρμογή. Κρύβεται από goToApp()/_showLogin()/_showNewPassword() μόλις αποφασιστεί
+     ποια οθόνη πρέπει τελικά να δειχτεί. -->
+<div id="app-loading-gate" style="position:fixed;inset:0;background:#f4f4f2;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#025857,#0a8f86);display:flex;align-items:center;justify-content:center;font-size:22px;">🥗</div>
+</div>
+<script>
+// Δίχτυ ασφαλείας: αν για οποιονδήποτε λόγο το Cloud.init() δεν προλάβει ποτέ να αποφασίσει ποια οθόνη
+// να δείξει (π.χ. σπάνιο πρόβλημα δικτύου/φόρτωσης), μη μείνει ο χρήστης κολλημένος επ' αόριστον στον
+// φορτωτή — δείξε τουλάχιστον τη φόρμα σύνδεσης μετά από 8 δευτερόλεπτα.
+setTimeout(function(){
+  var g=document.getElementById('app-loading-gate');
+  if(g && g.style.display!=='none'){
+    g.style.display='none';
+    var lp=document.getElementById('login-page'); if(lp) lp.style.display='flex';
+  }
+}, 8000);
+</script>
+
 <!-- LOGIN / SIGNUP PAGE -->
-<div id="login-page" style="background:linear-gradient(135deg,#024a49 0%,#037070 55%,#0a8f86 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">
+<div id="login-page" style="display:none;background:linear-gradient(135deg,#024a49 0%,#037070 55%,#0a8f86 100%);min-height:100vh;align-items:center;justify-content:center;padding:20px;">
   <div style="background:white;border-radius:18px;padding:38px 34px;box-shadow:0 18px 50px rgba(0,0,0,0.28);max-width:410px;width:100%;">
     <div style="text-align:center;margin-bottom:26px;">
       <div style="width:74px;height:74px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,#025857,#0a8f86);display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 6px 16px rgba(2,88,87,.35);">🥗</div>
@@ -37,21 +57,24 @@
           style="flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;background:transparent;color:#7aa6a2;">Νέος λογαριασμός</button>
       </div>
 
-      <input id="cloud-email" type="email" placeholder="Email" autocomplete="username"
-        style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
-      <div style="position:relative;margin-bottom:11px;">
-        <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
-          onkeydown="if(event.key==='Enter'){window.Cloud&&window.Cloud.submit();}"
-          style="width:100%;padding:13px;padding-right:46px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
-        <button type="button" onclick="window.Cloud&&window.Cloud.togglePw()" title="Εμφάνιση/Απόκρυψη κωδικού"
-          style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:6px;opacity:.6;">👁️</button>
-      </div>
+      <!-- Πραγματικό <form> (όχι μεμονωμένα inputs) ώστε ο browser να μπορεί να προσφέρει
+           αποθήκευση/αυτόματη συμπλήρωση κωδικού — τα SPA-style onclick χωρίς φόρμα δεν το επιτρέπουν αξιόπιστα. -->
+      <form id="cloud-login-form" onsubmit="event.preventDefault();window.Cloud&&window.Cloud.submit();">
+        <input id="cloud-email" type="email" placeholder="Email" autocomplete="username"
+          style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
+        <div style="position:relative;margin-bottom:11px;">
+          <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
+            style="width:100%;padding:13px;padding-right:46px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
+          <button type="button" onclick="window.Cloud&&window.Cloud.togglePw()" title="Εμφάνιση/Απόκρυψη κωδικού"
+            style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:6px;opacity:.6;">👁️</button>
+        </div>
 
-      <!-- Ένα κουμπί — αλλάζει ανάλογα με την καρτέλα -->
-      <button id="cloud-primary-btn" onclick="window.Cloud&&window.Cloud.submit()"
-        style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(2,88,87,.25);">
-        ✓ Σύνδεση
-      </button>
+        <!-- Ένα κουμπί — αλλάζει ανάλογα με την καρτέλα -->
+        <button id="cloud-primary-btn" type="submit"
+          style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(2,88,87,.25);">
+          ✓ Σύνδεση
+        </button>
+      </form>
 
       <!-- Βοήθεια για νέους (μόνο στην καρτέλα «Νέος λογαριασμός») -->
       <div id="signup-hint" style="display:none;text-align:center;margin-top:12px;font-size:12.5px;color:#7aa6a2;line-height:1.4;">
@@ -90,6 +113,10 @@
 <div class="app" style="display:none;" id="app-container">
 <div class="sb" id="sidebar">
   <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" title="Ανοίγ/Κλείσιμο" aria-label="Άνοιγμα/Κλείσιμο πλαϊνής μπάρας">☰</button>
+  <div class="undo-redo-toolbar">
+    <button id="undoBtnGlobal" class="undo-redo-btn" onclick="undo()" title="Αναίρεση (Ctrl+Z)" aria-label="Αναίρεση τελευταίας ενέργειας" disabled>↩</button>
+    <button id="redoBtnGlobal" class="undo-redo-btn" onclick="redo()" title="Επανάληψη (Ctrl+Y)" aria-label="Επανάληψη ενέργειας" disabled>↪</button>
+  </div>
   <button type="button" class="hm-nav-btn" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(7)" aria-label="Πελάτες">👥 Πελάτες</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
@@ -237,15 +264,31 @@
       <h3 id="confirmTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Επιβεβαίωση</h3>
       <p id="confirmMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;"></p>
     </div>
-    <div style="display:flex;gap:12px;justify-content:center;">
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <button onclick="closeConfirmDialog()" aria-label="Ακύρωση διαλόγου" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
+      <button id="confirmSecondaryBtn" onclick="executeConfirmSecondary()" aria-label="Δευτερεύουσα ενέργεια" style="display:none;background:#fff3e0;color:#e65100;border:1px solid #ffb74d;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;"></button>
       <button id="confirmBtn" onclick="executeConfirm()" aria-label="Επιβεβαίωση ενέργειας" style="background:#c62828;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Διαγραφή</button>
     </div>
   </div>
 </div>
 
+<!-- ✅ TEXT INPUT DIALOG — στυλιζαρισμένη εναλλακτική του native prompt() -->
+<div id="promptDialog" role="dialog" aria-labelledby="promptTitle" aria-describedby="promptMessage" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:12px;padding:32px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <div style="text-align:center;margin-bottom:16px;">
+      <h3 id="promptTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Στοιχείο</h3>
+      <p id="promptMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;"></p>
+    </div>
+    <input id="promptInput" type="text" style="width:100%;padding:10px 12px;border-radius:7px;border:1.5px solid #e0e0e0;font-size:13px;margin:16px 0 20px;box-sizing:border-box;font-family:inherit" />
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button onclick="closePromptDialog()" aria-label="Ακύρωση" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
+      <button id="promptOkBtn" onclick="executePrompt()" aria-label="Επιβεβαίωση" style="background:#025857;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- ✅ ENHANCED TOAST NOTIFICATION - TIER 2 -->
-<div id="successToast" style="display:none;position:fixed;bottom:20px;right:20px;background:#2e7d32;color:white;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:9999;font-weight:600;font-size:14px;animation:slideIn 0.3s ease-out;">
+<div id="successToast" style="display:none;position:fixed;bottom:20px;right:20px;background:#2e7d32;color:white;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:9999;font-weight:600;font-size:14px;animation:slideIn 0.3s ease-out;white-space:pre-line;max-width:320px;">
   <span id="successToastText">✓ Αποθηκεύτηκε με επιτυχία</span>
 </div>
 
@@ -268,6 +311,14 @@
   <div class="shortcut-row">
     <span>Dark Mode</span>
     <span class="shortcut-key">Shift+D</span>
+  </div>
+  <div class="shortcut-row">
+    <span>Αναίρεση</span>
+    <span class="shortcut-key">Ctrl+Z</span>
+  </div>
+  <div class="shortcut-row">
+    <span>Επανάληψη</span>
+    <span class="shortcut-key">Ctrl+Y</span>
   </div>
   <div class="shortcut-row">
     <span>Δημιουργία Πλάνου</span>
@@ -367,6 +418,7 @@
         <button onclick="closeSettingsPanel();restoreFromSnapshot()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">↩️ Επαναφορά (snapshot)</button>
         <button onclick="closeSettingsPanel();showReferences()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">📚 Βιβλιογραφία &amp; Πηγές</button>
         <button onclick="closeSettingsPanel();showDebugPanel()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">🔧 Σφάλματα &amp; Αναφορά</button>
+        <button onclick="rotateAllShareTokens()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">🔐 Ανανέωση συνδέσμων portal (όλων των πελατών)</button>
       </div>
     </div>
 
@@ -375,6 +427,11 @@
       <div style="margin-bottom:4px;"><strong>Εργαλείο Διαιτολόγου v3.0</strong></div>
       <div>Τελευταία ενημέρωση: Ιούνιος 2026</div>
       <div style="margin-top:8px;font-size:11px;color:#999;">Όλα τα δεδομένα αποθηκεύονται τοπικά στον υπολογιστή σας</div>
+    </div>
+
+    <!-- Λογαριασμός -->
+    <div style="margin-top:16px;">
+      <button onclick="closeSettingsPanel();logout()" style="width:100%;padding:10px 16px;background:#fff;color:#c0392b;border:1px solid #c0392b;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">🚪 Αποσύνδεση</button>
     </div>
   </div>
 </div>
@@ -388,7 +445,7 @@
 function openMicroModal() {
   var c = getC();
   if (!c || !c.weekPlan || c.weekPlan.length === 0) {
-    alert('Δημιουργήστε πρώτα ένα πλάνο');
+    showErrorToast('Δημιουργήστε πρώτα ένα πλάνο');
     return;
   }
 
@@ -420,33 +477,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// ✅ TIER 2: CONFIRMATION DIALOG FUNCTIONS
-var confirmCallback = null;
-
-function showConfirmDialog(title, message, icon, onConfirm) {
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMessage').textContent = message;
-  document.getElementById('confirmIcon').textContent = icon || '⚠️';
-  confirmCallback = onConfirm;
-
-  var dialog = document.getElementById('confirmDialog');
-  dialog.style.display = 'flex';
-  dialog.setAttribute('data-open', 'true');
-}
-
-function closeConfirmDialog() {
-  var dialog = document.getElementById('confirmDialog');
-  dialog.style.display = 'none';
-  dialog.setAttribute('data-open', 'false');
-  confirmCallback = null;
-}
-
-function executeConfirm() {
-  if(confirmCallback && typeof confirmCallback === 'function') {
-    confirmCallback();
-  }
-  closeConfirmDialog();
-}
+// ✅ TIER 2: CONFIRMATION DIALOG FUNCTIONS — υλοποιημένες πλέον στο js/app-part2.js
+// (showConfirmDialog/closeConfirmDialog/executeConfirm). Αυτό εδώ ήταν παλιότερη εκδοχή που
+// ποτέ δεν καλούνταν πουθενά (dead code, ίδιο id="confirmDialog" αλλά διαφορετική σειρά params)
+// — αφαιρέθηκε γιατί φόρτωνε ΜΕΤΑ το app-part2.js και σιωπηλά υπέγραφε (override) τη σωστή έκδοση.
 
 // ✅ TIER 2: ENHANCED TOAST NOTIFICATIONS
 function showSuccessToast(message) {
@@ -455,11 +489,12 @@ function showSuccessToast(message) {
   toast.setAttribute('data-show', 'true');
   toast.style.display = 'block';
 
-  // Auto-hide after 3 seconds
-  setTimeout(function() {
+  // Auto-hide (5s — long enough for the multi-line confirmations toast now carries)
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(function() {
     toast.setAttribute('data-show', 'false');
     toast.style.display = 'none';
-  }, 3000);
+  }, 5000);
 }
 
 // ✅ MODIFIED DELETE CLIENT WITH CONFIRMATION
@@ -535,7 +570,7 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     var c = getC();
     if(!c) {
-      alert('Παρακαλώ επιλέξτε πρώτα ένα πελάτη');
+      showErrorToast('Παρακαλώ επιλέξτε πρώτα ένα πελάτη');
       return;
     }
     genPlan();
@@ -861,18 +896,19 @@ function addProgressEntry() {
   var c = getC();
   if(!c) return;
 
-  var weight = prompt('Τρέχον βάρος (kg):');
-  if(!weight) return;
-
-  if(!c.progressLog) c.progressLog = [];
-  c.progressLog.push({
-    date: new Date().toISOString(),
-    weight: parseFloat(weight),
-    notes: prompt('Σημειώσεις (προαιρετικό):') || ''
-  });
-
-  upd();
-  showSuccessToast('✅ Εγγραφή προόδου!');
+  showPromptDialog('Τρέχον βάρος (kg):', '', function(weight){
+    if(!weight) return;
+    showPromptDialog('Σημειώσεις (προαιρετικό):', '', function(notes){
+      if(!c.progressLog) c.progressLog = [];
+      c.progressLog.push({
+        date: new Date().toISOString(),
+        weight: parseFloat(weight),
+        notes: notes || ''
+      });
+      upd();
+      showSuccessToast('✅ Εγγραφή προόδου!');
+    }, {title:'Σημειώσεις προόδου'});
+  }, {title:'Νέα καταγραφή προόδου', inputType:'number'});
 }
 
 // NOTE: rateMeal() is defined earlier (writes ratings to TRACKING_DATA so the
@@ -938,7 +974,7 @@ function showAutoAdjustHints() {
     });
   }
 
-  alert(message);
+  showErrorToast(message);
 }
 
 // 5B. Generate next plan with auto-adjustments
@@ -957,10 +993,10 @@ function generateSmartPlanWithFeedback() {
   message += '🎯 Θα διατηρηθούν θερμίδες & macros\n\n';
   message += 'Επιβεβαίωση;';
 
-  if(confirm(message)) {
+  showConfirmDialog(message, function(){
     genPlanWithUndo();
     showSuccessToast('📈 Νέο πλάνο με AI adjustments!');
-  }
+  }, {icon:'📊', confirmLabel:'Δημιουργία'});
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1156,7 +1192,7 @@ function getActiveProtocols(client) {
 function showMedicalProtocol(condition) {
   var protocol = getProtocol(condition);
   if(!protocol) {
-    alert('Δεν βρέθηκε πρωτόκολο για: ' + condition);
+    showErrorToast('Δεν βρέθηκε πρωτόκολο για: ' + condition);
     return;
   }
 
@@ -1276,9 +1312,9 @@ function applyMedicalProtocol(condition, isChecked) {
   if(c.weekPlan && c.weekPlan.length > 0) {
     var msg = protocol.icon + ' ' + protocol.name + ' ενεργοποιήθηκε.\n\n';
     msg += 'Θέλετε να δημιουργήσετε νέο πλάνο με αυτό το πρωτόκολο;';
-    if(confirm(msg)) {
+    showConfirmDialog(msg, function(){
       genPlanWithUndo();
-    }
+    }, {icon: protocol.icon, confirmLabel:'Δημιουργία'});
   }
 }
 
@@ -1286,7 +1322,7 @@ function applyMedicalProtocol(condition, isChecked) {
 function generateProgressReport() {
   var c = getC();
   if(!c || !c.progressLog || c.progressLog.length === 0) {
-    alert('Δεν υπάρχουν καταγραφές προόδου');
+    showErrorToast('Δεν υπάρχουν καταγραφές προόδου');
     return;
   }
 
@@ -1382,7 +1418,7 @@ function openCombinedSupplementsModal() {
 function toggleSupplementSelector() {
   var c = getC();
   if (!c) {
-    alert('Δημιουργήστε πρώτα έναν πελάτη');
+    showErrorToast('Δημιουργήστε πρώτα έναν πελάτη');
     return;
   }
 
@@ -1779,21 +1815,19 @@ function getDayStatus(dayTotals, targetTotals){
 }
 
 function deleteMealAllDays(mealIndex){
-  if(!confirm('Σίγουρα θέλετε να διαγράψετε αυτό το γεύμα από όλες τις ημέρες;')) return;
-
   var c = getC();
   if(!c || !c.weekPlan) return;
-
-  // Remove from all 7 days
-  for(var d = 0; d < 7; d++){
-    if(c.weekPlan[d] && c.weekPlan[d][mealIndex]){
-      c.weekPlan[d].splice(mealIndex, 1);
+  showConfirmDialog('Σίγουρα θέλετε να διαγράψετε αυτό το γεύμα από όλες τις ημέρες;', function(){
+    // Remove from all 7 days
+    for(var d = 0; d < 7; d++){
+      if(c.weekPlan[d] && c.weekPlan[d][mealIndex]){
+        c.weekPlan[d].splice(mealIndex, 1);
+      }
     }
-  }
-
-  save();
-  renderWeekTable();
-  showSuccessToast('✅ Γεύμα διαγράφηκε από όλες τις ημέρες!');
+    save();
+    renderWeekTable();
+    showSuccessToast('✅ Γεύμα διαγράφηκε από όλες τις ημέρες!');
+  });
 }
 
 // ✅ FOOD EXCLUSION PICKER - NEW FEATURE
@@ -1976,7 +2010,7 @@ function openValidationModal() {
   var c = getC();
   // Check if weekPlan exists and has at least one day with meals
   if(!c || !c.weekPlan || Object.keys(c.weekPlan).length === 0){
-    alert('Please generate a meal plan first');
+    showErrorToast('Please generate a meal plan first');
     return;
   }
 
@@ -2588,6 +2622,7 @@ function saveFoodExclusions(){
     },
 
     _showLogin:function(){
+      var g=document.getElementById('app-loading-gate'); if(g) g.style.display='none';
       var lp=document.getElementById('login-page'), ac=document.getElementById('app-container');
       if(lp) lp.style.display='flex';
       if(ac) ac.style.display='none';
@@ -2923,6 +2958,7 @@ function saveFoodExclusions(){
 
     // Δείχνει τη φόρμα «νέος κωδικός» (όταν ο χρήστης έρθει από το email)
     _showNewPassword:function(){
+      var g=document.getElementById('app-loading-gate'); if(g) g.style.display='none';
       var lp=document.getElementById('login-page'), ac=document.getElementById('app-container');
       if(lp) lp.style.display='flex';
       if(ac) ac.style.display='none';

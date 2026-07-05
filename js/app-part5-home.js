@@ -80,14 +80,14 @@ function homeCard(title,items,emptyText,moreLabel,variant){
 function homeQuickRepublish(clientId,btn){
   var c=clients.find(function(x){return x.id===clientId;});
   if(!c) return;
-  if(!window.Cloud || !window.Cloud.publishPlan){ alert('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
+  if(!window.Cloud || !window.Cloud.publishPlan){ showErrorToast('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
   var orig=btn.textContent;
   btn.disabled=true; btn.textContent='Δημοσίευση...';
   window.Cloud.publishPlan(c).then(function(){
     renderHome();
   }).catch(function(e){
     btn.disabled=false; btn.textContent=orig;
-    alert('Σφάλμα δημοσίευσης: '+(e.message||''));
+    showErrorToast('Σφάλμα δημοσίευσης: '+(e.message||''));
   });
 }
 
@@ -192,14 +192,14 @@ function dietsQuickCreatePlan(clientId){
 function dietsQuickRepublish(clientId,btn){
   var c=clients.find(function(x){return x.id===clientId;});
   if(!c) return;
-  if(!window.Cloud || !window.Cloud.publishPlan){ alert('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
+  if(!window.Cloud || !window.Cloud.publishPlan){ showErrorToast('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
   var orig=btn.textContent;
   btn.disabled=true; btn.textContent='Δημοσίευση...';
   window.Cloud.publishPlan(c).then(function(){
     renderDiets();
   }).catch(function(e){
     btn.disabled=false; btn.textContent=orig;
-    alert('Σφάλμα δημοσίευσης: '+(e.message||''));
+    showErrorToast('Σφάλμα δημοσίευσης: '+(e.message||''));
   });
 }
 

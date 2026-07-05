@@ -28,7 +28,13 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
   transform:scale(1.1);
   box-shadow:0 3px 12px rgba(0,0,0,0.3);
 }
-.sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:12px 10px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto;transition:width 0.3s ease;}
+.undo-redo-toolbar{position:fixed;top:12px;left:60px;display:flex;gap:6px;z-index:999}
+.undo-redo-btn{width:36px;height:36px;background:#fff;color:#025857;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.2s}
+.undo-redo-btn:hover:not(:disabled){background:#f0f7f7;border-color:#025857}
+.undo-redo-btn:disabled{color:#ccc;cursor:not-allowed;box-shadow:none}
+body.dark-mode .undo-redo-btn{background:#242424;border-color:#444;color:#4fc3f7}
+body.dark-mode .undo-redo-btn:disabled{color:#555}
+.sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:56px 10px 12px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto;transition:width 0.3s ease;}
 .sb.collapsed{
   width:0;
   padding:0;
@@ -151,6 +157,9 @@ body.dark-mode .hm-card-title{color:#4fc3f7}
 body.dark-mode .hm-row{border-color:#333}
 body.dark-mode .hm-row:hover{background:#2a2a2a}
 body.dark-mode .hm-row-name{color:#e0e0e0}
+.rcp-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.rcp-toolbar .rcp-search{flex:2;min-width:200px;margin-bottom:0}
+.rcp-toolbar .clients-toolbar-select{flex:1;min-width:150px}
 .rcp-search{width:100%;max-width:400px;padding:8px 10px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;margin-bottom:10px;box-sizing:border-box;font-family:inherit}
 .rcp-search:focus{outline:none;border-color:#025857}
 .rcp-filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
@@ -161,25 +170,38 @@ body.dark-mode .hm-row-name{color:#e0e0e0}
 .rcp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .rcp-row{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:10px 12px}
 .rcp-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.rcp-row-left{display:flex;align-items:center;gap:6px;min-width:0}
 .rcp-name{font-weight:600;font-size:12.5px;color:#333}
+.rcp-expand-btn{background:none;border:none;cursor:pointer;font-size:10px;padding:2px;line-height:1;opacity:.55;flex-shrink:0}
+.rcp-expand-btn:hover{opacity:1}
 .rcp-star{background:none;border:none;cursor:pointer;font-size:14px;opacity:.3;padding:0;line-height:1}
 .rcp-star.active{opacity:1}
 .rcp-sub{font-size:10.5px;color:#999;margin:4px 0 8px}
+.rcp-ingredients{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:10px;color:#777;margin:0 0 8px;padding:6px 8px;background:#f7f7f5;border-radius:6px}
+.rcp-ing{white-space:nowrap}
 .rcp-chips{display:flex;flex-wrap:wrap;gap:4px}
 .rcp-chip{padding:3px 8px;border-radius:10px;border:1px solid #ddd;background:#fafafa;color:#888;font-size:9.5px;font-weight:600;cursor:pointer}
 .rcp-chip:hover{border-color:#025857}
 .rcp-chip.active{background:#E2EEE5;border-color:#025857;color:#025857}
-.rcp-chip-hint{font-size:9.5px;color:#bbb;font-style:italic;padding:3px 0}
+.rcp-cat-pill{padding:3px 8px;border-radius:10px;border:1px solid #ddd;background:#fafafa;color:#888;font-size:9.5px;font-weight:600;cursor:pointer}
+.rcp-cat-pill:hover{border-color:#025857}
+.rcp-cat-pill.active{background:#E2EEE5;border-color:#025857;color:#025857}
+.rcp-cat-done{padding:3px 8px;border-radius:10px;border:1px solid #025857;background:#025857;color:#fff;font-size:9.5px;font-weight:600;cursor:pointer}
 body.dark-mode .rcp-search{background:#242424;border-color:#444;color:#e0e0e0}
 body.dark-mode .rcp-filter-chip{background:#1a1a1a;border-color:#444;color:#4fc3f7}
 body.dark-mode .rcp-filter-chip.active{background:#025857;color:#fff}
 body.dark-mode .rcp-row{background:#242424;border-color:#444}
 body.dark-mode .rcp-name{color:#e0e0e0}
+body.dark-mode .rcp-expand-btn{color:#e0e0e0}
+body.dark-mode .rcp-ingredients{background:#1a1a1a;color:#aaa}
 body.dark-mode .rcp-chip{background:#1a1a1a;border-color:#444;color:#aaa}
 body.dark-mode .rcp-chip.active{background:#025857;border-color:#025857;color:#fff}
+body.dark-mode .rcp-cat-pill{background:#1a1a1a;border-color:#444;color:#aaa}
+body.dark-mode .rcp-cat-pill.active{background:#025857;border-color:#025857;color:#fff}
+body.dark-mode .rcp-cat-done{background:#025857;border-color:#025857;color:#fff}
 @media(max-width:768px){
   /* Keep these compact pills inline instead of the site-wide mobile "button{width:100%}" rule */
-  .rcp-filter-chip,.rcp-chip,.rcp-star{width:auto}
+  .rcp-filter-chip,.rcp-chip,.rcp-star,.rcp-cat-pill,.rcp-cat-done,.rcp-expand-btn{width:auto}
 }
 /* ✅ BOTTOM NAVIGATION BAR (Mobile) */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e0e0e0;z-index:99;flex-direction:row;box-shadow:0 -2px 8px rgba(0,0,0,.08)}

@@ -113,6 +113,10 @@ setTimeout(function(){
 <div class="app" style="display:none;" id="app-container">
 <div class="sb" id="sidebar">
   <button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()" title="Ανοίγ/Κλείσιμο" aria-label="Άνοιγμα/Κλείσιμο πλαϊνής μπάρας">☰</button>
+  <div class="undo-redo-toolbar">
+    <button id="undoBtnGlobal" class="undo-redo-btn" onclick="undo()" title="Αναίρεση (Ctrl+Z)" aria-label="Αναίρεση τελευταίας ενέργειας" disabled>↩</button>
+    <button id="redoBtnGlobal" class="undo-redo-btn" onclick="redo()" title="Επανάληψη (Ctrl+Y)" aria-label="Επανάληψη ενέργειας" disabled>↪</button>
+  </div>
   <button type="button" class="hm-nav-btn" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(7)" aria-label="Πελάτες">👥 Πελάτες</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
@@ -260,15 +264,31 @@ setTimeout(function(){
       <h3 id="confirmTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Επιβεβαίωση</h3>
       <p id="confirmMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;"></p>
     </div>
-    <div style="display:flex;gap:12px;justify-content:center;">
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <button onclick="closeConfirmDialog()" aria-label="Ακύρωση διαλόγου" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
+      <button id="confirmSecondaryBtn" onclick="executeConfirmSecondary()" aria-label="Δευτερεύουσα ενέργεια" style="display:none;background:#fff3e0;color:#e65100;border:1px solid #ffb74d;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;"></button>
       <button id="confirmBtn" onclick="executeConfirm()" aria-label="Επιβεβαίωση ενέργειας" style="background:#c62828;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Διαγραφή</button>
     </div>
   </div>
 </div>
 
+<!-- ✅ TEXT INPUT DIALOG — στυλιζαρισμένη εναλλακτική του native prompt() -->
+<div id="promptDialog" role="dialog" aria-labelledby="promptTitle" aria-describedby="promptMessage" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:12px;padding:32px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <div style="text-align:center;margin-bottom:16px;">
+      <h3 id="promptTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Στοιχείο</h3>
+      <p id="promptMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;"></p>
+    </div>
+    <input id="promptInput" type="text" style="width:100%;padding:10px 12px;border-radius:7px;border:1.5px solid #e0e0e0;font-size:13px;margin:16px 0 20px;box-sizing:border-box;font-family:inherit" />
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button onclick="closePromptDialog()" aria-label="Ακύρωση" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
+      <button id="promptOkBtn" onclick="executePrompt()" aria-label="Επιβεβαίωση" style="background:#025857;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- ✅ ENHANCED TOAST NOTIFICATION - TIER 2 -->
-<div id="successToast" style="display:none;position:fixed;bottom:20px;right:20px;background:#2e7d32;color:white;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:9999;font-weight:600;font-size:14px;animation:slideIn 0.3s ease-out;">
+<div id="successToast" style="display:none;position:fixed;bottom:20px;right:20px;background:#2e7d32;color:white;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:9999;font-weight:600;font-size:14px;animation:slideIn 0.3s ease-out;white-space:pre-line;max-width:320px;">
   <span id="successToastText">✓ Αποθηκεύτηκε με επιτυχία</span>
 </div>
 
@@ -291,6 +311,14 @@ setTimeout(function(){
   <div class="shortcut-row">
     <span>Dark Mode</span>
     <span class="shortcut-key">Shift+D</span>
+  </div>
+  <div class="shortcut-row">
+    <span>Αναίρεση</span>
+    <span class="shortcut-key">Ctrl+Z</span>
+  </div>
+  <div class="shortcut-row">
+    <span>Επανάληψη</span>
+    <span class="shortcut-key">Ctrl+Y</span>
   </div>
   <div class="shortcut-row">
     <span>Δημιουργία Πλάνου</span>
@@ -417,7 +445,7 @@ setTimeout(function(){
 function openMicroModal() {
   var c = getC();
   if (!c || !c.weekPlan || c.weekPlan.length === 0) {
-    alert('Δημιουργήστε πρώτα ένα πλάνο');
+    showErrorToast('Δημιουργήστε πρώτα ένα πλάνο');
     return;
   }
 
@@ -449,33 +477,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// ✅ TIER 2: CONFIRMATION DIALOG FUNCTIONS
-var confirmCallback = null;
-
-function showConfirmDialog(title, message, icon, onConfirm) {
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMessage').textContent = message;
-  document.getElementById('confirmIcon').textContent = icon || '⚠️';
-  confirmCallback = onConfirm;
-
-  var dialog = document.getElementById('confirmDialog');
-  dialog.style.display = 'flex';
-  dialog.setAttribute('data-open', 'true');
-}
-
-function closeConfirmDialog() {
-  var dialog = document.getElementById('confirmDialog');
-  dialog.style.display = 'none';
-  dialog.setAttribute('data-open', 'false');
-  confirmCallback = null;
-}
-
-function executeConfirm() {
-  if(confirmCallback && typeof confirmCallback === 'function') {
-    confirmCallback();
-  }
-  closeConfirmDialog();
-}
+// ✅ TIER 2: CONFIRMATION DIALOG FUNCTIONS — υλοποιημένες πλέον στο js/app-part2.js
+// (showConfirmDialog/closeConfirmDialog/executeConfirm). Αυτό εδώ ήταν παλιότερη εκδοχή που
+// ποτέ δεν καλούνταν πουθενά (dead code, ίδιο id="confirmDialog" αλλά διαφορετική σειρά params)
+// — αφαιρέθηκε γιατί φόρτωνε ΜΕΤΑ το app-part2.js και σιωπηλά υπέγραφε (override) τη σωστή έκδοση.
 
 // ✅ TIER 2: ENHANCED TOAST NOTIFICATIONS
 function showSuccessToast(message) {
@@ -484,11 +489,12 @@ function showSuccessToast(message) {
   toast.setAttribute('data-show', 'true');
   toast.style.display = 'block';
 
-  // Auto-hide after 3 seconds
-  setTimeout(function() {
+  // Auto-hide (5s — long enough for the multi-line confirmations toast now carries)
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(function() {
     toast.setAttribute('data-show', 'false');
     toast.style.display = 'none';
-  }, 3000);
+  }, 5000);
 }
 
 // ✅ MODIFIED DELETE CLIENT WITH CONFIRMATION
@@ -564,7 +570,7 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault();
     var c = getC();
     if(!c) {
-      alert('Παρακαλώ επιλέξτε πρώτα ένα πελάτη');
+      showErrorToast('Παρακαλώ επιλέξτε πρώτα ένα πελάτη');
       return;
     }
     genPlan();
@@ -890,18 +896,19 @@ function addProgressEntry() {
   var c = getC();
   if(!c) return;
 
-  var weight = prompt('Τρέχον βάρος (kg):');
-  if(!weight) return;
-
-  if(!c.progressLog) c.progressLog = [];
-  c.progressLog.push({
-    date: new Date().toISOString(),
-    weight: parseFloat(weight),
-    notes: prompt('Σημειώσεις (προαιρετικό):') || ''
-  });
-
-  upd();
-  showSuccessToast('✅ Εγγραφή προόδου!');
+  showPromptDialog('Τρέχον βάρος (kg):', '', function(weight){
+    if(!weight) return;
+    showPromptDialog('Σημειώσεις (προαιρετικό):', '', function(notes){
+      if(!c.progressLog) c.progressLog = [];
+      c.progressLog.push({
+        date: new Date().toISOString(),
+        weight: parseFloat(weight),
+        notes: notes || ''
+      });
+      upd();
+      showSuccessToast('✅ Εγγραφή προόδου!');
+    }, {title:'Σημειώσεις προόδου'});
+  }, {title:'Νέα καταγραφή προόδου', inputType:'number'});
 }
 
 // NOTE: rateMeal() is defined earlier (writes ratings to TRACKING_DATA so the
@@ -967,7 +974,7 @@ function showAutoAdjustHints() {
     });
   }
 
-  alert(message);
+  showErrorToast(message);
 }
 
 // 5B. Generate next plan with auto-adjustments
@@ -986,10 +993,10 @@ function generateSmartPlanWithFeedback() {
   message += '🎯 Θα διατηρηθούν θερμίδες & macros\n\n';
   message += 'Επιβεβαίωση;';
 
-  if(confirm(message)) {
+  showConfirmDialog(message, function(){
     genPlanWithUndo();
     showSuccessToast('📈 Νέο πλάνο με AI adjustments!');
-  }
+  }, {icon:'📊', confirmLabel:'Δημιουργία'});
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1185,7 +1192,7 @@ function getActiveProtocols(client) {
 function showMedicalProtocol(condition) {
   var protocol = getProtocol(condition);
   if(!protocol) {
-    alert('Δεν βρέθηκε πρωτόκολο για: ' + condition);
+    showErrorToast('Δεν βρέθηκε πρωτόκολο για: ' + condition);
     return;
   }
 
@@ -1305,9 +1312,9 @@ function applyMedicalProtocol(condition, isChecked) {
   if(c.weekPlan && c.weekPlan.length > 0) {
     var msg = protocol.icon + ' ' + protocol.name + ' ενεργοποιήθηκε.\n\n';
     msg += 'Θέλετε να δημιουργήσετε νέο πλάνο με αυτό το πρωτόκολο;';
-    if(confirm(msg)) {
+    showConfirmDialog(msg, function(){
       genPlanWithUndo();
-    }
+    }, {icon: protocol.icon, confirmLabel:'Δημιουργία'});
   }
 }
 
@@ -1315,7 +1322,7 @@ function applyMedicalProtocol(condition, isChecked) {
 function generateProgressReport() {
   var c = getC();
   if(!c || !c.progressLog || c.progressLog.length === 0) {
-    alert('Δεν υπάρχουν καταγραφές προόδου');
+    showErrorToast('Δεν υπάρχουν καταγραφές προόδου');
     return;
   }
 
@@ -1411,7 +1418,7 @@ function openCombinedSupplementsModal() {
 function toggleSupplementSelector() {
   var c = getC();
   if (!c) {
-    alert('Δημιουργήστε πρώτα έναν πελάτη');
+    showErrorToast('Δημιουργήστε πρώτα έναν πελάτη');
     return;
   }
 
@@ -1808,21 +1815,19 @@ function getDayStatus(dayTotals, targetTotals){
 }
 
 function deleteMealAllDays(mealIndex){
-  if(!confirm('Σίγουρα θέλετε να διαγράψετε αυτό το γεύμα από όλες τις ημέρες;')) return;
-
   var c = getC();
   if(!c || !c.weekPlan) return;
-
-  // Remove from all 7 days
-  for(var d = 0; d < 7; d++){
-    if(c.weekPlan[d] && c.weekPlan[d][mealIndex]){
-      c.weekPlan[d].splice(mealIndex, 1);
+  showConfirmDialog('Σίγουρα θέλετε να διαγράψετε αυτό το γεύμα από όλες τις ημέρες;', function(){
+    // Remove from all 7 days
+    for(var d = 0; d < 7; d++){
+      if(c.weekPlan[d] && c.weekPlan[d][mealIndex]){
+        c.weekPlan[d].splice(mealIndex, 1);
+      }
     }
-  }
-
-  save();
-  renderWeekTable();
-  showSuccessToast('✅ Γεύμα διαγράφηκε από όλες τις ημέρες!');
+    save();
+    renderWeekTable();
+    showSuccessToast('✅ Γεύμα διαγράφηκε από όλες τις ημέρες!');
+  });
 }
 
 // ✅ FOOD EXCLUSION PICKER - NEW FEATURE
@@ -2005,7 +2010,7 @@ function openValidationModal() {
   var c = getC();
   // Check if weekPlan exists and has at least one day with meals
   if(!c || !c.weekPlan || Object.keys(c.weekPlan).length === 0){
-    alert('Please generate a meal plan first');
+    showErrorToast('Please generate a meal plan first');
     return;
   }
 

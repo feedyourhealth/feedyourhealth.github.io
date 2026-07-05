@@ -1251,7 +1251,7 @@ function genPlan(){
   }catch(e){
     console.error('GENPLAN ERROR:', e.message);
     console.error('Stack:', e.stack);
-    alert('Σφάλμα στη δημιουργία πλάνου: ' + e.message);
+    showErrorToast('Σφάλμα στη δημιουργία πλάνου: ' + e.message);
   }
 }
 
@@ -1433,16 +1433,16 @@ function mealSourceBadge(meal){
 function regenerateDay(dayIndex){
   var c=getC();
   if(!c || !c.weekPlan || !Object.keys(c.weekPlan).length) return;
-  if(!confirm('Αναδημιουργία μόνο της ημέρας «'+DAYS[dayIndex]+'»;')) return;
-
-  var oldPlan = deepClone(c.weekPlan);
-  genPlan();
-  var newDay = deepClone(c.weekPlan[dayIndex]);
-  c.weekPlan = deepClone(oldPlan);
-  c.weekPlan[dayIndex] = newDay;
-  save();
-  renderWeekTable();
-  showSuccessToast('🔄 Η ημέρα «'+DAYS[dayIndex]+'» αναδημιουργήθηκε!');
+  showConfirmDialog('Αναδημιουργία μόνο της ημέρας «'+DAYS[dayIndex]+'»;', function(){
+    var oldPlan = deepClone(c.weekPlan);
+    genPlan();
+    var newDay = deepClone(c.weekPlan[dayIndex]);
+    c.weekPlan = deepClone(oldPlan);
+    c.weekPlan[dayIndex] = newDay;
+    save();
+    renderWeekTable();
+    showSuccessToast('🔄 Η ημέρα «'+DAYS[dayIndex]+'» αναδημιουργήθηκε!');
+  }, {icon:'🔄', confirmLabel:'Αναδημιουργία'});
 }
 
 function renderWeekTable(){
@@ -2007,7 +2007,7 @@ function getDoubleTrainingDays(c){
 // Τα γεύματα είναι κοινά slots σε όλες τις 7 ημέρες. Προσθέτουμε ένα νέο slot
 // (π.χ. «Pre 2ης προπόνησης») σε όλες τις ημέρες — κενό όπου δεν χρειάζεται.
 function openAddMealSlotModal(){
-  var c=getC();if(!c||!c.weekPlan||!c.weekPlan[0]){alert('Δημιούργησε πρώτα πλάνο.');return;}
+  var c=getC();if(!c||!c.weekPlan||!c.weekPlan[0]){showErrorToast('Δημιούργησε πρώτα πλάνο.');return;}
   var names=(c.weekPlan[0]||[]).map(function(m){return m.name;});
   var posOpts='';
   for(var i=0;i<names.length;i++){
@@ -2056,7 +2056,7 @@ function closeAddMealSlotModal(){var m=document.getElementById('addMealSlotModal
 function confirmAddMealSlot(){
   var c=getC();if(!c)return;
   var name=(document.getElementById('newMealName').value||'').trim();
-  if(!name){alert('Δώσε όνομα γεύματος.');return;}
+  if(!name){showErrorToast('Δώσε όνομα γεύματος.');return;}
   var timing=document.getElementById('newMealTiming').value||'regular';
   var pos=parseInt(document.getElementById('newMealPos').value,10);
   if(isNaN(pos))pos=(c.weekPlan[0]||[]).length;
@@ -2071,24 +2071,25 @@ function confirmAddMealSlot(){
 function renameMealSlot(mi){
   var c=getC();if(!c||!c.weekPlan[0]||!c.weekPlan[0][mi])return;
   var cur=c.weekPlan[0][mi].name;
-  var nv=prompt('Νέο όνομα γεύματος:',cur);
-  if(nv===null)return;
-  nv=nv.trim();if(!nv)return;
-  Object.keys(c.weekPlan).forEach(function(d){
-    if(c.weekPlan[d]&&c.weekPlan[d][mi])c.weekPlan[d][mi].name=nv;
-  });
-  save();renderWeekTable();
+  showPromptDialog('Νέο όνομα γεύματος:', cur, function(nv){
+    nv=nv.trim();if(!nv)return;
+    Object.keys(c.weekPlan).forEach(function(d){
+      if(c.weekPlan[d]&&c.weekPlan[d][mi])c.weekPlan[d][mi].name=nv;
+    });
+    save();renderWeekTable();
+  }, {title:'Μετονομασία γεύματος'});
 }
 function deleteMealSlot(mi){
   var c=getC();if(!c||!c.weekPlan[0]||!c.weekPlan[0][mi])return;
-  if((c.weekPlan[0]||[]).length<=1){alert('Δεν γίνεται να μείνει η μέρα χωρίς γεύματα.');return;}
+  if((c.weekPlan[0]||[]).length<=1){showErrorToast('Δεν γίνεται να μείνει η μέρα χωρίς γεύματα.');return;}
   var nm=c.weekPlan[0][mi].name;
-  if(!confirm('Διαγραφή του γεύματος «'+nm+'» από ΟΛΕΣ τις ημέρες;'))return;
-  Object.keys(c.weekPlan).forEach(function(d){
-    if(c.weekPlan[d]&&c.weekPlan[d].length>mi)c.weekPlan[d].splice(mi,1);
+  showConfirmDialog('Διαγραφή του γεύματος «'+nm+'» από ΟΛΕΣ τις ημέρες;', function(){
+    Object.keys(c.weekPlan).forEach(function(d){
+      if(c.weekPlan[d]&&c.weekPlan[d].length>mi)c.weekPlan[d].splice(mi,1);
+    });
+    save();renderWeekTable();
+    showSuccessToast('🗑️ Διαγράφηκε το γεύμα «'+nm+'»');
   });
-  save();renderWeekTable();
-  showSuccessToast('🗑️ Διαγράφηκε το γεύμα «'+nm+'»');
 }
 function copyDayPrompt(btn,fromDay){
   var c=getC();if(!c||!c.weekPlan[fromDay]||!c.weekPlan[fromDay].length)return;
@@ -2129,7 +2130,7 @@ function doCopyDay(fromDay){
     var cb=document.getElementById('cp-'+di);
     if(cb&&cb.checked){c.weekPlan[di]=deepClone(c.weekPlan[fromDay]);copied.push(dayNames[di]);}
   }
-  if(!copied.length){alert('Δεν επιλέχθηκε καμία ημέρα.');return;}
+  if(!copied.length){showErrorToast('Δεν επιλέχθηκε καμία ημέρα.');return;}
   save();renderWeekTable();
 }
 
@@ -2156,7 +2157,7 @@ function enableMealDragDrop(){
 
       // Check if meal has foods
       if(!c.weekPlan[sourceD][sourceMi].foods||c.weekPlan[sourceD][sourceMi].foods.length===0){
-        alert('Αυτό το γεύμα δεν έχει τροφίμων για αντιγραφή.');e.preventDefault();return;
+        showErrorToast('Αυτό το γεύμα δεν έχει τροφίμων για αντιγραφή.');e.preventDefault();return;
       }
 
       // Store meal data as JSON
@@ -2302,7 +2303,7 @@ function expandRecipeInPlan(d,mi,fi){
   var c=getC();if(!c)return;
   var food=c.weekPlan[d][mi].foods[fi];
   var rx=FYH_RECIPE_EXPAND[food.n];
-  if(!rx){alert('Αυτή η συνταγή δεν έχει αναλυτικά υλικά για άνοιγμα.');return;}
+  if(!rx){showErrorToast('Αυτή η συνταγή δεν έχει αναλυτικά υλικά για άνοιγμα.');return;}
   // Scale ingredients to the recipe's current portion
   var scale=(food.g||rx.base)/rx.base;
   var ings=rx.ing.map(function(ing){return {n:ing.n,g:Math.max(1,Math.round(ing.g*scale))};});
@@ -2810,47 +2811,49 @@ window.addEventListener('load', function(){
 function saveCombo(d,mi){
   var c=getC();if(!c)return;
   var meal=c.weekPlan[d]&&c.weekPlan[d][mi];
-  if(!meal||!meal.foods||!meal.foods.length){alert('Δεν υπάρχουν τρόφιμα για αποθήκευση.');return;}
-  var name=prompt('Όνομα συνδυασμού:',meal.name||'');
-  if(!name||!name.trim())return;
+  if(!meal||!meal.foods||!meal.foods.length){showErrorToast('Δεν υπάρχουν τρόφιμα για αποθήκευση.');return;}
+  showPromptDialog('Όνομα συνδυασμού:', meal.name||'', function(name){
+    if(!name||!name.trim())return;
 
-  // Calculate nutritional info for this meal
-  var mealKcal=0,mealP=0,mealF=0,mealC=0;
-  meal.foods.forEach(function(f){
-    var macros=cm(f.n,f.g);
-    mealKcal+=macros.k;mealP+=macros.p;mealF+=macros.f;mealC+=macros.c;
-  });
+    // Calculate nutritional info for this meal
+    var mealKcal=0,mealP=0,mealF=0,mealC=0;
+    meal.foods.forEach(function(f){
+      var macros=cm(f.n,f.g);
+      mealKcal+=macros.k;mealP+=macros.p;mealF+=macros.f;mealC+=macros.c;
+    });
 
-  // Create enhanced combo object (for smart generation learning)
-  var combo={
-    id:'c'+Date.now(),
-    name:name.trim(),
-    foods:deepClone(meal.foods),
-    kcal:Math.round(mealKcal),
-    p:Math.round(mealP),f:Math.round(mealF),c:Math.round(mealC),
-    mealTiming:meal.mealTiming||'regular',
-    tags:['approved','manual'], // Mark as dietitian-approved
-    createdAt:new Date().toISOString(),
-    notes:'' // Optional: why this combo works
-  };
+    // Create enhanced combo object (for smart generation learning)
+    var combo={
+      id:'c'+Date.now(),
+      name:name.trim(),
+      foods:deepClone(meal.foods),
+      kcal:Math.round(mealKcal),
+      p:Math.round(mealP),f:Math.round(mealF),c:Math.round(mealC),
+      mealTiming:meal.mealTiming||'regular',
+      tags:['approved','manual'], // Mark as dietitian-approved
+      createdAt:new Date().toISOString(),
+      notes:'' // Optional: why this combo works
+    };
 
-  var combos=getSavedCombos();
-  combos.push(combo);
-  setSavedCombos(combos);
-  alert('✅ Σύνδυασμός αποθηκευμένος! Το σύστημα θα τον προτείνει στα μελλοντικά πλάνα.');
-  renderFoodLib('');
+    var combos=getSavedCombos();
+    combos.push(combo);
+    setSavedCombos(combos);
+    showSuccessToast('✅ Σύνδυασμός αποθηκευμένος! Το σύστημα θα τον προτείνει στα μελλοντικά πλάνα.');
+    renderFoodLib('');
+  }, {title:'Αποθήκευση συνδυασμού'});
 }
 
 function deleteCombo(id){
-  if(!confirm('Διαγραφή συνδυασμού;'))return;
-  setSavedCombos(getSavedCombos().filter(function(x){return x.id!==id;}));
-  renderFoodLib('');
+  showConfirmDialog('Διαγραφή συνδυασμού;', function(){
+    setSavedCombos(getSavedCombos().filter(function(x){return x.id!==id;}));
+    renderFoodLib('');
+  });
 }
 
 function copyMealToClipboard(d,mi){
   var c=getC();if(!c)return;
   var meal=c.weekPlan[d]&&c.weekPlan[d][mi];
-  if(!meal||!meal.foods||!meal.foods.length){alert('Δεν υπάρχουν τρόφιμα για αντιγραφή.');return;}
+  if(!meal||!meal.foods||!meal.foods.length){showErrorToast('Δεν υπάρχουν τρόφιμα για αντιγραφή.');return;}
 
   // Store meal data in window clipboard buffer
   window.mealClipboard={
@@ -2861,11 +2864,11 @@ function copyMealToClipboard(d,mi){
 
   // Show user feedback
   var foodList=meal.foods.map(function(f){return f.n+' ('+f.g+'g)';}).join(', ');
-  alert('✅ Γεύμα αντιγράφηκε!\n\nΤρόφιμα: '+foodList+'\n\nΌταν πατήσεις + σε άλλο γεύμα, θα δεις επιλογή για επικόλληση.');
+  showSuccessToast('✅ Γεύμα αντιγράφηκε!\n\nΤρόφιμα: '+foodList+'\n\nΌταν πατήσεις + σε άλλο γεύμα, θα δεις επιλογή για επικόλληση.');
 }
 
 function pasteMealFromClipboard(d,mi){
-  if(!window.mealClipboard){alert('Δεν υπάρχει γεύμα αποθηκευμένο.');return;}
+  if(!window.mealClipboard){showErrorToast('Δεν υπάρχει γεύμα αποθηκευμένο.');return;}
 
   var c=getC();if(!c)return;
   var sourceMeal=window.mealClipboard.meal;
@@ -2877,7 +2880,7 @@ function pasteMealFromClipboard(d,mi){
 
   save();
   renderWeekTable();
-  alert('✅ Γεύμα επικολλήθηκε!');
+  showSuccessToast('✅ Γεύμα επικολλήθηκε!');
 }
 
 /* ---- Favorite Meals System ---- */
@@ -2902,7 +2905,7 @@ function toggleFavoriteMeal(d,mi,btn){
     // Remove from favorites
     favs.splice(idx,1);
     btn.style.opacity='0.5';
-    alert('✅ Αφαιρέθηκε από αγαπημένα');
+    showSuccessToast('✅ Αφαιρέθηκε από αγαπημένα');
   } else {
     // Add to favorites
     favs.push({
@@ -2912,7 +2915,7 @@ function toggleFavoriteMeal(d,mi,btn){
       createdAt:new Date().toISOString()
     });
     btn.style.opacity='1';
-    alert('⭐ Προστέθηκε στα αγαπημένα!');
+    showErrorToast('⭐ Προστέθηκε στα αγαπημένα!');
   }
 
   saveFavoriteMeals(favs);
@@ -2931,7 +2934,7 @@ function isFavoriteMeal(d,mi){
 
 function showFavoriteMeals(){
   var favs=getFavoriteMeals();
-  if(!favs.length){alert('Δεν υπάρχουν αγαπημένα γεύματα ακόμη.');return;}
+  if(!favs.length){showErrorToast('Δεν υπάρχουν αγαπημένα γεύματα ακόμη.');return;}
 
   var html='<div style="background:#fff;border-radius:10px;padding:15px;max-width:500px">';
   html+='<h3 style="color:#025857;margin-top:0;margin-bottom:15px">⭐ Αγαπημένα Γεύματα</h3>';
@@ -2965,39 +2968,39 @@ function pasteFavoriteMeal(idx){
 
   // Ask which meal to paste to
   var c=getC();if(!c)return;
-  var prompt_txt='Επιλέξτε ημέρα και γεύμα (π.χ. 0-0 για Δευτέρα-Πρωί, 1-0 για Τρίτη-Πρωί, κλπ):';
-  var input=prompt(prompt_txt);
-  if(!input)return;
+  showPromptDialog('Επιλέξτε ημέρα και γεύμα:', '', function(input){
+    if(!input)return;
+    var parts=input.split('-');
+    var d=parseInt(parts[0]),mi=parseInt(parts[1]);
+    if(isNaN(d)||isNaN(mi)||d<0||d>6||mi<0||mi>4){showErrorToast('Άκυρη επιλογή');return;}
 
-  var parts=input.split('-');
-  var d=parseInt(parts[0]),mi=parseInt(parts[1]);
-  if(isNaN(d)||isNaN(mi)||d<0||d>6||mi<0||mi>4){alert('Άκυρη επιλογή');return;}
+    if(!c.weekPlan[d]||!c.weekPlan[d][mi]){showErrorToast('Το γεύμα δεν υπάρχει');return;}
 
-  if(!c.weekPlan[d]||!c.weekPlan[d][mi]){alert('Το γεύμα δεν υπάρχει');return;}
+    // Paste the meal
+    fav.foods.forEach(function(food){
+      c.weekPlan[d][mi].foods.push(deepClone(food));
+    });
 
-  // Paste the meal
-  fav.foods.forEach(function(food){
-    c.weekPlan[d][mi].foods.push(deepClone(food));
-  });
-
-  save();
-  renderWeekTable();
-  alert('✅ Αγαπημένο γεύμα επικολλήθηκε!');
+    save();
+    renderWeekTable();
+    showSuccessToast('✅ Αγαπημένο γεύμα επικολλήθηκε!');
+  }, {title:'Επικόλληση αγαπημένου γεύματος', placeholder:'π.χ. 0-0 για Δευτέρα-Πρωί, 1-0 για Τρίτη-Πρωί'});
 }
 
 function removeFavoriteMeal(idx){
-  if(!confirm('Διαγραφή αγαπημένου γεύματος;'))return;
-  var favs=getFavoriteMeals();
-  favs.splice(idx,1);
-  saveFavoriteMeals(favs);
-  showFavoriteMeals();
+  showConfirmDialog('Διαγραφή αγαπημένου γεύματος;', function(){
+    var favs=getFavoriteMeals();
+    favs.splice(idx,1);
+    saveFavoriteMeals(favs);
+    showFavoriteMeals();
+  });
 }
 
 /* ---- Macro Balance Check & Suggestions ---- */
 function balanceMacros(d,mi){
   var c=getC();if(!c)return;
   var meal=c.weekPlan[d]&&c.weekPlan[d][mi];
-  if(!meal||!meal.foods||!meal.foods.length){alert('Δεν υπάρχουν τρόφιμα');return;}
+  if(!meal||!meal.foods||!meal.foods.length){showErrorToast('Δεν υπάρχουν τρόφιμα');return;}
 
   // Calculate current macros
   var totalK=0,totalP=0,totalF=0,totalC=0;
@@ -3233,10 +3236,10 @@ var EN_CAT_NAMES={
 // ── 📲 ΔΗΜΟΣΙΕΥΣΗ ΠΛΑΝΟΥ ΣΤΟΝ ΠΕΛΑΤΗ ────────────────────────────────────────
 function openPublishModal(){
   var c=getC();
-  if(!c){ alert('Διάλεξε πρώτα πελάτη.'); return; }
-  if(!c.weekPlan || !Object.keys(c.weekPlan).length){ alert('Δεν υπάρχει πλάνο για δημοσίευση.'); return; }
+  if(!c){ showErrorToast('Διάλεξε πρώτα πελάτη.'); return; }
+  if(!c.weekPlan || !Object.keys(c.weekPlan).length){ showErrorToast('Δεν υπάρχει πλάνο για δημοσίευση.'); return; }
   if(!window.Cloud || !window.Cloud.enabled || !window.Cloud.user){
-    alert('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις πλάνο στον πελάτη.\n(Κάνε αποσύνδεση και ξανασυνδέσου με email/κωδικό.)');
+    showErrorToast('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις πλάνο στον πελάτη.\n(Κάνε αποσύνδεση και ξανασυνδέσου με email/κωδικό.)');
     return;
   }
   // overlay
@@ -3299,7 +3302,7 @@ function openPublishModal(){
       c.portalShowBFBands=!!(bandsEl&&bandsEl.checked);
       noteSave.disabled=true; noteSave.textContent='Αποθήκευση…';
       window.Cloud.publishPlan(c).then(function(){ noteSave.textContent='✓ Αποθηκεύτηκε'; setTimeout(function(){noteSave.disabled=false;noteSave.textContent='💾 Αποθήκευση ρυθμίσεων';},1600); })
-        .catch(function(e){ noteSave.disabled=false; noteSave.textContent='💾 Αποθήκευση ρυθμίσεων'; alert('Σφάλμα αποθήκευσης: '+(e.message||'')); });
+        .catch(function(e){ noteSave.disabled=false; noteSave.textContent='💾 Αποθήκευση ρυθμίσεων'; showErrorToast('Σφάλμα αποθήκευσης: '+(e.message||'')); });
     };}
   }).catch(function(e){
     var body=document.getElementById('publish-body');

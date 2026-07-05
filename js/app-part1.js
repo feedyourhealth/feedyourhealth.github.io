@@ -718,29 +718,30 @@ function _rollingSnapshot(){
 function restoreFromSnapshot(){
   var snaps = [];
   try { snaps = JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY)) || []; } catch(e){ snaps = []; }
-  if(!snaps.length){ alert('Δεν υπάρχουν διαθέσιμα snapshots ακόμη.\nΘα δημιουργηθούν αυτόματα καθώς δουλεύετε.'); return; }
+  if(!snaps.length){ showErrorToast('Δεν υπάρχουν διαθέσιμα snapshots ακόμη.\nΘα δημιουργηθούν αυτόματα καθώς δουλεύετε.'); return; }
   var rev = snaps.slice().reverse(); // newest first
   var msg = 'Επιλέξτε snapshot για επαναφορά:\n\n';
   rev.forEach(function(s, i){
     msg += (i+1) + ') ' + new Date(s.ts).toLocaleString('el-GR') + '  —  ' + s.count + ' πελάτες\n';
   });
-  msg += '\nΓράψτε τον αριθμό (1 = πιο πρόσφατο) ή Cancel:';
-  var pick = prompt(msg, '1');
-  if(pick === null) return;
-  var idx = parseInt(pick, 10);
-  if(!(idx >= 1 && idx <= rev.length)){ alert('Άκυρη επιλογή.'); return; }
-  var chosen = rev[idx-1];
-  if(!confirm('⚠️ Θα αντικατασταθούν ΟΛΑ τα τρέχοντα δεδομένα με το snapshot της '
-      + new Date(chosen.ts).toLocaleString('el-GR') + ' (' + chosen.count + ' πελάτες).\n\nΣυνέχεια;')) return;
-  var d = chosen.data || {};
-  clients = d.clients || [];
-  customTemplates = d.customTemplates || [];
-  if(d.trackingData && typeof TRACKING_DATA !== 'undefined') TRACKING_DATA = d.trackingData;
-  _doSave();
-  curId = null;
-  if(typeof renderSB === 'function') renderSB();
-  if(typeof renderMain === 'function') renderMain();
-  alert('✅ Επαναφορά ολοκληρώθηκε: ' + clients.length + ' πελάτες.');
+  msg += '\nΓράψτε τον αριθμό (1 = πιο πρόσφατο):';
+  showPromptDialog(msg, '1', function(pick){
+    var idx = parseInt(pick, 10);
+    if(!(idx >= 1 && idx <= rev.length)){ showErrorToast('Άκυρη επιλογή.'); return; }
+    var chosen = rev[idx-1];
+    showConfirmDialog('⚠️ Θα αντικατασταθούν ΟΛΑ τα τρέχοντα δεδομένα με το snapshot της '
+        + new Date(chosen.ts).toLocaleString('el-GR') + ' (' + chosen.count + ' πελάτες).\n\nΣυνέχεια;', function(){
+      var d = chosen.data || {};
+      clients = d.clients || [];
+      customTemplates = d.customTemplates || [];
+      if(d.trackingData && typeof TRACKING_DATA !== 'undefined') TRACKING_DATA = d.trackingData;
+      _doSave();
+      curId = null;
+      if(typeof renderSB === 'function') renderSB();
+      if(typeof renderMain === 'function') renderMain();
+      showSuccessToast('✅ Επαναφορά ολοκληρώθηκε: ' + clients.length + ' πελάτες.');
+    }, {confirmLabel:'Αντικατάσταση'});
+  }, {title:'Επαναφορά από snapshot'});
 }
 
 // Στοχευμένη ανάκτηση: ψάχνει ΜΟΝΟ τα savedPlans ενός πελάτη μέσα στα τοπικά snapshots
@@ -749,7 +750,7 @@ function restoreFromSnapshot(){
 function recoverSavedPlansFor(clientId){
   var snaps=[];
   try{ snaps=JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY))||[]; }catch(e){ snaps=[]; }
-  if(!snaps.length){ alert('Δεν βρέθηκαν τοπικά snapshots σε αυτόν τον υπολογιστή/browser.'); return; }
+  if(!snaps.length){ showErrorToast('Δεν βρέθηκαν τοπικά snapshots σε αυτόν τον υπολογιστή/browser.'); return; }
   var rev=snaps.slice().reverse(); // πιο πρόσφατο πρώτα
   var found=null;
   for(var i=0;i<rev.length;i++){
@@ -758,18 +759,19 @@ function recoverSavedPlansFor(clientId){
     for(var j=0;j<snapClients.length;j++){ if(snapClients[j].id===clientId){ sc=snapClients[j]; break; } }
     if(sc && sc.savedPlans && sc.savedPlans.length){ found={snap:rev[i],client:sc}; break; }
   }
-  if(!found){ alert('Ελέγχθηκαν '+snaps.length+' τοπικά snapshots — κανένα δεν έχει αποθηκευμένα πλάνα για αυτόν τον πελάτη.\n\n(Τα snapshots κρατούν μόνο τις τελευταίες 5 αλλαγές, οπότε αν έγιναν πολλές άλλες αλλαγές μετά, μπορεί να έχουν "σπρωχτεί έξω".)'); return; }
+  if(!found){ showErrorToast('Ελέγχθηκαν '+snaps.length+' τοπικά snapshots — κανένα δεν έχει αποθηκευμένα πλάνα για αυτόν τον πελάτη.'); return; }
   var c=getC();
-  if(!c||c.id!==clientId){ alert('Σφάλμα: δεν βρέθηκε ο τρέχων πελάτης.'); return; }
+  if(!c||c.id!==clientId){ showErrorToast('Σφάλμα: δεν βρέθηκε ο τρέχων πελάτης.'); return; }
   var existing=c.savedPlans||[];
   var existingIds={}; existing.forEach(function(p){existingIds[p.id]=true;});
   var toAdd=found.client.savedPlans.filter(function(p){return !existingIds[p.id];});
-  if(!toAdd.length){ alert('Βρέθηκε snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+', αλλά δεν έχει επιπλέον πλάνα από όσα ήδη υπάρχουν.'); return; }
-  if(!confirm('Βρέθηκαν '+toAdd.length+' αποθηκευμένα πλάνα σε τοπικό snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+' που λείπουν τώρα από τον πελάτη.\n\nΝα προστεθούν πίσω (δεν πειράζεται τίποτα άλλο σε κανέναν πελάτη);'))return;
-  c.savedPlans=existing.concat(toAdd).sort(function(a,b){return (a.number||0)-(b.number||0);});
-  save();
-  var s4=document.getElementById('s4'); if(s4) s4.innerHTML=buildPlanHistoryHtml(c);
-  alert('✅ Επαναφέρθηκαν '+toAdd.length+' πλάνα από το snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+'.');
+  if(!toAdd.length){ showErrorToast('Βρέθηκε snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+', αλλά δεν έχει επιπλέον πλάνα από όσα ήδη υπάρχουν.'); return; }
+  showConfirmDialog('Βρέθηκαν '+toAdd.length+' αποθηκευμένα πλάνα σε τοπικό snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+' που λείπουν τώρα από τον πελάτη.\n\nΝα προστεθούν πίσω (δεν πειράζεται τίποτα άλλο σε κανέναν πελάτη);', function(){
+    c.savedPlans=existing.concat(toAdd).sort(function(a,b){return (a.number||0)-(b.number||0);});
+    save();
+    var s4=document.getElementById('s4'); if(s4) s4.innerHTML=buildPlanHistoryHtml(c);
+    showSuccessToast('✅ Επαναφέρθηκαν '+toAdd.length+' πλάνα από το snapshot της '+new Date(found.snap.ts).toLocaleString('el-GR')+'.');
+  }, {confirmLabel:'Προσθήκη'});
 }
 
 // ── Layer 2: Silent backups to a real disk folder (File System Access API) ──────────
@@ -808,7 +810,7 @@ function _idbSet(val){
 
 function chooseBackupFolder(){
   if(!backupFolderSupported()){
-    alert('Ο browser σας δεν υποστηρίζει αυτόματο backup σε φάκελο.\n\n'
+    showErrorToast('Ο browser σας δεν υποστηρίζει αυτόματο backup σε φάκελο.\n\n'
       + 'Χρησιμοποιήστε «Αντίγραφο ασφαλείας (.json)» χειροκίνητα, ή ανοίξτε την εφαρμογή σε Chrome/Edge.');
     return;
   }
@@ -816,7 +818,7 @@ function chooseBackupFolder(){
     _backupDirHandle = handle;
     _idbSet(handle);
     _writeFileBackup(true);
-    alert('✅ Συνδέθηκε φάκελος backup.\n\nΑπό εδώ και πέρα αποθηκεύεται αυτόματα αντίγραφο σε κάθε αλλαγή '
+    showSuccessToast('✅ Συνδέθηκε φάκελος backup.\n\nΑπό εδώ και πέρα αποθηκεύεται αυτόματα αντίγραφο σε κάθε αλλαγή '
       + '(Dietologist_Backup_latest.json + ημερήσιο αρχείο).');
   }).catch(function(e){ if(e && e.name !== 'AbortError') console.warn('[BACKUP] folder pick', e && e.message); });
 }
@@ -933,50 +935,52 @@ function importData(){
 
     var reader=new FileReader();
     reader.onload=function(event){
+      var importObj;
       try{
-        var importObj=JSON.parse(event.target.result);
-
-        // Validate structure
+        importObj=JSON.parse(event.target.result);
         if(!importObj.clients || !Array.isArray(importObj.clients)){
           throw new Error('Invalid backup file: clients array missing');
         }
-
-        // Merge strategy: Ask user
-        var action=confirm(
-          'Δεδομένα εισαγωγής: ' + importObj.clients.length + ' πελάτες\n\n' +
-          '✅ OK = Αντικατάσταση όλων (εγγυημένη)\n' +
-          '❌ Cancel = Ακύρωση'
-        );
-
-        if(!action) return;
-
-        // Replace data
-        clients=importObj.clients;
-        customTemplates=importObj.customTemplates || [];
-        if(importObj.trackingData) TRACKING_DATA=importObj.trackingData;
-
-        // Save to localStorage
-        _doSave();
-
-        // Reload UI
-        curId=null;
-        renderSB();
-        renderMain();
-
-        // Show confirmation
-        var t=document.getElementById('autosave-toast');
-        if(t){
-          t.innerHTML='✅ Εισαγωγή με επιτυχία! ' + clients.length + ' πελάτες φορτώθηκαν';
-          t.style.opacity='1';
-          clearTimeout(t._ft);
-          t._ft=setTimeout(function(){t.innerHTML='💾 Αυτόματη αποθήκευση...'; t.style.opacity='0';},3000);
-        }
-
-        console.log('[IMPORT] Loaded ' + clients.length + ' clients');
       } catch(err){
-        alert('❌ Σφάλμα κατά την εισαγωγή:\n' + err.message);
+        showErrorToast('❌ Σφάλμα κατά την εισαγωγή: ' + err.message);
         console.error('[IMPORT ERROR]', err);
+        return;
       }
+
+      showConfirmDialog(
+        'Δεδομένα εισαγωγής: ' + importObj.clients.length + ' πελάτες.\n\nΑντικατάσταση όλων των τρεχόντων δεδομένων;',
+        function(){
+          try{
+            // Replace data
+            clients=importObj.clients;
+            customTemplates=importObj.customTemplates || [];
+            if(importObj.trackingData) TRACKING_DATA=importObj.trackingData;
+
+            // Save to localStorage
+            _doSave();
+
+            // Reload UI
+            curId=null;
+            renderSB();
+            renderMain();
+
+            // Show confirmation
+            var t=document.getElementById('autosave-toast');
+            if(t){
+              t.innerHTML='✅ Εισαγωγή με επιτυχία! ' + clients.length + ' πελάτες φορτώθηκαν';
+              t.style.opacity='1';
+              clearTimeout(t._ft);
+              t._ft=setTimeout(function(){t.innerHTML='💾 Αυτόματη αποθήκευση...'; t.style.opacity='0';},3000);
+            }
+
+            console.log('[IMPORT] Loaded ' + clients.length + ' clients');
+          } catch(err){
+            showErrorToast('❌ Σφάλμα κατά την εισαγωγή: ' + err.message);
+            console.error('[IMPORT ERROR]', err);
+          }
+        },
+        {confirmLabel:'Αντικατάσταση'}
+      );
     };
     reader.readAsText(file);
   };
@@ -989,7 +993,7 @@ function showBackupInfo(){
   var msg='Αυτόματη αποθήκευση κάθε 30 δευτερόλεπτα\n\n' +
           'Συνολικές αποθηκεύσεις: ' + backupCount + '\n' +
           'Τελευταία: ' + (lastBackup || 'ποτέ');
-  alert(msg);
+  showErrorToast(msg);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════════
@@ -1111,7 +1115,7 @@ function showPlanRegenerationPrompt(c){
     +'Νέο Άθλημα: '+newSport+'\n\n'
     +'Θέλεις να αναδημιουργηθεί το πλάνο με τις νέες τιμές;';
 
-  if(confirm(msg)){
+  showConfirmDialog(msg, function(){
     c._lastRecalcTime=null;  // Reset recalc time so it doesn't ask again
     var oldPlan = deepClone(c.weekPlan);
     if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
@@ -1121,7 +1125,7 @@ function showPlanRegenerationPrompt(c){
       c.weekPlan={};  // Clear old plan
       genPlan();
     }
-  }
+  }, {icon:'🔄', confirmLabel:'Αναδημιουργία'});
 }
 
 // ── Notification: Show "auto-updated" badge + visual feedback
@@ -2295,18 +2299,18 @@ function unarchiveClient(id){
 }
 
 function permanentlyDeleteClient(id){
-  if(!confirm('Διαγραφή ΜΟΝΙΜΑ; Δεν θα μπορείς να ανακτήσεις τα δεδομένα!')) return;
+  showConfirmDialog('Διαγραφή ΜΟΝΙΜΑ; Δεν θα μπορείς να ανακτήσεις τα δεδομένα!', function(){
+    // ✅ HARD DELETE: Permanently remove
+    clients = clients.filter(function(c){return c.id!==id;});
 
-  // ✅ HARD DELETE: Permanently remove
-  clients = clients.filter(function(c){return c.id!==id;});
+    if(curId===id){
+      curId=null;
+      if(typeof renderHome==='function') renderHome();
+    }
 
-  if(curId===id){
-    curId=null;
-    if(typeof renderHome==='function') renderHome();
-  }
-
-  save();
-  renderSB();
+    save();
+    renderSB();
+  }, {confirmLabel:'Μόνιμη διαγραφή'});
 }
 function selectClient(id){
   try {
@@ -2479,7 +2483,7 @@ function loadTestClientBasilina(){
   save();
   renderSB();
   selectClient(basilina.id);
-  alert('✅ Βασιλίνα Περίσιου φορτώθηκε με επιτυχία!');
+  showSuccessToast('✅ Βασιλίνα Περίσιου φορτώθηκε με επιτυχία!');
 }
 
 // Μικρό badge κατάστασης δίπλα σε κάθε πελάτη στη λίστα (βασισμένο στα cloud checkins από το portal).
@@ -2797,7 +2801,7 @@ function closeSaveTmplPanel(){
 }
 function doSaveAsTmpl(){
   var c=getC();
-  if(!c||!Object.keys(c.weekPlan||{}).length){alert('Δεν υπάρχει πλάνο για αποθήκευση!');return;}
+  if(!c||!Object.keys(c.weekPlan||{}).length){showErrorToast('Δεν υπάρχει πλάνο για αποθήκευση!');return;}
   var nameInp=document.getElementById('save-tmpl-name');
   var goalSel=document.getElementById('save-tmpl-goal');
   var name=(nameInp?nameInp.value.trim():'');
@@ -2822,7 +2826,7 @@ function doSaveAsTmpl(){
 // ═══════════════════════════════════════════════════════════════
 function showSavePlanPanel(){
   var c=getC();
-  if(!c||!Object.keys(c.weekPlan||{}).length){alert('Δεν υπάρχει πλάνο για αποθήκευση!');return;}
+  if(!c||!Object.keys(c.weekPlan||{}).length){showErrorToast('Δεν υπάρχει πλάνο για αποθήκευση!');return;}
   var modal=document.getElementById('savePlanModal');
   if(modal){
     modal.style.display='flex';
@@ -2840,7 +2844,7 @@ function closeSavePlanPanel(){
 
 function doSavePlan(){
   var c=getC();
-  if(!c||!Object.keys(c.weekPlan||{}).length){alert('Δεν υπάρχει πλάνο για αποθήκευση!');return;}
+  if(!c||!Object.keys(c.weekPlan||{}).length){showErrorToast('Δεν υπάρχει πλάνο για αποθήκευση!');return;}
 
   // Initialize savedPlans if it doesn't exist
   if(!c.savedPlans)c.savedPlans=[];
@@ -2969,7 +2973,7 @@ function renderPlanCharts(c){
 function exportPlanHistory(){
   var c=getC();
   if(!c||!c.savedPlans||c.savedPlans.length===0){
-    alert('Δεν υπάρχουν πλάνα για εξαγωγή');
+    showErrorToast('Δεν υπάρχουν πλάνα για εξαγωγή');
     return;
   }
 
@@ -3111,19 +3115,20 @@ function loadPlanAsActive(planIndex){
   var plan=c.savedPlans[planIndex];
   c.weekPlan=deepClone(plan.weekPlan);
   save();
-  alert('✅ Πλάνο #'+plan.number+' φορτώθηκε! Πήγαινε στο "Εβδομαδιαίο πλάνο" για να το δεις.');
+  showSuccessToast('✅ Πλάνο #'+plan.number+' φορτώθηκε! Πήγαινε στο "Εβδομαδιαίο πλάνο" για να το δεις.');
   renderMain();
 }
 
 function deletePlanFromHistory(planIndex){
   var c=getC();
   if(!c||!c.savedPlans||!c.savedPlans[planIndex])return;
-  if(!confirm('Είσαι σίγουρος ότι θέλεις να διαγράψεις το πλάνο #'+c.savedPlans[planIndex].number+';'))return;
-  c.savedPlans.splice(planIndex,1);
-  save();
-  var s4=document.getElementById('s4');
-  if(s4)s4.innerHTML=buildPlanHistoryHtml(c);
-  console.log('[PLAN HISTORY] Deleted plan at index',planIndex);
+  showConfirmDialog('Είσαι σίγουρος ότι θέλεις να διαγράψεις το πλάνο #'+c.savedPlans[planIndex].number+';', function(){
+    c.savedPlans.splice(planIndex,1);
+    save();
+    var s4=document.getElementById('s4');
+    if(s4)s4.innerHTML=buildPlanHistoryHtml(c);
+    console.log('[PLAN HISTORY] Deleted plan at index',planIndex);
+  });
 }
 
 function duplicatePlan(planIndex){

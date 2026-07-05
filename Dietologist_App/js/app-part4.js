@@ -1,7 +1,7 @@
 function exportPDF(lang){
   var isEn=lang==='en';
   var c=getC();
-  if(!c||!Object.keys(c.weekPlan||{}).length){alert(isEn?'Create a plan first!':'Πρώτα δημιούργησε πλάνο!');return;}
+  if(!c||!Object.keys(c.weekPlan||{}).length){showErrorToast(isEn?'Create a plan first!':'Πρώτα δημιούργησε πλάνο!');return;}
   // Calculate weekly average target for MET-based accuracy
   var t=calcTDEE(c);
   var avgTarget=t.target;
@@ -576,7 +576,7 @@ function exportPDF(lang){
     +'</body></html>';
 
   var w=window.open('','_blank');
-  if(!w){alert(isEn?'Please allow pop-ups for this page to export PDF.':'Επέτρεψε τα pop-ups για αυτή τη σελίδα για να εξαχθεί PDF.');return;}
+  if(!w){showErrorToast(isEn?'Please allow pop-ups for this page to export PDF.':'Επέτρεψε τα pop-ups για αυτή τη σελίδα για να εξαχθεί PDF.');return;}
   w.document.write(html);
   w.document.close();
   setTimeout(function(){w.print();},800);
@@ -753,7 +753,7 @@ function exportLipometriaPDF(){
     +'</div></body></html>';
 
   var w=window.open('','_blank');
-  if(!w){alert('Επέτρεψε τα pop-ups για να ανοίξει το PDF.');return;}
+  if(!w){showErrorToast('Επέτρεψε τα pop-ups για να ανοίξει το PDF.');return;}
   w.document.write(html);w.document.close();
   setTimeout(function(){w.print();},600);
 }
@@ -761,7 +761,7 @@ function exportLipometriaPDF(){
 /* ── Body Composition PDF ─────────────────────────────────────────────────── */
 function exportBodyCompPDF(){
   var c=getC();if(!c)return;
-  if(!c.weightLog||!c.weightLog.length){alert('Δεν υπάρχουν εγγραφές tracker.');return;}
+  if(!c.weightLog||!c.weightLog.length){showErrorToast('Δεν υπάρχουν εγγραφές tracker.');return;}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   var sorted=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
   var latest=sorted[sorted.length-1];
@@ -944,7 +944,7 @@ function exportBodyCompPDF(){
     +'</body></html>';
 
   var w=window.open('','_blank');
-  if(!w){alert('Επέτρεψε τα pop-ups για να ανοίξει το PDF.');return;}
+  if(!w){showErrorToast('Επέτρεψε τα pop-ups για να ανοίξει το PDF.');return;}
   w.document.write(html);w.document.close();
   setTimeout(function(){w.print();},600);
 }
@@ -1097,7 +1097,7 @@ function exportBackup(){
 // ── Export All Data to JSON (for Google Drive) ──
 function exportClientsJSON(){
   if((!clients||clients.length===0)&&(!customTemplates||customTemplates.length===0)){
-    alert('Δεν υπάρχουν δεδομένα για εξαγωγή');return;
+    showErrorToast('Δεν υπάρχουν δεδομένα για εξαγωγή');return;
   }
   var data=JSON.stringify({
     clients:clients,
@@ -1113,7 +1113,7 @@ function exportClientsJSON(){
   a.href=URL.createObjectURL(blob);
   a.download='FYH_AllData_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
-  setTimeout(function(){alert('✅ Κατεβάστηκε!\n\nPelátai: '+clients.length+'\nPrótupa: '+customTemplates.length+'\n\nΒήμα 1: Ανεβάσμε το αρχείο στο Google Drive\nΒήμα 2: Σε άλλο PC, κάνε κλικ "Ανεβάσμε" και επίλεξε το αρχείο');},500);
+  setTimeout(function(){showSuccessToast('✅ Κατεβάστηκε!\n\nPelátai: '+clients.length+'\nPrótupa: '+customTemplates.length+'\n\nΒήμα 1: Ανεβάσμε το αρχείο στο Google Drive\nΒήμα 2: Σε άλλο PC, κάνε κλικ "Ανεβάσμε" και επίλεξε το αρχείο');},500);
 }
 
 // ── Import All Data from JSON (from Google Drive) ──
@@ -1124,39 +1124,33 @@ function importClientsJSON(){
     var f=inp.files[0];if(!f)return;
     var r=new FileReader();
     r.onload=function(e){
+      var d;
       try{
-        var d=JSON.parse(e.target.result);
+        d=JSON.parse(e.target.result);
         if(!d.clients||!Array.isArray(d.clients))throw new Error('Λάθος format αρχείου');
-        var incoming=d.clients.length;
-        var incomingTmpls=(d.customTemplates||[]).length;
-        var existing=clients.length;
-        var existingTmpls=customTemplates.length;
-        // Offer merge or replace
-        var choice=existing>0
-          ?window.confirm(
-              'Αρχείο:\n  Πελάτες: '+incoming+'\n  Πρότυπα: '+incomingTmpls+'\n\n'
-              +'Τρέχον:\n  Πελάτες: '+existing+'\n  Πρότυπα: '+existingTmpls+'\n\n'
-              +'✓ = Προσθήκη / Merge\n'
-              +'✕ = Αντικατάσταση (όλα)')
-          :true;
-        if(choice===null)return;
-        if(choice){
-          // Merge — avoid duplicate IDs
-          var existingIds=clients.map(function(c){return c.id;});
-          var toAdd=d.clients.filter(function(c){return existingIds.indexOf(c.id)<0;});
-          var dupes=d.clients.length-toAdd.length;
-          clients=clients.concat(toAdd);
-          // Merge templates
-          var existingTmplIds=customTemplates.map(function(t){return t.id;});
-          var toAddTmpls=(d.customTemplates||[]).filter(function(t){return existingTmplIds.indexOf(t.id)<0;});
-          customTemplates=customTemplates.concat(toAddTmpls);
-          alert('✅ Εισαγωγή επιτυχής!\n\nΠροστέθηκαν:\n  '+toAdd.length+' πελάτες ('+dupes+' ήδη υπάρχοντες)\n  '+toAddTmpls.length+' πρότυπα\n\nΣύνολο: '+clients.length+' πελάτες, '+customTemplates.length+' πρότυπα');
-        } else {
-          // Replace everything
-          clients=d.clients;
-          customTemplates=d.customTemplates||[];
-          alert('✅ Αντικαταστάθηκαν όλα τα δεδομένα!\n\nΣύνολο: '+clients.length+' πελάτες, '+customTemplates.length+' πρότυπα');
-        }
+      }catch(ex){showErrorToast('❌ Σφάλμα: '+ex.message);return;}
+
+      var incoming=d.clients.length;
+      var incomingTmpls=(d.customTemplates||[]).length;
+      var existing=clients.length;
+      var existingTmpls=customTemplates.length;
+
+      function doMerge(){
+        var existingIds=clients.map(function(c){return c.id;});
+        var toAdd=d.clients.filter(function(c){return existingIds.indexOf(c.id)<0;});
+        var dupes=d.clients.length-toAdd.length;
+        clients=clients.concat(toAdd);
+        var existingTmplIds=customTemplates.map(function(t){return t.id;});
+        var toAddTmpls=(d.customTemplates||[]).filter(function(t){return existingTmplIds.indexOf(t.id)<0;});
+        customTemplates=customTemplates.concat(toAddTmpls);
+        finishImport('✅ Εισαγωγή επιτυχής! Προστέθηκαν '+toAdd.length+' πελάτες ('+dupes+' ήδη υπάρχοντες), '+toAddTmpls.length+' πρότυπα. Σύνολο: '+clients.length+' πελάτες, '+customTemplates.length+' πρότυπα.');
+      }
+      function doReplace(){
+        clients=d.clients;
+        customTemplates=d.customTemplates||[];
+        finishImport('✅ Αντικαταστάθηκαν όλα τα δεδομένα! Σύνολο: '+clients.length+' πελάτες, '+customTemplates.length+' πρότυπα.');
+      }
+      function finishImport(msg){
         curId=null;
         saveNow();
         renderSB();
@@ -1166,7 +1160,18 @@ function importClientsJSON(){
           +'<div style="font-size:12px;color:#555">Πελάτες: '+clients.length+' · Πρότυπα: '+customTemplates.length
           +(d.exportedAt?' · Αρχείο από: '+d.exportedAt.slice(0,10):'')
           +'</div></div>';
-      }catch(ex){alert('❌ Σφάλμα: '+ex.message);}
+        showSuccessToast(msg);
+      }
+
+      if(existing>0){
+        showConfirmDialog(
+          'Αρχείο: '+incoming+' πελάτες, '+incomingTmpls+' πρότυπα.\nΤρέχον: '+existing+' πελάτες, '+existingTmpls+' πρότυπα.',
+          doMerge,
+          {title:'Συγχώνευση ή αντικατάσταση;', icon:'📥', confirmLabel:'Συγχώνευση', secondary:{label:'Αντικατάσταση', onClick:doReplace}}
+        );
+      } else {
+        doMerge();
+      }
     };
     r.readAsText(f);
   };
@@ -1175,7 +1180,7 @@ function importClientsJSON(){
 
 function exportWord(){
   var c=getC();
-  if(!c||!Object.keys(c.weekPlan||{}).length){alert('Πρώτα δημιούργησε πλάνο!');return;}
+  if(!c||!Object.keys(c.weekPlan||{}).length){showErrorToast('Πρώτα δημιούργησε πλάνο!');return;}
   var t=calcTDEE(c);
   // Calculate weekly average target for MET-based accuracy
   var avgTarget=t.target;
@@ -1382,8 +1387,8 @@ function exportWord(){
 
 function exportGoogleDocs(){
   var c=getC();
-  if(!c||!Object.keys(c.weekPlan||{}).length){alert('Πρώτα δημιούργησε πλάνο!');return;}
-  if(typeof JSZip==='undefined'){alert('Η βιβλιοθήκη JSZip δεν φορτώθηκε. Έλεγξε τη σύνδεση internet.');return;}
+  if(!c||!Object.keys(c.weekPlan||{}).length){showErrorToast('Πρώτα δημιούργησε πλάνο!');return;}
+  if(typeof JSZip==='undefined'){showErrorToast('Η βιβλιοθήκη JSZip δεν φορτώθηκε. Έλεγξε τη σύνδεση internet.');return;}
   var t=calcTDEE(c);
   // Calculate weekly average target for MET-based accuracy
   var avgTarget=t.target;
@@ -1922,7 +1927,7 @@ function loadCloudData() {
 function showRecipeModal(foodName){
   var food=FOODS[foodName];
   var rxModal=(typeof FYH_RECIPE_EXPAND!=='undefined')&&FYH_RECIPE_EXPAND[foodName];
-  if((!food||!food.ingredients)&&!rxModal){alert('Δεν υπάρχουν συστατικά για αυτό το τρόφιμο');return;}
+  if((!food||!food.ingredients)&&!rxModal){showErrorToast('Δεν υπάρχουν συστατικά για αυτό το τρόφιμο');return;}
 
   var modal=document.getElementById('recipe-modal');
   if(!modal){
@@ -1980,7 +1985,7 @@ function closeRecipeModal(){
 function openMicroModal(){
   var c=getC();
   if(!c||!c.weekPlan){
-    alert('Δημιουργήστε πρώτα ένα πλάνο');
+    showErrorToast('Δημιουργήστε πρώτα ένα πλάνο');
     return;
   }
 
@@ -2053,7 +2058,7 @@ function openSupplementModal(){
   try {
     var c=getC();
     if(!c || !c.weekPlan){
-      alert('Δημιουργήστε πρώτα ένα πλάνο');
+      showErrorToast('Δημιουργήστε πρώτα ένα πλάνο');
       return;
     }
 
@@ -2112,7 +2117,7 @@ function openSupplementModal(){
   } catch(err) {
     console.error('[ERROR] openSupplementModal failed:', err.message);
     console.error('[ERROR] Stack:', err.stack);
-    alert('Σφάλμα κατά το άνοιγμα του προτάσεων συμπληρωμάτων: ' + err.message);
+    showErrorToast('Σφάλμα κατά το άνοιγμα του προτάσεων συμπληρωμάτων: ' + err.message);
   }
 }
 
@@ -2125,7 +2130,7 @@ function closeSupplementModal(){
 function saveSupplementSelection(){
   var c=getC();
   if(!c){
-    alert('Δημιουργήστε πρώτα ένα πλάνο');
+    showErrorToast('Δημιουργήστε πρώτα ένα πλάνο');
     return;
   }
 
@@ -2152,7 +2157,7 @@ function saveSupplementSelection(){
   });
 
   if(selectedSupps.length===0){
-    alert('Επιλέξτε τουλάχιστον ένα συμπλήρωμα');
+    showErrorToast('Επιλέξτε τουλάχιστον ένα συμπλήρωμα');
     return;
   }
 
@@ -2161,7 +2166,7 @@ function saveSupplementSelection(){
   save();
 
   // Show success message
-  alert('✅ Επιλογή αποθηκεύτηκε! ' + selectedSupps.length + ' συμπληρώματα θα εμφανιστούν στο PDF.');
+  showSuccessToast('✅ Επιλογή αποθηκεύτηκε! ' + selectedSupps.length + ' συμπληρώματα θα εμφανιστούν στο PDF.');
 
   // Close modal and update display
   closeSupplementModal();
@@ -2350,7 +2355,7 @@ function regeneratePlan(){
   } else {
     genPlan();
   }
-  alert('Το σχέδιο δημιουργήθηκε ξανά. Το σύστημα θα μάθει από αυτό!');
+  showErrorToast('Το σχέδιο δημιουργήθηκε ξανά. Το σύστημα θα μάθει από αυτό!');
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -3125,35 +3130,46 @@ function handleBackupImport(event){
 
   var reader = new FileReader();
   reader.onload = function(e){
+    var data;
     try{
-      var data = JSON.parse(e.target.result);
+      data = JSON.parse(e.target.result);
       if(!data.clients || !Array.isArray(data.clients)){
-        alert('Λάθος format αρχείου!');
+        showErrorToast('Λάθος format αρχείου!');
         return;
       }
+    } catch(ex){
+      showErrorToast('Σφάλμα: ' + ex.message);
+      return;
+    }
 
-      var incoming = data.clients.length;
-      var existing = clients.length;
-      var choice = existing > 0
-        ? confirm('Βρέθηκαν ' + incoming + ' πελάτες.\n\nΟΚ = Προσθήκη στους υπάρχοντες (' + existing + ' + ' + incoming + ')\nΆκυρο = Αντικατάσταση των υπαρχόντων')
-        : true;
+    var incoming = data.clients.length;
+    var existing = clients.length;
 
-      if(choice === null) return;
-
-      if(choice){
-        var existingIds = clients.map(function(c){return c.id;});
-        var toAdd = data.clients.filter(function(c){return existingIds.indexOf(c.id) < 0;});
-        clients = clients.concat(toAdd);
-      } else {
-        clients = data.clients;
-      }
-
+    function finish(){
       curId = null;
       saveNow();
       renderSB();
-      alert('✅ Εισαγωγή επιτυχής! ' + clients.length + ' πελάτες φορτώθηκαν.');
-    } catch(ex){
-      alert('Σφάλμα: ' + ex.message);
+      showSuccessToast('✅ Εισαγωγή επιτυχής! ' + clients.length + ' πελάτες φορτώθηκαν.');
+    }
+    function doMerge(){
+      var existingIds = clients.map(function(c){return c.id;});
+      var toAdd = data.clients.filter(function(c){return existingIds.indexOf(c.id) < 0;});
+      clients = clients.concat(toAdd);
+      finish();
+    }
+    function doReplace(){
+      clients = data.clients;
+      finish();
+    }
+
+    if(existing > 0){
+      showConfirmDialog(
+        'Βρέθηκαν ' + incoming + ' πελάτες, υπάρχουν ήδη ' + existing + '.',
+        doMerge,
+        {title:'Συγχώνευση ή αντικατάσταση;', icon:'📥', confirmLabel:'Συγχώνευση ('+(existing+incoming)+')', secondary:{label:'Αντικατάσταση', onClick:doReplace}}
+      );
+    } else {
+      doMerge();
     }
   };
   reader.readAsText(file);
@@ -3173,31 +3189,46 @@ function importBackup(){
     setTimeout(function(){if(inp.parentNode) inp.parentNode.removeChild(inp);}, 0);
     var r = new FileReader();
     r.onload = function(e){
+      var data;
       try{
-        var data = JSON.parse(e.target.result);
+        data = JSON.parse(e.target.result);
         if(!data.clients || !Array.isArray(data.clients)){
-          alert('Λάθος format αρχείου!');
+          showErrorToast('Λάθος format αρχείου!');
           return;
         }
-        var incoming = data.clients.length;
-        var existing = clients.length;
-        var choice = existing > 0
-          ? confirm('Βρέθηκαν ' + incoming + ' πελάτες.\n\nΟΚ = Προσθήκη στους υπάρχοντες (' + existing + ' + ' + incoming + ')\nΆκυρο = Αντικατάσταση των υπαρχόντων')
-          : true;
-        if(choice === null) return;
-        if(choice){
-          var existingIds = clients.map(function(c){return c.id;});
-          var toAdd = data.clients.filter(function(c){return existingIds.indexOf(c.id) < 0;});
-          clients = clients.concat(toAdd);
-        } else {
-          clients = data.clients;
-        }
+      }catch(ex){
+        showErrorToast('Σφάλμα: ' + ex.message);
+        return;
+      }
+
+      var incoming = data.clients.length;
+      var existing = clients.length;
+
+      function finish(){
         curId = null;
         saveNow();
         renderSB();
-        alert('✅ Εισαγωγή επιτυχής! ' + clients.length + ' πελάτες φορτώθηκαν.');
-      }catch(ex){
-        alert('Σφάλμα: ' + ex.message);
+        showSuccessToast('✅ Εισαγωγή επιτυχής! ' + clients.length + ' πελάτες φορτώθηκαν.');
+      }
+      function doMerge(){
+        var existingIds = clients.map(function(c){return c.id;});
+        var toAdd = data.clients.filter(function(c){return existingIds.indexOf(c.id) < 0;});
+        clients = clients.concat(toAdd);
+        finish();
+      }
+      function doReplace(){
+        clients = data.clients;
+        finish();
+      }
+
+      if(existing > 0){
+        showConfirmDialog(
+          'Βρέθηκαν ' + incoming + ' πελάτες, υπάρχουν ήδη ' + existing + '.',
+          doMerge,
+          {title:'Συγχώνευση ή αντικατάσταση;', icon:'📥', confirmLabel:'Συγχώνευση ('+(existing+incoming)+')', secondary:{label:'Αντικατάσταση', onClick:doReplace}}
+        );
+      } else {
+        doMerge();
       }
     };
     r.readAsText(f);
@@ -3220,7 +3251,7 @@ window.addEventListener('load', function(){
 function openGapAnalysisModal(){
   var c = getC();
   if(!c || !c.weekPlan){
-    alert('Δημιουργήστε πρώτα ένα πλάνο');
+    showErrorToast('Δημιουργήστε πρώτα ένα πλάνο');
     return;
   }
 

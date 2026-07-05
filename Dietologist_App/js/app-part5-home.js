@@ -80,14 +80,14 @@ function homeCard(title,items,emptyText,moreLabel,variant){
 function homeQuickRepublish(clientId,btn){
   var c=clients.find(function(x){return x.id===clientId;});
   if(!c) return;
-  if(!window.Cloud || !window.Cloud.publishPlan){ alert('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
+  if(!window.Cloud || !window.Cloud.publishPlan){ showErrorToast('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
   var orig=btn.textContent;
   btn.disabled=true; btn.textContent='Δημοσίευση...';
   window.Cloud.publishPlan(c).then(function(){
     renderHome();
   }).catch(function(e){
     btn.disabled=false; btn.textContent=orig;
-    alert('Σφάλμα δημοσίευσης: '+(e.message||''));
+    showErrorToast('Σφάλμα δημοσίευσης: '+(e.message||''));
   });
 }
 
@@ -192,14 +192,14 @@ function dietsQuickCreatePlan(clientId){
 function dietsQuickRepublish(clientId,btn){
   var c=clients.find(function(x){return x.id===clientId;});
   if(!c) return;
-  if(!window.Cloud || !window.Cloud.publishPlan){ alert('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
+  if(!window.Cloud || !window.Cloud.publishPlan){ showErrorToast('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
   var orig=btn.textContent;
   btn.disabled=true; btn.textContent='Δημοσίευση...';
   window.Cloud.publishPlan(c).then(function(){
     renderDiets();
   }).catch(function(e){
     btn.disabled=false; btn.textContent=orig;
-    alert('Σφάλμα δημοσίευσης: '+(e.message||''));
+    showErrorToast('Σφάλμα δημοσίευσης: '+(e.message||''));
   });
 }
 
@@ -294,6 +294,7 @@ function renderClients(){
   html+='</select>';
   html+='<select id="client-sort" class="clients-toolbar-select" aria-label="Ταξινόμηση πελατών" onchange="setClientSort(this.value)">'
     +'<option value="recent"'+sel(_clientSortMode,'recent')+'>🕐 Πρόσφατη επίσκεψη πρώτα</option>'
+    +'<option value="attention"'+sel(_clientSortMode,'attention')+'>🔔 Χρειάζονται προσοχή πρώτα</option>'
     +'<option value="oldest"'+sel(_clientSortMode,'oldest')+'>⏳ Παλαιότερη επίσκεψη πρώτα</option>'
     +'<option value="name"'+sel(_clientSortMode,'name')+'>🔤 Όνομα (Α-Ω)</option>'
     +'<option value="stale"'+sel(_clientSortMode,'stale')+'>⚠️ Μπαγιατεμένο πλάνο πρώτα</option>'

@@ -28,7 +28,13 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
   transform:scale(1.1);
   box-shadow:0 3px 12px rgba(0,0,0,0.3);
 }
-.sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:12px 10px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto;transition:width 0.3s ease;}
+.undo-redo-toolbar{position:fixed;top:12px;left:60px;display:flex;gap:6px;z-index:999}
+.undo-redo-btn{width:36px;height:36px;background:#fff;color:#025857;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.2s}
+.undo-redo-btn:hover:not(:disabled){background:#f0f7f7;border-color:#025857}
+.undo-redo-btn:disabled{color:#ccc;cursor:not-allowed;box-shadow:none}
+body.dark-mode .undo-redo-btn{background:#242424;border-color:#444;color:#4fc3f7}
+body.dark-mode .undo-redo-btn:disabled{color:#555}
+.sb{width:220px;flex-shrink:0;border-right:1px solid #e0e0e0;padding:56px 10px 12px;background:#fff;position:sticky;top:0;height:100vh;overflow-y:auto;transition:width 0.3s ease;}
 .sb.collapsed{
   width:0;
   padding:0;

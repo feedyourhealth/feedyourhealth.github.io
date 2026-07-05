@@ -36,25 +36,133 @@ function createNewAccount(){
 function undo(){
   if(!window.undoRedoManager) return;
   window.undoRedoManager.undo();
+  renderMain(); // rebuilds the client header (incl. its own #undoBtn/#redoBtn) — must run before the UI sync below
   updateUndoRedoUI();
-  renderMain();
 }
 
 function redo(){
   if(!window.undoRedoManager) return;
   window.undoRedoManager.redo();
-  updateUndoRedoUI();
   renderMain();
+  updateUndoRedoUI();
 }
+
+// ✅ TIER 2: CONFIRMATION DIALOG SYSTEM
+// Στυλιζαρισμένη εναλλακτική του native confirm() — ίδιο dialog HTML με #confirmDialog.
+var _confirmPendingCallback = null;
+var _confirmPendingSecondary = null;
+
+// opts.secondary = {label, onClick} — προσθέτει ένα 3ο κουμπί (π.χ. "Αντικατάσταση" ανάμεσα σε
+// "Άκυρο"/"Συγχώνευση") για επιλογές με 3 πραγματικές εκβάσεις αντί για confirm()'s true/false.
+function showConfirmDialog(message, onConfirm, opts){
+  opts = opts || {};
+  var dlg = document.getElementById('confirmDialog');
+  if(!dlg){ if(window.confirm(message)) onConfirm(); return; }
+  document.getElementById('confirmTitle').textContent = opts.title || 'Επιβεβαίωση';
+  document.getElementById('confirmMessage').textContent = message;
+  document.getElementById('confirmIcon').textContent = opts.icon || '⚠️';
+  document.getElementById('confirmBtn').textContent = opts.confirmLabel || 'Διαγραφή';
+  var secBtn = document.getElementById('confirmSecondaryBtn');
+  if(opts.secondary){
+    secBtn.textContent = opts.secondary.label;
+    secBtn.style.display = 'inline-block';
+    _confirmPendingSecondary = opts.secondary.onClick;
+  } else {
+    secBtn.style.display = 'none';
+    _confirmPendingSecondary = null;
+  }
+  _confirmPendingCallback = onConfirm;
+  dlg.style.display = 'flex';
+  dlg.setAttribute('data-open', 'true'); // css/styles.css forces #confirmDialog{display:none!important} unless this is set
+  var cancelBtn = dlg.querySelector('button[onclick="closeConfirmDialog()"]');
+  if(cancelBtn) cancelBtn.focus();
+}
+
+function closeConfirmDialog(){
+  var dlg = document.getElementById('confirmDialog');
+  if(dlg){ dlg.style.display = 'none'; dlg.setAttribute('data-open', 'false'); }
+  _confirmPendingCallback = null;
+  _confirmPendingSecondary = null;
+}
+
+function executeConfirm(){
+  var cb = _confirmPendingCallback;
+  closeConfirmDialog();
+  if(cb) cb();
+}
+
+function executeConfirmSecondary(){
+  var cb = _confirmPendingSecondary;
+  closeConfirmDialog();
+  if(cb) cb();
+}
+
+// ✅ TEXT INPUT DIALOG SYSTEM — στυλιζαρισμένη εναλλακτική του native prompt().
+// onSubmit(value) καλείται ΜΟΝΟ όταν πατηθεί OK (αντίστοιχο του prompt()!==null).
+var _promptPendingCallback = null;
+
+function showPromptDialog(message, defaultValue, onSubmit, opts){
+  opts = opts || {};
+  var dlg = document.getElementById('promptDialog');
+  if(!dlg){ var v = window.prompt(message, defaultValue); if(v !== null) onSubmit(v); return; }
+  document.getElementById('promptTitle').textContent = opts.title || 'Στοιχείο';
+  document.getElementById('promptMessage').textContent = message;
+  document.getElementById('promptOkBtn').textContent = opts.okLabel || 'OK';
+  var inp = document.getElementById('promptInput');
+  inp.type = opts.inputType || 'text';
+  inp.value = defaultValue || '';
+  inp.placeholder = opts.placeholder || '';
+  _promptPendingCallback = onSubmit;
+  dlg.style.display = 'flex';
+  setTimeout(function(){ inp.focus(); inp.select(); }, 0);
+}
+
+function closePromptDialog(){
+  var dlg = document.getElementById('promptDialog');
+  if(dlg) dlg.style.display = 'none';
+  _promptPendingCallback = null;
+}
+
+function executePrompt(){
+  var cb = _promptPendingCallback;
+  var val = document.getElementById('promptInput').value;
+  closePromptDialog();
+  if(cb) cb(val);
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    var pdlg = document.getElementById('promptDialog');
+    if(pdlg && pdlg.style.display !== 'none') closePromptDialog();
+  }
+  if(e.key === 'Enter' && document.activeElement && document.activeElement.id === 'promptInput'){
+    var pdlg2 = document.getElementById('promptDialog');
+    if(pdlg2 && pdlg2.style.display !== 'none'){ e.preventDefault(); executePrompt(); }
+  }
+});
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    var dlg = document.getElementById('confirmDialog');
+    if(dlg && dlg.style.display !== 'none') closeConfirmDialog();
+  }
+});
 
 function updateUndoRedoUI(){
   if(!window.undoRedoManager) return;
-  var undoBtn = document.getElementById('undoBtn');
-  var redoBtn = document.getElementById('redoBtn');
-  if(undoBtn) undoBtn.disabled = !window.undoRedoManager.canUndo();
-  if(redoBtn) redoBtn.disabled = !window.undoRedoManager.canRedo();
-  if(undoBtn) undoBtn.style.opacity = window.undoRedoManager.canUndo() ? '1' : '0.5';
-  if(redoBtn) redoBtn.style.opacity = window.undoRedoManager.canRedo() ? '1' : '0.5';
+  var canUndo = window.undoRedoManager.canUndo();
+  var canRedo = window.undoRedoManager.canRedo();
+  // 'undoBtn'/'redoBtn' = green pair rendered inside a client's own header (only exists while a
+  // client is open); 'undoBtnGlobal'/'redoBtnGlobal' = always-visible sidebar toolbar (added so
+  // undo/redo works from list views too, e.g. after deleting a client from Πελάτες).
+  ['undoBtn','undoBtnGlobal'].forEach(function(id){
+    var btn = document.getElementById(id);
+    if(btn){ btn.disabled = !canUndo; btn.style.opacity = canUndo ? '1' : '0.5'; }
+  });
+  ['redoBtn','redoBtnGlobal'].forEach(function(id){
+    var btn = document.getElementById(id);
+    if(btn){ btn.disabled = !canRedo; btn.style.opacity = canRedo ? '1' : '0.5'; }
+  });
 }
 
 function logout(){
@@ -74,28 +182,29 @@ function logout(){
 // εγγραφή στο shared_plans (ώστε ο παλιός σύνδεσμος να σταματήσει να δουλεύει αμέσως) και δημοσιεύει
 // ξανά με νέο, ισχυρό token. Χρήσιμο μετά από πιθανή έκθεση συνδέσμων (π.χ. RLS fix).
 function rotateAllShareTokens(){
-  if(!window.Cloud || !window.Cloud.enabled){ alert('Χρειάζεται σύνδεση στο cloud για αυτή την ενέργεια.'); return; }
+  if(!window.Cloud || !window.Cloud.enabled){ showErrorToast('Χρειάζεται σύνδεση στο cloud για αυτή την ενέργεια.'); return; }
   var toRotate=clients.filter(function(c){ return c.shareToken && !c.deleted; });
-  if(!toRotate.length){ alert('Κανένας πελάτης δεν έχει δημοσιευμένο σύνδεσμο portal αυτή τη στιγμή.'); return; }
-  if(!confirm('Θα ανανεωθούν οι σύνδεσμοι portal για '+toRotate.length+' πελάτ'+(toRotate.length===1?'η':'ες')+'. Οι ΠΑΛΙΟΙ σύνδεσμοι θα σταματήσουν να δουλεύουν αμέσως — θα χρειαστεί να στείλεις τον νέο σύνδεσμο σε κάθε πελάτη ξανά.\n\nΣυνέχεια;')) return;
-  if(typeof closeSettingsPanel==='function') closeSettingsPanel();
-  var done=0, failed=[];
-  function next(i){
-    if(i>=toRotate.length){
-      alert('Ολοκληρώθηκε: '+done+' / '+toRotate.length+' σύνδεσμοι ανανεώθηκαν.'+(failed.length?'\n\nΑπέτυχαν: '+failed.join(', '):''));
-      return;
+  if(!toRotate.length){ showErrorToast('Κανένας πελάτης δεν έχει δημοσιευμένο σύνδεσμο portal αυτή τη στιγμή.'); return; }
+  showConfirmDialog('Θα ανανεωθούν οι σύνδεσμοι portal για '+toRotate.length+' πελάτ'+(toRotate.length===1?'η':'ες')+'. Οι ΠΑΛΙΟΙ σύνδεσμοι θα σταματήσουν να δουλεύουν αμέσως — θα χρειαστεί να στείλεις τον νέο σύνδεσμο σε κάθε πελάτη ξανά.\n\nΣυνέχεια;', function(){
+    if(typeof closeSettingsPanel==='function') closeSettingsPanel();
+    var done=0, failed=[];
+    function next(i){
+      if(i>=toRotate.length){
+        showSuccessToast('Ολοκληρώθηκε: '+done+' / '+toRotate.length+' σύνδεσμοι ανανεώθηκαν.'+(failed.length?' Απέτυχαν: '+failed.join(', '):''));
+        return;
+      }
+      var c=toRotate[i];
+      window.Cloud.unpublishPlan(c).then(function(){
+        c.shareToken=genSecureToken();
+        return window.Cloud.publishPlan(c);
+      }).then(function(){
+        done++; next(i+1);
+      }).catch(function(){
+        failed.push(c.name||'άγνωστος πελάτης'); next(i+1);
+      });
     }
-    var c=toRotate[i];
-    window.Cloud.unpublishPlan(c).then(function(){
-      c.shareToken=genSecureToken();
-      return window.Cloud.publishPlan(c);
-    }).then(function(){
-      done++; next(i+1);
-    }).catch(function(){
-      failed.push(c.name||'άγνωστος πελάτης'); next(i+1);
-    });
-  }
-  next(0);
+    next(0);
+  }, {confirmLabel:'Ανανέωση'});
 }
 
 // Check if app should start
@@ -148,10 +257,11 @@ function backToClientsList(){
 }
 
 function deleteCustomTmpl(id){
-  if(!confirm('Διαγραφή αυτού του προτύπου;'))return;
-  customTemplates=customTemplates.filter(function(t){return t.id!==id;});
-  clients.forEach(function(cl){if(cl.selectedTemplate===id)cl.selectedTemplate=null;});
-  save();renderTemplateEditor();
+  showConfirmDialog('Διαγραφή αυτού του προτύπου;', function(){
+    customTemplates=customTemplates.filter(function(t){return t.id!==id;});
+    clients.forEach(function(cl){if(cl.selectedTemplate===id)cl.selectedTemplate=null;});
+    save();renderTemplateEditor();
+  });
 }
 function selectTmplForClient(id){
   var c=getC();if(!c)return;
@@ -916,7 +1026,7 @@ function addMetActivity(){
     var btn=document.getElementById('met-day-'+d);
     if(btn&&btn.classList.contains('met-day-on'))days.push(d);
   }
-  if(!days.length){alert('Επίλεξε τουλάχιστον μία ημέρα!');return;}
+  if(!days.length){showErrorToast('Επίλεξε τουλάχιστον μία ημέρα!');return;}
   var found=null;
   (MET_ACTIVITIES[catIdx]||MET_ACTIVITIES[0]).items.forEach(function(a){if(a.id===actId)found=a;});
   if(!found)return;
@@ -1841,7 +1951,7 @@ function applyErgoCSVData(data){
   if(hEl&&c.height)hEl.value=c.height;
   updateAgeDisplay();
 
-  alert('✅ Εισήχθησαν δεδομένα από το CSV. Έλεγξε τις τιμές και πάτησε "+ Προσθήκη" για να αποθηκευτούν.');
+  showSuccessToast('✅ Εισήχθησαν δεδομένα από το CSV. Έλεγξε τις τιμές και πάτησε "+ Προσθήκη" για να αποθηκευτούν.');
 }
 
 function handleErgoCSVFile(evt){
@@ -1852,9 +1962,9 @@ function handleErgoCSVFile(evt){
     reader.onload=function(e){
       try{
         var data=parseErgoCSV(e.target.result);
-        if(!data){alert('Δεν βρέθηκαν αναγνωρίσιμα δεδομένα στο CSV.');return;}
+        if(!data){showErrorToast('Δεν βρέθηκαν αναγνωρίσιμα δεδομένα στο CSV.');return;}
         applyErgoCSVData(data);
-      }catch(err){alert('Σφάλμα ανάγνωσης CSV: '+err.message);}
+      }catch(err){showErrorToast('Σφάλμα ανάγνωσης CSV: '+err.message);}
       evt.target.value='';
     };
     reader.readAsText(files[0],'UTF-8');
@@ -1876,7 +1986,7 @@ function finishBatchErgoImport(texts){
   var c=getC();if(!c)return;
   var allRows=[];
   texts.forEach(function(t){if(t)allRows=allRows.concat(parseErgoCSVRows(t));});
-  if(!allRows.length){alert('Δεν βρέθηκαν αναγνωρίσιμα δεδομένα στα CSV.');return;}
+  if(!allRows.length){showErrorToast('Δεν βρέθηκαν αναγνωρίσιμα δεδομένα στα CSV.');return;}
   var byDate={};
   allRows.forEach(function(r){byDate[r.testDate]=r;}); // later file wins on same date
   var rows=Object.keys(byDate).map(function(d){return byDate[d];}).sort(function(a,b){return a.testDate<b.testDate?-1:1;});
@@ -1886,45 +1996,45 @@ function finishBatchErgoImport(texts){
   c.weightLog.forEach(function(e){existingDates[e.date]=true;});
   var toAdd=rows.filter(function(r){return !existingDates[r.testDate];});
   var skipped=rows.length-toAdd.length;
-  if(!toAdd.length){alert('Όλες οι ημερομηνίες υπάρχουν ήδη στο ιστορικό ('+skipped+' παραλείφθηκαν).');return;}
+  if(!toAdd.length){showErrorToast('Όλες οι ημερομηνίες υπάρχουν ήδη στο ιστορικό ('+skipped+' παραλείφθηκαν).');return;}
 
   var summary=toAdd.map(function(r){return r.testDate+' — '+r.weight+'kg';}).join('\n');
   var msg='Θα προστεθούν '+toAdd.length+' μετρήσεις στο ιστορικό (ταξινομημένες κατά ημερομηνία):\n\n'+summary
     +(skipped?'\n\n('+skipped+' παραλείφθηκαν — υπάρχουν ήδη ίδιες ημερομηνίες στο ιστορικό)':'')
     +'\n\nΣυνέχεια;';
-  if(!confirm(msg))return;
+  showConfirmDialog(msg, function(){
+    var profileChanged=false;
+    var withHeight=rows.filter(function(r){return r.height!=null;})[0];
+    if(withHeight&&!c.height){c.height=withHeight.height;profileChanged=true;}
+    var withDob=rows.filter(function(r){return r.birthDate;})[0];
+    if(withDob&&!c.birthDate&&!c.age){
+      c.birthDate=withDob.birthDate;
+      var a0=calcAgeFromBirthdate(withDob.birthDate);
+      if(a0!=null)c.age=a0;
+      profileChanged=true;
+    }
 
-  var profileChanged=false;
-  var withHeight=rows.filter(function(r){return r.height!=null;})[0];
-  if(withHeight&&!c.height){c.height=withHeight.height;profileChanged=true;}
-  var withDob=rows.filter(function(r){return r.birthDate;})[0];
-  if(withDob&&!c.birthDate&&!c.age){
-    c.birthDate=withDob.birthDate;
-    var a0=calcAgeFromBirthdate(withDob.birthDate);
-    if(a0!=null)c.age=a0;
+    toAdd.forEach(function(r){
+      var age=ageAtDate(c.birthDate||r.birthDate,r.testDate)||c.age||25;
+      var fields={tricep:r.tricep||0,subscapular:r.subscapular||0,abdomen:r.abdomen||0,suprailiac:r.suprailiac||0,thigh:r.thigh||0};
+      var res=calcSkinfoldBF('jp4',c.sex||'M',age,fields);
+      c.weightLog.push({date:r.testDate,weight:r.weight,bf:res.bf||0,waist:0,hip:0,arm:0,sleep:0,energy:0,compliance:0,notes:'',sfProtocol:'jp4',sfFields:fields});
+    });
+    c.weightLog.sort(function(a,b){return a.date<b.date?-1:1;});
+
+    var latest=c.weightLog[c.weightLog.length-1];
+    if(latest.bf>0){c.lbm=+(latest.weight*(1-latest.bf/100)).toFixed(1);c.bf=latest.bf;}
+    c.weight=latest.weight;
     profileChanged=true;
-  }
 
-  toAdd.forEach(function(r){
-    var age=ageAtDate(c.birthDate||r.birthDate,r.testDate)||c.age||25;
-    var fields={tricep:r.tricep||0,subscapular:r.subscapular||0,abdomen:r.abdomen||0,suprailiac:r.suprailiac||0,thigh:r.thigh||0};
-    var res=calcSkinfoldBF('jp4',c.sex||'M',age,fields);
-    c.weightLog.push({date:r.testDate,weight:r.weight,bf:res.bf||0,waist:0,hip:0,arm:0,sleep:0,energy:0,compliance:0,notes:'',sfProtocol:'jp4',sfFields:fields});
-  });
-  c.weightLog.sort(function(a,b){return a.date<b.date?-1:1;});
+    save();
+    var s3=document.getElementById('s3');
+    if(s3)s3.innerHTML=buildTrackerHtml(c);
+    var hEl=document.getElementById('inp-height');if(hEl&&c.height)hEl.value=c.height;
+    updateAgeDisplay();
 
-  var latest=c.weightLog[c.weightLog.length-1];
-  if(latest.bf>0){c.lbm=+(latest.weight*(1-latest.bf/100)).toFixed(1);c.bf=latest.bf;}
-  c.weight=latest.weight;
-  profileChanged=true;
-
-  save();
-  var s3=document.getElementById('s3');
-  if(s3)s3.innerHTML=buildTrackerHtml(c);
-  var hEl=document.getElementById('inp-height');if(hEl&&c.height)hEl.value=c.height;
-  updateAgeDisplay();
-
-  alert('✅ Προστέθηκαν '+toAdd.length+' μετρήσεις στο ιστορικό.'+(skipped?' ('+skipped+' παραλείφθηκαν λόγω ίδιας ημερομηνίας)':''));
+    showSuccessToast('✅ Προστέθηκαν '+toAdd.length+' μετρήσεις στο ιστορικό.'+(skipped?' ('+skipped+' παραλείφθηκαν λόγω ίδιας ημερομηνίας)':''));
+  }, {confirmLabel:'Προσθήκη'});
 }
 
 function addWeightEntry(){
@@ -2581,7 +2691,7 @@ function flagRedSRisk(status) {
   if(!c) return;
 
   if(status === 'absent') {
-    alert('⚠️ ΚΡΙΤΙΚΗ ΠΡΟΕΙΔΟΠΟΙΗΣΗ:\n\nΗ απουσία εμμήνων κύκλου δείχνει HIGH RED-S RISK!\n\nΣυστάσεις:\n• Αυξήστε τις θερμίδες σταδιακά\n• Μειώστε τον όγκο άσκησης\n• Δείτε ενδοκρινολόγο\n\nΓυναίκες αθλήτριες σε RED-S κίνδυνο δεν θα πρέπει να χάνουν >0.5kg/εβδ');
+    showErrorToast('⚠️ ΚΡΙΤΙΚΗ ΠΡΟΕΙΔΟΠΟΙΗΣΗ:\n\nΗ απουσία εμμήνων κύκλου δείχνει HIGH RED-S RISK!\n\nΣυστάσεις:\n• Αυξήστε τις θερμίδες σταδιακά\n• Μειώστε τον όγκο άσκησης\n• Δείτε ενδοκρινολόγο\n\nΓυναίκες αθλήτριες σε RED-S κίνδυνο δεν θα πρέπει να χάνουν >0.5kg/εβδ');
   }
 
   console.log('🚨 RED-S Status:', status);
@@ -2591,7 +2701,7 @@ function flagRedSRisk(status) {
 function openCurrentSupplementsTracker() {
   var c = getC();
   if(!c) {
-    alert('Δημιουργήστε πρώτα ένα προφίλ πελάτη');
+    showErrorToast('Δημιουργήστε πρώτα ένα προφίλ πελάτη');
     return;
   }
 
