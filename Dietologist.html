@@ -17,8 +17,28 @@
 <!-- Autosave indicator -->
 <div id="autosave-toast">✓ Αποθηκεύτηκε</div>
 
+<!-- Εμφανίζεται πρώτο, όσο ελέγχουμε αν υπάρχει ήδη αποθηκευμένη σύνδεση (Cloud.init()/getSession()) —
+     έτσι όποιος είναι ήδη συνδεδεμένος δεν βλέπει μια στιγμιαία «αναλαμπή» της οθόνης σύνδεσης πριν μπει
+     κατευθείαν στην εφαρμογή. Κρύβεται από goToApp()/_showLogin()/_showNewPassword() μόλις αποφασιστεί
+     ποια οθόνη πρέπει τελικά να δειχτεί. -->
+<div id="app-loading-gate" style="position:fixed;inset:0;background:#f4f4f2;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#025857,#0a8f86);display:flex;align-items:center;justify-content:center;font-size:22px;">🥗</div>
+</div>
+<script>
+// Δίχτυ ασφαλείας: αν για οποιονδήποτε λόγο το Cloud.init() δεν προλάβει ποτέ να αποφασίσει ποια οθόνη
+// να δείξει (π.χ. σπάνιο πρόβλημα δικτύου/φόρτωσης), μη μείνει ο χρήστης κολλημένος επ' αόριστον στον
+// φορτωτή — δείξε τουλάχιστον τη φόρμα σύνδεσης μετά από 8 δευτερόλεπτα.
+setTimeout(function(){
+  var g=document.getElementById('app-loading-gate');
+  if(g && g.style.display!=='none'){
+    g.style.display='none';
+    var lp=document.getElementById('login-page'); if(lp) lp.style.display='flex';
+  }
+}, 8000);
+</script>
+
 <!-- LOGIN / SIGNUP PAGE -->
-<div id="login-page" style="background:linear-gradient(135deg,#024a49 0%,#037070 55%,#0a8f86 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;">
+<div id="login-page" style="display:none;background:linear-gradient(135deg,#024a49 0%,#037070 55%,#0a8f86 100%);min-height:100vh;align-items:center;justify-content:center;padding:20px;">
   <div style="background:white;border-radius:18px;padding:38px 34px;box-shadow:0 18px 50px rgba(0,0,0,0.28);max-width:410px;width:100%;">
     <div style="text-align:center;margin-bottom:26px;">
       <div style="width:74px;height:74px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,#025857,#0a8f86);display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 6px 16px rgba(2,88,87,.35);">🥗</div>
@@ -2594,6 +2614,7 @@ function saveFoodExclusions(){
     },
 
     _showLogin:function(){
+      var g=document.getElementById('app-loading-gate'); if(g) g.style.display='none';
       var lp=document.getElementById('login-page'), ac=document.getElementById('app-container');
       if(lp) lp.style.display='flex';
       if(ac) ac.style.display='none';
@@ -2929,6 +2950,7 @@ function saveFoodExclusions(){
 
     // Δείχνει τη φόρμα «νέος κωδικός» (όταν ο χρήστης έρθει από το email)
     _showNewPassword:function(){
+      var g=document.getElementById('app-loading-gate'); if(g) g.style.display='none';
       var lp=document.getElementById('login-page'), ac=document.getElementById('app-container');
       if(lp) lp.style.display='flex';
       if(ac) ac.style.display='none';

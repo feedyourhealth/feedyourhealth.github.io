@@ -7,6 +7,7 @@
 function goToApp(){
   // Show app, hide login
   try {
+    var loadingGate=document.getElementById('app-loading-gate'); if(loadingGate) loadingGate.style.display='none';
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     renderSB();  // Load client list
