@@ -62,6 +62,21 @@
   .food:last-child{border-bottom:none}
   .food .q{font-weight:600;color:var(--teal)}
 
+  .swap-btn{width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:.5px solid var(--bord);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--teal);margin-top:8px;cursor:pointer;font-family:inherit}
+  .swap-btn i{font-size:16px;transition:transform .15s}
+  .swap-btn.open i.chev{transform:rotate(180deg)}
+  .swap-list{display:none;flex-direction:column;gap:8px;margin-top:8px}
+  .swap-list.open{display:flex}
+  .swap-item{display:flex;flex-direction:column;gap:1px;padding:8px 10px;background:var(--tint2);border-radius:10px}
+  .swap-item .nm{font-size:13px;font-weight:600;color:var(--teal-d)}
+  .swap-item .fd{font-size:12px;color:var(--muted)}
+  .swap-note{font-size:11px;color:var(--faint);margin-top:8px}
+
+  .log-inp{width:100%;border:.5px solid var(--bord);border-radius:10px;padding:9px 11px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff;box-sizing:border-box}
+  .log-inp:focus{outline:none;border-color:var(--teal-l)}
+  textarea.log-inp{resize:vertical;min-height:54px}
+  .log-sent{font-size:12px;color:var(--ok);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+
   .water{background:var(--tint);border-radius:14px;padding:12px 14px}
   .glasses{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
   .glass{font-size:30px;color:var(--faint);cursor:pointer;line-height:1;transition:transform .1s}
@@ -313,6 +328,10 @@ function setMeals(o){try{const d=JSON.parse(localStorage.getItem(lk('meals'))||'
 // supplement adherence: { 'YYYY-MM-DD': { '<supp name>': true } }
 function getSuppLog(){try{return JSON.parse(localStorage.getItem(lk('supps'))||'{}')}catch(e){return {}}}
 function setSuppLog(o){try{localStorage.setItem(lk('supps'),JSON.stringify(o))}catch(e){}}
+// βάρος/σημείωση που στέλνει ο ίδιος ο πελάτης (client_logs, χωρίς login) — { 'YYYY-MM-DD': {w,n} }
+function getClientLog(){try{return JSON.parse(localStorage.getItem(lk('clientlog'))||'{}')}catch(e){return {}}}
+function getClientLogToday(){return getClientLog()[todayKey()]||null}
+function setClientLogToday(o){try{const d=getClientLog();d[todayKey()]=o;localStorage.setItem(lk('clientlog'),JSON.stringify(d))}catch(e){}}
 function dKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function weekDates(){ // Δευτέρα → Κυριακή της τρέχουσας εβδομάδας
   const now=new Date(); const js=now.getDay(); const toMon=(js===0?-6:1-js);
@@ -342,6 +361,29 @@ function pushCheckin(){
       p_supps_done:sDone, p_supps_total:supCount
     }).then(()=>{}).catch(()=>{});
   }catch(e){}
+}
+
+// Ο πελάτης καταγράφει μόνος του βάρος/σημείωση από το Πρόοδος tab (write-only, χωρίς login).
+function submitClientLog(){
+  const wEl=$('#log-weight'), nEl=$('#log-note');
+  const w=wEl&&wEl.value?parseFloat(wEl.value):null;
+  const n=nEl&&nEl.value?nEl.value.trim():'';
+  if(!w && !n)return;
+  const tok=token(), todK=dKey(new Date());
+  if(sb && tok){
+    sb.rpc('submit_client_log',{p_token:tok,p_date:todK,p_weight_kg:w,p_note:n||null}).then(()=>{}).catch(()=>{});
+  }
+  setClientLogToday({w:w,n:n});
+  if(w){
+    SNAP.progress=SNAP.progress||{};
+    const log=SNAP.progress.log=SNAP.progress.log||[];
+    const idx=log.findIndex(e=>e.date===todK);
+    if(idx>-1)log[idx]=Object.assign({},log[idx],{kg:w}); else log.push({date:todK,kg:w});
+    log.sort((a,b)=>a.date<b.date?-1:1);
+    SNAP.progress.current=w;
+    if(!SNAP.progress.start)SNAP.progress.start=w;
+  }
+  go('prog');
 }
 
 async function boot(){
@@ -598,6 +640,22 @@ function viewPlan(){
         mc.innerHTML='<span>Π '+nfmt(m.macros.p)+'g</span><span>Υ '+nfmt(m.macros.c)+'g</span><span>Λ '+nfmt(m.macros.f)+'g</span>';
         body.appendChild(mc);
       }
+      if(m.alternates&&m.alternates.length){
+        const btn=el('button','swap-btn');
+        btn.innerHTML='<span style="display:flex;align-items:center;gap:6px"><i class="ti ti-refresh"></i>Εναλλακτικά</span><i class="ti ti-chevron-down chev"></i>';
+        const list=el('div','swap-list');
+        m.alternates.forEach(a=>{
+          const item=el('div','swap-item');
+          const foodsStr=(a.foods||[]).map(f=>f.name+' '+f.qty).join(', ');
+          item.innerHTML='<span class="nm">'+esc(a.name||'')+'</span><span class="fd">'+esc(foodsStr)+'</span>';
+          list.appendChild(item);
+        });
+        const note=el('div','swap-note','Ισοδύναμες επιλογές βάσει των προτιμήσεών σου');
+        list.appendChild(note);
+        btn.onclick=()=>{btn.classList.toggle('open');list.classList.toggle('open')};
+        body.appendChild(btn);
+        body.appendChild(list);
+      }
       c.appendChild(body);
       grid.appendChild(c);
     });
@@ -828,6 +886,16 @@ function viewProg(){
     +'<p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5">'+(cur.anyData?totDone+' από '+totTot+' στόχους ✓':'Τσέκαρε τα γεύματα, τα συμπληρώματα και το νερό σου.')
     +(streak>0?' · σερί <span style="color:var(--teal);font-weight:600">'+streak+' '+(streak===1?'μέρα':'μέρες')+'</span>':'')+'</p></div>';
   hero.appendChild(hp); v.appendChild(hero);
+
+  // καταγραφή βάρους/σημείωσης από τον ίδιο τον πελάτη
+  const already=getClientLogToday();
+  const logCard=el('div','card'); const logCp=el('div','card-pad');
+  logCp.innerHTML='<div class="card-hdr"><i class="ti ti-notebook"></i>Καταγραφή σήμερα</div>'
+    +(already?('<div class="log-sent"><i class="ti ti-circle-check"></i>Καταγράφηκε'+(already.w?(': '+String(already.w).replace('.',',')+' kg'):'')+(already.n?(' — '+esc(already.n)):'')+'</div>'):'')
+    +'<input type="number" class="log-inp" id="log-weight" placeholder="Βάρος σήμερα (kg)" step="0.1" min="20" max="300" style="width:140px">'
+    +'<textarea class="log-inp" id="log-note" placeholder="Πώς πήγε η μέρα; (προαιρετικό)" style="margin-top:8px"></textarea>'
+    +'<button class="swap-btn" style="justify-content:center;margin-top:8px" onclick="submitClientLog()"><i class="ti ti-send"></i>Αποστολή στον/στην διαιτολόγο</button>';
+  logCard.appendChild(logCp); v.appendChild(logCard);
 
   // πυλώνες αυτής της εβδομάδας
   const wk=el('div','card'); const wp=el('div','card-pad');

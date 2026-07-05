@@ -2797,13 +2797,28 @@ function saveFoodExclusions(){
           });
           dayK+=mk; dP+=mp; dC+=mc; dF+=mf; dFi+=mfi;
           var title=foods.map(function(x){return shortName(x.name);}).slice(0,3).join(', ')+(foods.length>3?'…':'');
+          var alternates=[];
+          if(typeof findMealAlternates==='function'){
+            findMealAlternates(meal, c.dietType||'normal', c.id, mk, 3).forEach(function(a){
+              var af=[], ak=0;
+              (a.foods||[]).forEach(function(f){
+                var v=macro(f.n,f.g);
+                ak+=v.k;
+                var q=fmtQ(f);
+                af.push({name:shortName(f.n), qty:q.main, sub:q.sub||''});
+              });
+              var altTitle=af.map(function(x){return x.name;}).slice(0,3).join(', ')+(af.length>3?'…':'');
+              alternates.push({name:altTitle, kcal:Math.round(ak), foods:af});
+            });
+          }
           meals.push({
             label:meal.name||'Γεύμα',
             time:TIMES[meal.name]||'',
             title:title,
             kcal:Math.round(mk),
             macros:{p:Math.round(mp),c:Math.round(mc),f:Math.round(mf)},
-            foods:foods
+            foods:foods,
+            alternates:alternates
           });
         });
         days.push({
@@ -3125,6 +3140,40 @@ function saveFoodExclusions(){
     // Τα checkins ενός συγκεκριμένου πελάτη (από το cache — refreshCheckinsCache πρέπει να έχει τρέξει πρώτα).
     checkinsFor:function(c){
       return (c && c.shareToken && this._checkinsCache[c.shareToken]) || [];
+    },
+
+    // ── 📥 ΒΑΡΟΣ & ΣΗΜΕΙΩΣΕΙΣ ΠΕΛΑΤΗ (client_logs — γράφει το plan.html χωρίς login) ──
+    _clientLogsCache:{},
+    fetchAllClientLogs:function(tokens){
+      var self=this;
+      if(!this.enabled || !this.user || !tokens || !tokens.length) return Promise.resolve({});
+      return this.sb.from('client_logs')
+        .select('token,date,weight_kg,note')
+        .in('token',tokens).order('date',{ascending:true}).then(function(res){
+          if(res.error){ console.error('[CLOUD] fetchAllClientLogs', res.error); return {}; }
+          var byToken={};
+          (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
+          return byToken;
+        });
+    },
+    refreshClientLogsCache:function(){
+      var self=this;
+      var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
+      if(!tokens.length) return Promise.resolve();
+      return this.fetchAllClientLogs(tokens).then(function(byToken){
+        self._clientLogsCache=byToken;
+        var s3=document.getElementById('s3');
+        if(s3 && typeof getC==='function' && typeof buildTrackerHtml==='function'){
+          var cur=getC(); if(cur) s3.innerHTML=buildTrackerHtml(cur);
+        }
+      });
+    },
+    // Καταχωρήσεις πελάτη που δεν έχουν ακόμα περάσει στο επίσημο weightLog (by date).
+    pendingClientLogsFor:function(c){
+      if(!c || !c.shareToken) return [];
+      var entries=this._clientLogsCache[c.shareToken]||[];
+      var haveDates={}; (c.weightLog||[]).forEach(function(e){haveDates[e.date]=true;});
+      return entries.filter(function(e){return !(e.weight_kg && haveDates[e.date]);});
     }
   };
   window.Cloud = Cloud;

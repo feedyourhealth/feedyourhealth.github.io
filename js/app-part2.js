@@ -13,6 +13,7 @@ function goToApp(){
     renderSB();  // Load client list
     if(typeof renderHome==='function') renderHome();
     if(window.Cloud && typeof window.Cloud.refreshCheckinsCache==='function') window.Cloud.refreshCheckinsCache();
+    if(window.Cloud && typeof window.Cloud.refreshClientLogsCache==='function') window.Cloud.refreshClientLogsCache();
   } catch(e) {
     console.error('Error in goToApp():', e.message);
     showErrorToast('Σφάλμα: ' + e.message);
@@ -1313,6 +1314,31 @@ function buildClientProgressHtml(c){
 }
 
 /* ── Body Composition & Consultation Tracker ────────────────────────────── */
+// Καταχωρήσεις βάρους/σημειώσεων που έστειλε ο ίδιος ο πελάτης από το portal (client_logs, χωρίς login).
+// Δεν μπαίνουν αυτόματα στο επίσημο weightLog — ο διαιτολόγος επιβεβαιώνει με ένα κλικ.
+function clientLogsPanelHtml(c){
+  if(!window.Cloud || typeof window.Cloud.pendingClientLogsFor!=='function') return '';
+  var entries=window.Cloud.pendingClientLogsFor(c);
+  if(!entries.length) return '';
+  var rows=entries.map(function(e){
+    var w=e.weight_kg?('<b>'+e.weight_kg+' kg</b>'):'';
+    var n=e.note?('<span style="color:#666">'+esc(e.note)+'</span>'):'';
+    var useBtn=e.weight_kg?('<button class="btn" style="padding:3px 9px;font-size:10px" onclick="useClientLogEntry(\''+e.date+'\','+e.weight_kg+')">Χρησιμοποίησε</button>'):'';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:11px">'
+      +'<span>'+e.date+' — '+w+(w&&n?' · ':'')+n+'</span>'+useBtn+'</div>';
+  }).join('');
+  return '<div class="tracker-section" style="background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:4px">📥 Καταχωρήσεις από τον πελάτη</div>'
+    +rows+'</div>';
+}
+// Γεμίζει τη φόρμα προσθήκης με μια καταχώρηση πελάτη — ο διαιτολόγος πατάει "+ Προσθήκη" για να την επιβεβαιώσει.
+function useClientLogEntry(dateStr,weightKg){
+  var dEl=document.getElementById('tr-date'), wEl=document.getElementById('tr-weight');
+  if(dEl)dEl.value=dateStr;
+  if(wEl)wEl.value=weightKg;
+  if(wEl){wEl.scrollIntoView({behavior:'smooth',block:'center'}); wEl.focus();}
+}
+
 function buildTrackerHtml(c){
   if(!c.weightLog)c.weightLog=[];
   if(!c.consultLog)c.consultLog=[];
@@ -1354,6 +1380,7 @@ function buildTrackerHtml(c){
     +'<div id="sf-result" style="display:none"></div>'
     +'</div>'
     +'</div>'
+    +clientLogsPanelHtml(c)
     // ── Standard entry row ────────────────────────────────────────────────────
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
     +'<input type="date" id="tr-date" value="'+today+'" class="tracker-inp">'

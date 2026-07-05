@@ -268,6 +268,37 @@ function harvestMealLibrary(excludeClientId){
   return lib;
 }
 
+// ── MEAL ALTERNATES (client portal swap suggestions) ───────────────────────
+// Given a meal, find up to `count` alternative meals of the same slot+diet
+// from the cross-client taste library, scaled to the meal's own kcal target.
+function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count){
+  count = count || 3;
+  var mySig = mealSignature(meal.foods);
+  var slot = classifyMealSlot(meal.name);
+  var lib = harvestMealLibrary(excludeClientId);
+  function dietOK(comboDiet){
+    if(!dietType || dietType==='normal') return true;
+    if(!comboDiet) return true;
+    return comboDiet===dietType;
+  }
+  var seen={};
+  var cands = lib.filter(function(x){
+    if(!x.foods || !x.foods.length) return false;
+    var sig = mealSignature(x.foods);
+    if(sig===mySig || seen[sig]) return false;
+    if(x.slot!=='other' && slot!=='other' && x.slot!==slot) return false;
+    if(!dietOK(x.dietType)) return false;
+    seen[sig]=true;
+    return true;
+  });
+  cands.sort(function(a,b){ return Math.abs(a.kcal-targetKcal) - Math.abs(b.kcal-targetKcal); });
+  cands = cands.slice(0,count);
+  return cands.map(function(x){
+    var scaled = scalePlan([{name:x.name,foods:x.foods}], null, [{k:targetKcal}])[0];
+    return {name:x.name, foods:scaled.foods};
+  });
+}
+
 // Find the best matching saved combo / library meal for a target.
 // Now slot- and diet-aware, with a variety penalty (usedSigs) to avoid repeats.
 function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, excl, slot, dietType, usedSigs) {
