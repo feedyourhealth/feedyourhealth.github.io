@@ -972,8 +972,8 @@ function showDebugPanel(){
     html+='<div style="background:#ffebee;border-left:4px solid #d32f2f;padding:10px;margin-bottom:10px;border-radius:3px;font-size:11px;max-height:150px;overflow-y:auto">';
     audit.errors.forEach(function(e){
       html+='<div style="padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.1)">';
-      html+='<strong>['+e.timestamp+']</strong> '+e.msg;
-      if(e.data)html+=' <code style="color:#666;font-size:10px">'+JSON.stringify(e.data).substring(0,100)+'</code>';
+      html+='<strong>['+esc(e.timestamp)+']</strong> '+esc(e.msg);
+      if(e.data)html+=' <code style="color:#666;font-size:10px">'+esc(JSON.stringify(e.data).substring(0,100))+'</code>';
       html+='</div>';
     });
     html+='</div>';
@@ -985,8 +985,8 @@ function showDebugPanel(){
     html+='<div style="background:#fff3e0;border-left:4px solid #ff9800;padding:10px;margin-bottom:10px;border-radius:3px;font-size:11px;max-height:150px;overflow-y:auto">';
     audit.warnings.forEach(function(w){
       html+='<div style="padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.1)">';
-      html+='<strong>['+w.timestamp+']</strong> '+w.msg;
-      if(w.data)html+=' <code style="color:#666;font-size:10px">'+JSON.stringify(w.data).substring(0,100)+'</code>';
+      html+='<strong>['+esc(w.timestamp)+']</strong> '+esc(w.msg);
+      if(w.data)html+=' <code style="color:#666;font-size:10px">'+esc(JSON.stringify(w.data).substring(0,100))+'</code>';
       html+='</div>';
     });
     html+='</div>';
@@ -3018,25 +3018,6 @@ function analyzePatterns(){
   return patterns;
 }
 
-// Get smart recipe suggestions based on patterns
-function getSuggestedRecipes(dietType, targetKcal){
-  var patterns = analyzePatterns();
-  var suggested = [];
-
-  // Prioritize top recipes
-  patterns.topRecipes.forEach(function(recipe){
-    if(MEAL_RECIPES.find(function(r){ return r.id === recipe.id; })){
-      suggested.push({
-        ...recipe,
-        priority: 'high',
-        reason: 'Your favorite (' + recipe.trustScore + '%)'
-      });
-    }
-  });
-
-  return suggested;
-}
-
 // Show analytics dashboard
 function showTrackingDashboard(){
   var patterns = analyzePatterns();
@@ -3293,8 +3274,8 @@ function buildGapAnalysisHTML(gaps, recommendations, weekAnalysis, c){
   var methodologyNote = '📋 Προσαρμογές (Επιστημονικές μελέτες 2024-2025): ';
   var adjustments = [];
   if(c.sport) adjustments.push('🏆 Άθλημα-ειδικές ανάγκες');
-  if(c.dietType && (c.dietType.includes('Веγανι') || c.dietType.includes('Χορτοφαγική') || c.dietType.includes('Ορθόδοξη'))) {
-    adjustments.push('🥗 ' + (c.dietType.includes('Веγανι') ? 'Χορτοφαγικές' : c.dietType.includes('Χορτοφαγική') ? 'Vegetarian' : 'Ορθόδοξη') + ' ανάγκες');
+  if(c.dietType && (c.dietType==='vegan' || c.dietType==='vegetarian' || c.dietType==='orthodox_fasting')) {
+    adjustments.push('🥗 ' + (c.dietType==='vegan' ? 'Vegan' : c.dietType==='vegetarian' ? 'Χορτοφαγικές' : 'Ορθόδοξη Νηστεία') + ' ανάγκες');
   }
   if(c.altitudeTraining) adjustments.push('⛰️ Προπόνηση σε ύψος');
   if(adjustments.length > 0) {

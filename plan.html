@@ -399,7 +399,7 @@ async function boot(){
   }catch(e){fail('Πρόβλημα σύνδεσης.',e.message||'Δοκίμασε ξανά σε λίγο.')}
 }
 function fail(title,sub){
-  $('#app').innerHTML='<div class="center"><i class="ti ti-leaf" style="font-size:40px;color:var(--teal)"></i><div style="font-size:17px;font-weight:600;color:var(--teal-d)">'+title+'</div><div>'+sub+'</div></div>';
+  $('#app').innerHTML='<div class="center"><i class="ti ti-leaf" style="font-size:40px;color:var(--teal)"></i><div style="font-size:17px;font-weight:600;color:var(--teal-d)">'+esc(title)+'</div><div>'+esc(sub)+'</div></div>';
 }
 
 // pick the day index = today if present, else 0
@@ -572,8 +572,17 @@ function viewHome(){
   v.appendChild(q);
   return v;
 }
-function statBox(l,v,u){const ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
+function statBox(l,v,u,ok){if(ok===undefined)ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
 function deltaU(p){if(p.start&&p.current){const d=Math.round((p.current-p.start)*10)/10;return (d<=0?'−':'+')+Math.abs(d).toString().replace('.',',')+' kg'}return 'kg'}
+// Η κατεύθυνση αλλαγής βάρους είναι "καλή" ανάλογα με τον στόχο (goalWeight) του πελάτη —
+// π.χ. σε πρόγραμμα μυϊκής αύξησης η αύξηση βάρους είναι επιθυμητή, όχι πάντα η μείωση.
+function deltaGood(p){
+  if(!(p.start&&p.current))return false;
+  const d=p.current-p.start;
+  if(d===0)return true;
+  if(p.goal!=null&&p.goal!==p.start)return p.goal>p.start?d>0:d<0;
+  return d<=0;
+}
 function quickCard(tab,icon,title,sub){const c=el('div','card');const p=el('div','card-pad');p.onclick=()=>go(tab);p.innerHTML='<i class="ti '+icon+'" style="font-size:18px"></i><div class="qt">'+title+'</div><div class="qs">'+esc(sub)+'</div>';c.appendChild(p);return c}
 function suppsProgressText(){
   const s=SNAP;
@@ -936,7 +945,7 @@ function viewProg(){
   if(log.length>=2 || p.waist || p.bodyfat || p.lbm || p.start || p.current || p.goal){
     const stats=el('div','stats');
     stats.innerHTML=statBox('Έναρξη',p.start?String(p.start).replace('.',','):'—','kg')
-      +statBox('Τώρα',p.current?String(p.current).replace('.',','):'—',deltaU(p))
+      +statBox('Τώρα',p.current?String(p.current).replace('.',','):'—',deltaU(p),deltaGood(p))
       +statBox('Στόχος',p.goal?String(p.goal).replace('.',','):'—','kg');
     v.appendChild(stats);
     if(log.length>=2){

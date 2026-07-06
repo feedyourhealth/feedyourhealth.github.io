@@ -624,27 +624,6 @@ function scalePlanWithValidation(tmpl,target){
 }
 
 // Data integrity check
-function validateClientData(c){
-  var issues=[];
-
-  if(!c.id)issues.push('Missing client ID');
-  if(!c.name)issues.push('Missing client name');
-  if(c.age<1||c.age>120)issues.push('Invalid age: '+c.age);
-  if(c.weight<20||c.weight>300)issues.push('Invalid weight: '+c.weight);
-  if(c.height<100||c.height>230)issues.push('Invalid height: '+c.height);
-  if(c.bf<0||c.bf>60)issues.push('Invalid body fat %: '+c.bf);
-  if(!c.trainDays||c.trainDays.length!==7)issues.push('trainDays corrupted');
-  if(!c.weekPlan)issues.push('weekPlan missing');
-
-  if(issues.length>0){
-    LOGGER.WARN('Client data integrity issues',{client:c.name,issues:issues});
-    return{ok:false,issues:issues};
-  }
-
-  LOGGER.INFO('Client validation passed',{client:c.name});
-  return{ok:true};
-}
-
 /* ── Autosave system ──────────────────────────────────────────────────────────
    save()     = debounced 800ms — καλείται σε κάθε αλλαγή, δεν σπαταλά πόρους
    saveNow()  = άμεσα — για import/backup, beforeunload
@@ -1901,39 +1880,6 @@ function scalePlan(tmpl,tgt,mealTargets){
 
 var clients=[],curId=null,currentDD=null;
 
-// ✅ PERFORMANCE: DOM CACHE - Cache frequently accessed elements
-var DOM_CACHE={
-  main: null,
-  sideBar: null,
-  clientList: null,
-  tabContent: null,
-
-  // Initialize cache on first access
-  init: function(){
-    if(!this.main) this.main = document.getElementById('main');
-    if(!this.sideBar) this.sideBar = document.getElementById('sideBar');
-    if(!this.clientList) this.clientList = document.getElementById('client-list');
-    if(!this.tabContent) this.tabContent = document.getElementById('tabContent');
-  },
-
-  // Helper to get cached or find element
-  get: function(id){
-    if(!this[id]) this[id] = document.getElementById(id);
-    return this[id];
-  },
-
-  // Clear cache on major DOM changes
-  clear: function(){
-    this.main = null;
-    this.sideBar = null;
-    this.clientList = null;
-    this.tabContent = null;
-  }
-};
-
-// Initialize cache on load
-document.addEventListener('DOMContentLoaded', function(){ DOM_CACHE.init(); });
-
 // ✅ PERFORMANCE: JSON CACHE - Cache parsed JSON to avoid repeated parsing
 var JSON_CACHE={
   storage: {},
@@ -2648,8 +2594,8 @@ function renderTemplateEditor(){
       var gl=GOAL_LABELS[ct.goal]||ct.goal;
       custHtml+='<div class="custom-tmpl-item">'
         +'<div class="custom-tmpl-info">'
-        +'<span class="custom-tmpl-name">'+ct.name+'</span>'
-        +'<span class="custom-tmpl-meta">'+gl+' · '+ct.createdAt+(ct.clientName?' · από: '+ct.clientName:'')+'</span>'
+        +'<span class="custom-tmpl-name">'+esc(ct.name)+'</span>'
+        +'<span class="custom-tmpl-meta">'+gl+' · '+esc(ct.createdAt)+(ct.clientName?' · από: '+esc(ct.clientName):'')+'</span>'
         +'</div>'
         +'<button class="met-del" onclick="deleteCustomTmpl(\''+ct.id+'\')" title="Διαγραφή">&#10005;</button>'
         +'</div>';
@@ -2766,7 +2712,7 @@ function buildTmplSelectorHtml(c){
   // User-saved custom templates
   customTemplates.forEach(function(ct){
     var gl=GOAL_LABELS[ct.goal]||ct.goal;
-    opts+='<option value="'+ct.id+'"'+(sel===ct.id?' selected':'')+'>⭐ '+ct.name+' — '+gl+' ('+ct.createdAt+')</option>';
+    opts+='<option value="'+ct.id+'"'+(sel===ct.id?' selected':'')+'>⭐ '+esc(ct.name)+' — '+gl+' ('+esc(ct.createdAt)+')</option>';
   });
   // Existing clients' plans (as basis for new plans)
   console.log('Building template selector. Total clients:', clients.length);
@@ -2782,7 +2728,7 @@ function buildTmplSelectorHtml(c){
     clientsWithPlans.forEach(function(cl){
       var cGoal=GOAL_LABELS[cl.goal]||cl.goal;
       var cName=cl.name||'Νέος πελάτης';
-      opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+cName+' — '+cGoal+'</option>';
+      opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+esc(cName)+' — '+cGoal+'</option>';
     });
     opts+='</optgroup>';
   }
@@ -2987,7 +2933,7 @@ function exportPlanHistory(){
   html+='<table><tr><th>Πλάνο</th><th>Ημερομηνία</th><th>Kcal</th><th>Πρωτ(g)</th><th>Λίπος(g)</th><th>Υδατ(g)</th><th>Σχόλιο</th></tr>';
   for(var i=0;i<c.savedPlans.length;i++){
     var p=c.savedPlans[i];
-    html+='<tr><td>#'+p.number+'</td><td>'+p.date+'</td><td>'+p.macros.k+'</td><td>'+p.macros.p+'</td><td>'+p.macros.f+'</td><td>'+p.macros.c+'</td><td>'+p.note+'</td></tr>';
+    html+='<tr><td>#'+p.number+'</td><td>'+p.date+'</td><td>'+p.macros.k+'</td><td>'+p.macros.p+'</td><td>'+p.macros.f+'</td><td>'+p.macros.c+'</td><td>'+esc(p.note||'')+'</td></tr>';
   }
   html+='</table>';
   html+='</body></html>';
@@ -3030,7 +2976,7 @@ function generateSmartAlerts(c){
   }
 
   // Carb trend
-  if(latest.macros.c>c.goal==='gain'?180:150){
+  if(latest.macros.c>(c.goal==='gain'?180:150)){
     alerts.push({type:'info',icon:'🍞',title:'Υδατάνθρακες υψηλά',msg:'Τα υδατάνθρακες είναι '+latest.macros.c+'g. Είναι κατάλληλα για τον στόχο σου;'});
   }
 
@@ -3237,7 +3183,7 @@ function buildPlanHistoryHtmlInner(c){
       +'<div><strong>Λίπος:</strong> <span style="color:#d32f2f;font-weight:600">'+plan.macros.f+'g</span></div>'
       +'</div>'
       +'<div><strong>Υδατάνθρακες:</strong> <span style="color:#388e3c;font-weight:600">'+plan.macros.c+'g</span></div>'
-      +(plan.note?'<div style="margin-top:8px;padding:8px;background:#fffbea;border-left:3px solid #ffc107;font-style:italic;color:#666">💬 '+plan.note+'</div>':'')
+      +(plan.note?'<div style="margin-top:8px;padding:8px;background:#fffbea;border-left:3px solid #ffc107;font-style:italic;color:#666">💬 '+esc(plan.note)+'</div>':'')
       +'</div>'
       // Action buttons
       +'<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">'

@@ -335,7 +335,7 @@ function renderMain(){
     +'<div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1.5px solid #c8e6c9;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">👤 Πελάτης</span>'
-      +'<span style="font-size:13px;font-weight:700;color:#025857">' + (c.name||'—') + '</span>'
+      +'<span style="font-size:13px;font-weight:700;color:#025857">' + esc(c.name||'—') + '</span>'
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">📊 Μέτρα</span>'
@@ -351,11 +351,11 @@ function renderMain(){
     +'<div class="section-card basic">'
     +'<div class="section-header basic sec-collapse-hd" onclick="toggleSec(\'basic\')"><div><span class="section-icon">👤</span>Βασικά Στοιχεία'+(secState.basic?'<div class="sec-collapse-preview">'+esc(basicPreview)+'</div>':'')+'</div><span class="sec-chevron'+(secState.basic?'':' open')+'">▸</span></div>'
     +'<div id="sec-basic-body" style="display:'+(secState.basic?'none':'block')+'">'
-    +'<div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος" value="'+(c.name||'')+'"></div>'
+    +'<div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος" value="'+esc(c.name||'')+'"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div>'
     +'<div class="fgrp"><label>Ημερομηνία Γέννησης <span id="age-display" style="color:#025857;font-weight:600;font-size:12px"></span></label><div style="display:flex;gap:6px"><select id="inp-bday" style="flex:0.9"></select><select id="inp-bmonth" style="flex:1.4"></select><select id="inp-byear" style="flex:1.1"></select></div></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+(c.email||'')+'"></div>'
-    +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+(c.phone||'')+'"></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+esc(c.email||'')+'"></div>'
+    +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+esc(c.phone||'')+'"></div></div>'
     +'</div>'
     +'</div>'
 
@@ -486,9 +486,7 @@ function renderMain(){
     +buildDayTgtHtml(c,t)
     +'</div>'
     +'</div>'
-    // +buildSuppHtml(c)
     // +buildExcludeHtml(c)
-    // +buildAlertsAndTipsHtml(c)
     // ✅ TEMPLATE SELECTOR - Show available nutrition plan templates
     +buildTmplSelectorHtml(c)
     // ✅ PLAN GENERATION BUTTON ONLY IN S1
@@ -1529,7 +1527,7 @@ function buildTrackerHtml(c){
         +'<td style="font-size:9px">'+sleepStars+'</td>'
         +'<td style="font-size:9px">'+energyBolts+'</td>'
         +'<td>'+(e.compliance?'<b>'+e.compliance+'/10</b>':'—')+'</td>'
-        +'<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666">'+(e.notes||'')+'</td>'
+        +'<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666">'+esc(e.notes||'')+'</td>'
         +'<td><button class="met-del" onclick="removeWeightEntry('+i+')">&#10005;</button></td>'
         +'</tr>';
     });
@@ -2190,40 +2188,6 @@ function resetDayTargets(){
   renderMain();
 }
 
-function buildSuppHtml(c){
-  if(!c.supps)c.supps=[];
-  var cats={};
-  SUPPS.forEach(function(s){if(!cats[s.cat])cats[s.cat]=[];cats[s.cat].push(s);});
-  var MINOR_SUPPS_WARN=['tribulus','testoboost','ecdy','hgh','htp','gaba'];
-  var isMinorC=(c.age||0)<18;
-  var html='<div class="supp-wrap">'
-    +'<div class="supp-wrap-title" style="display:flex;align-items:center;gap:8px;">✓ Συμπληρώματα που παίρνετε ήδη <span style="font-size:11px;color:#666;font-weight:400">(Page 1/Σελίδα 1)</span></div>'
-    +'<p style="font-size:11px;color:#666;margin:8px 0;">Επιλέξτε τα συμπληρώματα που καταναλώνετε ήδη. Τα συνιστώμενα συμπληρώματα από την ανάλυση της διατροφής θα εμφανιστούν στη σελίδα 2 (Εβδομαδιαίο πλάνο) κατά την δημιουργία του σχεδίου.</p>'
-    +(isMinorC?'<div style="background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;padding:6px 10px;font-size:10px;color:#e65100;margin-bottom:8px">⚠️ Ανήλικος — τα ορμονικά συμπληρώματα (Tribulus, Testoboost, Ecdysterone, HGH, 5-HTP, GABA) <b>δεν ενδείκνυνται</b> κάτω των 18 ετών.</div>':'');
-  Object.keys(cats).forEach(function(cat){
-    html+='<div class="supp-cat-label" style="margin:6px 0 3px">'+cat+'</div>';
-    html+='<div class="supp-cat-grid">';
-    cats[cat].forEach(function(s){
-      var chk=c.supps.indexOf(s.id)>-1;
-      var isWarn=isMinorC&&MINOR_SUPPS_WARN.indexOf(s.id)>-1;
-      html+='<label class="supp-item" style="'+(isWarn?'opacity:.45;cursor:not-allowed':'')+'"><input type="checkbox" '+(chk?'checked':'')+' '+(isWarn?'disabled title="Μη κατάλληλο για ανηλίκους"':'')+' onchange="toggleSupp(\''+s.id+'\')">'
-        +'<span>'+s.name+(isWarn?' ⛔':'')+'</span>'+(s.dose?'<span class="supp-dose">('+s.dose+')</span>':'')+'</label>';
-    });
-    html+='</div>';
-  });
-  html+='</div>';
-  return html;
-}
-
-function toggleSupp(id){
-  var c=getC();if(!c)return;
-  if(!c.supps)c.supps=[];
-  var idx=c.supps.indexOf(id);
-  if(idx>-1)c.supps.splice(idx,1);
-  else c.supps.push(id);
-  renderSuppNotes();
-}
-
 function excludeSupp(id,timing){
   var c=getC();if(!c)return;
   if(!c.suppExclude)c.suppExclude=[];
@@ -2308,46 +2272,6 @@ function applyFoodExclusions(tmplDays,excludeList,allergyList){
     });
   });
   return result;
-}
-
-function buildAlertsAndTipsHtml(c){
-  var alerts=generateSmartAlerts(c);
-  var tips=generateImprovementTips(c);
-
-  var html='<div style="background:#fff8e1;border:1px solid #ffb74d;border-radius:8px;padding:16px;margin:16px 0;">'
-    +'<div style="font-weight:600;color:#e65100;margin-bottom:12px;font-size:14px;">🎯 Alerts & Tips</div>';
-
-  // Alerts section
-  if(alerts.length>0){
-    html+='<div style="margin-bottom:12px;">';
-    for(var i=0;i<alerts.length;i++){
-      var alert=alerts[i];
-      var bgColor=alert.type==='warning'?'#ffebee':alert.type==='success'?'#e8f5e9':'#e3f2fd';
-      var borderColor=alert.type==='warning'?'#f44336':alert.type==='success'?'#4caf50':'#2196f3';
-      html+='<div style="background:'+bgColor+';border-left:4px solid '+borderColor+';padding:10px;margin-bottom:8px;border-radius:4px;font-size:12px;">'
-        +'<strong>'+alert.icon+' '+alert.title+':</strong> '+alert.msg
-        +'</div>';
-    }
-    html+='</div>';
-  }
-
-  // Tips section
-  if(tips.length>0){
-    html+='<div style="border-top:1px solid #ffb74d;padding-top:12px;">';
-    for(var i=0;i<tips.length;i++){
-      html+='<div style="padding:6px 0;font-size:12px;color:#555;">'
-        +'• '+tips[i]
-        +'</div>';
-    }
-    html+='</div>';
-  }
-
-  html+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">'
-    +'<button onclick="exportPlanHistory()" style="background:#2196F3;color:white;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;font-size:11px;">📤 Εξαγωγή Ιστορικού</button>'
-    +'</div>'
-    +'</div>';
-
-  return html;
 }
 
 function buildExcludeHtml(c){

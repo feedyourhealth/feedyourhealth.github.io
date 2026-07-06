@@ -221,7 +221,7 @@ body.dark-mode .rcp-cat-done{background:#025857;border-color:#025857;color:#fff}
 .stab{padding:7px 16px;font-size:12px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none}
 .stab.active{color:#025857;border-bottom-color:#025857;font-weight:600}
 /* ✅ PAGE SECTIONS - ENSURE ONLY ONE VISIBLE AT A TIME */
-#s1,#s2,#s3,#s4,#s5{
+#s1,#s2,#s3,#s4{
   display:block;
   width:100%;
   clear:both;
