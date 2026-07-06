@@ -2,19 +2,45 @@
 // ΑΡΧΙΚΗ — control-tower dashboard (Phase 2)
 // ═══════════════════════════════════════════════════════════════
 
-// Πελάτες (ενεργοί, μη-αρχειοθετημένοι) χωρίς πρόσφατη μέτρηση βάρους/σώματος.
+// Πελάτες (ενεργοί, μη-αρχειοθετημένοι) που χρειάζονται προσοχή για οποιονδήποτε από τους λόγους
+// που ήδη χρησιμοποιεί το clientNeedsAttention() (app-part1.js) για την ταξινόμηση στο Πελάτες —
+// έτσι τα δύο ταμπ δεν διαφωνούν πια για το ποιος "χρειάζεται προσοχή". Ένας πελάτης χωρίς πλάνο
+// ή με πλάνο 30+ ημερών δεν εμφανιζόταν πουθενά στην Αρχική πριν αν είχε πρόσφατη μέτρηση βάρους.
+// Ο ξεπερασμένος σύνδεσμος portal εξαιρείται σκόπιμα εδώ (έχει ήδη δική του κάρτα με δικό της κουμπί).
 function homeClientsNeedingAttention(){
-  var THRESHOLD_DAYS=30;
+  var WEIGHT_GAP_DAYS=30, CHECKIN_GAP_DAYS=2;
   var now=Date.now();
-  return clients.filter(function(c){return !c.deleted && !c.archived;})
-    .map(function(c){
-      var wl=c.weightLog||[];
-      var last=wl.length?wl[wl.length-1].date:null;
-      var days=last?Math.round((now-new Date(last+'T00:00:00'))/86400000):Infinity;
-      return {c:c,days:days};
-    })
-    .filter(function(x){return x.days>=THRESHOLD_DAYS;})
-    .sort(function(a,b){return b.days-a.days;});
+  var out=[];
+  clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+    var hasPlan=(typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
+    if(!hasPlan){
+      out.push({c:c,tier:0,gap:0,label:'χωρίς πλάνο ακόμα',
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>'});
+      return;
+    }
+    if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)){
+      var daysOld=Math.floor((now-c.planGeneratedAt)/86400000);
+      out.push({c:c,tier:1,gap:daysOld,label:'το πλάνο έγινε πριν '+daysOld+' ημέρες',
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>'});
+      return;
+    }
+    var wl=c.weightLog||[];
+    var last=wl.length?wl[wl.length-1].date:null;
+    var gapDays=last?Math.round((now-new Date(last+'T00:00:00'))/86400000):Infinity;
+    if(gapDays>=WEIGHT_GAP_DAYS){
+      out.push({c:c,tier:2,gap:gapDays,label:isFinite(gapDays)?(gapDays+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα'});
+      return;
+    }
+    if(c.shareToken && window.Cloud && window.Cloud.checkinsFor){
+      var rows=window.Cloud.checkinsFor(c);
+      var ckGap=rows.length?ckDaysSinceLast(rows):Infinity;
+      if(rows.length && ckGap>=CHECKIN_GAP_DAYS){
+        out.push({c:c,tier:3,gap:ckGap,label:'χωρίς check-in στο portal '+ckGap+' ημέρες'});
+      }
+    }
+  });
+  out.sort(function(a,b){ return a.tier!==b.tier ? a.tier-b.tier : b.gap-a.gap; });
+  return out;
 }
 
 // Πελάτες με δημοσιευμένο σύνδεσμο portal που δείχνει πλέον ξεπερασμένο πλάνο.
@@ -109,7 +135,7 @@ function renderHome(){
 
   var metrics=(typeof ANALYTICS!=='undefined'&&ANALYTICS.getClientMetrics)?ANALYTICS.getClientMetrics():{total:clients.length,active:0};
   var attentionRows=homeClientsNeedingAttention().map(function(x){
-    return homeRow(x.c, isFinite(x.days)?(x.days+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα', 'red');
+    return homeRow(x.c, x.label, 'red', x.action);
   });
   var staleRows=homeStaleLinks().map(function(c){
     return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
