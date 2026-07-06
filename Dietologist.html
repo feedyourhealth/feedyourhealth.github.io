@@ -3022,12 +3022,13 @@ function saveFoodExclusions(){
         }
       });
     },
-    // Καταχωρήσεις πελάτη που δεν έχουν ακόμα περάσει στο επίσημο weightLog (by date).
-    pendingClientLogsFor:function(c){
+    // Πλήρες ιστορικό καταχωρήσεων του πελάτη (μέτρα δικά του, χωριστά από το επίσημο weightLog
+    // του διαιτολόγου — μόνο για σύγκριση, δεν πειράζει ποτέ τα δικά σου δεδομένα). Πιο πρόσφατα πρώτα.
+    allClientLogsFor:function(c){
       if(!c || !c.shareToken) return [];
-      var entries=this._clientLogsCache[c.shareToken]||[];
-      var haveDates={}; (c.weightLog||[]).forEach(function(e){haveDates[e.date]=true;});
-      return entries.filter(function(e){return !(e.weight_kg && haveDates[e.date]);});
+      var entries=(this._clientLogsCache[c.shareToken]||[]).slice();
+      entries.sort(function(a,b){return a.date<b.date?1:-1;});
+      return entries.slice(0,15);
     }
   };
   window.Cloud = Cloud;

@@ -73,13 +73,8 @@ function homePortalActivity(){
     .sort(function(a,b){return a.gap-b.gap;});
 }
 
-// Αρχικά ενός ονόματος για το avatar κάθε γραμμής (π.χ. "Γιώργος Παπαδόπουλος" → "ΓΠ").
-function initials(name){
-  var parts=(name||'').trim().split(/\s+/).filter(Boolean);
-  if(!parts.length) return '?';
-  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
-  return (parts[0][0]+parts[1][0]).toUpperCase();
-}
+// initials() moved to js/app-part1.js — it's called from renderSB() there, which can run
+// (via an early auth-callback in app-part4.js) before this later-loading file exists yet.
 
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'

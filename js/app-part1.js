@@ -1643,21 +1643,23 @@ function calcTDEE(c){
   var exerciseKcal=metKcal.daily;// Exercise from MET or estimated
   // CRITICAL: Check for double counting between Activity Factor and MET
   var hasDoubleCountingRisk=false;
+  // Standard PAL presets (FAO/WHO/UNU-style bands) — quick-fill values shown as buttons in the UI.
+  // c.activityFactor (typed by the dietitian, e.g. to match a specific job) always wins when set.
+  var act={sed:1.2,light:1.375,mod:1.55,active:1.725};
+  var totalMultiplier=(c.activityFactor>0)?c.activityFactor:(act[c.activity]||1.2);
   if(usedMET){
     // MET-based: TDEE = NEAT + daily average exercise kcal
     tdee=neat+metKcal.daily;
-    // WARNING: If Activity Factor > 1.2, there's risk of double counting
+    // WARNING: If Activity Factor > 1.2 (sedentary/NEAT baseline), there's risk of double counting
     // Activity Factor already includes exercise estimate
-    if(c.activity && c.activity!=='sed'){
+    if(totalMultiplier>1.2){
       hasDoubleCountingRisk=true;
     }
   } else {
     // Activity factor method: factor includes both NEAT and exercise estimates
-    var act={sed:1.37,light:1.375,mod:1.55,active:1.725};
-    var totalMultiplier=act[c.activity]||1.37;
     tdee=Math.round(bmr*totalMultiplier);
-    // Estimate exercise kcal from activity factor: exercise ≈ (multiplier - 1.37) × BMR
-    exerciseKcal=Math.round(Math.max(0,(totalMultiplier-1.37)*bmr));
+    // Estimate exercise kcal above the sedentary/NEAT baseline (1.2)
+    exerciseKcal=Math.round(Math.max(0,(totalMultiplier-1.2)*bmr));
   }
   tdee=Math.round(tdee);
   // Goal deltas - Support BOTH old (loss/maintain/gain) and NEW (numeric -500 to +500) formats
@@ -1733,7 +1735,7 @@ function calcTDEE(c){
   // VALIDATION WARNINGS
   var warnings=[];
   if(hasDoubleCountingRisk){
-    warnings.push({type:'alert',msg:'⚠️ Double Counting Risk: Χρησιμοποιείτε ΑΜΦΟΤΕΡΑ Activity Factor ('+c.activity+') ΚΑΙ MET activities. Αυτό μπορεί να υπερεκτιμήσει τον TDEE κατά 300-500 kcal. Πρόταση: Θέστε Activity="Sedentary" (1.2) όταν χρησιμοποιείτε MET.'});
+    warnings.push({type:'alert',msg:'⚠️ Double Counting Risk: Χρησιμοποιείτε ΑΜΦΟΤΕΡΑ Activity Factor (×'+totalMultiplier+') ΚΑΙ MET activities. Αυτό μπορεί να υπερεκτιμήσει τον TDEE κατά 300-500 kcal. Πρόταση: Θέστε Activity="Sedentary" (1.2) όταν χρησιμοποιείτε MET.'});
   }
   if(protGperKg<1.2){
     warnings.push({type:'warn',msg:'⚠️ Πρωτείνη χαμηλή: '+protGperKg+'g/kg (ελάχιστο 1.2 για απώλεια)'});
@@ -2460,6 +2462,15 @@ function clientNeedsAttention(c){
     if(rows.length && ckDaysSinceLast(rows)>=2) return true;
   }
   return false;
+}
+// Αρχικά ενός ονόματος για το avatar κάθε γραμμής (π.χ. "Γιώργος Παπαδόπουλος" → "ΓΠ").
+// Ζει εδώ (όχι στο app-part5-home.js, που φορτώνει αργότερα) γιατί ένα early callback
+// από το app-part4.js μπορεί να καλέσει renderSB() πριν προλάβει να φορτώσει εκείνο το αρχείο.
+function initials(name){
+  var parts=(name||'').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return '?';
+  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0]+parts[1][0]).toUpperCase();
 }
 function renderSB(){
   var term=_clientSearchTerm;

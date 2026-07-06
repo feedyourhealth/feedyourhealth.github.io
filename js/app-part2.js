@@ -309,6 +309,11 @@ function renderMain(){
   var fOpts='<option value="mifflin"'+(c.formula==='mifflin'||!c.formula?' selected':'')+'>Mifflin-St Jeor</option><option value="cunningham"'+(c.formula==='cunningham'?' selected':'')+'>Cunningham (αθλητές)</option>';
   var isCunn=c.formula==='cunningham';
   var numTrainDays=(c.trainDays||[]).filter(function(x){return x;}).length;
+  // ✅ Activity factor: 4 preset buttons (standard PAL bands) + free numeric override, so the
+  // dietitian can type an exact value for the client's actual job when the presets don't fit.
+  var PAL_PRESETS=[{k:'sed',v:1.2,lbl:'Καθιστικός'},{k:'light',v:1.375,lbl:'Ελαφρύ'},{k:'mod',v:1.55,lbl:'Μέτριο'},{k:'active',v:1.725,lbl:'Έντονο'}];
+  var PAL_BY_KEY={sed:1.2,light:1.375,mod:1.55,active:1.725};
+  var effAF=(c.activityFactor>0)?c.activityFactor:(PAL_BY_KEY[c.activity]||'');
   var hydBase=t.hydBase||Math.round(c.weight*35);
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
   // ✅ Collapsible section state (Βασικά Στοιχεία / Άθλημα) — see getSecState()
@@ -344,6 +349,18 @@ function renderMain(){
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">🎯 Στόχος</span>'
       +'<span id="header-goal" style="font-size:13px;font-weight:600;color:#025857">' + (c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'}[c.goalMain]||c.goalMain):'—') + (c.goal&&parseInt(c.goal)?' ('+(parseInt(c.goal)>=0?'+':'')+parseInt(c.goal)+' kcal)':'') + '</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">🏅 Άθλημα</span>'
+      +'<span id="header-sport" style="font-size:13px;font-weight:600;color:#025857">' + esc(c.sport&&SPORT_PROFILES[c.sport]?SPORT_PROFILES[c.sport].name:'—') + '</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">🥗 Διατροφή</span>'
+      +'<span id="header-diet" style="font-size:13px;font-weight:600;color:#025857">' + esc(({normal:'Κανονική',vegetarian:'Χορτοφαγική',vegan:'Vegan',keto:'Κετογονική',orthodox_fasting:'Ορθόδοξη Νηστεία',intermittent_fasting:'Διαλείπουσα Νηστεία',bodybuilding_clean:'Bodybuilding Clean',kids_10_14:'Παιδιά 10-14'}[c.dietType]||'Κανονική')) + '</span>'
+    +'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">🚫 Αποφυγές</span>'
+      +'<span id="header-exclude" style="font-size:13px;font-weight:600;color:#025857">' + esc((c.foodExclude&&c.foodExclude.length)?c.foodExclude.join(', '):'—') + '</span>'
     +'</div>'
     +'</div>'
 
@@ -388,13 +405,18 @@ function renderMain(){
     +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
     +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
     // ✅ Activity Level — manually selected by dietitian (reflects job + daily life, not just sport)
-    +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>⚡ Επίπεδο Δραστηριότητας Ημέρας'+(t.usedMET?' (NEAT baseline)':'')+'</label><select id="inp-activity">'
-    +'<option value=""'+(c.activity?'':' selected')+' disabled>-- Επιλέξτε --</option>'
-    +'<option value="sed"'+(c.activity==='sed'?' selected':'')+'>Καθιστικός (γραφείο, λίγη κίνηση)</option>'
-    +'<option value="light"'+(c.activity==='light'?' selected':'')+'>Ελαφρά ενεργός (όρθια εργασία, περπάτημα)</option>'
-    +'<option value="mod"'+(c.activity==='mod'?' selected':'')+'>Μέτρια ενεργός (εργασία με κίνηση)</option>'
-    +'<option value="active"'+(c.activity==='active'?' selected':'')+'>Έντονα ενεργός (χειρωνακτική π.χ. οικοδόμος)</option>'
-    +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic">Ορίστε με βάση τη δουλειά & καθημερινότητα — όχι μόνο το άθλημα.</div></div></div>'
+    // 4 preset buttons (standard PAL bands) as quick-fill shortcuts + a free numeric field so an
+    // exact value can be typed in when a client's actual job doesn't match a preset band.
+    +'<div class="fg" id="activity-factor-wrap"><div class="fgrp"><label>⚡ Επίπεδο Δραστηριότητας Ημέρας (PAL)'+(t.usedMET?' (NEAT baseline)':'')+'</label>'
+    +'<div class="pal-btn-row" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">'
+    +PAL_PRESETS.map(function(p){
+      var isActive=(+effAF===p.v);
+      return '<button type="button" class="pal-preset-btn" onclick="setActivityFactor('+p.v+',\''+p.k+'\')" style="padding:6px 10px;border-radius:5px;border:1px solid '+(isActive?'#025857':'#ddd')+';background:'+(isActive?'#025857':'#fff')+';color:'+(isActive?'#fff':'#333')+';font-size:11px;cursor:pointer;">'+p.lbl+' <b>'+p.v+'</b></button>';
+    }).join('')
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><input type="number" id="inp-activity-factor" min="1.0" max="3.0" step="0.01" value="'+effAF+'" placeholder="π.χ. 1.45" style="width:90px;padding:6px;border:1px solid #ddd;border-radius:4px"><span style="font-size:11px;color:#666">× BMR — πληκτρολόγησε ακριβή τιμή αν οι παραπάνω κατηγορίες δεν ταιριάζουν</span></div>'
+    +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Ενδεικτικός οδηγός βάσει δουλειάς (όχι απόλυτος κανόνας): Γραφείο/καθιστική 1.2-1.3 · Όρθια εργασία με κίνηση (πωλητής, σερβιτόρος, νοσηλευτής) 1.4-1.6 · Δουλειά με σωματική προσπάθεια (διανομέας, τεχνίτης) 1.6-1.8 · Βαριά χειρωνακτική εργασία 1.8-2.2</div>'
+    +'</div></div>'
     // ✅ Sport-Specific Supplement Recommendations (PHASE 4)
     +(c.sport && SPORT_PROTOCOLS[c.sport] ?
       '<div style="background:#E8F5E9;padding:12px;border-radius:5px;margin:10px 0;border-left:4px solid #025857;">'
@@ -528,9 +550,11 @@ function renderMain(){
     +'<button class="btn" style="padding:5px 10px;font-size:11px;background:#eee;color:#555;border:none" onclick="closeSaveTmplPanel()">&#10005;</button>'
     +'</div>'
     +'<div class="plan-wrap"><div class="week-main"><div id="week-con"></div></div>'
-    +'<div class="food-lib"><div class="food-lib-title">Τρόφιμα</div>'
+    +'<div class="food-lib'+(isFoodLibCollapsed()?' collapsed':'')+'" id="food-lib">'
+    +'<button class="food-lib-toggle" onclick="toggleFoodLib()" title="Απόκρυψη/εμφάνιση τροφίμων" aria-label="Απόκρυψη/εμφάνιση τροφίμων">'+(isFoodLibCollapsed()?'‹':'›')+'</button>'
+    +'<div class="food-lib-body"><div class="food-lib-title">Τρόφιμα</div>'
     +'<input class="food-lib-search" type="text" placeholder="Αναζήτηση..." oninput="filterLib(this)">'
-    +'<div id="lib-list"></div></div></div>'
+    +'<div id="lib-list"></div></div></div></div>'
     +'<div id="supp-notes"></div></div>'
     +'<div id="s3" style="display:none">'+buildTrackerHtml(c)+'</div>'
     +'<div id="s4" style="display:none">'+buildPlanHistoryHtml(c)+'</div>';
@@ -545,7 +569,8 @@ function renderMain(){
   updateAgeDisplay();
   document.getElementById('inp-weight').value=c.weight||'';
   document.getElementById('inp-height').value=c.height||'';
-  document.getElementById('inp-activity').value=c.activity||'';
+  var afInp0=document.getElementById('inp-activity-factor');
+  if(afInp0){var _palByKey={sed:1.2,light:1.375,mod:1.55,active:1.725};afInp0.value=(c.activityFactor>0)?c.activityFactor:(_palByKey[c.activity]||'');}
   // ✅ Update goal display (numeric adjuster)
   var goalVal = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : 0;
   document.getElementById('inp-goal').value=goalVal;
@@ -580,7 +605,12 @@ function renderMain(){
   if(bfProfInp)bfProfInp.onblur=function(){upd('bf',+this.value||0);};
   var lmInp=document.getElementById('inp-leanmass');
   if(lmInp)lmInp.onblur=function(){upd('leanmass',+this.value||0);};
-  document.getElementById('inp-activity').onchange=function(){upd('activity',this.value);};
+  var afInp=document.getElementById('inp-activity-factor');
+  if(afInp)afInp.onchange=function(){
+    var v=parseFloat(this.value);
+    if(!v||v<1||v>3){showErrorToast('Η τιμή πρέπει να είναι μεταξύ 1.0 και 3.0');this.value=(getC().activityFactor||'');return;}
+    setActivityFactor(v,null);
+  };
   document.getElementById('inp-goal').onchange=function(){upd('goal',this.value);};
   // Sport selector — auto-update macros & show sport-specific notes & toggle conditional visibility
   var sportSel=document.getElementById('inp-sport');
@@ -1093,22 +1123,17 @@ function updateActivityFromSport(sportId){
     var sport=SPORT_PROFILES[sportId];
     if(!sport)return;
 
-    // Auto-set activity based on sport intensity
-    var newActivity='mod';
-    if(sport.category.includes('Endurance'))newActivity='high';
-    else if(sport.category.includes('High-Intensity'))newActivity='high';
-    else if(sport.category.includes('Combat'))newActivity='vhigh';
-
-    upd('activity', newActivity);
-
-    // Update display badge
-    var activityNames={sed:'Χαμηλή',light:'Ελαφρά',mod:'Μέτρια',high:'Υψηλή',vhigh:'Πολύ Υψηλή'};
-    var display=document.getElementById('activity-display');
-    if(display)display.textContent=activityNames[newActivity];
-
+    // ✅ Used to auto-set c.activity from sport.category here, but SPORT_PROFILES entries
+    // have no category field at all — that line threw on every single sport (undefined.includes),
+    // silently aborting the rest of this function every time. Activity level stays purely
+    // manual (the 4 PAL buttons below), which is what was actually happening in practice anyway.
     updateConditionalVisibility(sportId);
     var noteDiv=document.getElementById('sport-note');
     if(noteDiv)noteDiv.textContent=sport.notes||'';
+  } else {
+    // ✅ Cleared sport selection: activity isn't auto-set above, so nothing else
+    // triggers a re-render — force one so the header "Άθλημα" tile reflects "—".
+    renderMain();
   }
 
   onClientChange();
@@ -1315,26 +1340,18 @@ function buildClientProgressHtml(c){
 // Καταχωρήσεις βάρους/σημειώσεων που έστειλε ο ίδιος ο πελάτης από το portal (client_logs, χωρίς login).
 // Δεν μπαίνουν αυτόματα στο επίσημο weightLog — ο διαιτολόγος επιβεβαιώνει με ένα κλικ.
 function clientLogsPanelHtml(c){
-  if(!window.Cloud || typeof window.Cloud.pendingClientLogsFor!=='function') return '';
-  var entries=window.Cloud.pendingClientLogsFor(c);
+  if(!window.Cloud || typeof window.Cloud.allClientLogsFor!=='function') return '';
+  var entries=window.Cloud.allClientLogsFor(c);
   if(!entries.length) return '';
   var rows=entries.map(function(e){
     var w=e.weight_kg?('<b>'+e.weight_kg+' kg</b>'):'';
     var n=e.note?('<span style="color:#666">'+esc(e.note)+'</span>'):'';
-    var useBtn=e.weight_kg?('<button class="btn" style="padding:3px 9px;font-size:10px" onclick="useClientLogEntry(\''+e.date+'\','+e.weight_kg+')">Χρησιμοποίησε</button>'):'';
-    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:11px">'
-      +'<span>'+e.date+' — '+w+(w&&n?' · ':'')+n+'</span>'+useBtn+'</div>';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:11px">'
+      +'<span>'+e.date+' — '+w+(w&&n?' · ':'')+n+'</span></div>';
   }).join('');
   return '<div class="tracker-section" style="background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
-    +'<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:4px">📥 Καταχωρήσεις από τον πελάτη</div>'
+    +'<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:4px">📥 Ιστορικό καταχωρήσεων πελάτη <span style="font-weight:400;color:#666">(δικά του μέτρα — για σύγκριση, δεν επηρεάζουν το ιστορικό σου)</span></div>'
     +rows+'</div>';
-}
-// Γεμίζει τη φόρμα προσθήκης με μια καταχώρηση πελάτη — ο διαιτολόγος πατάει "+ Προσθήκη" για να την επιβεβαιώσει.
-function useClientLogEntry(dateStr,weightKg){
-  var dEl=document.getElementById('tr-date'), wEl=document.getElementById('tr-weight');
-  if(dEl)dEl.value=dateStr;
-  if(wEl)wEl.value=weightKg;
-  if(wEl){wEl.scrollIntoView({behavior:'smooth',block:'center'}); wEl.focus();}
 }
 
 function buildTrackerHtml(c){
@@ -2468,7 +2485,6 @@ function setupFormEventListeners(){
     'inp-height':['height','number'],
     'inp-bf':['bf','number'],
     'inp-sex':['sex',null],
-    'inp-activity':['activity',null],
     'inp-goal':['goal',null],
     'inp-sport':['sport',null],
     'inp-formula':['formula',null],
@@ -2506,7 +2522,10 @@ function swTab(n){
   // ✅ THEN SHOW ONLY THE SELECTED PAGE
   if(n===1 && s1)s1.style.display='block';
   if(n===2 && s2)s2.style.display='block';
-  if(n===3 && s3)s3.style.display='block';
+  // ✅ Rebuild s3 fresh every time it's opened — the client-logs cache can finish loading
+  // (refreshClientLogsCache) after this div was first built, and swTab() only ever
+  // toggled display before, so a stale (pre-fetch) panel could get stuck showing forever.
+  if(n===3 && s3){var _c=getC();if(_c)s3.innerHTML=buildTrackerHtml(_c);s3.style.display='block';}
   if(n===4 && s4)s4.style.display='block';
 
   // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1 (Page 1 only - Στοιχεία Πελάτη)
@@ -2575,6 +2594,24 @@ function updateDayTargetTable(c,t){
       }
     });
   }
+}
+
+// ✅ Set the activity multiplier (PAL) — either from one of the 4 preset buttons (presetKey set)
+// or from the free numeric field (presetKey null, auto-detects if it happens to match a preset).
+function setActivityFactor(val, presetKey) {
+  var c = getC();
+  if(!c) return;
+  val = Math.round(val*1000)/1000;
+  c.activityFactor = val;
+  if(presetKey){
+    c.activity = presetKey;
+  } else {
+    var PAL_BY_KEY={sed:1.2,light:1.375,mod:1.55,active:1.725};
+    var matched = Object.keys(PAL_BY_KEY).filter(function(k){return PAL_BY_KEY[k]===val;})[0];
+    c.activity = matched || 'custom';
+  }
+  saveNow();
+  renderMain();
 }
 
 // ✅ NEW: Adjust goal calories (+/- 50, +/- 10)
@@ -2832,6 +2869,20 @@ function toggleSec(sec){
   var st=getSecState(c);
   st[sec]=!st[sec];
   renderMain();
+}
+
+// ✅ Collapsible «Τρόφιμα» panel next to the weekly plan — frees width for the day columns.
+// Persisted in localStorage (UI preference, not client data) so it stays collapsed across clients.
+function isFoodLibCollapsed(){
+  try{ return localStorage.getItem('fyh_foodlib_collapsed')==='1'; }catch(e){ return false; }
+}
+function toggleFoodLib(){
+  var el=document.getElementById('food-lib');
+  if(!el)return;
+  var collapsed=el.classList.toggle('collapsed');
+  try{ localStorage.setItem('fyh_foodlib_collapsed', collapsed?'1':'0'); }catch(e){}
+  var btn=el.querySelector('.food-lib-toggle');
+  if(btn) btn.textContent = collapsed?'‹':'›';
 }
 // ✅ Safety net: if plan-generation validation fails on a field that lives inside a
 // collapsed accordion (Βασικά Στοιχεία / Άθλημα / Κατανομή Μακρο), force it open so the

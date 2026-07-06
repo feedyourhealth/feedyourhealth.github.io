@@ -1377,7 +1377,7 @@ function mealSourceBadge(meal){
   };
   var m = MAP[src];
   if(!m) return '';
-  return '<span class="meal-source-badge" style="display:block;font-size:8px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:3px;background:'+m.bg+';color:'+m.color+';width:fit-content" title="Πηγή γεύματος: '+m.label+'">'+m.icon+' '+m.label+'</span>';
+  return '<span class="meal-source-badge" style="display:block;font-size:10px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:3px;background:'+m.bg+';color:'+m.color+';width:fit-content" title="Πηγή γεύματος: '+m.label+'">'+m.icon+' '+m.label+'</span>';
 }
 
 // Ξαναδημιουργεί ΜΟΝΟ μία ημέρα (όχι όλη την εβδομάδα) — τρέχει το κανονικό genPlan εσωτερικά
@@ -1451,8 +1451,20 @@ function renderWeekTable(){
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">Μακρο</span>'
-      +'<span style="font-size:12px;font-weight:600;color:#555">P:' + Math.round(tdeeInfo.p) + 'g | F:' + Math.round(tdeeInfo.f) + 'g | C:' + Math.round(tdeeInfo.carb) + 'g</span>'
+      +'<span style="font-size:12px;font-weight:600;color:#555">Π:' + Math.round(tdeeInfo.p) + 'g | Λ:' + Math.round(tdeeInfo.f) + 'g | Υ:' + Math.round(tdeeInfo.carb) + 'g</span>'
     +'</div>'
+    +'</div>';
+
+  // ✅ Legend για τις χρωματιστές κουκκίδες τροφίμων — ίδια hex codes με getFoodColorHex()
+  var foodDotLegend='<div style="background:#f5f5f5;border:1px solid #e0e0e0;border-radius:6px;padding:6px 10px;margin-bottom:10px;font-size:10px;color:#666;display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#5DADE2;margin-right:4px;vertical-align:middle"></span>Πρωτεΐνη</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#F8B739;margin-right:4px;vertical-align:middle"></span>Δημητριακά/Άλλα</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52B788;margin-right:4px;vertical-align:middle"></span>Λαχανικά</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E8A0BF;margin-right:4px;vertical-align:middle"></span>Αυγά/Γαλακτ.</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C77DFF;margin-right:4px;vertical-align:middle"></span>Φρούτα</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FFB703;margin-right:4px;vertical-align:middle"></span>Ξηροί καρποί</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FB8500;margin-right:4px;vertical-align:middle"></span>Λάδια</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#B5651D;margin-right:4px;vertical-align:middle"></span>Μπαχαρικά</span>'
     +'</div>';
 
   // Build table HTML — show T/R badge in header + training time
@@ -1467,17 +1479,17 @@ function renderWeekTable(){
       +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. πριν/μετά 2ης προπόνησης)" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
       +'</div>';
   }
-  var html=metExplainerHtml+summaryCard+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
+  var html=metExplainerHtml+summaryCard+foodDotLegend+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
-    var badge=trainD[di]?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">T</span>':'<span style="background:#eee;color:#aaa;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">R</span>';
+    var badge=trainD[di]?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px">T</span>':'<span style="background:#eee;color:#aaa;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px">R</span>';
     var timeStr='';
     if(trainD[di]&&trainTimes[di]&&trainTimes[di].length>0){
-      timeStr='<div style="font-size:8px;color:#666;margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';
+      timeStr='<div style="font-size:10px;color:#666;margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';
     }
     // ✅ Phase 1: Add sport display for training days
     var sportStr='';
     if(trainD[di]&&c.sport){
-      sportStr='<div class="sport-header-dietitian" style="font-size:9px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
+      sportStr='<div class="sport-header-dietitian" style="font-size:10px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
     }
     var copyBtn='<button class="day-copy-btn" onclick="copyDayPrompt(this,'+di+')" title="Αντιγραφή ημέρας σε άλλες" aria-label="Αντιγραφή ημέρας σε άλλες">📋</button>';
     var regenDayBtn='<button class="day-regen-btn" onclick="regenerateDay('+di+')" title="Αναδημιουργία μόνο αυτής της ημέρας" aria-label="Αναδημιουργία μόνο αυτής της ημέρας">🔄</button>';
@@ -1492,11 +1504,11 @@ function renderWeekTable(){
       mealTiming=c.weekPlan[0][mi].mealTiming;
     }
     var timingProf=MEAL_TIMING_PROFILES[mealTiming]||MEAL_TIMING_PROFILES.regular;
-    var timingInfo='P:'+timingProf.p+'% F:'+timingProf.f+'% C:'+timingProf.c+'% — '+timingProf.desc;
+    var timingInfo='Π:'+timingProf.p+'% Λ:'+timingProf.f+'% Υ:'+timingProf.c+'% — '+timingProf.desc;
 
     // ✅ HORIZONTAL LAYOUT: Meal name as section header
     var timingBadge=(mealTiming&&mealTiming!=='regular')
-      ?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:9px;padding:1px 7px;margin-left:8px;font-weight:600" title="'+timingProf.desc+'">'+timingProf.label+'</span>'
+      ?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 7px;margin-left:8px;font-weight:600" title="'+timingProf.desc+'">'+timingProf.label+'</span>'
       :'';
     html+='<tr style="background:linear-gradient(90deg, #f8f8f8 0%, #f0f0f0 100%);box-shadow:0 2px 4px rgba(0,0,0,0.05)"><td colspan="8" class="meal-section-header" data-timing-info="'+timingInfo+'">'
       +'<span style="font-weight:700;color:#025857;font-size:12px">'+timingProf.icon+' '+esc(mealNames[mi])+'</span>'
@@ -1546,9 +1558,9 @@ function renderWeekTable(){
         var borderColor=getFoodColorHex(food.n);
         var rvTip=cm(food.n,food.g);
         var macroTip='<div class="chip-macro-tip">'
-          +'<span style="color:#1565C0">P '+Math.round(rvTip.p)+'</span> '
-          +'<span style="color:#B71C1C">F '+Math.round(rvTip.f)+'</span> '
-          +'<span style="color:#2E7D32">C '+Math.round(rvTip.c)+'</span> '
+          +'<span style="color:#1565C0">Π '+Math.round(rvTip.p)+'</span> '
+          +'<span style="color:#B71C1C">Λ '+Math.round(rvTip.f)+'</span> '
+          +'<span style="color:#2E7D32">Υ '+Math.round(rvTip.c)+'</span> '
           +'<span style="color:#E65100;font-weight:700">&middot; '+Math.round(rvTip.k)+' kcal</span>'
           +'</div>';
         html+='<div class="food-chip">'
@@ -1602,9 +1614,9 @@ function renderWeekTable(){
         var lowProt=!hasFree&&mP2<15&&mP2>0;
         html+='<div class="meal-mac-bar">'
           +(lowProt?'<span class="prot-warn" title="Χαμηλή πρωτεΐνη — στόχος ≥15g/γεύμα για βέλτιστη MPS">⚠️</span>':'')
-          +'<span style="color:#1565C0">P:'+Math.round(mP2)+'</span> '
-          +'<span style="color:#B71C1C">F:'+Math.round(mF2)+'</span> '
-          +'<span style="color:#2E7D32">C:'+Math.round(mC2)+'</span>'
+          +'<span style="color:#1565C0">Π:'+Math.round(mP2)+'</span> '
+          +'<span style="color:#B71C1C">Λ:'+Math.round(mF2)+'</span> '
+          +'<span style="color:#2E7D32">Υ:'+Math.round(mC2)+'</span>'
           +(mFi2>=0.5?' <span style="color:#795548" title="Φυτικές ίνες">· 🌾'+mFi2.toFixed(1)+'g</span>':'')
           +' <span style="color:#E65100;font-weight:700">&middot; '+Math.round(mK2)+' kcal</span></div>';
       }
