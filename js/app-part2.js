@@ -1263,9 +1263,22 @@ function buildMacroDistributionHtml(c,t){
     +'</div>'
     +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Προσαρμόζεται αυτόματα από το άθλημα — αλλάξτε ελεύθερα χειροκίνητα.</div>'
     +buildREDSAndWarningsHtml(t)
+    +buildCreatineSuggestionHtml(c)
     +'</div>'
     +'</div>';
   return html;
+}
+
+// 💊 Creatine monohydrate suggestion for strength/power sports (ISSN Position Stand, Kreider et al. 2017).
+// Purely informational — no food exclusion or macro change. Empty string (nothing shown) for any other sport/diet type.
+var CREATINE_SUGGESTED_SPORTS={weightlifting:1,crossfit:1,mma:1,bjj:1,boxing:1};
+function buildCreatineSuggestionHtml(c){
+  var relevant=(c.sport && CREATINE_SUGGESTED_SPORTS[c.sport]) || c.dietType==='bodybuilding_clean';
+  if(!relevant) return '';
+  return '<div style="margin-top:8px;padding:9px 12px;border-radius:6px;border-left:4px solid #6a1b9a;background:#f3e5f5;font-size:12px;color:#4a148c">'
+    +'<b>💊 Κρεατίνη:</b> 3-5g/ημέρα κρεατίνη μονοϋδρική — από τα πιο μελετημένα συμπληρώματα για δύναμη/όγκο, ασφαλές σε μακροχρόνια χρήση.'
+    +' <a href="https://link.springer.com/article/10.1186/s12970-017-0173-z" target="_blank" style="color:inherit;text-decoration:underline">ISSN Position Stand 2017 ↗</a>'
+    +'</div>';
 }
 
 // ⚡ RED-S (Energy Availability) + general target/macro warnings — t.ea and t.warnings were already
