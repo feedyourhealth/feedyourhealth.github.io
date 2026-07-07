@@ -2321,8 +2321,12 @@ function enforceRedMeatFrequency(weekPlan, excl){
       var mealLoc = redMeatMeals[i];
       var meal = weekPlan[mealLoc.day][mealLoc.index];
 
+      // meal.kcal isn't a stored field on weekPlan meal objects — compute it from the actual foods,
+      // otherwise findBestRecipe's calorie-match compares against undefined (NaN) and never matches anything.
+      var mealKcal = (meal.foods||[]).reduce(function(sum,f){ return sum + cm(f.n,f.g).k; }, 0);
+
       // Find alternative chicken or fish recipe with similar calories, respecting exclusions
-      var altRecipe = findBestRecipe('normal', meal.kcal, meal.name, excl);
+      var altRecipe = findBestRecipe('normal', mealKcal, meal.name, excl);
       if(altRecipe && !isRedMeat(altRecipe.name, altRecipe.foods)){
         meal.foods = altRecipe.foods;
         meal.name = altRecipe.name;
