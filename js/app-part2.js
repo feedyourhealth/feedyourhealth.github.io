@@ -661,9 +661,34 @@ function renderMain(){
   setupFormEventListeners();
 }
 
+// Whole days between today and a client's event date (c.eventDate, 'YYYY-MM-DD'). null if unset/invalid.
+function daysUntilEvent(dateStr){
+  if(!dateStr) return null;
+  var target=new Date(dateStr+'T00:00:00');
+  if(isNaN(target.getTime())) return null;
+  var today=new Date(); today.setHours(0,0,0,0);
+  return Math.round((target-today)/86400000);
+}
+
+// Carbohydrate loading (ISSN Position Stand: Nutrient Timing — ~8-12g carbs/kg/day, 1-3 days pre-event).
+// Only returns day-of-week indexes (0=Mon..6=Sun, matching trainDays/weekPlan) when c.eventDate is set
+// AND the event is actually imminent (0-10 days out) for THIS plan generation — inert otherwise, so a
+// client with no event date, or one far from any event, behaves exactly as before.
+function getCarbLoadDayIndexes(c){
+  var daysLeft=daysUntilEvent(c.eventDate);
+  if(daysLeft==null||daysLeft<0||daysLeft>10) return [];
+  var loadDays=c.carbLoadDays!=null?c.carbLoadDays:3;
+  var eventDow=new Date(c.eventDate+'T00:00:00').getDay(); // 0=Sun..6=Sat
+  var eventIdx=(eventDow+6)%7; // convert to 0=Mon..6=Sun
+  var idxs=[];
+  for(var k=0;k<loadDays;k++) idxs.push(((eventIdx-k)%7+7)%7);
+  return idxs;
+}
+
 function makeDayTgtDefaults(c,t){
   var boost=(c.carbBoost!=null?c.carbBoost:20)/100;
   var baseHrs=c.trainHoursPerDay||1;
+  var carbLoadIdxs=(typeof getCarbLoadDayIndexes==='function')?getCarbLoadDayIndexes(c):[];
   var r=[];
   for(var i=0;i<7;i++){
     var isT=c.trainDays&&c.trainDays[i];
@@ -717,6 +742,18 @@ function makeDayTgtDefaults(c,t){
       var kcalFromExtraC=extraC*4;
       dayF=Math.max(0,Math.round(dayF-(kcalFromExtraC/9)));
       dayC=dayC+extraC;
+    }
+
+    // 🏁 Carb-loading override (only on the specific pre-event days computed above; no-op for everyone else).
+    // Reduces fat kcal-for-kcal to make room, same pattern as the training-day carb boost above.
+    if(carbLoadIdxs.indexOf(i)!==-1){
+      var loadCarbG=Math.round((c.weight||70)*10); // ISSN: ~10g/kg/day carb-loading target
+      if(loadCarbG>dayC){
+        var extraLoadC=loadCarbG-dayC;
+        var kcalFromExtraLoadC=extraLoadC*4;
+        dayF=Math.max(0,Math.round(dayF-(kcalFromExtraLoadC/9)));
+        dayC=loadCarbG;
+      }
     }
 
     r.push({k:dayKcal,p:dayP,f:dayF,c:dayC});
@@ -902,6 +939,16 @@ function buildDayTgtHtml(c,t){
   });
   var carbBoostVal=c.carbBoost!=null?c.carbBoost:20;
   var timingGuide=getMealTimingGuide(c);
+  // 🏁 Carb-loading status (ISSN Position Stand: Nutrient Timing) — only shows when an event date is set
+  // AND imminent (see getCarbLoadDayIndexes); silent otherwise.
+  var carbLoadIdxs=(typeof getCarbLoadDayIndexes==='function')?getCarbLoadDayIndexes(c):[];
+  var carbLoadNote='';
+  if(carbLoadIdxs.length){
+    var dAbbrCL=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
+    var namesCL=carbLoadIdxs.slice().sort(function(a,b){return a-b;}).map(function(ix){return dAbbrCL[ix];});
+    var loadCarbGPreview=Math.round((c.weight||70)*10);
+    carbLoadNote='<div style="background:#fff3e0;border:1px solid #ffb74d;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#e65100"><b>🏁 Ενεργή καρβοφόρτωση:</b> '+namesCL.join(', ')+' — στόχος ~'+loadCarbGPreview+'g υδατάνθρακες/ημέρα (ISSN: 8-12g/kg)</div>';
+  }
   return '<div class="day-tgt-wrap">'
     +'<div class="day-tgt-head"><span class="day-tgt-title">Θερμίδες &amp; μακροθρεπτικά ανά ημέρα</span>'
     +'<button class="day-tgt-reset" onclick="resetDayTargets()">&#8635; Επαναφορά TDEE</button></div>'
@@ -910,6 +957,11 @@ function buildDayTgtHtml(c,t){
     +'<label>&#127947; Carb boost ημέρας προπόνησης:</label>'
     +'<input class="carb-boost-inp" type="number" min="0" max="60" value="'+carbBoostVal+'" onchange="setCarbBoost(this.value)">%'
     +'</div>'
+    +'<div class="carb-boost-row">'
+    +'<label>&#127937; Ημερομηνία αγώνα (καρβοφόρτωση):</label>'
+    +'<input class="carb-boost-inp" type="date" value="'+(c.eventDate||'')+'" onchange="setEventDate(this.value)" style="width:auto">'
+    +'</div>'
+    +carbLoadNote
     +'<div style="font-size:10px;color:#999;margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
     +'<div style="background:#f0f7ff;border:1px solid #80d4ff;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#0056b3">'
     +'<div style="font-weight:700;margin-bottom:4px">⚡ Προσαρμογή Macros ανάλογα Προπόνησης</div>'
@@ -2221,6 +2273,12 @@ function setCarbBoost(v){
   // If no custom targets, let defaults recompute
   if(c.dayTargets)c.dayTargets=null;
   onClientChange();  // ← TRIGGER CASCADE RECALCULATION
+}
+function setEventDate(v){
+  var c=getC();if(!c)return;
+  c.eventDate=v||null;
+  if(c.dayTargets)c.dayTargets=null;
+  onClientChange();  // ← TRIGGER CASCADE RECALCULATION (re-applies/clears carb-loading window)
 }
 function resetDayTargets(){
   var c=getC();if(!c)return;
