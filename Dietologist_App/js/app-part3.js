@@ -3359,7 +3359,9 @@ function openPublishModal(){
       +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📧 Αποστολή με Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
       +(c.email?'':'<div style="font-size:11px;color:#e08a00;margin:-4px 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα — θα ανοίξει κενό. Πρόσθεσέ το στα «Βασικά Στοιχεία».</div>')
       +'<a href="'+wa+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📱 WhatsApp'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
-      +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5">⏳ Ο σύνδεσμος λήγει στις <b>'+expTxt+'</b> ('+window.Cloud.LINK_EXPIRE_DAYS+' μέρες). Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα και η λήξη ανανεώνεται.</div>';
+      +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5;margin-bottom:14px">⏳ Ο σύνδεσμος λήγει στις <b>'+expTxt+'</b> ('+window.Cloud.LINK_EXPIRE_DAYS+' μέρες). Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα και η λήξη ανανεώνεται.</div>'
+      +'<button id="portal-reset-link" class="btn" style="width:100%;background:#fff;color:#c0392b;border:1px solid #f0c2c2;font-size:12px">🔄 Καθαρισμός & νέο σύνδεσμος</button>'
+      +'<div style="font-size:11px;color:#9fb5b0;line-height:1.4;margin-top:4px">Σβήνει τον τρέχοντα σύνδεσμο και φτιάχνει καινούριο — χρήσιμο αν ο πελάτης έχει συμπληρώσει νερό/συμπληρώματα/σημειώσεις που θες να «καθαρίσουν». Ο παλιός σύνδεσμος σταματάει να δουλεύει αμέσως.</div>';
     // Αποθήκευση προσωπικού μηνύματος → ξαναδημοσίευση ώστε να μπει στο snapshot
     var noteSave=document.getElementById('portal-note-save'), noteEl=document.getElementById('portal-note');
     if(noteSave&&noteEl){ noteSave.onclick=function(){
@@ -3371,6 +3373,32 @@ function openPublishModal(){
       noteSave.disabled=true; noteSave.textContent='Αποθήκευση…';
       window.Cloud.publishPlan(c).then(function(){ noteSave.textContent='✓ Αποθηκεύτηκε'; setTimeout(function(){noteSave.disabled=false;noteSave.textContent='💾 Αποθήκευση ρυθμίσεων';},1600); })
         .catch(function(e){ noteSave.disabled=false; noteSave.textContent='💾 Αποθήκευση ρυθμίσεων'; showErrorToast('Σφάλμα αποθήκευσης: '+(e.message||'')); });
+    };}
+    // Καθαρισμός & νέο σύνδεσμος → unpublish (σβήνει την παλιά εγγραφή) + νέο token + ξαναδημοσίευση
+    var resetBtn=document.getElementById('portal-reset-link');
+    if(resetBtn){ resetBtn.onclick=function(){
+      // Το #confirmDialog έχει z-index:10000, χαμηλότερο από το publish-overlay (100000) που είναι ήδη ανοιχτό
+      // από πάνω του — χωρίς αυτό το boost το κουμπί "Καθαρισμός" θα ήταν οπτικά κρυμμένο πίσω από το τρέχον modal.
+      var dlg=document.getElementById('confirmDialog');
+      var origZ=dlg?dlg.style.zIndex:'';
+      if(dlg) dlg.style.zIndex='100001';
+      var restoreZ=function(){ if(dlg) dlg.style.zIndex=origZ; };
+      showConfirmDialog('Θα δημιουργηθεί ΝΕΟΣ σύνδεσμος για τον/την «'+esc(c.name||'πελάτη')+'». Ο ΠΑΛΙΟΣ σύνδεσμος θα σταματήσει να δουλεύει αμέσως και όσα είχε καταχωρήσει ο πελάτης (νερό, check-off γευμάτων/συμπληρωμάτων, σημειώσεις βάρους) δεν θα φαίνονται πια — θα χρειαστεί να του στείλεις τον νέο σύνδεσμο.\n\nΣυνέχεια;', function(){
+        restoreZ();
+        resetBtn.disabled=true; resetBtn.textContent='Γίνεται καθαρισμός…';
+        window.Cloud.unpublishPlan(c).then(function(){
+          c.shareToken=genSecureToken();
+          return window.Cloud.publishPlan(c);
+        }).then(function(){
+          showSuccessToast('Δημιουργήθηκε νέος, καθαρός σύνδεσμος.');
+          openPublishModal();
+        }).catch(function(e){
+          resetBtn.disabled=false; resetBtn.textContent='🔄 Καθαρισμός & νέο σύνδεσμος';
+          showErrorToast('Σφάλμα: '+(e.message||''));
+        });
+      }, {confirmLabel:'Καθαρισμός', icon:'🔄'});
+      var cancelBtn=dlg && dlg.querySelector('button[onclick="closeConfirmDialog()"]');
+      if(cancelBtn) cancelBtn.addEventListener('click', restoreZ, {once:true});
     };}
   }).catch(function(e){
     var body=document.getElementById('publish-body');
