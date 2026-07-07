@@ -17,8 +17,17 @@
   :root{
     --teal:#025857; --teal-d:#014545; --teal-l:#037070;
     --tint:#E2EEE5; --tint2:#E8F5E9; --bord:#c5ddd8; --bord-l:#eef4f2;
-    --ink:#1a3330; --muted:#5a8a82; --faint:#9fb5b0; --ok:#2e7d32;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
     --bg:#f4f8f6; --card:#ffffff;
+  }
+  /* Σκοτεινή λειτουργία — ακολουθεί τη ρύθμιση της συσκευής. Το print παραμένει πάντα λευκό (δικό του @media). */
+  @media (prefers-color-scheme: dark){
+    :root{
+      --teal-l:#1a8f8a;
+      --tint:#152722; --tint2:#16302a; --bord:#283b36; --bord-l:#1f2f2a;
+      --ink:#e7f2ef; --muted:#8fb6af; --faint:#6f948d; --ok:#4caf50;
+      --bg:#0d1614; --card:#131f1c;
+    }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
@@ -58,6 +67,11 @@
   .meal .mc:active{transform:scale(.85)}
   .meal.eaten .mc{background:var(--teal);border-color:var(--teal)}
   .meal.eaten .nm{color:var(--faint);text-decoration:line-through}
+  /* check-off στο tab Πλάνο (σήμερα ή παλαιότερα) — ίδιο ύφος με το .meal .mc της Αρχικής */
+  .pm-chk{width:23px;height:23px;border:1.5px solid var(--bord);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;cursor:pointer;transition:transform .1s}
+  .pm-chk:active{transform:scale(.85)}
+  .pm-chk.on{background:var(--teal);border-color:var(--teal)}
+  .card.eaten-meal{opacity:.65}
   .food{display:flex;justify-content:space-between;padding:8px 0;border-bottom:.5px solid var(--bord-l);font-size:13px}
   .food:last-child{border-bottom:none}
   .food .q{font-weight:600;color:var(--teal)}
@@ -76,6 +90,8 @@
   .log-inp:focus{outline:none;border-color:var(--teal-l)}
   textarea.log-inp{resize:vertical;min-height:54px}
   .log-sent{font-size:12px;color:var(--ok);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+  .log-warn{font-size:12px;color:#c77d11;display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+  .log-warn button{background:none;border:none;color:#c77d11;font-weight:700;text-decoration:underline;cursor:pointer;font-size:12px;padding:0;font-family:inherit}
 
   .water{background:var(--tint);border-radius:14px;padding:12px 14px}
   .glasses{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
@@ -83,10 +99,10 @@
   .glass.on{color:var(--teal)}
   .glass:active{transform:scale(.85)}
 
-  .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .quick .card-pad{cursor:pointer}
-  .quick .qt{font-size:13px;font-weight:600;color:var(--teal-d);margin-top:6px}
-  .quick .qs{font-size:12px;color:var(--muted)}
+  .quick{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .quick .card-pad{cursor:pointer;padding:10px 8px}
+  .quick .qt{font-size:12.5px;font-weight:600;color:var(--teal-d);margin-top:6px;line-height:1.25}
+  .quick .qs{font-size:11px;color:var(--muted)}
 
   .daypills{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
   .daypills::-webkit-scrollbar{display:none}
@@ -171,7 +187,7 @@
   .stbl .val{text-align:right;font-weight:600;color:var(--teal)}
 
   /* header print button */
-  .hdr-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:5px}
+  .hdr-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12px;font-weight:600;padding:9px 13px;min-height:38px;min-width:38px;justify-content:center;border-radius:999px;cursor:pointer;display:flex;align-items:center;gap:5px}
   .hdr-btn:active{transform:scale(.95)}
   .hdr-btn i{font-size:15px}
 
@@ -195,7 +211,9 @@
     .view{gap:14px}
     /* use the width: meals & quick cards in columns */
     .plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
-    .quick{grid-template-columns:1fr 1fr 1fr}
+    .quick .card-pad{padding:12px 14px}
+    .quick .qt{font-size:13px}
+    .quick .qs{font-size:12px}
     .daypills{flex-wrap:wrap;overflow:visible}
     .pill{font-size:13px;padding:8px 16px}
   }
@@ -308,7 +326,7 @@ const SPICES=[
 // ⬇️ Συμπλήρωσε WhatsApp/τηλέφωνο (διεθνής μορφή, π.χ. 306900000000) για να ενεργοποιηθεί το κουμπί.
 const COACH={ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' };
 
-let SNAP=null, curDay=0, sb=null;
+let SNAP=null, curDay=0, sb=null, curView='home';
 
 function $(s){return document.querySelector(s)}
 function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
@@ -323,8 +341,12 @@ function getWater(){try{const d=JSON.parse(localStorage.getItem(lk('water'))||'{
 function setWater(n){try{const d=JSON.parse(localStorage.getItem(lk('water'))||'{}');d[todayKey()]=n;localStorage.setItem(lk('water'),JSON.stringify(d))}catch(e){}}
 function getShop(){try{return JSON.parse(localStorage.getItem(lk('shop'))||'{}')}catch(e){return {}}}
 function setShop(o){try{localStorage.setItem(lk('shop'),JSON.stringify(o))}catch(e){}}
-function getMeals(){try{const d=JSON.parse(localStorage.getItem(lk('meals'))||'{}');return d[todayKey()]||{}}catch(e){return {}}}
-function setMeals(o){try{const d=JSON.parse(localStorage.getItem(lk('meals'))||'{}');d[todayKey()]=o;localStorage.setItem(lk('meals'),JSON.stringify(d))}catch(e){}}
+// Γενικές εκδόσεις με ημερομηνία-κλειδί (ώστε το Πλάνο tab να μπορεί να τσεκάρει και παλαιότερες μέρες,
+// όχι μόνο "σήμερα") — τα getMeals()/setMeals() παραμένουν wrappers για τα ήδη υπάρχοντα σημεία κλήσης.
+function getMealsFor(dateKey){try{const d=JSON.parse(localStorage.getItem(lk('meals'))||'{}');return d[dateKey]||{}}catch(e){return {}}}
+function setMealsFor(dateKey,o){try{const d=JSON.parse(localStorage.getItem(lk('meals'))||'{}');d[dateKey]=o;localStorage.setItem(lk('meals'),JSON.stringify(d))}catch(e){}}
+function getMeals(){return getMealsFor(todayKey())}
+function setMeals(o){setMealsFor(todayKey(),o)}
 // supplement adherence: { 'YYYY-MM-DD': { '<supp name>': true } }
 function getSuppLog(){try{return JSON.parse(localStorage.getItem(lk('supps'))||'{}')}catch(e){return {}}}
 function setSuppLog(o){try{localStorage.setItem(lk('supps'),JSON.stringify(o))}catch(e){}}
@@ -369,11 +391,8 @@ function submitClientLog(){
   const w=wEl&&wEl.value?parseFloat(wEl.value):null;
   const n=nEl&&nEl.value?nEl.value.trim():'';
   if(!w && !n)return;
-  const tok=token(), todK=dKey(new Date());
-  if(sb && tok){
-    sb.rpc('submit_client_log',{p_token:tok,p_date:todK,p_weight_kg:w,p_note:n||null}).then(()=>{}).catch(()=>{});
-  }
-  setClientLogToday({w:w,n:n});
+  const todK=dKey(new Date());
+  setClientLogToday({w:w,n:n,synced:false});
   if(w){
     SNAP.progress=SNAP.progress||{};
     const log=SNAP.progress.log=SNAP.progress.log||[];
@@ -383,7 +402,30 @@ function submitClientLog(){
     SNAP.progress.current=w;
     if(!SNAP.progress.start)SNAP.progress.start=w;
   }
+  syncClientLog(w,n);
   go('prog');
+}
+// Best-effort αποστολή στο Supabase. Σε αντίθεση με πριν, ΔΕΝ κρύβουμε σιωπηλά την αποτυχία —
+// αν δεν περάσει (offline, session κλπ.) ο πελάτης βλέπει προειδοποίηση + κουμπί "Δοκίμασε ξανά"
+// αντί να νομίζει ότι η διαιτολόγος του έλαβε κάτι που ποτέ δεν έφτασε.
+function syncClientLog(w,n){
+  const tok=token(), todK=dKey(new Date());
+  if(!sb||!tok)return;
+  sb.rpc('submit_client_log',{p_token:tok,p_date:todK,p_weight_kg:w,p_note:n||null}).then((res)=>{
+    // Το Supabase JS client ΔΕΝ κάνει reject σε HTTP 4xx/5xx — resolve με {error} μέσα.
+    // Πρέπει να το ελέγξουμε ρητά, αλλιώς ένα απορριφθέν αίτημα (π.χ. άκυρο token) θα φαινόταν "εστάλη".
+    const ok=!(res&&res.error);
+    const e=getClientLogToday(); if(e){e.synced=ok; setClientLogToday(e);}
+    if(curTab()==='prog')go('prog');
+  }).catch(()=>{
+    const e=getClientLogToday(); if(e){e.synced=false; setClientLogToday(e);}
+    if(curTab()==='prog')go('prog');
+  });
+}
+// Καλείται από το κουμπί "Δοκίμασε ξανά" στην προειδοποίηση μη-συγχρονισμένης καταγραφής.
+function retryClientLogSync(){
+  const e=getClientLogToday(); if(!e)return;
+  syncClientLog(e.w,e.n);
 }
 
 async function boot(){
@@ -392,14 +434,40 @@ async function boot(){
   try{
     sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     const {data,error}=await sb.rpc('get_shared_plan',{p_token:t}).single();
-    if(error||!data){return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να έληξε ή να αποσύρθηκε. Ζήτησε νέο link από τον διαιτολόγο σου.')}
+    if(error||!data){console.error('[FYH portal] get_shared_plan:',error); return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να έληξε ή να αποσύρθηκε. Ζήτησε νέο link από τον διαιτολόγο σου. Αν μόλις σου το έστειλε, δοκίμασε ξανά.',true)}
     if(data.expires_at && new Date(data.expires_at)<new Date()){return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο σου να στείλει νέο link.')}
     SNAP=data.snapshot; SNAP._updated=data.updated_at;
     render();
-  }catch(e){fail('Πρόβλημα σύνδεσης.',e.message||'Δοκίμασε ξανά σε λίγο.')}
+  }catch(e){
+    // Το ακριβές τεχνικό μήνυμα (π.χ. αγγλικό "Failed to fetch") πάει μόνο στο console για εμάς —
+    // ο πελάτης βλέπει πάντα το ίδιο κατανοητό ελληνικό μήνυμα, ό,τι κι αν πήγε στραβά.
+    console.error('[FYH portal] boot failed:',e);
+    fail('Πρόβλημα σύνδεσης.','Έλεγξε τη σύνδεσή σου στο ίντερνετ και δοκίμασε ξανά.',true);
+  }
 }
-function fail(title,sub){
-  $('#app').innerHTML='<div class="center"><i class="ti ti-leaf" style="font-size:40px;color:var(--teal)"></i><div style="font-size:17px;font-weight:600;color:var(--teal-d)">'+esc(title)+'</div><div>'+esc(sub)+'</div></div>';
+function fail(title,sub,retry){
+  $('#app').innerHTML='<div class="center"><i class="ti ti-leaf" style="font-size:40px;color:var(--teal)"></i><div style="font-size:17px;font-weight:600;color:var(--teal-d)">'+esc(title)+'</div><div>'+esc(sub)+'</div>'
+    +(retry?'<button class="swap-btn" style="justify-content:center;max-width:220px" onclick="boot()"><i class="ti ti-refresh"></i>Δοκίμασε ξανά</button>':'')+'</div>';
+}
+
+// Χειροκίνητος έλεγχος για ενημερωμένο πλάνο (header button) — χωρίς αυτό, μια ήδη ανοιχτή καρτέλα
+// (ειδικά αν έχει προστεθεί στην αρχική οθόνη σαν PWA) δεν βλέπει ποτέ νέο περιεχόμενο μετά από re-publish
+// χωρίς πλήρες reload. Ξαναφορτώνει μόνο το snapshot και ξαναχτίζει το ΤΡΕΧΟΝ tab, όχι όλη τη σελίδα.
+async function refreshPlan(){
+  const t=token(); if(!t||!sb)return;
+  const btn=$('#refresh-btn'); const icon=btn&&btn.querySelector('i');
+  if(icon)icon.style.animation='sp .6s linear infinite';
+  if(btn)btn.disabled=true;
+  try{
+    const {data,error}=await sb.rpc('get_shared_plan',{p_token:t}).single();
+    if(!error&&data){
+      SNAP=data.snapshot; SNAP._updated=data.updated_at;
+      const badge=$('#upd-badge'); if(badge)badge.innerHTML=updatedBadge();
+      go(curTab());
+    }else{console.error('[FYH portal] refreshPlan:',error);}
+  }catch(e){console.error('[FYH portal] refreshPlan failed:',e);}
+  if(icon)icon.style.animation='';
+  if(btn)btn.disabled=false;
 }
 
 // pick the day index = today if present, else 0
@@ -419,10 +487,11 @@ function render(){
   const hdr=el('div','hdr');
   hdr.innerHTML=
     '<div class="hdr-top"><div class="brand"><span class="brand-logo">FY</span>Feed Your Health</div>'
-    +'<button class="hdr-btn" onclick="doPrint()" title="Εκτύπωση ή αποθήκευση ως PDF"><i class="ti ti-printer"></i>PDF</button></div>'
+    +'<div style="display:flex;gap:6px"><button class="hdr-btn" id="refresh-btn" onclick="refreshPlan()" title="Έλεγχος για ενημερωμένο πλάνο"><i class="ti ti-refresh"></i></button>'
+    +'<button class="hdr-btn" onclick="doPrint()" title="Εκτύπωση ή αποθήκευση ως PDF"><i class="ti ti-printer"></i>PDF</button></div></div>'
     +'<h1>Γεια σου, '+esc((s.name||'').split(' ')[0]||'')+'</h1>'
     +'<div class="sub" id="hdr-sub"></div>'
-    +updatedBadge();
+    +'<div id="upd-badge">'+updatedBadge()+'</div>';
   app.appendChild(hdr);
 
   const scroll=el('div','scroll');
@@ -434,11 +503,12 @@ function render(){
     +tabBtn('shop','ti-shopping-cart','Ψώνια')
     +tabBtn('water','ti-droplet','Νερό')
     +tabBtn('supps','ti-pill','Συμπλ.')
-    +tabBtn('prog','ti-chart-line','Πρόοδος')
-    +tabBtn('spices','ti-leaf','Μπαχαρικά');
+    +tabBtn('prog','ti-chart-line','Πρόοδος');
   app.appendChild(nav);
 
-  if(contactChannels().length){
+  // Το FAB εμφανίζεται μόνο αν υπάρχει ΠΡΑΓΜΑΤΙΚΟΣ τρόπος επικοινωνίας (WhatsApp/τηλέφωνο/email) —
+  // μόνο το γενικό site link (COACH.web) δεν μετράει σαν «Ρώτησέ με», μπερδεύει τον πελάτη χωρίς λόγο.
+  if(hasDirectContact()){
     const fab=el('button','fab');
     fab.innerHTML='<i class="ti ti-message-circle"></i>Ρώτησέ με';
     fab.onclick=openContact;
@@ -480,6 +550,8 @@ function contactChannels(){
   if(c.wa)out.push('wa'); if(c.tel)out.push('tel'); if(c.email)out.push('email'); if(c.web)out.push('web');
   return out;
 }
+// Μόνο κανάλια που φτάνουν ΚΑΤΕΥΘΕΙΑΝ στον/στην διαιτολόγο (όχι το γενικό site) μετράνε σαν «έχω τρόπο να ρωτήσω».
+function hasDirectContact(){const c=contactInfo();return !!(c.wa||c.tel||c.email)}
 function openContact(){
   const c=contactInfo();
   const fname=((SNAP&&SNAP.name||'').split(' ')[0])||'';
@@ -497,13 +569,14 @@ function openContact(){
 function tabBtn(id,icon,label){return '<button data-tab="'+id+'" onclick="go(\''+id+'\')"><i class="ti '+icon+'"></i>'+label+'</button>'}
 
 function go(tab){
+  curView=tab;
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   const sc=$('#scroll'); sc.scrollTop=0;
   const fn={home:viewHome,plan:viewPlan,prog:viewProg,shop:viewShop,water:viewWater,supps:viewSupps,spices:viewSpices}[tab];
   sc.innerHTML=''; sc.appendChild(fn());
   const sub=$('#hdr-sub');
   if(sub){
-    const labels={home:dayHeader(curDay),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση',supps:'Τα συμπληρώματά μου',spices:'Μπαχαρικά & βότανα'};
+    const labels={home:dayHeader(defaultDay()),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση',supps:'Τα συμπληρώματά μου',spices:'Μπαχαρικά & βότανα'};
     sub.textContent=labels[tab]||'';
   }
 }
@@ -518,7 +591,7 @@ function dayHeader(i){
 function viewHome(){
   const s=SNAP, v=el('div','view active');
   const tg=s.targets||{};
-  const day=s.days&&s.days[curDay];
+  const day=s.days&&s.days[defaultDay()];
   const h=s.hydration||{};
 
   // personal note from the dietitian
@@ -569,6 +642,7 @@ function viewHome(){
   const q=el('div','quick');
   q.appendChild(quickCard('shop','ti-shopping-cart','Λίστα ψώνια',shopProgressText()));
   q.appendChild(quickCard('supps','ti-pill','Συμπληρώματα',suppsProgressText()));
+  q.appendChild(quickCard('spices','ti-leaf','Μπαχαρικά & βότανα','Οδηγός χρήσης'));
   v.appendChild(q);
   return v;
 }
@@ -630,15 +704,36 @@ function viewPlan(){
   meta.innerHTML='<span>'+esc(dayHeader(curDay))+'</span><span>'+(day&&day.kcal?nfmt(day.kcal)+' kcal':'')+'</span>';
   v.appendChild(meta);
 
+  // Το curDay είναι απλά η μέρα της εβδομάδας (Δευ..Κυρ) του template — για retroactive check-off
+  // πρέπει να το «αγκυρώσουμε» στην πραγματική ημερομηνία ΑΥΤΗΣ της εβδομάδας, όχι σε προηγούμενη/επόμενη.
+  const planDate=weekDatesOffset(0)[curDay];
+  const planDateKey=dKey(planDate);
+  const isFuture=planDateKey>todayKey();
+  const isPlanToday=planDateKey===todayKey();
+  const eatenHere=getMealsFor(planDateKey);
+
   if(day&&day.meals){
     const grid=el('div','plan-grid');
-    day.meals.forEach(m=>{
-      const c=el('div','card');
+    day.meals.forEach((m,idx)=>{
+      const c=el('div','card'+(eatenHere[idx]?' eaten-meal':''));
       const icon=SLOT_ICON[m.label]||'ti-tools-kitchen-2';
       const head=el('div',null);
       head.style.cssText='background:var(--tint2);padding:11px 14px;display:flex;align-items:center;justify-content:space-between';
-      head.innerHTML='<div style="display:flex;align-items:center;gap:8px"><i class="ti '+icon+'" style="color:var(--teal);font-size:18px"></i><div><div style="font-size:11px;color:var(--teal-l)">'+esc((m.time?m.time+' · ':'')+(m.label||''))+'</div><div style="font-size:14px;font-weight:600;color:var(--teal-d)">'+esc(m.title||'Γεύμα')+'</div></div></div>'+(m.kcal?'<span style="font-size:12px;color:var(--teal-l)">'+nfmt(m.kcal)+' kcal</span>':'');
+      head.innerHTML='<div style="display:flex;align-items:center;gap:8px"><i class="ti '+icon+'" style="color:var(--teal);font-size:18px"></i><div><div style="font-size:11px;color:var(--teal-l)">'+esc((m.time?m.time+' · ':'')+(m.label||''))+'</div><div style="font-size:14px;font-weight:600;color:var(--teal-d)">'+esc(m.title||'Γεύμα')+'</div></div></div>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +(m.kcal?'<span style="font-size:12px;color:var(--teal-l)">'+nfmt(m.kcal)+' kcal</span>':'')
+        // Check-off μόνο για σήμερα ή παλαιότερα — δεν έχει νόημα να «τσεκάρεις» ένα μελλοντικό γεύμα.
+        +(isFuture?'':'<span class="pm-chk'+(eatenHere[idx]?' on':'')+'" data-idx="'+idx+'">'+(eatenHere[idx]?'<i class="ti ti-check"></i>':'')+'</span>')
+        +'</div>';
       c.appendChild(head);
+      if(!isFuture){
+        const chkEl=head.querySelector('.pm-chk');
+        chkEl.onclick=()=>{
+          const e=getMealsFor(planDateKey); e[idx]=!e[idx]; setMealsFor(planDateKey,e);
+          if(isPlanToday)pushCheckin();
+          go('plan');
+        };
+      }
       const body=el('div','card-pad');
       (m.foods||[]).forEach(f=>{
         body.appendChild(el('div','food','<span>'+esc(f.name)+'</span><span class="q">'+esc(f.qty)+(f.sub?' <span style="color:var(--faint);font-weight:400;font-size:11px">'+esc(f.sub)+'</span>':'')+'</span>'));
@@ -898,9 +993,17 @@ function viewProg(){
 
   // καταγραφή βάρους/σημείωσης από τον ίδιο τον πελάτη
   const already=getClientLogToday();
+  let logStatus='';
+  if(already){
+    const detail=(already.w?(': '+String(already.w).replace('.',',')+' kg'):'')+(already.n?(' — '+esc(already.n)):'');
+    // synced===false = γνωστό ότι απέτυχε η αποστολή· οτιδήποτε άλλο (true ή παλιά εγγραφή χωρίς το πεδίο) = εστάλη κανονικά
+    logStatus = already.synced===false
+      ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη στον/στην διαιτολόγο σου'+detail+' <button onclick="retryClientLogSync()">Δοκίμασε ξανά</button></div>'
+      : '<div class="log-sent"><i class="ti ti-circle-check"></i>Καταγράφηκε'+detail+'</div>';
+  }
   const logCard=el('div','card'); const logCp=el('div','card-pad');
   logCp.innerHTML='<div class="card-hdr"><i class="ti ti-notebook"></i>Καταγραφή σήμερα</div>'
-    +(already?('<div class="log-sent"><i class="ti ti-circle-check"></i>Καταγράφηκε'+(already.w?(': '+String(already.w).replace('.',',')+' kg'):'')+(already.n?(' — '+esc(already.n)):'')+'</div>'):'')
+    +logStatus
     +'<input type="number" class="log-inp" id="log-weight" placeholder="Βάρος σήμερα (kg)" step="0.1" min="20" max="300" style="width:140px">'
     +'<textarea class="log-inp" id="log-note" placeholder="Πώς πήγε η μέρα; (προαιρετικό)" style="margin-top:8px"></textarea>'
     +'<button class="swap-btn" style="justify-content:center;margin-top:8px" onclick="submitClientLog()"><i class="ti ti-send"></i>Αποστολή στον/στην διαιτολόγο</button>';
@@ -1170,7 +1273,7 @@ function viewSpices(){
 }
 function waterCard(mini){
   const s=SNAP, h=s.hydration||{};
-  const day=s.days&&s.days[curDay];
+  const day=s.days&&s.days[defaultDay()];
   const goalMl=(day&&day.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
   const per=h.glassMl||250;
   const totalGlasses=Math.max(6,Math.round(goalMl/per));
@@ -1189,7 +1292,7 @@ function waterCard(mini){
   if(!mini)c.appendChild(el('div','empty-glass-note','Πάτα ένα ποτήρι για να καταγράψεις πόσο νερό ήπιες σήμερα.'));
   return c;
 }
-function curTab(){const b=document.querySelector('.nav button.on');return b?b.dataset.tab:'home'}
+function curTab(){return curView}
 // clean water-glass (tumbler) icon — empty = outline, full = with water
 function glassSVG(on){
   const stroke=on?'#025857':'#a9c2bc';

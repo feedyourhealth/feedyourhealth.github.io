@@ -233,7 +233,11 @@ function harvestMealLibrary(excludeClientId){
 // ── MEAL ALTERNATES (client portal swap suggestions) ───────────────────────
 // Given a meal, find up to `count` alternative meals of the same slot+diet
 // from the cross-client taste library, scaled to the meal's own kcal target.
-function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count){
+// `excl` = client's own exclusion/allergy list (lowercased substrings) — a swap
+// suggestion pulled from ANOTHER client's library must never contain something
+// this client avoids or is allergic to, so it's filtered the same way
+// findSavedComboMatch() already filters the main plan generator's candidates.
+function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count, excl){
   count = count || 3;
   var mySig = mealSignature(meal.foods);
   var slot = classifyMealSlot(meal.name);
@@ -243,6 +247,14 @@ function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count){
     if(!comboDiet) return true;
     return comboDiet===dietType;
   }
+  var exclLower = (excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+  function hasExcludedFood(foods){
+    if(!exclLower.length) return false;
+    return foods.some(function(food){
+      var nameLower=(food.n||'').toLowerCase();
+      return exclLower.some(function(excluded){ return nameLower.indexOf(excluded)!==-1; });
+    });
+  }
   var seen={};
   var cands = lib.filter(function(x){
     if(!x.foods || !x.foods.length) return false;
@@ -250,6 +262,7 @@ function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count){
     if(sig===mySig || seen[sig]) return false;
     if(x.slot!=='other' && slot!=='other' && x.slot!==slot) return false;
     if(!dietOK(x.dietType)) return false;
+    if(hasExcludedFood(x.foods)) return false;
     seen[sig]=true;
     return true;
   });

@@ -2634,6 +2634,16 @@ function saveFoodExclusions(){
       function shortName(n){return String(n||'').replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim();}
       function macro(n,g){return (typeof cm==='function')?cm(n,g):{k:0,p:0,c:0,f:0};}
 
+      // Αποκλεισμοί/αλλεργίες του πελάτη — ίδια λίστα με αυτή που ήδη φιλτράρει τον γεννήτορα πλάνου,
+      // ώστε μια «εναλλακτική» πρόταση από τη βιβλιοθήκη ΑΛΛΟΥ πελάτη να μην περιέχει κάτι που αυτός αποφεύγει.
+      var altExcl=(c.foodExclude||[]).slice();
+      if(c.foodExclusions && Array.isArray(c.foodExclusions)){
+        c.foodExclusions.forEach(function(food){ if(altExcl.indexOf(food)===-1)altExcl.push(food); });
+      }
+      if(c.allergies && typeof parseAllergies==='function'){
+        parseAllergies(c.allergies).forEach(function(a){ if(altExcl.indexOf(a)===-1)altExcl.push(a); });
+      }
+
       // ── Ημερήσια πλάνα ──
       var wp=c.weekPlan||{};
       var fmtQ=(typeof fmtFoodQty==='function')?function(f){return fmtFoodQty(f,'γρ.',function(u){return u;});}:function(f){return {main:Math.round(f.g)+' γρ.',sub:''};};
@@ -2653,7 +2663,7 @@ function saveFoodExclusions(){
           var title=foods.map(function(x){return shortName(x.name);}).slice(0,3).join(', ')+(foods.length>3?'…':'');
           var alternates=[];
           if(typeof findMealAlternates==='function'){
-            findMealAlternates(meal, c.dietType||'normal', c.id, mk, 3).forEach(function(a){
+            findMealAlternates(meal, c.dietType||'normal', c.id, mk, 3, altExcl).forEach(function(a){
               var af=[], ak=0;
               (a.foods||[]).forEach(function(f){
                 var v=macro(f.n,f.g);
