@@ -748,6 +748,13 @@ function makeDayTgtDefaults(c,t){
     // Reduces fat kcal-for-kcal to make room, same pattern as the training-day carb boost above.
     if(carbLoadIdxs.indexOf(i)!==-1){
       var loadCarbG=Math.round((c.weight||70)*10); // ISSN: ~10g/kg/day carb-loading target
+      // ⚕️ Cap at any active protocol's carb% ceiling (e.g. Διαβήτης) — the protocol always wins over
+      // the event-prep target, so carb-loading never silently exceeds a clinical limit on those days.
+      var protocolCarbCapPct=(typeof getProtocolCarbCapPct==='function')?getProtocolCarbCapPct(c):null;
+      if(protocolCarbCapPct!=null){
+        var capGrams=Math.round(dayKcal*protocolCarbCapPct/100/4);
+        if(capGrams<loadCarbG) loadCarbG=capGrams;
+      }
       if(loadCarbG>dayC){
         var extraLoadC=loadCarbG-dayC;
         var kcalFromExtraLoadC=extraLoadC*4;

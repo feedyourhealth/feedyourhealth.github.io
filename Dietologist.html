@@ -1234,6 +1234,18 @@ function applyProtocolMacros(client) {
   return true;
 }
 
+// Lowest carbPercentage among all active protocols (most restrictive), or null if none define one.
+// Used to cap carb-loading (see makeDayTgtDefaults in app-part2.js) so an event-prep carb boost never
+// silently exceeds a clinical limit — e.g. Διαβήτης — on those days. The protocol always wins.
+function getProtocolCarbCapPct(client) {
+  var candidates = [];
+  getActiveProtocols(client).forEach(function(protocol) {
+    var r = protocol.restrictions || {};
+    if (r.carbPercentage != null) candidates.push(r.carbPercentage);
+  });
+  return candidates.length ? Math.min.apply(null, candidates) : null;
+}
+
 // Show medical protocol details with official sources
 function showMedicalProtocol(condition) {
   var protocol = getProtocol(condition);
