@@ -134,6 +134,9 @@ body.dark-mode .hm-avatar-teal{background:#0f2a24;color:#5dcaa5}
 body.dark-mode .hm-avatar-green{background:#14301a;color:#8bc98f}
 .hm-row-name{font-weight:600;color:#333;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hm-row-sub{font-size:10.5px;color:#999;white-space:nowrap;flex-shrink:0}
+.hm-trend-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap;flex-shrink:0}
+.hm-trend-bad{background:#FCEBEB;color:#791F1F}
+body.dark-mode .hm-trend-bad{background:#3a1a1a;color:#f09595}
 .hm-empty{font-size:11.5px;color:#999;padding:8px 4px;font-style:italic}
 .hm-more{font-size:10.5px;color:#025857;text-align:center;padding-top:6px;font-weight:600}
 .hm-action-btn{padding:5px 10px;border-radius:6px;border:none;background:#025857;color:#fff;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;width:auto}
@@ -221,7 +224,7 @@ body.dark-mode .rcp-cat-done{background:#025857;border-color:#025857;color:#fff}
 .stab{padding:7px 16px;font-size:12px;cursor:pointer;color:#888;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none}
 .stab.active{color:#025857;border-bottom-color:#025857;font-weight:600}
 /* ✅ PAGE SECTIONS - ENSURE ONLY ONE VISIBLE AT A TIME */
-#s1,#s2,#s3,#s4,#s5{
+#s1,#s2,#s3,#s4{
   display:block;
   width:100%;
   clear:both;
@@ -460,8 +463,8 @@ body.dark-mode .rcp-cat-done{background:#025857;border-color:#025857;color:#fff}
 .macro-bar{flex:1;height:5px;background:#e4e4e4;border-radius:3px;overflow:hidden}
 .macro-bar-fill{height:100%;border-radius:3px}
 .mbr-val{font-size:8.5px;color:#555;white-space:nowrap;width:40px;text-align:right;flex-shrink:0}
-/* Per-meal macro bar inside each day cell */
-.meal-mac-bar{font-size:11px;color:#333;border-top:1px solid #e5e5e5;margin-top:2px;padding-top:2px;white-space:nowrap;line-height:1.3;font-weight:600}
+/* Per-meal macro bar inside each day cell — wraps instead of forcing the column wider */
+.meal-mac-bar{font-size:11px;color:#333;border-top:1px solid #e5e5e5;margin-top:2px;padding-top:2px;white-space:normal;line-height:1.3;font-weight:600}
 /* Chip dropdown */
 .chip-dd{position:absolute;left:0;top:calc(100% + 2px);z-index:9999;background:#fff;border:1px solid #ddd;border-radius:7px;box-shadow:0 4px 16px rgba(0,0,0,.13);min-width:220px;max-height:180px;overflow-y:auto}
 .chip-ddi{padding:5px 10px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;gap:6px;white-space:nowrap}
@@ -469,7 +472,12 @@ body.dark-mode .rcp-cat-done{background:#025857;border-color:#025857;color:#fff}
 .chip-ddm{font-size:9px;color:#bbb}
 .chip-ddi:hover .chip-ddm{color:#025857}
 /* Food library */
-.food-lib{width:185px;flex-shrink:0;background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:10px;position:sticky;top:0;max-height:92vh;overflow-y:auto}
+.food-lib{width:185px;flex-shrink:0;background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:10px;position:sticky;top:0;max-height:92vh;overflow-y:auto;transition:width .15s ease}
+.food-lib.collapsed{width:22px;padding:8px 3px;overflow:hidden}
+.food-lib.collapsed .food-lib-body{display:none}
+.food-lib-toggle{display:block;width:16px;height:16px;line-height:15px;text-align:center;border:none;background:#E2EEE5;color:#025857;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;margin-bottom:6px;padding:0}
+.food-lib-toggle:hover{background:#c5ddd8}
+.food-lib.collapsed .food-lib-toggle{transform:rotate(180deg)}
 .food-lib-title{font-size:10px;font-weight:700;color:#025857;margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
 .food-lib-search{width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:11px;margin-bottom:7px;font-family:inherit}
 .food-lib-search:focus{outline:none;border-color:#025857}

@@ -43,6 +43,39 @@ function homeClientsNeedingAttention(){
   return out;
 }
 
+// Πελάτες με στόχο απώλειας/αύξησης (goalMain) που η τάση βάρους τους (τελευταίες έως 5 μετρήσεις,
+// γραμμή πρώτη→τελευταία) κινείται ΑΝΤΙΘΕΤΑ από τον στόχο τους — π.χ. στόχος απώλειας αλλά ανεβαίνει.
+// Στόχος "διατήρησης" (maintain) εξαιρείται σκόπιμα: δεν υπάρχει "λάθος" κατεύθυνση για να τη σημάνουμε.
+// Απαιτεί τουλάχιστον 10 ημέρες span (μειώνει θόρυβο από μία μεμονωμένη διακύμανση) και ρυθμό
+// ≥0.15 κ/εβδ αντίθετο στον στόχο (αγνοεί φυσιολογικές ημερήσιες διακυμάνσεις).
+function homeWeightTrendAlerts(){
+  var MIN_SPAN_DAYS=10, MIN_RATE=0.15;
+  var out=[];
+  clients.filter(function(c){return !c.deleted && !c.archived && (c.goalMain==='loss'||c.goalMain==='gain');}).forEach(function(c){
+    var wl=(c.weightLog||[]).slice(-5);
+    if(wl.length<2) return;
+    var first=wl[0], last=wl[wl.length-1];
+    var days=(new Date(last.date+'T00:00:00')-new Date(first.date+'T00:00:00'))/86400000;
+    if(days<MIN_SPAN_DAYS) return;
+    var rate=(last.weight-first.weight)/(days/7);
+    var wrong=c.goalMain==='loss'?(rate>MIN_RATE):(rate<-MIN_RATE);
+    if(!wrong) return;
+    out.push({c:c,rate:rate});
+  });
+  out.sort(function(a,b){ return Math.abs(b.rate)-Math.abs(a.rate); });
+  return out;
+}
+
+function homeTrendRow(c,rate){
+  var arrow=rate>0?'↑':(rate<0?'↓':'→');
+  var txt=arrow+' '+(rate>0?'+':'')+rate.toFixed(1)+' κ/εβδ';
+  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
+    +'<div class="hm-avatar hm-avatar-red">'+initials(c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-trend-badge hm-trend-bad">'+txt+'</span>'
+    +'</div>';
+}
+
 // Πελάτες με δημοσιευμένο σύνδεσμο portal που δείχνει πλέον ξεπερασμένο πλάνο.
 function homeStaleLinks(){
   return clients.filter(function(c){return !c.deleted && !c.archived && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c);});
@@ -140,6 +173,7 @@ function renderHome(){
     var sub=x.gap===0?'σήμερα':(x.gap===1?'χθες':'πριν '+x.gap+' ημέρες');
     return homeRow(x.c,sub,'teal');
   });
+  var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -155,6 +189,7 @@ function renderHome(){
 
   html+='<div class="hm-grid">';
   html+=homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'Όλοι οι πελάτες έχουν πρόσφατη μέτρηση 👍', 'ακόμα', 'danger');
+  html+=homeCard('📈 Τάση βάρους', trendRows, 'Καμία ανησυχητική τάση βάρους αυτή τη στιγμή 👍', 'ακόμα', 'danger');
   html+=homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'Κανένας σύνδεσμος δεν χρειάζεται ανανέωση 👍', 'ακόμα', 'warning');
   html+=homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'Καμία πρόσφατη δραστηριότητα από το portal', 'ακόμα', 'info');
   html+='</div>';

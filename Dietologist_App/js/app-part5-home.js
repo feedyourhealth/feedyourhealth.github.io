@@ -2,19 +2,78 @@
 // ΑΡΧΙΚΗ — control-tower dashboard (Phase 2)
 // ═══════════════════════════════════════════════════════════════
 
-// Πελάτες (ενεργοί, μη-αρχειοθετημένοι) χωρίς πρόσφατη μέτρηση βάρους/σώματος.
+// Πελάτες (ενεργοί, μη-αρχειοθετημένοι) που χρειάζονται προσοχή για οποιονδήποτε από τους λόγους
+// που ήδη χρησιμοποιεί το clientNeedsAttention() (app-part1.js) για την ταξινόμηση στο Πελάτες —
+// έτσι τα δύο ταμπ δεν διαφωνούν πια για το ποιος "χρειάζεται προσοχή". Ένας πελάτης χωρίς πλάνο
+// ή με πλάνο 30+ ημερών δεν εμφανιζόταν πουθενά στην Αρχική πριν αν είχε πρόσφατη μέτρηση βάρους.
+// Ο ξεπερασμένος σύνδεσμος portal εξαιρείται σκόπιμα εδώ (έχει ήδη δική του κάρτα με δικό της κουμπί).
 function homeClientsNeedingAttention(){
-  var THRESHOLD_DAYS=30;
+  var WEIGHT_GAP_DAYS=30, CHECKIN_GAP_DAYS=2;
   var now=Date.now();
-  return clients.filter(function(c){return !c.deleted && !c.archived;})
-    .map(function(c){
-      var wl=c.weightLog||[];
-      var last=wl.length?wl[wl.length-1].date:null;
-      var days=last?Math.round((now-new Date(last+'T00:00:00'))/86400000):Infinity;
-      return {c:c,days:days};
-    })
-    .filter(function(x){return x.days>=THRESHOLD_DAYS;})
-    .sort(function(a,b){return b.days-a.days;});
+  var out=[];
+  clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+    var hasPlan=(typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
+    if(!hasPlan){
+      out.push({c:c,tier:0,gap:0,label:'χωρίς πλάνο ακόμα',
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>'});
+      return;
+    }
+    if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)){
+      var daysOld=Math.floor((now-c.planGeneratedAt)/86400000);
+      out.push({c:c,tier:1,gap:daysOld,label:'το πλάνο έγινε πριν '+daysOld+' ημέρες',
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>'});
+      return;
+    }
+    var wl=c.weightLog||[];
+    var last=wl.length?wl[wl.length-1].date:null;
+    var gapDays=last?Math.round((now-new Date(last+'T00:00:00'))/86400000):Infinity;
+    if(gapDays>=WEIGHT_GAP_DAYS){
+      out.push({c:c,tier:2,gap:gapDays,label:isFinite(gapDays)?(gapDays+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα'});
+      return;
+    }
+    if(c.shareToken && window.Cloud && window.Cloud.checkinsFor){
+      var rows=window.Cloud.checkinsFor(c);
+      var ckGap=rows.length?ckDaysSinceLast(rows):Infinity;
+      if(rows.length && ckGap>=CHECKIN_GAP_DAYS){
+        out.push({c:c,tier:3,gap:ckGap,label:'χωρίς check-in στο portal '+ckGap+' ημέρες'});
+      }
+    }
+  });
+  out.sort(function(a,b){ return a.tier!==b.tier ? a.tier-b.tier : b.gap-a.gap; });
+  return out;
+}
+
+// Πελάτες με στόχο απώλειας/αύξησης (goalMain) που η τάση βάρους τους (τελευταίες έως 5 μετρήσεις,
+// γραμμή πρώτη→τελευταία) κινείται ΑΝΤΙΘΕΤΑ από τον στόχο τους — π.χ. στόχος απώλειας αλλά ανεβαίνει.
+// Στόχος "διατήρησης" (maintain) εξαιρείται σκόπιμα: δεν υπάρχει "λάθος" κατεύθυνση για να τη σημάνουμε.
+// Απαιτεί τουλάχιστον 10 ημέρες span (μειώνει θόρυβο από μία μεμονωμένη διακύμανση) και ρυθμό
+// ≥0.15 κ/εβδ αντίθετο στον στόχο (αγνοεί φυσιολογικές ημερήσιες διακυμάνσεις).
+function homeWeightTrendAlerts(){
+  var MIN_SPAN_DAYS=10, MIN_RATE=0.15;
+  var out=[];
+  clients.filter(function(c){return !c.deleted && !c.archived && (c.goalMain==='loss'||c.goalMain==='gain');}).forEach(function(c){
+    var wl=(c.weightLog||[]).slice(-5);
+    if(wl.length<2) return;
+    var first=wl[0], last=wl[wl.length-1];
+    var days=(new Date(last.date+'T00:00:00')-new Date(first.date+'T00:00:00'))/86400000;
+    if(days<MIN_SPAN_DAYS) return;
+    var rate=(last.weight-first.weight)/(days/7);
+    var wrong=c.goalMain==='loss'?(rate>MIN_RATE):(rate<-MIN_RATE);
+    if(!wrong) return;
+    out.push({c:c,rate:rate});
+  });
+  out.sort(function(a,b){ return Math.abs(b.rate)-Math.abs(a.rate); });
+  return out;
+}
+
+function homeTrendRow(c,rate){
+  var arrow=rate>0?'↑':(rate<0?'↓':'→');
+  var txt=arrow+' '+(rate>0?'+':'')+rate.toFixed(1)+' κ/εβδ';
+  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
+    +'<div class="hm-avatar hm-avatar-red">'+initials(c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-trend-badge hm-trend-bad">'+txt+'</span>'
+    +'</div>';
 }
 
 // Πελάτες με δημοσιευμένο σύνδεσμο portal που δείχνει πλέον ξεπερασμένο πλάνο.
@@ -47,13 +106,8 @@ function homePortalActivity(){
     .sort(function(a,b){return a.gap-b.gap;});
 }
 
-// Αρχικά ενός ονόματος για το avatar κάθε γραμμής (π.χ. "Γιώργος Παπαδόπουλος" → "ΓΠ").
-function initials(name){
-  var parts=(name||'').trim().split(/\s+/).filter(Boolean);
-  if(!parts.length) return '?';
-  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
-  return (parts[0][0]+parts[1][0]).toUpperCase();
-}
+// initials() moved to js/app-part1.js — it's called from renderSB() there, which can run
+// (via an early auth-callback in app-part4.js) before this later-loading file exists yet.
 
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
@@ -109,7 +163,7 @@ function renderHome(){
 
   var metrics=(typeof ANALYTICS!=='undefined'&&ANALYTICS.getClientMetrics)?ANALYTICS.getClientMetrics():{total:clients.length,active:0};
   var attentionRows=homeClientsNeedingAttention().map(function(x){
-    return homeRow(x.c, isFinite(x.days)?(x.days+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα', 'red');
+    return homeRow(x.c, x.label, 'red', x.action);
   });
   var staleRows=homeStaleLinks().map(function(c){
     return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
@@ -119,6 +173,7 @@ function renderHome(){
     var sub=x.gap===0?'σήμερα':(x.gap===1?'χθες':'πριν '+x.gap+' ημέρες');
     return homeRow(x.c,sub,'teal');
   });
+  var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -134,6 +189,7 @@ function renderHome(){
 
   html+='<div class="hm-grid">';
   html+=homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'Όλοι οι πελάτες έχουν πρόσφατη μέτρηση 👍', 'ακόμα', 'danger');
+  html+=homeCard('📈 Τάση βάρους', trendRows, 'Καμία ανησυχητική τάση βάρους αυτή τη στιγμή 👍', 'ακόμα', 'danger');
   html+=homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'Κανένας σύνδεσμος δεν χρειάζεται ανανέωση 👍', 'ακόμα', 'warning');
   html+=homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'Καμία πρόσφατη δραστηριότητα από το portal', 'ακόμα', 'info');
   html+='</div>';
