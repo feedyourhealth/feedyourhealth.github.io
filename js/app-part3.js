@@ -914,6 +914,10 @@ function genPlan(){
   try{
   var c=getC();if(!c)return;var t=calcTDEE(c);c.weekPlan={};
 
+  // ⚕️ Active medical protocols (e.g. Διαβήτης, Χοληστερόλη) contribute their avoidFoods to the exclusion list below —
+  // union across every active protocol, so multiple simultaneous conditions are each respected.
+  var protocolAvoidFoods=(typeof getProtocolAvoidFoods==='function')?getProtocolAvoidFoods(c):[];
+
   // Check if basis plan is from an existing client
   var isClientPlan=c.selectedTemplate && c.selectedTemplate.indexOf('__client_')===0;
   if(isClientPlan){
@@ -925,6 +929,7 @@ function genPlan(){
       c.weekPlan=clonedPlan;
       // Apply food exclusions to the cloned plan
       var excl=c.foodExclude||[];
+      protocolAvoidFoods.forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
       if(excl.length>0){
         for(var d=0;d<7;d++){
           if(c.weekPlan[d]){
@@ -986,6 +991,8 @@ function genPlan(){
   for(var d=0;d<7;d++)tmplDays.push(tmpl[d]||tmpl[0]);
   console.log('tmplDays built:', tmplDays.length, 'days');
   var excl=c.foodExclude||[];
+  // ⚕️ Active medical protocols' avoidFoods (union across all active conditions, see top of genPlan())
+  protocolAvoidFoods.forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
   // ✅ ADD FOOD EXCLUSIONS (NEW PICKER) TO EXCLUSION LIST
   if(c.foodExclusions && Array.isArray(c.foodExclusions)){
     c.foodExclusions.forEach(function(food){

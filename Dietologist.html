@@ -1167,6 +1167,17 @@ function getActiveProtocols(client) {
   return protocols;
 }
 
+// Union of avoidFoods across every active protocol (e.g. Διαβήτης + Χοληστερόλη at once) — feeds genPlan()'s exclusion list.
+function getProtocolAvoidFoods(client) {
+  var avoid = [];
+  getActiveProtocols(client).forEach(function(protocol) {
+    (protocol.restrictions.avoidFoods || []).forEach(function(food) {
+      if (avoid.indexOf(food) === -1) avoid.push(food);
+    });
+  });
+  return avoid;
+}
+
 // Show medical protocol details with official sources
 function showMedicalProtocol(condition) {
   var protocol = getProtocol(condition);
