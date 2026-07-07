@@ -103,7 +103,7 @@ function calcMedScore(weekPlan){
     meals.forEach(function(meal){
       var isMain=meal.name==='Μεσημεριανό'||meal.name==='Βραδινό';
       var isBrk=meal.name==='Πρωινό';
-      meal.foods.forEach(function(f){
+      (meal.foods||[]).forEach(function(f){
         // Fish & Meat: count DAYS, not occurrences
         if(FISH_FOODS.indexOf(f.n)!==-1)fishDays.add(d);
         if(RED_MEAT_FOODS.indexOf(f.n)!==-1)meatDays.add(d);
@@ -173,44 +173,6 @@ function renderMedScore(weekPlan){
 // ✅ PHASE 2: CHEF-INSPIRED MEAL GENERATION RULES ENGINE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// Check if two foods have conflicting flavors (avoid_with list)
-function hasFlavorConflict(food1, food2) {
-  if(!FOOD_PAIRING_DB[food1] || !FOOD_PAIRING_DB[food2]) return false;
-  var conflicts1 = FOOD_PAIRING_DB[food1].avoid_with || [];
-  var conflicts2 = FOOD_PAIRING_DB[food2].avoid_with || [];
-  return conflicts1.includes(food2) || conflicts2.includes(food1);
-}
-
-// Check if protein + carb + vegetable combination is valid (no conflicts)
-function isValidCombo(protein, carb, veggies) {
-  // Check protein-carb compatibility
-  if(hasFlavorConflict(protein, carb)) return false;
-
-  // Check protein-vegetable compatibility
-  for(var i = 0; i < veggies.length; i++) {
-    if(hasFlavorConflict(protein, veggies[i])) return false;
-  }
-
-  return true;
-}
-
-// Get compatible vegetables for a protein (ones in best_pairings)
-function getCompatibleVeggies(protein) {
-  if(!FOOD_PAIRING_DB[protein]) return [];
-  var pairingDb = FOOD_PAIRING_DB[protein];
-  var compatible = [];
-
-  Object.keys(FOODS).forEach(function(foodName) {
-    if(FOODS[foodName].cat === 'Λαχανικά' && pairingDb.best_pairings.includes(foodName)) {
-      compatible.push(foodName);
-    }
-  });
-
-  return compatible.length > 0 ? compatible :
-    Object.keys(FOODS).filter(function(f) { return FOODS[f].cat === 'Λαχανικά'; });
-}
-
-// Find a saved combo that matches kcal and macro targets
 // ── MEAL-SLOT CLASSIFICATION ───────────────────────────────────────────────
 // Categorize a meal by its name so we can match breakfast→breakfast, etc.
 function classifyMealSlot(name){
@@ -266,6 +228,50 @@ function harvestMealLibrary(excludeClientId){
     }
   });
   return lib;
+}
+
+// ── MEAL ALTERNATES (client portal swap suggestions) ───────────────────────
+// Given a meal, find up to `count` alternative meals of the same slot+diet
+// from the cross-client taste library, scaled to the meal's own kcal target.
+// `excl` = client's own exclusion/allergy list (lowercased substrings) — a swap
+// suggestion pulled from ANOTHER client's library must never contain something
+// this client avoids or is allergic to, so it's filtered the same way
+// findSavedComboMatch() already filters the main plan generator's candidates.
+function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count, excl){
+  count = count || 3;
+  var mySig = mealSignature(meal.foods);
+  var slot = classifyMealSlot(meal.name);
+  var lib = harvestMealLibrary(excludeClientId);
+  function dietOK(comboDiet){
+    if(!dietType || dietType==='normal') return true;
+    if(!comboDiet) return true;
+    return comboDiet===dietType;
+  }
+  var exclLower = (excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+  function hasExcludedFood(foods){
+    if(!exclLower.length) return false;
+    return foods.some(function(food){
+      var nameLower=(food.n||'').toLowerCase();
+      return exclLower.some(function(excluded){ return nameLower.indexOf(excluded)!==-1; });
+    });
+  }
+  var seen={};
+  var cands = lib.filter(function(x){
+    if(!x.foods || !x.foods.length) return false;
+    var sig = mealSignature(x.foods);
+    if(sig===mySig || seen[sig]) return false;
+    if(x.slot!=='other' && slot!=='other' && x.slot!==slot) return false;
+    if(!dietOK(x.dietType)) return false;
+    if(hasExcludedFood(x.foods)) return false;
+    seen[sig]=true;
+    return true;
+  });
+  cands.sort(function(a,b){ return Math.abs(a.kcal-targetKcal) - Math.abs(b.kcal-targetKcal); });
+  cands = cands.slice(0,count);
+  return cands.map(function(x){
+    var scaled = scalePlan([{name:x.name,foods:x.foods}], null, [{k:targetKcal}])[0];
+    return {name:x.name, foods:scaled.foods};
+  });
 }
 
 // Find the best matching saved combo / library meal for a target.
@@ -329,47 +335,6 @@ function calculateMealKcal(foods) {
   });
 
   return total;
-}
-
-// Build a meal combo using pairing rules
-function buildMealCombo(protein, carb, veggies, targetKcal) {
-  // Validate combo (no flavor conflicts)
-  if(!isValidCombo(protein, carb, veggies)) {
-    return null;
-  }
-
-  // Start with protein (use base amount, will scale later)
-  var meal = {foods: []};
-
-  // Base portions: adjust to target kcal later
-  var proteinG = 150;
-  var carbG = 100;
-  var vegG = 150;
-
-  // Add protein
-  meal.foods.push({n: protein, g: proteinG});
-
-  // Add carb
-  meal.foods.push({n: carb, g: carbG});
-
-  // Add vegetables (1-2 different ones for variety)
-  if(veggies && veggies.length > 0) {
-    meal.foods.push({n: veggies[0], g: vegG});
-    if(veggies.length > 1 && Math.random() > 0.5) {
-      meal.foods.push({n: veggies[1], g: Math.round(vegG * 0.5)});
-    }
-  }
-
-  // Add olive oil (always, for flavor + healthy fat)
-  meal.foods.push({n: 'Ελαιόλαδο', g: 10});
-
-  // Add lemon (if not already in vegetables)
-  var hasAcid = veggies.some(function(v) { return v === 'Λεμόνι' || v === 'Ντοματες'; });
-  if(!hasAcid) {
-    // Lemon will be added via dressing (not as standalone food)
-  }
-
-  return meal;
 }
 
 // Ensure food diversity across week (no boring repetition)
@@ -1425,7 +1390,7 @@ function mealSourceBadge(meal){
   };
   var m = MAP[src];
   if(!m) return '';
-  return '<span class="meal-source-badge" style="display:block;font-size:8px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:3px;background:'+m.bg+';color:'+m.color+';width:fit-content" title="Πηγή γεύματος: '+m.label+'">'+m.icon+' '+m.label+'</span>';
+  return '<span class="meal-source-badge" style="display:block;font-size:10px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:3px;background:'+m.bg+';color:'+m.color+';width:fit-content" title="Πηγή γεύματος: '+m.label+'">'+m.icon+' '+m.label+'</span>';
 }
 
 // Ξαναδημιουργεί ΜΟΝΟ μία ημέρα (όχι όλη την εβδομάδα) — τρέχει το κανονικό genPlan εσωτερικά
@@ -1499,8 +1464,20 @@ function renderWeekTable(){
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">Μακρο</span>'
-      +'<span style="font-size:12px;font-weight:600;color:#555">P:' + Math.round(tdeeInfo.p) + 'g | F:' + Math.round(tdeeInfo.f) + 'g | C:' + Math.round(tdeeInfo.carb) + 'g</span>'
+      +'<span style="font-size:12px;font-weight:600;color:#555">Π:' + Math.round(tdeeInfo.p) + 'g | Λ:' + Math.round(tdeeInfo.f) + 'g | Υ:' + Math.round(tdeeInfo.carb) + 'g</span>'
     +'</div>'
+    +'</div>';
+
+  // ✅ Legend για τις χρωματιστές κουκκίδες τροφίμων — ίδια hex codes με getFoodColorHex()
+  var foodDotLegend='<div style="background:#f5f5f5;border:1px solid #e0e0e0;border-radius:6px;padding:6px 10px;margin-bottom:10px;font-size:10px;color:#666;display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#5DADE2;margin-right:4px;vertical-align:middle"></span>Πρωτεΐνη</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#F8B739;margin-right:4px;vertical-align:middle"></span>Δημητριακά/Άλλα</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52B788;margin-right:4px;vertical-align:middle"></span>Λαχανικά</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#E8A0BF;margin-right:4px;vertical-align:middle"></span>Αυγά/Γαλακτ.</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C77DFF;margin-right:4px;vertical-align:middle"></span>Φρούτα</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FFB703;margin-right:4px;vertical-align:middle"></span>Ξηροί καρποί</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#FB8500;margin-right:4px;vertical-align:middle"></span>Λάδια</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#B5651D;margin-right:4px;vertical-align:middle"></span>Μπαχαρικά</span>'
     +'</div>';
 
   // Build table HTML — show T/R badge in header + training time
@@ -1515,17 +1492,17 @@ function renderWeekTable(){
       +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. πριν/μετά 2ης προπόνησης)" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
       +'</div>';
   }
-  var html=metExplainerHtml+summaryCard+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
+  var html=metExplainerHtml+summaryCard+foodDotLegend+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
-    var badge=trainD[di]?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">T</span>':'<span style="background:#eee;color:#aaa;border-radius:8px;font-size:9px;padding:1px 5px;margin-left:3px">R</span>';
+    var badge=trainD[di]?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px">T</span>':'<span style="background:#eee;color:#aaa;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px">R</span>';
     var timeStr='';
     if(trainD[di]&&trainTimes[di]&&trainTimes[di].length>0){
-      timeStr='<div style="font-size:8px;color:#666;margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';
+      timeStr='<div style="font-size:10px;color:#666;margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';
     }
     // ✅ Phase 1: Add sport display for training days
     var sportStr='';
     if(trainD[di]&&c.sport){
-      sportStr='<div class="sport-header-dietitian" style="font-size:9px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
+      sportStr='<div class="sport-header-dietitian" style="font-size:10px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
     }
     var copyBtn='<button class="day-copy-btn" onclick="copyDayPrompt(this,'+di+')" title="Αντιγραφή ημέρας σε άλλες" aria-label="Αντιγραφή ημέρας σε άλλες">📋</button>';
     var regenDayBtn='<button class="day-regen-btn" onclick="regenerateDay('+di+')" title="Αναδημιουργία μόνο αυτής της ημέρας" aria-label="Αναδημιουργία μόνο αυτής της ημέρας">🔄</button>';
@@ -1540,14 +1517,14 @@ function renderWeekTable(){
       mealTiming=c.weekPlan[0][mi].mealTiming;
     }
     var timingProf=MEAL_TIMING_PROFILES[mealTiming]||MEAL_TIMING_PROFILES.regular;
-    var timingInfo='P:'+timingProf.p+'% F:'+timingProf.f+'% C:'+timingProf.c+'% — '+timingProf.desc;
+    var timingInfo='Π:'+timingProf.p+'% Λ:'+timingProf.f+'% Υ:'+timingProf.c+'% — '+timingProf.desc;
 
     // ✅ HORIZONTAL LAYOUT: Meal name as section header
     var timingBadge=(mealTiming&&mealTiming!=='regular')
-      ?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:9px;padding:1px 7px;margin-left:8px;font-weight:600" title="'+timingProf.desc+'">'+timingProf.label+'</span>'
+      ?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 7px;margin-left:8px;font-weight:600" title="'+timingProf.desc+'">'+timingProf.label+'</span>'
       :'';
     html+='<tr style="background:linear-gradient(90deg, #f8f8f8 0%, #f0f0f0 100%);box-shadow:0 2px 4px rgba(0,0,0,0.05)"><td colspan="8" class="meal-section-header" data-timing-info="'+timingInfo+'">'
-      +'<span style="font-weight:700;color:#025857;font-size:12px">'+timingProf.icon+' '+mealNames[mi]+'</span>'
+      +'<span style="font-weight:700;color:#025857;font-size:12px">'+timingProf.icon+' '+esc(mealNames[mi])+'</span>'
       +timingBadge
       +'<button onclick="renameMealSlot('+mi+')" title="Μετονομασία γεύματος" aria-label="Μετονομασία γεύματος" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:0.55;margin-left:6px" class="meal-slot-ctl">✏️</button>'
       +'<button onclick="deleteMealSlot('+mi+')" title="Διαγραφή γεύματος (όλες τις ημέρες)" aria-label="Διαγραφή γεύματος (όλες τις ημέρες)" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:0.55" class="meal-slot-ctl">🗑️</button>'
@@ -1594,9 +1571,9 @@ function renderWeekTable(){
         var borderColor=getFoodColorHex(food.n);
         var rvTip=cm(food.n,food.g);
         var macroTip='<div class="chip-macro-tip">'
-          +'<span style="color:#1565C0">P '+Math.round(rvTip.p)+'</span> '
-          +'<span style="color:#B71C1C">F '+Math.round(rvTip.f)+'</span> '
-          +'<span style="color:#2E7D32">C '+Math.round(rvTip.c)+'</span> '
+          +'<span style="color:#1565C0">Π '+Math.round(rvTip.p)+'</span> '
+          +'<span style="color:#B71C1C">Λ '+Math.round(rvTip.f)+'</span> '
+          +'<span style="color:#2E7D32">Υ '+Math.round(rvTip.c)+'</span> '
           +'<span style="color:#E65100;font-weight:700">&middot; '+Math.round(rvTip.k)+' kcal</span>'
           +'</div>';
         html+='<div class="food-chip">'
@@ -1650,9 +1627,9 @@ function renderWeekTable(){
         var lowProt=!hasFree&&mP2<15&&mP2>0;
         html+='<div class="meal-mac-bar">'
           +(lowProt?'<span class="prot-warn" title="Χαμηλή πρωτεΐνη — στόχος ≥15g/γεύμα για βέλτιστη MPS">⚠️</span>':'')
-          +'<span style="color:#1565C0">P:'+Math.round(mP2)+'</span> '
-          +'<span style="color:#B71C1C">F:'+Math.round(mF2)+'</span> '
-          +'<span style="color:#2E7D32">C:'+Math.round(mC2)+'</span>'
+          +'<span style="color:#1565C0">Π:'+Math.round(mP2)+'</span> '
+          +'<span style="color:#B71C1C">Λ:'+Math.round(mF2)+'</span> '
+          +'<span style="color:#2E7D32">Υ:'+Math.round(mC2)+'</span>'
           +(mFi2>=0.5?' <span style="color:#795548" title="Φυτικές ίνες">· 🌾'+mFi2.toFixed(1)+'g</span>':'')
           +' <span style="color:#E65100;font-weight:700">&middot; '+Math.round(mK2)+' kcal</span></div>';
       }
@@ -1685,7 +1662,7 @@ function renderWeekTable(){
   html+='<tr class="totals-row"><td class="meal-label">Σύνολο</td>';
   for(var d=0;d<7;d++){
     var tK=0,tP=0,tF=0,tC=0,tFi=0;
-    (c.weekPlan[d]||[]).forEach(function(m){m.foods.forEach(function(f){var r=cm(f.n,f.g);tK+=r.k;tP+=r.p;tF+=r.f;tC+=r.c;tFi+=r.fi;});});
+    (c.weekPlan[d]||[]).forEach(function(m){(m.foods||[]).forEach(function(f){var r=cm(f.n,f.g);tK+=r.k;tP+=r.p;tF+=r.f;tC+=r.c;tFi+=r.fi;});});
     var eff=effTgtArr[d]||{k:tdeeR.target,p:tdeeR.p,f:tdeeR.f,c:tdeeR.carb};
     var kPct=eff.k?Math.round(tK/eff.k*100):100;
     var kCls=kPct<88?'low':kPct>112?'over':'ok';
@@ -1747,7 +1724,7 @@ function renderWeekTable(){
   var wkFiByDay=[];
   for(var wfd=0;wfd<7;wfd++){
     var dFi=0;
-    (c.weekPlan[wfd]||[]).forEach(function(m){m.foods.forEach(function(ff){dFi+=cm(ff.n,ff.g).fi;});});
+    (c.weekPlan[wfd]||[]).forEach(function(m){(m.foods||[]).forEach(function(ff){dFi+=cm(ff.n,ff.g).fi;});});
     wkFiByDay.push(dFi);wkFiTot+=dFi;
   }
   var wkFiPct=wkFiTgt?Math.round(wkFiTot/wkFiTgt*100):100;
@@ -1985,10 +1962,6 @@ function confirmFoodQuantity(foodId,foodName){
   if(modal)modal.remove();
 }
 
-function selectFoodFromModal(foodName){
-  // This function is kept for backward compatibility, but now it shows quantity input
-  showFoodQuantityInput(foodName);
-}
 function delF(d,mi,fi){var c=getC();if(!c)return;c.weekPlan[d][mi].foods.splice(fi,1);save();renderWeekTable();}
 
 // Επιστρέφει τους δείκτες ημερών (0-6) που έχουν 2+ προπονήσεις στη MET λίστα
@@ -3154,26 +3127,25 @@ function filterLib(inp){renderFoodLib(inp.value);}
 var EN_MEAL_NAMES={
   'Πρωινό':'Breakfast','Δεκατιανό':'Morning Snack','Μεσημεριανό':'Lunch',
   'Απογευματινό':'Afternoon Snack','Βραδινό':'Dinner','Βραδινό Σνακ':'Evening Snack',
-  'Σνακ':'Snack','Pre-workout':'Pre-workout','Post-workout':'Post-workout',
+  'Σνακ':'Snack','Ενδιάμεσο':'Snack','Pre-workout':'Pre-workout','Post-workout':'Post-workout',
   'Πρωινό Σνακ':'Morning Snack','Μεσνύχτιο':'Late Night Snack'
 };
 var EN_UNITS={
   'τεμ.':'pc.','φέτα':'slice','μερίδ.':'serving','χούφτα':'handful','stick':'stick','scoop':'scoop',
   'φλ.':'cup','κ.σ.':'tbsp','κ.γ.':'tsp',
   '3/4 φλ.':'3/4 cup','1/4 τεμ.':'1/4 pc.','4 τεμ.':'4 pcs.','2 τεμ.':'2 pcs.',
-  '12 τεμ.':'12 pcs.','10 τεμ.':'10 pcs.','17 ρόγες':'17 grapes','3 μισά':'3 halves',
-  '4 τεμ.':'4 pcs.','2 τεμ.':'2 pcs.','1/4 τεμ.':'1/4 pc.'
+  '12 τεμ.':'12 pcs.','10 τεμ.':'10 pcs.','17 ρόγες':'17 grapes','3 μισά':'3 halves'
 };
 var EN_FOOD_NAMES={
   // Proteins
   'Κοτόπουλο στήθος (ψητό)':'Chicken Breast (grilled)','Κοτόπουλο μπούτι (ψητό)':'Chicken Thigh (grilled)',
   'Κοτόπουλο σουβλάκι':'Chicken Souvlaki','Κοτόπουλο μπιφτέκι':'Chicken Patty',
-  'Γαλοπούλα (ψητή)':'Turkey (roasted)','Βοδινό άπαχο (ψητό)':'Lean Beef (grilled)',
-  'Χοιρινό (μπριζόλα)':'Pork Chop','Αρνί (μαγ.)':'Lamb (cooked)','Κουνέλι (μαγ.)':'Rabbit (cooked)',
+  'Γαλοπούλα στήθος':'Turkey (roasted)','Βοδινό άπαχο (ψητό)':'Lean Beef (grilled)',
+  'Χοιρινό (μπριζόλα)':'Pork Chop','Αρνί (ψητό)':'Lamb (cooked)','Κουνέλι (μαγ.)':'Rabbit (cooked)',
   'Σολομός (ψητός)':'Salmon (grilled)','Λαβράκι (ψητό)':'Sea Bass (grilled)',
   'Τσιπούρα (ψητή)':'Sea Bream (grilled)','Τόνος (κονσέρβα)':'Tuna (canned)',
-  'Σαρδέλες (κονσέρβα)':'Sardines (canned)','Γαρίδες (βραστές)':'Shrimp (boiled)',
-  'Χταπόδι (βραστό)':'Octopus (boiled)',
+  'Σαρδέλες':'Sardines (canned)','Γαρίδες (βραστές)':'Shrimp (boiled)',
+  'Χταπόδι (βρ.)':'Octopus (boiled)',
   // Dairy / Eggs
   'Αυγά (ολόκληρα)':'Eggs (whole)','Ασπράδια αυγών':'Egg Whites','Γιαούρτι 2%':'Yogurt 2%','Τυρί φέτα':'Feta Cheese',
   'Μοτσαρέλα':'Mozzarella','Γάλα πλήρες':'Whole Milk','Γάλα αμυγδάλου':'Almond Milk',
@@ -3224,7 +3196,103 @@ var EN_FOOD_NAMES={
   'Σαλάτα Φακής Μεσογειακή':'Mediterranean Lentil Salad',
   'Μπουλγκούρ-Κινόα Κοτόπουλο':'Bulgur-Quinoa Chicken','Ψάρι στο Φούρνο (FYH)':'Baked Fish (FYH)',
   'Ρύζι-Φακές Stir Fry':'Rice-Lentil Stir Fry','Γκρανόλα χωρίς ζάχαρη':'Sugar-Free Granola',
-  'Μπανανόψωμο':'Banana Bread','Muffins Μύρτιλου':'Blueberry Muffins'
+  'Μπανανόψωμο':'Banana Bread','Muffins Μύρτιλου':'Blueberry Muffins',
+  // ✅ Προστέθηκαν 2026-07-05 — συμπλήρωση 171 λειπόντων FOODS (code review)
+  // Meat / Poultry
+  'Κοτόπουλο βραστό':'Chicken (boiled)','Μπριζόλα άπαχη':'Lean Steak',
+  'Βοδινά φιλετάκια':'Beef Strips','Βοδινά μπιφτέκια (ψημένα)':'Beef Patties (grilled)',
+  'Μοσχάρι (ψητό)':'Veal (roasted)','Μοσχάρι κιμάς (μαγ.)':'Ground Veal (cooked)',
+  'Βοδινός κιμάς (μαγ.)':'Ground Beef (cooked)','Βοδινός κιμάς άπαχος (μαγ.)':'Lean Ground Beef (cooked)',
+  'Χοιρινός κιμάς (μαγ.)':'Ground Pork (cooked)','Κιμάς κοτόπουλο (μαγ.)':'Ground Chicken (cooked)',
+  'Γαλακτοπουλο (βρ.)':'Turkey (boiled)','Λούτζα':'Lountza (cured pork loin)',
+  'Μπιφτέκι Κοτόπουλο Πηδηχτούλης Κόκορας':'Chicken Patty (Pidichtoulis)',
+  'Moving Mountains Burger':'Moving Mountains Burger','Grillman Chicken Burger':'Grillman Chicken Burger',
+  // Fish / Seafood
+  'Μπακαλιάρος (ψητός)':'Cod (grilled)','Σκουμπρί (ψητό)':'Mackerel (grilled)',
+  'Καλαμάρι (ψητό)':'Squid (grilled)','Καλαμαράκια (ψητά)':'Baby Squid (grilled)',
+  'Μύδια (βρ.)':'Mussels (boiled)','Σούπιες (βρ.)':'Cuttlefish (cooked)',
+  'Γαρίδες γίγαντες (βρ.)':'Jumbo Shrimp (cooked)','Καβούρι (βρ.)':'Crab (cooked)',
+  'Φιδάκι (ψητό)':'Garfish (grilled)',
+  // Dairy / Eggs / Protein products
+  'Cottage cheese':'Cottage Cheese','Cream cheese':'Cream Cheese',
+  'Στραγγιστό γιαούρτι 0%':'Strained Yogurt 0%','Γιαούρτι πλήρες 5%':'Whole Milk Yogurt 5%',
+  'Ανθότυρο':'Anthotyro Cheese','Μυζήθρα':'Myzithra Cheese','Γάλα σόγιας':'Soy Milk',
+  'Γάλα βρώμης':'Oat Milk','Γάλα φρέσκο 1.5% Λιπαρά':'Fresh Milk 1.5% Fat',
+  'Koko Γιαούρτι Καρύδας (Νηστίσιμο)':'Koko Coconut Yogurt (Vegan)',
+  'Γραβιέρα':'Graviera Cheese','Κασέρι':'Kasseri Cheese','Κεφαλοτύρι':'Kefalotyri Cheese',
+  'Παρμεζάνα':'Parmesan','Quark (0%)':'Quark (0%)','Ricotta':'Ricotta','Edam light':'Edam Light',
+  'Γαλατάκι σοκολάτα delact χωρίς ζάχαρη':'Delact Sugar-Free Chocolate Milk Drink',
+  'Χαλλούμι (ψητό)':'Halloumi (grilled)','Χαλλούμι (ωμό)':'Halloumi (raw)',
+  'Arla Protein Γιαουρτάκι Σοκολάτα (πουτίγκα)':'Arla Protein Chocolate Yogurt (pudding)',
+  'Arla Protein Ρόφημα Σοκολάτα':'Arla Protein Chocolate Drink',
+  'Σαγανάκι (τηγανητό)':'Saganaki (fried cheese)','Τυρί Cheddar':'Cheddar Cheese',
+  // Grains / Bread
+  'Noodles αυγού (M&S)':'Egg Noodles (M&S)','Ψωμάκι Brioche':'Brioche Bun',
+  'Ψωμάκι Μπιφτεκιού':'Burger Bun','Τορτίλια (large)':'Tortilla (large)',
+  'Ψωμί ολικής άλεσης':'Whole Wheat Bread','Κρίθινο παξιμάδι':'Barley Rusk',
+  'Κους κους (βρ.)':'Couscous (cooked)','Σπαγγέτι ολικής (βρ.)':'Whole Wheat Spaghetti (cooked)',
+  'Τραχανάς (βρ.)':'Trahana (cooked)','Φρυγανιές':'Rusks','Wasa Φρυγανιές Σίκαλης':'Wasa Rye Crispbread',
+  'Κράκερ ολικής':'Whole Wheat Crackers','Popcorn (αέρας)':'Popcorn (air-popped)',
+  'Βρώμη (βρ.)':'Oats (cooked)','Ρύζι μαύρο (βρ.)':'Black Rice (cooked)',
+  // Legumes
+  'Γίγαντες (βρ.)':'Giant Beans (cooked)','Κουκιά (βρ.)':'Fava Beans (cooked)',
+  'Αρακάς (βρ.)':'Green Peas (cooked)','Φακές κόκκινες (βρ.)':'Red Lentils (cooked)',
+  'Λούπινα (βρ.)':'Lupini Beans (cooked)','Κανελλίνι (βρ.)':'Cannellini Beans (cooked)',
+  'Φασόλια μπορλότι (βρ.)':'Borlotti Beans (cooked)','Beyond Beef (φυτικός κιμάς)':'Beyond Beef (plant-based mince)',
+  // Vegetables
+  'Ρόκα':'Arugula','Πιπεριά κόκκινη':'Red Bell Pepper','Πιπεριά κίτρινη':'Yellow Bell Pepper',
+  'Κρεμμύδι':'Onion','Σκόρδο':'Garlic','Κέϊλ (βρ.)':'Kale (cooked)','Ραπανάκι':'Radish',
+  'Αγκινάρες (βρ.)':'Artichokes (cooked)','Αγκινάρες καρδιές (κονσ.)':'Artichoke Hearts (canned)',
+  'Κρεμμυδάκι (φρέσκο)':'Spring Onion (fresh)','Καλαμπόκι (κονσέρβα)':'Corn (canned)',
+  'Καλαμπόκι (ολόκληρο στον ατμό 200g)':'Corn on the Cob (steamed, 200g)',
+  'Καλαμπόκι (ολόκληρο στον ατμό 400g - Halvatzis)':'Corn on the Cob (steamed, 400g - Halvatzis)',
+  'Μικτά λαχανικά':'Mixed Vegetables',
+  // Fruits
+  'Σύκα φρέσκα':'Fresh Figs','Σύκα ξερά':'Dried Figs','Ρόδι':'Pomegranate','Ακτινίδιο':'Kiwi',
+  'Χουρμάδες (ξερές)':'Dates (dried)','Βύσσινο':'Sour Cherry','Κουμουατ':'Kumquat',
+  'Λεμόνι (χυμός)':'Lemon (juice)','Λεμόνι (ξύσμα)':'Lemon (zest)','Χυμό ντομάτας':'Tomato Juice',
+  'Πορτοκαλάδα φρέσκια':'Fresh Orange Juice',
+  // Nuts / Seeds / Fats
+  'Chia seeds':'Chia Seeds','Σκόνη κακάο':'Cocoa Powder','Φιστίκια Αιγίνης':'Aegina Pistachios',
+  'Φιστίκια':'Peanuts','Φουντούκια':'Hazelnuts','Κολοκυθόσποροι':'Pumpkin Seeds',
+  'Ηλιόσποροι':'Sunflower Seeds','Σουσάμι':'Sesame Seeds','Λιναρόσπορος':'Flaxseed',
+  'Βούτυρο':'Butter','Μαργαρίνη light':'Light Margarine','Dark Chocolate 70%':'Dark Chocolate 70%',
+  'Ελιές πράσινες':'Green Olives','Ελιές μαύρες':'Black Olives','Κοκος γάλα light':'Light Coconut Milk',
+  // Spices / Herbs / Sauces
+  'Βασιλικός (φρέσκος)':'Basil (fresh)','Ρίγανη (ξηρή)':'Oregano (dried)','Θυμάρι (φρέσκο)':'Thyme (fresh)',
+  'Δυόσμος/Μέντα':'Mint','Άνηθος (φρέσκος)':'Dill (fresh)','Μαϊντανός (φρέσκος)':'Parsley (fresh)',
+  'Δεντρολίβανο (φρέσκο)':'Rosemary (fresh)','Κύμινο':'Cumin','Πάπρικα':'Paprika','Μουστάρδα':'Mustard',
+  'Βασιλικό':'Basil','Μπούκοβο':'Bukovo (chili flakes)',
+  'Βαλσάμικο ξίδι':'Balsamic Vinegar','Σάλτσα γιαουρτιού-άνηθου':'Yogurt-Dill Sauce',
+  'Πέστο βασιλικού':'Basil Pesto','Σάλτσα ντομάτας (μαγειρεμένη)':'Tomato Sauce (cooked)',
+  'Ταχινοσάλτσα λεμονιού':'Lemon Tahini Sauce','Σάλτσα λεμονιού-ελαιολάδου (λαδολέμονο)':'Lemon-Olive Oil Sauce (Ladolemono)',
+  'Τζατζίκι':'Tzatziki','Σάλτσα σόγιας-μελιού':'Soy-Honey Sauce','Σάλτσα σόγιας (μειωμένο αλάτι)':'Soy Sauce (reduced salt)',
+  'Σάλσα κόκκινη':'Red Salsa',
+  'Μαγιονέζα light':'Light Mayonnaise','Μαρμελάδα φράουλας':'Strawberry Jam','Σάλτσα κάρι light':'Light Curry Sauce',
+  'Κύβο λαχανικών':'Vegetable Stock Cube','Αλάτι':'Salt','Αλάτι & μπαχαρικά':'Salt & Spices','Νερό':'Water',
+  'Ούζο':'Ouzo','Λευκό κρασί':'White Wine',
+  // Snacks / Treats
+  'Παστέλι':'Pastelli (sesame-honey bar)','Χαλβάς σεσαμιού':'Sesame Halva','USN Trust Crunch Bar':'USN Trust Crunch Bar',
+  // Meals & recipes (High-Protein/Combo)
+  'High Protein Ομελέτα Wrap':'High Protein Omelette Wrap','Wrap με τονοσαλάτα':'Tuna Salad Wrap',
+  'Chive & Onion Whipped Tofu Toast':'Chive & Onion Whipped Tofu Toast',
+  'Berries & Cream Instant Oatmeal':'Berries & Cream Instant Oatmeal',
+  'Peanut Butter & Jelly Smoothie Bowl':'Peanut Butter & Jelly Smoothie Bowl',
+  'Mixed Berry & Granola Yogurt Parfait':'Mixed Berry & Granola Yogurt Parfait',
+  'Ελεύθερο γεύμα':'Free Meal','Korean Beef Bowl':'Korean Beef Bowl','Chicken Lettuce Wraps':'Chicken Lettuce Wraps',
+  'Chia Pudding (FYH)':'Chia Pudding (FYH)','Green Protein Smoothie (FYH)':'Green Protein Smoothie (FYH)',
+  'Berry Protein Smoothie (FYH)':'Berry Protein Smoothie (FYH)','Protein Pancakes (FYH)':'Protein Pancakes (FYH)',
+  'Dark Choc Oat Bites':'Dark Choc Oat Bites','PB Coconut Truffles':'PB Coconut Truffles',
+  'Energy Bites (FYH)':'Energy Bites (FYH)','PB Protein Bars':'PB Protein Bars',
+  'Σάλτσα Ντομάτας (FYH)':'FYH Tomato Sauce',
+  'Breakfast Burrito (Πετρετζίκης)':'Breakfast Burrito (Petretzikis)',
+  'Chia Bowl Φράουλα (Πετρετζίκης)':'Strawberry Chia Bowl (Petretzikis)',
+  'Overnight Oats Banoffee (Πετρετζίκης)':'Banoffee Overnight Oats (Petretzikis)',
+  'Overnight Oats Black Forest (Πετρετζίκης)':'Black Forest Overnight Oats (Petretzikis)',
+  'Overnight Oats P.B. & Choco (Πετρετζίκης)':'P.B. & Choco Overnight Oats (Petretzikis)',
+  'Αυγά Ποσέ Air Fryer (Πετρετζίκης)':'Air Fryer Poached Eggs (Petretzikis)',
+  'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)':'Turkey & Veggie Omelette (Petretzikis)',
+  'Λιγκουίνι με Γαρίδες (Πετρετζίκης)':'Linguine with Shrimp (Petretzikis)'
 };
 var EN_CAT_NAMES={
   'Κρέας':'Meat','Ψάρια':'Fish & Seafood','Αυγά/Γαλακτ.':'Eggs & Dairy',

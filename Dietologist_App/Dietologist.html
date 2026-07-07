@@ -871,26 +871,6 @@ function genSecureToken(bytes) {
   return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-// 1. Get client share link for portal
-function getClientShareLink(c) {
-  if(!c.shareToken) {
-    c.shareToken = genSecureToken();
-    upd();
-  }
-  var url = window.location.protocol + '//' + window.location.host + window.location.pathname + '?view=client&token=' + c.shareToken;
-  return url;
-}
-
-// Copy share link to clipboard
-function copyShareLink() {
-  var c = getC();
-  if(!c) return;
-  var link = getClientShareLink(c);
-  navigator.clipboard.writeText(link).then(function() {
-    showSuccessToast('🔗 Link αντιγράφηκε!');
-  });
-}
-
 // 2. Add progress entry (weight tracking)
 function addProgressEntry() {
   var c = getC();
@@ -1522,16 +1502,6 @@ function savePage1Supplements() {
   save();
   closePage1SupplementSelector();
 
-  // Update preview
-  var preview = document.getElementById('supp-preview');
-  if (preview) {
-    if (selectedSupps.length > 0) {
-      preview.textContent = '✓ ' + selectedSupps.map(s => s.supplement).slice(0, 3).join(', ') + (selectedSupps.length > 3 ? '...' : '');
-    } else {
-      preview.textContent = '💡 Κάνε κλικ για να επιλέξεις συμπληρώματα';
-    }
-  }
-
   showSuccessToast('✓ Συμπληρώματα αποθηκεύτηκαν!');
 }
 
@@ -1829,122 +1799,6 @@ function deleteMealAllDays(mealIndex){
     showSuccessToast('✅ Γεύμα διαγράφηκε από όλες τις ημέρες!');
   });
 }
-
-// ✅ FOOD EXCLUSION PICKER - NEW FEATURE
-function openFoodExclusionPicker(){
-  var c = getC();
-  if(!c) return;
-
-  var modal = document.getElementById('foodExclusionModal');
-  if(!modal){
-    console.error('Modal not found!');
-    return;
-  }
-
-  // Build food list
-  var foodListHtml = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:400px;overflow-y:auto;padding:10px;border:1px solid #e0e0e0;border-radius:6px;background:#f9f9f9;">';
-
-  var currentExclusions = c.foodExclusions || [];
-
-  Object.keys(FOODS).forEach(function(foodName){
-    var isExcluded = currentExclusions.indexOf(foodName) !== -1;
-    var checkedAttr = isExcluded ? 'checked' : '';
-    foodListHtml += '<label style="display:flex;align-items:center;gap:8px;padding:6px;cursor:pointer;border-radius:4px;transition:all 0.2s ease;" onmouseover="this.style.background=\'#f0f0f0\'" onmouseout="this.style.background=\'transparent\'">'
-      + '<input type="checkbox" data-food="' + foodName + '" ' + checkedAttr + ' style="cursor:pointer;width:16px;height:16px;">'
-      + '<span style="font-size:12px;flex:1;">' + foodName + '</span>'
-      + '</label>';
-  });
-
-  foodListHtml += '</div>';
-
-  document.getElementById('foodListContainer').innerHTML = foodListHtml;
-  modal.style.display = 'flex';
-}
-
-function closeFoodExclusionModal(){
-  document.getElementById('foodExclusionModal').style.display = 'none';
-}
-
-function saveFoodExclusions(){
-  var c = getC();
-  if(!c) return;
-
-  var checkboxes = document.querySelectorAll('#foodListContainer input[type="checkbox"]');
-  var selected = [];
-
-  checkboxes.forEach(function(cb){
-    if(cb.checked){
-      selected.push(cb.dataset.food);
-    }
-  });
-
-  c.foodExclusions = selected;
-  upd();
-
-  // Update preview
-  document.getElementById('excl-preview').innerHTML = selected.length > 0
-    ? '✓ ' + selected.slice(0,3).join(', ') + (selected.length > 3 ? '...' : '')
-    : '💡 Κάνε κλικ για να επιλέξεις τρόφιμα';
-
-  // Update button count
-  document.querySelector('button[onclick="openFoodExclusionPicker()"]').innerHTML =
-    '📋 Επιλέξτε τρόφιμα που δεν του αρέσουν (' + selected.length + ')';
-
-  closeFoodExclusionModal();
-  showSuccessToast('✅ Αποφυγές τροφίμων ενημερώθηκαν!');
-}
-
-// Search function for food picker
-function searchFoodsInModal(query){
-  query = query.toLowerCase();
-  var foodLabels = document.querySelectorAll('#foodListContainer label');
-
-  foodLabels.forEach(function(label){
-    var foodName = label.textContent.toLowerCase();
-    if(foodName.includes(query)){
-      label.style.display = 'flex';
-    } else {
-      label.style.display = 'none';
-    }
-  });
-}
-
-</script>
-
-<!-- 🚫 FOOD EXCLUSION MODAL -->
-<div id="foodExclusionModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #ff6b35;padding-bottom:10px;">
-      <h2 style="color:#ff6b35;margin:0;font-size:16px;">🚫 Τρόφιμα που αποφεύγει</h2>
-      <button onclick="closeFoodExclusionModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>
-    </div>
-
-    <div style="margin-bottom:12px;">
-      <input type="text" id="foodSearchInput" placeholder="🔍 Αναζητήστε τρόφιμα..."
-        oninput="searchFoodsInModal(this.value)"
-        style="width:100%;padding:10px;border:1.5px solid #e0e0e0;border-radius:6px;font-size:12px;box-sizing:border-box;">
-    </div>
-
-    <div id="foodListContainer" style="min-height:200px;max-height:400px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:6px;padding:10px;background:#f9f9f9;">
-      <!-- Foods will be inserted here -->
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:15px;justify-content:flex-end;">
-      <button onclick="closeFoodExclusionModal()" style="padding:10px 20px;background:#ddd;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Ακύρωση</button>
-      <button onclick="saveFoodExclusions()" style="padding:10px 20px;background:#ff6b35;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">✅ Αποθήκευση</button>
-    </div>
-
-  </div>
-</div>
-
-<!-- Close modal when clicking outside -->
-<script>
-document.getElementById('foodExclusionModal').addEventListener('click', function(e){
-  if(e.target === this){
-    closeFoodExclusionModal();
-  }
-});
 </script>
 
 <!-- VALIDATION MODAL -->
@@ -2780,6 +2634,16 @@ function saveFoodExclusions(){
       function shortName(n){return String(n||'').replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim();}
       function macro(n,g){return (typeof cm==='function')?cm(n,g):{k:0,p:0,c:0,f:0};}
 
+      // Αποκλεισμοί/αλλεργίες του πελάτη — ίδια λίστα με αυτή που ήδη φιλτράρει τον γεννήτορα πλάνου,
+      // ώστε μια «εναλλακτική» πρόταση από τη βιβλιοθήκη ΑΛΛΟΥ πελάτη να μην περιέχει κάτι που αυτός αποφεύγει.
+      var altExcl=(c.foodExclude||[]).slice();
+      if(c.foodExclusions && Array.isArray(c.foodExclusions)){
+        c.foodExclusions.forEach(function(food){ if(altExcl.indexOf(food)===-1)altExcl.push(food); });
+      }
+      if(c.allergies && typeof parseAllergies==='function'){
+        parseAllergies(c.allergies).forEach(function(a){ if(altExcl.indexOf(a)===-1)altExcl.push(a); });
+      }
+
       // ── Ημερήσια πλάνα ──
       var wp=c.weekPlan||{};
       var fmtQ=(typeof fmtFoodQty==='function')?function(f){return fmtFoodQty(f,'γρ.',function(u){return u;});}:function(f){return {main:Math.round(f.g)+' γρ.',sub:''};};
@@ -2797,13 +2661,28 @@ function saveFoodExclusions(){
           });
           dayK+=mk; dP+=mp; dC+=mc; dF+=mf; dFi+=mfi;
           var title=foods.map(function(x){return shortName(x.name);}).slice(0,3).join(', ')+(foods.length>3?'…':'');
+          var alternates=[];
+          if(typeof findMealAlternates==='function'){
+            findMealAlternates(meal, c.dietType||'normal', c.id, mk, 3, altExcl).forEach(function(a){
+              var af=[], ak=0;
+              (a.foods||[]).forEach(function(f){
+                var v=macro(f.n,f.g);
+                ak+=v.k;
+                var q=fmtQ(f);
+                af.push({name:shortName(f.n), qty:q.main, sub:q.sub||''});
+              });
+              var altTitle=af.map(function(x){return x.name;}).slice(0,3).join(', ')+(af.length>3?'…':'');
+              alternates.push({name:altTitle, kcal:Math.round(ak), foods:af});
+            });
+          }
           meals.push({
             label:meal.name||'Γεύμα',
             time:TIMES[meal.name]||'',
             title:title,
             kcal:Math.round(mk),
             macros:{p:Math.round(mp),c:Math.round(mc),f:Math.round(mf)},
-            foods:foods
+            foods:foods,
+            alternates:alternates
           });
         });
         days.push({
@@ -2910,7 +2789,7 @@ function saveFoodExclusions(){
         if(res.error){ self._msg(self._translateError(res.error.message),true); return; }
         if(res.data && res.data.session){ self.user=res.data.user; self._msg(''); self.load().then(function(){ self._enterApp(); }); }
         else { self._msg('✅ Έλεγξε το email σου για επιβεβαίωση και μετά πάτα «Σύνδεση».'); }
-      });
+      }).catch(function(e){ self._msg(self._translateError(e&&e.message), true); });
     },
 
     signIn:function(email,pw){
@@ -2927,7 +2806,7 @@ function saveFoodExclusions(){
         }
         self.user=res.data.user; self._msg('');
         self.load().then(function(){ self._enterApp(); });
-      });
+      }).catch(function(e){ self._msg(self._translateError(e&&e.message), true); });
     },
 
     signOut:function(){
@@ -2953,7 +2832,7 @@ function saveFoodExclusions(){
       this.sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }).then(function(res){
         if(res.error){ self._msg(self._translateError(res.error.message),true); return; }
         self._msg('✅ Σου στείλαμε email με link για νέο κωδικό. Έλεγξε τα εισερχόμενά σου (και τα spam).');
-      });
+      }).catch(function(e){ self._msg(self._translateError(e&&e.message), true); });
     },
 
     // Δείχνει τη φόρμα «νέος κωδικός» (όταν ο χρήστης έρθει από το email)
@@ -2979,7 +2858,7 @@ function saveFoodExclusions(){
         try{ history.replaceState(null,'',location.origin+location.pathname); }catch(e){}
         if(res.data && res.data.user){ self.user=res.data.user; self.load().then(function(){ self._enterApp(); }); }
         else { setTimeout(function(){ location.reload(); }, 900); }
-      });
+      }).catch(function(e){ rmsg(self._translateError(e&&e.message), true); });
     },
 
     // 🇬🇷 Μετάφραση συνηθισμένων σφαλμάτων Supabase στα ελληνικά
@@ -3033,7 +2912,7 @@ function saveFoodExclusions(){
             if(window.clients && window.clients.length){ self._pushNow().then(resolve); }
             else { resolve(); }
           }
-        });
+        }).catch(function(e){ console.error('[CLOUD] load', e); self._loaded=true; resolve(); });
       });
     },
 
@@ -3125,9 +3004,54 @@ function saveFoodExclusions(){
     // Τα checkins ενός συγκεκριμένου πελάτη (από το cache — refreshCheckinsCache πρέπει να έχει τρέξει πρώτα).
     checkinsFor:function(c){
       return (c && c.shareToken && this._checkinsCache[c.shareToken]) || [];
+    },
+
+    // ── 📥 ΒΑΡΟΣ & ΣΗΜΕΙΩΣΕΙΣ ΠΕΛΑΤΗ (client_logs — γράφει το plan.html χωρίς login) ──
+    _clientLogsCache:{},
+    fetchAllClientLogs:function(tokens){
+      var self=this;
+      if(!this.enabled || !this.user || !tokens || !tokens.length) return Promise.resolve({});
+      return this.sb.from('client_logs')
+        .select('token,date,weight_kg,note')
+        .in('token',tokens).order('date',{ascending:true}).then(function(res){
+          if(res.error){ console.error('[CLOUD] fetchAllClientLogs', res.error); return {}; }
+          var byToken={};
+          (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
+          return byToken;
+        });
+    },
+    refreshClientLogsCache:function(){
+      var self=this;
+      var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
+      if(!tokens.length) return Promise.resolve();
+      return this.fetchAllClientLogs(tokens).then(function(byToken){
+        self._clientLogsCache=byToken;
+        var s3=document.getElementById('s3');
+        if(s3 && typeof getC==='function' && typeof buildTrackerHtml==='function'){
+          var cur=getC(); if(cur) s3.innerHTML=buildTrackerHtml(cur);
+        }
+      });
+    },
+    // Πλήρες ιστορικό καταχωρήσεων του πελάτη (μέτρα δικά του, χωριστά από το επίσημο weightLog
+    // του διαιτολόγου — μόνο για σύγκριση, δεν πειράζει ποτέ τα δικά σου δεδομένα). Πιο πρόσφατα πρώτα.
+    allClientLogsFor:function(c){
+      if(!c || !c.shareToken) return [];
+      var entries=(this._clientLogsCache[c.shareToken]||[]).slice();
+      entries.sort(function(a,b){return a.date<b.date?1:-1;});
+      return entries.slice(0,15);
     }
   };
   window.Cloud = Cloud;
+
+  // 🛡️ Αν ο χρήστης κλείσει/αλλάξει καρτέλα ενώ εκκρεμεί debounced save (1.5s),
+  // στείλε το push αμέσως αντί να το χάσουμε σιωπηλά (βλ. code review: race condition).
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='hidden' && Cloud._t){
+      clearTimeout(Cloud._t);
+      Cloud._t=null;
+      Cloud._pushNow();
+    }
+  });
 })();
 
 // ── Βοηθητικές συναρτήσεις για το σκορ/σερί προόδου πελάτη από τα checkins ──
