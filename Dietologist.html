@@ -1178,6 +1178,32 @@ function getProtocolAvoidFoods(client) {
   return avoid;
 }
 
+// Sets the client's macro-% distribution (c.macroP/F/C) from any active protocol that specifies one
+// (currently only Διαβήτης: carbPercentage/proteinPercentage). If more than one active protocol specifies
+// a target, the most restrictive wins (lowest carb%, highest protein%; remainder to fat).
+// This is a one-time starting point applied when protocols are saved — NOT continuously enforced,
+// so the dietitian can freely edit it afterward in Κατανομή Μακροθρεπτικών without it snapping back.
+// Returns true if it changed anything (so callers can tailor their confirmation message).
+function applyProtocolMacros(client) {
+  var carbCandidates = [], proteinCandidates = [];
+  getActiveProtocols(client).forEach(function(protocol) {
+    var r = protocol.restrictions || {};
+    if (r.carbPercentage != null) carbCandidates.push(r.carbPercentage);
+    if (r.proteinPercentage != null) proteinCandidates.push(r.proteinPercentage);
+  });
+  if (!carbCandidates.length && !proteinCandidates.length) return false;
+
+  var carbPct = carbCandidates.length ? Math.min.apply(null, carbCandidates) : (client.macroC != null ? client.macroC : 50);
+  var proteinPct = proteinCandidates.length ? Math.max.apply(null, proteinCandidates) : (client.macroP != null ? client.macroP : 25);
+  var fatPct = Math.max(10, 100 - carbPct - proteinPct);
+
+  client.macroPreset = 'custom';
+  client.macroP = proteinPct;
+  client.macroC = carbPct;
+  client.macroF = fatPct;
+  return true;
+}
+
 // Show medical protocol details with official sources
 function showMedicalProtocol(condition) {
   var protocol = getProtocol(condition);
@@ -2213,6 +2239,10 @@ function saveMedicalConditions(){
   var c=getC();if(!c)return;
   if(!c.medConditions)c.medConditions={};
 
+  // Snapshot BEFORE overwriting, so we can tell which condition(s) were just newly turned on.
+  var prevConditions={};
+  Object.keys(c.medConditions).forEach(function(k){ prevConditions[k]=c.medConditions[k]; });
+
   c.medConditions.diabetes=document.getElementById('chk-diabetes-modal').checked;
   c.medConditions.hypertension=document.getElementById('chk-hypertension-modal').checked;
   c.medConditions.cholesterol=document.getElementById('chk-cholesterol-modal').checked;
@@ -2223,9 +2253,20 @@ function saveMedicalConditions(){
   var menstrualValue=document.querySelector('input[name="menstrual"]:checked').value;
   c.menstrualCycle=menstrualValue;
 
+  // ⚕️ Give the client a correct starting macro-% distribution, but only when one of the conditions that was
+  // JUST turned on (off→on) actually specifies a macro target itself (e.g. Διαβήτης). Otherwise leave macros
+  // untouched — adding an unrelated condition (e.g. Υπέρταση, which has no macro target) must not silently
+  // overwrite a manual edit the dietitian already made in Κατανομή Μακροθρεπτικών.
+  var newlyActivatedWithMacroTarget=Object.keys(c.medConditions).some(function(k){
+    if(!c.medConditions[k] || prevConditions[k]) return false; // not a fresh off→on transition
+    var p=getProtocol(k);
+    return !!(p && p.restrictions && (p.restrictions.carbPercentage!=null || p.restrictions.proteinPercentage!=null));
+  });
+  var macrosApplied=(newlyActivatedWithMacroTarget && typeof applyProtocolMacros==='function')?applyProtocolMacros(c):false;
+
   save();
   closeMedicalConditionsModal();
-  showSuccessToast('✅ Ιατρικές συνθήκες αποθηκεύτηκαν!');
+  showSuccessToast(macrosApplied?'✅ Ιατρικές συνθήκες αποθηκεύτηκαν! Τα μακροθρεπτικά ενημερώθηκαν βάσει πρωτοκόλλου.':'✅ Ιατρικές συνθήκες αποθηκεύτηκαν!');
   renderMain();
 }
 
