@@ -1144,6 +1144,36 @@ var MEDICAL_PROTOCOLS = {
       { name: 'Academy of Nutrition & Dietetics', url: 'https://www.eatright.org/food-and-nutrition/planning-meals/eating-as-a-vegetarian', official: true },
       { name: 'Vegetarian Society Guidelines', url: 'https://www.vegsoc.org/resources/', official: true }
     ]
+  },
+
+  ironDeficiency: {
+    name: 'Σιδηροπενία / Αναιμία (Αθλητές)',
+    icon: '🔋',
+    restrictions: {
+      avoidFoods: [], // καμία τροφή προς αποκλεισμό — η καθοδήγηση αφορά χρονισμό/συνδυασμούς, όχι απαγόρευση
+      preferIronRich: true
+    },
+    foodReplacements: {},
+    supplements: ['Σίδηρος (θειούχος ή bisglycinate, κατόπιν εξέτασης φερριτίνης)', 'Βιταμίνη C (ενισχύει απορρόφηση σιδήρου)', 'Βιταμίνη Β12 (αν χαμηλή)'],
+    notes: 'Συχνό σε αθλητές αντοχής (π.χ. δρομείς — "footstrike hemolysis") και γυναίκες αθλήτριες. Το λογισμικό ήδη αποφεύγει αυτόματα συνδυασμούς οσπρίων με τανίνες (καφές/τσάι) ή γαλακτοκομικά στο ίδιο γεύμα, που βελτιώνει την απορρόφηση σιδήρου. Ελέγξτε περιοδικά φερριτίνη σε αθλητές αντοχής υψηλού όγκου προπόνησης.',
+    sources: [
+      { name: 'Sim M, et al. "Iron considerations for the athlete: a narrative review." Eur J Appl Physiol. 2019', url: 'https://pubmed.ncbi.nlm.nih.gov/31055680/', official: true }
+    ]
+  },
+
+  hydration: {
+    name: 'Ενυδάτωση & Ηλεκτρολύτες (Αθλητές)',
+    icon: '💧',
+    restrictions: {
+      avoidFoods: [], // καμία τροφή προς αποκλεισμό — αφορά στόχους υγρών/ηλεκτρολυτών
+      hydrationFocus: true
+    },
+    foodReplacements: {},
+    supplements: ['Νάτριο/Ηλεκτρολύτες (προπονήσεις >60 λεπτών ή έντονη εφίδρωση)', 'Ισοτονικό ρόφημα κατά τη διάρκεια παρατεταμένης άσκησης'],
+    notes: 'Στόχος: αποφυγή απώλειας >2% σωματικού βάρους από υγρά κατά την άσκηση. Πριν: σταδιακή ενυδάτωση ώρες πριν. Κατά τη διάρκεια (>60 λεπτά, υψηλή ένταση): εξατομικευμένη αναπλήρωση λόγω μεγάλης διακύμανσης ρυθμού εφίδρωσης μεταξύ ατόμων.',
+    sources: [
+      { name: 'Sawka MN, et al. "ACSM Position Stand: Exercise and Fluid Replacement." Med Sci Sports Exerc. 2007', url: 'https://pubmed.ncbi.nlm.nih.gov/17277604/', official: true }
+    ]
   }
 };
 
@@ -1215,13 +1245,15 @@ function showMedicalProtocol(condition) {
   var html = '<div style="padding:20px;max-width:600px;font-family:Arial,sans-serif;">';
   html += '<h3 style="color:#025857;margin-top:0;border-bottom:3px solid #E2EEE5;padding-bottom:10px;">' + protocol.icon + ' ' + protocol.name + '</h3>';
 
-  // RESTRICTIONS
-  html += '<div style="margin-bottom:15px;"><strong style="color:#d32f2f;">🚫 Αποφύγετε:</strong>';
-  html += '<ul style="margin:8px 0;color:#333;">';
-  protocol.restrictions.avoidFoods.forEach(function(food) {
-    html += '<li style="margin:4px 0;">' + food + '</li>';
-  });
-  html += '</ul></div>';
+  // RESTRICTIONS (some protocols, e.g. sports supplement/education-only ones, have nothing to avoid)
+  if(protocol.restrictions.avoidFoods && protocol.restrictions.avoidFoods.length > 0) {
+    html += '<div style="margin-bottom:15px;"><strong style="color:#d32f2f;">🚫 Αποφύγετε:</strong>';
+    html += '<ul style="margin:8px 0;color:#333;">';
+    protocol.restrictions.avoidFoods.forEach(function(food) {
+      html += '<li style="margin:4px 0;">' + food + '</li>';
+    });
+    html += '</ul></div>';
+  }
 
   // FOOD REPLACEMENTS
   if(protocol.foodReplacements && Object.keys(protocol.foodReplacements).length > 0) {
@@ -2199,6 +2231,16 @@ function openMedicalConditionsModal(){
     +'<span style="font-weight:600">🥛 Δυσανεξία Λακτόζης</span>'
     +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#E1BEE7;border-radius:6px;cursor:pointer">'
+    +'<input type="checkbox" id="chk-ironDeficiency-modal" '+(c.medConditions?.ironDeficiency?'checked':'')+' style="width:18px;height:18px">'
+    +'<span style="font-weight:600">🔋 Σιδηροπενία / Αναιμία (Αθλητές)</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ironDeficiency\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#B3E5FC;border-radius:6px;cursor:pointer">'
+    +'<input type="checkbox" id="chk-hydration-modal" '+(c.medConditions?.hydration?'checked':'')+' style="width:18px;height:18px">'
+    +'<span style="font-weight:600">💧 Ενυδάτωση & Ηλεκτρολύτες (Αθλητές)</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hydration\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'</label>'
     +'</div>'
     +'<div style="border-top:2px solid #ddd;padding-top:15px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:10px">👩 Μητρικός Κύκλος (Γυναίκες):</label>'
@@ -2249,6 +2291,8 @@ function saveMedicalConditions(){
   c.medConditions.celiac=document.getElementById('chk-celiac-modal').checked;
   c.medConditions.ibs=document.getElementById('chk-ibs-modal').checked;
   c.medConditions.lactose=document.getElementById('chk-lactose-modal').checked;
+  c.medConditions.ironDeficiency=document.getElementById('chk-ironDeficiency-modal').checked;
+  c.medConditions.hydration=document.getElementById('chk-hydration-modal').checked;
 
   var menstrualValue=document.querySelector('input[name="menstrual"]:checked').value;
   c.menstrualCycle=menstrualValue;
