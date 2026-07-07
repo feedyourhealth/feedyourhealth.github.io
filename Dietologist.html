@@ -503,13 +503,12 @@ deleteClient = function(id) {
   var client = clients.find(function(c) { return c.id === id; });
   if(client) {
     showConfirmDialog(
-      'Διαγραφή Πελάτη',
       'Είστε σίγουρο ότι θέλετε να διαγράψετε τον πελάτη "' + (client.name || 'Unnamed') + '";\nΘα μεταφερθεί στους «Διαγραμμένοι» απ\' όπου μπορείς να τον ανακτήσεις όποτε θες.',
-      '🗑️',
       function() {
         _originalDeleteClient(id);
         showSuccessToast('✓ Πελάτης διαγράφηκε με επιτυχία');
-      }
+      },
+      { title: 'Διαγραφή Πελάτη', icon: '🗑️' }
     );
   }
 };
