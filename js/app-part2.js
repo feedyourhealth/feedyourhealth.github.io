@@ -1210,8 +1210,31 @@ function buildMacroDistributionHtml(c,t){
     +'<span class="macro-c-val">Υδατ/κες: '+t.carb+'g&nbsp;&nbsp;('+t.cPct+'%)</span>'
     +'</div>'
     +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Προσαρμόζεται αυτόματα από το άθλημα — αλλάξτε ελεύθερα χειροκίνητα.</div>'
+    +buildREDSAndWarningsHtml(t)
     +'</div>'
     +'</div>';
+  return html;
+}
+
+// ⚡ RED-S (Energy Availability) + general target/macro warnings — t.ea and t.warnings were already
+// computed correctly by calcTDEE(), but never actually reached the dietitian (only a hidden debug
+// audit read them). Thresholds per IOC Consensus Statement on RED-S (2018): EA<30 kcal/kgLBM/day =
+// critical, <45 = borderline. Shows nothing when EA is healthy or unmeasurable (no LBM/body-fat data).
+function buildREDSAndWarningsHtml(t){
+  var html='';
+  if(t.ea!=null && t.ea<45){
+    var isCrit=t.ea<30;
+    html+='<div style="margin-top:10px;padding:9px 12px;border-radius:6px;border-left:4px solid '+(isCrit?'#c62828':'#f9a825')+';background:'+(isCrit?'#fdecea':'#fff8e1')+';font-size:12px;color:'+(isCrit?'#7f1d1d':'#7a5c00')+'">'
+      +'<b>'+(isCrit?'🔴 Κίνδυνος RED-S':'🟡 Οριακή Ενεργειακή Διαθεσιμότητα')+':</b> EA='+t.ea+' kcal/kgLBM ('+(isCrit?'κατώφλι &lt;30':'στόχος &gt;45')+')'
+      +' <a href="https://stillmed.olympics.com/media/Documents/Athletes/Medical-Scientific/Consensus-Statements/REDs/IOC-consensus-statement-Relative-Energy-Deficiency-in-Sport-2018.pdf" target="_blank" style="color:inherit;text-decoration:underline">IOC Consensus 2018 ↗</a>'
+      +'</div>';
+  }
+  if(t.warnings && t.warnings.length){
+    html+='<div style="margin-top:8px">'+t.warnings.map(function(w){
+      var isAlert=w.type==='alert';
+      return '<div style="background:'+(isAlert?'#ffebee':'#fff3e0')+';border:1px solid '+(isAlert?'#f44336':'#ff9800')+';border-radius:6px;padding:7px 10px;margin:4px 0;font-size:12px;color:'+(isAlert?'#c62828':'#e65100')+'">'+esc(w.msg)+'</div>';
+    }).join('')+'</div>';
+  }
   return html;
 }
 
