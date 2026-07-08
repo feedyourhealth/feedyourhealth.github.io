@@ -98,6 +98,29 @@
   .log-tag i{font-size:14px}
   .log-tag-on{background:var(--tint2);border-color:var(--teal-l);color:var(--teal-d)}
   .log-tag-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:999px;background:var(--tint2);color:var(--teal-d);white-space:nowrap}
+  .milestone{display:flex;align-items:center;gap:12px;background:var(--tint2);border-radius:14px;padding:12px}
+  .milestone i{font-size:26px;color:var(--teal)}
+  .mtitle{font-size:14px;font-weight:600;color:var(--teal-d)}
+  .msub{font-size:12px;color:var(--muted);margin-top:2px}
+  .mstrip{display:flex;gap:8px;margin-top:12px}
+  .mbadge{flex:1;text-align:center;padding:8px 4px;border-radius:10px;border:.5px solid var(--bord)}
+  .mbadge.done{background:var(--tint2);border-color:var(--teal-l)}
+  .mbadge i{font-size:17px;color:var(--muted)}
+  .mbadge.done i{color:var(--teal)}
+  .mbadge .n{font-size:10px;color:var(--muted);margin-top:3px}
+  .mbadge.done .n{color:var(--teal-d);font-weight:600}
+  .sharebtn{width:100%;background:none;border:.5px solid var(--bord);border-radius:10px;padding:9px;font-size:13px;font-weight:500;font-family:inherit;color:var(--teal);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;margin-top:12px}
+  .goalhero{background:var(--teal);color:#fff;border-radius:16px;padding:18px;margin-bottom:14px}
+  .goalhero .lbl{font-size:11px;opacity:.85;text-transform:uppercase;letter-spacing:.4px}
+  .goalhero .val{font-size:26px;font-weight:700;margin:4px 0}
+  .goalhero .arrow{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.9}
+  .obicon{font-size:40px;color:var(--teal);display:block;text-align:center;margin-bottom:10px}
+  .obtitle{font-size:16px;font-weight:600;color:var(--teal-d);text-align:center;margin:0 0 6px}
+  .obsub{font-size:12px;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:14px}
+  .obdots{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+  .obdot{width:6px;height:6px;border-radius:50%;background:var(--bord)}
+  .obdot.on{background:var(--teal);width:16px;border-radius:3px}
+  .obskip{text-align:center;font-size:12px;color:var(--muted);margin-top:10px;cursor:pointer}
 
   .water{background:var(--tint);border-radius:14px;padding:12px 14px}
   .glasses{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
@@ -373,6 +396,11 @@ function setSuppLog(o){try{localStorage.setItem(lk('supps'),JSON.stringify(o))}c
 // βάρος/σημείωση που στέλνει ο ίδιος ο πελάτης (client_logs, χωρίς login) — { 'YYYY-MM-DD': {w,n} }
 function getClientLog(){try{return JSON.parse(localStorage.getItem(lk('clientlog'))||'{}')}catch(e){return {}}}
 function getClientLogToday(){return getClientLog()[todayKey()]||null}
+// Η κάρτα στόχου δείχνεται ΜΙΑ φορά συνολικά ανά link (όχι ανά επίσκεψη) — μόλις εμφανιστεί σημειώνεται ως "seen".
+function getGoalHeroSeen(){try{return localStorage.getItem(lk('goalheroSeen'))==='1'}catch(e){return true}}
+function setGoalHeroSeen(){try{localStorage.setItem(lk('goalheroSeen'),'1')}catch(e){}}
+function getOnboardingSeen(){try{return localStorage.getItem(lk('onboardingSeen'))==='1'}catch(e){return true}}
+function setOnboardingSeen(){try{localStorage.setItem(lk('onboardingSeen'),'1')}catch(e){}}
 function setClientLogToday(o){try{const d=getClientLog();d[todayKey()]=o;localStorage.setItem(lk('clientlog'),JSON.stringify(d))}catch(e){}}
 function dKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function weekDates(){ // Δευτέρα → Κυριακή της τρέχουσας εβδομάδας
@@ -550,6 +578,7 @@ function render(){
 
   injectManifest();
   go('home');
+  showOnboarding();
 }
 
 // Δείχνει πότε ενημερώθηκε τελευταία φορά το πλάνο.
@@ -599,6 +628,34 @@ function openContact(){
     +opts+'<button class="close" onclick="this.closest(\'.sheet-bg\').remove()">Κλείσιμο</button></div>';
   document.body.appendChild(bg);
 }
+// Ελαφρύ tour 3 οθονών, δείχνεται ΜΙΑ φορά συνολικά (setOnboardingSeen κλειδώνει αμέσως στο κλείσιμο/παράλειψη).
+// bg προστίθεται στο document ΠΡΙΝ το πρώτο paint(), αλλιώς το $('#ob-next') (global querySelector) δεν θα έβρισκε
+// τα στοιχεία — δεν υπάρχουν ακόμη στο DOM όσο είναι μέσα σε ένα detached div.
+const ONBOARD_SCREENS=[
+  {icon:'ti-calendar-week',title:'Το πλάνο σου',sub:'Εδώ βλέπεις τα γεύματά σου κάθε μέρα, με ποσότητες και θερμίδες.'},
+  {icon:'ti-square-check',title:'Τσέκαρε ό,τι τρως',sub:'Πάτα ένα γεύμα όταν το ολοκληρώσεις — έτσι χτίζεις το σερί σου.'},
+  {icon:'ti-chart-line',title:'Δες την πρόοδό σου',sub:'Σκορ, σερί και βάρος σε μία ματιά — ενημέρωσέ τα όποτε θες.'}
+];
+function showOnboarding(){
+  if(getOnboardingSeen())return;
+  let step=0;
+  const bg=el('div','sheet-bg');
+  bg.onclick=e=>{if(e.target===bg)finish();};
+  document.body.appendChild(bg);
+  function finish(){ setOnboardingSeen(); bg.remove(); }
+  function paint(){
+    const sc=ONBOARD_SCREENS[step], last=step===ONBOARD_SCREENS.length-1;
+    bg.innerHTML='<div class="sheet"><i class="ti '+sc.icon+' obicon"></i>'
+      +'<div class="obtitle">'+sc.title+'</div>'
+      +'<div class="obsub">'+sc.sub+'</div>'
+      +'<div class="obdots">'+ONBOARD_SCREENS.map((_,i)=>'<span class="obdot'+(i===step?' on':'')+'"></span>').join('')+'</div>'
+      +'<button class="close" id="ob-next">'+(last?'Ξεκίνα':'Επόμενο')+'</button>'
+      +(last?'':'<div class="obskip" id="ob-skip">Παράλειψη</div>')+'</div>';
+    $('#ob-next').onclick=()=>{ if(last){finish();}else{step++;paint();} };
+    const sk=$('#ob-skip'); if(sk)sk.onclick=finish;
+  }
+  paint();
+}
 function tabBtn(id,icon,label){return '<button data-tab="'+id+'" onclick="go(\''+id+'\')"><i class="ti '+icon+'"></i>'+label+'</button>'}
 
 function go(tab){
@@ -626,6 +683,9 @@ function viewHome(){
   const tg=s.targets||{};
   const day=s.days&&s.days[defaultDay()];
   const h=s.hydration||{};
+
+  // στιγμή δέσμευσης στόχου — δείχνεται μία φορά συνολικά, στο πρώτο άνοιγμα του link
+  const gh=goalHero(); if(gh)v.appendChild(gh);
 
   // personal note from the dietitian
   if(s.coachNote){
@@ -690,6 +750,21 @@ function deltaGood(p){
   if(d===0)return true;
   if(p.goal!=null&&p.goal!==p.start)return p.goal>p.start?d>0:d<0;
   return d<=0;
+}
+// Στιγμή δέσμευσης στόχου: δείχνεται ΜΙΑ φορά συνολικά (setGoalHeroSeen το κλειδώνει αμέσως).
+// Αν ο διαιτολόγος δεν έχει ορίσει goalWeight για αυτόν τον πελάτη δεν υπάρχει τι να δείξουμε — καμία κάρτα.
+function goalHero(){
+  const p=SNAP.progress||{};
+  if(getGoalHeroSeen()||!p.goal)return null;
+  const start=p.start||p.current;
+  if(!start||p.goal===start)return null;
+  setGoalHeroSeen();
+  const diff=Math.round(Math.abs(p.goal-start)*10)/10;
+  const dirIcon=p.goal<start?'ti-trending-down':'ti-trending-up';
+  const c=el('div','goalhero');
+  c.innerHTML='<div class="lbl">Ο στόχος σου</div><div class="val">'+String(p.goal).replace('.',',')+' kg</div>'
+    +'<div class="arrow"><i class="ti '+dirIcon+'"></i>Από '+String(start).replace('.',',')+' kg — '+String(diff).replace('.',',')+' kg να πάμε!</div>';
+  return c;
 }
 function quickCard(tab,icon,title,sub){const c=el('div','card');const p=el('div','card-pad');p.onclick=()=>go(tab);p.innerHTML='<i class="ti '+icon+'" style="font-size:18px"></i><div class="qt">'+title+'</div><div class="qs">'+esc(sub)+'</div>';c.appendChild(p);return c}
 function suppsProgressText(){
@@ -956,6 +1031,35 @@ function streakDays(){
   if(!good(d))d.setDate(d.getDate()-1);
   while(good(d)){n++; d.setDate(d.getDate()-1); if(n>365)break;} return n;
 }
+// Ορόσημα σερί — καθαρά υπολογισμένο strip κατάστασης (όχι εφάπαξ animation), οπότε δεν χρειάζεται
+// να θυμάται τι έχει ήδη "γιορτάσει" — απλά δείχνει την τρέχουσα κατάσταση κάθε φορά.
+const STREAK_MILESTONES=[7,14,30];
+function milestoneCard(streak){
+  if(streak<=0)return null;
+  const next=STREAK_MILESTONES.find(m=>m>streak);
+  const c=el('div','card'); const cp=el('div','card-pad');
+  cp.innerHTML='<div class="milestone"><i class="ti ti-flame"></i><div><div class="mtitle">'+streak+' '+(streak===1?'μέρα':'μέρες')+' σερί!</div>'
+    +'<div class="msub">'+(next?('Συνέχισε έτσι — το επόμενο ορόσημο είναι στις '+next):'Απίστευτο σερί — συνέχισε έτσι!')+'</div></div></div>'
+    +'<div class="mstrip">'+STREAK_MILESTONES.map(m=>'<div class="mbadge'+(streak>=m?' done':'')+'"><i class="ti '+(streak>=m?'ti-check':'ti-lock')+'"></i><div class="n">'+m+' μέρες</div></div>').join('')+'</div>';
+  c.appendChild(cp);
+  return c;
+}
+// Κοινοποίηση προόδου: native share όπου υποστηρίζεται, αλλιώς αντιγραφή στο clipboard με οπτική επιβεβαίωση.
+function shareProgress(btn,score,streak){
+  const parts=['Πέτυχα '+score+'% τήρηση αυτή την εβδομάδα!'];
+  if(streak>0)parts.push('🔥 '+streak+' '+(streak===1?'μέρα':'μέρες')+' σερί');
+  parts.push('με το πλάνο μου από το Feed Your Health 💪');
+  const text=parts.join(' ');
+  if(navigator.share){
+    navigator.share({text:text}).catch(()=>{});
+  }else if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>{
+      const old=btn.innerHTML;
+      btn.innerHTML='<i class="ti ti-check"></i>Αντιγράφηκε!';
+      setTimeout(()=>{btn.innerHTML=old;},1500);
+    }).catch(()=>{});
+  }
+}
 // Αυτόματες συμβουλές βάσει αποτελεσμάτων (κανόνες, max 3).
 function buildTips(cur,prev){
   const out=[], P=(d,t)=>t?Math.round(d/t*100):-1, dn=n=>n===1?'μέρα':'μέρες';
@@ -1012,8 +1116,7 @@ function viewProg(){
 
   // hero: σκορ εβδομάδας
   const hero=el('div','card'); const hp=el('div','card-pad');
-  hp.style.cssText='display:flex;align-items:center;gap:16px';
-  hp.innerHTML='<div style="position:relative;width:82px;height:82px;flex-shrink:0">'
+  hp.innerHTML='<div style="display:flex;align-items:center;gap:16px"><div style="position:relative;width:82px;height:82px;flex-shrink:0">'
     +'<svg viewBox="0 0 36 36" style="width:82px;height:82px;transform:rotate(-90deg)">'
     +'<circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--tint2)" stroke-width="3.4"/>'
     +'<circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--teal)" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+(score||0)+' 100"/>'
@@ -1022,8 +1125,18 @@ function viewProg(){
     +'<span style="font-size:10px;color:var(--muted)">σκορ</span></div></div>'
     +'<div style="flex:1"><p style="margin:0 0 4px;font-size:14px;font-weight:600;color:var(--teal-d)">'+scoreGreeting(score)+'</p>'
     +'<p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5">'+(cur.anyData?totDone+' από '+totTot+' στόχους ✓':'Τσέκαρε τα γεύματα, τα συμπληρώματα και το νερό σου.')
-    +(streak>0?' · σερί <span style="color:var(--teal);font-weight:600">'+streak+' '+(streak===1?'μέρα':'μέρες')+'</span>':'')+'</p></div>';
+    +(streak>0?' · σερί <span style="color:var(--teal);font-weight:600">'+streak+' '+(streak===1?'μέρα':'μέρες')+'</span>':'')+'</p></div></div>';
+  if(score!=null){
+    const shareBtn=el('button','sharebtn');
+    shareBtn.type='button';
+    shareBtn.innerHTML='<i class="ti ti-share-2"></i>Κοινοποίησε την πρόοδό σου';
+    shareBtn.onclick=()=>shareProgress(shareBtn,score,streak);
+    hp.appendChild(shareBtn);
+  }
   hero.appendChild(hp); v.appendChild(hero);
+
+  // ορόσημα σερί (7/14/30 μέρες) — καθαρά υπολογισμένο, δεν αποθηκεύει τίποτα δικό του
+  const ms=milestoneCard(streak); if(ms)v.appendChild(ms);
 
   // καταγραφή βάρους/σημείωσης από τον ίδιο τον πελάτη
   const already=getClientLogToday();
