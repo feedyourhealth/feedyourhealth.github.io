@@ -98,6 +98,46 @@ function fmtFoodQty(food, gLabel, tuFn){
 // ── PHASE 2: Meal Timing Profiles ──────────────────────────────────────────────
 // Nutritional optimization for different meal purposes relative to training
 
+// ── ΕΓΚΥΜΟΣΥΝΗ: τρίμηνο υπολογίζεται πάντα από την εβδομάδα κύησης (όχι ξεχωριστό πεδίο) ──
+// ώστε να μην μπορούν να διαφωνήσουν δύο χειροκίνητα πεδία μεταξύ τους.
+function getPregTrimester(week){
+  if(!week || week<1) return null;
+  if(week<=13) return 1;
+  if(week<=27) return 2;
+  return 3;
+}
+function getPregTrimesterLabel(week){
+  var t=getPregTrimester(week);
+  if(!t) return '';
+  return ['','(Α\' τρίμηνο)','(Β\' τρίμηνο)','(Γ\' τρίμηνο)'][t];
+}
+
+// IOM 2009 εύρος συνολικής αύξησης βάρους κύησης ανά κατηγορία ΔΜΣ προ εγκυμοσύνης (verified, βλ. memory).
+function getIOMWeightGainRange(prePregBMI){
+  if(prePregBMI<18.5) return {min:12.5,max:18,label:'Λιποβαρής'};
+  if(prePregBMI<25) return {min:11.5,max:16,label:'Φυσιολογικός'};
+  if(prePregBMI<30) return {min:7,max:11.5,label:'Υπέρβαρη'};
+  return {min:5,max:9.1,label:'Παχύσαρκη'};
+}
+// Σύγκριση πραγματικής αύξησης βάρους με το εύρος IOM — διαφορετική λογική από το γενικό weight-trend
+// (goalMain loss/gain), εδώ ο "στόχος" είναι ένα εύρος, όχι κατεύθυνση. Το "below" είναι σκόπιμα συντηρητικό
+// (μόνο κοντά στον τοκετό, με γενναίο περιθώριο) γιατί δεν έχουμε επιβεβαιωμένο εβδομαδιαίο ρυθμό-στόχο ανά ΔΜΣ,
+// μόνο το συνολικό εύρος — δεν προσποιούμαστε ακρίβεια που δεν έχουμε τεκμηριώσει.
+function checkGestationalWeightGain(c){
+  if(!c || !c.pregnant || !(c.prePregnancyWeight>0) || !(c.height>0)) return null;
+  var wl=(c.weightLog||[]).slice().sort(function(a,b){return a.date<b.date?-1:1;});
+  if(!wl.length) return null;
+  var latest=wl[wl.length-1];
+  var gained=+(latest.weight-c.prePregnancyWeight).toFixed(1);
+  var bmi=c.prePregnancyWeight/((c.height/100)*(c.height/100));
+  var range=getIOMWeightGainRange(bmi);
+  var week=c.gestationalWeek||null;
+  var status='ontrack';
+  if(gained>range.max) status='above';
+  else if(week>=36 && gained<range.min*0.7) status='below';
+  return {gained:gained, range:range, bmi:+bmi.toFixed(1), week:week, status:status};
+}
+
 // ── PHASE 4: Academic Sports Nutrition Protocols (ISSN, IOC, PubMed) ──────────
 // Based on comprehensive research: ISSN Consensus, IOC 2018, PubMed meta-analyses
 
@@ -270,6 +310,26 @@ function getMicronutrientTargets(c){
       unit:'g',label:'Omega-6 (LA)',
       notes:'Essential fatty acid',
       athletic:Math.round((sex==='M'?17:12)*athleteBoost)
+    },
+    // ✅ Εγκυμοσύνη pass: Ιώδιο/Χολίνη/DHA — στόχοι πέφτουν κατευθείαν σε c.pregnant (IOM/ACOG/ODS-NIH,
+    // βλ. verification pass), ίδιο πρότυπο με το ηλικιακό/φύλου branching του baseIron/baseCa πιο πάνω.
+    iodine:{
+      target:c.pregnant?220:150,
+      unit:'mcg',label:'Ιώδιο',
+      notes:c.pregnant?'Στόχος εγκυμοσύνης (ACOG/ODS-NIH)':'Γενικός ενήλικας',
+      athletic:c.pregnant?220:150
+    },
+    choline:{
+      target:c.pregnant?450:(sex==='M'?550:425),
+      unit:'mg',label:'Χολίνη',
+      notes:c.pregnant?'Στόχος εγκυμοσύνης, ανώτατο όριο ασφαλείας 3500mg/ημ. (IOM)':'Adequate Intake (IOM)',
+      athletic:c.pregnant?450:(sex==='M'?550:425)
+    },
+    dha:{
+      target:c.pregnant?200:250,
+      unit:'mg',label:'DHA (ω-3)',
+      notes:c.pregnant?'Ελάχιστο εγκυμοσύνης (ACOG/Perinatal Lipid Intake Working Group)':'Γενική σύσταση EPA+DHA (όχι επίσημο DRI)',
+      athletic:c.pregnant?200:250
     }
   };
 }
@@ -1294,7 +1354,7 @@ function getFiberTarget(age,sex){
 
 // ── Calculate micronutrient totals for a day ──────────────────────────────────
 function getDayMicronutrients(meals){
-  var result={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0};
+  var result={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0};
   (meals||[]).forEach(function(meal){
     (meal.foods||[]).forEach(function(food){
       var mn=MICRONUTRIENTS[food.n];
@@ -1311,6 +1371,9 @@ function getDayMicronutrients(meals){
         result.Folate+=(mn.Folate||0)*food.g/100;
         result.Omega3+=(mn.Omega3||0)*food.g/100;
         result.Omega6+=(mn.Omega6||0)*food.g/100;
+        result.Iodine+=(mn.Iodine||0)*food.g/100;
+        result.Choline+=(mn.Choline||0)*food.g/100;
+        result.DHA+=(mn.DHA||0)*food.g/100;
       }
     });
   });
@@ -1320,7 +1383,7 @@ function getDayMicronutrients(meals){
 // ── Check micronutrient adequacy for the day ────────────────────────────────
 function checkMicronutrientAdequacy(dayMN,targets,useAthletic){
   var result={};
-  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6'].forEach(function(key){
+  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA'].forEach(function(key){
     var tgt=targets[key.toLowerCase()]||targets[key]||{};
     var target=useAthletic?tgt.athletic:tgt.target;
     var actual=dayMN[key]||0;
@@ -1335,7 +1398,7 @@ function getWeekMicronutrients(weekPlan){
   // INPUT: 7-day meal plan (weekPlan[0-6] each with meals)
   // OUTPUT: Weekly aggregate {Fe: 126, Ca: 8400, ...} and daily averages
 
-  var weekTotals={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0};
+  var weekTotals={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0};
   var dailyAverage={};
 
   for(var d=0;d<7;d++){
@@ -1628,13 +1691,21 @@ function calcTDEE(c){
     }
     // Priority 3: Fallback to Mifflin-St Jeor
     else {
-      // Mifflin-St Jeor (default)
-      bmr=c.sex==='M'?10*c.weight+6.25*c.height-5*c.age+5:10*c.weight+6.25*c.height-5*c.age-161;
+      // Mifflin-St Jeor (default) — σε εγκυμοσύνη χρησιμοποιούμε το βάρος προ εγκυμοσύνης όταν υπάρχει
+      // (το BMR εξίσωσης δεν είναι επικυρωμένο πάνω σε εγκυμονούσα φυσιολογία με το τρέχον βάρος·
+      // η επιπλέον ενεργειακή ανάγκη προστίθεται ξεχωριστά παρακάτω μέσω pregAdd, βάσει IOM/DRI ανά τρίμηνο)
+      var bmrW=(c.pregnant&&c.prePregnancyWeight>0)?c.prePregnancyWeight:c.weight;
+      bmr=c.sex==='M'?10*bmrW+6.25*c.height-5*c.age+5:10*bmrW+6.25*c.height-5*c.age-161;
       t.bmrMethod='Mifflin-St Jeor';
       t.ffmUsed=null;
     }
   }
   }  // Close else block for RMR check
+
+  // ✅ Εγκυμοσύνη: επιπλέον θερμίδες ανά τρίμηνο πάνω από το TDEE (IOM/National Academies DRI for Energy)
+  // Α' τρίμηνο +0, Β' +340, Γ' +452 kcal/ημέρα — εφαρμόζεται ΚΑΘΕ ημέρα (όχι μόνο ημέρες ξεκούρασης, σε αντίθεση με το growthAdd)
+  var pregTri=c.pregnant?getPregTrimester(c.gestationalWeek):null;
+  var pregAdd=pregTri===3?452:(pregTri===2?340:0);
 
   var tdee;
   var metKcal=calcMETkcal(c);
@@ -1683,16 +1754,16 @@ function calcTDEE(c){
   // - Rest days (R): baseTDEE + goalDelta + growthAdd (for development)
   // - Train days (T): baseTDEE + exercise kcal + goalDelta (no growth allowance needed, training provides stimulus)
   var baseTDEE=neat;
-  var restTarget=usedMET?baseTDEE+goalDelta+growthAdd:tdee+goalDelta+growthAdd;
-  var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta:tdee+goalDelta;  // NO growthAdd on training days
+  var restTarget=usedMET?baseTDEE+goalDelta+growthAdd+pregAdd:tdee+goalDelta+growthAdd+pregAdd;
+  var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta+pregAdd:tdee+goalDelta+pregAdd;  // NO growthAdd on training days, but pregAdd applies every day
   var trainTargetByDay=[];
   for(var tdi=0;tdi<7;tdi++){
     if(usedMET){
       // MET-based: NEAT + per-day exercise + goal + growth (every day)
-      trainTargetByDay.push(Math.round(baseTDEE+metKcal.byDay[tdi]+goalDelta+growthAdd));
+      trainTargetByDay.push(Math.round(baseTDEE+metKcal.byDay[tdi]+goalDelta+growthAdd+pregAdd));
     } else {
       // Activity factor-based: same for all days (TDEE already has avg activity)
-      trainTargetByDay.push(Math.round(tdee+goalDelta+growthAdd));
+      trainTargetByDay.push(Math.round(tdee+goalDelta+growthAdd+pregAdd));
     }
   }
   // ✅ CORRECTED: Single target = average of daily targets
@@ -1746,6 +1817,23 @@ function calcTDEE(c){
   if(carbG<20&&target>1200){
     warnings.push({type:'warn',msg:'⚠️ Πολύ λίγοι υδατάνθρακες: '+carbG+'g (ίσως συντακτικό λάθος;)'});
   }
+  // ✅ Εγκυμοσύνη: πρωτεΐνη-στόχος 1.1 g/kg (βάρος προ εγκυμοσύνης) — ACOG/IOM DRI. Δεν επιβάλλεται
+  // αυτόματα (το macro% preset μένει στη διακριτική ευχέρεια της διαιτολόγου) — μόνο προειδοποίηση, ίδιο σχέδιο με τα προηγούμενα warnings.
+  if(c.pregnant){
+    var pregWforProt=(c.prePregnancyWeight>0)?c.prePregnancyWeight:c.weight;
+    var pregProtGperKg=pregWforProt>0?+(protG/pregWforProt).toFixed(2):0;
+    if(pregProtGperKg<1.1){
+      warnings.push({type:'warn',msg:'🤰 Πρωτεΐνη κάτω από τον στόχο εγκυμοσύνης: '+pregProtGperKg+'g/kg (ελάχιστο 1.1 g/kg βάρους προ εγκυμοσύνης, ACOG/IOM)'});
+    }
+    if(!pregTri){
+      warnings.push({type:'warn',msg:'🤰 Συμπλήρωσε εβδομάδα κύησης για ακριβή θερμιδικό στόχο τριμήνου'});
+    }
+    // GDM carb floor (IOM/ADA): ποτέ κάτω από 175g/ημ. υδατάνθρακες σε εγκυμοσύνη, ακόμα κι αν το
+    // πρωτόκολλο διαβήτη ζητά χαμηλότερο ποσοστό — βλ. verification pass, PMC12620731.
+    if(c.medConditions && c.medConditions.diabetes && carbG<175){
+      warnings.push({type:'alert',msg:'🚫 GDM: υδατάνθρακες '+carbG+'g κάτω από το ελάχιστο ασφαλείας 175g/ημ. (IOM/ADA) — ανέβασε το ποσοστό υδατανθράκων στην Κατανομή Μακροθρεπτικών.'});
+    }
+  }
   return{bmr:Math.round(bmr),tdee:tdee,target:target,
     restTarget:restTarget,trainTarget:trainTarget,trainTargetByDay:trainTargetByDay,
     p:protG,f:fatG,carb:carbG,
@@ -1754,6 +1842,7 @@ function calcTDEE(c){
     exerciseDaily:exerciseKcal,exerciseWeekly:metKcal.weekly,
     perTrainDay:metKcal.perTrainDay,byDay:metKcal.byDay,usedMET:usedMET,
     isMinor:isMinor,growthAdd:growthAdd,neat:neat,
+    pregTrimester:pregTri,pregAdd:pregAdd,
     protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA,warnings:warnings,
     bmrMethod:t.bmrMethod||'Mifflin-St Jeor',ffmUsed:t.ffmUsed||null,usedRMR:t.usedRMR||false};
 }

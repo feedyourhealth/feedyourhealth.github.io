@@ -1174,8 +1174,73 @@ var MEDICAL_PROTOCOLS = {
     sources: [
       { name: 'Sawka MN, et al. "ACSM Position Stand: Exercise and Fluid Replacement." Med Sci Sports Exerc. 2007', url: 'https://pubmed.ncbi.nlm.nih.gov/17277604/', official: true }
     ]
+  },
+
+  pregnancy: {
+    name: 'Εγκυμοσύνη',
+    icon: '🤰',
+    restrictions: {
+      // avoidFoods σκόπιμα κενό: η βάση τροφίμων FOODS δεν περιέχει αλλαντικά, ωμό ψάρι/κρέας, συκώτι
+      // ή μη παστεριωμένα γαλακτοκομικά (είναι ήδη whole-foods βάση) — δεν υπάρχει τίποτα ουσιαστικό να
+      // αποκλειστεί μηχανικά εδώ· η καθοδήγηση γι' αυτά είναι συμπεριφορική (βλ. notes) και αφορά τη
+      // διαιτολόγο/πελάτισσα εκτός του παραγόμενου πλάνου.
+      avoidFoods: [],
+      maxCaffeineMg: 200
+    },
+    foodReplacements: {},
+    supplements: ['Φυλλικό οξύ (600 μg/ημ.)', 'Σίδηρος (27 mg/ημ.)', 'Ασβέστιο (1000 mg/ημ.)', 'Ιώδιο (220 μg/ημ.)', 'Χολίνη (450 mg/ημ., ανώτατο όριο ασφαλείας 3500 mg/ημ.)', 'DHA (≥200 mg/ημ.)', 'Βιταμίνη D (600 IU/ημ.)'],
+    notes: 'Ενεργειακή πρόσληψη: +0 kcal Α\' τρίμηνο, +340 kcal Β\' τρίμηνο, +452 kcal Γ\' τρίμηνο πάνω από το TDEE προ εγκυμοσύνης (IOM/DRI). Πρωτεΐνη-στόχος: 1.1 g/kg βάρους προ εγκυμοσύνης (~71g/ημ.). Καφεΐνη <200mg/ημέρα. Αλκοόλ: πλήρης αποφυγή. Αλλαντικά: μόνο καλά αναθερμασμένα (≥74°C, κίνδυνος λιστερίας). Ψάρια: 227-340g/εβδομάδα ποικιλίας χαμηλού υδραργύρου (σολομός/τόνος κονσέρβα εντάξει, όχι σε κάθε γεύμα). Άσκηση: αποφυγή υπερθέρμανσης (ειδικά Α\' τρίμηνο) και ύπτιας θέσης μετά τις 20 εβδομάδες.',
+    sources: [
+      { name: 'ACOG — Nutrition During Pregnancy', url: 'https://www.acog.org/womens-health/faqs/healthy-eating-during-pregnancy', official: true },
+      { name: 'National Academies — Nutrition During Pregnancy and Lactation (DRI for Energy)', url: 'https://www.nationalacademies.org/read/25841/chapter/3', official: true },
+      { name: 'National Academies Press — Weight Gain During Pregnancy: Reexamining the Guidelines (IOM 2009)', url: 'https://nap.nationalacademies.org/read/12584/chapter/9', official: true },
+      { name: 'WHO — Calcium Supplementation During Pregnancy for Prevention of Pre-eclampsia', url: 'https://www.who.int/publications/i/item/9789241550451', official: true },
+      { name: 'CDC — Safer Food Choices for Pregnant Women', url: 'https://www.cdc.gov/food-safety/foods/pregnant-women.html', official: true },
+      { name: 'ODS/NIH — Dietary Supplements and Life Stages: Pregnancy', url: 'https://ods.od.nih.gov/factsheets/Pregnancy-HealthProfessional/', official: true },
+      { name: 'ACOG — Physical Activity and Exercise During Pregnancy', url: 'https://www.acog.org/womens-health/faqs/exercise-during-pregnancy', official: true }
+    ]
   }
 };
+
+// Trimester-specific σημείωση (χρησιμοποιείται στο showMedicalProtocol όταν condition==='pregnancy' και
+// υπάρχει ενεργός πελάτης με gestationalWeek — τα υπόλοιπα πεδία του πρωτοκόλλου παραμένουν σταθερά).
+function getPregnancyTrimesterNote(week){
+  var tri=(typeof getPregTrimester==='function')?getPregTrimester(week):null;
+  if(tri===1) return 'Α\' τρίμηνο: το φυλλικό οξύ είναι κρίσιμο ΤΩΡΑ (κλείσιμο νευρικού σωλήνα, εβδ. 4-6) — δεν πρέπει να ξεκινά μετά τη διάγνωση. Ναυτία/έμετος συχνά: μικρά, συχνά γεύματα.';
+  if(tri===2) return 'Β\' τρίμηνο: αυξημένη ανάγκη σιδήρου λόγω επέκτασης όγκου αίματος. Καλή στιγμή για σταθεροποίηση διατροφικών συνηθειών.';
+  if(tri===3) return 'Γ\' τρίμηνο: καούρα/παλινδρόμηση συχνή — μικρότερα, συχνότερα γεύματα, αποφυγή ξάπλωσης αμέσως μετά το φαγητό.';
+  return 'Συμπλήρωσε την εβδομάδα κύησης στη φόρμα πελάτη για συγκεκριμένη καθοδήγηση τριμήνου.';
+}
+
+// ✅ Κεντρική συνάρτηση ασφαλείας εγκυμοσύνης — τρέχει ΠΑΝΩ από οποιονδήποτε συνδυασμό dietType/άλλου
+// ενεργού πρωτοκόλλου, αντί να διορθώνεται το κάθε πρωτόκολλο ξεχωριστά (π.χ. Διαβήτης+έγκυος+keto
+// ταυτόχρονα πρέπει να ελέγχεται ενιαία). level: 'block' (χρειάζεται ρητή επιβεβαίωση διαιτολόγου πριν
+// τη δημιουργία πλάνου), 'warn' (εμφανίζεται αλλά δεν μπλοκάρει), 'info' (μόνο στο πρωτόκολλο modal).
+function getPregnancySafetyFlags(client){
+  var flags=[];
+  if(!client || !client.pregnant) return flags;
+  var mc=client.medConditions||{};
+
+  if(client.dietType==='keto'){
+    flags.push({level:'block', msg:'Κετογονική δίαιτα + εγκυμοσύνη: δεν συστήνεται χωρίς στενή ιατρική παρακολούθηση — μελέτες δείχνουν ~30% αυξημένο κίνδυνο ανεγκεφαλίας/spina bifida σε χαμηλή πρόσληψη υδατανθράκων, πέρα από κίνδυνο ανεπάρκειας φυλλικού/μαγνησίου/βιταμινών Α&D. Το 60% των κλινικών δεν τη συστήνει σε εγκυμοσύνη.'});
+  }
+  if(client.dietType==='intermittent_fasting'){
+    flags.push({level:'warn', msg:'Διαλείπουσα νηστεία + εγκυμοσύνη: τα δεδομένα είναι ηπιότερα απ\' ό,τι για την κετογονική (μικρή, οριακή μείωση βάρους γέννησης σε μετα-ανάλυση, όχι αυξημένος κίνδυνος χαμηλού βάρους) — αλλά παρατεταμένη νηστεία στο Α\' τρίμηνο αυξάνει κίνδυνο ναυτίας/αφυδάτωσης. Εξέτασε εναλλακτικό πρότυπο γευμάτων.'});
+  }
+  if(mc.diabetes){
+    flags.push({level:'info', msg:'Διαβήτης + εγκυμοσύνη (πιθανό GDM): μην αφήσεις τους υδατάνθρακες κάτω από 175g/ημέρα (ελάχιστο ασφαλείας IOM/ADA για εγκέφαλο εμβρύου) ακόμα κι αν το πρωτόκολλο διαβήτη ζητά χαμηλότερο ποσοστό. Απόφυγε το Χρώμιο σε μορφή συμπληρώματος — ανεπαρκή δεδομένα ασφάλειας σε εγκυμοσύνη, προτίμησε πηγές από τροφή.'});
+  }
+  if(mc.hypertension){
+    flags.push({level:'info', msg:'Υπέρταση + εγκυμοσύνη: ο περιορισμός νατρίου ΔΕΝ συστήνεται για πρόληψη/διαχείριση προεκλαμψίας (WHO) — μη σφίγγεις το αλάτι πέρα από τη γενική καθοδήγηση. Το Ασβέστιο (ήδη στο πρωτόκολλο υπέρτασης) είναι το τεκμηριωμένο μέτρο πρόληψης προεκλαμψίας.'});
+  }
+  if(mc.cholesterol){
+    flags.push({level:'info', msg:'Χοληστερόλη + εγκυμοσύνη: απόφυγε Φυτικές στερόλες/στανόλες (δεν συστήνονται σε εγκυμοσύνη/θηλασμό, ανεπαρκή δεδομένα ασφάλειας). Χαλάρωσε την ένταση περιορισμού λίπους/κορεσμένων — η φυσιολογική άνοδος χοληστερόλης στην εγκυμοσύνη δεν χρειάζεται επιθετική διορθωτική δίαιτα, και τα λιπαρά/DHA είναι τώρα πιο σημαντικά.'});
+  }
+  if(mc.ibs){
+    flags.push({level:'info', msg:'IBS + εγκυμοσύνη: Σπιρουλίνα μόνο από πιστοποιημένη, ελεγμένη πηγή (κίνδυνος μόλυνσης βαρέων μετάλλων/μικροκυστινών σε μη ελεγμένες πηγές) — Προβιοτικά/Ίνες παραμένουν ασφαλή.'});
+  }
+  return flags;
+}
 
 // Get protocol for a specific condition
 function getProtocol(condition) {
@@ -1185,6 +1250,12 @@ function getProtocol(condition) {
 // Get all active protocols for a client
 function getActiveProtocols(client) {
   var protocols = [];
+  // ✅ Εγκυμοσύνη ρέει αυτόματα εδώ από c.pregnant (φόρμα πελάτη) — όχι ξεχωριστό checkbox
+  // στο modal Ιατρικές Συνθήκες, ώστε να μην υπάρχουν δύο σημαίες που μπορούν να αποσυγχρονιστούν.
+  if(client.pregnant){
+    var pregProtocol = getProtocol('pregnancy');
+    if(pregProtocol) protocols.push(pregProtocol);
+  }
   if(!client.medConditions) return protocols;
 
   Object.keys(client.medConditions).forEach(function(condition) {
@@ -1256,6 +1327,44 @@ function showMedicalProtocol(condition) {
 
   var html = '<div style="padding:20px;max-width:600px;font-family:Arial,sans-serif;">';
   html += '<h3 style="color:#025857;margin-top:0;border-bottom:3px solid #E2EEE5;padding-bottom:10px;">' + protocol.icon + ' ' + protocol.name + '</h3>';
+
+  // ✅ ΕΓΚΥΜΟΣΥΝΗ: δυναμικό μπλοκ τριμήνου βάσει της εβδομάδας κύησης του ενεργού πελάτη
+  if(condition==='pregnancy'){
+    var pc=getC();
+    if(pc && pc.pregnant){
+      var pt=calcTDEE(pc);
+      html += '<div style="background:#E2EEE5;padding:12px;border-radius:6px;margin-bottom:15px;">';
+      html += '<strong style="color:#025857;">'+esc(getPregTrimesterLabel(pc.gestationalWeek)||'Τρίμηνο άγνωστο')+'</strong>';
+      html += '<div style="display:flex;gap:16px;margin-top:6px;font-size:13px;color:#333;">';
+      html += '<span>Επιπλέον θερμίδες: <strong>+'+(pt.pregAdd||0)+' kcal</strong></span>';
+      html += '<span>Στόχος: <strong>'+pt.target+' kcal</strong> · Π:'+pt.p+'g</span>';
+      html += '</div>';
+      html += '<div style="margin-top:8px;font-size:12px;color:#333;line-height:1.5;">'+esc(getPregnancyTrimesterNote(pc.gestationalWeek))+'</div>';
+      html += '</div>';
+
+      var pFlags=(typeof getPregnancySafetyFlags==='function')?getPregnancySafetyFlags(pc):[];
+      if(pFlags.length>0){
+        html += '<div style="margin-bottom:15px;"><strong style="color:#333;font-size:13px;">🔗 Αλληλεπιδράσεις με άλλα ενεργά πρωτόκολλα/ρυθμίσεις:</strong>';
+        pFlags.forEach(function(f){
+          var bg=f.level==='block'?'#fdecea':(f.level==='warn'?'#fff3e0':'#f5f5f5');
+          var bd=f.level==='block'?'#d32f2f':(f.level==='warn'?'#ff9800':'#999');
+          var ic=f.level==='block'?'🚫':(f.level==='warn'?'⚠️':'ℹ️');
+          html += '<div style="background:'+bg+';border-left:4px solid '+bd+';padding:8px 10px;border-radius:4px;margin-top:6px;font-size:12px;color:#333;line-height:1.5;">'+ic+' '+esc(f.msg)+'</div>';
+        });
+        html += '</div>';
+      }
+
+      var wg=(typeof checkGestationalWeightGain==='function')?checkGestationalWeightGain(pc):null;
+      if(wg){
+        var wgBg=wg.status==='above'?'#fdecea':(wg.status==='below'?'#fff3e0':'#e8f5e9');
+        var wgBd=wg.status==='above'?'#d32f2f':(wg.status==='below'?'#ff9800':'#4caf50');
+        var wgTxt=wg.status==='above'?'Πάνω από το συνολικό εύρος IOM':(wg.status==='below'?'Κάτω από το αναμενόμενο κοντά στον τοκετό':'Εντός εύρους IOM');
+        html += '<div style="background:'+wgBg+';border-left:4px solid '+wgBd+';padding:10px 12px;border-radius:4px;margin-bottom:15px;font-size:12px;color:#333;">';
+        html += '<strong>⚖️ Αύξηση βάρους κύησης:</strong> '+wg.gained+' kg μέχρι τώρα (ΔΜΣ προ εγκυμοσύνης '+wg.bmi+' — '+wg.range.label+', εύρος IOM '+wg.range.min+'-'+wg.range.max+' kg) — <strong>'+wgTxt+'</strong>';
+        html += '</div>';
+      }
+    }
+  }
 
   // RESTRICTIONS (some protocols, e.g. sports supplement/education-only ones, have nothing to avoid)
   if(protocol.restrictions.avoidFoods && protocol.restrictions.avoidFoods.length > 0) {
@@ -1837,7 +1946,7 @@ function calculateDailyTotals(dayMeals){
 
     meal.foods.forEach(function(food){
       if(!food) return;
-      var foodData = ALLFOODS[food.name];
+      var foodData = FOODS[food.n];
       if(!foodData) return;
 
       var qty = food.g || 0;

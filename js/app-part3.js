@@ -900,8 +900,26 @@ function genPlanWithUndo(){
   var c=getC();if(!c)return;
   var errors=validateClientData(c);
   if(errors.length>0){ showValidationErrors(errors); return; }
-  var oldPlan = deepClone(c.weekPlan);
 
+  // ✅ Εγκυμοσύνη: συνδυασμοί υψηλού κινδύνου (π.χ. κετογονική+έγκυος) χρειάζονται ρητή επιβεβαίωση
+  // της διαιτολόγου πριν τη δημιουργία πλάνου — δεν μπλοκάρουμε απόλυτα γιατί μπορεί να υπάρχει
+  // ιατρικά επιβλεπόμενη εξαίρεση, αλλά δεν προχωράμε σιωπηλά.
+  var pregFlags=(typeof getPregnancySafetyFlags==='function')?getPregnancySafetyFlags(c):[];
+  var blockFlags=pregFlags.filter(function(f){return f.level==='block';});
+  if(blockFlags.length>0){
+    var msg='🚫 '+blockFlags.map(function(f){return f.msg;}).join('\n\n')+'\n\nΘέλεις να συνεχίσεις ούτως ή άλλως (π.χ. υπό ιατρική παρακολούθηση);';
+    showConfirmDialog(msg, function(){ _genPlanWithUndoProceed(c); }, {icon:'🚫', confirmLabel:'Συνέχεια ούτως ή άλλως'});
+    return;
+  }
+  var warnFlags=pregFlags.filter(function(f){return f.level==='warn';});
+  if(warnFlags.length>0 && typeof showErrorToast==='function'){
+    showErrorToast('⚠️ '+warnFlags[0].msg);
+  }
+  _genPlanWithUndoProceed(c);
+}
+
+function _genPlanWithUndoProceed(c){
+  var oldPlan = deepClone(c.weekPlan);
   if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
     var cmd = new GeneratePlanCommand(c, oldPlan);
     window.undoRedoManager.execute(cmd);
@@ -2544,14 +2562,14 @@ function getMicronutrientHtml(c){
   }
 
   // Calculate weekly average
-  var weekMN={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0};
+  var weekMN={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0};
   Object.keys(daysMN).forEach(function(d){
     var dmn=daysMN[d];
-    ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6'].forEach(function(key){
+    ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA'].forEach(function(key){
       weekMN[key]+=dmn[key];
     });
   });
-  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6'].forEach(function(key){
+  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA'].forEach(function(key){
     weekMN[key]=Math.round(weekMN[key]/7);
   });
 
@@ -2592,7 +2610,7 @@ function getMicronutrientHtml(c){
   html+='<tbody>';
 
   // Sort by status (critical first, then low, then ok)
-  var sortedKeys=['Fe','Zn','Mg','Ca','B12','B1','B2','B3','B6','Folate','Omega3','Omega6'];
+  var sortedKeys=['Fe','Zn','Mg','Ca','B12','B1','B2','B3','B6','Folate','Omega3','Omega6','Iodine','Choline','DHA'];
   var rows=[];
 
   sortedKeys.forEach(function(key){
@@ -2648,7 +2666,8 @@ function getMicronutrientHtml(c){
 
   // ✅ ADD DAILY TOTALS & STATUS HEADERS
   html+='<div style="margin-top:20px;display:grid;grid-template-columns:repeat(7,1fr);gap:10px;">';
-  var targetTotals = calcTDEE(c);
+  var tdeeResult = calcTDEE(c);
+  var targetTotals = {k: tdeeResult.target}; // ✅ FIX: calcTDEE() returns .target for kcal, not .k — getDayStatus expects .k
   for(var dayIdx = 0; dayIdx < 7; dayIdx++){
     var dayMeals = c.weekPlan[dayIdx] || [];
     var dayTotals = calculateDailyTotals(dayMeals);

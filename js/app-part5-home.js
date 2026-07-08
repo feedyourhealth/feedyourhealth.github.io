@@ -76,6 +76,25 @@ function homeTrendRow(c,rate){
     +'</div>';
 }
 
+// Έγκυες πελάτισσες με αύξηση βάρους εκτός του εύρους IOM (βλ. checkGestationalWeightGain, js/app-part1.js) —
+// ξεχωριστό από homeWeightTrendAlerts γιατί ο "στόχος" εδώ είναι εύρος, όχι κατεύθυνση loss/gain.
+function homePregnancyWeightAlerts(){
+  var out=[];
+  clients.filter(function(c){return !c.deleted && !c.archived && c.pregnant;}).forEach(function(c){
+    var wg=(typeof checkGestationalWeightGain==='function')?checkGestationalWeightGain(c):null;
+    if(wg && wg.status!=='ontrack') out.push({c:c,wg:wg});
+  });
+  return out;
+}
+function homePregWeightRow(c,wg){
+  var txt=wg.status==='above'?('+'+wg.gained+'kg · πάνω από '+wg.range.max+'kg'):('+'+wg.gained+'kg · κάτω από αναμενόμενο');
+  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
+    +'<div class="hm-avatar hm-avatar-red">'+initials(c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-trend-badge hm-trend-bad">'+txt+'</span>'
+    +'</div>';
+}
+
 // Πελάτες με δημοσιευμένο σύνδεσμο portal που δείχνει πλέον ξεπερασμένο πλάνο.
 function homeStaleLinks(){
   return clients.filter(function(c){return !c.deleted && !c.archived && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c);});
@@ -174,6 +193,7 @@ function renderHome(){
     return homeRow(x.c,sub,'teal');
   });
   var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
+  var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -190,6 +210,7 @@ function renderHome(){
   html+='<div class="hm-grid">';
   html+=homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'Όλοι οι πελάτες έχουν πρόσφατη μέτρηση 👍', 'ακόμα', 'danger');
   html+=homeCard('📈 Τάση βάρους', trendRows, 'Καμία ανησυχητική τάση βάρους αυτή τη στιγμή 👍', 'ακόμα', 'danger');
+  html+=homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'Καμία έγκυος εκτός εύρους IOM αυτή τη στιγμή 👍', 'ακόμα', 'danger');
   html+=homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'Κανένας σύνδεσμος δεν χρειάζεται ανανέωση 👍', 'ακόμα', 'warning');
   html+=homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'Καμία πρόσφατη δραστηριότητα από το portal', 'ακόμα', 'info');
   html+='</div>';

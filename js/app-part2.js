@@ -283,6 +283,7 @@ function renderMain(){
   if(!c.trainDays) c.trainDays = [false, false, false, false, false, false, false];
   if(!c.trainHoursByDay) c.trainHoursByDay = [1, 1, 1, 1, 1, 1, 1];
   if(!c.savedPlans) c.savedPlans = [];  // Initialize saved plans for plan history
+  if(c.pregnant===undefined) c.pregnant = false; // ✅ Εγκυμοσύνη: trimester υπολογίζεται από gestationalWeek, βλ. getPregTrimester()
 
   var t=calcTDEE(c);
   // Calculate weekly average target from daily targets (for MET-based accuracy)
@@ -371,6 +372,14 @@ function renderMain(){
     +'<div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος" value="'+esc(c.name||'')+'"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div>'
     +'<div class="fgrp"><label>Ημερομηνία Γέννησης <span id="age-display" style="color:#025857;font-weight:600;font-size:12px"></span></label><input type="date" id="inp-birthdate" min="1915-01-01" max="'+new Date().toISOString().slice(0,10)+'"></div></div>'
+    // ✅ Εγκυμοσύνη: ορατό μόνο όταν Φύλο=Γυναίκα, ίδιο conditional-reveal pattern με formula==='cunningham'
+    +'<div class="fg" id="preg-toggle-wrap" style="display:'+(c.sex==='F'?'flex':'none')+'">'
+    +'<div class="fgrp" style="flex:1"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">'
+    +'<input type="checkbox" id="inp-pregnant" style="width:16px;height:16px;cursor:pointer"'+(c.pregnant?' checked':'')+'>🤰 Η πελάτισσα είναι έγκυος</label></div></div>'
+    +'<div class="fg" id="preg-fields-wrap" style="display:'+(c.pregnant?'flex':'none')+'">'
+    +'<div class="fgrp"><label>Εβδομάδα κύησης <span id="preg-tri-badge" style="color:#025857;font-weight:600;font-size:11px">'+esc(getPregTrimesterLabel(c.gestationalWeek))+'</span></label><input type="number" id="inp-gestweek" value="'+(c.gestationalWeek||'')+'" min="1" max="42" placeholder="π.χ. 20"></div>'
+    +'<div class="fgrp"><label>Βάρος προ εγκυμοσύνης (kg)</label><input type="number" id="inp-prepregweight" value="'+(c.prePregnancyWeight||'')+'" min="30" max="200" step="0.1" placeholder="π.χ. 63"></div>'
+    +'<div class="fgrp" style="justify-content:flex-end"><button type="button" class="btn" onclick="showMedicalProtocol(\'pregnancy\')" style="background:#025857;color:#fff;border:none;border-radius:6px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;">🤰 Πρωτόκολλο Εγκυμοσύνης</button></div></div>'
     +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+esc(c.email||'')+'"></div>'
     +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+esc(c.phone||'')+'"></div></div>'
     +'</div>'
@@ -594,9 +603,24 @@ function renderMain(){
   document.getElementById('inp-name').oninput=function(){upd('name',this.value);};
   if(_inpEmail)_inpEmail.oninput=function(){upd('email',this.value.trim());};
   if(_inpPhone)_inpPhone.oninput=function(){upd('phone',this.value.trim());};
-  document.getElementById('inp-sex').onchange=function(){upd('sex',this.value);};
+  // ⚠️ inp-sex.onchange is (re)assigned by setupFormEventListeners() below, which always runs LAST
+  // in this function and would silently clobber a handler set here (same pattern as the historical
+  // duplicate rateMeal/validateClientData bugs) — the pregnancy-toggle-visibility logic for sex lives
+  // there instead, see the 'inp-sex' special-case in setupFormEventListeners().
   var _bdEl=document.getElementById('inp-birthdate');
   if(_bdEl)_bdEl.onchange=function(){commitBirthdate(c);};
+  var _pregCb=document.getElementById('inp-pregnant');
+  if(_pregCb)_pregCb.onchange=function(){
+    upd('pregnant',this.checked);
+    var pf=document.getElementById('preg-fields-wrap');if(pf)pf.style.display=this.checked?'flex':'none';
+  };
+  var _gestWeekInp=document.getElementById('inp-gestweek');
+  if(_gestWeekInp)_gestWeekInp.oninput=function(){
+    upd('gestationalWeek',+this.value);
+    var badge=document.getElementById('preg-tri-badge');if(badge)badge.textContent=getPregTrimesterLabel(+this.value);
+  };
+  var _prePregWInp=document.getElementById('inp-prepregweight');
+  if(_prePregWInp)_prePregWInp.oninput=function(){upd('prePregnancyWeight',+this.value);};
   document.getElementById('inp-weight').onblur=function(){upd('weight',+this.value);};
   document.getElementById('inp-height').onblur=function(){upd('height',+this.value);};
   var rmrInp=document.getElementById('inp-rmr');
@@ -2577,6 +2601,19 @@ function setupFormEventListeners(){
     el.onchange=function(){
       var val=type==='number'?parseFloat(this.value)||0:this.value;
       upd(fieldName,val);
+      // ✅ Εγκυμοσύνη: το toggle είναι ορατό μόνο για sex==='F' — αυτό ΠΡΕΠΕΙ να ζει εδώ (όχι στο
+      // αρχικό wiring πιο πάνω στη renderMain), γιατί αυτή η ανάθεση τρέχει τελευταία και νικάει.
+      if(elemId==='inp-sex'){
+        var pw=document.getElementById('preg-toggle-wrap');if(pw)pw.style.display=val==='F'?'flex':'none';
+        if(val!=='F'){
+          var cSex=getC();
+          if(cSex && cSex.pregnant){
+            upd('pregnant',false);
+            var pcb=document.getElementById('inp-pregnant');if(pcb)pcb.checked=false;
+            var pf=document.getElementById('preg-fields-wrap');if(pf)pf.style.display='none';
+          }
+        }
+      }
     };
   });
 }
