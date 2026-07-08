@@ -2395,23 +2395,27 @@ function logPlanGeneration(client, weekPlan){
     status: 'active'
   };
 
-  // Extract all recipes used
+  // Extract all recipes used. trackKey identifies the meal for trust tracking regardless of where
+  // it came from: a chef recipe's stable id (meal.recipeId), or a taste-library/saved-combo meal's
+  // content signature (meal.recipeSig) — most real plans are library-sourced, so without this they'd
+  // never accumulate usage history at all.
   for(var d=0;d<7;d++){
     if(weekPlan[d]){
       for(var mi=0;mi<weekPlan[d].length;mi++){
         var meal = weekPlan[d][mi];
-        if(meal.recipeId){
+        var trackKey = meal.recipeId || meal.recipeSig;
+        if(trackKey){
           planLog.mealsUsed.push({
             day: d,
             mealIndex: mi,
-            recipeId: meal.recipeId,
+            recipeId: trackKey,
             mealName: meal.name
           });
 
           // Update recipe stats
-          if(!TRACKING_DATA.recipes[meal.recipeId]){
-            TRACKING_DATA.recipes[meal.recipeId] = {
-              id: meal.recipeId,
+          if(!TRACKING_DATA.recipes[trackKey]){
+            TRACKING_DATA.recipes[trackKey] = {
+              id: trackKey,
               name: meal.name || 'Unknown',
               timesUsed: 0,
               successCount: 0,
@@ -2423,11 +2427,11 @@ function logPlanGeneration(client, weekPlan){
               thumbsDown: 0
             };
           }
-          TRACKING_DATA.recipes[meal.recipeId].timesUsed++;
-          TRACKING_DATA.recipes[meal.recipeId].lastUsed = new Date().toISOString();
+          TRACKING_DATA.recipes[trackKey].timesUsed++;
+          TRACKING_DATA.recipes[trackKey].lastUsed = new Date().toISOString();
 
-          if(!TRACKING_DATA.recipes[meal.recipeId].clientsUsedWith.includes(client.name)){
-            TRACKING_DATA.recipes[meal.recipeId].clientsUsedWith.push(client.name);
+          if(!TRACKING_DATA.recipes[trackKey].clientsUsedWith.includes(client.name)){
+            TRACKING_DATA.recipes[trackKey].clientsUsedWith.push(client.name);
           }
         }
       }
@@ -3018,10 +3022,11 @@ function analyzePatterns(){
 
 // Show analytics dashboard
 function showTrackingDashboard(){
+  closeTrackingDashboard(); // avoid stacking a second overlay if one is already open
   var patterns = analyzePatterns();
   var stats = calculateRecipeStats();
 
-  var html = '<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;overflow:auto;padding:20px;">';
+  var html = '<div id="tracking-dashboard-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;overflow:auto;padding:20px;">';
   html += '<div style="background:white;max-width:1000px;margin:0 auto;border-radius:10px;padding:30px;">';
   html += '<div style="position:absolute;top:10px;right:10px;cursor:pointer;font-size:30px;" onclick="closeTrackingDashboard();">&times;</div>';
 
@@ -3037,11 +3042,11 @@ function showTrackingDashboard(){
       var mealName = meal.meals && meal.meals[0] ? meal.meals[0].mealName : 'Γεύμα';
       var foods = meal.meals && meal.meals[0] ? meal.meals[0].foods : '-';
       html += '<tr style="border-bottom:1px solid #ddd;">';
-      html += '<td style="padding:10px;"><strong>' + mealName + '</strong></td>';
+      html += '<td style="padding:10px;"><strong>' + esc(mealName) + '</strong></td>';
       html += '<td style="padding:10px;"><span style="color:#4caf50;font-weight:bold;">' + meal.goodCount + '</span></td>';
       html += '<td style="padding:10px;"><span style="color:#d9534f;font-weight:bold;">' + meal.badCount + '</span></td>';
       html += '<td style="padding:10px;"><span style="color:#025857;font-weight:bold;">' + meal.successPercent + '%</span></td>';
-      html += '<td style="padding:10px;font-size:12px;color:#666;">' + foods.substring(0, 50) + (foods.length > 50 ? '...' : '') + '</td>';
+      html += '<td style="padding:10px;font-size:12px;color:#666;">' + esc(foods.substring(0, 50)) + (foods.length > 50 ? '...' : '') + '</td>';
       html += '</tr>';
     });
     html += '</table>';
@@ -3058,7 +3063,7 @@ function showTrackingDashboard(){
     patterns.problemMeals.forEach(function(meal){
       var mealName = meal.meals && meal.meals[0] ? meal.meals[0].mealName : 'Γεύμα';
       html += '<tr style="border-bottom:1px solid #ddd;">';
-      html += '<td style="padding:10px;"><strong>' + mealName + '</strong></td>';
+      html += '<td style="padding:10px;"><strong>' + esc(mealName) + '</strong></td>';
       html += '<td style="padding:10px;"><span style="color:#4caf50;font-weight:bold;">' + meal.goodCount + '</span></td>';
       html += '<td style="padding:10px;"><span style="color:#d9534f;font-weight:bold;">' + meal.badCount + '</span></td>';
       html += '<td style="padding:10px;"><span style="color:#d9534f;font-weight:bold;">' + meal.successPercent + '%</span></td>';
@@ -3075,9 +3080,34 @@ function showTrackingDashboard(){
     patterns.recentRatings.slice(0, 8).forEach(function(rating){
       var icon = rating.rating > 0 ? '👍' : '👎';
       var date = new Date(rating.date).toLocaleDateString('el-GR');
-      html += '<div style="padding:8px;border-bottom:1px solid #ddd;"><strong>' + rating.mealName + '</strong> ' + icon + ' <span style="font-size:12px;color:#666;">(' + date + ')</span></div>';
+      html += '<div style="padding:8px;border-bottom:1px solid #ddd;"><strong>' + esc(rating.mealName) + '</strong> ' + icon + ' <span style="font-size:12px;color:#666;">(' + date + ')</span></div>';
     });
     html += '</div>';
+  }
+
+  // Trust Score per meal/recipe — real usage-based ranking (drives the genPlan weighting in
+  // findBestRecipe/findSavedComboMatch), separate from the manual 👍/👎 ratings above. Keyed by
+  // either a chef recipe's id or a taste-library/saved-combo meal's food signature.
+  var statEntries = Object.keys(stats).map(function(id){ return stats[id]; }).sort(function(a,b){ return b.timesUsed - a.timesUsed; });
+  html += '<h2 style="color:#025857;margin-top:30px;">🏆 Trust Score ανά Γεύμα/Συνταγή</h2>';
+  if(statEntries.length > 0){
+    html += '<p style="color:#666;font-size:13px;margin:0 0 10px;">Πόσο συχνά «κρατιέται» ένα γεύμα σε σχέση με το πόσες φορές το πλάνο του ξαναρολάρεται — αυτό επηρεάζει ποια γεύματα προτιμώνται σε νέα πλάνα.</p>';
+    html += '<table style="width:100%;border-collapse:collapse;margin:10px 0;">';
+    html += '<tr style="background:#E2EEE5;"><th style="padding:10px;text-align:left;">Γεύμα</th><th>Φορές Χρήσης</th><th>Trust Score</th><th>Πελάτες</th><th>Τελευταία Χρήση</th></tr>';
+    statEntries.slice(0, 30).forEach(function(s){
+      var trustColor = s.trustScore >= 0.7 ? '#4caf50' : (s.trustScore <= 0.4 ? '#d9534f' : '#f0a500');
+      var lastUsed = s.lastUsed ? new Date(s.lastUsed).toLocaleDateString('el-GR') : '-';
+      html += '<tr style="border-bottom:1px solid #ddd;">';
+      html += '<td style="padding:10px;"><strong>' + esc(s.name||'Γεύμα') + '</strong></td>';
+      html += '<td style="padding:10px;text-align:center;">' + s.timesUsed + '</td>';
+      html += '<td style="padding:10px;text-align:center;"><span style="color:' + trustColor + ';font-weight:bold;">' + Math.round(s.trustScore*100) + '%</span></td>';
+      html += '<td style="padding:10px;text-align:center;">' + s.usedWithClients + '</td>';
+      html += '<td style="padding:10px;font-size:12px;color:#666;">' + lastUsed + '</td>';
+      html += '</tr>';
+    });
+    html += '</table>';
+  } else {
+    html += '<p style="color:#666;">Δεν έχει καταγραφεί ακόμα καμία χρήση γεύματος. Φτιάξε ένα πλάνο για να ξεκινήσει η καταγραφή!</p>';
   }
 
   // Statistics
@@ -3097,7 +3127,10 @@ function showTrackingDashboard(){
 }
 
 function closeTrackingDashboard(){
-  var dashboard = document.querySelector('[style*="position:fixed"]');
+  // Must target this dashboard specifically by id — a generic "[style*=position:fixed]" selector
+  // also matches unrelated always-present elements (#context-menu, modals, toasts), so it used to
+  // remove whichever of those happened to be first in the DOM instead of the dashboard.
+  var dashboard = document.getElementById('tracking-dashboard-overlay');
   if(dashboard)dashboard.remove();
 }
 

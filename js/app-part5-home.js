@@ -294,7 +294,10 @@ function renderDiets(){
   if(!main) return;
 
   var html='<div class="hm-wrap">';
-  html+='<div class="hm-title">📊 Διατροφές</div>';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px">'
+    +'<div class="hm-title" style="margin-bottom:0">📊 Διατροφές</div>'
+    +'<button type="button" class="hm-action-btn" style="padding:8px 14px;font-size:12px" onclick="showTrackingDashboard()">📈 Στατιστικά Γευμάτων</button>'
+    +'</div>';
 
   html+=dietsSection('🔴 Χρειάζονται ενέργεια', dietsNeedsAction(), function(c){
     // Προτεραιότητα: "χωρίς πλάνο" > "ξεπερασμένος σύνδεσμος" > "χρειάζεται ανανέωση" — ένας πελάτης

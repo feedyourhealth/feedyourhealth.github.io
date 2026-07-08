@@ -1539,11 +1539,15 @@ function fabMenu(){
   }
 }
 
-// Close FAB menu when clicking elsewhere
+// Close FAB menu when clicking elsewhere. Two different buttons open this same menu — the
+// circular "+" (#fab-btn) and the "⋯" quick-actions button (#fab-btn-alt) shown instead of it on
+// the plan tab (see swTab()) — so a click on either must count as "inside", not just the first one.
 document.addEventListener('click', function(e){
   var fab = document.getElementById('fab-btn');
+  var fabAlt = document.getElementById('fab-btn-alt');
   var menu = document.getElementById('fab-menu');
-  if(!fab.contains(e.target) && !menu.contains(e.target)){
+  var insideTrigger = (fab && fab.contains(e.target)) || (fabAlt && fabAlt.contains(e.target));
+  if(!insideTrigger && !menu.contains(e.target)){
     menu.style.display = 'none';
   }
 });
@@ -3137,6 +3141,7 @@ function saveFoodExclusions(){
               if(Array.isArray(d.clients)) window.clients=d.clients;
               if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
               if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
+              if(d.recipeMeta && typeof saveRecipeMetaAll==='function') saveRecipeMetaAll(d.recipeMeta);
               if(typeof safeStorageSet==='function'){
                 safeStorageSet('fyh_clients', window.clients);
                 safeStorageSet('fyh_custom_tmpls', window.customTemplates);
@@ -3161,6 +3166,7 @@ function saveFoodExclusions(){
           clients: window.clients||[],
           customTemplates: window.customTemplates||[],
           trackingData: (typeof window.TRACKING_DATA!=='undefined'?window.TRACKING_DATA:null),
+          recipeMeta: (typeof getRecipeMeta==='function'?getRecipeMeta():null),
           updatedAt: new Date().toISOString()
         };
         self.sb.from('user_data').upsert({user_id:self.user.id, data:blob, updated_at:new Date().toISOString()}).then(function(res){

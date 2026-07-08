@@ -192,29 +192,27 @@ function mealSignature(foods){
 }
 
 // ── CROSS-CLIENT TASTE LIBRARY ─────────────────────────────────────────────
-// Harvest real, dietitian-made meals from clients marked as ⭐ "taste templates".
+// Harvest real, dietitian-made meals from two deliberately-curated sources — clients marked as
+// ⭐ "taste templates", and named plan templates saved via "💾 Αποθ. ως πρότυπο" (customTemplates).
+// Both represent the same signal ("I vouch for this plan"), so they're pooled into one library.
 // Returns combo-shaped objects (same shape as saved combos) tagged with slot+diet,
 // so they flow through the existing findSavedComboMatch / genPlan pipeline.
 function harvestMealLibrary(excludeClientId){
   var lib=[];
   var seen={};
-  if(typeof clients==='undefined' || !clients || !clients.length) return lib;
-  clients.forEach(function(cl){
-    if(!cl || !cl.isMealTemplate || !cl.weekPlan) return;
-    if(excludeClientId && cl.id===excludeClientId) return;
-    var dietType=cl.dietType||'normal';
+  function harvestDays(days, idPrefix, dietType, sourceLabel){
     for(var d=0; d<7; d++){
-      var day=cl.weekPlan[d];
+      var day=days[d];
       if(!day || !day.length) continue;
       day.forEach(function(meal){
         if(!meal || !meal.foods || !meal.foods.length) return;
         var sig=mealSignature(meal.foods);
-        if(!sig || seen[sig]) return;   // dedup identical meals across days/clients
+        if(!sig || seen[sig]) return;   // dedup identical meals across days/clients/templates
         var kcal=calculateMealKcal(meal.foods);
         if(kcal<50) return;             // skip empty / trivial meals
         seen[sig]=true;
         lib.push({
-          id:'lib_'+cl.id+'_'+sig.length+'_'+Math.round(kcal),
+          id:idPrefix+'_'+sig.length+'_'+Math.round(kcal),
           name:meal.name||'',
           foods:deepClone(meal.foods),
           kcal:Math.round(kcal),
@@ -222,11 +220,26 @@ function harvestMealLibrary(excludeClientId){
           slot:classifyMealSlot(meal.name),
           dietType:dietType,
           tags:['library','approved'],
-          source:cl.name||''
+          source:sourceLabel||''
         });
       });
     }
-  });
+  }
+  if(typeof clients!=='undefined' && clients && clients.length){
+    clients.forEach(function(cl){
+      if(!cl || !cl.isMealTemplate || !cl.weekPlan) return;
+      if(excludeClientId && cl.id===excludeClientId) return;
+      harvestDays(cl.weekPlan, 'lib_'+cl.id, cl.dietType||'normal', cl.name);
+    });
+  }
+  // Named templates have no dietType field (only a calorie/goal category) — default to 'normal'
+  // like unset-dietType clients above, so restrictive-diet clients (vegan/keto/…) correctly skip them.
+  if(typeof customTemplates!=='undefined' && customTemplates && customTemplates.length){
+    customTemplates.forEach(function(ct){
+      if(!ct || !ct.days) return;
+      harvestDays(ct.days, 'tmpl_'+ct.id, 'normal', ct.name);
+    });
+  }
   return lib;
 }
 
@@ -313,15 +326,17 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
     if(slot && combo.slot && combo.slot!=='other' && combo.slot!==slot) continue;
     if(!dietOK(combo.dietType)) continue;
     if(comboHasExcludedFood(combo.foods)) continue;
-    // Score: closeness to target + strong penalty for meals already used this week
+    // Score: closeness to target, nudged by real-world trust (same idea as findBestRecipe's
+    // recipeScore — proven meals get a small edge), then a strong penalty for meals already used this week.
     var sig=mealSignature(combo.foods);
     var usedCount=(usedSigs && usedSigs[sig])?usedSigs[sig]:0;
-    var score=Math.abs(comboKcal-targetKcal) + usedCount*100000;
+    var trustBonus=getRecipeTrustScore(sig)*targetKcal*0.08;
+    var score=Math.abs(comboKcal-targetKcal) - trustBonus + usedCount*100000;
     if(score<bestScore){bestScore=score;best=combo;bestSig=sig;}
   }
   if(!best) return null;
   if(usedSigs && bestSig!=null){usedSigs[bestSig]=(usedSigs[bestSig]||0)+1;}
-  return {foods: best.foods, mealTiming: best.mealTiming || 'regular'};
+  return {foods: best.foods, mealTiming: best.mealTiming || 'regular', sig: bestSig};
 }
 
 // Calculate kcal for a meal (foods array)
@@ -364,6 +379,19 @@ function ensureFoodDiversity(weekPlan, maxRepeatPerWeek) {
   });
 
   return overuseFood; // Return foods to replace
+}
+
+// Trust score for a recipe based on real usage across all clients' plans (TRACKING_DATA.recipes).
+// Recipes never used yet get a neutral 0.5 — no penalty for lack of history. Used elsewhere by
+// calculateRecipeStats() (app-part4.js) for the Analytics tab too.
+function calculateTrustScore(trackingEntry){
+  if(!trackingEntry || !trackingEntry.timesUsed) return 0.5;
+  var success = 1 - (trackingEntry.regenerateCount||0) / trackingEntry.timesUsed;
+  return Math.max(0, Math.min(1, success));
+}
+function getRecipeTrustScore(recipeId){
+  var entry = (typeof TRACKING_DATA!=='undefined' && TRACKING_DATA.recipes) ? TRACKING_DATA.recipes[recipeId] : null;
+  return calculateTrustScore(entry);
 }
 
 // ── Chef-Inspired Recipe Selection ────────────────────────────────────────────
@@ -428,9 +456,17 @@ function findBestRecipe(dietType, targetKcal, mealType, excl){
 
   if(!candidates.length)return null;
 
-  // Return the closest match by calorie
+  // Rank by calorie closeness, nudged by real-world trust (proven recipes vs. ones that keep getting
+  // regenerated away). Trust can only sway ~8% of targetKcal worth of ranking — within the 80-120%
+  // calorie window already filtered above, a spot-on but untrusted recipe still beats a borderline
+  // one that merely has a perfect track record.
+  function recipeScore(r){
+    var calDiff = Math.abs(r.kcal-targetKcal);
+    var trustBonus = getRecipeTrustScore(r.id) * targetKcal * 0.08;
+    return calDiff - trustBonus;
+  }
   candidates.sort(function(a,b){
-    return Math.abs(a.kcal-targetKcal) - Math.abs(b.kcal-targetKcal);
+    return recipeScore(a) - recipeScore(b);
   });
 
   var best=candidates[0];
@@ -1067,6 +1103,7 @@ function genPlan(){
             if(libMeal.mealTiming) meal.mealTiming = libMeal.mealTiming;
             meal.fromLibrary = true;  // tag for UI/debug
             meal.source = 'library';  // for the meal-source badge in renderWeekTable
+            meal.recipeSig = libMeal.sig;  // identity for usage/trust tracking (TRACKING_DATA)
             continue;  // Use real approved meal from a template client
           }
         }
@@ -1087,6 +1124,7 @@ function genPlan(){
             meal.foods = deepClone(savedMeal.foods);
             if(savedMeal.mealTiming) meal.mealTiming = savedMeal.mealTiming;
             meal.source = 'saved';
+            meal.recipeSig = savedMeal.sig;  // identity for usage/trust tracking (TRACKING_DATA)
             continue;  // Use saved combo
           }
         }
@@ -1116,9 +1154,10 @@ function genPlan(){
   var isOrthodoxFasting = (c.dietType === 'orthodox_fasting');
   var isIntermittentFasting = (c.dietType === 'intermittent_fasting');
   var isVegan = (c.dietType === 'vegan');
+  var isVegetarianDiet = (c.dietType === 'vegetarian');
   var isKetogenic = (c.dietType === 'keto');
 
-  if(!isOrthodoxFasting && !isIntermittentFasting && !isVegan && !isKetogenic) {
+  if(!isOrthodoxFasting && !isIntermittentFasting && !isVegan && !isVegetarianDiet && !isKetogenic) {
     tmplDays=preferWholeGrains(tmplDays);                // 1. ολικής άλεσης δημητριακά
     tmplDays=applyMediterraneanRules(tmplDays);          // 2. κατανομή πρωτεΐνης (ψάρι/κρέας/όσπρια)
     tmplDays=cleanFYHMeals(tmplDays);                    // 3. FYH σε snacks = αυτόνομα (safety net)
@@ -1138,6 +1177,14 @@ function genPlan(){
     tmplDays=preferWholeGrains(tmplDays);                // 1. ολικής άλεσης δημητριακά (safe for plant-based)
     tmplDays=ensureSaladAndOil(tmplDays);                // 4. σαλάτα εποχής + ελαιόλαδο παντού (safe for plant-based)
     tmplDays=ensureOilWithVegetables(tmplDays);          // 6ε. εξασφάλιση λαδιού με λαχανικά (safe for plant-based)
+  } else if(isVegetarianDiet) {
+    // For Vegetarian, skip applyMediterraneanRules() — it swaps each meal's protein onto a fixed
+    // meat/fish weekly rotation (MED_PLAN), which would silently inject meat/fish into an otherwise
+    // correctly vegetarian-selected plan. Dairy/eggs are already handled upstream by the smart-gen
+    // protein selector, so only the meat/fish-free safe subset runs here (same as Vegan above).
+    tmplDays=preferWholeGrains(tmplDays);                // 1. ολικής άλεσης δημητριακά (safe, no protein change)
+    tmplDays=ensureSaladAndOil(tmplDays);                // 4. σαλάτα εποχής + ελαιόλαδο παντού (safe, no protein change)
+    tmplDays=ensureOilWithVegetables(tmplDays);          // 6ε. εξασφάλιση λαδιού με λαχανικά (safe, no protein change)
   } else if(isOrthodoxFasting) {
     // For Orthodox Fasting, only apply safe Mediterranean rules that don't add meat/fish/dairy
     tmplDays=preferWholeGrains(tmplDays);                // 1. ολικής άλεσης δημητριακά (safe for plant-based)
