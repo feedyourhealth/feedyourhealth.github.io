@@ -370,7 +370,7 @@ function renderMain(){
     +'<div id="sec-basic-body" style="display:'+(secState.basic?'none':'block')+'">'
     +'<div class="fg"><div class="fgrp"><label>Ονοματεπώνυμο</label><input type="text" id="inp-name" placeholder="π.χ. Γιώργος Παπαδόπουλος" value="'+esc(c.name||'')+'"></div>'
     +'<div class="fgrp"><label>Φύλο</label><select id="inp-sex">'+sOpts+'</select></div>'
-    +'<div class="fgrp"><label>Ημερομηνία Γέννησης <span id="age-display" style="color:#025857;font-weight:600;font-size:12px"></span></label><div style="display:flex;gap:6px"><select id="inp-bday" style="flex:0.9"></select><select id="inp-bmonth" style="flex:1.4"></select><select id="inp-byear" style="flex:1.1"></select></div></div></div>'
+    +'<div class="fgrp"><label>Ημερομηνία Γέννησης <span id="age-display" style="color:#025857;font-weight:600;font-size:12px"></span></label><input type="date" id="inp-birthdate" min="1915-01-01" max="'+new Date().toISOString().slice(0,10)+'"></div></div>'
     +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+esc(c.email||'')+'"></div>'
     +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+esc(c.phone||'')+'"></div></div>'
     +'</div>'
@@ -443,34 +443,38 @@ function renderMain(){
     +'<div id="sec-goal-body" style="display:'+(secState.goal?'none':'block')+'">'
     // ✅ GOAL SELECTION (NEW) - COMPACT VERSION
     +'<div class="fg"><div class="fgrp"><label style="font-weight:700;color:#025857;font-size:12px;">🎯 Κύριος Στόχος:</label>'
+    // ✅ All 3 goal cards share one neutral/teal selection language (selected=teal, unselected=grey)
+    // instead of red/teal/green per goal — losing weight isn't "bad" (red) and gaining isn't
+    // inherently "good" (green); which goal is right depends entirely on the client.
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">'
-    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(211,47,47,0.05);border:1px solid #d32f2f;border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='loss'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='loss'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
     +'<input type="radio" name="goal-main" value="loss" '+(c.goalMain==='loss'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:#d32f2f;font-size:11px;">📉 Απώλεια</div><div style="font-size:9px;color:#999;">-500 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:#333;font-size:11px;">📉 Απώλεια</div><div style="font-size:9px;color:#999;">-500 kcal</div></div>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(2,88,87,0.05);border:1px solid #025857;border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='maintain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='maintain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
     +'<input type="radio" name="goal-main" value="maintain" '+(c.goalMain==='maintain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:#025857;font-size:11px;">➡️ Διατήρηση</div><div style="font-size:9px;color:#999;">0 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:#333;font-size:11px;">➡️ Διατήρηση</div><div style="font-size:9px;color:#999;">0 kcal</div></div>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:rgba(76,175,80,0.05);border:1px solid #4caf50;border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='gain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='gain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
     +'<input type="radio" name="goal-main" value="gain" '+(c.goalMain==='gain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:#4caf50;font-size:11px;">📈 Αύξηση</div><div style="font-size:9px;color:#999;">+300 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:#333;font-size:11px;">📈 Αύξηση</div><div style="font-size:9px;color:#999;">+300 kcal</div></div>'
     +'</label>'
     +'</div></div></div>'
     +'<div class="fg"><div class="fgrp"><label style="font-weight:700;color:#025857;font-size:13px;">🎯 ΠΡΟΣΑΡΜΟΓΗ ΘΕΡΜΙΔΩΝ (-500 έως +500)</label>'
-    +'<div style="display:flex;align-items:center;gap:8px;margin:8px 0;">'
-    +'<button type="button" onclick="adjGoalCalories(-100)" style="background:#d32f2f;color:white;border:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;">−100</button>'
-    +'<button type="button" onclick="adjGoalCalories(-10)" style="background:#ff9800;color:white;border:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;">−10</button>'
-    +'<div style="flex:1;text-align:center;background:#E2EEE5;border:2px solid #025857;padding:6px 8px;border-radius:6px;">'
+    +'<div style="text-align:center;background:#E2EEE5;border:2px solid #025857;padding:6px 8px;border-radius:6px;margin:8px 0 6px;">'
     +'<div style="font-size:9px;color:#666;">Προσαρμογή Θερμίδων</div>'
     +'<div style="font-size:18px;font-weight:bold;color:#025857;margin:2px 0;line-height:1.2;" id="goal-display">'+(goalCalAdj>=0?'+':'')+(goalCalAdj)+'</div>'
     +'<div style="font-size:8px;color:#999;">kcal/ημέρα</div>'
     +'</div>'
-    +'<button type="button" onclick="adjGoalCalories(10)" style="background:#4caf50;color:white;border:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;">+10</button>'
-    +'<button type="button" onclick="adjGoalCalories(100)" style="background:#2196f3;color:white;border:none;padding:10px 12px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:14px;">+100</button>'
+    +'<input type="range" id="goal-slider" min="-500" max="500" step="10" value="'+goalCalAdj+'" style="width:100%;accent-color:#025857;cursor:pointer;display:block;" oninput="document.getElementById(\'goal-display\').textContent=(this.value>=0?\'+\':\'\')+this.value" onchange="setGoalCalories(this.value)">'
+    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:#999;padding:2px 2px 8px;"><span>-500</span><span>0</span><span>+500</span></div>'
+    +'<div style="display:flex;gap:6px;">'
+    +'<button type="button" onclick="setGoalCalories(-500)" style="flex:1;background:#fff;color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:11px;">📉 Απώλεια −500</button>'
+    +'<button type="button" onclick="setGoalCalories(0)" style="flex:1;background:#fff;color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:11px;">➡️ Διατήρηση 0</button>'
+    +'<button type="button" onclick="setGoalCalories(300)" style="flex:1;background:#fff;color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:11px;">📈 Αύξηση +300</button>'
     +'</div>'
     +'<input type="hidden" id="inp-goal" value="'+(goalCalAdj)+'"/>'
-    +'<div style="font-size:10px;color:#025857;margin-top:4px;font-style:italic;">⚠️ Αρνητικό = Μείωση | 0 = Διατήρηση | Θετικό = Αύξηση</div>'
+    +'<div style="font-size:10px;color:#025857;margin-top:8px;font-style:italic;">⚠️ Αρνητικό = Μείωση | 0 = Διατήρηση | Θετικό = Αύξηση</div>'
     +'</div></div>'
     // ✅ FORMULA AUTO-SELECT (Removed user picker - auto-detects)
     +'<div style="background:#E2EEE5;padding:10px 12px;border-radius:6px;font-size:11px;color:#025857;font-weight:600;margin-top:12px;">'
@@ -490,12 +494,12 @@ function renderMain(){
 
     // ✅ SECTION 5-7: Moved to Modals (cleaner UI)
     // ✅ QUICK ACCESS BUTTONS FOR ALL SETTINGS (6 Modal Windows)
-    +'<div id="modal-btns-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">'
-    +'<button class="btn" onclick="openMealTimesModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">⏱️ Χρόνοι Γευμάτων</button>'
-    +'<button class="btn" onclick="openMetActivitiesModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🏃 Προπονήσεις (MET)</button>'
-    +'<button class="btn" onclick="openDietModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🥗 Διατροφή</button>'
-    +'<button class="btn" onclick="openMedicalConditionsModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🩺 Ιατρικές Συνθήκες</button>'
-    +'<button class="btn" onclick="openCombinedSupplementsModal()" style="background:#fff;color:#1a1a1a;padding:12px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">💊 Συμπληρώματα</button>'
+    +'<div id="modal-btns-grid" style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;">'
+    +'<button class="btn" onclick="openMealTimesModal()" style="background:#fff;color:#1a1a1a;padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">⏱️ Χρόνοι Γευμάτων</button>'
+    +'<button class="btn" onclick="openMetActivitiesModal()" style="background:#fff;color:#1a1a1a;padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🏃 Προπονήσεις (MET)</button>'
+    +'<button class="btn" onclick="openDietModal()" style="background:#fff;color:#1a1a1a;padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🥗 Διατροφή</button>'
+    +'<button class="btn" onclick="openMedicalConditionsModal()" style="background:#fff;color:#1a1a1a;padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">🩺 Ιατρικές Συνθήκες</button>'
+    +'<button class="btn" onclick="openCombinedSupplementsModal()" style="background:#fff;color:#1a1a1a;padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid #e0e0e0;border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'#fff\';this.style.borderColor=\'#e0e0e0\'">💊 Συμπληρώματα</button>'
     +'</div>'
     // ✅ 2x/day training: now handled by adding 2 MET activities on the same day (different times)
     +'<div id="hint-2x-training" style="background:#E8F5E9;padding:8px 12px;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:15px;border-left:3px solid #025857;">💡 Για 2 προπονήσεις την ίδια ημέρα, πρόσθεσε 2 δραστηριότητες στις «🏃 Προπονήσεις (MET)» με διαφορετική ώρα.</div>'
@@ -512,7 +516,10 @@ function renderMain(){
     // ✅ TEMPLATE SELECTOR - Show available nutrition plan templates
     +buildTmplSelectorHtml(c)
     // ✅ PLAN GENERATION BUTTON ONLY IN S1
-    +'<div id="genplan-row" class="brow"><button class="btn primary" onclick="genPlanWithUndo()">Δημιουργία πλάνου →</button></div>'
+    // ✅ Quick-actions button lives in this same bar (not a separate floating "+") so there's one
+    // bottom action bar instead of two overlapping fixed elements — see swTab() for the paired
+    // hide/show of the circular .fab, which only reappears on tabs that don't have this bar.
+    +'<div id="genplan-row" class="brow"><button class="btn primary" style="flex:1" onclick="genPlanWithUndo()">Δημιουργία πλάνου →</button><button class="btn secondary" style="flex:none;padding:10px 14px" onclick="fabMenu()" title="Γρήγορες ενέργειες" aria-label="Γρήγορες ενέργειες">⋯</button></div>'
     +'</div>'
     // ✅ S2: MEAL PLAN VIEW ONLY
     +'<div id="s2" style="display:none">'
@@ -565,7 +572,7 @@ function renderMain(){
   var _inpEmail=document.getElementById('inp-email');if(_inpEmail)_inpEmail.value=c.email||'';
   var _inpPhone=document.getElementById('inp-phone');if(_inpPhone)_inpPhone.value=c.phone||'';
   document.getElementById('inp-sex').value=c.sex||'';
-  initBirthdateSelects(c);
+  var _inpBirthdate=document.getElementById('inp-birthdate');if(_inpBirthdate)_inpBirthdate.value=(c.birthDate&&/^\d{4}-\d{2}-\d{2}$/.test(c.birthDate))?c.birthDate:'';
   updateAgeDisplay();
   document.getElementById('inp-weight').value=c.weight||'';
   document.getElementById('inp-height').value=c.height||'';
@@ -588,10 +595,8 @@ function renderMain(){
   if(_inpEmail)_inpEmail.oninput=function(){upd('email',this.value.trim());};
   if(_inpPhone)_inpPhone.oninput=function(){upd('phone',this.value.trim());};
   document.getElementById('inp-sex').onchange=function(){upd('sex',this.value);};
-  ['inp-bday','inp-bmonth','inp-byear'].forEach(function(id){
-    var el=document.getElementById(id);
-    if(el)el.onchange=function(){commitBirthdate(c);};
-  });
+  var _bdEl=document.getElementById('inp-birthdate');
+  if(_bdEl)_bdEl.onchange=function(){commitBirthdate(c);};
   document.getElementById('inp-weight').onblur=function(){upd('weight',+this.value);};
   document.getElementById('inp-height').onblur=function(){upd('height',+this.value);};
   var rmrInp=document.getElementById('inp-rmr');
@@ -832,16 +837,11 @@ function getMealTimingGuide(c){
   var hasAnyTime=times.some(function(t,i){return t&&td[i];});
   if(!hasAnyTime)return'';
 
-  var guide='<div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
-    +'<div style="font-size:11px;font-weight:700;color:#2e7d32;margin-bottom:6px">⏰ Προτεινόμενα γεύματα ανά ημέρα</div>';
-
-  for(var i=0;i<7;i++){
-    if(!td[i]||!times[i])continue;
-    var trainTime=times[i];
+  function timingFor(trainTime){
     var parts=trainTime.split(':');
     var h=parseInt(parts[0],10);
     var m=parseInt(parts[1],10)||0;
-    if(isNaN(h)||h<0||h>23)continue;
+    if(isNaN(h)||h<0||h>23)return null;
 
     // Pre-workout: 2 hours before
     var preH=(h-2)<0?(h-2+24):(h-2);
@@ -853,11 +853,40 @@ function getMealTimingGuide(c){
     if(postMin>=60){postH=(h+1)%24;postMin=postMin-60;}
     var postTime=String(postH).padStart(2,'0')+':'+String(postMin).padStart(2,'0');
 
-    guide+='<div style="font-size:10px;color:#333;margin-bottom:5px;padding:4px 6px;background:#f1f8f6;border-radius:4px">'
-      +'<b>'+abbr[i]+'</b> — προπόνηση στις '+trainTime
-      +' | <span style="color:#1565C0">⚡Pre (2h πριν): '+preTime+'</span>'
-      +' | <span style="color:#e65100">💪Post (30min μετά): '+postTime+'</span>'
+    return {trainTime:trainTime,preTime:preTime,postTime:postTime};
+  }
+
+  var rows=[];
+  for(var i=0;i<7;i++){
+    if(!td[i]||!times[i])continue;
+    var tm=timingFor(times[i]);
+    if(!tm)continue;
+    rows.push({day:abbr[i],trainTime:tm.trainTime,preTime:tm.preTime,postTime:tm.postTime});
+  }
+  if(!rows.length)return'';
+
+  var guide='<div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#2e7d32;margin-bottom:6px">⏰ Προτεινόμενα γεύματα ανά ημέρα</div>';
+
+  // ✅ When every training day shares the exact same schedule, show one summary
+  // row instead of repeating identical text once per day.
+  var allSame=rows.every(function(r){return r.trainTime===rows[0].trainTime&&r.preTime===rows[0].preTime&&r.postTime===rows[0].postTime;});
+
+  if(allSame){
+    var dayList=rows.map(function(r){return r.day;}).join(', ');
+    guide+='<div style="font-size:10px;color:#333;padding:4px 6px;background:#f1f8f6;border-radius:4px">'
+      +'<b>'+dayList+'</b> <span style="color:#2e7d32;font-weight:600">(ίδιο κάθε μέρα)</span> — προπόνηση στις '+rows[0].trainTime
+      +' | <span style="color:#1565C0">⚡Pre (2h πριν): '+rows[0].preTime+'</span>'
+      +' | <span style="color:#e65100">💪Post (30min μετά): '+rows[0].postTime+'</span>'
       +'</div>';
+  } else {
+    rows.forEach(function(r){
+      guide+='<div style="font-size:10px;color:#333;margin-bottom:5px;padding:4px 6px;background:#f1f8f6;border-radius:4px">'
+        +'<b>'+r.day+'</b> — προπόνηση στις '+r.trainTime
+        +' | <span style="color:#1565C0">⚡Pre (2h πριν): '+r.preTime+'</span>'
+        +' | <span style="color:#e65100">💪Post (30min μετά): '+r.postTime+'</span>'
+        +'</div>';
+    });
   }
 
   guide+='</div>';
@@ -1269,45 +1298,62 @@ function buildMacroDistributionHtml(c,t){
     +'<span class="macro-c-val">Υδατ/κες: '+t.carb+'g&nbsp;&nbsp;('+t.cPct+'%)</span>'
     +'</div>'
     +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Προσαρμόζεται αυτόματα από το άθλημα — αλλάξτε ελεύθερα χειροκίνητα.</div>'
-    +buildREDSAndWarningsHtml(t)
-    +buildCreatineSuggestionHtml(c)
+    +buildInsightsPanelHtml(c,t)
     +'</div>'
     +'</div>';
   return html;
 }
 
 // 💊 Creatine monohydrate suggestion for strength/power sports (ISSN Position Stand, Kreider et al. 2017).
-// Purely informational — no food exclusion or macro change. Empty string (nothing shown) for any other sport/diet type.
+// Purely informational — no food exclusion or macro change. Empty for any other sport/diet type.
 var CREATINE_SUGGESTED_SPORTS={weightlifting:1,crossfit:1,mma:1,bjj:1,boxing:1};
-function buildCreatineSuggestionHtml(c){
-  var relevant=(c.sport && CREATINE_SUGGESTED_SPORTS[c.sport]) || c.dietType==='bodybuilding_clean';
-  if(!relevant) return '';
-  return '<div style="margin-top:8px;padding:9px 12px;border-radius:6px;border-left:4px solid #6a1b9a;background:#f3e5f5;font-size:12px;color:#4a148c">'
-    +'<b>💊 Κρεατίνη:</b> 3-5g/ημέρα κρεατίνη μονοϋδρική — από τα πιο μελετημένα συμπληρώματα για δύναμη/όγκο, ασφαλές σε μακροχρόνια χρήση.'
-    +' <a href="https://link.springer.com/article/10.1186/s12970-017-0173-z" target="_blank" style="color:inherit;text-decoration:underline">ISSN Position Stand 2017 ↗</a>'
-    +'</div>';
-}
 
-// ⚡ RED-S (Energy Availability) + general target/macro warnings — t.ea and t.warnings were already
-// computed correctly by calcTDEE(), but never actually reached the dietitian (only a hidden debug
-// audit read them). Thresholds per IOC Consensus Statement on RED-S (2018): EA<30 kcal/kgLBM/day =
-// critical, <45 = borderline. Shows nothing when EA is healthy or unmeasurable (no LBM/body-fat data).
-function buildREDSAndWarningsHtml(t){
-  var html='';
+// ✅ Single consolidated findings panel — replaces 3 separately-colored, separately-styled boxes
+// (RED-S/energy availability, TDEE double-counting/macro warnings, creatine tip) that all read as
+// equally urgent. Now one severity dot per row (red=risk, amber=borderline, purple=info-only tip),
+// so the actually-serious item is the one that stands out instead of everything shouting at once.
+function buildInsightsPanelHtml(c,t){
+  var items=[];
+
+  // RED-S / energy availability — thresholds per IOC Consensus Statement on RED-S (2018):
+  // EA<30 kcal/kgLBM/day = critical, <45 = borderline. Nothing shown when healthy/unmeasurable.
   if(t.ea!=null && t.ea<45){
     var isCrit=t.ea<30;
-    html+='<div style="margin-top:10px;padding:9px 12px;border-radius:6px;border-left:4px solid '+(isCrit?'#c62828':'#f9a825')+';background:'+(isCrit?'#fdecea':'#fff8e1')+';font-size:12px;color:'+(isCrit?'#7f1d1d':'#7a5c00')+'">'
-      +'<b>'+(isCrit?'🔴 Κίνδυνος RED-S':'🟡 Οριακή Ενεργειακή Διαθεσιμότητα')+':</b> EA='+t.ea+' kcal/kgLBM ('+(isCrit?'κατώφλι &lt;30':'στόχος &gt;45')+')'
+    items.push({sev:isCrit?'bad':'warn', text:
+      '<b>'+(isCrit?'🔴 Κίνδυνος RED-S':'🟡 Οριακή Ενεργειακή Διαθεσιμότητα')+':</b> EA='+t.ea+' kcal/kgLBM ('+(isCrit?'κατώφλι &lt;30':'στόχος &gt;45')+')'
       +' <a href="https://stillmed.olympics.com/media/Documents/Athletes/Medical-Scientific/Consensus-Statements/REDs/IOC-consensus-statement-Relative-Energy-Deficiency-in-Sport-2018.pdf" target="_blank" style="color:inherit;text-decoration:underline">IOC Consensus 2018 ↗</a>'
+    });
+  }
+
+  // General TDEE/macro warnings computed by calcTDEE() (e.g. double-counting risk, protein out of range).
+  (t.warnings||[]).forEach(function(w){
+    items.push({sev:w.type==='alert'?'bad':'warn', text:esc(w.msg)});
+  });
+
+  // Creatine tip — informational only, never a risk, so it's always the lowest-severity row.
+  var creatineRelevant=(c.sport && CREATINE_SUGGESTED_SPORTS[c.sport]) || c.dietType==='bodybuilding_clean';
+  if(creatineRelevant){
+    items.push({sev:'info', text:
+      '<b>💊 Κρεατίνη:</b> 3-5g/ημέρα κρεατίνη μονοϋδρική — από τα πιο μελετημένα συμπληρώματα για δύναμη/όγκο, ασφαλές σε μακροχρόνια χρήση.'
+      +' <a href="https://link.springer.com/article/10.1186/s12970-017-0173-z" target="_blank" style="color:inherit;text-decoration:underline">ISSN Position Stand 2017 ↗</a>'
+    });
+  }
+
+  if(!items.length) return '';
+
+  var sevColor={bad:'#c62828',warn:'#f9a825',info:'#6a1b9a'};
+  var rowsHtml=items.map(function(it,i){
+    var borderStyle=(i<items.length-1)?'border-bottom:1px solid #eee;':'';
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;'+borderStyle+'font-size:12px;color:#333">'
+      +'<span style="flex-shrink:0;width:8px;height:8px;border-radius:50%;margin-top:4px;background:'+sevColor[it.sev]+'"></span>'
+      +'<span style="flex:1">'+it.text+'</span>'
       +'</div>';
-  }
-  if(t.warnings && t.warnings.length){
-    html+='<div style="margin-top:8px">'+t.warnings.map(function(w){
-      var isAlert=w.type==='alert';
-      return '<div style="background:'+(isAlert?'#ffebee':'#fff3e0')+';border:1px solid '+(isAlert?'#f44336':'#ff9800')+';border-radius:6px;padding:7px 10px;margin:4px 0;font-size:12px;color:'+(isAlert?'#c62828':'#e65100')+'">'+esc(w.msg)+'</div>';
-    }).join('')+'</div>';
-  }
-  return html;
+  }).join('');
+
+  return '<div style="margin-top:10px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;background:#fff">'
+    +'<div style="padding:8px 10px;background:#f7f7f7;font-size:11px;font-weight:700;color:#555">📋 '+items.length+' εύρημα'+(items.length>1?'τα':'')+' σε αυτό το πλάνο</div>'
+    +rowsHtml
+    +'</div>';
 }
 
 function buildMacroPresetHtml(c,t){
@@ -2658,13 +2704,17 @@ function swTab(n){
   // ✅ HIDE MODAL BUTTONS GRID EXCEPT IN TAB 1 (Page 1 only)
   // Buttons: Χρόνοι Γευμάτων, Εβδομαδιαίο Πρόγραμμα, MET Activities, Διατροφή, Ιατρικές Συνθήκες, Συμπληρώματα
   var modalButtonsDiv=document.getElementById('modal-btns-grid');
-  if(modalButtonsDiv)modalButtonsDiv.style.display=n===1?'grid':'none';
+  if(modalButtonsDiv)modalButtonsDiv.style.display=n===1?'flex':'none';
 
   // ✅ HIDE 2x-TRAINING HINT + "Δημιουργία πλάνου" BUTTON EXCEPT IN TAB 1 (Page 1 only)
   var hint2x=document.getElementById('hint-2x-training');
   if(hint2x)hint2x.style.display=n===1?'':'none';
   var genPlanRow=document.getElementById('genplan-row');
   if(genPlanRow)genPlanRow.style.display=n===1?'':'none';
+  // ✅ genplan-row already hosts a "⋯" quick-actions button on tab 1, so hide the floating
+  // circular FAB there to avoid two overlapping fixed bottom controls; other tabs still get it.
+  var fabBtn=document.getElementById('fab-btn');
+  if(fabBtn)fabBtn.style.display=n===1?'none':'';
 
   if(n===1){setupFormEventListeners();}  // ← SET UP EVENT LISTENERS
   if(n===2){renderFoodLib('');var c=getC();if(c){initializeMealTiming(c);}renderWeekTable();renderSuppNotes();}
@@ -2726,16 +2776,13 @@ function setActivityFactor(val, presetKey) {
   renderMain();
 }
 
-// ✅ NEW: Adjust goal calories (+/- 50, +/- 10)
-function adjGoalCalories(delta) {
+// ✅ Set goal calorie adjustment to an absolute value, clamped to -500..+500.
+// Shared by the slider (onchange, on release) and the quick-jump buttons.
+function setGoalCalories(newGoal) {
   var c = getC();
   if(!c) return;
 
-  var currentGoal = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : 0;
-  var newGoal = currentGoal + delta;
-
-  // ✅ Clamp to -500 to +500 range
-  newGoal = Math.max(-500, Math.min(500, newGoal));
+  newGoal = Math.max(-500, Math.min(500, Math.round(newGoal)));
 
   // Save the new goal
   c.goal = newGoal.toString();
@@ -2743,6 +2790,8 @@ function adjGoalCalories(delta) {
   // Update the display
   document.getElementById('goal-display').textContent = (newGoal >= 0 ? '+' : '') + newGoal;
   document.getElementById('inp-goal').value = newGoal;
+  var slider = document.getElementById('goal-slider');
+  if(slider) slider.value = newGoal;
 
   // Save to localStorage
   saveNow();
@@ -2751,6 +2800,14 @@ function adjGoalCalories(delta) {
   renderMain();
 
   console.log('📊 Goal adjusted to:', newGoal, 'kcal/day');
+}
+
+// ✅ Kept for compatibility with any other caller that still adjusts by a relative delta.
+function adjGoalCalories(delta) {
+  var c = getC();
+  if(!c) return;
+  var currentGoal = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : 0;
+  setGoalCalories(currentGoal + delta);
 }
 
 // ✅ GOAL MACROS AUTO-ADJUSTMENT (NEW)
@@ -2904,37 +2961,14 @@ function calcAgeFromBirthdate(birthDate){
   return (a>=0&&a<=150)?a:null;
 }
 
-// ✅ Greek month names for the birth-date dropdowns
-
-// ✅ Populate the Day / Month / Year dropdowns (in that order) and preselect
-//    the values from c.birthDate (stored as ISO "YYYY-MM-DD").
-function initBirthdateSelects(c){
-  var dEl=document.getElementById('inp-bday'),mEl=document.getElementById('inp-bmonth'),yEl=document.getElementById('inp-byear');
-  if(!dEl||!mEl||!yEl)return;
-  var parts=(c&&c.birthDate&&/^\d{4}-\d{2}-\d{2}$/.test(c.birthDate))?c.birthDate.split('-'):['','',''];
-  var selY=parts[0],selM=parts[1],selD=parts[2];
-  var i,o,html;
-  // Day 1-31
-  html='<option value="">Ημέρα</option>';
-  for(i=1;i<=31;i++){var dd=(i<10?'0':'')+i;html+='<option value="'+dd+'"'+(dd===selD?' selected':'')+'>'+i+'</option>';}
-  dEl.innerHTML=html;
-  // Month 1-12 (Greek names)
-  html='<option value="">Μήνας</option>';
-  for(i=1;i<=12;i++){var mm=(i<10?'0':'')+i;html+='<option value="'+mm+'"'+(mm===selM?' selected':'')+'>'+GREEK_MONTHS[i-1]+'</option>';}
-  mEl.innerHTML=html;
-  // Year current..1915
-  var nowY=new Date().getFullYear();
-  html='<option value="">Έτος</option>';
-  for(i=nowY;i>=1915;i--){html+='<option value="'+i+'"'+(String(i)===selY?' selected':'')+'>'+i+'</option>';}
-  yEl.innerHTML=html;
-}
-
-// ✅ Assemble the three dropdowns into an ISO birth-date, save it, recalc age.
+// ✅ Read the single native date input (already ISO "YYYY-MM-DD", same format c.birthDate
+// is stored in — no assembly needed), save it, recalc age. Replaces the old 3-dropdown
+// (day/month/year) version: same data, one field instead of three.
 function commitBirthdate(c){
-  var d=document.getElementById('inp-bday'),m=document.getElementById('inp-bmonth'),y=document.getElementById('inp-byear');
-  if(!d||!m||!y)return;
-  if(d.value&&m.value&&y.value){
-    c.birthDate=y.value+'-'+m.value+'-'+d.value;
+  var el=document.getElementById('inp-birthdate');
+  if(!el)return;
+  if(el.value){
+    c.birthDate=el.value;
     var a=calcAgeFromBirthdate(c.birthDate);
     updateAgeDisplay();
     if(a!=null){upd('age',a);}else{save();}
