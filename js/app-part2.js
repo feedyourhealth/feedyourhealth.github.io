@@ -1434,15 +1434,26 @@ function buildClientProgressHtml(c){
 /* ── Body Composition & Consultation Tracker ────────────────────────────── */
 // Καταχωρήσεις βάρους/σημειώσεων που έστειλε ο ίδιος ο πελάτης από το portal (client_logs, χωρίς login).
 // Δεν μπαίνουν αυτόματα στο επίσημο weightLog — ο διαιτολόγος επιβεβαιώνει με ένα κλικ.
+// Ο πελάτης μπορεί προαιρετικά να επισημάνει ένα πλαίσιο ημέρας (ταξίδι/γιορτή/αρρώστια) από το portal —
+// αποθηκεύεται ως πρόθεμα "[tag:id] " μέσα στο ίδιο πεδίο note (καμία νέα στήλη στο client_logs), το ξεχωρίζουμε εδώ.
+var CLIENT_LOG_TAG_DEFS={travel:{icon:'✈️',label:'Ταξίδι'},party:{icon:'🎉',label:'Γιορτή'},sick:{icon:'🤒',label:'Άρρωστος/η'}};
 function clientLogsPanelHtml(c){
   if(!window.Cloud || typeof window.Cloud.allClientLogsFor!=='function') return '';
   var entries=window.Cloud.allClientLogsFor(c);
   if(!entries.length) return '';
   var rows=entries.map(function(e){
     var w=e.weight_kg?('<b>'+e.weight_kg+' kg</b>'):'';
-    var n=e.note?('<span style="color:#666">'+esc(e.note)+'</span>'):'';
+    var noteRaw=e.note||'';
+    var tagMatch=/^\[tag:(travel|party|sick)\]\s*/.exec(noteRaw);
+    var tagHtml='';
+    if(tagMatch){
+      var td=CLIENT_LOG_TAG_DEFS[tagMatch[1]];
+      noteRaw=noteRaw.slice(tagMatch[0].length);
+      tagHtml='<span style="background:#e8f5e9;color:#014545;border-radius:999px;padding:2px 8px;font-size:10px;margin-right:6px;white-space:nowrap">'+td.icon+' '+td.label+'</span>';
+    }
+    var n=noteRaw?('<span style="color:#666">'+esc(noteRaw)+'</span>'):'';
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:11px">'
-      +'<span>'+e.date+' — '+w+(w&&n?' · ':'')+n+'</span></div>';
+      +tagHtml+'<span>'+e.date+' — '+w+(w&&n?' · ':'')+n+'</span></div>';
   }).join('');
   return '<div class="tracker-section" style="background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
     +'<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:4px">📥 Ιστορικό καταχωρήσεων πελάτη <span style="font-weight:400;color:#666">(δικά του μέτρα — για σύγκριση, δεν επηρεάζουν το ιστορικό σου)</span></div>'

@@ -2868,6 +2868,15 @@ function saveFoodExclusions(){
       var hb=t.hydBase||Math.round((c.weight||70)*35);
       var ht=t.hydTrain||(hb+500);
 
+      // ── Λίστα ανταλλαγής φρούτων ── κρύβεται σε κετογονική δίαιτα, όπου τα φρούτα δεν προβλέπονται.
+      var fruits=[];
+      if(c.dietType!=='keto' && typeof FX!=='undefined'){
+        FX.forEach(function(fx){
+          var kcal=(typeof FOODS!=='undefined'&&FOODS[fx.n])?Math.round(FOODS[fx.n].k*fx.g/100):null;
+          fruits.push({name:fx.n, portion:fx.por, g:fx.g, kcal:kcal});
+        });
+      }
+
       var clinic=this.CLINIC||{};
       var hasContact=!!(clinic.wa||clinic.tel||clinic.email||clinic.web);
       return {
@@ -2882,6 +2891,7 @@ function saveFoodExclusions(){
         days:days,
         shopping:shopping,
         supps:supps,
+        fruits:fruits,
         progress:progress
       };
     },

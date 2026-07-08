@@ -2797,3 +2797,24 @@ var PETRETZEAKIS_EGG_RECIPES=[
 var PETRETZEAKIS_YOGURT_RECIPES=[
   {n:'Chia Bowl Φράουλα (Πετρετζίκης)',g:385}
 ];
+// Λίστα ανταλλαγής φρούτων — global ώστε να τη χρησιμοποιούν και το PDF export (exportPDF) και το client portal snapshot (_buildSnapshot).
+var FX=[
+  {n:'Ανανάς',     por:'3/4 φλιτζάνι',            porEn:'3/4 cup',                g:116},
+  {n:'Αχλάδι',     por:'1 μικρό',                  porEn:'1 small',                g:110},
+  {n:'Βερίκοκα',   por:'4 ολόκληρα',               porEn:'4 whole',                g:150},
+  {n:'Γκρέιπφρούτ',por:'1 ολόκληρο',               porEn:'1 whole',                g:330},
+  {n:'Δαμάσκηνα',  por:'2 μέτρια',                 porEn:'2 medium',               g:140},
+  {n:'Καρπούζι',   por:'1 φέτα',                   porEn:'1 slice',                g:380},
+  {n:'Κεράσια',    por:'12 μεγάλα',                porEn:'12 large',               g:85},
+  {n:'Μανταρίνι',  por:'2 μικρά',                  porEn:'2 small',                g:220},
+  {n:'Μήλο',       por:'1 μικρό',                  porEn:'1 small',                g:120},
+  {n:'Μούρα',      por:'3/4 φλιτζάνι',             porEn:'3/4 cup',                g:109},
+  {n:'Μπανάνα',    por:'½ μεγάλη ή 1 μικρή',       porEn:'½ large or 1 small',    g:120},
+  {n:'Νεκταρίνι',  por:'1 μέτριο',                 porEn:'1 medium',               g:140},
+  {n:'Πεπόνι',     por:'3/4 φλιτζάνι',             porEn:'3/4 cup',                g:280},
+  {n:'Πορτοκάλι',  por:'1 μικρό',                  porEn:'1 small',                g:180},
+  {n:'Ροδάκινο',   por:'1 μέτριο',                 porEn:'1 medium',               g:110},
+  {n:'Σταφίδες',   por:'1 κουτ. σούπας',           porEn:'1 tbsp',                 g:15},
+  {n:'Σταφύλια',   por:'17 ρόγες μικρές',          porEn:'17 small grapes',        g:85},
+  {n:'Φράουλες',   por:'10 μικρές ή 1¼ φλιτζάνι', porEn:'10 small or 1¼ cup',    g:190}
+];

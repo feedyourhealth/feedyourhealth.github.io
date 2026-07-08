@@ -92,6 +92,12 @@
   .log-sent{font-size:12px;color:var(--ok);display:flex;align-items:center;gap:6px;margin-bottom:8px}
   .log-warn{font-size:12px;color:#c77d11;display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
   .log-warn button{background:none;border:none;color:#c77d11;font-weight:700;text-decoration:underline;cursor:pointer;font-size:12px;padding:0;font-family:inherit}
+  .log-tag-label{font-size:11px;color:var(--muted);margin:8px 0 6px}
+  .log-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .log-tag{border:.5px solid var(--bord);background:var(--card);color:var(--muted);border-radius:999px;padding:6px 11px;font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;font-family:inherit}
+  .log-tag i{font-size:14px}
+  .log-tag-on{background:var(--tint2);border-color:var(--teal-l);color:var(--teal-d)}
+  .log-tag-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:999px;background:var(--tint2);color:var(--teal-d);white-space:nowrap}
 
   .water{background:var(--tint);border-radius:14px;padding:12px 14px}
   .glasses{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
@@ -119,6 +125,12 @@
   .slrow .nm{flex:1;font-size:13px}
   .slrow .amt{font-size:12px;color:var(--teal);font-weight:600}
   .slrow .amt .raw{color:var(--muted);font-weight:400;font-size:11px}
+  .fxrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--bord-l)}
+  .fxrow:last-child{border-bottom:none}
+  .fxname{font-size:13px;font-weight:600;color:var(--teal-d)}
+  .fxpor{font-size:11px;color:var(--muted);margin-top:1px}
+  .fxr{text-align:right;font-size:12px;color:var(--muted)}
+  .fxg{color:var(--ink);font-weight:600}
 
   .prog{height:6px;background:#fff;border-radius:999px;margin-top:10px;overflow:hidden}
   .prog>div{height:100%;background:var(--teal);transition:width .25s}
@@ -326,7 +338,15 @@ const SPICES=[
 // ⬇️ Συμπλήρωσε WhatsApp/τηλέφωνο (διεθνής μορφή, π.χ. 306900000000) για να ενεργοποιηθεί το κουμπί.
 const COACH={ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' };
 
-let SNAP=null, curDay=0, sb=null, curView='home';
+// Πλαίσιο ημέρας που μπορεί προαιρετικά να επιλέξει ο πελάτης όταν καταγράφει βάρος/σημείωση —
+// βοηθά τον διαιτολόγο να καταλάβει ΓΙΑΤΙ έπεσε η τήρηση μια μέρα, χωρίς να μαντεύει.
+const LOG_TAGS=[
+  {id:'travel',icon:'ti-plane',label:'Ταξίδι'},
+  {id:'party',icon:'ti-gift',label:'Γιορτή'},
+  {id:'sick',icon:'ti-thermometer',label:'Άρρωστος/η'}
+];
+
+let SNAP=null, curDay=0, sb=null, curView='home', selectedLogTag=null;
 
 function $(s){return document.querySelector(s)}
 function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
@@ -385,14 +405,23 @@ function pushCheckin(){
   }catch(e){}
 }
 
+// Εναλλάσσει το επιλεγμένο tag πλαισίου ημέρας. Ενημερώνει τα chips απευθείας στο DOM (όχι go('prog') —
+// ένα πλήρες re-render θα έσβηνε ό,τι έχει ήδη γράψει ο πελάτης στο βάρος/σημείωση πριν προλάβει να στείλει).
+function toggleLogTag(id,btn){
+  selectedLogTag=(selectedLogTag===id?null:id);
+  const group=btn.parentElement;
+  Array.prototype.forEach.call(group.children,c=>c.classList.remove('log-tag-on'));
+  if(selectedLogTag)btn.classList.add('log-tag-on');
+}
 // Ο πελάτης καταγράφει μόνος του βάρος/σημείωση από το Πρόοδος tab (write-only, χωρίς login).
 function submitClientLog(){
   const wEl=$('#log-weight'), nEl=$('#log-note');
   const w=wEl&&wEl.value?parseFloat(wEl.value):null;
   const n=nEl&&nEl.value?nEl.value.trim():'';
-  if(!w && !n)return;
+  const tag=selectedLogTag;
+  if(!w && !n && !tag)return;
   const todK=dKey(new Date());
-  setClientLogToday({w:w,n:n,synced:false});
+  setClientLogToday({w:w,n:n,tag:tag,synced:false});
   if(w){
     SNAP.progress=SNAP.progress||{};
     const log=SNAP.progress.log=SNAP.progress.log||[];
@@ -402,16 +431,20 @@ function submitClientLog(){
     SNAP.progress.current=w;
     if(!SNAP.progress.start)SNAP.progress.start=w;
   }
-  syncClientLog(w,n);
+  syncClientLog(w,n,tag);
+  selectedLogTag=null;
   go('prog');
 }
 // Best-effort αποστολή στο Supabase. Σε αντίθεση με πριν, ΔΕΝ κρύβουμε σιωπηλά την αποτυχία —
 // αν δεν περάσει (offline, session κλπ.) ο πελάτης βλέπει προειδοποίηση + κουμπί "Δοκίμασε ξανά"
 // αντί να νομίζει ότι η διαιτολόγος του έλαβε κάτι που ποτέ δεν έφτασε.
-function syncClientLog(w,n){
+// Το tag κωδικοποιείται ως πρόθεμα "[tag:id] " μέσα στο ίδιο πεδίο σημείωσης (p_note) — έτσι δεν
+// χρειάζεται νέα στήλη/migration στο client_logs table, μόνο parsing στην πλευρά του διαιτολόγου.
+function syncClientLog(w,n,tag){
   const tok=token(), todK=dKey(new Date());
   if(!sb||!tok)return;
-  sb.rpc('submit_client_log',{p_token:tok,p_date:todK,p_weight_kg:w,p_note:n||null}).then((res)=>{
+  const noteToSend=((tag?'[tag:'+tag+'] ':'')+(n||'')).trim()||null;
+  sb.rpc('submit_client_log',{p_token:tok,p_date:todK,p_weight_kg:w,p_note:noteToSend}).then((res)=>{
     // Το Supabase JS client ΔΕΝ κάνει reject σε HTTP 4xx/5xx — resolve με {error} μέσα.
     // Πρέπει να το ελέγξουμε ρητά, αλλιώς ένα απορριφθέν αίτημα (π.χ. άκυρο token) θα φαινόταν "εστάλη".
     const ok=!(res&&res.error);
@@ -425,7 +458,7 @@ function syncClientLog(w,n){
 // Καλείται από το κουμπί "Δοκίμασε ξανά" στην προειδοποίηση μη-συγχρονισμένης καταγραφής.
 function retryClientLogSync(){
   const e=getClientLogToday(); if(!e)return;
-  syncClientLog(e.w,e.n);
+  syncClientLog(e.w,e.n,e.tag);
 }
 
 async function boot(){
@@ -572,11 +605,11 @@ function go(tab){
   curView=tab;
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   const sc=$('#scroll'); sc.scrollTop=0;
-  const fn={home:viewHome,plan:viewPlan,prog:viewProg,shop:viewShop,water:viewWater,supps:viewSupps,spices:viewSpices}[tab];
+  const fn={home:viewHome,plan:viewPlan,prog:viewProg,shop:viewShop,water:viewWater,supps:viewSupps,spices:viewSpices,fruits:viewFruits}[tab];
   sc.innerHTML=''; sc.appendChild(fn());
   const sub=$('#hdr-sub');
   if(sub){
-    const labels={home:dayHeader(defaultDay()),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση',supps:'Τα συμπληρώματά μου',spices:'Μπαχαρικά & βότανα'};
+    const labels={home:dayHeader(defaultDay()),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση',supps:'Τα συμπληρώματά μου',spices:'Μπαχαρικά & βότανα',fruits:'Λίστα ανταλλαγής φρούτων'};
     sub.textContent=labels[tab]||'';
   }
 }
@@ -643,6 +676,7 @@ function viewHome(){
   q.appendChild(quickCard('shop','ti-shopping-cart','Λίστα ψώνια',shopProgressText()));
   q.appendChild(quickCard('supps','ti-pill','Συμπληρώματα',suppsProgressText()));
   q.appendChild(quickCard('spices','ti-leaf','Μπαχαρικά & βότανα','Οδηγός χρήσης'));
+  if(s.fruits && s.fruits.length)q.appendChild(quickCard('fruits','ti-apple','Φρούτα','Λίστα ανταλλαγής'));
   v.appendChild(q);
   return v;
 }
@@ -995,7 +1029,9 @@ function viewProg(){
   const already=getClientLogToday();
   let logStatus='';
   if(already){
-    const detail=(already.w?(': '+String(already.w).replace('.',',')+' kg'):'')+(already.n?(' — '+esc(already.n)):'');
+    const tagDef=already.tag&&LOG_TAGS.find(t=>t.id===already.tag);
+    const tagBadge=tagDef?(' <span class="log-tag-badge"><i class="ti '+tagDef.icon+'"></i>'+tagDef.label+'</span>'):'';
+    const detail=(already.w?(': '+String(already.w).replace('.',',')+' kg'):'')+(already.n?(' — '+esc(already.n)):'')+tagBadge;
     // synced===false = γνωστό ότι απέτυχε η αποστολή· οτιδήποτε άλλο (true ή παλιά εγγραφή χωρίς το πεδίο) = εστάλη κανονικά
     logStatus = already.synced===false
       ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη στον/στην διαιτολόγο σου'+detail+' <button onclick="retryClientLogSync()">Δοκίμασε ξανά</button></div>'
@@ -1006,6 +1042,8 @@ function viewProg(){
     +logStatus
     +'<input type="number" class="log-inp" id="log-weight" placeholder="Βάρος σήμερα (kg)" step="0.1" min="20" max="300" style="width:140px">'
     +'<textarea class="log-inp" id="log-note" placeholder="Πώς πήγε η μέρα; (προαιρετικό)" style="margin-top:8px"></textarea>'
+    +'<div class="log-tag-label">Πλαίσιο ημέρας (προαιρετικό)</div>'
+    +'<div class="log-tags">'+LOG_TAGS.map(t=>'<button type="button" class="log-tag'+(selectedLogTag===t.id?' log-tag-on':'')+'" onclick="toggleLogTag(\''+t.id+'\',this)"><i class="ti '+t.icon+'"></i>'+t.label+'</button>').join('')+'</div>'
     +'<button class="swap-btn" style="justify-content:center;margin-top:8px" onclick="submitClientLog()"><i class="ti ti-send"></i>Αποστολή στον/στην διαιτολόγο</button>';
   logCard.appendChild(logCp); v.appendChild(logCard);
 
@@ -1269,6 +1307,18 @@ function viewSpices(){
       +'</table>';
     c.appendChild(cp);v.appendChild(c);
   });
+  return v;
+}
+function viewFruits(){
+  const v=el('div','view active');
+  const intro=el('div',null);
+  intro.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
+  intro.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-apple" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Λίστα Ανταλλαγής Φρούτων</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Κάθε επιλογή αντιστοιχεί σε 1 μερίδα φρούτου — αλλάζτε ελεύθερα μεταξύ τους.</div>';
+  v.appendChild(intro);
+  const fruits=(SNAP&&SNAP.fruits)||[];
+  const c=el('div','card'); const cp=el('div','card-pad');
+  cp.innerHTML=fruits.map(fx=>'<div class="fxrow"><div><div class="fxname">'+esc(fx.name)+'</div><div class="fxpor">'+esc(fx.portion)+'</div></div><div class="fxr"><div class="fxg">'+fx.g+'g</div><div>'+(fx.kcal!=null?'~'+fx.kcal+' kcal':'')+'</div></div></div>').join('');
+  c.appendChild(cp); v.appendChild(c);
   return v;
 }
 function waterCard(mini){
