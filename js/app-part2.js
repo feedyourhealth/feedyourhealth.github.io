@@ -3169,9 +3169,12 @@ function expandFYHRecipes(days){
       meal.foods.forEach(function(food){
         var rx=FYH_RECIPE_EXPAND[food.n];
         if(rx){
+          // Ασφαλιστική δικλείδα: αν κάποιο πρότυπο γεύμα (π.χ. MED_PLAN) δώσει κατά λάθος πολύ μικρό g
+          // (π.χ. "1" νοώντας "1 μερίδα" αντί για πραγματικά γραμμάρια), μην παράγουμε φάντασμα γεύμα
+          // με 0γρ. σε όλα τα συστατικά — ελάχιστο 1γρ. ανά συστατικό, ίδιο floor με το expandRecipeInPlan.
           var scale=food.g/rx.base;
           rx.ing.forEach(function(ing){
-            expanded.push({n:ing.n,g:Math.round(ing.g*scale)});
+            expanded.push({n:ing.n,g:Math.max(1,Math.round(ing.g*scale))});
           });
         } else {
           expanded.push(food);
