@@ -1612,7 +1612,6 @@ function buildTrackerHtml(c){
         +'</div>';
     }
 
-    wHtml+=buildWeightChart(c.weightLog);
     // ── Progress summary ───────────────────────────────────────────────────────
     if(c.weightLog.length>=2){
       var sorted2=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
@@ -1802,85 +1801,6 @@ function initTrendCharts(c){
       }
     });
   }
-}
-
-function buildWeightChart(log){
-  if(log.length<2)return'';
-  var sorted=log.slice().sort(function(a,b){return a.date<b.date?-1:1;});
-  var weights=sorted.map(function(e){return e.weight;});
-  var bfArr=sorted.map(function(e){return(e.bf>0)?e.bf:null;});
-  var hasBF=bfArr.some(function(v){return v!==null;});
-  var n=weights.length;
-  var minW=Math.min.apply(null,weights),maxW=Math.max.apply(null,weights),rangeW=maxW-minW||1;
-  var W=540,H=100,pL=hasBF?10:8,pR=hasBF?38:8,pT=14,pB=22;
-  var cW=W-pL-pR,cH=H-pT-pB;
-  function xp(i){return pL+i/(n>1?n-1:1)*cW;}
-  function yw(w){return pT+cH-(w-minW)/rangeW*cH;}
-  var ptsW=weights.map(function(w,i){return xp(i).toFixed(1)+','+yw(w).toFixed(1);});
-  var dotsW='';
-  sorted.forEach(function(e,i){
-    dotsW+='<circle cx="'+xp(i).toFixed(1)+'" cy="'+yw(e.weight).toFixed(1)+'" r="3" fill="#025857" stroke="#fff" stroke-width="1.5"/>';
-  });
-  // Weight Y-axis labels (left)
-  var yAxis='<text x="'+(pL-2)+'" y="'+(pT+5)+'" fill="#025857" font-size="7.5" font-family="sans-serif" text-anchor="end">'+maxW+'</text>'
-    +'<text x="'+(pL-2)+'" y="'+(pT+cH)+'" fill="#025857" font-size="7.5" font-family="sans-serif" text-anchor="end">'+minW+'</text>'
-    +'<line x1="'+pL+'" y1="'+pT+'" x2="'+pL+'" y2="'+(pT+cH)+'" stroke="#025857" stroke-width="0.5" opacity="0.4"/>';
-  // BF% axis + line
-  var bfSvg='',bfStats='';
-  if(hasBF){
-    var bfVals=bfArr.filter(function(v){return v!==null;});
-    var minBF=Math.min.apply(null,bfVals),maxBF=Math.max.apply(null,bfVals),rangeBF=maxBF-minBF||1;
-    function yb(v){return pT+cH-(v-minBF)/rangeBF*cH;}
-    // Build segments (skip nulls)
-    var segs=[],seg=[];
-    sorted.forEach(function(e,i){
-      if(e.bf>0){seg.push(xp(i).toFixed(1)+','+yb(e.bf).toFixed(1));}
-      else if(seg.length){segs.push(seg.slice());seg=[];}
-    });
-    if(seg.length)segs.push(seg);
-    segs.forEach(function(s){
-      if(s.length>1)bfSvg+='<polyline points="'+s.join(' ')+'" fill="none" stroke="#1565C0" stroke-width="2" stroke-dasharray="5,2.5" stroke-linejoin="round"/>';
-    });
-    // BF dots
-    sorted.forEach(function(e,i){
-      if(e.bf>0)bfSvg+='<circle cx="'+xp(i).toFixed(1)+'" cy="'+yb(e.bf).toFixed(1)+'" r="2.5" fill="#1565C0" stroke="#fff" stroke-width="1"/>';
-    });
-    // Right Y axis
-    bfSvg+='<line x1="'+(W-pR)+'" y1="'+pT+'" x2="'+(W-pR)+'" y2="'+(pT+cH)+'" stroke="#1565C0" stroke-width="0.5" opacity="0.4"/>';
-    bfSvg+='<text x="'+(W-pR+3)+'" y="'+(pT+5)+'" fill="#1565C0" font-size="7.5" font-family="sans-serif">'+maxBF+'%</text>';
-    bfSvg+='<text x="'+(W-pR+3)+'" y="'+(pT+cH)+'" fill="#1565C0" font-size="7.5" font-family="sans-serif">'+minBF+'%</text>';
-    // BF stats
-    if(bfVals.length>=2){
-      var bfDiff=+(bfVals[bfVals.length-1]-bfVals[0]).toFixed(1);
-      var bfCol=bfDiff<0?'#2e7d32':'#c62828';
-      bfStats='<span>%BF: <b style="color:'+bfCol+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>';
-      // LBM change using first and last entries that have bf
-      var bfEntries=sorted.filter(function(e){return e.bf>0;});
-      var lbmFirst=+(bfEntries[0].weight*(1-bfEntries[0].bf/100)).toFixed(1);
-      var lbmLast=+(bfEntries[bfEntries.length-1].weight*(1-bfEntries[bfEntries.length-1].bf/100)).toFixed(1);
-      var lbmDiff=+(lbmLast-lbmFirst).toFixed(1);
-      bfStats+='<span>LBM: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>';
-    }
-  }
-  var firstW=weights[0],lastW=weights[n-1];
-  var diff=+(lastW-firstW).toFixed(1);
-  var diffCol=diff<0?'#2e7d32':diff>0?'#c62828':'#888';
-  var legend='<span style="display:inline-flex;align-items:center;gap:3px"><svg width="16" height="5" style="flex-shrink:0"><line x1="0" y1="2.5" x2="16" y2="2.5" stroke="#025857" stroke-width="2.5"/></svg>Βάρος kg</span>';
-  if(hasBF)legend+='<span style="display:inline-flex;align-items:center;gap:3px"><svg width="16" height="5" style="flex-shrink:0"><line x1="0" y1="2.5" x2="16" y2="2.5" stroke="#1565C0" stroke-width="2" stroke-dasharray="5,2.5"/></svg>%BF</span>';
-  return '<div class="weight-chart-wrap">'
-    +'<svg width="100%" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="height:'+H+'px;display:block">'
-    +yAxis
-    +'<polyline points="'+ptsW.join(' ')+'" fill="none" stroke="#025857" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'
-    +dotsW+bfSvg
-    +'</svg>'
-    +'<div class="weight-chart-stats">'
-    +legend
-    +'<span style="border-left:1px solid #ddd;padding-left:10px">Βάρος: <b style="color:'+diffCol+'">'+(diff>0?'+':'')+diff+' kg</b></span>'
-    +bfStats
-    +'<span>Min: <b>'+minW+'</b> Max: <b>'+maxW+' kg</b></span>'
-    +'<span style="color:#aaa">'+n+' μετρήσεις</span>'
-    +'</div>'
-    +'</div>';
 }
 
 /* ── Skinfold Calculator ─────────────────────────────────────────────────── */

@@ -1425,19 +1425,8 @@ function renderWeekTable(){
   var mealNames=(c.weekPlan[0]||[]).map(function(m){return m.name;});
   var numMeals=mealNames.length;
 
-  var tdeeR2=calcTDEE(c);
   var trainD=c.trainDays||[false,false,false,false,false,false,false];
   var trainTimes=c.trainTimesByDay||['','','','','','',''];
-
-  // ✅ MET Activity Explanation Banner
-  var metExplainerHtml='';
-  if(tdeeR2.usedMET){
-    metExplainerHtml='<div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1565C0;line-height:1.5">'
-      +'💡 <b>Δυναμικοί Ημερήσιοι Στόχοι:</b> Χρησιμοποιείτε MET δραστηριότητες, οπότε κάθε ημέρα έχει διαφορετικό στόχο θερμίδων:<br/>'
-      +'&nbsp;&nbsp;&nbsp;&nbsp;<span style="background:#025857;color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-right:6px">T</span>Ημέρα με άσκηση = <b>περισσότερες θερμίδες</b> (για ενέργεια + ανάκαμψη)'
-      +'&nbsp;&nbsp;&nbsp;&nbsp;<span style="background:#eee;color:#aaa;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-right:6px;display:inline-block">R</span>Ημέρα ανάπαυσης = <b>λιγότερες θερμίδες</b> (μειωμένη δαπάνη ενέργειας)'
-      +'</div>';
-  }
 
   // Supplement recommendations now shown in modal only (not inline)
 
@@ -1499,9 +1488,11 @@ function renderWeekTable(){
       +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. πριν/μετά 2ης προπόνησης)" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
       +'</div>';
   }
-  var html=metExplainerHtml+summaryCard+foodDotLegend+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
+  var html=summaryCard+foodDotLegend+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
-    var badge=trainD[di]?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px">T</span>':'<span style="background:#eee;color:#aaa;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px">R</span>';
+    // ✅ Native title tooltip explains T/R on hover instead of a permanent banner repeating
+    // the same explanation once above a table where the badge already appears 7 times.
+    var badge=trainD[di]?'<span title="Ημέρα με άσκηση: περισσότερες θερμίδες για ενέργεια + ανάκαμψη" style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">T</span>':'<span title="Ημέρα ανάπαυσης: λιγότερες θερμίδες λόγω μειωμένης δαπάνης ενέργειας" style="background:#eee;color:#aaa;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">R</span>';
     var timeStr='';
     if(trainD[di]&&trainTimes[di]&&trainTimes[di].length>0){
       timeStr='<div style="font-size:10px;color:#666;margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';

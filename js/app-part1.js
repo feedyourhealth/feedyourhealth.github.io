@@ -3131,15 +3131,18 @@ function buildPlanHistoryHtmlInner(c){
   // Calculate stats
   var stats=calculatePlanStats(c.savedPlans);
 
-  // Stats section
-  html+='<div style="background:#e8f5e9;border:1px solid #81c784;border-radius:8px;padding:12px;margin-bottom:16px">'
-    +'<div style="font-weight:600;color:#2e7d32;margin-bottom:8px">📈 Στατιστικά Πλάνων:</div>'
+  // ✅ One consolidated card (stats + comparison + trend) instead of 3 separately-colored
+  // boxes stacked on top of each other — sections are divided by hairlines, not competing
+  // background colors, and deltas use one neutral tone (a higher kcal between two plans
+  // isn't inherently "bad" the way red implied) instead of red/green.
+  html+='<div style="background:#fff;border:1px solid #e0e0e0;border-left:3px solid #025857;border-radius:8px;padding:14px 16px;margin-bottom:16px">'
+    +'<div style="font-weight:700;color:#025857;margin-bottom:8px;font-size:13px">📈 Στατιστικά Πλάνων</div>'
     +'<div style="font-size:12px;line-height:1.8;display:grid;grid-template-columns:1fr 1fr;gap:10px">'
     +'<div>📊 Σύνολο: <strong>'+stats.count+' πλάνα</strong></div>'
     +'<div>📊 Μέσο Kcal: <strong>'+stats.avgK+'</strong> ('+stats.minK+'-'+stats.maxK+')</div>'
     +'<div>📊 Μέσο Protein: <strong>'+stats.avgP+'g</strong> ('+stats.minP+'-'+stats.maxP+'g)</div>'
     +'<div>📊 Τελευταίο: <strong>'+c.savedPlans[c.savedPlans.length-1].date+'</strong></div>'
-    +'</div></div>';
+    +'</div>';
 
   // Comparison section
   if(c.savedPlans.length>1){
@@ -3148,18 +3151,18 @@ function buildPlanHistoryHtmlInner(c){
     var kDiff=last.k-prev.k;
     var pDiff=last.p-prev.p;
     var fDiff=last.f-prev.f;
-    html+='<div style="background:#f0f8ff;border:1px solid #b3e5fc;border-radius:8px;padding:12px;margin-bottom:16px">'
-      +'<div style="font-weight:600;color:#0277bd;margin-bottom:8px">📊 Σύγκριση Τελευταίων 2 Πλάνων:</div>'
-      +'<div style="font-size:12px;line-height:1.8;display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-      +'<div>Kcal: '+prev.k+' → '+last.k+' <span style="color:'+(kDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(kDiff>0?'+':'')+kDiff+')</span></div>'
-      +'<div>Πρωτεΐνες: '+prev.p+'g → '+last.p+'g <span style="color:'+(pDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(pDiff>0?'+':'')+pDiff+'g)</span></div>'
-      +'<div>Λίπος: '+prev.f+'g → '+last.f+'g <span style="color:'+(fDiff<0?'#2e7d32':'#c62828')+';font-weight:600">('+(fDiff>0?'+':'')+fDiff+'g)</span></div>'
+    html+='<div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px">'
+      +'<div style="font-weight:700;color:#025857;margin-bottom:8px;font-size:12px">Σύγκριση Τελευταίων 2 Πλάνων</div>'
+      +'<div style="font-size:12px;line-height:1.8;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+      +'<div>Kcal: '+prev.k+' → '+last.k+' <span style="color:#666;font-weight:600">('+(kDiff>0?'+':'')+kDiff+')</span></div>'
+      +'<div>Πρωτεΐνες: '+prev.p+'g → '+last.p+'g <span style="color:#666;font-weight:600">('+(pDiff>0?'+':'')+pDiff+'g)</span></div>'
+      +'<div>Λίπος: '+prev.f+'g → '+last.f+'g <span style="color:#666;font-weight:600">('+(fDiff>0?'+':'')+fDiff+'g)</span></div>'
       +'</div></div>';
   }
 
   // Macro trend visualization
-  html+='<div style="background:#fff3e0;border:1px solid #ffb74d;border-radius:8px;padding:12px;margin-bottom:16px">'
-    +'<div style="font-weight:600;color:#e65100;margin-bottom:8px">📈 Τάση Macros:</div>'
+  html+='<div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px">'
+    +'<div style="font-weight:700;color:#025857;margin-bottom:8px;font-size:12px">Τάση Macros</div>'
     +'<div style="font-size:11px;line-height:1.6">';
   for(var i=0;i<c.savedPlans.length;i++){
     var plan=c.savedPlans[i];
@@ -3171,11 +3174,12 @@ function buildPlanHistoryHtmlInner(c){
       +'<span style="font-weight:600">'+plan.macros.k+' kcal</span>'
       +'</div>'
       +'<div style="background:#e0e0e0;border-radius:3px;height:12px;overflow:hidden">'
-      +'<div style="background:linear-gradient(90deg,#2196F3,#00BCD4);width:'+barWidth+'%;height:100%;"></div>'
+      +'<div style="background:#025857;width:'+barWidth+'%;height:100%;"></div>'
       +'</div>'
       +'</div>';
   }
-    html+='</div></div>';
+    html+='</div></div>'
+    +'</div>';
 
   // Plans list
   html+='<div style="border-top:1px solid #e0e0e0;padding-top:16px">';
@@ -3188,21 +3192,22 @@ function buildPlanHistoryHtmlInner(c){
       +'<div style="font-size:12px;color:#999">'+plan.date+' '+plan.time+'</div>'
       +'</div>'
       +'<div style="background:#fff;padding:10px;border-radius:4px;font-size:12px;margin-bottom:8px">'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:6px">'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'
       +'<div><strong>Kcal:</strong> <span style="color:#025857;font-weight:600">'+plan.macros.k+'</span></div>'
-      +'<div><strong>Πρωτ:</strong> <span style="color:#f57c00;font-weight:600">'+plan.macros.p+'g</span></div>'
-      +'<div><strong>Λίπος:</strong> <span style="color:#d32f2f;font-weight:600">'+plan.macros.f+'g</span></div>'
+      +'<div><strong>Πρωτ:</strong> <span style="color:#025857;font-weight:600">'+plan.macros.p+'g</span></div>'
+      +'<div><strong>Λίπος:</strong> <span style="color:#025857;font-weight:600">'+plan.macros.f+'g</span></div>'
+      +'<div><strong>Υδατ:</strong> <span style="color:#025857;font-weight:600">'+plan.macros.c+'g</span></div>'
       +'</div>'
-      +'<div><strong>Υδατάνθρακες:</strong> <span style="color:#388e3c;font-weight:600">'+plan.macros.c+'g</span></div>'
       +(plan.note?'<div style="margin-top:8px;padding:8px;background:#fffbea;border-left:3px solid #ffc107;font-style:italic;color:#666">💬 '+esc(plan.note)+'</div>':'')
       +'</div>'
-      // Action buttons
+      // Action buttons — shared .btn classes instead of 4 unrelated hardcoded colors:
+      // one primary view action, two secondary utility actions, one danger action.
       +'<div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">'
-      +'<button onclick="loadPlanAsActive('+i+')" style="background:#2196F3;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;flex:1">📥 Φόρτωση</button>'
-      +'<button onclick="duplicatePlan('+i+')" style="background:#4CAF50;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;flex:1">📋 Αντιγραφή</button>'
-      +'<button onclick="deletePlanFromHistory('+i+')" style="background:#f44336;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:11px;flex:1">🗑️ Διαγραφή</button>'
+      +'<button class="btn secondary" onclick="loadPlanAsActive('+i+')" style="flex:1;font-size:11px;padding:6px 10px;min-height:auto">📥 Φόρτωση</button>'
+      +'<button class="btn secondary" onclick="duplicatePlan('+i+')" style="flex:1;font-size:11px;padding:6px 10px;min-height:auto">📋 Αντιγραφή</button>'
+      +'<button class="btn danger" onclick="deletePlanFromHistory('+i+')" style="flex:1;font-size:11px;padding:6px 10px;min-height:auto">🗑️ Διαγραφή</button>'
       +'</div>'
-      +'<button onclick="document.getElementById(\''+planId+'\').style.display=document.getElementById(\''+planId+'\').style.display===\'none\'?\'block\':\'none\'" style="background:#025857;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:11px;width:100%;">🍽️ Δες το πλάνο διατροφής</button>'
+      +'<button class="btn primary" onclick="document.getElementById(\''+planId+'\').style.display=document.getElementById(\''+planId+'\').style.display===\'none\'?\'block\':\'none\'" style="width:100%;font-size:11px;padding:6px 12px;min-height:auto">🍽️ Δες το πλάνο διατροφής</button>'
       +'<div id="'+planId+'" style="display:none;margin-top:10px;padding:10px;background:#f0f8ff;border-radius:4px;border:1px solid #b3e5fc;max-height:400px;overflow-y:auto;font-size:11px">';
 
     // Show week plan meals

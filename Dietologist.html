@@ -1493,8 +1493,8 @@ function toggleSupplementSelector() {
 
   // Build HTML with supplement checkboxes
   var suppListHtml = '<div style="background:white;border-radius:10px;padding:25px;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">';
-  suppListHtml += '<h2 style="color:#e65100;margin:0 0 15px 0;">💊 Επιλέξτε Συμπληρώματα</h2>';
-  suppListHtml += '<p style="color:#666;font-size:12px;margin:0 0 15px 0;">Τικάρετε τα συμπληρώματα που χρησιμοποιείτε τακτικά</p>';
+  suppListHtml += '<h2 style="color:#025857;margin:0 0 15px 0;">💊 Συμπληρώματα που Παίρνει Ήδη ο Πελάτης</h2>';
+  suppListHtml += '<p style="color:#666;font-size:12px;margin:0 0 15px 0;">Τικάρετε ό,τι χρησιμοποιεί ήδη τακτικά. Για προτάσεις νέων συμπληρωμάτων βάσει του πλάνου, δες «💊» στο «Εβδομαδιαίο πλάνο» — και τα δύο εμφανίζονται μαζί στο PDF.</p>';
 
   // List common supplements
   var commonSupps = [
@@ -1514,7 +1514,7 @@ function toggleSupplementSelector() {
 
   commonSupps.forEach(function(supp, idx) {
     var isSelected = c.selectedSupplements && c.selectedSupplements.some(function(s) { return s.supplement === supp.name; });
-    suppListHtml += '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer;border:2px solid '+(isSelected?'#e65100':'#ddd')+';transition:all 0.2s;">';
+    suppListHtml += '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer;border:2px solid '+(isSelected?'#025857':'#ddd')+';transition:all 0.2s;">';
     suppListHtml += '<input type="checkbox" id="supp-cb-'+idx+'" '+(isSelected?'checked':'')+' style="width:18px;height:18px;cursor:pointer;margin-top:2px;">';
     suppListHtml += '<div style="flex:1;">';
     suppListHtml += '<div style="font-weight:600;color:#333;">'+supp.name+'</div>';
@@ -1526,7 +1526,7 @@ function toggleSupplementSelector() {
 
   suppListHtml += '</div>';
   suppListHtml += '<div style="display:flex;gap:10px;margin-top:20px;border-top:1px solid #ddd;padding-top:15px;">';
-  suppListHtml += '<button onclick="savePage1Supplements()" style="flex:1;background:#4caf50;color:white;border:none;padding:12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">✓ Αποθήκευση</button>';
+  suppListHtml += '<button onclick="savePage1Supplements()" style="flex:1;background:#025857;color:white;border:none;padding:12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">✓ Αποθήκευση</button>';
   suppListHtml += '<button onclick="closePage1SupplementSelector()" style="flex:1;background:#999;color:white;border:none;padding:12px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:13px;">✕ Κλείσιμο</button>';
   suppListHtml += '</div>';
   suppListHtml += '</div>';
@@ -1578,7 +1578,15 @@ function savePage1Supplements() {
     }
   });
 
-  c.selectedSupplements = selectedSupps;
+  // ✅ Merge instead of overwrite: this modal only knows about the fixed "already taking"
+  // list above, so keep whatever the plan-based suggestions modal (Tab 2, "💊" in Εβδομαδιαίο
+  // πλάνο) already saved for names outside that list — otherwise saving here would silently
+  // wipe out those recommendations from c.selectedSupplements.
+  var thisModalNames = commonSupps.map(function(s) { return s.name; });
+  var keepFromOther = (c.selectedSupplements || []).filter(function(s) {
+    return thisModalNames.indexOf(s.supplement) === -1;
+  });
+  c.selectedSupplements = keepFromOther.concat(selectedSupps);
   save();
   closePage1SupplementSelector();
 
@@ -2088,17 +2096,17 @@ function openSecondTrainingModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="secondTrainOverlay" onclick="if(event.target===this)closeSecondTrainingModal()">'
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #FF6B35;padding-bottom:10px">'
-    +'<h2 style="margin:0;color:#FF6B35;font-size:18px">⏱️ 2η Προπόνηση (Optional)</h2>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#025857;font-size:18px">⏱️ 2η Προπόνηση (Optional)</h2>'
     +'<button onclick="closeSecondTrainingModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
     +'</div>'
-    +'<div style="background:#FFF3E0;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#E65100">'
+    +'<div style="background:#E2EEE5;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#025857">'
     +'⚠️ Για αθλητές που προπονούνται 2 φορές την ημέρα (π.χ. Judoka, Combat Sports)'
     +'</div>'
     +'<div id="secondTrainContent" style="font-size:13px"></div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeSecondTrainingModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
-    +'<button onclick="closeSecondTrainingModal();save()" style="padding:10px 20px;background:#FF6B35;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'<button onclick="closeSecondTrainingModal();save()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
     +'</div>'
     +'</div>'
     +'</div>';
@@ -2121,11 +2129,11 @@ function openMealTimesModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="mealTimesOverlay" onclick="if(event.target===this)closeMealTimesModal()">'
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #2E7D32;padding-bottom:10px">'
-    +'<h2 style="margin:0;color:#2E7D32;font-size:18px">⏱️ Χρόνοι Γευμάτων</h2>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#025857;font-size:18px">⏱️ Χρόνοι Γευμάτων</h2>'
     +'<button onclick="closeMealTimesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
     +'</div>'
-    +'<div style="background:#E8F5E9;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#2E7D32">'
+    +'<div style="background:#E2EEE5;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#025857">'
     +'💡 Ορίστε τους χρόνους των γευμάτων. Θα χρησιμοποιηθούν για meal planning.'
     +'</div>'
     +'<div style="display:grid;gap:12px">'
@@ -2137,7 +2145,7 @@ function openMealTimesModal(){
     +'</div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeMealTimesModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
-    +'<button onclick="saveMealTimes()" style="padding:10px 20px;background:#2E7D32;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'<button onclick="saveMealTimes()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
     +'</div>'
     +'</div>'
     +'</div>';
@@ -2171,17 +2179,17 @@ function openMetActivitiesModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="metActivOverlay" onclick="if(event.target===this)closeMetActivitiesModal()">'
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #1565C0;padding-bottom:10px">'
-    +'<h2 style="margin:0;color:#1565C0;font-size:18px">🏃 MET Activities (Δραστηριότητες)</h2>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#025857;font-size:18px">🏃 MET Activities (Δραστηριότητες)</h2>'
     +'<button onclick="closeMetActivitiesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
     +'</div>'
-    +'<div style="background:#E3F2FD;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#1565C0">'
+    +'<div style="background:#E2EEE5;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#025857">'
     +'💡 Προσθέστε συγκεκριμένες δραστηριότητες για ακριβή υπολογισμό θερμίδων.'
     +'</div>'
     +'<div id="metActivContent" style="font-size:13px"></div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeMetActivitiesModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
-    +'<button onclick="closeMetActivitiesModal();save()" style="padding:10px 20px;background:#1565C0;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'<button onclick="closeMetActivitiesModal();save()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
     +'</div>'
     +'</div>'
     +'</div>';
@@ -2205,53 +2213,56 @@ function openMedicalConditionsModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="medicalOverlay" onclick="if(event.target===this)closeMedicalConditionsModal()">'
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #c62828;padding-bottom:10px">'
-    +'<h2 style="margin:0;color:#c62828;font-size:18px">🩺 Ιατρικές Συνθήκες</h2>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#025857;font-size:18px">🩺 Ιατρικές Συνθήκες</h2>'
     +'<button onclick="closeMedicalConditionsModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
     +'</div>'
     +'<div style="background:#FFEBEE;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#c62828">'
     +'⚠️ Επιλέξτε τυχόν ενεργές ιατρικές συνθήκες για προσαρμογή του πλάνου.'
     +'</div>'
+    // ✅ One neutral row background for all 8 conditions — the 6 arbitrary pastel colors here
+    // had no legend and no consistent meaning (unlike the 3-tier menstrual-cycle colors below,
+    // which do mean something). Reserving color for the genuine risk callouts above/below.
     +'<div style="display:grid;gap:10px;margin-bottom:20px">'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFCDD2;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-diabetes-modal" '+(c.medConditions?.diabetes?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🍬 Διαβήτης</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'diabetes\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'diabetes\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFCDD2;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-hypertension-modal" '+(c.medConditions?.hypertension?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🩸 Υψηλή Πίεση</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hypertension\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hypertension\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFCDD2;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-cholesterol-modal" '+(c.medConditions?.cholesterol?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🩸 Υψηλή Χοληστερόλη</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'cholesterol\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'cholesterol\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#FFECB3;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-celiac-modal" '+(c.medConditions?.celiac?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🌾 Κοιλιοκάκη</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'celiac\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'celiac\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#C8E6C9;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-ibs-modal" '+(c.medConditions?.ibs?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🔄 IBS</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ibs\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ibs\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#BBDEFB;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-lactose-modal" '+(c.medConditions?.lactose?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🥛 Δυσανεξία Λακτόζης</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#E1BEE7;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-ironDeficiency-modal" '+(c.medConditions?.ironDeficiency?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🔋 Σιδηροπενία / Αναιμία (Αθλητές)</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ironDeficiency\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ironDeficiency\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#B3E5FC;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-hydration-modal" '+(c.medConditions?.hydration?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">💧 Ενυδάτωση & Ηλεκτρολύτες (Αθλητές)</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hydration\')" style="margin-left:auto;background:#fff;border:1px solid #c62828;color:#c62828;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hydration\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'</div>'
     +'<div style="border-top:2px solid #ddd;padding-top:15px">'
@@ -2273,7 +2284,7 @@ function openMedicalConditionsModal(){
     +'</div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeMedicalConditionsModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
-    +'<button onclick="saveMedicalConditions()" style="padding:10px 20px;background:#c62828;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'<button onclick="saveMedicalConditions()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
     +'</div>'
     +'</div>'
     +'</div>';
@@ -2331,8 +2342,8 @@ function openDietModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="dietOverlay" onclick="if(event.target===this)closeDietModal()">'
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #F57C00;padding-bottom:10px">'
-    +'<h2 style="margin:0;color:#F57C00;font-size:18px">🥗 Διατροφή & Αποκλεισμοί</h2>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#025857;font-size:18px">🥗 Διατροφή & Αποκλεισμοί</h2>'
     +'<button onclick="closeDietModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
     +'</div>'
     +'<div style="margin-bottom:20px">'
@@ -2350,7 +2361,7 @@ function openDietModal(){
     +'</div>'
     +'<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">🚫 Αποκλεισμοί Τροφών:</label>'
-    +'<button onclick="openFoodPickerModal()" style="width:100%;padding:12px;background:#FF6B35;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;margin-bottom:8px">'
+    +'<button onclick="openFoodPickerModal()" style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;margin-bottom:8px">'
     +'📋 Επιλέξτε τρόφιμα που δεν του αρέσουν ('+(c.foodExclude?.length||0)+')'
     +'</button>'
     +'<div style="font-size:11px;color:#666;padding:8px;background:#FFF3E0;border-radius:4px">'
@@ -2363,7 +2374,7 @@ function openDietModal(){
     +'</div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeDietModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
-    +'<button onclick="saveDietSettings()" style="padding:10px 20px;background:#F57C00;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'<button onclick="saveDietSettings()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
     +'</div>'
     +'</div>'
     +'</div>';
@@ -2415,8 +2426,8 @@ function openFoodPickerModal(){
 
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="foodPickerOverlay" onclick="if(event.target===this)closeFoodPickerModal()">'
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #FF6B35;padding-bottom:10px">'
-    +'<h2 style="margin:0;color:#FF6B35;font-size:18px">🚫 Αποκλεισμοί Τροφών</h2>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
+    +'<h2 style="margin:0;color:#025857;font-size:18px">🚫 Αποκλεισμοί Τροφών</h2>'
     +'<button onclick="closeFoodPickerModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
     +'</div>'
 
@@ -2434,7 +2445,7 @@ function openFoodPickerModal(){
 
     +'<div style="display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeFoodPickerModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
-    +'<button onclick="saveFoodExclusions()" style="padding:10px 20px;background:#FF6B35;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
+    +'<button onclick="saveFoodExclusions()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
     +'</div>'
     +'</div>'
     +'</div>';
@@ -2449,7 +2460,7 @@ function openFoodPickerModal(){
   var contentHtml='';
   categories.forEach(function(cat){
     contentHtml+='<div style="margin-bottom:20px">'
-      +'<div style="font-weight:700;color:#FF6B35;padding:10px;background:#FFF3E0;border-radius:6px;margin-bottom:10px">📁 '+cat+'</div>'
+      +'<div style="font-weight:700;color:#025857;padding:10px;background:#E2EEE5;border-radius:6px;margin-bottom:10px">📁 '+cat+'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-left:10px">';
 
     foodsByCategory[cat].forEach(function(foodName){
@@ -2492,9 +2503,9 @@ function updateFoodChips(){
 
   var chipsHtml='';
   selected.forEach(function(food){
-    chipsHtml+='<div style="background:#FF6B35;color:white;padding:6px 12px;border-radius:16px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600">'
+    chipsHtml+='<div style="background:#025857;color:white;padding:6px 12px;border-radius:16px;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600">'
       +food
-      +'<button onclick="removeFoodExclusion(\''+food+'\'" style="background:none;border:none;color:white;cursor:pointer;font-size:16px;padding:0">×</button>'
+      +'<button onclick="removeFoodExclusion(\''+food+'\')" style="background:none;border:none;color:white;cursor:pointer;font-size:16px;padding:0">×</button>'
       +'</div>';
   });
 

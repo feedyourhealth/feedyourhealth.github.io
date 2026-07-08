@@ -794,8 +794,11 @@ body.dark-mode .tooltip-text {
 .ea-warn{background:#fff8e1;border:1px solid #ffd54f;color:#e65100}
 .ea-danger{background:#ffebee;border:1px solid #ef9a9a;color:#c62828}
 /* ── Day copy button ── */
-.day-copy-btn{background:none;border:1px solid rgba(255,255,255,.4);border-radius:4px;cursor:pointer;color:rgba(255,255,255,.7);font-size:9px;padding:1px 4px;margin-left:3px;vertical-align:middle;line-height:1}
-.day-copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+/* ✅ Shared style for the two day-header icon buttons (📋 copy day / 🔄 regenerate day) — previously
+   .day-copy-btn was styled translucent-white (low contrast on the light mint header) and
+   .day-regen-btn had no rule at all (fell back to default browser button chrome) */
+.day-copy-btn,.day-regen-btn{background:none;border:1px solid rgba(2,88,87,.35);border-radius:4px;cursor:pointer;color:#025857;font-size:9px;padding:1px 4px;margin-left:3px;vertical-align:middle;line-height:1}
+.day-copy-btn:hover,.day-regen-btn:hover{background:rgba(2,88,87,.12);border-color:#025857}
 /* ── Protein per-meal warning ── */
 .prot-warn{display:inline-block;font-size:9px;color:#c62828;margin-right:2px;cursor:default}
 /* ── MET Activities panel ── */
@@ -1268,6 +1271,19 @@ body.dark-mode .week-table {
 
 body.dark-mode .week-table thead th {
   background: #025857;
+  color: #fff;
+}
+
+/* Header background is solid teal in dark mode, so the teal-on-transparent button style from
+   the light-mode rule above would be invisible here — go back to translucent white instead. */
+body.dark-mode .day-copy-btn,
+body.dark-mode .day-regen-btn {
+  border-color: rgba(255,255,255,.4);
+  color: rgba(255,255,255,.7);
+}
+body.dark-mode .day-copy-btn:hover,
+body.dark-mode .day-regen-btn:hover {
+  background: rgba(255,255,255,.2);
   color: #fff;
 }
 

@@ -2075,10 +2075,10 @@ function openSupplementModal(){
       +'<div class="supp-modal-header">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'
       +'<div>'
-      +'<h2 style="margin:0;color:#e65100;">💊 Προτάσεις Συμπληρωμάτων (Βάσει Ανάλυσης)</h2>'
-      +'<p style="font-size:11px;color:#666;margin:4px 0 0;">Σελίδα 2: Συνιστώμενα συμπληρώματα βάσει ανάλυσης διατροφής</p>'
+      +'<h2 style="margin:0;color:#025857;">💊 Προτάσεις Συμπληρωμάτων (Βάσει Ανάλυσης)</h2>'
+      +'<p style="font-size:11px;color:#666;margin:4px 0 0;">Συνιστώμενα βάσει ανάλυσης του πλάνου — συνδυάζονται στο PDF με όσα ήδη παίρνει ο πελάτης (Tab 1, «💊 Συμπληρώματα»).</p>'
       +'</div>'
-      +'<button onclick="closeSupplementModal()" style="background:#ff6b35;padding:8px 12px;border:none;border-radius:4px;cursor:pointer;color:white;font-weight:bold;font-size:14px;white-space:nowrap;">✕ Κλείσιμο</button>'
+      +'<button onclick="closeSupplementModal()" style="background:#025857;padding:8px 12px;border:none;border-radius:4px;cursor:pointer;color:white;font-weight:bold;font-size:14px;white-space:nowrap;">✕ Κλείσιμο</button>'
       +'</div>'
       +'</div>'
       +'<div id="supp-modal-content" style="overflow-y:auto;max-height:calc(85vh - 120px);">'+suppHtml+'</div>'
@@ -2141,8 +2141,22 @@ function saveSupplementSelection(){
     return;
   }
 
+  // ✅ Merge instead of overwrite: this modal only lists gap-based recommendation candidates
+  // (checked or not, all under #supp-modal input[type=checkbox]), so keep whatever the "already
+  // taking" modal (Tab 1, "💊 Συμπληρώματα") saved for names outside that candidate set —
+  // otherwise saving here would silently wipe those out of c.selectedSupplements.
+  var allCandidateNames=[];
+  document.querySelectorAll('#supp-modal input[type="checkbox"]').forEach(function(cb){
+    var parent=cb.closest('div');
+    var label=parent.querySelector('label');
+    if(label) allCandidateNames.push(label.textContent.split(' - ')[0].trim());
+  });
+  var keepFromOther=(c.selectedSupplements||[]).filter(function(s){
+    return allCandidateNames.indexOf(s.supplement)===-1;
+  });
+
   // Save to client
-  c.selectedSupplements=selectedSupps;
+  c.selectedSupplements=keepFromOther.concat(selectedSupps);
   save();
 
   // Show success message
@@ -2250,8 +2264,8 @@ function buildDynamicSupplementHtml(c, gapBasedRecs, gaps){
   html += '</div>';
 
   // SECTION 3: SAVE SELECTION BUTTON
-  html += '<div style="background:#e8f5e9;padding:15px;border-radius:4px;border-left:4px solid #4caf50;">';
-  html += '<button onclick="saveSupplementSelection()" style="background:#4caf50;color:white;padding:12px 20px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:14px;width:100%;margin-bottom:10px;">';
+  html += '<div style="background:#E2EEE5;padding:15px;border-radius:4px;border-left:4px solid #025857;">';
+  html += '<button onclick="saveSupplementSelection()" style="background:#025857;color:white;padding:12px 20px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:14px;width:100%;margin-bottom:10px;">';
   html += '✅ Αποθήκευση Επιλογής στο Πλάνο';
   html += '</button>';
   html += '<p style="font-size:11px;color:#666;margin:0;">Τα επιλεγμένα συμπληρώματα θα εμφανιστούν στο PDF εξαγωγή και στο πλάνο διατροφής.</p>';
