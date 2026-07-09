@@ -3373,10 +3373,12 @@ function addPotatoToFishMeals(days){
         return FOODS[f.n]&&FOODS[f.n].cat==='Ψάρια';
       });
       if(!hasFish)return;
-      // Έλεγχος αν υπάρχει ήδη υδατάνθρακας (δημητριακά ή πατάτα)
+      // Έλεγχος αν υπάρχει ήδη υδατάνθρακας (δημητριακά, πατάτα, ή όσπρια — π.χ. Φακές έχουν ~20g
+      // υδατ./100g και ήδη καλύπτουν τον ρόλο του αμύλου σε ένα πιάτο φακές+σαρδέλες)
       var hasCarb=meal.foods.some(function(f){
         if(f.n==='Πατάτες')return true;
-        return FOODS[f.n]&&FOODS[f.n].cat==='Δημητριακά';
+        var cat=FOODS[f.n]&&FOODS[f.n].cat;
+        return cat==='Δημητριακά'||cat==='Όσπρια';
       });
       if(!hasCarb)meal.foods.push({n:'Πατάτες',g:200});
     });
