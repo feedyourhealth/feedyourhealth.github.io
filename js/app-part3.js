@@ -2830,26 +2830,23 @@ function getMicronutrientHtml(c){
   return html;
 }
 
-/* ---- Saved Combos ---- */
+/* ---- Saved Combos ----
+   Per-client only (c.savedCombos), cloud-synced with the rest of the client's data.
+   Used to fall back to a single shared localStorage key ('dieto_combos') when a client
+   had no combos of its own — but every save() overwrote that shared key with just the
+   current client's list, so it silently clobbered whatever another client had saved
+   there. That's how a real client's combo list got wiped. No longer read or written. */
 function getSavedCombos(){
   var c=getC();
-  // Προτεραιότητα 1: Ανάκτηση από client object (backup)
-  if(c && c.savedCombos && Array.isArray(c.savedCombos)){
-    return c.savedCombos;
-  }
-  // Προτεραιότητα 2: Ανάκτηση από localStorage (παλαιό σύστημα)
-  return safeStorageGet('dieto_combos', []);
+  return (c && Array.isArray(c.savedCombos)) ? c.savedCombos : [];
 }
 
 function setSavedCombos(arr){
   var c=getC();
-  // Αποθήκευση στο client object (backup)
   if(c){
     c.savedCombos=arr;
     save();
   }
-  // Αποθήκευση και στο localStorage για συμβατότητα
-  safeStorageSet('dieto_combos', arr);
 }
 
 // ── Lightweight toast notification ─────────────────────────────────────────
