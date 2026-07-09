@@ -257,7 +257,9 @@ function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count, 
   var lib = harvestMealLibrary(excludeClientId);
   function dietOK(comboDiet){
     if(!dietType || dietType==='normal') return true;
-    if(!comboDiet) return true;
+    // Restrictive target diet (vegan/vegetarian/keto/...): an UNTAGGED source is no
+    // longer assumed safe. Legacy combos/library entries saved before dietType tagging
+    // existed could contain anything — this closed the same leak now confirmed for keto.
     return comboDiet===dietType;
   }
   var exclLower = (excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
@@ -309,10 +311,11 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
     });
   }
   // Diet compatibility: a restrictive target diet only accepts same-diet sources;
-  // 'normal'/undefined target accepts anything. Legacy combos without diet info pass.
+  // 'normal'/undefined target accepts anything. Legacy combos without diet info are
+  // NOT assumed safe for a restrictive diet (confirmed leak: untagged combos were
+  // matching into keto/vegan/vegetarian plans regardless of actual content).
   function dietOK(comboDiet){
     if(!dietType || dietType==='normal') return true;
-    if(!comboDiet) return true;
     return comboDiet===dietType;
   }
 
