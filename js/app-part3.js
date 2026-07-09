@@ -1193,8 +1193,9 @@ function genPlan(){
   var isVegan = (c.dietType === 'vegan');
   var isVegetarianDiet = (c.dietType === 'vegetarian');
   var isKetogenic = (c.dietType === 'keto');
+  var isBodybuildingClean = (c.dietType === 'bodybuilding_clean');
 
-  if(!isOrthodoxFasting && !isIntermittentFasting && !isVegan && !isVegetarianDiet && !isKetogenic) {
+  if(!isOrthodoxFasting && !isIntermittentFasting && !isVegan && !isVegetarianDiet && !isKetogenic && !isBodybuildingClean) {
     tmplDays=preferWholeGrains(tmplDays);                // 1. ολικής άλεσης δημητριακά
     tmplDays=applyMediterraneanRules(tmplDays);          // 2. κατανομή πρωτεΐνης (ψάρι/κρέας/όσπρια)
     tmplDays=cleanFYHMeals(tmplDays);                    // 3. FYH σε snacks = αυτόνομα (safety net)
@@ -1227,6 +1228,16 @@ function genPlan(){
     tmplDays=preferWholeGrains(tmplDays);                // 1. ολικής άλεσης δημητριακά (safe for plant-based)
     tmplDays=ensureSaladAndOil(tmplDays);                // 4. σαλάτα εποχής + ελαιόλαδο παντού (safe for plant-based)
     tmplDays=ensureOilWithVegetables(tmplDays);          // 6ε. εξασφάλιση λαδιού με λαχανικά (safe for plant-based)
+  } else if(isBodybuildingClean) {
+    // For Bodybuilding Clean, skip applyMediterraneanRules() — it unconditionally overwrites each
+    // lunch/dinner's protein with a fixed weekly meat/fish rotation (MED_PLAN) by meal NAME, with no
+    // awareness that Priority 1 already matched a dietTagMap-tagged bodybuilding_clean/high_protein
+    // recipe for that slot. Confirmed live: it was silently swapping in the MED_PLAN rotation's food
+    // while leaving the stale recipeId behind, so the plan (and trust-score tracking) no longer
+    // matched what was actually served. Same safe subset as Vegetarian above.
+    tmplDays=preferWholeGrains(tmplDays);                // 1. ολικής άλεσης δημητριακά (safe, no protein change)
+    tmplDays=ensureSaladAndOil(tmplDays);                // 4. σαλάτα εποχής + ελαιόλαδο παντού (safe, no protein change)
+    tmplDays=ensureOilWithVegetables(tmplDays);          // 6ε. εξασφάλιση λαδιού με λαχανικά (safe, no protein change)
   }
   // For Ketogenic, skip all Mediterranean rules (templates are already optimized for low-carb)
 
