@@ -2384,6 +2384,22 @@ function saveTrackingData(){
   safeStorageSet('dietologist_tracking', TRACKING_DATA);
 }
 
+// Real display name for a tracked meal — meal.name is always just the meal-time slot
+// label ("Πρωινό"/"Μεσημεριανό"/"Βραδινό"/"Ενδιάμεσο", set once from TMPLS and never
+// overwritten once real foods are filled in), so it's useless for telling recipes apart
+// in Tracking Analytics. Prefer the chef recipe's real title, then fall back to the
+// actual foods in the meal.
+function getMealDisplayName(meal){
+  if(meal.recipeId && typeof findRecipeById==='function'){
+    var r = findRecipeById(meal.recipeId);
+    if(r && r.name) return r.name;
+  }
+  if(meal.foods && meal.foods.length){
+    return meal.foods.slice(0,3).map(function(f){return f.n;}).join(', ');
+  }
+  return meal.name || 'Γεύμα';
+}
+
 // Log plan generation
 function logPlanGeneration(client, weekPlan){
   if(!client || !weekPlan)return;
@@ -2414,14 +2430,14 @@ function logPlanGeneration(client, weekPlan){
             day: d,
             mealIndex: mi,
             recipeId: trackKey,
-            mealName: meal.name
+            mealName: getMealDisplayName(meal)
           });
 
           // Update recipe stats
           if(!TRACKING_DATA.recipes[trackKey]){
             TRACKING_DATA.recipes[trackKey] = {
               id: trackKey,
-              name: meal.name || 'Unknown',
+              name: getMealDisplayName(meal),
               timesUsed: 0,
               successCount: 0,
               regenerateCount: 0,
