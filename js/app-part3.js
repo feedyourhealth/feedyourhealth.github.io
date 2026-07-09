@@ -318,6 +318,16 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
     if(!dietType || dietType==='normal') return true;
     return comboDiet===dietType;
   }
+  // ✅ Ένα ολόκληρο πιάτο κρέατος/ψαριού δεν είναι λογικό "Ενδιάμεσο" — χωρίς αυτό, ένα πραγματικό
+  // γεύμα κρέατος/ψαριού αποθηκευμένο ως snack από έναν bodybuilding_clean πελάτη (⭐ taste library ή
+  // saved combo) θα μπορούσε να καταλήξει σε ΟΠΟΙΟΥΔΗΠΟΤΕ άλλου diet type το πλάνο, αφού dietOK()
+  // δέχεται οποιαδήποτε πηγή για target 'normal'/χωρίς dietType.
+  function isMeatOrFishSnack(foods){
+    return foods.some(function(food){
+      var fd = FOODS[food.n] || FOODS[resolveFood(food.n)];
+      return fd && (fd.cat==='Κρέας' || fd.cat==='Ψάρια');
+    });
+  }
 
   var best=null, bestScore=Infinity, bestSig=null;
   for(var i = 0; i < savedCombos.length; i++) {
@@ -328,6 +338,7 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
     // Slot filter: skip only when both slots are known and differ
     if(slot && combo.slot && combo.slot!=='other' && combo.slot!==slot) continue;
     if(!dietOK(combo.dietType)) continue;
+    if(slot==='snack' && dietType!=='bodybuilding_clean' && isMeatOrFishSnack(combo.foods)) continue;
     if(comboHasExcludedFood(combo.foods)) continue;
     // Score: closeness to target, nudged by real-world trust (same idea as findBestRecipe's
     // recipeScore — proven meals get a small edge), then a strong penalty for meals already used this week.
@@ -450,6 +461,17 @@ function findBestRecipe(dietType, targetKcal, mealType, excl){
         dietMatch = tagged || lowCarb;
       } else {
         dietMatch = true;
+      }
+      // ✅ Ένα ολόκληρο πιάτο κρέατος/ψαριού (π.χ. "Κρέας Γαλοπούλας με Ρυζογκοφρέτες") δεν είναι
+      // λογικό "Ενδιάμεσο" εκτός αν ο πελάτης είναι σε πρωτεϊνο-κεντρικό diet type (bodybuilding_clean) —
+      // επιβεβαιωμένο ότι SNACK_RECIPES δεν είχε κανένα φίλτρο εδώ πέρα από το keto carb-check, οπότε ένα
+      // κρέας/ψάρι snack φτιαγμένο για bodybuilders μπορούσε να ταιριάξει σε ΟΠΟΙΟΔΗΠΟΤΕ diet type.
+      if(dietMatch && isSnack && dietType!=='bodybuilding_clean'){
+        var hasMeatOrFish = recipe.foods.some(function(food){
+          var fd = FOODS[food.n] || FOODS[resolveFood(food.n)];
+          return fd && (fd.cat==='Κρέας' || fd.cat==='Ψάρια');
+        });
+        if(hasMeatOrFish) dietMatch = false;
       }
     } else {
       dietMatch = dietTags.some(function(tag){return recipe.tags.indexOf(tag)!==-1;});
