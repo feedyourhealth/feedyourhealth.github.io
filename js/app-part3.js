@@ -437,7 +437,23 @@ function findBestRecipe(dietType, targetKcal, mealType, excl){
   // ✅ MEAL-TIME CATEGORY: which of the 4 dietitian-assigned categories this slot needs (null = not recognized, no constraint).
   var mealCategory = (typeof mealTypeToCategory==='function') ? mealTypeToCategory(mealType) : null;
   function matchesBase(recipe){
-    var dietMatch = isSnack ? true : (dietTags.some(function(tag){return recipe.tags.indexOf(tag)!==-1;}));
+    var dietMatch;
+    if(isSnack){
+      // SNACK_RECIPES carry no diet tags at all ("universal" by design), which is fine for diets
+      // that only restrict by food category (their forbidden foods are still caught downstream) —
+      // but keto restricts by carb content, and several snacks here run 20-38g carbs, enough to
+      // blow a whole day's keto carb budget on one snack. Require an explicit Keto/LowCarb tag
+      // or a genuinely low-carb macro before treating a snack as keto-appropriate.
+      if(dietType==='keto'){
+        var tagged = recipe.tags.indexOf('Keto')!==-1 || recipe.tags.indexOf('LowCarb')!==-1;
+        var lowCarb = recipe.macro && recipe.macro.c<=10;
+        dietMatch = tagged || lowCarb;
+      } else {
+        dietMatch = true;
+      }
+    } else {
+      dietMatch = dietTags.some(function(tag){return recipe.tags.indexOf(tag)!==-1;});
+    }
     var calMatch=(recipe.kcal >= targetKcal*0.80) && (recipe.kcal <= targetKcal*1.20);
     var noExcludedFoods = !recipeHasExcludedFood(recipe);
     return dietMatch && calMatch && noExcludedFoods;
@@ -1022,10 +1038,28 @@ function genPlan(){
   console.log('CLIENT DATA:', {dietType: c.dietType, goal: c.goal, selectedTemplate: c.selectedTemplate});
   console.log('AVAILABLE TEMPLATES IN TMPLS:', Object.keys(TMPLS));
 
-  var templateKey = (c.dietType && c.dietType !== 'normal') ? (c.dietType + '_' + c.goal) : c.goal;
+  // Diet-type -> TMPLS key prefix. Almost always identical to dietType, EXCEPT keto: its
+  // templates are historically named with the 'ketogenic' prefix (TMPLS.ketogenic_mild etc.),
+  // so 'keto_'+goal never matched anything and every keto client silently fell through to
+  // the generic, non-keto template below (confirmed live: high-carb fruit/rice-cake snacks
+  // baked into what should've been a low-carb plan).
+  var TMPL_DIET_PREFIX={keto:'ketogenic'};
+  var tmplDietPrefix=TMPL_DIET_PREFIX[c.dietType]||c.dietType;
+  var templateKey = (c.dietType && c.dietType !== 'normal') ? (tmplDietPrefix + '_' + c.goal) : c.goal;
   console.log('Template lookup - templateKey:', templateKey, 'dietType:', c.dietType, 'goal:', c.goal);
 
-  var tmpl=TMPLS[templateKey]||TMPLS[c.dietType]||TMPLS[c.goal]||TMPLS.maintain;
+  var tmpl=TMPLS[templateKey]||TMPLS[c.dietType]||TMPLS[tmplDietPrefix];
+  // This diet type has SOME dedicated template(s), just not for this exact goal (e.g. keto has
+  // mild/maintain/gain but no 'loss' — the most common keto goal!). Prefer any same-diet
+  // template over jumping straight to a generic one: losing the diet's structure entirely is
+  // worse than using a same-diet template tuned for a slightly different goal.
+  if(!tmpl && c.dietType && c.dietType!=='normal'){
+    ['maintain','mild','gain','loss'].some(function(g){
+      tmpl=TMPLS[tmplDietPrefix+'_'+g];
+      return !!tmpl;
+    });
+  }
+  tmpl = tmpl || TMPLS[c.goal] || TMPLS.maintain;
   console.log('Template found (tmpl):', tmpl ? 'YES - has ' + (tmpl.length || '?') + ' days' : 'NO - tmpl is', tmpl);
 
   if(!tmpl){
