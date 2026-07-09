@@ -2393,6 +2393,59 @@ function applyFoodExclusions(tmplDays,excludeList,allergyList){
   return result;
 }
 
+// ── Diet-Type Category Safety Net ────────────────────────────────────────────
+// Final defense-in-depth pass: regardless of WHICH code path put a food into a meal
+// (Mediterranean rules, chef recipes, taste library, saved combos...), this strips
+// anything from a category the client's diet type forbids. This matters because saved
+// combos carry no dietType tag (see saveCombo()), so the per-path diet checks
+// (findSavedComboMatch's dietOK) silently pass an untagged combo through for ANY
+// client, including vegan/vegetarian — this catches that regardless of source.
+var DIET_TYPE_FORBIDDEN_CATS={
+  'vegan':['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Γαλακτοκομικά'],
+  'vegetarian':['Κρέας','Ψάρια'],
+  'orthodox_fasting':['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Γαλακτοκομικά']
+};
+
+function applyDietTypeCategorySafetyNet(weekPlan,dietType){
+  var forbiddenCats=DIET_TYPE_FORBIDDEN_CATS[dietType];
+  if(!forbiddenCats||!forbiddenCats.length||!weekPlan)return weekPlan;
+  for(var d=0;d<weekPlan.length;d++){
+    if(!weekPlan[d])continue;
+    for(var mi=0;mi<weekPlan[d].length;mi++){
+      var meal=weekPlan[d][mi];
+      if(!meal.foods||!meal.foods.length)continue;
+      meal.foods=meal.foods.map(function(food){
+        var cat=FOODS[food.n]?FOODS[food.n].cat:'';
+        if(forbiddenCats.indexOf(cat)===-1)return food;
+        // Find a substitute via the existing substitution chain, restricted to allowed categories
+        var order=SUBST_ORDER[cat]||[cat];
+        var sub=null;
+        for(var i=0;i<order.length&&!sub;i++){
+          if(forbiddenCats.indexOf(order[i])!==-1)continue; // still forbidden, skip
+          var candidates=Object.keys(FOODS).filter(function(n){
+            return FOODS[n]&&FOODS[n].cat===order[i];
+          });
+          if(candidates.length){
+            var origDens=FOODS[food.n]?FOODS[food.n].k:100;
+            candidates.sort(function(a,b){
+              return Math.abs(FOODS[a].k-origDens)-Math.abs(FOODS[b].k-origDens);
+            });
+            sub=candidates[0];
+          }
+        }
+        if(sub){
+          var origK=FOODS[food.n]?FOODS[food.n].k:100;
+          var subK=FOODS[sub].k||100;
+          return{n:sub,g:Math.max(10,Math.round(food.g*(origK/subK)))};
+        }
+        return{n:'__EXCLUDED__',g:0};
+      });
+      meal.foods=meal.foods.filter(function(f){return f.n!=='__EXCLUDED__';});
+    }
+  }
+  return weekPlan;
+}
+
 function buildExcludeHtml(c){
   var excl=c.foodExclude||[];
   var quickBtns='';

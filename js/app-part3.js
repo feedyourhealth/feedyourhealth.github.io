@@ -1280,6 +1280,10 @@ function genPlan(){
     }
   }
 
+  // ✅ DIET-TYPE SAFETY NET: strip any food from a category the client's diet type
+  // forbids, regardless of which code path (recipe, taste library, saved combo...) put it there.
+  applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType);
+
   // ✅ LOG PLAN TO TRACKING SYSTEM
   logPlanGeneration(c, c.weekPlan);
 
@@ -2867,6 +2871,7 @@ function saveCombo(d,mi){
       kcal:Math.round(mealKcal),
       p:Math.round(mealP),f:Math.round(mealF),c:Math.round(mealC),
       mealTiming:meal.mealTiming||'regular',
+      dietType:c.dietType||'normal', // so findSavedComboMatch's diet check actually applies
       tags:['approved','manual'], // Mark as dietitian-approved
       createdAt:new Date().toISOString(),
       notes:'' // Optional: why this combo works
