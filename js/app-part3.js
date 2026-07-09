@@ -1025,6 +1025,12 @@ function genPlan(){
           c.weekPlan[d]=scalePlan(c.weekPlan[d],eff[d]);
         }
       }
+      // ✅ DIET-TYPE SAFETY NET: the "Βάση πλάνου" client picker lists EVERY client with a plan,
+      // regardless of diet type — cloning a normal/omnivore client's plan as the basis for a new
+      // vegan/vegetarian/orthodox_fasting client would otherwise carry their meat/fish/dairy over
+      // completely unfiltered (confirmed live: 41 category violations in one such test). This path
+      // returns early, before the same check that already runs on the template-generation path below.
+      applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType);
       c.planGeneratedAt=Date.now();  // ✅ ώστε να ξέρουμε πότε "λήγει" (χρειάζεται ανανέωση) το πλάνο
       saveNow();  // Save immediately, not delayed
       renderWeekTable();

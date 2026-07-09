@@ -2409,8 +2409,11 @@ var DIET_TYPE_FORBIDDEN_CATS={
 function applyDietTypeCategorySafetyNet(weekPlan,dietType){
   var forbiddenCats=DIET_TYPE_FORBIDDEN_CATS[dietType];
   if(!forbiddenCats||!forbiddenCats.length||!weekPlan)return weekPlan;
-  for(var d=0;d<weekPlan.length;d++){
-    if(!weekPlan[d])continue;
+  // c.weekPlan is a plain object keyed '0'..'6' (NOT a real Array — c.weekPlan={} then
+  // c.weekPlan[d]=... throughout genPlan()), so a numeric `d<weekPlan.length` bound is always
+  // undefined and silently skips every day. Iterate its actual keys instead.
+  Object.keys(weekPlan).forEach(function(d){
+    if(!weekPlan[d])return;
     for(var mi=0;mi<weekPlan[d].length;mi++){
       var meal=weekPlan[d][mi];
       if(!meal.foods||!meal.foods.length)continue;
@@ -2442,7 +2445,7 @@ function applyDietTypeCategorySafetyNet(weekPlan,dietType){
       });
       meal.foods=meal.foods.filter(function(f){return f.n!=='__EXCLUDED__';});
     }
-  }
+  });
   return weekPlan;
 }
 
