@@ -1359,7 +1359,7 @@ function getDayMicronutrients(meals){
   var result={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0};
   (meals||[]).forEach(function(meal){
     (meal.foods||[]).forEach(function(food){
-      var mn=MICRONUTRIENTS[food.n];
+      var mn=MICRONUTRIENTS[resolveFood(food.n)];
       if(mn){
         result.Fe+=(mn.Fe||0)*food.g/100;
         result.Zn+=(mn.Zn||0)*food.g/100;
