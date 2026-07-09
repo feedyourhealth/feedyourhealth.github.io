@@ -572,8 +572,10 @@ document.addEventListener('keydown', function(e) {
       showErrorToast('Παρακαλώ επιλέξτε πρώτα ένα πελάτη');
       return;
     }
-    genPlan();
-    showSuccessToast('📋 Πλάνο δημιουργήθηκε με επιτυχία');
+    pregnancyBlockCheck(c, function(){
+      genPlan();
+      showSuccessToast('📋 Πλάνο δημιουργήθηκε με επιτυχία');
+    });
   }
 
   // Ctrl+?: Show Help

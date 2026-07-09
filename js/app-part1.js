@@ -1156,14 +1156,16 @@ function showPlanRegenerationPrompt(c){
 
   showConfirmDialog(msg, function(){
     c._lastRecalcTime=null;  // Reset recalc time so it doesn't ask again
-    var oldPlan = deepClone(c.weekPlan);
-    if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
-      var cmd = new GeneratePlanCommand(c, oldPlan);
-      window.undoRedoManager.execute(cmd);
-    } else {
-      c.weekPlan={};  // Clear old plan
-      genPlan();
-    }
+    pregnancyBlockCheck(c, function(){
+      var oldPlan = deepClone(c.weekPlan);
+      if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
+        var cmd = new GeneratePlanCommand(c, oldPlan);
+        window.undoRedoManager.execute(cmd);
+      } else {
+        c.weekPlan={};  // Clear old plan
+        genPlan();
+      }
+    });
   }, {icon:'🔄', confirmLabel:'Αναδημιουργία'});
 }
 

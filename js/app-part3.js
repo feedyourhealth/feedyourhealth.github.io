@@ -950,27 +950,32 @@ function displayFoodDistributionResults(validation) {
   return html;
 }
 
-// ✅ PHASE 4: GENERATE PLAN WITH UNDO/REDO WRAPPER
-function genPlanWithUndo(){
-  var c=getC();if(!c)return;
-  var errors=validateClientData(c);
-  if(errors.length>0){ showValidationErrors(errors); return; }
-
-  // ✅ Εγκυμοσύνη: συνδυασμοί υψηλού κινδύνου (π.χ. κετογονική+έγκυος) χρειάζονται ρητή επιβεβαίωση
-  // της διαιτολόγου πριν τη δημιουργία πλάνου — δεν μπλοκάρουμε απόλυτα γιατί μπορεί να υπάρχει
-  // ιατρικά επιβλεπόμενη εξαίρεση, αλλά δεν προχωράμε σιωπηλά.
+// ✅ Εγκυμοσύνη: συνδυασμοί υψηλού κινδύνου (π.χ. κετογονική+έγκυος) χρειάζονται ρητή επιβεβαίωση
+// της διαιτολόγου πριν τη δημιουργία/αναδημιουργία πλάνου — δεν μπλοκάρουμε απόλυτα γιατί μπορεί να
+// υπάρχει ιατρικά επιβλεπόμενη εξαίρεση, αλλά δεν προχωράμε σιωπηλά. Κάθε σημείο που μπορεί να
+// (ξανα)δημιουργήσει πλάνο (κύριο κουμπί, regenerateDay, regeneratePlan, auto-regen στην αλλαγή
+// στοιχείων, Ctrl+P) ΠΡΕΠΕΙ να περνά από εδώ πρώτα — αλλιώς η προειδοποίηση παρακάμπτεται σιωπηλά.
+function pregnancyBlockCheck(c, proceedFn){
   var pregFlags=(typeof getPregnancySafetyFlags==='function')?getPregnancySafetyFlags(c):[];
   var blockFlags=pregFlags.filter(function(f){return f.level==='block';});
   if(blockFlags.length>0){
     var msg='🚫 '+blockFlags.map(function(f){return f.msg;}).join('\n\n')+'\n\nΘέλεις να συνεχίσεις ούτως ή άλλως (π.χ. υπό ιατρική παρακολούθηση);';
-    showConfirmDialog(msg, function(){ _genPlanWithUndoProceed(c); }, {icon:'🚫', confirmLabel:'Συνέχεια ούτως ή άλλως'});
+    showConfirmDialog(msg, proceedFn, {icon:'🚫', confirmLabel:'Συνέχεια ούτως ή άλλως'});
     return;
   }
   var warnFlags=pregFlags.filter(function(f){return f.level==='warn';});
   if(warnFlags.length>0 && typeof showErrorToast==='function'){
     showErrorToast('⚠️ '+warnFlags[0].msg);
   }
-  _genPlanWithUndoProceed(c);
+  proceedFn();
+}
+
+// ✅ PHASE 4: GENERATE PLAN WITH UNDO/REDO WRAPPER
+function genPlanWithUndo(){
+  var c=getC();if(!c)return;
+  var errors=validateClientData(c);
+  if(errors.length>0){ showValidationErrors(errors); return; }
+  pregnancyBlockCheck(c, function(){ _genPlanWithUndoProceed(c); });
 }
 
 function _genPlanWithUndoProceed(c){
@@ -1528,16 +1533,18 @@ function mealSourceBadge(meal){
 function regenerateDay(dayIndex){
   var c=getC();
   if(!c || !c.weekPlan || !Object.keys(c.weekPlan).length) return;
-  showConfirmDialog('Αναδημιουργία μόνο της ημέρας «'+DAYS[dayIndex]+'»;', function(){
-    var oldPlan = deepClone(c.weekPlan);
-    genPlan();
-    var newDay = deepClone(c.weekPlan[dayIndex]);
-    c.weekPlan = deepClone(oldPlan);
-    c.weekPlan[dayIndex] = newDay;
-    save();
-    renderWeekTable();
-    showSuccessToast('🔄 Η ημέρα «'+DAYS[dayIndex]+'» αναδημιουργήθηκε!');
-  }, {icon:'🔄', confirmLabel:'Αναδημιουργία'});
+  pregnancyBlockCheck(c, function(){
+    showConfirmDialog('Αναδημιουργία μόνο της ημέρας «'+DAYS[dayIndex]+'»;', function(){
+      var oldPlan = deepClone(c.weekPlan);
+      genPlan();
+      var newDay = deepClone(c.weekPlan[dayIndex]);
+      c.weekPlan = deepClone(oldPlan);
+      c.weekPlan[dayIndex] = newDay;
+      save();
+      renderWeekTable();
+      showSuccessToast('🔄 Η ημέρα «'+DAYS[dayIndex]+'» αναδημιουργήθηκε!');
+    }, {icon:'🔄', confirmLabel:'Αναδημιουργία'});
+  });
 }
 
 function renderWeekTable(){

@@ -2344,20 +2344,21 @@ function enforceRedMeatFrequency(weekPlan, excl, dietType){
 function regeneratePlan(){
   var c=getC();
   if(!c || !TRACKING_DATA.plans.length)return;
+  pregnancyBlockCheck(c, function(){
+    // Find and mark the last plan as regenerated (negative signal)
+    var lastPlanIndex = TRACKING_DATA.plans.length - 1;
+    logRegenerate(lastPlanIndex);
 
-  // Find and mark the last plan as regenerated (negative signal)
-  var lastPlanIndex = TRACKING_DATA.plans.length - 1;
-  logRegenerate(lastPlanIndex);
-
-  // Generate new plan (through undo/redo so this regeneration can be undone too)
-  var oldPlan = deepClone(c.weekPlan);
-  if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
-    var cmd = new GeneratePlanCommand(c, oldPlan);
-    window.undoRedoManager.execute(cmd);
-  } else {
-    genPlan();
-  }
-  showErrorToast('Το σχέδιο δημιουργήθηκε ξανά. Το σύστημα θα μάθει από αυτό!');
+    // Generate new plan (through undo/redo so this regeneration can be undone too)
+    var oldPlan = deepClone(c.weekPlan);
+    if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
+      var cmd = new GeneratePlanCommand(c, oldPlan);
+      window.undoRedoManager.execute(cmd);
+    } else {
+      genPlan();
+    }
+    showErrorToast('Το σχέδιο δημιουργήθηκε ξανά. Το σύστημα θα μάθει από αυτό!');
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
