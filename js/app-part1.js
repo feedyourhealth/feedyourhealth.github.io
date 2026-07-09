@@ -1939,6 +1939,29 @@ function scalePlan(tmpl,tgt,mealTargets){
         if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
         f.g=snapWholeG(f.n,Math.max(minScaleG(f.n),Math.round(f.g*r)));
       });
+
+      // ✅ ΤΕΛΙΚΟΣ ΕΛΕΓΧΟΣ ΘΕΡΜΙΔΩΝ: κάθε τρόφιμο μόλις σκαλώθηκε από τον ΔΙΚΟ ΤΟΥ macro-type λόγο
+      // (πρωτεΐνη→ratioP, υδατ.→ratioC, λίπος→ratioF) — ανεξάρτητα το ένα από το άλλο. Επειδή τα
+      // περισσότερα πραγματικά τρόφιμα έχουν μεικτά μακροθρεπτικά (π.χ. αυγά = πρωτεΐνη + λίπος), το
+      // άθροισμα θερμίδων μετά από αυτούς τους ανεξάρτητους λόγους συχνά αποκλίνει από το targetK, ακόμα
+      // κι όταν κάθε μακροθρεπτικό «πέτυχε» το δικό του γραμμαριαίο στόχο (επιβεβαιωμένο: αποκλίσεις
+      // -30% έως +17% στο ημερήσιο σύνολο σε πραγματικά πλάνα). Μία επιπλέον, ενιαία διόρθωση εδώ κλείνει
+      // το χάσμα θερμίδων χωρίς να πειράξει σημαντικά τις αναλογίες μακροθρεπτικών που μόλις πετύχαμε.
+      var afterTot=0;
+      m.foods.forEach(function(f){ afterTot+=cm(f.n,f.g).k; });
+      if(afterTot>0){
+        var reconcile=targetK/afterTot;
+        if(Math.abs(reconcile-1)>0.03){
+          reconcile=Math.max(0.7,Math.min(1.4,reconcile));
+          m.foods.forEach(function(f){
+            var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+            var cap=SCALE_CATS[cat];
+            var r=reconcile;
+            if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
+            f.g=snapWholeG(f.n,Math.max(minScaleG(f.n),Math.round(f.g*r)));
+          });
+        }
+      }
     });
     return p;
   }

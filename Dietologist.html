@@ -1067,7 +1067,13 @@ var MEDICAL_PROTOCOLS = {
     name: 'Κοιλιοκάκη',
     icon: '🌾',
     restrictions: {
-      avoidFoods: ['Σίτος', 'Κριθή', 'Σίκαλη', 'Ψωμί', 'Ζυμαρικά (κανονικά)'],
+      // Σκόπιμα αντλεί από το QUICK_EXCL['🌾 Γλουτένη'] (data.js) αντί για δική του λίστα — ήταν
+      // δύο ξεχωριστές, αποκλίνουσες λίστες (η παλιά εδώ έλεγχε μόνο 'Σίτος'/'Κριθή'/'Σίκαλη'/'Ψωμί'/
+      // 'Ζυμαρικά (κανονικά)' ως substring match, άφηνε Κυπριακή πίτα/Τορτίλια/Κους κους/Πλιγούρι/
+      // Noodles να περάσουν αφιλτράριστα σε πραγματικό πλάνο — επιβεβαιωμένο). Γενικοί όροι ('Σίτος'
+      // κ.λπ.) μένουν σαν επιπλέον ασφάλεια για μελλοντικές τροφές που δεν έχουν προλάβει να μπουν
+      // στο QUICK_EXCL.
+      avoidFoods: ['Σίτος', 'Κριθή', 'Σίκαλη', 'Ψωμί', 'Ζυμαρικά (κανονικά)'].concat(QUICK_EXCL['🌾 Γλουτένη'] || []),
       glutenFree: true
     },
     foodReplacements: {
@@ -1124,27 +1130,6 @@ var MEDICAL_PROTOCOLS = {
       { name: 'National Institute of Health (NIH)', url: 'https://www.niddk.nih.gov/health-information/digestive-diseases/lactose-intolerance', official: true },
       { name: 'American Gastroenterological Association', url: 'https://gi.org/topics/lactose-intolerance/', official: true },
       { name: 'Mayo Clinic - Lactose Intolerance', url: 'https://www.mayoclinic.org/diseases-conditions/lactose-intolerance/diagnosis-treatment/drc-20374232', official: true }
-    ]
-  },
-
-  vegetarian: {
-    name: 'Χορτοφαγική Δίαιτα',
-    icon: '🌱',
-    restrictions: {
-      avoidFoods: ['Κοτόπουλο', 'Χοιρινό', 'Μοσχάρι', 'Ψάρι', 'Θαλασσινά'],
-      vegetarian: true
-    },
-    foodReplacements: {
-      'Κοτόπουλο': 'Φακές, Ρεβίθια, Τόφου',
-      'Ψάρι': 'Καρυδιές, Σπόροι, Ταχίνι',
-      'Κρέας': 'Όσπρια, Αυγά, Τυρί'
-    },
-    supplements: ['Βιταμίνη Β12', 'Σίδηρος', 'Ψευδάργυρος', 'Ω-3 (φυτικά)'],
-    notes: 'Αποφύγετε όλο το κρέας. Συμπληρώστε με Β12.',
-    sources: [
-      { name: 'American Dietetic Association', url: 'https://www.eatright.org/nutrition/special-diets/vegetarian', official: true },
-      { name: 'Academy of Nutrition & Dietetics', url: 'https://www.eatright.org/food-and-nutrition/planning-meals/eating-as-a-vegetarian', official: true },
-      { name: 'Vegetarian Society Guidelines', url: 'https://www.vegsoc.org/resources/', official: true }
     ]
   },
 
