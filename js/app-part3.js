@@ -1257,7 +1257,7 @@ function genPlan(){
   }
 
   // ✅ ENFORCE RED MEAT FREQUENCY (MAX 2x/week for cholesterol)
-  c.weekPlan = enforceRedMeatFrequency(c.weekPlan, excl);
+  c.weekPlan = enforceRedMeatFrequency(c.weekPlan, excl, c.dietType);
 
   // ✅ FINAL CLEANUP: REMOVE OATS FROM NON-BREAKFAST MEALS (AFTER all Mediterranean rules)
   // CRITICAL: Oats should ONLY appear in breakfast, never in lunch/dinner

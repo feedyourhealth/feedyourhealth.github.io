@@ -2287,7 +2287,7 @@ function isRedMeat(mealName, mealFoods){
 }
 
 // Check and enforce red meat frequency (MAX 2x/week)
-function enforceRedMeatFrequency(weekPlan, excl){
+function enforceRedMeatFrequency(weekPlan, excl, dietType){
   var redMeatCount = 0;
   var redMeatMeals = [];
   excl = excl || [];
@@ -2319,8 +2319,12 @@ function enforceRedMeatFrequency(weekPlan, excl){
       // otherwise findBestRecipe's calorie-match compares against undefined (NaN) and never matches anything.
       var mealKcal = (meal.foods||[]).reduce(function(sum,f){ return sum + cm(f.n,f.g).k; }, 0);
 
-      // Find alternative chicken or fish recipe with similar calories, respecting exclusions
-      var altRecipe = findBestRecipe('normal', mealKcal, meal.name, excl);
+      // Find alternative chicken or fish recipe with similar calories, respecting exclusions.
+      // MUST use the client's actual dietType, not a hardcoded 'normal' — otherwise a keto client
+      // (who legitimately eats red meat >2x/week; this cap is a general cardiovascular guideline,
+      // not a keto rule) gets "fixed" straight out of ketosis with a high-carb normal-diet recipe
+      // (confirmed live: swapped in a 62g-carb shrimp-orzo dish and a 39g-carb pita souvlaki).
+      var altRecipe = findBestRecipe(dietType||'normal', mealKcal, meal.name, excl);
       if(altRecipe && !isRedMeat(altRecipe.name, altRecipe.foods)){
         meal.foods = altRecipe.foods;
         meal.name = altRecipe.name;
