@@ -2343,17 +2343,22 @@ function deleteClient(id){
   var clientToDelete = clients.find(function(c){return c.id===id;});
   if(!clientToDelete) return;
 
-  // ✅ SOFT DELETE: Mark as deleted instead of removing
-  clientToDelete.deleted = true;
-  clientToDelete.deletedAt = new Date().toISOString();
+  if(window.undoRedoManager && typeof DeleteClientCommand !== 'undefined'){
+    var cmd = new DeleteClientCommand(clientToDelete);
+    window.undoRedoManager.execute(cmd);
+  } else {
+    // ✅ SOFT DELETE: Mark as deleted instead of removing
+    clientToDelete.deleted = true;
+    clientToDelete.deletedAt = new Date().toISOString();
 
-  if(curId===id){
-    curId=null;
-    if(typeof renderHome==='function') renderHome();
+    if(curId===id){
+      curId=null;
+      if(typeof renderHome==='function') renderHome();
+    }
+
+    save();
+    renderSB();
   }
-
-  save();
-  renderSB();
 }
 
 function restoreClient(id){

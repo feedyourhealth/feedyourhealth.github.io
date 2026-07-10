@@ -100,29 +100,33 @@ class CreateClientCommand {
 
 /**
  * DeleteClientCommand - Undo/redo for deleting a client
+ *
+ * Mirrors deleteClient()'s soft-delete (deleted/deletedAt flags), not a hard
+ * array removal — the client stays in `clients` the whole time (same object
+ * the existing trash/"↶ Ανάκτηση" UI already reads and restores), so this
+ * command and that manual restore path stay consistent with each other.
  */
 class DeleteClientCommand {
   constructor(client) {
     this.client = client;
-    this.index = clients.findIndex(c => c.id === client.id);
   }
 
   execute() {
-    clients = clients.filter(c => c.id !== this.client.id);
+    this.client.deleted = true;
+    this.client.deletedAt = new Date().toISOString();
     if (curId === this.client.id) {
       curId = null;
       if(typeof renderHome==='function') renderHome();
     }
+    save();
     renderSB();
     console.log('✗ Client deleted:', this.client.name);
   }
 
   undo() {
-    if (this.index >= 0) {
-      clients.splice(this.index, 0, this.client);
-    } else {
-      clients.push(this.client);
-    }
+    this.client.deleted = false;
+    delete this.client.deletedAt;
+    save();
     selectClient(this.client.id);
     renderSB();
     renderMain();
