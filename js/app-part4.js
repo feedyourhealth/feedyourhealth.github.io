@@ -937,6 +937,8 @@ function showDebugPanel(){
   var audit=LOGGER.getAuditTrail();
   var modal=document.createElement('div');
   modal.id='debug-modal';
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
   modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999';
 
   var content=document.createElement('div');
@@ -1024,6 +1026,8 @@ function showReferences(){
   ];
   var overlay=document.createElement('div');
   overlay.id='ref-modal';
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto';
   var box=document.createElement('div');
   box.style.cssText='background:#fff;border-radius:14px;max-width:760px;width:100%;padding:22px 24px;box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative;font-family:inherit';
@@ -1887,6 +1891,8 @@ function showRecipeModal(foodName){
     modal=document.createElement('div');
     modal.id='recipe-modal';
     modal.className='recipe-modal hidden';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
     document.body.appendChild(modal);
   }
 
@@ -1947,6 +1953,8 @@ function openMicroModal(){
     modal=document.createElement('div');
     modal.id='micro-modal';
     modal.className='micro-modal';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
     document.body.appendChild(modal);
   }
 
@@ -2022,6 +2030,8 @@ function openSupplementModal(){
       modal=document.createElement('div');
       modal.id='supp-modal';
       modal.className='supp-modal';
+      modal.setAttribute('role','dialog');
+      modal.setAttribute('aria-modal','true');
       document.body.appendChild(modal);
       console.log('[DEBUG] openSupplementModal - Modal div created');
     }
@@ -2317,6 +2327,8 @@ function enforceRedMeatFrequency(weekPlan, excl, dietType){
 function regeneratePlan(){
   var c=getC();
   if(!c || !TRACKING_DATA.plans.length)return;
+  var errors=validateClientData(c);
+  if(errors.length>0){ showValidationErrors(errors); return; }
   pregnancyBlockCheck(c, function(){
     // Find and mark the last plan as regenerated (negative signal)
     var lastPlanIndex = TRACKING_DATA.plans.length - 1;
@@ -3129,59 +3141,6 @@ function closeTrackingDashboard(){
 }
 
 // Initialize tracking on page load
-/* ---- Backup Import Handler ---- */
-function handleBackupImport(event){
-  var file = event.target.files[0];
-  if(!file) return;
-
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var data;
-    try{
-      data = JSON.parse(e.target.result);
-      if(!data.clients || !Array.isArray(data.clients)){
-        showErrorToast('Λάθος format αρχείου!');
-        return;
-      }
-    } catch(ex){
-      showErrorToast('Σφάλμα: ' + ex.message);
-      return;
-    }
-
-    var incoming = data.clients.length;
-    var existing = clients.length;
-
-    function finish(){
-      curId = null;
-      saveNow();
-      renderSB();
-      showSuccessToast('✅ Εισαγωγή επιτυχής! ' + clients.length + ' πελάτες φορτώθηκαν.');
-    }
-    function doMerge(){
-      var existingIds = clients.map(function(c){return c.id;});
-      var toAdd = data.clients.filter(function(c){return existingIds.indexOf(c.id) < 0;});
-      clients = clients.concat(toAdd);
-      finish();
-    }
-    function doReplace(){
-      clients = data.clients;
-      finish();
-    }
-
-    if(existing > 0){
-      showConfirmDialog(
-        'Βρέθηκαν ' + incoming + ' πελάτες, υπάρχουν ήδη ' + existing + '.',
-        doMerge,
-        {title:'Συγχώνευση ή αντικατάσταση;', icon:'📥', confirmLabel:'Συγχώνευση ('+(existing+incoming)+')', secondary:{label:'Αντικατάσταση', onClick:doReplace}}
-      );
-    } else {
-      doMerge();
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
 /* ---- Backup Import via Button (works with file:// protocol) ---- */
 function importBackup(){
   var inp = document.createElement('input');

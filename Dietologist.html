@@ -247,7 +247,7 @@ setTimeout(function(){
 </div>
 
 <!-- ✅ CONFIRMATION DIALOG - TIER 2 -->
-<div id="confirmDialog" role="dialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
+<div id="confirmDialog" role="dialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100000;align-items:center;justify-content:center;">
   <div style="background:white;border-radius:12px;padding:32px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="text-align:center;margin-bottom:24px;">
       <div id="confirmIcon" style="font-size:48px;margin-bottom:12px;">⚠️</div>
@@ -263,7 +263,7 @@ setTimeout(function(){
 </div>
 
 <!-- ✅ TEXT INPUT DIALOG — στυλιζαρισμένη εναλλακτική του native prompt() -->
-<div id="promptDialog" role="dialog" aria-labelledby="promptTitle" aria-describedby="promptMessage" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;">
+<div id="promptDialog" role="dialog" aria-labelledby="promptTitle" aria-describedby="promptMessage" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100000;align-items:center;justify-content:center;">
   <div style="background:white;border-radius:12px;padding:32px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="text-align:center;margin-bottom:16px;">
       <h3 id="promptTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Στοιχείο</h3>
@@ -321,7 +321,7 @@ setTimeout(function(){
 </div>
 
 <!-- ✅ PHASE 2: SETTINGS PANEL -->
-<div id="settingsPanel" style="display:none;position:fixed;right:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:997;align-items:center;justify-content:center;">
+<div id="settingsPanel" role="dialog" aria-modal="true" style="display:none;position:fixed;right:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:997;align-items:center;justify-content:center;">
   <div style="background:white;border-radius:12px;padding:32px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:2px solid #E2EEE5;padding-bottom:16px;">
       <h2 style="color:#025857;margin:0;font-size:20px;font-weight:700;">⚙️ Ρυθμίσεις Εφαρμογής</h2>
@@ -782,10 +782,26 @@ document.addEventListener('keydown', function(e) {
       closeSettingsPanel();
     }
 
-    var microModal = document.getElementById('microModal');
+    var microModal = document.getElementById('micro-modal');
     if(microModal && microModal.style.display === 'flex') {
       closeMicroModal();
     }
+
+    var recipeModal = document.getElementById('recipe-modal');
+    if(recipeModal && !recipeModal.classList.contains('hidden')) {
+      closeRecipeModal();
+    }
+
+    var suppModal = document.getElementById('supp-modal');
+    if(suppModal && suppModal.style.display === 'flex') {
+      closeSupplementModal();
+    }
+
+    // Modals που κλείνουν με .remove() αντί για display toggle — απλά κλειδί/id lookup
+    ['debug-modal','ref-modal','food-selector-modal','addMealSlotModal'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.remove();
+    });
   }
 
   // Tab key focus management (optional enhancement)

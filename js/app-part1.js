@@ -1156,6 +1156,8 @@ function showPlanRegenerationPrompt(c){
 
   showConfirmDialog(msg, function(){
     c._lastRecalcTime=null;  // Reset recalc time so it doesn't ask again
+    var errors=validateClientData(c);
+    if(errors.length>0){ showValidationErrors(errors); return; }
     pregnancyBlockCheck(c, function(){
       var oldPlan = deepClone(c.weekPlan);
       if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
@@ -1994,6 +1996,27 @@ function scalePlan(tmpl,tgt,mealTargets){
   return p;
 }
 
+// ✅ Μετά την αφαίρεση τροφίμων ΜΕΤΑ το scalePlan (π.χ. καθαρισμός βρώμης/αποκλεισμών), τα υπόλοιπα
+// τρόφιμα του γεύματος μένουν στα ίδια γραμμάρια αλλά το γεύμα πλέον έχει λιγότερες θερμίδες από τον
+// στόχο του — καμία διόρθωση δεν γινόταν. Κλιμακώνει αναλογικά τα εναπομείναντα τρόφιμα ώστε το γεύμα
+// να ξαναφτάσει τον στόχο θερμίδων που είχε ΠΡΙΝ την αφαίρεση (ίδια λογική caps/ελάχιστα με scalePlan).
+function reconcileMealCaloriesAfterRemoval(meal,targetK){
+  if(!meal||!meal.foods||!meal.foods.length||!targetK)return;
+  var curK=0;
+  meal.foods.forEach(function(f){curK+=cm(f.n,f.g).k;});
+  if(curK<=0)return;
+  var ratio=targetK/curK;
+  if(Math.abs(ratio-1)<0.03)return; // ήδη αρκετά κοντά
+  ratio=Math.max(0.5,Math.min(2.5,ratio));
+  meal.foods.forEach(function(f){
+    var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+    var cap=SCALE_CATS[cat];
+    var r=ratio;
+    if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
+    f.g=snapWholeG(f.n,Math.max(minScaleG(f.n),Math.round(f.g*r)));
+  });
+}
+
 var clients=[],curId=null,currentDD=null;
 
 // ✅ PERFORMANCE: JSON CACHE - Cache parsed JSON to avoid repeated parsing
@@ -2222,6 +2245,12 @@ function validateClientData(client) {
   if(client.macroP || client.macroF || client.macroC) {
     var totalMacro = (client.macroP || 0) + (client.macroF || 0) + (client.macroC || 0);
     if(totalMacro < 90 || totalMacro > 110) {
+      errors.push('macros_invalid');
+    }
+    // ✅ Το άθροισμα μπορεί να είναι 90-110% ενώ ΠΡΩΤΕΪΝΗ%+ΛΙΠΟΣ% μόνα τους ξεπερνούν το 100%
+    // (π.χ. Π=70%,Λ=40%,Υ=0% → άθροισμα 110, περνάει τον παραπάνω έλεγχο) — αυτό παράγει ΑΡΝΗΤΙΚΟΥΣ
+    // υδατάνθρακες στο calcTDEE (carbG=(target-protG*4-fatG*9)/4). Ελέγχουμε αυτό ξεχωριστά.
+    if(((client.macroP || 0) + (client.macroF || 0)) > 100) {
       errors.push('macros_invalid');
     }
   }

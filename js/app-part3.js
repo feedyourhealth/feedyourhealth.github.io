@@ -366,35 +366,6 @@ function calculateMealKcal(foods) {
   return total;
 }
 
-// Ensure food diversity across week (no boring repetition)
-function ensureFoodDiversity(weekPlan, maxRepeatPerWeek) {
-  maxRepeatPerWeek = maxRepeatPerWeek || 2;
-  var foodCount = {};
-
-  // Count food occurrences
-  for(var d = 0; d < 7; d++) {
-    if(!weekPlan[d]) continue;
-    for(var mi = 0; mi < weekPlan[d].length; mi++) {
-      var meal = weekPlan[d][mi];
-      if(!meal.foods) continue;
-
-      meal.foods.forEach(function(f) {
-        foodCount[f.n] = (foodCount[f.n] || 0) + 1;
-      });
-    }
-  }
-
-  // Mark foods that appear too many times
-  var overuseFood = {};
-  Object.keys(foodCount).forEach(function(foodName) {
-    if(foodCount[foodName] > maxRepeatPerWeek) {
-      overuseFood[foodName] = true;
-    }
-  });
-
-  return overuseFood; // Return foods to replace
-}
-
 // Trust score for a recipe based on real usage across all clients' plans (TRACKING_DATA.recipes).
 // Recipes never used yet get a neutral 0.5 — no penalty for lack of history. Used elsewhere by
 // calculateRecipeStats() (app-part4.js) for the Analytics tab too.
@@ -1353,10 +1324,13 @@ function genPlan(){
 
       // For all non-breakfast meals, remove oats
       if(meal.foods && meal.foods.length > 0) {
+        var oatsTargetK = 0;
+        meal.foods.forEach(function(food){oatsTargetK += cm(food.n, food.g).k;});
         meal.foods = meal.foods.filter(function(food) {
           var foodLower = (food.n || '').toLowerCase();
           return !foodLower.includes('βρώμη');
         });
+        reconcileMealCaloriesAfterRemoval(meal, oatsTargetK);
       }
     }
   }
@@ -1374,6 +1348,8 @@ function genPlan(){
       for(var mi=0;mi<c.weekPlan[d].length;mi++){
         var meal = c.weekPlan[d][mi];
         if(meal.foods && meal.foods.length > 0) {
+          var exclTargetK = 0;
+          meal.foods.forEach(function(food){exclTargetK += cm(food.n, food.g).k;});
           // LAYER 1: Remove foods that match exclusions (exact, normalized, or substring)
           meal.foods = meal.foods.filter(function(food){
             var foodName = (food.n||'');
@@ -1410,6 +1386,8 @@ function genPlan(){
             }
             return true;
           });
+
+          reconcileMealCaloriesAfterRemoval(meal, exclTargetK);
         }
       }
     }
@@ -1609,6 +1587,8 @@ function mealSourceBadge(meal){
 function regenerateDay(dayIndex){
   var c=getC();
   if(!c || !c.weekPlan || !Object.keys(c.weekPlan).length) return;
+  var errors=validateClientData(c);
+  if(errors.length>0){ showValidationErrors(errors); return; }
   pregnancyBlockCheck(c, function(){
     showConfirmDialog('Αναδημιουργία μόνο της ημέρας «'+DAYS[dayIndex]+'»;', function(){
       var oldPlan = deepClone(c.weekPlan);
@@ -1844,7 +1824,7 @@ function renderWeekTable(){
         html+='<div style="display:inline-block;position:relative;margin-left:8px;">'
           +'<button class="chip-add" onclick="toggleMealMenu(\''+menuId+'\')" style="background:#025857;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;" title="Περισσότερες επιλογές">⋮</button>'
           +'<div id="'+menuId+'" class="meal-menu-dropdown" style="display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:100;min-width:200px;margin-top:4px;">'
-          +'<button onclick="toggleFavoriteMeal('+d+','+mi+',this);closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">⭐ Αγαπημένο</button>'
+          +'<button onclick="toggleFavoriteMeal('+d+','+mi+',this);closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;opacity:'+(isFavoriteMeal(d,mi)?'1':'0.5')+'" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">'+(isFavoriteMeal(d,mi)?'⭐ Αφαίρεση από Αγαπημένα':'⭐ Προσθήκη στα Αγαπημένα')+'</button>'
           +'<button onclick="saveCombo('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">💾 Αποθήκευση</button>'
           +'<button onclick="balanceMacros('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">⚖️ Ισορροπία</button>'
           +'<button onclick="copyMealToClipboard('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'none\'">❐ Αντιγραφή</button>'
@@ -2041,6 +2021,8 @@ function openFoodSelectorModal(d,mi){
 
   var modal=document.createElement('div');
   modal.id='food-selector-modal';
+  modal.setAttribute('role','dialog');
+  modal.setAttribute('aria-modal','true');
   modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:9999';
 
   var content=document.createElement('div');
@@ -2226,6 +2208,8 @@ function openAddMealSlotModal(){
     +'</div></div></div>';
   var overlay=document.createElement('div');
   overlay.id='addMealSlotModal';
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
   overlay.innerHTML=html;
   document.body.appendChild(overlay);
 }
@@ -2490,19 +2474,6 @@ function expandRecipeInPlan(d,mi,fi){
   save();renderWeekTable();
 }
 
-/* ── FEATURE #1: Custom Meal Times Management ──────────────────────────────── */
-function updateMealTime(mealType, timeValue){
-  var c=getC();if(!c)return;
-  if(!c.mealTimes)c.mealTimes={};
-  c.mealTimes[mealType]=timeValue;
-  save();
-  // Recalculate meal timings if plan exists
-  if(c.weekPlan&&Object.keys(c.weekPlan).length>0){
-    initializeMealTiming(c);
-    renderWeekTable();
-  }
-}
-
 /* ── FEATURE #2: Weekly Training Schedule Management ────────────────────────── */
 function buildWeeklyTrainingScheduleHtml(c){
   var dayNames=['Δευτέρα','Τρίτα','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
@@ -2559,35 +2530,6 @@ function updateWeeklyTraining(dayIndex, hasTraining, time, duration){
 }
 
 /* ── FEATURE #3: Multiple Training Times (2x/day) ────────────────────────── */
-function addSecondTraining(enabled){
-  var c=getC();if(!c)return;
-  c.hasMultipleTrainings=enabled;
-  if(enabled&&!c.secondTraining){
-    c.secondTraining=[
-      {training:false,time:'06:00',duration:60},
-      {training:false,time:'06:00',duration:60},
-      {training:false,time:'06:00',duration:60},
-      {training:false,time:'06:00',duration:60},
-      {training:false,time:'06:00',duration:60},
-      {training:false,time:'06:00',duration:60},
-      {training:false,time:'06:00',duration:60}
-    ];
-  } else if(!enabled){
-    // When disabling 2x training, clear the data
-    c.secondTraining=null;
-  }
-  save();
-  renderS1();  // Refresh UI
-}
-
-function removeSecondTraining(){
-  var c=getC();if(!c)return;
-  c.hasMultipleTrainings=false;
-  c.secondTraining=null;
-  save();
-  renderS1();
-}
-
 function updateSecondTraining(dayIndex, hasTraining, time, duration){
   var c=getC();if(!c)return;
   if(!c.secondTraining)c.secondTraining=[{},{},{},{},{},{},{}];
@@ -2724,17 +2666,6 @@ function initializeMealTiming(c){
       }
     });
   }
-}
-
-function setMealTiming(d,mi,timing){
-  var c=getC();if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi])return;
-  c.weekPlan[d][mi].mealTiming=timing;
-  save();renderWeekTable();
-}
-
-function getMealTimingRecommendation(mealTiming){
-  var prof=MEAL_TIMING_PROFILES[mealTiming]||MEAL_TIMING_PROFILES.regular;
-  return{p:prof.p,f:prof.f,c:prof.c,label:prof.label,icon:prof.icon,notes:prof.notes};
 }
 
 /* ── PHASE 3: Micronutrient Adequacy Display ──────────────────────────────── */

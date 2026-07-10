@@ -3309,6 +3309,11 @@ function applyMediterraneanRules(days){
         // Replace entire meal with the fixed meal foods
         meal.foods=deepClone(rule.foods);
       } else if(rule.type==='legumes'){
+        // Currently unreachable — no MED_PLAN entry uses type:'legumes' (all are 'fixed'/'meat'/'free').
+        // Kept for future MED_PLAN authors who want a legume-based day. Safe to use: the cascade bug this
+        // used to trigger (this legume meal → avoidLegumeStarchCombos adding feta → avoidDairyWithLegumes
+        // stripping it back out and adding chicken, doubling up protein) was fixed at its root in
+        // avoidLegumeStarchCombos (feta-adding removed, see its own comment), so it no longer applies here either.
         // Remove proteins and grains; replace with legume (+ tuna if specified)
         var keep=meal.foods.filter(function(f){
           var cat=FOODS[f.n]?FOODS[f.n].cat:'';
@@ -3433,6 +3438,9 @@ function avoidLegumeStarchCombos(days){
   var result=deepClone(days);
   result.forEach(function(dayMeals){
     dayMeals.forEach(function(meal){
+      // Ο κανόνας αφορά κύρια γεύματα — αποφεύγουμε να πειράξουμε πρωινό/σνακ κατά λάθος
+      // (ίδιο pattern scoping με addPotatoToFishMeals/ensureSaladAndOil)
+      if(meal.name!=='Μεσημεριανό'&&meal.name!=='Βραδινό')return;
       // Ελέγχουμε αν υπάρχουν τόσο όσπρια όσο και άλλο άμυλο στο γεύμα
       var hasLegume=false, legumeName='', legumeGrams=0;
       var hasOtherStarch=false, starchNames=[];
@@ -3489,6 +3497,8 @@ function avoidDairyWithLegumes(days){
   var result=deepClone(days);
   result.forEach(function(dayMeals){
     dayMeals.forEach(function(meal){
+      // Ο κανόνας αφορά κύρια γεύματα — αποφεύγουμε να πειράξουμε πρωινό/σνακ κατά λάθος
+      if(meal.name!=='Μεσημεριανό'&&meal.name!=='Βραδινό')return;
       // Ελέγχουμε αν υπάρχουν τόσο όσπρια όσο και γαλακτοκομικό
       var hasLegume=false, legumeName='', legumeFoods=[];
       var hasDairy=false, dairyNames=[];
@@ -3564,6 +3574,8 @@ function ensureOilWithVegetables(days){
   var result=deepClone(days);
   result.forEach(function(dayMeals){
     dayMeals.forEach(function(meal){
+      // Ο κανόνας αφορά κύρια γεύματα — αποφεύγουμε να πειράξουμε πρωινό/σνακ κατά λάθος
+      if(meal.name!=='Μεσημεριανό'&&meal.name!=='Βραδινό')return;
       // Ελέγχουμε αν υπάρχουν λαχανικά που χρειάζονται λάδι
       var hasVeggieNeedingFat=false;
       meal.foods.forEach(function(f){
@@ -3607,6 +3619,8 @@ function avoidOxalateWithDairy(days){
   var result=deepClone(days);
   result.forEach(function(dayMeals){
     dayMeals.forEach(function(meal){
+      // Ο κανόνας αφορά κύρια γεύματα — αποφεύγουμε να πειράξουμε πρωινό/σνακ κατά λάθος
+      if(meal.name!=='Μεσημεριανό'&&meal.name!=='Βραδινό')return;
       // Ελέγχουμε αν υπάρχουν ψηλά οξαλικά + γαλακτοκομικά
       var hasHighOxalate=false, oxalateName='';
       var hasDairy=false;
