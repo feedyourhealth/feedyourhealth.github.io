@@ -2714,7 +2714,7 @@ function showMealAlternatives(dayIndex, mealIndex){
   var mealName = currentMeal.name || '';
   var currentCalories = 0;
   var currentProtein = 0, currentFat = 0, currentCarbs = 0;
-  var excl = (c.excl || []);
+  var excl = (c.foodExclude || []);
   var currentFoodNames = [];
 
   // Calculate current meal macros and remember food names

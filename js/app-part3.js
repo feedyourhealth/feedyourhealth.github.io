@@ -2001,7 +2001,7 @@ function renderWeekTable(){
         var cid=data.slice(6);
         var combo=getSavedCombos().filter(function(x){return x.id===cid;})[0];
         if(combo){
-          var exclLower2=(c2.excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+          var exclLower2=(c2.foodExclude||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
           if(!comboDietOK(c2.dietType, combo.dietType) || comboHasExcludedFood(combo.foods, exclLower2)){
             showErrorToast('⚠️ Ο συνδυασμός δεν ταιριάζει με το diet type / τις εξαιρέσεις τροφίμων αυτού του πελάτη.');
             return;
@@ -3282,7 +3282,7 @@ function renderFoodLib(q){
   var comboHtml='';
   if(!q){
     var libC=getC();
-    var libExclLower=((libC&&libC.excl)||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+    var libExclLower=((libC&&libC.foodExclude)||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
     var combos=getSavedCombos().filter(function(combo){
       return comboDietOK(libC&&libC.dietType, combo.dietType) && !comboHasExcludedFood(combo.foods, libExclLower);
     });
