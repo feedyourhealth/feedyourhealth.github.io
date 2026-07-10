@@ -26,6 +26,8 @@ class UndoRedoManager {
     this.history.push(command);
     this.currentIndex++;
 
+    if (typeof updateUndoRedoUI === 'function') updateUndoRedoUI();
+
     console.log('📝 Command executed:', command.constructor.name, '| History:', this.currentIndex + 1);
   }
 
