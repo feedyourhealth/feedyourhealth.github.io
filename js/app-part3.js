@@ -2850,6 +2850,21 @@ function comboHasExcludedFood(foods, exclLower){
     return exclLower.some(function(excluded){ return excluded && nameLower.indexOf(excluded)!==-1; });
   });
 }
+// Merge two saved-combo lists, deduping by id (id-less entries can't be matched against
+// existing ones, so they're always kept). Shared by the legacy migration below and by
+// importBackup()'s "merge" path (js/app-part4.js).
+function mergeSavedComboLists(base, incoming){
+  var merged=(base||[]).slice();
+  var seenIds={};
+  merged.forEach(function(x){ if(x && x.id) seenIds[x.id]=true; });
+  (incoming||[]).forEach(function(combo){
+    if(combo && (!combo.id || !seenIds[combo.id])){
+      if(combo.id) seenIds[combo.id]=true;
+      merged.push(combo);
+    }
+  });
+  return merged;
+}
 
 // Pull any combos still sitting on old per-client c.savedCombos (from before this became a
 // shared list) into the shared 'savedCombos' key, then strip the now-unread field off each
@@ -2866,16 +2881,9 @@ function migrateLegacyPerClientCombos(){
   var hasLegacy = clientsArr.some(function(c){ return c && Array.isArray(c.savedCombos) && c.savedCombos.length; });
   if(!hasLegacy) return;
   var merged=safeStorageGet('savedCombos', []) || [];
-  var seenIds={};
-  merged.forEach(function(x){ if(x && x.id) seenIds[x.id]=true; });
   clientsArr.forEach(function(c){
     if(c && Array.isArray(c.savedCombos) && c.savedCombos.length){
-      c.savedCombos.forEach(function(combo){
-        if(combo && (!combo.id || !seenIds[combo.id])){
-          if(combo.id) seenIds[combo.id]=true;
-          merged.push(combo);
-        }
-      });
+      merged=mergeSavedComboLists(merged, c.savedCombos);
       delete c.savedCombos;
     }
   });

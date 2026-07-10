@@ -3171,10 +3171,16 @@ function importBackup(){
         var existingIds = clients.map(function(c){return c.id;});
         var toAdd = data.clients.filter(function(c){return existingIds.indexOf(c.id) < 0;});
         clients = clients.concat(toAdd);
+        if(Array.isArray(data.savedCombos) && data.savedCombos.length){
+          setSavedCombos(mergeSavedComboLists(getSavedCombos(), data.savedCombos));
+        }
         finish();
       }
       function doReplace(){
         clients = data.clients;
+        // Only overwrite if this backup actually has combos — an older backup (from before
+        // combos got their own key) shouldn't wipe out combos saved since then.
+        if(Array.isArray(data.savedCombos)) setSavedCombos(data.savedCombos);
         finish();
       }
 

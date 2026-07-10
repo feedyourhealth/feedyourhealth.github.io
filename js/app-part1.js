@@ -936,6 +936,7 @@ function exportData(){
     clients: deepClone(clients),  // Deep copy
     customTemplates: deepClone(customTemplates),
     trackingData: TRACKING_DATA || {},
+    savedCombos: deepClone(safeStorageGet('savedCombos', [])),
     backupCount: (safeStorageGet('backup_count') || 0) + 1
   };
 
@@ -994,6 +995,10 @@ function importData(){
             clients=importObj.clients;
             customTemplates=importObj.customTemplates || [];
             if(importObj.trackingData) TRACKING_DATA=importObj.trackingData;
+            // Saved combos live outside `clients` in their own key — only overwrite if this
+            // backup actually has them, so restoring an older backup (from before combos got
+            // their own key) doesn't wipe out combos saved since then.
+            if(Array.isArray(importObj.savedCombos)) setSavedCombos(importObj.savedCombos);
 
             // Save to localStorage
             _doSave();
