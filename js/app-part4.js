@@ -520,7 +520,7 @@ function exportPDF(lang){
        +'<div class="hl">'+(logoSrc?'<img src="'+logoSrc+'" alt="fyh">':'')+'<div class="hlurl">WWW.FEEDYOURHEALTH.ORG</div></div>'
        +'<div class="hr">'
        +'<div class="hrname">'+esc(c.name||'Πελάτης')+'</div>'
-       +'<div class="hrinfo">'+esc((isEn?(c.sex==='M'?'Male':'Female'):(c.sex==='M'?'Άνδρας':'Γυναίκα'))+', '+c.age+(isEn?' yrs old':' ετών')+'  |  '+c.weight+'kg / '+c.height+'cm  |  '+(goalL[c.goal]||''))+'</div>'
+       +'<div class="hrinfo">'+esc((isEn?(c.sex==='M'?'Male':'Female'):(c.sex==='M'?'Άνδρας':'Γυναίκα'))+', '+c.age+(isEn?' yrs old':' ετών')+'  |  '+c.weight+'kg / '+c.height+'cm  |  '+(goalL[c.goalMain]||''))+'</div>'
        +'<div style="margin-top:3px;"><span style="background:#E8F5F4;border-radius:20px;padding:2px 10px;font-size:7pt;font-weight:700;color:#025857;">🎯 '+(isEn?'Goal: ':'Στόχος: ')+avgTarget+' kcal (avg)  ·  '+(isEn?'P':'Π')+':'+t.p+'g  '+(isEn?'F':'Λ')+':'+t.f+'g  '+(isEn?'C':'Υ')+':'+t.carb+'g</span></div>'
        +(function(){
          var defDelta={mild:-250,loss:-500,maintain:0,gain:300};
@@ -1215,7 +1215,7 @@ function exportWord(){
   r+='{\\pard\\qc\\f0\\fs22\\cf4 '
     +escRtf((c.sex==='M'?'Άνδρας':'Γυναίκα'))+', '+c.age+escRtf(' ετών')
     +' | '+c.weight+'kg / '+c.height+'cm'
-    +' | '+escRtf(goalL[c.goal])
+    +' | '+escRtf(goalL[c.goalMain]||'')
     +'\\par}\n';
   r+='{\\pard\\qc\\f0\\b\\fs24\\cf1 '+escRtf('Ενεργειακός Στόχος: ')+avgTarget+' kcal (μέσο εβδομάδας)'
     +'   P:'+t.p+'g   F:'+t.f+'g   C:'+t.carb+'g'
@@ -1491,7 +1491,7 @@ function exportGoogleDocs(){
     +'<w:r>'+rp(false,22,CM)+'<w:t xml:space="preserve">  ·  Εβδομαδιαίο Διατροφικό Πλάνο</w:t></w:r>'
     +'</w:p>'
     +'<w:p>'+pp('left',20,20)
-    +'<w:r>'+rp(false,17,CG)+'<w:t xml:space="preserve">'+xe((c.sex==='M'?'Άνδρας':'Γυναίκα')+', '+c.age+' ετών  |  '+c.weight+'kg / '+c.height+'cm  |  '+(goalL[c.goal]||''))+'</w:t></w:r>'
+    +'<w:r>'+rp(false,17,CG)+'<w:t xml:space="preserve">'+xe((c.sex==='M'?'Άνδρας':'Γυναίκα')+', '+c.age+' ετών  |  '+c.weight+'kg / '+c.height+'cm  |  '+(goalL[c.goalMain]||''))+'</w:t></w:r>'
     +'<w:r>'+rp(true,17,CT)+'<w:t xml:space="preserve">    Στόχος: '+xe(t.target+' kcal  Π:'+t.p+'g  Λ:'+t.f+'g  Υ:'+t.carb+'g')+'</w:t></w:r>'
     +'<w:r>'+rp(false,17,'1565C0')+'<w:t xml:space="preserve">    '+xe(hydStr)+'</w:t></w:r>'
     +'</w:p>'

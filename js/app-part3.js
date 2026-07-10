@@ -1624,7 +1624,7 @@ function renderWeekTable(){
   var goalL = {mild:'Ήπια απώλεια',loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'};
 
   var activityLabel = actL[c.activity] || c.activity;
-  var goalLabel = goalL[c.goal] || c.goal;
+  var goalLabel = goalL[c.goalMain] || c.goalMain;
   var bmiVal = (c.weight && c.height) ? (c.weight / ((c.height/100) * (c.height/100))).toFixed(1) : '—';
 
   var summaryCard = '<div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1.5px solid #c8e6c9;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
