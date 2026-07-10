@@ -2851,16 +2851,24 @@ function comboHasExcludedFood(foods, exclLower){
   });
 }
 
-// One-time migration: pull any combos still sitting on old per-client c.savedCombos
-// (from before this became a shared list) into the shared 'savedCombos' key, then strip
-// the now-unread field off each client so it doesn't linger as dead data.
+// Pull any combos still sitting on old per-client c.savedCombos (from before this became a
+// shared list) into the shared 'savedCombos' key, then strip the now-unread field off each
+// client so it doesn't linger as dead data.
+//
+// Deliberately NOT gated by a persistent "already migrated" flag: `clients` can still be a
+// stale/partial local cache the first few times this runs (e.g. Cloud.load() hasn't resolved
+// yet, or an old snapshot got restored later via restoreFromSnapshot()) — a flag set on that
+// first, incomplete pass would permanently strand any legacy combos that show up afterwards.
+// Instead we just check current `clients` state on every call; the check is a cheap in-memory
+// scan, and it naturally becomes a no-op once every client's c.savedCombos has been cleared.
 function migrateLegacyPerClientCombos(){
-  if(safeStorageGet('savedCombosMigratedV1', false)) return;
+  var clientsArr = (typeof clients!=='undefined' ? clients : []);
+  var hasLegacy = clientsArr.some(function(c){ return c && Array.isArray(c.savedCombos) && c.savedCombos.length; });
+  if(!hasLegacy) return;
   var merged=safeStorageGet('savedCombos', []) || [];
   var seenIds={};
   merged.forEach(function(x){ if(x && x.id) seenIds[x.id]=true; });
-  var changed=false;
-  (typeof clients!=='undefined' ? clients : []).forEach(function(c){
+  clientsArr.forEach(function(c){
     if(c && Array.isArray(c.savedCombos) && c.savedCombos.length){
       c.savedCombos.forEach(function(combo){
         if(combo && (!combo.id || !seenIds[combo.id])){
@@ -2869,12 +2877,10 @@ function migrateLegacyPerClientCombos(){
         }
       });
       delete c.savedCombos;
-      changed=true;
     }
   });
   safeStorageSet('savedCombos', merged);
-  safeStorageSet('savedCombosMigratedV1', true);
-  if(changed){ try{ save(); }catch(e){} }
+  try{ save(); }catch(e){}
 }
 
 function getSavedCombos(){
