@@ -3110,7 +3110,12 @@ function saveFoodExclusions(){
                 // Saved combos live outside `clients` (own localStorage key, shared across
                 // clients) so they need their own restore here — otherwise they never
                 // travel across devices even though they now ride along in the same blob.
-                if(Array.isArray(d.savedCombos)) safeStorageSet('savedCombos', d.savedCombos);
+                if(Array.isArray(d.savedCombos)){
+                  safeStorageSet('savedCombos', d.savedCombos);
+                  // getSavedCombos() (js/app-part3.js) caches this in memory; writing straight
+                  // to storage here would otherwise leave stale data behind that cache.
+                  window._savedCombosCache = d.savedCombos;
+                }
               }
             }catch(e){ console.error('[CLOUD] apply data', e); }
             self._loaded=true; resolve();

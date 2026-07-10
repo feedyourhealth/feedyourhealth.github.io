@@ -2836,6 +2836,14 @@ function getMicronutrientHtml(c){
    or saved while another client's food was excluded must never surface for an incompatible
    client. */
 
+// In-memory cache of the shared list, so the many getSavedCombos() call sites (plan
+// generation, meal alternatives, food-library render, drag-and-drop, save/delete) don't each
+// re-read+JSON.parse localStorage. null means "not loaded from storage yet" (distinct from a
+// loaded-but-empty list). Anything that writes 'savedCombos' to storage from outside
+// setSavedCombos() (currently just Cloud.load(), in Dietologist.html) must also null this out
+// or the cache will keep serving stale data after that write.
+var _savedCombosCache = null;
+
 // Diet-type compatibility check shared by every saved-combo consumer. A restrictive client
 // diet only accepts same-diet combos; 'normal'/no dietType accepts anything.
 function comboDietOK(clientDietType, comboDietType){
@@ -2888,15 +2896,18 @@ function migrateLegacyPerClientCombos(){
     }
   });
   safeStorageSet('savedCombos', merged);
+  _savedCombosCache = merged;
   try{ save(); }catch(e){}
 }
 
 function getSavedCombos(){
   migrateLegacyPerClientCombos();
-  return safeStorageGet('savedCombos', []);
+  if(_savedCombosCache===null) _savedCombosCache=safeStorageGet('savedCombos', []);
+  return _savedCombosCache;
 }
 
 function setSavedCombos(arr){
+  _savedCombosCache=arr;
   safeStorageSet('savedCombos', arr);
   // Bypasses the per-client save()/_doSave() path on purpose (that's what clobbered this
   // data before — see the doc comment above), so it has to poke Cloud sync directly instead
