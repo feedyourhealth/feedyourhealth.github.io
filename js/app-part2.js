@@ -1395,7 +1395,7 @@ function buildMacroPresetHtml(c,t){
     +'<div class="macro-preset-btns">'
     +'<button class="macro-preset-btn'+(dietType==='normal'?' active':'')+'" onclick="setDietType(\'normal\')" title="Κανονική διατροφή">🍗 Κανονική</button>'
     +'<button class="macro-preset-btn'+(dietType==='vegetarian'?' active':'')+'" onclick="setDietType(\'vegetarian\')" title="Χορτοφαγική διατροφή">🥬 Χορτοφαγική</button>'
-    +'<button class="macro-preset-btn'+(dietType==='vegan'?' active':'')+'" onclick="setDietType(\'vegan\')" title="Веγανική διατροφή">🌱 Веγανι</button>'
+    +'<button class="macro-preset-btn'+(dietType==='vegan'?' active':'')+'" onclick="setDietType(\'vegan\')" title="Vegan διατροφή">🌱 Vegan</button>'
     +'<button class="macro-preset-btn'+(dietType==='keto'?' active':'')+'" onclick="setDietType(\'keto\')" title="Κετογονική διατροφή">⚡ Κετογονική</button>'
     +'<button class="macro-preset-btn'+(dietType==='bodybuilding_clean'?' active':'')+'" onclick="setDietType(\'bodybuilding_clean\')" title="Bodybuilding Clean Eating">🏋️ Bodybuilding Clean</button>'
     +'<button class="macro-preset-btn'+(dietType==='intermittent_fasting'?' active':'')+'" onclick="setDietType(\'intermittent_fasting\')" title="Διαλείπουσα νηστεία">⏰ Διαλείπουσα Νηστεία</button>'
@@ -3373,10 +3373,11 @@ function addPotatoToFishMeals(days){
         return FOODS[f.n]&&FOODS[f.n].cat==='Ψάρια';
       });
       if(!hasFish)return;
-      // Έλεγχος αν υπάρχει ήδη υδατάνθρακας (δημητριακά, πατάτα, ή όσπρια — π.χ. Φακές έχουν ~20g
-      // υδατ./100g και ήδη καλύπτουν τον ρόλο του αμύλου σε ένα πιάτο φακές+σαρδέλες)
+      // Έλεγχος αν υπάρχει ήδη υδατάνθρακας (δημητριακά, πατάτα, γλυκοπατάτα, ή όσπρια — π.χ. Φακές έχουν ~20g
+      // υδατ./100g και ήδη καλύπτουν τον ρόλο του αμύλου σε ένα πιάτο φακές+σαρδέλες).
+      // Η Γλυκοπατάτα ελέγχεται ρητά με το όνομά της γιατί είναι καταχωρημένη cat:'Λαχανικά', όχι 'Δημητριακά'.
       var hasCarb=meal.foods.some(function(f){
-        if(f.n==='Πατάτες')return true;
+        if(f.n==='Πατάτες'||f.n==='Γλυκοπατάτα')return true;
         var cat=FOODS[f.n]&&FOODS[f.n].cat;
         return cat==='Δημητριακά'||cat==='Όσπρια';
       });
@@ -3437,7 +3438,7 @@ function avoidLegumeStarchCombos(days){
       var hasOtherStarch=false, starchNames=[];
 
       meal.foods.forEach(function(f){
-        if(LEGUME_FOODS_LST.indexOf(f.n)!==-1){
+        if(isLegumeFood(f.n)){
           hasLegume=true;
           legumeName=f.n;
           legumeGrams=f.g||200;
@@ -3463,11 +3464,11 @@ function avoidLegumeStarchCombos(days){
           }
         }
 
-        // Προσθέτουμε φέτα (30-50g) αν δεν υπάρχει
-        var hasDairy=meal.foods.some(function(f){return f.n==='Τυρί φέτα';});
-        if(!hasDairy){
-          meal.foods.push({n:'Τυρί φέτα',g:40});
-        }
+        // ΣΗΜΕΙΩΣΗ: εδώ πρόσθεταμε παλιότερα φέτα ως αντικατάσταση του αμύλου, αλλά αυτό προκαλούσε
+        // ένα cascade bug — η avoidDairyWithLegumes (αμέσως μετά, όσπριο+γαλακτοκομικό) την έβλεπε,
+        // την αφαιρούσε, και πρόσθετε κοτόπουλο· το γεύμα κατέληγε με ΚΑΙ το όσπριο ΚΑΙ κοτόπουλο ως
+        // πρωτεΐνη (ίδιο pattern με το bug φακές+σαρδέλες+κοτόπουλο, commit f3926e5). Η ενισχυμένη
+        // ποσότητα οσπρίου (250-300g) παραπάνω καλύπτει ήδη την πρωτεΐνη — δεν προσθέτουμε γαλακτοκομικό.
 
         // Προσθέτουμε ψωμί ολικής άλεσης (30g) αν δεν υπάρχει
         var hasBread=meal.foods.some(function(f){return f.n==='Ολικής άλεσης ψωμί' || f.n.indexOf('ψωμί')!==-1;});
@@ -3493,7 +3494,7 @@ function avoidDairyWithLegumes(days){
       var hasDairy=false, dairyNames=[];
 
       meal.foods.forEach(function(f){
-        if(LEGUME_FOODS_LST.indexOf(f.n)!==-1){
+        if(isLegumeFood(f.n)){
           hasLegume=true;
           legumeName=f.n;
           legumeFoods.push(f);
@@ -3539,7 +3540,7 @@ function avoidTanninsWithLegumes(days){
     var dayHasLegume=false;
     dayMeals.forEach(function(meal){
       // Ελέγχουμε αν υπάρχουν όσπρια σε αυτό το γεύμα
-      if(meal.foods.some(function(f){return LEGUME_FOODS_LST.indexOf(f.n)!==-1;})){
+      if(meal.foods.some(function(f){return isLegumeFood(f.n);})){
         dayHasLegume=true;
       }
     });

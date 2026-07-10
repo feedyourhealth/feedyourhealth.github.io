@@ -192,7 +192,7 @@ function getMicronutrientTargets(c){
 
   if(dietType){
     // VEGAN: Lower bioavailability of Fe/Zn, NO natural B12
-    if(dietType.includes('Веγανι')||dietType.includes('vegan')){
+    if(dietType.includes('vegan')){
       dietBoost.iron=1.80; // +80%: nonheme iron bioavailability 2-20% vs heme 15-35%
       dietBoost.zinc=1.25; // +25%: phytate inhibition of absorption
       dietBoost.b12=2.0; // x2 or supplement required (50% vegans B12 deficient)
@@ -291,7 +291,7 @@ function getMicronutrientTargets(c){
       notes:'Nerve function & energy',
       athletic:Math.round(baseB12*athleteBoost*100)/100,
       adjusted:Math.round(finalB12*100)/100,
-      supplementRequired:dietType&&(dietType.includes('Веγανι')||dietType.includes('vegan')||dietType.includes('Ορθόδοξη'))
+      supplementRequired:dietType&&(dietType.includes('vegan')||dietType.includes('Ορθόδοξη'))
     },
     folate:{
       target:400,

@@ -1830,17 +1830,15 @@ function exportGoogleDocs(){
     });
 }
 
-// ── Cloud Integration: Listen for user info from cloud wrapper ───────────────────────────────────
+// ── Cloud Integration: legacy localStorage key prefix ─────────────────────────────────────────────
+// cloudUsername/getStorageKey were fed by a postMessage('CLOUD_USER', ...) listener from the old
+// app_wrapper.html iframe prototype (deleted 2026-07-03, see [[dietologist-cloud-supabase]] memory —
+// real auth is Supabase now, window.Cloud). Nothing in the app ever sends that postMessage anymore,
+// so cloudUsername was always null in practice; the listener + its loadCloudData() re-load (which
+// reassigned the whole global `clients` array with no re-validation of curId/open client — a real
+// stale-object race if it ever DID fire) were removed 2026-07-10 as confirmed-dead code. getStorageKey
+// itself is kept since safeStorageGet/safeStorageSet (js/app-part1.js) still call it on every read/write.
 var cloudUsername = null;
-
-window.addEventListener('message', function(event) {
-  if (event.data && event.data.type === 'CLOUD_USER') {
-    cloudUsername = event.data.username;
-    console.log('Cloud user detected:', cloudUsername);
-    // Re-load data with cloud user prefix
-    loadCloudData();
-  }
-}, false);
 
 function getStorageKey(baseKey) {
   if (cloudUsername) {
@@ -1877,31 +1875,6 @@ function getStorageKey(baseKey) {
   }
 })();
 
-function loadCloudData() {
-  // Load custom templates
-  var parsedCt = safeStorageGet('fyh_custom_tmpls', null);
-  if(Array.isArray(parsedCt)) customTemplates = parsedCt;
-
-  // Load clients data
-  var d = safeStorageGet('fyh_clients', null);
-  if(Array.isArray(d) && d.length){
-    clients = d;
-    clients.forEach(function(c){
-      if(!c.metActivities)c.metActivities=[];
-      if(!c.weightLog)c.weightLog=[];
-      if(!c.consultLog)c.consultLog=[];
-      migrateClientSkinfoldBF(c);
-      if(c.macroP==null)c.macroP=25;
-      if(c.macroF==null)c.macroF=25;
-      if(c.macroC==null)c.macroC=50;
-      if(!c.macroPreset)c.macroPreset='balanced';
-      if(!c.suppExclude)c.suppExclude=[];
-      if(!c.foodExclude)c.foodExclude=[];
-      if(c.selectedTemplate===undefined)c.selectedTemplate=null;
-    });
-    renderSB();
-  }
-}
 
 /* Recipe Modal Display */
 function showRecipeModal(foodName){

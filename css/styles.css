@@ -58,7 +58,11 @@ body.dark-mode .undo-redo-btn:disabled{color:#555}
 .cc-name{font-weight:700;color:#025857;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-sub{font-size:11px;color:#999;margin-top:2px}
 .cc-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s;flex-shrink:0}
-.client-card:hover .cc-actions{opacity:1}
+.client-card:hover .cc-actions,.client-card:focus-within .cc-actions{opacity:1}
+/* 2026-07-10: hover-only reveal left these buttons unreachable on touch (no persistent hover state)
+   and invisible to keyboard-only users before the :focus-within rule above — always show on
+   touch/no-hover devices instead of relying on a hover that never fires there. */
+@media (hover:none){.cc-actions{opacity:1}}
 .cc-actions button{border:none;background:none;cursor:pointer;font-size:12px;padding:4px 6px;border-radius:5px;color:#999}
 .cc-actions button:hover{background:#f5f5f5}
 .cc-actions .cdel:hover{color:#c62828;background:#fcebeb}
@@ -516,14 +520,11 @@ body.dark-mode .rcp-cat-done{background:#025857;border-color:#025857;color:#fff}
 .spin { animation: spin 1s linear infinite; }
 
 /* ✅ IMPROVED DARK MODE */
-body.dark-mode {
-  background: #1a1a1a;
-  color: #e0e0e0;
-}
-body.dark-mode .sb {
-  background: #242424;
-  border-right-color: #333;
-}
+/* Note (2026-07-10): body.dark-mode base / .sb / .main / .btn / .btn.primary / .empty used to be
+   redefined again, with conflicting values, in the "TIER 3: DARK MODE THEME" block further down —
+   that later block always won by source order, so this one's copies were dead. Removed those 6 dead
+   duplicates; the rules below (.client-card family, .fab, #fab-menu, .tooltip-text) are NOT
+   duplicated anywhere else and are still the only dark-mode styling for those components — kept. */
 body.dark-mode .client-card {
   background: #333;
   border-color: #444;
@@ -549,21 +550,6 @@ body.dark-mode .clients-toolbar-select {
   background: #242424;
   border-color: #444;
   color: #e0e0e0;
-}
-body.dark-mode .main {
-  background: #1a1a1a;
-}
-body.dark-mode .empty {
-  color: #999;
-}
-body.dark-mode .btn {
-  background: #333;
-  color: #e0e0e0;
-  border-color: #444;
-}
-body.dark-mode .btn.primary {
-  background: #025857;
-  border-color: #037070;
 }
 body.dark-mode .fab {
   background: #025857;

@@ -1052,12 +1052,66 @@ function genPlan(){
           c.weekPlan[d]=scalePlan(c.weekPlan[d],eff[d]);
         }
       }
+
+      // ✅ ENFORCE RED MEAT FREQUENCY (MAX 2x/week for cholesterol) — same cap the template path
+      // applies below; the cloned source client's own plan could exceed it for this new client's
+      // dietType/exclusions, and this path used to skip the check entirely (2026-07-10 fix).
+      c.weekPlan = enforceRedMeatFrequency(c.weekPlan, excl, c.dietType);
+
+      // ✅ REMOVE OATS FROM NON-BREAKFAST MEALS — same rule the template path applies below,
+      // in case enforceRedMeatFrequency's substitutions reintroduced βρώμη outside breakfast.
+      for(var d=0;d<7;d++){
+        if(!c.weekPlan[d])continue;
+        for(var mi=0;mi<c.weekPlan[d].length;mi++){
+          var meal=c.weekPlan[d][mi];
+          var mealName=(meal.name||'').toLowerCase();
+          if(mealName.includes('πρωινό'))continue;
+          if(meal.foods&&meal.foods.length>0){
+            meal.foods=meal.foods.filter(function(food){
+              return !(food.n||'').toLowerCase().includes('βρώμη');
+            });
+          }
+        }
+      }
+
+      // ✅ THREE-LAYER EXCLUSION CLEANUP — same paranoia pass the template path applies below,
+      // catching anything enforceRedMeatFrequency's own substitutions might have reintroduced.
+      if(excl.length>0){
+        var exclNormalized=excl.map(function(x){return normalizeGreekText(x);});
+        var exclExact=excl.map(function(x){return (x||'');});
+        for(var d=0;d<7;d++){
+          if(!c.weekPlan[d])continue;
+          for(var mi=0;mi<c.weekPlan[d].length;mi++){
+            var meal=c.weekPlan[d][mi];
+            if(meal.foods&&meal.foods.length>0){
+              meal.foods=meal.foods.filter(function(food){
+                var foodName=(food.n||'');
+                var foodNameNormalized=normalizeGreekText(foodName);
+                if(exclExact.indexOf(foodName)!==-1)return false;
+                for(var ei=0;ei<exclNormalized.length;ei++){
+                  if(foodNameNormalized.indexOf(exclNormalized[ei])!==-1)return false;
+                }
+                return true;
+              });
+              meal.foods=meal.foods.filter(function(food){
+                return food.n && (food.n||'').trim().length>0;
+              });
+            }
+          }
+        }
+      }
+
       // ✅ DIET-TYPE SAFETY NET: the "Βάση πλάνου" client picker lists EVERY client with a plan,
       // regardless of diet type — cloning a normal/omnivore client's plan as the basis for a new
       // vegan/vegetarian/orthodox_fasting client would otherwise carry their meat/fish/dairy over
       // completely unfiltered (confirmed live: 41 category violations in one such test). This path
       // returns early, before the same check that already runs on the template-generation path below.
       applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType);
+
+      // ✅ LOG PLAN TO TRACKING SYSTEM — this path used to skip logging entirely, so plans made
+      // by cloning an existing client never appeared in Στατιστικά Γευμάτων (2026-07-10 fix).
+      logPlanGeneration(c, c.weekPlan);
+
       c.planGeneratedAt=Date.now();  // ✅ ώστε να ξέρουμε πότε "λήγει" (χρειάζεται ανανέωση) το πλάνο
       saveNow();  // Save immediately, not delayed
       renderWeekTable();

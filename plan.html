@@ -92,6 +92,8 @@
   .log-sent{font-size:12px;color:var(--ok);display:flex;align-items:center;gap:6px;margin-bottom:8px}
   .log-warn{font-size:12px;color:#c77d11;display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
   .log-warn button{background:none;border:none;color:#c77d11;font-weight:700;text-decoration:underline;cursor:pointer;font-size:12px;padding:0;font-family:inherit}
+  .log-err{font-size:12px;color:#c0392b;margin:6px 0 8px;display:none}
+  .log-err.show{display:block}
   .log-tag-label{font-size:11px;color:var(--muted);margin:8px 0 6px}
   .log-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
   .log-tag{border:.5px solid var(--bord);background:var(--card);color:var(--muted);border-radius:999px;padding:6px 11px;font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;font-family:inherit}
@@ -443,8 +445,17 @@ function toggleLogTag(id,btn){
 }
 // Ο πελάτης καταγράφει μόνος του βάρος/σημείωση από το Πρόοδος tab (write-only, χωρίς login).
 function submitClientLog(){
-  const wEl=$('#log-weight'), nEl=$('#log-note');
-  const w=wEl&&wEl.value?parseFloat(wEl.value):null;
+  const wEl=$('#log-weight'), nEl=$('#log-note'), errEl=$('#log-err');
+  if(errEl)errEl.classList.remove('show');
+  const wRaw=wEl&&wEl.value?wEl.value.trim():'';
+  let w=null;
+  if(wRaw){
+    w=parseFloat(wRaw);
+    if(!isFinite(w)||w<20||w>300){
+      if(errEl){errEl.textContent='Το βάρος πρέπει να είναι ένας αριθμός μεταξύ 20 και 300 kg.';errEl.classList.add('show');}
+      return;
+    }
+  }
   const n=nEl&&nEl.value?nEl.value.trim():'';
   const tag=selectedLogTag;
   if(!w && !n && !tag)return;
@@ -1154,6 +1165,7 @@ function viewProg(){
   logCp.innerHTML='<div class="card-hdr"><i class="ti ti-notebook"></i>Καταγραφή σήμερα</div>'
     +logStatus
     +'<input type="number" class="log-inp" id="log-weight" placeholder="Βάρος σήμερα (kg)" step="0.1" min="20" max="300" style="width:140px">'
+    +'<div class="log-err" id="log-err"></div>'
     +'<textarea class="log-inp" id="log-note" placeholder="Πώς πήγε η μέρα; (προαιρετικό)" style="margin-top:8px"></textarea>'
     +'<div class="log-tag-label">Πλαίσιο ημέρας (προαιρετικό)</div>'
     +'<div class="log-tags">'+LOG_TAGS.map(t=>'<button type="button" class="log-tag'+(selectedLogTag===t.id?' log-tag-on':'')+'" onclick="toggleLogTag(\''+t.id+'\',this)"><i class="ti '+t.icon+'"></i>'+t.label+'</button>').join('')+'</div>'
