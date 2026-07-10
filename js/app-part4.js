@@ -2734,6 +2734,7 @@ function showMealAlternatives(dayIndex, mealIndex){
   var savedCombos = getSavedCombos();
 
   if(savedCombos && savedCombos.length > 0) {
+    var exclLowerSMA = excl.map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
     // Find saved combos compatible with current meal type and calorie target
     // Use ±100 kcal tolerance for saved combos to find similar meals
     for(var si = 0; si < savedCombos.length; si++) {
@@ -2748,23 +2749,14 @@ function showMealAlternatives(dayIndex, mealIndex){
 
       var isWithinCaloricRange = Math.abs(savedComboKcal - currentCalories) <= 120; // ±120 kcal
 
-      // Check: no excluded foods in saved combo
-      var hasExcludedFood = false;
-      if(savedCombo.foods) {
-        for(var ei = 0; ei < excl.length; ei++) {
-          var excluded = excl[ei] || '';
-          for(var fi = 0; fi < savedCombo.foods.length; fi++) {
-            if((savedCombo.foods[fi].n || '').toLowerCase().indexOf(excluded.toLowerCase()) !== -1) {
-              hasExcludedFood = true;
-              break;
-            }
-          }
-          if(hasExcludedFood) break;
-        }
-      }
+      // Check: combo's tagged diet type is compatible with this client's diet
+      var isDietCompatible = comboDietOK(c.dietType, savedCombo.dietType);
 
-      // Add to alternatives if compatible (same meal type, within calorie range, no excluded foods)
-      if(isSameMealType && isWithinCaloricRange && !hasExcludedFood && savedCombo.foods && savedCombo.foods.length > 0) {
+      // Check: no excluded foods in saved combo
+      var hasExcludedFood = comboHasExcludedFood(savedCombo.foods, exclLowerSMA);
+
+      // Add to alternatives if compatible (same meal type, within calorie range, diet-compatible, no excluded foods)
+      if(isSameMealType && isWithinCaloricRange && isDietCompatible && !hasExcludedFood && savedCombo.foods && savedCombo.foods.length > 0) {
         alternatives.push({
           foods: deepClone(savedCombo.foods),
           isSavedCombo: true,

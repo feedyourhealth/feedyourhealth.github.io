@@ -2000,7 +2000,14 @@ function renderWeekTable(){
         // Insert all foods from saved combo
         var cid=data.slice(6);
         var combo=getSavedCombos().filter(function(x){return x.id===cid;})[0];
-        if(combo)combo.foods.forEach(function(f){c2.weekPlan[dd][mmi].foods.push({n:f.n,g:f.g});});
+        if(combo){
+          var exclLower2=(c2.excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+          if(!comboDietOK(c2.dietType, combo.dietType) || comboHasExcludedFood(combo.foods, exclLower2)){
+            showErrorToast('⚠️ Ο συνδυασμός δεν ταιριάζει με το diet type / τις εξαιρέσεις τροφίμων αυτού του πελάτη.');
+            return;
+          }
+          combo.foods.forEach(function(f){c2.weekPlan[dd][mmi].foods.push({n:f.n,g:f.g});});
+        }
       } else {
         if(!FOODS[data])return;
         c2.weekPlan[dd][mmi].foods.push({n:data,g:100});
@@ -2816,22 +2823,67 @@ function getMicronutrientHtml(c){
 }
 
 /* ---- Saved Combos ----
-   Per-client only (c.savedCombos), cloud-synced with the rest of the client's data.
-   Used to fall back to a single shared localStorage key ('dieto_combos') when a client
-   had no combos of its own — but every save() overwrote that shared key with just the
-   current client's list, so it silently clobbered whatever another client had saved
-   there. That's how a real client's combo list got wiped. No longer read or written. */
+   Shared across ALL clients, stored under its own localStorage key ('savedCombos') via
+   safeStorageGet/safeStorageSet — same pattern as getFavoriteMeals/saveFavoriteMeals below.
+   This used to live per-client (c.savedCombos). An earlier version tried a shared key but
+   wrote it through the per-client save() path, so each client's save() overwrote the shared
+   key with just its own list and clobbered whatever another client had saved — that's how a
+   real client's combo list got wiped. Storing it independently of any client's save() avoids
+   that: it's read/written directly, never touched by per-client save(). Diet-type mixing
+   across clients is guarded by comboDietOK()/comboHasExcludedFood() below, applied at every
+   read site (plan generation via findSavedComboMatch, meal-alternative suggestions, the
+   food-library sidebar, and drag-and-drop insertion) — a combo tagged for one client's diet
+   or saved while another client's food was excluded must never surface for an incompatible
+   client. */
+
+// Diet-type compatibility check shared by every saved-combo consumer. A restrictive client
+// diet only accepts same-diet combos; 'normal'/no dietType accepts anything.
+function comboDietOK(clientDietType, comboDietType){
+  if(!clientDietType || clientDietType==='normal') return true;
+  return comboDietType===clientDietType;
+}
+// Allergen/exclusion check shared by every saved-combo consumer.
+function comboHasExcludedFood(foods, exclLower){
+  if(!exclLower || !exclLower.length || !foods) return false;
+  return foods.some(function(food){
+    var nameLower=(food.n||'').toLowerCase();
+    return exclLower.some(function(excluded){ return excluded && nameLower.indexOf(excluded)!==-1; });
+  });
+}
+
+// One-time migration: pull any combos still sitting on old per-client c.savedCombos
+// (from before this became a shared list) into the shared 'savedCombos' key, then strip
+// the now-unread field off each client so it doesn't linger as dead data.
+function migrateLegacyPerClientCombos(){
+  if(safeStorageGet('savedCombosMigratedV1', false)) return;
+  var merged=safeStorageGet('savedCombos', []) || [];
+  var seenIds={};
+  merged.forEach(function(x){ if(x && x.id) seenIds[x.id]=true; });
+  var changed=false;
+  (typeof clients!=='undefined' ? clients : []).forEach(function(c){
+    if(c && Array.isArray(c.savedCombos) && c.savedCombos.length){
+      c.savedCombos.forEach(function(combo){
+        if(combo && (!combo.id || !seenIds[combo.id])){
+          if(combo.id) seenIds[combo.id]=true;
+          merged.push(combo);
+        }
+      });
+      delete c.savedCombos;
+      changed=true;
+    }
+  });
+  safeStorageSet('savedCombos', merged);
+  safeStorageSet('savedCombosMigratedV1', true);
+  if(changed){ try{ save(); }catch(e){} }
+}
+
 function getSavedCombos(){
-  var c=getC();
-  return (c && Array.isArray(c.savedCombos)) ? c.savedCombos : [];
+  migrateLegacyPerClientCombos();
+  return safeStorageGet('savedCombos', []);
 }
 
 function setSavedCombos(arr){
-  var c=getC();
-  if(c){
-    c.savedCombos=arr;
-    save();
-  }
+  safeStorageSet('savedCombos', arr);
 }
 
 // ── Lightweight toast notification ─────────────────────────────────────────
@@ -3200,7 +3252,11 @@ function renderFoodLib(q){
   // ── Saved combos section (shown only when not searching) ──
   var comboHtml='';
   if(!q){
-    var combos=getSavedCombos();
+    var libC=getC();
+    var libExclLower=((libC&&libC.excl)||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+    var combos=getSavedCombos().filter(function(combo){
+      return comboDietOK(libC&&libC.dietType, combo.dietType) && !comboHasExcludedFood(combo.foods, libExclLower);
+    });
     comboHtml='<div class="combo-section">'
       +'<div class="combo-sec-title">📋 Αποθηκευμένοι Συνδυασμοί</div>';
     if(!combos.length){
