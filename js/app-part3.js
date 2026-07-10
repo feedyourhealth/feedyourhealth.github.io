@@ -2890,6 +2890,10 @@ function getSavedCombos(){
 
 function setSavedCombos(arr){
   safeStorageSet('savedCombos', arr);
+  // Bypasses the per-client save()/_doSave() path on purpose (that's what clobbered this
+  // data before — see the doc comment above), so it has to poke Cloud sync directly instead
+  // of getting it for free the way client-data saves do.
+  if(window.Cloud) try{ window.Cloud.save(); }catch(e){}
 }
 
 // ── Lightweight toast notification ─────────────────────────────────────────

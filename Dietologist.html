@@ -3107,6 +3107,10 @@ function saveFoodExclusions(){
               if(typeof safeStorageSet==='function'){
                 safeStorageSet('fyh_clients', window.clients);
                 safeStorageSet('fyh_custom_tmpls', window.customTemplates);
+                // Saved combos live outside `clients` (own localStorage key, shared across
+                // clients) so they need their own restore here — otherwise they never
+                // travel across devices even though they now ride along in the same blob.
+                if(Array.isArray(d.savedCombos)) safeStorageSet('savedCombos', d.savedCombos);
               }
             }catch(e){ console.error('[CLOUD] apply data', e); }
             self._loaded=true; resolve();
@@ -3129,6 +3133,7 @@ function saveFoodExclusions(){
           customTemplates: window.customTemplates||[],
           trackingData: (typeof window.TRACKING_DATA!=='undefined'?window.TRACKING_DATA:null),
           recipeMeta: (typeof getRecipeMeta==='function'?getRecipeMeta():null),
+          savedCombos: (typeof safeStorageGet==='function'?safeStorageGet('savedCombos',[]):[]),
           updatedAt: new Date().toISOString()
         };
         self.sb.from('user_data').upsert({user_id:self.user.id, data:blob, updated_at:new Date().toISOString()}).then(function(res){
