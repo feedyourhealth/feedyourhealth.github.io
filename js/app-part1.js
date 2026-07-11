@@ -2369,6 +2369,21 @@ function restoreClient(id){
   clientToRestore.deleted = false;
   delete clientToRestore.deletedAt;
 
+  // This manual restore bypasses the undo/redo command system, so purge any
+  // DeleteClientCommand for this client from the history — otherwise a later
+  // redo (Ctrl+Y) could silently re-delete the client we just restored.
+  if(window.undoRedoManager && typeof DeleteClientCommand !== 'undefined'){
+    var mgr = window.undoRedoManager;
+    var removedUpToIndex = 0;
+    mgr.history = mgr.history.filter(function(cmd, idx){
+      var isMatch = (cmd instanceof DeleteClientCommand) && cmd.client === clientToRestore;
+      if(isMatch && idx <= mgr.currentIndex) removedUpToIndex++;
+      return !isMatch;
+    });
+    mgr.currentIndex -= removedUpToIndex;
+    if(typeof updateUndoRedoUI==='function') updateUndoRedoUI();
+  }
+
   save();
   renderSB();
 }
@@ -2861,7 +2876,7 @@ function resetTmpl(goal){
 /* ── Custom Template Management ──────────────────────────────────────────── */
 function buildTmplSelectorHtml(c){
   var sel=c.selectedTemplate||'';
-  var goalLabel=GOAL_LABELS[c.goal]||c.goal;
+  var goalLabel=GOAL_LABELS[c.goalMain]||c.goalMain;
   var opts='<option value="">📋 Προεπιλεγμένο ('+goalLabel+')</option>';
 
   // Hide this selector on page 2 and others — only show on Tab 1
@@ -2890,7 +2905,7 @@ function buildTmplSelectorHtml(c){
   if(clientsWithPlans.length>0){
     opts+='<optgroup label="━━━ Υπάρχοντα πλάνα πελατών ━━━">';
     clientsWithPlans.forEach(function(cl){
-      var cGoal=GOAL_LABELS[cl.goal]||cl.goal;
+      var cGoal=GOAL_LABELS[cl.goalMain]||cl.goalMain;
       var cName=cl.name||'Νέος πελάτης';
       opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+esc(cName)+' — '+cGoal+'</option>';
     });
