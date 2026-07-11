@@ -615,74 +615,6 @@ var LOGGER={
   }
 };
 
-// Validation wrapper for calcTDEE
-function calcTDEEWithValidation(c){
-  try{
-    if(!c){throw new Error('calcTDEE: client object is null/undefined');}
-    if(!c.age||c.age<1||c.age>120){
-      LOGGER.WARN('calcTDEE: Invalid age',{age:c.age});
-      return {error:true,msg:'Age must be 1-120'};
-    }
-    if(!c.weight||c.weight<20||c.weight>300){
-      LOGGER.WARN('calcTDEE: Invalid weight',{weight:c.weight});
-      return {error:true,msg:'Weight must be 20-300 kg'};
-    }
-    if(!c.height||c.height<100||c.height>230){
-      LOGGER.WARN('calcTDEE: Invalid height',{height:c.height});
-      return {error:true,msg:'Height must be 100-230 cm'};
-    }
-
-    var result=calcTDEE(c);
-
-    // Validate result
-    if(!result.target||result.target<800||result.target>5000){
-      LOGGER.WARN('calcTDEE: Suspicious TDEE value',{tdee:result.target,client:c.name});
-    }
-    if(!result.bmr||result.bmr<600||result.bmr>3000){
-      LOGGER.WARN('calcTDEE: Suspicious BMR value',{bmr:result.bmr,client:c.name});
-    }
-
-    LOGGER.INFO('calcTDEE: Calculated for '+c.name,{tdee:result.target,bmr:result.bmr});
-    return result;
-  }catch(e){
-    LOGGER.ERROR('calcTDEEWithValidation failed',{error:e.message,client:c});
-    throw e;
-  }
-}
-
-// Validation wrapper for scalePlan
-function scalePlanWithValidation(tmpl,target){
-  try{
-    if(!tmpl){throw new Error('scalePlan: template is null');}
-    if(!target||!target.k){throw new Error('scalePlan: target missing calories');}
-    if(target.k<500||target.k>5000){
-      LOGGER.WARN('scalePlan: Suspicious target calories',{target:target.k});
-    }
-
-    var result=scalePlan(tmpl,target);
-
-    // Validate result
-    var scaled=result.k||0;
-    var diff=Math.abs(scaled-target.k);
-    var tolerance=Math.max(30,target.k*0.05);  // 5% or 30 kcal
-
-    if(diff>tolerance){
-      LOGGER.WARN('scalePlan: Calorie mismatch exceeds tolerance',{
-        target:target.k,
-        scaled:scaled,
-        diff:diff,
-        tolerance:tolerance
-      });
-    }
-
-    LOGGER.INFO('scalePlan: Scaled meal',{target:target.k,result:scaled});
-    return result;
-  }catch(e){
-    LOGGER.ERROR('scalePlanWithValidation failed',{error:e.message,target:target});
-    throw e;
-  }
-}
-
 // Data integrity check
 /* ── Autosave system ──────────────────────────────────────────────────────────
    save()     = debounced 800ms — καλείται σε κάθε αλλαγή, δεν σπαταλά πόρους
@@ -1574,9 +1506,9 @@ function calculateOptimalDose(gap, supplement){
 function flagSupplementInteractions(recommendations){
   // Flag known interactions
   var interactions={
-    'zinc': ['calcium','iron'],
-    'calcium': ['zinc','iron'],
-    'iron': ['calcium','zinc','magn']
+    'zinc': ['calc','iron'],
+    'calc': ['zinc','iron'],
+    'iron': ['calc','zinc','magn']
   };
 
   recommendations.forEach(function(rec){
@@ -1759,12 +1691,11 @@ function calcTDEE(c){
     goalDelta = def[c.goal]||0;
   }
   // Per-day MET targets: each day gets its own exercise kcal based on assigned activities
-  // CRITICAL: Growth allowance applies ONLY on rest days (when no training occurs)
-  // - Rest days (R): baseTDEE + goalDelta + growthAdd (for development)
-  // - Train days (T): baseTDEE + exercise kcal + goalDelta (no growth allowance needed, training provides stimulus)
+  // Growth allowance (DRI requirement for minors) applies every day, training or rest —
+  // matches trainTargetByDay/target below, which already include it every day.
   var baseTDEE=neat;
   var restTarget=usedMET?baseTDEE+goalDelta+growthAdd+pregAdd:tdee+goalDelta+growthAdd+pregAdd;
-  var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta+pregAdd:tdee+goalDelta+pregAdd;  // NO growthAdd on training days, but pregAdd applies every day
+  var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta+growthAdd+pregAdd:tdee+goalDelta+growthAdd+pregAdd;
   var trainTargetByDay=[];
   for(var tdi=0;tdi<7;tdi++){
     if(usedMET){
@@ -2159,7 +2090,10 @@ var PERF_METRICS={
 
 // ✅ PHASE 4: CREATE CLIENT WITH UNDO/REDO
 // ✅ PHASE 1: COMPREHENSIVE INPUT VALIDATION
-var VALIDATION_RULES = {
+// Named distinctly from the calculation-audit VALIDATION_RULES above (line ~344) —
+// both used the same global name, and this one, loading second, silently won and
+// broke validateAllCalculations()/logValidation() (rule.validate was undefined).
+var FIELD_VALIDATION_RULES = {
   'name': {min: 2, max: 100, required: true, pattern: /^[^\n]{2,100}$/},
   'age': {min: 13, max: 120, required: true},
   'weight': {min: 20, max: 300, required: true},
@@ -2504,9 +2438,9 @@ function renderQANewPlan(q){
   var results=document.getElementById('qa-newplan-results'); if(!results) return;
   var list=qaMatchingClients(q), html='';
   list.forEach(function(c){
-    html+='<div class="qa-row" onclick="qaStartPlan(\''+c.id+'\')"><span>'+(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+qaPlanStatusText(c)+'</span></div>';
+    html+='<div class="qa-row" onclick="qaStartPlan(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+qaPlanStatusText(c)+'</span></div>';
   });
-  html+='<div class="qa-row qa-row-new" onclick="qaCreateAndPlan(document.getElementById(\'qa-newplan-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+q+'»':'')+'</div>';
+  html+='<div class="qa-row qa-row-new" onclick="qaCreateAndPlan(document.getElementById(\'qa-newplan-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
   results.innerHTML=html;
 }
 
@@ -2515,9 +2449,9 @@ function renderQAQuickMeasure(q){
   var list=qaMatchingClients(q), html='';
   list.forEach(function(c){
     var sub = (c.weightLog && c.weightLog.length) ? ('τελ. μέτρηση '+c.weightLog[c.weightLog.length-1].date) : 'καμία μέτρηση ακόμα';
-    html+='<div class="qa-row" onclick="qaStartMeasure(\''+c.id+'\')"><span>'+(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
+    html+='<div class="qa-row" onclick="qaStartMeasure(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
   });
-  html+='<div class="qa-row qa-row-new" onclick="qaCreateAndMeasure(document.getElementById(\'qa-quickmeasure-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+q+'»':'')+'</div>';
+  html+='<div class="qa-row qa-row-new" onclick="qaCreateAndMeasure(document.getElementById(\'qa-quickmeasure-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
   results.innerHTML=html;
 }
 

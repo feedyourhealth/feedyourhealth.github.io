@@ -7,8 +7,9 @@ const ANALYTICS = {
    * Get client metrics summary
    */
   getClientMetrics() {
-    const total = clients.length;
-    const active = clients.filter(c => c.weekPlan && Object.keys(c.weekPlan).length > 0).length;
+    const visible = clients.filter(c => !c.deleted && !c.archived);
+    const total = visible.length;
+    const active = visible.filter(c => c.weekPlan && Object.keys(c.weekPlan).length > 0).length;
     const withPlans = active;
     const dropoutRate = total > 0 ? Math.round(((total - active) / total) * 100) : 0;
 
