@@ -1712,6 +1712,17 @@ function calcTDEE(c){
       trainTargetByDay.push(Math.round(tdee+goalDelta+growthAdd+pregAdd));
     }
   }
+  // 🛡️ SAFETY FLOOR: mirror the per-day floor in makeDayTgtDefaults (js/app-part2.js) HERE too.
+  // Without this, an aggressive flat deficit on a low-BMR client (elderly/small/sedentary) could
+  // make this function's own target/restTarget/trainTarget/macros drop below BMR, while the actual
+  // generated meal plan (c.dayTargets) is already floored — a dietitian-facing summary that
+  // contradicts the plan actually being served. Use the same rounded BMR exposed as t.bmr below.
+  var bmrFloor=Math.round(bmr);
+  if(bmrFloor){
+    restTarget=Math.max(restTarget,bmrFloor);
+    trainTarget=Math.max(trainTarget,bmrFloor);
+    trainTargetByDay=trainTargetByDay.map(function(v){return Math.max(v,bmrFloor);});
+  }
   // ✅ CORRECTED: Single target = average of daily targets
   // This is scientifically correct because:
   // - Growth allowance is applied every day (DRI requirement)
@@ -1762,6 +1773,20 @@ function calcTDEE(c){
   }
   if(carbG<20&&target>1200){
     warnings.push({type:'warn',msg:'⚠️ Πολύ λίγοι υδατάνθρακες: '+carbG+'g (ίσως συντακτικό λάθος;)'});
+  }
+  // ✅ %-of-TDEE sanity check για το goal deficit/surplus (ίδιο μοτίβο με τα προηγούμενα g/kg
+  // πρωτεΐνης warnings). Το goal είναι clamped απόλυτα σε -500..+500 kcal (βλ. setGoalCalories),
+  // αλλά το ΙΔΙΟ απόλυτο kcal ποσό αντιστοιχεί σε πολύ διαφορετικό % ανάλογα με το TDEE του πελάτη
+  // (π.χ. -500 σε TDEE 1150 = ~44% έλλειμμα, ενώ σε TDEE 2800 = ~18%). Υπολογίζεται από το
+  // ΕΝΕΡΓΟ target vs tdee (μετά το BMR safety floor), ώστε να αντανακλά αυτό που θα πάρει
+  // πραγματικά ο πελάτης, όχι το ανεπεξέργαστο goalDelta.
+  if(tdee>0){
+    var deltaPct=Math.round((target-tdee)/tdee*100);
+    if(deltaPct<0&&Math.abs(deltaPct)>25){
+      warnings.push({type:'warn',msg:'⚠️ Πολύ μεγάλο έλλειμμα: '+Math.abs(deltaPct)+'% κάτω από το TDEE (συνιστάται ~15-25%, ρίσκο απώλειας μυϊκής μάζας/μεταβολικής προσαρμογής)'});
+    } else if(deltaPct>20){
+      warnings.push({type:'warn',msg:'⚠️ Πολύ μεγάλο πλεόνασμα: +'+deltaPct+'% πάνω από το TDEE (συνιστάται ~10-20%, ρίσκο υπερβολικής αύξησης λίπους)'});
+    }
   }
   // ✅ Εγκυμοσύνη: πρωτεΐνη-στόχος 1.1 g/kg (βάρος προ εγκυμοσύνης) — ACOG/IOM DRI. Δεν επιβάλλεται
   // αυτόματα (το macro% preset μένει στη διακριτική ευχέρεια της διαιτολόγου) — μόνο προειδοποίηση, ίδιο σχέδιο με τα προηγούμενα warnings.

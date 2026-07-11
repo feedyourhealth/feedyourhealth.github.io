@@ -1258,7 +1258,20 @@ function applyProtocolMacros(client) {
 
   var carbPct = carbCandidates.length ? Math.min.apply(null, carbCandidates) : (client.macroC != null ? client.macroC : 50);
   var proteinPct = proteinCandidates.length ? Math.max.apply(null, proteinCandidates) : (client.macroP != null ? client.macroP : 25);
-  var fatPct = Math.max(10, 100 - carbPct - proteinPct);
+
+  // 🛡️ Το λιπαρό πρέπει να έχει minimum 10% (κλινικό κατώφλι) ΚΑΙ το άθροισμα να είναι πάντα
+  // ακριβώς 100% — αν carbPct+proteinPct ξεπερνά το 90 (π.χ. δύο ενεργά πρωτόκολλα μαζί με
+  // υψηλά και τα δύο %), τα δύο αυτά ποσοστά scale down αναλογικά ώστε να χωρέσει το λιπαρό
+  // floor, αντί να αφήσουμε το άθροισμα να ξεφύγει πάνω από 100%. Χωρίς αυτό, το εμφανιζόμενο
+  // "Υ:X%" θα διαφωνούσε με τα πραγματικά γραμμάρια carbs — το calcTDEE υπολογίζει πάντα τους
+  // carbs ως υπόλοιπο θερμίδων (target-πρωτεΐνη-λιπαρά), όχι από το ίδιο το αποθηκευμένο %.
+  var fatPct = 100 - carbPct - proteinPct;
+  if (fatPct < 10) {
+    var pctSum = carbPct + proteinPct;
+    fatPct = 10;
+    carbPct = pctSum > 0 ? Math.round(90 * carbPct / pctSum) : 45;
+    proteinPct = 90 - carbPct;
+  }
 
   client.macroPreset = 'custom';
   client.macroP = proteinPct;
@@ -2047,7 +2060,7 @@ function openValidationModal() {
     if(s === 'M') return 10*w + 6.25*h - 5*a + 5;
     return 10*w + 6.25*h - 5*a - 161;
   }
-  var actFactors = {sed:1.37, light:1.375, mod:1.55, active:1.725};
+  var actFactors = {sed:1.2, light:1.375, mod:1.55, active:1.725};
 
   // DEBUG PANEL
   var debugHTML = '<div style="padding:10px;background:#fff;border-radius:4px;">';

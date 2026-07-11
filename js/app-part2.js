@@ -1846,10 +1846,14 @@ function calcSkinfoldBF(protocol,sex,age,fields){
       bf=(4.95/bd-4.50)*100;
     }
   } else if(protocol==='slaughter'){
+    // Slaughter et al. (1988) triceps+calf equation — a single linear formula per sex,
+    // with NO sum-based branch (that >35mm split/0.783|0.546 pair belongs to the DIFFERENT
+    // triceps+subscapular equation, not this one — confirmed against secondary sources
+    // quoting the original paper; verification pass 2026-07-11, see audit notes).
     sum=(fields.tricep||0)+(fields.calf||0);
     if(sum>0){
-      if(sex==='M') bf=sum<=35?0.735*sum+1.0:0.546*sum+9.7;
-      else bf=0.610*sum+5.1;
+      if(sex==='M') bf=0.735*sum+1.0;
+      else bf=0.610*sum+5.0;
     }
   }
   if(bf!==null) bf=Math.max(3,Math.min(60,+bf.toFixed(1)));
