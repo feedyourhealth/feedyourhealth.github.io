@@ -1,5 +1,5 @@
 
-function normalizeBreakfasts(days){
+function normalizeBreakfasts(days, mealTargets){
   var result=deepClone(days);
   result.forEach(function(meals,di){
     var brkIdx=-1;
@@ -21,21 +21,59 @@ function normalizeBreakfasts(days){
       return f.n==='Γιαούρτι 2%'||f.n==='Γιαούρτι 0%'||f.n==='Κεφίρ';
     });
     var fruit=MED_BRK_FRUITS[di%MED_BRK_FRUITS.length];
-    if(EGG_DAYS[di]){
-      // Egg days → 60% chance Petretzeakis egg recipe, 40% traditional egg breakfast
+
+    // ✅ FAT-BUDGET AWARENESS: the standard egg-day recipes (Petretzeakis egg dishes, "Πρωινό Αυγών
+    // (FYH)") are all fairly fat-dense (whole eggs + cheese/avocado — confirmed live around ~43-55% of
+    // their kcal comes from fat). That's fine at a normal/surplus fat budget, but portion-scaling
+    // downstream (scalePlan) can't shrink a whole egg's inherent fat:protein ratio to fit a tight
+    // deficit target — confirmed live: a 9g fat/meal target still received ~14g fat from eggs+cheese
+    // alone, before the olive oil was even counted, because no gram amount of egg hits that ratio.
+    // Below this floor, skip the egg-day override entirely and keep whatever breakfast the goal
+    // template itself already chose (already tuned lighter for that calorie level).
+    var MIN_FAT_FOR_EGG_BREAKFAST=15; // grams — rough floor an egg-based breakfast needs to fit into
+    var brkTarget=(mealTargets&&mealTargets[di]&&mealTargets[di].meals&&mealTargets[di].meals[brkIdx])
+      ?mealTargets[di].meals[brkIdx]:null;
+    var brkFatTarget=brkTarget?brkTarget.f:null;
+    var fatBudgetTooTight=(brkFatTarget!=null&&brkFatTarget>0&&brkFatTarget<MIN_FAT_FOR_EGG_BREAKFAST);
+
+    if(EGG_DAYS[di]&&!fatBudgetTooTight){
+      // Egg days → pick whichever egg-based option (3 Petretzeakis recipes + the FYH default) best
+      // fits this breakfast's actual fat/protein target, instead of a blind 60/40 random pick.
+      // ✅ Confirmed live the old random pick was the direct cause of the teen-athlete fat overshoot:
+      // it gave the leanest option ("Ομελέτα Γαλοπούλα & Λαχ." — egg WHITES + turkey, 42.8% fat/35.3%
+      // protein-of-kcal) only a 1-in-3 chance whenever the 60%-Petretzeakis branch fired, vs. e.g.
+      // "Αυγά Ποσέ Air Fryer" (55.2% fat/17.5% protein — whole eggs + avocado) landing just as often
+      // despite being a much worse fit for a protein-forward, tighter-fat target. Same fat%/protein%
+      // deviation scoring as findBestRecipe()/findSavedComboMatch() above, applied to this small,
+      // fixed candidate set.
       if(!hasEgg){
-        var usePetretzeakis=Math.random()<0.6;
-        if(usePetretzeakis&&PETRETZEAKIS_EGG_RECIPES.length>0){
-          var recipe=PETRETZEAKIS_EGG_RECIPES[di%PETRETZEAKIS_EGG_RECIPES.length];
-          meal.foods=[{n:recipe.n,g:recipe.g}];
+        var eggCandidates=PETRETZEAKIS_EGG_RECIPES.concat([{n:'Πρωινό Αυγών (FYH)',g:200}]);
+        var chosen=null;
+        if(brkTarget&&brkTarget.k>0){
+          var targetFatPct=(brkTarget.f*9)/brkTarget.k;
+          var targetProtPct=(brkTarget.p*4)/brkTarget.k;
+          var bestScore=Infinity;
+          eggCandidates.forEach(function(cand){
+            var v=cm(cand.n,cand.g);
+            if(!v.k)return;
+            var score=Math.abs((v.f*9)/v.k-targetFatPct)+Math.abs((v.p*4)/v.k-targetProtPct);
+            if(score<bestScore){bestScore=score;chosen=cand;}
+          });
+        }
+        if(!chosen){
+          // No target info available (e.g. called without mealTargets) — fall back to the old random pick
+          var usePetretzeakis=Math.random()<0.6;
+          chosen=(usePetretzeakis&&PETRETZEAKIS_EGG_RECIPES.length>0)
+            ?PETRETZEAKIS_EGG_RECIPES[di%PETRETZEAKIS_EGG_RECIPES.length]
+            :{n:'Πρωινό Αυγών (FYH)',g:200};
+        }
+        if(chosen.n==='Πρωινό Αυγών (FYH)'){
+          meal.foods=[{n:'Πρωινό Αυγών (FYH)',g:200},{n:fruit,g:150}];
         } else {
-          meal.foods=[
-            {n:'Πρωινό Αυγών (FYH)',g:200},
-            {n:fruit,g:150}
-          ];
+          meal.foods=[{n:chosen.n,g:chosen.g}];
         }
       }
-    } else {
+    } else if(!EGG_DAYS[di]){
       // Other days → alternate between yogurt and oats Petretzeakis recipes
       if(!hasYogurt){
         var usePetretzeakis=Math.random()<0.7;
@@ -345,7 +383,27 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
     var sig=mealSignature(combo.foods);
     var usedCount=(usedSigs && usedSigs[sig])?usedSigs[sig]:0;
     var trustBonus=getRecipeTrustScore(sig)*targetKcal*0.08;
-    var score=Math.abs(comboKcal-targetKcal) - trustBonus + usedCount*100000;
+    // ✅ MACRO-FIT PENALTY: candidates get portion-scaled to hit targetKcal afterward, but scaling
+    // can't fix a wrong protein/fat RATIO (confirmed live: an avocado+salmon combo scaled down to
+    // the right calories still delivered ~28g fat against a 12.5g target). Compare fat% and protein%
+    // of calories — saved combos already store p/f/c (saveCombo()); taste-library meals don't, so
+    // compute them from foods on the fly (cheap — meals are 2-6 items).
+    var macroPenalty=0;
+    if(targetMacros && targetMacros.f!=null && targetMacros.p!=null && comboKcal>0 && targetKcal>0){
+      var comboP=combo.p, comboF=combo.f;
+      if(comboP==null || comboF==null){
+        var mm={p:0,f:0};
+        combo.foods.forEach(function(fo){var v=cm(fo.n,fo.g);mm.p+=v.p;mm.f+=v.f;});
+        comboP=mm.p; comboF=mm.f;
+      }
+      var targetFatPct=(targetMacros.f*9)/targetKcal;
+      var targetProtPct=(targetMacros.p*4)/targetKcal;
+      var comboFatPct=(comboF*9)/comboKcal;
+      var comboProtPct=(comboP*4)/comboKcal;
+      var macroDeviation=Math.abs(comboFatPct-targetFatPct)+Math.abs(comboProtPct-targetProtPct);
+      macroPenalty=macroDeviation*targetKcal*0.5;
+    }
+    var score=Math.abs(comboKcal-targetKcal) - trustBonus + usedCount*100000 + macroPenalty;
     if(score<bestScore){bestScore=score;best=combo;bestSig=sig;}
   }
   if(!best) return null;
@@ -381,7 +439,7 @@ function getRecipeTrustScore(recipeId){
 
 // ── Chef-Inspired Recipe Selection ────────────────────────────────────────────
 // Finds the best pre-defined recipe for a meal based on diet type and calories
-function findBestRecipe(dietType, targetKcal, mealType, excl){
+function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros){
   // ✅ SNACK DETECTION: If meal name is "Ενδιάμεσο" (Snack), use SNACK_RECIPES
   var isSnack = mealType && mealType.toLowerCase().includes('ενδιάμεσο');
   var recipeDB = isSnack ? SNACK_RECIPES : MEAL_RECIPES;
@@ -472,10 +530,22 @@ function findBestRecipe(dietType, targetKcal, mealType, excl){
   // regenerated away). Trust can only sway ~8% of targetKcal worth of ranking — within the 80-120%
   // calorie window already filtered above, a spot-on but untrusted recipe still beats a borderline
   // one that merely has a perfect track record.
+  // ✅ MACRO-FIT PENALTY: every recipe already carries macro:{p,f,c} — compare its fat%/protein%-of-
+  // calories to the meal's actual target so a recipe that's calorie-close but macro-mismatched
+  // (e.g. a fat-heavy dish for a tight deficit meal) loses to one with a genuinely closer ratio,
+  // same reasoning and weighting as findSavedComboMatch's macroPenalty.
   function recipeScore(r){
     var calDiff = Math.abs(r.kcal-targetKcal);
     var trustBonus = getRecipeTrustScore(r.id) * targetKcal * 0.08;
-    return calDiff - trustBonus;
+    var macroPenalty = 0;
+    if(targetMacros && targetMacros.f!=null && targetMacros.p!=null && r.macro && r.kcal>0 && targetKcal>0){
+      var targetFatPct=(targetMacros.f*9)/targetKcal;
+      var targetProtPct=(targetMacros.p*4)/targetKcal;
+      var rFatPct=(r.macro.f*9)/r.kcal;
+      var rProtPct=(r.macro.p*4)/r.kcal;
+      macroPenalty=(Math.abs(rFatPct-targetFatPct)+Math.abs(rProtPct-targetProtPct))*targetKcal*0.5;
+    }
+    return calDiff - trustBonus + macroPenalty;
   }
   candidates.sort(function(a,b){
     return recipeScore(a) - recipeScore(b);
@@ -1193,12 +1263,13 @@ function genPlan(){
       for(var mi=0;mi<tmplDays[d].length;mi++){
         var meal = tmplDays[d][mi];
         var targetKcal = eff[d].meals[mi].k;  // Per-meal calorie target
+        var targetMacros = eff[d].meals[mi];  // {k,p,f,c} — same object, used for macro-fit scoring below
         var mealSlot = classifyMealSlot(meal.name);
 
         // ⭐ Priority 0: Taste library — real, dietitian-made meals from ⭐ clients
         // (verbatim food combos; portions get scaled to target in PHASE 3D)
         if(mealLibrary.length > 0){
-          var libMeal = findSavedComboMatch(mealLibrary, targetKcal, null, 80, excl, mealSlot, c.dietType, usedComboSigs);
+          var libMeal = findSavedComboMatch(mealLibrary, targetKcal, targetMacros, 80, excl, mealSlot, c.dietType, usedComboSigs);
           if(libMeal && libMeal.foods && libMeal.foods.length > 0){
             meal.foods = deepClone(libMeal.foods);
             if(libMeal.mealTiming) meal.mealTiming = libMeal.mealTiming;
@@ -1210,7 +1281,7 @@ function genPlan(){
         }
 
         // ✨ Priority 1: Check Chef-Inspired Recipes (culinary-sensible combinations)
-        var recipeMeal = findBestRecipe(c.dietType, targetKcal, meal.name, excl);
+        var recipeMeal = findBestRecipe(c.dietType, targetKcal, meal.name, excl, targetMacros);
         if(recipeMeal && recipeMeal.foods && recipeMeal.foods.length > 0){
           meal.foods = deepClone(recipeMeal.foods);
           meal.recipeId = recipeMeal.recipeId;  // Track which recipe was used
@@ -1220,7 +1291,7 @@ function genPlan(){
 
         // Priority 2: Check saved combos (user-approved, slot/diet-aware)
         if(savedCombos && savedCombos.length > 0){
-          var savedMeal = findSavedComboMatch(savedCombos, targetKcal, null, 80, excl, mealSlot, c.dietType, usedComboSigs);
+          var savedMeal = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 80, excl, mealSlot, c.dietType, usedComboSigs);
           if(savedMeal && savedMeal.foods && savedMeal.foods.length > 0){
             meal.foods = deepClone(savedMeal.foods);
             if(savedMeal.mealTiming) meal.mealTiming = savedMeal.mealTiming;
@@ -1232,7 +1303,7 @@ function genPlan(){
 
         // Priority 3: Try smart generation with chef pairing rules
         // Pass meal.name for breakfast-specific constraints, excl for food exclusions, and dietType for diet compliance
-        var smartMeal = generateSmartMeal(targetKcal, null, d, savedCombos, meal.name, excl, c.dietType);
+        var smartMeal = generateSmartMeal(targetKcal, targetMacros, d, savedCombos, meal.name, excl, c.dietType);
         if(smartMeal && smartMeal.foods && smartMeal.foods.length > 0){
           meal.foods = deepClone(smartMeal.foods);
           if(smartMeal.mealTiming) meal.mealTiming = smartMeal.mealTiming;
@@ -1272,7 +1343,7 @@ function genPlan(){
     tmplDays=ensureOilWithVegetables(tmplDays);          // 6ε. εξασφάλιση λαδιού με λαχανικά (βιταμίνες Α,D,E,K λιποδιαλυτές) → ≥10g ελαιόλαδο
     tmplDays=avoidOxalateWithDairy(tmplDays);            // 6στ. αποφυγή σπανακιού + γαλακτοκομικά (οξαλικό ↓ ασβέστιο) → κάλε/μπρόκολο αντί
     tmplDays=ensureOmega3FishIntake(tmplDays);           // 6ζ. προειδοποίηση: ωμέγα-3 από ψάρι ≥2-3x/εβδάδα (ωμέγα-6:3 αναλογία 4:1)
-    tmplDays=normalizeBreakfasts(tmplDays);              // 7. Πρωινό Αυγών (FYH) Δευ/Τετ/Παρ, γιαούρτι+βρώμη αλλού
+    tmplDays=normalizeBreakfasts(tmplDays,eff);          // 7. Πρωινό Αυγών (FYH) Δευ/Τετ/Παρ, γιαούρτι+βρώμη αλλού (fat-target-aware)
     tmplDays=expandFYHRecipes(tmplDays);                 // 8. ανάπτυξη συνταγών σε συστατικά (για πελάτες)
   } else if(isVegan) {
     // For Vegan, only apply safe Mediterranean rules that don't add meat/fish/dairy/eggs

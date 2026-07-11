@@ -1391,6 +1391,11 @@ function detectMicronutrientGaps(weekAnalysis, c){
     else if(tgtKey==='folate')mnKey='Folate';
     else if(tgtKey==='omega3')mnKey='Omega3';
     else if(tgtKey==='vit_d3')mnKey='D3';
+    // 'dha' would default to 'Dha' (only first letter capitalized) via the generic rule above,
+    // which never matches the all-caps 'DHA' key weekTotals/dailyAverage actually use (see
+    // weekTotals init a few lines up in getWeekMicronutrients) — so DHA intake always read as 0
+    // regardless of real diet content, same bug class as the other explicit overrides here.
+    else if(tgtKey==='dha')mnKey='DHA';
 
     var actual=weekAnalysis.dailyAverage[mnKey]||0;
     var pct=Math.round(actual/useTarget*100);
@@ -1438,7 +1443,11 @@ function matchSupplementsToGaps(gaps, supp_opts){
     'B12': 'bcomplex',
     'D3': 'vit_d3',
     'Omega3': 'omega3',
-    'Folate': 'multivit'
+    'Folate': 'multivit',
+    // Iodine has no dedicated SUPPS entry — same 'multivit' catch-all already used for Folate above.
+    'Iodine': 'multivit',
+    // DHA is covered by the same fish-oil product as Omega3 (ALA) — 'omega3' already stocks EPA/DHA.
+    'DHA': 'omega3'
   };
 
   var recommendations=[];
@@ -1897,7 +1906,33 @@ function scalePlan(tmpl,tgt,mealTargets){
       var ratioK=targetK/mealTot.k;
       var ratioP=(targetP>0&&mealTot.pt>0)?targetP/mealTot.pt:ratioK;
       var ratioC=(targetC>0&&mealTot.c>0)?targetC/mealTot.c:ratioK;
-      var ratioF=(targetF>0&&mealTot.f>0)?targetF/mealTot.f:ratioK;
+
+      // ✅ FAT-DRIFT FIX: ratioF used to be targetF/mealTot.f — i.e. computed as if 'Λάδια'/'Ξηροί
+      // καρποί' foods were the ONLY source of fat in the meal. In real meals most fat actually comes
+      // from protein-category foods (meat/fish/eggs/dairy — MACRO_TYPE 'p'), which get scaled by
+      // ratioP (driven by the protein target, not the fat target) a few lines below. So the old ratioF
+      // was sized to close a fat gap that protein foods were already going to close (or blow past) on
+      // their own — confirmed live: generated plans delivered +14% to +56% more fat than the target
+      // across every tested client profile, worst in calorie-deficit scenarios. Fix: project how much
+      // fat the OTHER categories will contribute once scaled by their own ratios first, then size
+      // ratioF so the fat-category foods fill only the REMAINING gap to targetF (same "remainder"
+      // principle calcTDEE() already uses for carbG — see its comment on exact calorie matching).
+      var fatFromFatCat=0,projectedFatFromOthers=0;
+      m.foods.forEach(function(f){
+        var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+        var mt=MACRO_TYPE[cat]||'k';
+        var v=cm(f.n,f.g);
+        if(mt==='f'){fatFromFatCat+=v.f;}
+        else{projectedFatFromOthers+=v.f*(mt==='p'?ratioP:mt==='c'?ratioC:ratioK);}
+      });
+      var ratioF;
+      if(targetF>0&&fatFromFatCat>0){
+        ratioF=(targetF-projectedFatFromOthers)/fatFromFatCat; // may go negative — the SCALE_CATS cap below floors it sanely
+      } else if(targetF>0&&mealTot.f>0){
+        ratioF=targetF/mealTot.f; // no fat-category food in this meal — value is moot, nothing will use it
+      } else {
+        ratioF=ratioK;
+      }
 
       // Scale foods in this meal
       m.foods.forEach(function(f){
@@ -1948,7 +1983,26 @@ function scalePlan(tmpl,tgt,mealTargets){
   var ratioK=targetK/tot.k;
   var ratioP=(targetP>0&&tot.pt>0)?targetP/tot.pt:ratioK;
   var ratioC=(targetC>0&&tot.c>0)?targetC/tot.c:ratioK;
-  var ratioF=(targetF>0&&tot.f>0)?targetF/tot.f:ratioK;
+
+  // ✅ FAT-DRIFT FIX — same reasoning as the per-meal branch above: size ratioF off the fat
+  // REMAINING after protein/carb/fallback foods are scaled by their own ratios, not off tot.f
+  // (which double-counts fat that protein-category foods already carry).
+  var fatFromFatCat=0,projectedFatFromOthers=0;
+  p.forEach(function(m){m.foods.forEach(function(f){
+    var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+    var mt=MACRO_TYPE[cat]||'k';
+    var v=cm(f.n,f.g);
+    if(mt==='f'){fatFromFatCat+=v.f;}
+    else{projectedFatFromOthers+=v.f*(mt==='p'?ratioP:mt==='c'?ratioC:ratioK);}
+  });});
+  var ratioF;
+  if(targetF>0&&fatFromFatCat>0){
+    ratioF=(targetF-projectedFatFromOthers)/fatFromFatCat;
+  } else if(targetF>0&&tot.f>0){
+    ratioF=targetF/tot.f;
+  } else {
+    ratioF=ratioK;
+  }
 
   p.forEach(function(m){
     m.foods.forEach(function(f){
