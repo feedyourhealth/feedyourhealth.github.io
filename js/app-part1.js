@@ -1623,8 +1623,14 @@ function calcTDEE(c){
     }
     // Priority 2: Calculated FFM from Body Fat %
     else if((c.bf || 0)>0 && c.weight>0){
-      // Calculate FFM from body fat percentage
-      var ffm=c.weight*(1-(c.bf/100));
+      // Calculate FFM from body fat percentage — σε εγκυμοσύνη χρησιμοποιούμε το βάρος
+      // προ εγκυμοσύνης, ίδιο σκεπτικό με το Mifflin-St Jeor fallback παρακάτω (η φόρμουλα
+      // δεν είναι επικυρωμένη πάνω σε εγκυμονούσα φυσιολογία με το τρέχον βάρος)
+      var ffmW=(c.pregnant&&c.prePregnancyWeight>0)?c.prePregnancyWeight:c.weight;
+      // Clamp to the same physiological range as the #inp-bf field (min="3" max="60") — the
+      // HTML attribute doesn't stop a typed (non-spinner) value from reaching here unclamped.
+      var bfClamped=Math.max(3,Math.min(60,c.bf));
+      var ffm=ffmW*(1-(bfClamped/100));
       // Katch-McArdle using calculated FFM
       bmr=370+21.6*ffm;
       t.bmrMethod='Katch-McArdle (Calc FFM)';
@@ -3322,11 +3328,11 @@ function buildPlanHistoryHtmlInner(c){
           for(var mi=0;mi<plan.weekPlan[d].length;mi++){
             var meal=plan.weekPlan[d][mi];
             html+='<div style="margin-top:4px;padding:4px;background:#fff;border-radius:3px">'
-              +'<strong>'+meal.name+':</strong> ';
+              +'<strong>'+esc(meal.name)+':</strong> ';
             if(meal.foods){
               var foodNames=[];
               for(var fi=0;fi<meal.foods.length;fi++){
-                foodNames.push(meal.foods[fi].n+' ('+meal.foods[fi].g+'g)');
+                foodNames.push(esc(meal.foods[fi].n)+' ('+meal.foods[fi].g+'g)');
               }
               html+=foodNames.join(', ');
             }

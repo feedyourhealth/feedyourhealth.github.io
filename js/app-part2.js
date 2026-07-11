@@ -727,14 +727,6 @@ function makeDayTgtDefaults(c,t){
     // Carb boost: REDISTRIBUTE (don't add calories)
     // On training days: add extra carbs, subtract from fat to keep total kcal same
     var extraC=isT?Math.round(t.carb*boost*(t.usedMET?1:hScale)):0;
-    var dayP=t.p;
-    var dayF=t.f;
-    var dayC=t.carb+extraC;
-    if(extraC>0){
-      // Reduce fat by the carb increase amount (carbs are 4kcal/g, fat is 9kcal/g)
-      var kcalFromExtraC=extraC*4;
-      dayF=Math.max(0,Math.round(dayF-(kcalFromExtraC/9)));
-    }
     // MET active: use precise per-day kcal from assigned activities
     // With carb boost=0%, all days should have same kcal (no redistribution across days)
     var dayKcal;
