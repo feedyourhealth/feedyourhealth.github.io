@@ -1103,8 +1103,14 @@ function genPlan(){
   // baked into what should've been a low-carb plan).
   var TMPL_DIET_PREFIX={keto:'ketogenic'};
   var tmplDietPrefix=TMPL_DIET_PREFIX[c.dietType]||c.dietType;
-  var templateKey = (c.dietType && c.dietType !== 'normal') ? (tmplDietPrefix + '_' + c.goal) : c.goal;
-  console.log('Template lookup - templateKey:', templateKey, 'dietType:', c.dietType, 'goal:', c.goal);
+  // ✅ Templates are keyed by the WORD goal code (loss/mild/maintain/gain — c.goalMain), not the
+  // numeric kcal-delta string (c.goal, e.g. "-500"). Using c.goal here meant this lookup (and the
+  // c.goal fallback below) never matched anything, so every client silently fell through to the
+  // 'maintain'/'_maintain' template regardless of their actual goal — only portions were scaled
+  // per-goal afterward, not the template's food structure. Same bug class already fixed for the
+  // goal-label lookups and the client-list goal filter.
+  var templateKey = (c.dietType && c.dietType !== 'normal') ? (tmplDietPrefix + '_' + c.goalMain) : c.goalMain;
+  console.log('Template lookup - templateKey:', templateKey, 'dietType:', c.dietType, 'goalMain:', c.goalMain);
 
   var tmpl=TMPLS[templateKey]||TMPLS[c.dietType]||TMPLS[tmplDietPrefix];
   // This diet type has SOME dedicated template(s), just not for this exact goal (e.g. keto has
@@ -1117,7 +1123,7 @@ function genPlan(){
       return !!tmpl;
     });
   }
-  tmpl = tmpl || TMPLS[c.goal] || TMPLS.maintain;
+  tmpl = tmpl || TMPLS[c.goalMain] || TMPLS.maintain;
   console.log('Template found (tmpl):', tmpl ? 'YES - has ' + (tmpl.length || '?') + ' days' : 'NO - tmpl is', tmpl);
 
   if(!tmpl){
