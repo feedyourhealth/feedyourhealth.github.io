@@ -2631,7 +2631,7 @@ function renderSB(){
   var base=clients.filter(function(c){return !c.deleted && !c.archived;});
   var list=base.filter(function(c){
     if(term && (c.name||'Νέος πελάτης').toLowerCase().indexOf(term)===-1) return false;
-    if(_clientFilterGoal && c.goal!==_clientFilterGoal) return false;
+    if(_clientFilterGoal && c.goalMain!==_clientFilterGoal) return false;
     if(_clientFilterSport && c.sport!==_clientFilterSport) return false;
     return true;
   });
