@@ -1545,7 +1545,7 @@ function buildTrackerHtml(c){
     +'<div class="sf-panel" id="sf-panel">'
     +'<div class="sf-header" onclick="toggleSkinfoldPanel()">'
     +'<span>📐 Δερματοπτυχόμετρο <span style="font-size:10px;font-weight:400;color:#888">&nbsp;— υπολογισμός %BF από δερματοπτυχές</span></span>'
-    +'<span id="sf-toggle-icon" style="font-size:11px;color:#888;font-weight:400">▼ άνοιγμα</span>'
+    +'<span id="sf-toggle-icon" class="sec-chevron">▸</span>'
     +'</div>'
     +'<div id="sf-body" style="display:none;padding-top:10px">'
     +(isMinorC?'<div style="font-size:10px;color:#e65100;background:#fff8e1;border-radius:5px;padding:4px 8px;margin-bottom:8px">👶 Ηλικία &lt;18 — προεπιλογή Slaughter (1988), ειδική εξίσωση για παιδιά/εφήβους</div>':'')
@@ -1866,7 +1866,7 @@ function toggleSkinfoldPanel(){
   if(!body)return;
   var isOpen=body.style.display!=='none';
   body.style.display=isOpen?'none':'block';
-  if(icon)icon.textContent=isOpen?'▼ άνοιγμα':'▲ κλείσιμο';
+  if(icon)icon.classList.toggle('open',!isOpen);
   if(!isOpen)updateSkinfoldFields();
 }
 
@@ -3416,7 +3416,7 @@ function standardizeMediterraneanSnacks(days){
       }
       // Add nuts/dried fruits if missing - rotate variety
       if(!hasNuts){
-        var nutsVariety=['Αμύγδαλα','Καρύδια','Φιστίκια','Κομπόστα σταφίδας'];
+        var nutsVariety=['Αμύγδαλα','Καρύδια','Φιστίκια'];
         var selectedNut=nutsVariety[di%nutsVariety.length];
         var nutGrams=25; // Mediterranean standard: 25-30g nuts/day
         meal.foods.push({n:selectedNut,g:nutGrams});
