@@ -887,8 +887,8 @@ body.dark-mode .tooltip-text {
    intentionally NOT carried forward (they were already fully overridden before this fix,
    confirmed live): a `.main{padding-bottom:70px}` mobile rule that a later unconditional
    `.main{padding:14px 16px}` was already nullifying (so bottom-nav clearance was never
-   actually happening — flagged separately, out of scope for this fix), and a `.stab{...}`
-   rule beaten on specificity by `.stabs button{...}` at every width.
+   actually happening — fixed 2026-07-12, see the MOBILE/SMALL PHONES tiers below), and a
+   `.stab{...}` rule beaten on specificity by `.stabs button{...}` at every width.
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 /* BASE: Desktop (1024px+) */
@@ -922,7 +922,7 @@ html{font-size:16px}
   .app{flex-direction:column}
   .sb{display:none}
   .bottom-nav{display:flex}
-  .main{flex:1;overflow-y:auto}
+  .main{flex:1;overflow-y:auto;padding-bottom:70px}
   .fab{width:48px;height:48px;bottom:70px;font-size:20px}
 
   /* Font sizing */
@@ -1045,7 +1045,7 @@ html{font-size:16px}
     padding:6px 8px;
   }
 
-  .main{padding:8px 10px}
+  .main{padding:8px 10px 70px}
   .app{gap:0}
   .sb-title{font-size:12px}
   .client-card{font-size:11px}
