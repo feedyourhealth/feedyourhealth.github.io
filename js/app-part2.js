@@ -817,12 +817,23 @@ function allocateMealTargets(dailyTarget, numMeals, mealTiming) {
   }
 
   var targets = [];
-  for (var i = 0; i < Math.min(numMeals, mealAlloc.length); i++) {
+  var n = Math.min(numMeals, mealAlloc.length);
+  // ✅ RE-NORMALIZE when the day has fewer than 5 meals (e.g. intermittent_fasting's 3-meal
+  // eating-window template): taking a raw prefix of the 5-slot percentages (e.g. 22+28+25=75%
+  // for 3 meals) silently left the remaining 25% of the daily target completely unallocated —
+  // confirmed live as the primary cause of intermittent_fasting plans running ~26-30% under
+  // target every day, regardless of goal. Scaling the used slice back up to sum to 100% means
+  // every meal still gets its original *relative* weight, just against the client's real total.
+  var usedSum = 0;
+  for (var s = 0; s < n; s++) usedSum += mealAlloc[s];
+  var norm = usedSum > 0 ? (1 / usedSum) : 1;
+  for (var i = 0; i < n; i++) {
+    var pct = mealAlloc[i] * norm;
     targets.push({
-      k: Math.round(dailyTarget.k * mealAlloc[i]),
-      p: Math.round(dailyTarget.p * mealAlloc[i]),
-      f: Math.round(dailyTarget.f * mealAlloc[i]),
-      c: Math.round(dailyTarget.c * mealAlloc[i])
+      k: Math.round(dailyTarget.k * pct),
+      p: Math.round(dailyTarget.p * pct),
+      f: Math.round(dailyTarget.f * pct),
+      c: Math.round(dailyTarget.c * pct)
     });
   }
 
