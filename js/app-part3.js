@@ -795,18 +795,10 @@ function reorderMealsToStandardSequence(tmplDays){
 
 // Helper function: Clone and scale a client's plan as basis
 function cloneAndScaleClientPlan(baseCId, newClient, newTDEE) {
-  console.log('=== cloneAndScaleClientPlan DEBUG ===');
-  console.log('Looking for base client ID:', baseCId);
-  console.log('All clients:', clients);
-
   var baseClient=null;
   clients.forEach(function(cl){
-    console.log('Checking client:', cl.name, 'ID:', cl.id, 'weekPlan keys:', Object.keys(cl.weekPlan||{}));
     if(cl.id===baseCId)baseClient=cl;
   });
-
-  console.log('Found baseClient:', baseClient);
-  if(baseClient)console.log('baseClient.weekPlan:', baseClient.weekPlan);
 
   if(!baseClient){
     console.warn('Basis client not found!');
@@ -817,15 +809,12 @@ function cloneAndScaleClientPlan(baseCId, newClient, newTDEE) {
   var hasWeekPlan = baseClient.weekPlan && (Object.keys(baseClient.weekPlan).length > 0 || baseClient.weekPlan[0]);
   if(!hasWeekPlan){
     console.warn('Basis client has no weekPlan data!');
-    console.log('baseClient.weekPlan:', baseClient.weekPlan);
     return null;
   }
 
   // Calculate TDEE ratio for scaling
   var baseTDEE=calcTDEE(baseClient);
-  console.log('Base TDEE:', baseTDEE.target, '| New TDEE:', newTDEE.target);
   var tdeeRatio=newTDEE.target / (baseTDEE.target||1);
-  console.log('TDEE Ratio:', tdeeRatio);
 
   // Deep clone the base client's weekPlan and scale portions
   var scaledPlan={};
@@ -854,8 +843,6 @@ function cloneAndScaleClientPlan(baseCId, newClient, newTDEE) {
     });
   }
 
-  console.log('Cloned and scaled plan:', scaledPlan);
-  console.log('Scaled plan day 0 meals:', scaledPlan[0] ? scaledPlan[0].length + ' meals' : 'No day 0');
   return scaledPlan;
 }
 
@@ -1063,9 +1050,7 @@ function genPlan(){
   var isClientPlan=c.selectedTemplate && c.selectedTemplate.indexOf('__client_')===0;
   if(isClientPlan){
     var baseCId=c.selectedTemplate.replace('__client_','');
-    console.log('Attempting to clone plan from client:', baseCId);
     var clonedPlan=cloneAndScaleClientPlan(baseCId, c, t);
-    console.log('Cloned plan result:', clonedPlan);
     if(clonedPlan){
       c.weekPlan=clonedPlan;
       // Apply food exclusions to the cloned plan
@@ -1163,8 +1148,6 @@ function genPlan(){
 
   // Original template-based plan generation
   // Build template key: dietType_goal (e.g., 'vegetarian_loss') or just goal (e.g., 'loss')
-  console.log('CLIENT DATA:', {dietType: c.dietType, goal: c.goal, selectedTemplate: c.selectedTemplate});
-  console.log('AVAILABLE TEMPLATES IN TMPLS:', Object.keys(TMPLS));
 
   // Diet-type -> TMPLS key prefix. Almost always identical to dietType, EXCEPT keto: its
   // templates are historically named with the 'ketogenic' prefix (TMPLS.ketogenic_mild etc.),
@@ -1180,7 +1163,6 @@ function genPlan(){
   // per-goal afterward, not the template's food structure. Same bug class already fixed for the
   // goal-label lookups and the client-list goal filter.
   var templateKey = (c.dietType && c.dietType !== 'normal') ? (tmplDietPrefix + '_' + c.goalMain) : c.goalMain;
-  console.log('Template lookup - templateKey:', templateKey, 'dietType:', c.dietType, 'goalMain:', c.goalMain);
 
   var tmpl=TMPLS[templateKey]||TMPLS[c.dietType]||TMPLS[tmplDietPrefix];
   // This diet type has SOME dedicated template(s), just not for this exact goal (e.g. keto has
@@ -1194,14 +1176,12 @@ function genPlan(){
     });
   }
   tmpl = tmpl || TMPLS[c.goalMain] || TMPLS.maintain;
-  console.log('Template found (tmpl):', tmpl ? 'YES - has ' + (tmpl.length || '?') + ' days' : 'NO - tmpl is', tmpl);
 
   if(!tmpl){
     throw new Error('Δεν υπάρχει κατάλληλο πρότυπο για dietType=' + c.dietType + ' goal=' + c.goal);
   }
 
   if(c.selectedTemplate){
-    console.log('Custom template selected:', c.selectedTemplate);
     if(c.selectedTemplate.indexOf('__kcal_')===0){
       var kcalKey=c.selectedTemplate.replace('__kcal_','');
       if(TMPLS[kcalKey])tmpl=TMPLS[kcalKey];
@@ -1214,7 +1194,6 @@ function genPlan(){
   // Build base day array
   var tmplDays=[];
   for(var d=0;d<7;d++)tmplDays.push(tmpl[d]||tmpl[0]);
-  console.log('tmplDays built:', tmplDays.length, 'days');
   var excl=c.foodExclude||[];
   // ⚕️ Active medical protocols' avoidFoods (union across all active conditions, see top of genPlan())
   protocolAvoidFoods.forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
@@ -1236,16 +1215,11 @@ function genPlan(){
   // Initial Mediterranean pipeline on templates ONLY
   tmplDays=removeFYHFromMainMeals(tmplDays);           // 0. FYH έξω από κύρια γεύματα (χειροκίνητα)
   tmplDays=removeOatsFromMainMeals(tmplDays);          // 0β. Βρώμη ΜΟΝΟ σε πρωινό (χειροκίνητα)
-  console.log('About to call getDayTgtEff with c=', c, 't=', t);
   var eff=getDayTgtEff(c,t);
-  console.log('getDayTgtEff returned:', eff, 'is Array?', Array.isArray(eff));
 
   // ✅ PHASE 3A: HYBRID SYSTEM — Allocate per-meal targets from daily totals
-  console.log('PHASE 3A: About to allocate meal targets. eff=', eff);
   for(var d=0;d<7;d++){
-    console.log('Day', d, '- eff[d]=', eff[d], 'tmplDays[d].length=', tmplDays[d].length);
     eff[d].meals = allocateMealTargets(eff[d], tmplDays[d].length);
-    console.log('Day', d, '- meals allocated:', eff[d].meals);
   }
 
   // ✅ PHASE 3B: TRY SMART GENERATION WITH 3-PRIORITY FALLBACK

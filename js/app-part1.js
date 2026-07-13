@@ -488,9 +488,6 @@ function validateAllCalculations(c){
 // Audit logging
 function logValidation(c){
   var audit=validateAllCalculations(c);
-  console.log('═══════════════════════════════════════════════════════════════');
-  console.log('📊 VALIDATION AUDIT: '+c.name);
-  console.log('═══════════════════════════════════════════════════════════════');
   Object.keys(audit.results).forEach(function(key){
     var r=audit.results[key];
     var icon=r.result.ok?'✓':'✗';
@@ -2344,7 +2341,6 @@ function addClient(prefillName){
     } else {
       clients.push(newClient);
       upd(); // Save to localStorage
-      console.log('✅ Νέος πελάτης δημιουργήθηκε:', newClient);
     }
 
     selectClient(id);
@@ -2469,9 +2465,6 @@ function selectClient(id){
     // Hide FAB menu
     var fabMenu = document.getElementById('fab-menu');
     if(fabMenu) fabMenu.style.display = 'none';
-
-    console.log('✅ Πελάτης επιλέχθηκε:', id);
-    console.log('✅ Πελάτης δεδομένα:', getC());
   } catch(e) {
     console.error('❌ Σφάλμα στη επιλογή πελάτη:', e.message);
     console.error('Stack:', e.stack);
@@ -2913,14 +2906,10 @@ function buildTmplSelectorHtml(c){
     opts+='<option value="'+ct.id+'"'+(sel===ct.id?' selected':'')+'>⭐ '+esc(ct.name)+' — '+gl+' ('+esc(ct.createdAt)+')</option>';
   });
   // Existing clients' plans (as basis for new plans)
-  console.log('Building template selector. Total clients:', clients.length);
-  console.log('Current client ID:', c.id);
   var clientsWithPlans=clients.filter(function(cl){
     var hasWeekPlan=Object.keys(cl.weekPlan||{}).length>0;
-    console.log('Client:', cl.name||'Νέος πελάτης', '| ID:', cl.id, '| Has weekPlan:', hasWeekPlan, '| weekPlan keys:', Object.keys(cl.weekPlan||{}));
     return cl.id!==c.id && hasWeekPlan;
   });
-  console.log('Clients with plans (excluding current):', clientsWithPlans.length);
   if(clientsWithPlans.length>0){
     opts+='<optgroup label="━━━ Υπάρχοντα πλάνα πελατών ━━━">';
     clientsWithPlans.forEach(function(cl){

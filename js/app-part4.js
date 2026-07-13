@@ -2039,15 +2039,12 @@ function openSupplementModal(){
     // ═════ GENERATE DYNAMIC RECOMMENDATIONS FROM GAP ANALYSIS ═════
     console.log('[DEBUG] openSupplementModal - Calling getWeekMicronutrients');
     var weekAnalysis=getWeekMicronutrients(c.weekPlan);
-    console.log('[DEBUG] openSupplementModal - weekAnalysis:', weekAnalysis);
 
     console.log('[DEBUG] openSupplementModal - Calling detectMicronutrientGaps');
     var gaps=detectMicronutrientGaps(weekAnalysis, c);
-    console.log('[DEBUG] openSupplementModal - gaps detected:', gaps);
 
     console.log('[DEBUG] openSupplementModal - Calling matchSupplementsToGaps');
     var gapBasedRecs=matchSupplementsToGaps(gaps, SUPPS);
-    console.log('[DEBUG] openSupplementModal - gapBasedRecs:', gapBasedRecs);
 
     // ═════ COMBINE WITH STATIC RECOMMENDATIONS ═════
     console.log('[DEBUG] openSupplementModal - Calling buildDynamicSupplementHtml');
@@ -2446,7 +2443,6 @@ function logPlanGeneration(client, weekPlan){
 
   TRACKING_DATA.plans.push(planLog);
   saveTrackingData();
-  console.log('Plan logged:', client.name);
 }
 
 // Track when plan is regenerated (negative signal)
