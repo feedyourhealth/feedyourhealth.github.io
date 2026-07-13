@@ -305,10 +305,23 @@ function renderRecipes(){
 var _newRecipeIngredientCount=0;
 var _newRecipeSelectedTags=[];
 
+// Το datalist περιορίζει (μέσω προτάσεων + validation στο saveNewRecipe) τα ονόματα υλικών σε
+// πραγματικά κλειδιά της βάσης FOODS — χωρίς αυτό, ένα ελεύθερο όνομα σαν "Κοτόπουλο" (αντί για
+// "Κοτόπουλο στήθος (ψητό)") θα υπολόγιζε 0 θερμίδες σιωπηλά όταν αργότερα χρησιμοποιηθεί το
+// scaler/swap (και τα δύο ψάχνουν στη FOODS με το ακριβές όνομα μέσω cm()).
+function ensureFoodNameDatalist(){
+  if(document.getElementById('fyh-food-names')) return;
+  var dl=document.createElement('datalist');
+  dl.id='fyh-food-names';
+  dl.innerHTML=Object.keys(FOODS).sort(function(a,b){return a.localeCompare(b,'el');}).map(function(n){
+    return '<option value="'+esc(n)+'"></option>';
+  }).join('');
+  document.body.appendChild(dl);
+}
 function newRecipeIngredientRowHtml(idx){
   return '<div class="nr-ing-row" id="nr-ing-row-'+idx+'">'
-    +'<input type="text" class="nr-ing-name" placeholder="Υλικό (π.χ. Στήθος κοτόπουλου)" aria-label="Όνομα υλικού">'
-    +'<input type="number" class="nr-ing-g" placeholder="γρ." aria-label="Γραμμάρια" min="0">'
+    +'<input type="text" class="nr-ing-name" list="fyh-food-names" placeholder="Υλικό (π.χ. Κοτόπουλο στήθος (ψητό))" aria-label="Όνομα υλικού" oninput="recomputeNewRecipeMacros()">'
+    +'<input type="number" class="nr-ing-g" placeholder="γρ." aria-label="Γραμμάρια" min="0" oninput="recomputeNewRecipeMacros()">'
     +'<button type="button" class="nr-ing-remove" title="Αφαίρεση" aria-label="Αφαίρεση υλικού" onclick="removeNewRecipeIngredientRow('+idx+')">×</button>'
     +'</div>';
 }
@@ -321,6 +334,37 @@ function addNewRecipeIngredientRow(){
 function removeNewRecipeIngredientRow(idx){
   var row=document.getElementById('nr-ing-row-'+idx);
   if(row) row.remove();
+  recomputeNewRecipeMacros();
+}
+
+// Θερμίδες/μακροθρεπτικά της νέας συνταγής υπολογίζονται αυτόματα από τα υλικά (cm() πάνω στη
+// βάση FOODS) — όχι πια χειροκίνητη εισαγωγή, ώστε να μην μπορούν ποτέ να αποκλίνουν από τα
+// πραγματικά υλικά. Ίδιος υπολογισμός εδώ (ζωντανή προεπισκόπηση) και στο saveNewRecipe() (τελική
+// τιμή που αποθηκεύεται), ώστε να μη διαφέρουν ποτέ.
+function computeNewRecipeMacroTotals(){
+  var totals={k:0,p:0,f:0,c:0};
+  document.querySelectorAll('#nr-ingredients .nr-ing-row').forEach(function(row){
+    var nEl=row.querySelector('.nr-ing-name');
+    var gEl=row.querySelector('.nr-ing-g');
+    var n=(nEl&&nEl.value||'').trim();
+    var g=parseInt(gEl&&gEl.value,10)||0;
+    if(!n||g<=0) return;
+    var known=!!FOODS[n]||(typeof FOOD_ALIASES!=='undefined'&&!!FOOD_ALIASES[n]);
+    if(!known) return;
+    var v=cm(n,g);
+    totals.k+=v.k; totals.p+=v.p; totals.f+=v.f; totals.c+=v.c;
+  });
+  return totals;
+}
+function recomputeNewRecipeMacros(){
+  var el=document.getElementById('nr-macro-summary');
+  if(!el) return;
+  var totals=computeNewRecipeMacroTotals();
+  if(totals.k<=0){
+    el.textContent='Πρόσθεσε υλικά με γραμμάρια για αυτόματο υπολογισμό θερμίδων.';
+    return;
+  }
+  el.textContent=Math.round(totals.k)+' kcal  ·  Π '+Math.round(totals.p)+'g  ·  Υ '+Math.round(totals.c)+'g  ·  Λ '+Math.round(totals.f)+'g';
 }
 function toggleNewRecipeTag(key){
   var el=document.getElementById('nr-tag-'+key);
@@ -336,17 +380,13 @@ function newRecipeModalHtml(){
   return '<div class="recipe-modal-content nr-modal-content">'
     +'<div class="recipe-modal-title"><span>Νέα συνταγή</span><button class="recipe-modal-close" onclick="closeNewRecipeModal()">&times;</button></div>'
     +'<div class="nr-field"><label>Όνομα συνταγής</label><input type="text" id="nr-name" placeholder="π.χ. Ομελέτα με σπανάκι"></div>'
-    +'<div class="nr-macro-grid">'
-    +'<div class="nr-field"><label>Θερμίδες</label><input type="number" id="nr-kcal" min="0" placeholder="420"></div>'
-    +'<div class="nr-field"><label>Πρωτ. (g)</label><input type="number" id="nr-p" min="0" placeholder="35"></div>'
-    +'<div class="nr-field"><label>Υδατ. (g)</label><input type="number" id="nr-c" min="0" placeholder="30"></div>'
-    +'<div class="nr-field"><label>Λίπη (g)</label><input type="number" id="nr-f" min="0" placeholder="14"></div>'
-    +'</div>'
     +'<div class="nr-field"><label>Χρόνος προετοιμασίας (λεπτά)</label><input type="number" id="nr-prep" min="0" placeholder="15" style="width:120px"></div>'
     +'<div class="nr-field"><label>Ετικέτες</label><div class="rcp-chips">'+tagPills+'</div></div>'
     +'<div class="nr-field"><label>Υλικά</label><div id="nr-ingredients">'
       +[0,1,2].map(newRecipeIngredientRowHtml).join('')
     +'</div><button type="button" class="nr-add-ing" onclick="addNewRecipeIngredientRow()">+ Πρόσθεσε υλικό</button></div>'
+    +'<div class="nr-field"><label>Θερμίδες &amp; μακροθρεπτικά (αυτόματος υπολογισμός από τα υλικά)</label>'
+      +'<div class="nr-macro-summary" id="nr-macro-summary">Πρόσθεσε υλικά με γραμμάρια για αυτόματο υπολογισμό θερμίδων.</div></div>'
     +'<div class="nr-field"><label>Οδηγίες παρασκευής</label><textarea id="nr-instructions" rows="3" placeholder="Περίγραψε τα βήματα παρασκευής..."></textarea></div>'
     +'<div id="nr-error" class="nr-error"></div>'
     +'<button type="button" class="nr-save-btn" onclick="saveNewRecipe()">💾 Αποθήκευσε συνταγή</button>'
@@ -358,6 +398,7 @@ function openNewRecipeModal(){
     if(typeof showErrorToast==='function') showErrorToast('Χρειάζεται σύνδεση στο cloud για να αποθηκεύσεις δικές σου συνταγές');
     return;
   }
+  ensureFoodNameDatalist();
   _newRecipeIngredientCount=3;
   _newRecipeSelectedTags=[];
   var modal=document.getElementById('recipe-form-modal');
@@ -381,25 +422,39 @@ function closeNewRecipeModal(){
 function saveNewRecipe(){
   var errorEl=document.getElementById('nr-error');
   var name=(document.getElementById('nr-name').value||'').trim();
-  var kcal=parseInt(document.getElementById('nr-kcal').value,10)||0;
-  var p=parseInt(document.getElementById('nr-p').value,10)||0;
-  var c=parseInt(document.getElementById('nr-c').value,10)||0;
-  var f=parseInt(document.getElementById('nr-f').value,10)||0;
   var prep=parseInt(document.getElementById('nr-prep').value,10)||null;
   var instructions=(document.getElementById('nr-instructions').value||'').trim();
 
   var foods=[];
+  var unknownNames=[];
   document.querySelectorAll('#nr-ingredients .nr-ing-row').forEach(function(row){
     var nEl=row.querySelector('.nr-ing-name');
     var gEl=row.querySelector('.nr-ing-g');
     var n=(nEl&&nEl.value||'').trim();
     var g=parseInt(gEl&&gEl.value,10)||0;
-    if(n && g>0) foods.push({n:n,g:g});
+    if(n && g>0){
+      foods.push({n:n,g:g});
+      // Πρέπει να ταιριάζει ΑΚΡΙΒΩΣ με κλειδί του FOODS (ή γνωστό alias) — αλλιώς το scaler/swap
+      // θα το υπολογίσουν αργότερα ως 0 θερμίδες αντί να δείξουν σφάλμα σε αυτό εδώ το σημείο.
+      var known=!!FOODS[n]||(typeof FOOD_ALIASES!=='undefined'&&!!FOOD_ALIASES[n]);
+      if(!known) unknownNames.push(n);
+    }
   });
 
   if(!name){ if(errorEl) errorEl.textContent='Χρειάζεται όνομα συνταγής.'; return; }
   if(!foods.length){ if(errorEl) errorEl.textContent='Πρόσθεσε τουλάχιστον ένα υλικό με γραμμάρια.'; return; }
+  if(unknownNames.length){
+    if(errorEl) errorEl.textContent='Άγνωστο υλικό: «'+unknownNames.join('», «')+'». Διάλεξε από τις προτάσεις (ξεκίνα να γράφεις και εμφανίζονται) ή διόρθωσε το όνομα ώστε να ταιριάζει ακριβώς.';
+    return;
+  }
   if(errorEl) errorEl.textContent='';
+
+  var totals={k:0,p:0,f:0,c:0};
+  foods.forEach(function(fd){
+    var v=cm(fd.n,fd.g);
+    totals.k+=v.k; totals.p+=v.p; totals.f+=v.f; totals.c+=v.c;
+  });
+  var kcal=Math.round(totals.k), p=Math.round(totals.p), c=Math.round(totals.c), f=Math.round(totals.f);
 
   var saveBtn=document.querySelector('#recipe-form-modal .nr-save-btn');
   if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='Αποθήκευση...'; }
@@ -448,6 +503,9 @@ function recipeDetailModalHtml(recipe){
     +instructionsHtml
     +'<button type="button" class="rcp-add-btn rd-shop-btn" onclick="toggleRecipeShoppingList(\''+recipe.id+'\')">🛒 <span id="rd-shop-label-'+recipe.id+'">Πρόσθεσε στη λίστα αγορών</span></button>'
     +'<div id="rd-shop-panel-'+recipe.id+'" class="rd-shop-panel" style="display:none"></div>'
+    // Διαγραφή μόνο για δικές σου (custom) συνταγές — οι στατικές MEAL_RECIPES/SNACK_RECIPES δεν
+    // διαγράφονται ποτέ από εδώ.
+    +(recipe.source==='custom'?'<button type="button" class="rd-delete-btn" onclick="confirmDeleteCustomRecipe(\''+recipe.id+'\')">🗑️ Διαγραφή συνταγής</button>':'')
     +'</div>';
 }
 
@@ -582,4 +640,32 @@ function recomputeModalTotals(recipeId){
   if(cOut) cOut.textContent='Υ'+Math.round(totals.c);
   var fOut=document.getElementById('rcp-scale-f-modal-'+recipeId);
   if(fOut) fOut.textContent='Λ'+Math.round(totals.f);
+}
+
+// ── Διαγραφή δικής σου συνταγής. Χρησιμοποιεί το ήδη υπάρχον στυλιζαρισμένο confirm dialog του
+// app (showConfirmDialog, js/app-part2.js) αντί για native confirm(), ίδιο ύφος με άλλες
+// καταστροφικές ενέργειες (π.χ. διαγραφή πελάτη). ──
+function confirmDeleteCustomRecipe(recipeId){
+  var recipe=findRecipeById(recipeId);
+  if(!recipe) return;
+  var doDelete=function(){ deleteCustomRecipeNow(recipeId); };
+  if(typeof showConfirmDialog==='function'){
+    showConfirmDialog('Θα διαγραφεί οριστικά η συνταγή «'+recipe.name+'». Δεν μπορεί να αναιρεθεί.', doDelete, {title:'Διαγραφή συνταγής', confirmLabel:'Διαγραφή'});
+  } else if(window.confirm('Θα διαγραφεί οριστικά η συνταγή «'+recipe.name+'». Συνέχεια;')){
+    doDelete();
+  }
+}
+function deleteCustomRecipeNow(recipeId){
+  var recipe=findRecipeById(recipeId);
+  if(!recipe || !recipe.dbId){ return; }
+  if(!window.Cloud || typeof window.Cloud.deleteCustomRecipe!=='function') return;
+  window.Cloud.deleteCustomRecipe(recipe.dbId).then(function(result){
+    if(!result.ok){
+      if(typeof showErrorToast==='function') showErrorToast('Η διαγραφή απέτυχε: '+((result.error&&result.error.message)||'άγνωστο σφάλμα'));
+      return;
+    }
+    window.customRecipes=(window.customRecipes||[]).filter(function(r){ return r.dbId!==recipe.dbId; });
+    closeRecipeDetailModal();
+    renderRecipesList();
+  });
 }

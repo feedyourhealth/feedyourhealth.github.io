@@ -3201,6 +3201,16 @@ function saveFoodExclusions(){
         return {ok:true,recipe:saved};
       }).catch(function(e){ console.error('[CLOUD] saveCustomRecipe', e); return {ok:false,error:e}; });
     },
+    deleteCustomRecipe:function(dbId){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve({ok:false,error:'Δεν είσαι συνδεδεμένος'});
+      // eq('dietitian_id',...) εδώ είναι άμυνα-σε-βάθος πέρα από το RLS policy — δεν αλλάζει τη
+      // λειτουργικότητα (η RLS ήδη το επιβάλλει), αλλά κάνει το intent ρητό στον ίδιο τον κώδικα.
+      return self.sb.from('custom_recipes').delete().eq('id',dbId).eq('dietitian_id',self.user.id).then(function(res){
+        if(res.error){ console.error('[CLOUD] deleteCustomRecipe', res.error); return {ok:false,error:res.error}; }
+        return {ok:true};
+      }).catch(function(e){ console.error('[CLOUD] deleteCustomRecipe', e); return {ok:false,error:e}; });
+    },
 
     // Καλείται από κάθε αποθήκευση. Φρουρά _loaded: ποτέ overwrite πριν φορτώσει το cloud.
     save:function(){
