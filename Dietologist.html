@@ -3109,7 +3109,7 @@ function saveFoodExclusions(){
             if(_localTs && d.updatedAt && _localTs>d.updatedAt && window.clients && window.clients.length){
               console.warn('[CLOUD] Τοπικά δεδομένα ('+_localTs+') πιο πρόσφατα από το cloud ('+d.updatedAt+') — τα διατηρώ και τα ανεβάζω αντί να τα αντικαταστήσω.');
               self._loaded=true;
-              self._pushNow().then(resolve);
+              self._pushNow().then(function(){ self._loadCustomRecipes().then(resolve); });
               return;
             }
             try{
@@ -3131,12 +3131,12 @@ function saveFoodExclusions(){
                 }
               }
             }catch(e){ console.error('[CLOUD] apply data', e); }
-            self._loaded=true; resolve();
+            self._loaded=true; self._loadCustomRecipes().then(resolve);
           } else {
             // Cloud άδειο → πρώτη φορά: ανεβάζουμε τα τοπικά δεδομένα (migration)
             self._loaded=true;
-            if(window.clients && window.clients.length){ self._pushNow().then(resolve); }
-            else { resolve(); }
+            if(window.clients && window.clients.length){ self._pushNow().then(function(){ self._loadCustomRecipes().then(resolve); }); }
+            else { self._loadCustomRecipes().then(resolve); }
           }
         }).catch(function(e){ console.error('[CLOUD] load', e); self._loaded=true; resolve(); });
       });
@@ -3159,6 +3159,47 @@ function saveFoodExclusions(){
           else { resolve({ok:true}); }
         }).catch(function(err){ console.error('[CLOUD] push', err); resolve({ok:false,error:err}); });
       });
+    },
+
+    // Custom (δικές του) συνταγές του διαιτολόγου — δικός τους πίνακας `custom_recipes` (όχι μέσα στο
+    // ενιαίο user_data blob), γιατί εδώ ταιριάζει καλύτερα ένα upsert-ανά-συνταγή αντί για ολόκληρο
+    // ξαναγράψιμο του blob σε κάθε μικρή αλλαγή. Ποτέ δεν πετάει σφάλμα προς τα έξω — αν αποτύχει,
+    // η οθόνη Συνταγές απλά δείχνει μόνο τη στατική βιβλιοθήκη, όπως και σήμερα.
+    _loadCustomRecipes:function(){
+      var self=this;
+      return new Promise(function(resolve){
+        if(!self.user){ window.customRecipes=[]; resolve(); return; }
+        self.sb.from('custom_recipes').select('*').eq('dietitian_id',self.user.id).then(function(res){
+          if(res.error){ console.error('[CLOUD] loadCustomRecipes', res.error); window.customRecipes=window.customRecipes||[]; resolve(); return; }
+          window.customRecipes=(res.data||[]).map(function(row){
+            return {
+              id:'custom_'+row.id, dbId:row.id, name:row.name, foods:row.foods||[], kcal:row.kcal||0,
+              macro:row.macro||{p:0,f:0,c:0}, tags:row.tags||[], instructions:row.instructions||'',
+              prepTimeMin:row.prep_time_min||null, source:'custom'
+            };
+          });
+          resolve();
+        }).catch(function(e){ console.error('[CLOUD] loadCustomRecipes', e); window.customRecipes=window.customRecipes||[]; resolve(); });
+      });
+    },
+    saveCustomRecipe:function(recipeData){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve({ok:false,error:'Δεν είσαι συνδεδεμένος'});
+      var row={
+        dietitian_id:self.user.id, name:recipeData.name, foods:recipeData.foods||[], kcal:recipeData.kcal||0,
+        macro:recipeData.macro||{p:0,f:0,c:0}, tags:recipeData.tags||[], instructions:recipeData.instructions||'',
+        prep_time_min:recipeData.prepTimeMin||null, updated_at:new Date().toISOString()
+      };
+      return self.sb.from('custom_recipes').insert(row).select().single().then(function(res){
+        if(res.error){ console.error('[CLOUD] saveCustomRecipe', res.error); return {ok:false,error:res.error}; }
+        var saved={
+          id:'custom_'+res.data.id, dbId:res.data.id, name:res.data.name, foods:res.data.foods||[], kcal:res.data.kcal||0,
+          macro:res.data.macro||{p:0,f:0,c:0}, tags:res.data.tags||[], instructions:res.data.instructions||'',
+          prepTimeMin:res.data.prep_time_min||null, source:'custom'
+        };
+        window.customRecipes=(window.customRecipes||[]).concat([saved]);
+        return {ok:true,recipe:saved};
+      }).catch(function(e){ console.error('[CLOUD] saveCustomRecipe', e); return {ok:false,error:e}; });
     },
 
     // Καλείται από κάθε αποθήκευση. Φρουρά _loaded: ποτέ overwrite πριν φορτώσει το cloud.

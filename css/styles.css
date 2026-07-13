@@ -199,6 +199,51 @@ body.dark-mode .hm-row-name{color:#e0e0e0}
 .rcp-cat-pill:hover{border-color:#025857}
 .rcp-cat-pill.active{background:#E2EEE5;border-color:#025857;color:#025857}
 .rcp-cat-done{padding:3px 8px;border-radius:999px;border:1px solid #025857;background:#025857;color:#fff;font-size:9.5px;font-weight:600;cursor:pointer}
+.rcp-scaler{margin:0 0 8px;padding:8px;background:#f7f7f5;border-radius:10px}
+.rcp-scaler-row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#6b6b6b;margin-bottom:4px}
+.rcp-scaler-out{font-weight:600;color:#025857}
+.rcp-scaler input[type=range]{width:100%;accent-color:#025857}
+.rcp-scaler-macros{display:flex;gap:10px;font-size:10.5px;color:#777;margin-top:4px}
+.rcp-add-btn{padding:7px 14px;border-radius:10px;border:1px solid #025857;background:#025857;color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.rcp-add-btn:hover{background:#014443}
+.rcp-custom-badge{font-size:9px;font-weight:600;color:#025857;background:#E2EEE5;border-radius:999px;padding:2px 7px;margin-left:6px}
+.nr-modal-content{max-width:420px}
+.nr-field{margin-bottom:12px}
+.nr-field label{display:block;font-size:11px;color:#6b6b6b;margin-bottom:4px;font-weight:600}
+.nr-field input[type=text],.nr-field input[type=number],.nr-field textarea{width:100%;padding:7px 9px;border:1px solid #e0e0e0;border-radius:8px;font-size:12.5px;box-sizing:border-box;font-family:inherit}
+.nr-field input:focus,.nr-field textarea:focus{outline:none;border-color:#025857}
+.nr-macro-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.nr-macro-grid .nr-field{margin-bottom:0}
+.nr-ing-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.nr-ing-name{flex:2}
+.nr-ing-g{flex:1;min-width:0}
+.nr-ing-remove{background:none;border:none;color:#c62828;font-size:16px;cursor:pointer;padding:0 4px;line-height:1;flex-shrink:0}
+.nr-add-ing{padding:5px 10px;border-radius:8px;border:1px dashed #b2d8d8;background:#fff;color:#025857;font-size:11px;font-weight:600;cursor:pointer;margin-top:2px}
+.nr-save-btn{width:100%;padding:10px;border-radius:10px;border:none;background:#025857;color:#fff;font-size:13px;font-weight:600;cursor:pointer;margin-top:6px}
+.nr-save-btn:hover{background:#014443}
+.nr-save-btn:disabled{opacity:.6;cursor:default}
+.nr-error{color:#c62828;font-size:11px;min-height:14px;margin-top:4px}
+.rcp-name-link{background:none;border:none;padding:0;cursor:pointer;text-align:left;text-decoration:none;font-family:inherit}
+.rcp-name-link:hover{text-decoration:underline;color:#025857}
+.rd-modal-content{max-width:460px}
+.rd-meta{font-size:11px;color:#6b6b6b;margin-bottom:8px}
+.rd-section-title{font-size:11px;font-weight:600;color:#6b6b6b;margin:12px 0 6px}
+.rd-instructions{font-size:12.5px;color:#333;line-height:1.6;white-space:pre-wrap}
+.rd-shop-btn{margin-top:14px}
+.rd-shop-panel{margin-top:10px;background:#f7f7f5;border-radius:10px;padding:8px 10px}
+.rd-shop-item{font-size:12px;color:#444;padding:3px 0}
+.rd-ingredients{margin-bottom:4px}
+.rd-ing-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0ee;font-size:12.5px}
+.rd-ing-name{flex:1;color:#333}
+.rd-ing-g{color:#6b6b6b;font-size:11.5px}
+.rd-swap-btn{background:none;border:none;cursor:pointer;font-size:13px;color:#025857;opacity:.6;padding:2px 4px;line-height:1}
+.rd-swap-btn:hover{opacity:1}
+.rd-swap-panel{margin:0 0 6px;padding:6px 8px;background:#f7f7f5;border-radius:8px}
+.rd-swap-option{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;padding:6px 8px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;font-size:11.5px;cursor:pointer;margin-bottom:4px}
+.rd-swap-option:hover{border-color:#025857}
+.rd-swap-option:last-child{margin-bottom:0}
+.rd-swap-delta{color:#6b6b6b;font-size:10.5px}
+.rd-swap-empty{font-size:11px;color:#888}
 body.dark-mode .rcp-search{background:#242424;border-color:#444;color:#e0e0e0}
 body.dark-mode .rcp-filter-chip{background:#1a1a1a;border-color:#444;color:#4fc3f7}
 body.dark-mode .rcp-filter-chip.active{background:#025857;color:#fff}
@@ -211,6 +256,24 @@ body.dark-mode .rcp-chip.active{background:#025857;border-color:#025857;color:#f
 body.dark-mode .rcp-cat-pill{background:#1a1a1a;border-color:#444;color:#aaa}
 body.dark-mode .rcp-cat-pill.active{background:#025857;border-color:#025857;color:#fff}
 body.dark-mode .rcp-cat-done{background:#025857;border-color:#025857;color:#fff}
+body.dark-mode .rcp-scaler{background:#1a1a1a}
+body.dark-mode .rcp-scaler-row{color:#aaa}
+body.dark-mode .rcp-scaler-macros{color:#aaa}
+body.dark-mode .rcp-custom-badge{background:#025857;color:#fff}
+body.dark-mode .nr-field label{color:#aaa}
+body.dark-mode .nr-field input[type=text],body.dark-mode .nr-field input[type=number],body.dark-mode .nr-field textarea{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .nr-add-ing{background:#1a1a1a;border-color:#444}
+body.dark-mode .rcp-name-link{color:#e0e0e0}
+body.dark-mode .rd-meta{color:#aaa}
+body.dark-mode .rd-section-title{color:#aaa}
+body.dark-mode .rd-instructions{color:#e0e0e0}
+body.dark-mode .rd-shop-panel{background:#1a1a1a}
+body.dark-mode .rd-shop-item{color:#ccc}
+body.dark-mode .rd-ing-row{border-color:#333}
+body.dark-mode .rd-ing-name{color:#e0e0e0}
+body.dark-mode .rd-swap-panel{background:#1a1a1a}
+body.dark-mode .rd-swap-option{background:#242424;border-color:#444;color:#e0e0e0}
+body.dark-mode .rd-swap-empty{color:#999}
 /* ✅ BOTTOM NAVIGATION BAR (Mobile) — visibility/layout rules consolidated into the single
    RESPONSIVE DESIGN system's MOBILE tier further down (see ≤767px block). Do not add
    width-based media queries here; this was one of 4 overlapping breakpoint systems that
