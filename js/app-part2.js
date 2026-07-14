@@ -1663,13 +1663,15 @@ function buildTrackerHtml(c){
     var latest=c.weightLog[c.weightLog.length-1];
     var latestLBM=latest.bf>0?+(latest.weight*(1-latest.bf/100)).toFixed(1):null;
     var latestFM=latest.bf>0?+(latest.weight-latestLBM).toFixed(1):null;
-    var latestBMI=+(latest.weight/((c.height/100)*(c.height/100))).toFixed(1);
+    var latestBMI=c.height>0?+(latest.weight/((c.height/100)*(c.height/100))).toFixed(1):null; // no height yet — don't divide by 0
     var latestBMIStatus='';
-    if(latestBMI<18.5)latestBMIStatus='Underweight ℹ️';
-    else if(latestBMI<25)latestBMIStatus='Normal ✓';
-    else if(latestBMI<30)latestBMIStatus='Overweight ⚠️';
-    else latestBMIStatus='Obese 🔴';
-    var latestBMIColor=latestBMI<18.5?'#ff6b35':latestBMI<25?'#2e7d32':latestBMI<30?'#ff9800':'#c62828';
+    if(latestBMI!=null){
+      if(latestBMI<18.5)latestBMIStatus='Underweight ℹ️';
+      else if(latestBMI<25)latestBMIStatus='Normal ✓';
+      else if(latestBMI<30)latestBMIStatus='Overweight ⚠️';
+      else latestBMIStatus='Obese 🔴';
+    }
+    var latestBMIColor=latestBMI==null?'#999':latestBMI<18.5?'#ff6b35':latestBMI<25?'#2e7d32':latestBMI<30?'#ff9800':'#c62828';
 
     wHtml+='<div style="background:#fff8e1;border:1px solid #ffb74d;border-radius:8px;padding:12px;margin-bottom:10px">'
       +'<div style="font-size:10px;color:#e65100;font-weight:700;margin-bottom:8px">📊 Τρέχουσα Κατάσταση ('+latest.date+')</div>'
@@ -1678,8 +1680,8 @@ function buildTrackerHtml(c){
       +'<div style="color:#666">Βάρος</div><div style="font-size:14px;font-weight:700;color:#025857">'+latest.weight+' kg</div></div>'
       +(latest.bf?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #ff9999"><div style="color:#666">Λίπος</div><div style="font-size:14px;font-weight:700;color:#c62828">'+latest.bf+'%</div></div>':'')
       +(latestLBM?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #1565C0"><div style="color:#666">Lean Mass</div><div style="font-size:14px;font-weight:700;color:#1565C0">'+latestLBM+' kg</div></div>':'')
-      +'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid '+latestBMIColor+'">'
-      +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+' ('+latestBMIStatus+')</div></div>'
+      +(latestBMI!=null?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid '+latestBMIColor+'">'
+      +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+' ('+latestBMIStatus+')</div></div>':'')
       +(latest.waist?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #9c27b0"><div style="color:#666">Μέση</div><div style="font-size:14px;font-weight:700;color:#9c27b0">'+latest.waist+' cm</div></div>':'')
       +(latest.hip?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #f57c00"><div style="color:#666">Γοφοί</div><div style="font-size:14px;font-weight:700;color:#f57c00">'+latest.hip+' cm</div></div>':'')
       +'</div>'
@@ -2246,6 +2248,7 @@ function addWeightEntry(){
   var date=document.getElementById('tr-date').value;
   var weight=parseFloat(document.getElementById('tr-weight').value);
   var bf=parseFloat(document.getElementById('tr-bf').value)||0;
+  if(bf>0)bf=Math.max(3,Math.min(60,bf)); // clamp to physiological range — HTML min/max are bypassable by typing
   var waist=parseFloat((document.getElementById('tr-waist')||{}).value)||0;
   var hip=parseFloat((document.getElementById('tr-hip')||{}).value)||0;
   var arm=parseFloat((document.getElementById('tr-arm')||{}).value)||0;
@@ -2253,7 +2256,7 @@ function addWeightEntry(){
   var energy=parseInt((document.getElementById('tr-energy')||{}).value)||0;
   var compliance=parseInt((document.getElementById('tr-compliance')||{}).value)||0;
   var notes=(document.getElementById('tr-notes').value||'').trim();
-  if(!date||!weight||weight<20)return;
+  if(!date||!weight||weight<20||weight>300)return;
   var sfEntry=getSkinfoldEntry();
   var entry={date:date,weight:weight,bf:bf,waist:waist,hip:hip,arm:arm,sleep:sleep,energy:energy,compliance:compliance,notes:notes};
   if(sfEntry){entry.sfProtocol=sfEntry.protocol;entry.sfFields=sfEntry.fields;}

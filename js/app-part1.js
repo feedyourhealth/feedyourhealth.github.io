@@ -403,7 +403,7 @@ var VALIDATION_RULES={
         return{ok:false,msg:'Macro total mismatch: P('+t.p+'g×4='+pCals+')+F('+t.f+'g×9='+fCals+')+C('+t.carb+'g×4='+cCals+')='+totalCals+' but target is '+t.target,diff:diff};
       }
       // Check protein ratios
-      var pRatio=Math.round(pCals/t.target*100);
+      var pRatio=t.target?Math.round(pCals/t.target*100):0;
       if(pRatio<t.pPct-2||pRatio>t.pPct+2){
         return{ok:false,msg:'Protein % mismatch: calculated '+pRatio+'% but expected '+t.pPct+'%'};
       }

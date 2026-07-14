@@ -3278,7 +3278,7 @@ function saveFoodExclusions(){
           var byToken={};
           (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
           return byToken;
-        });
+        }).catch(function(e){ console.error('[CLOUD] fetchAllCheckins network error', e && e.message); return {}; });
     },
     // Ξαναφορτώνει το cache και ξανασχεδιάζει τη λίστα πελατών (badges).
     refreshCheckinsCache:function(){
@@ -3312,7 +3312,7 @@ function saveFoodExclusions(){
           var byToken={};
           (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
           return byToken;
-        });
+        }).catch(function(e){ console.error('[CLOUD] fetchAllClientLogs network error', e && e.message); return {}; });
     },
     refreshClientLogsCache:function(){
       var self=this;
