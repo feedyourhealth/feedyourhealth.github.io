@@ -2476,7 +2476,7 @@ function getC(){return clients.filter(function(c){return c.id===curId;})[0];}
 
 /* ===== Γρήγορες ενέργειες πλαϊνής μπάρας: Νέο πλάνο / Γρήγορη μέτρηση ===== */
 function closeAllQA(){
-  ['qa-newplan','qa-quickmeasure'].forEach(function(p){
+  ['qa-newplan','qa-quickmeasure','qa-quickappt'].forEach(function(p){
     var panel=document.getElementById(p);
     var btn=document.getElementById('qa-toggle-'+p.replace('qa-',''));
     if(panel) panel.style.display='none';
@@ -2495,7 +2495,8 @@ function toggleQA(id){
     var inp=document.getElementById(id+'-input');
     if(inp){ inp.value=''; inp.focus(); }
     if(id==='qa-newplan') renderQANewPlan('');
-    else renderQAQuickMeasure('');
+    else if(id==='qa-quickmeasure') renderQAQuickMeasure('');
+    else renderQAQuickAppt('');
   }
 }
 
@@ -2551,6 +2552,27 @@ function qaStartMeasure(id){
 function qaCreateAndMeasure(name){
   addClient(name);
   swTab(3);
+  closeAllQA();
+}
+
+function renderQAQuickAppt(q){
+  var results=document.getElementById('qa-quickappt-results'); if(!results) return;
+  var list=qaMatchingClients(q), html='';
+  list.forEach(function(c){
+    var sub = (c.appointments && c.appointments.length) ? ('τελ. ραντεβού '+c.appointments[c.appointments.length-1].date) : 'καμία καταχώρηση ακόμα';
+    html+='<div class="qa-row" onclick="qaStartAppt(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
+  });
+  html+='<div class="qa-row qa-row-new" onclick="qaCreateAndAppt(document.getElementById(\'qa-quickappt-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
+  results.innerHTML=html;
+}
+function qaStartAppt(id){
+  selectClient(id);
+  swTab(100);
+  closeAllQA();
+}
+function qaCreateAndAppt(name){
+  addClient(name);
+  swTab(100);
   closeAllQA();
 }
 

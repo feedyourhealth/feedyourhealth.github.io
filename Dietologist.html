@@ -141,6 +141,14 @@ setTimeout(function(){
     <input type="text" class="qa-input" id="qa-quickmeasure-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για γρήγορη μέτρηση" oninput="renderQAQuickMeasure(this.value)">
     <div class="qa-results" id="qa-quickmeasure-results"></div>
   </div>
+
+  <button type="button" class="qa-btn" id="qa-toggle-quickappt" onclick="toggleQA('qa-quickappt')" aria-expanded="false" aria-controls="qa-quickappt">
+    <span>📝 Γρήγορη σημείωση ραντεβού</span><span aria-hidden="true">▾</span>
+  </button>
+  <div class="qa-panel" id="qa-quickappt" style="display:none">
+    <input type="text" class="qa-input" id="qa-quickappt-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για σημείωση ραντεβού" oninput="renderQAQuickAppt(this.value)">
+    <div class="qa-results" id="qa-quickappt-results"></div>
+  </div>
   <div class="sb-sep"></div>
 
   <button class="backup-btn" onclick="toggleSettingsPanel()" style="color:#025857;border-color:#025857">⚙️ Ρυθμίσεις</button>
