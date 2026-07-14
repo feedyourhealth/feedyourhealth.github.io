@@ -382,6 +382,13 @@ function renderMain(){
     +'<div class="fgrp" style="justify-content:flex-end"><button type="button" class="btn" onclick="showMedicalProtocol(\'pregnancy\')" style="background:#025857;color:#fff;border:none;border-radius:6px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;">🤰 Πρωτόκολλο Εγκυμοσύνης</button></div></div>'
     +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+esc(c.email||'')+'"></div>'
     +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+esc(c.phone||'')+'"></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>🏷️ Ομάδα <span style="color:#9fb5b0;font-weight:400;font-size:11px">(π.χ. ομάδα/σύλλογος)</span></label>'
+    +'<select id="inp-group"></select>'
+    +'<div id="inp-group-new-row" style="display:none;gap:8px;margin-top:8px">'
+    +'<input type="text" id="inp-group-new" placeholder="Όνομα νέας ομάδας" style="flex:1">'
+    +'<button type="button" class="btn" id="inp-group-new-confirm" style="padding:9px 12px;font-size:12px;background:#025857;color:#fff;border:none;border-radius:8px;cursor:pointer;">✓ Προσθήκη</button>'
+    +'<button type="button" class="btn" id="inp-group-new-cancel" style="padding:9px 12px;font-size:12px;background:#eee;color:#555;border:none;border-radius:8px;cursor:pointer;">Άκυρο</button>'
+    +'</div></div></div>'
     +'</div>'
     +'</div>'
 
@@ -580,6 +587,15 @@ function renderMain(){
   document.getElementById('inp-name').value=c.name||'';
   var _inpEmail=document.getElementById('inp-email');if(_inpEmail)_inpEmail.value=c.email||'';
   var _inpPhone=document.getElementById('inp-phone');if(_inpPhone)_inpPhone.value=c.phone||'';
+  var _inpGroup=document.getElementById('inp-group');
+  if(_inpGroup){
+    var _groupNames=getAllGroupNames();
+    if(c.group && _groupNames.indexOf(c.group)===-1) _groupNames.push(c.group); // παλιά/αρχειοθετημένη τιμή — μη χαθεί σιωπηλά
+    var _groupOptsHtml='<option value=""'+(!c.group?' selected':'')+'>— Χωρίς ομάδα —</option>';
+    _groupNames.forEach(function(g){_groupOptsHtml+='<option value="'+esc(g)+'"'+(c.group===g?' selected':'')+'>'+esc(g)+'</option>';});
+    _groupOptsHtml+='<option value="__new__">+ Νέα ομάδα…</option>';
+    _inpGroup.innerHTML=_groupOptsHtml;
+  }
   document.getElementById('inp-sex').value=c.sex||'';
   var _inpBirthdate=document.getElementById('inp-birthdate');if(_inpBirthdate)_inpBirthdate.value=(c.birthDate&&/^\d{4}-\d{2}-\d{2}$/.test(c.birthDate))?c.birthDate:'';
   updateAgeDisplay();
@@ -603,6 +619,35 @@ function renderMain(){
   document.getElementById('inp-name').oninput=function(){upd('name',this.value);};
   if(_inpEmail)_inpEmail.oninput=function(){upd('email',this.value.trim());};
   if(_inpPhone)_inpPhone.oninput=function(){upd('phone',this.value.trim());};
+  if(_inpGroup){
+    var _groupNewRow=document.getElementById('inp-group-new-row');
+    var _groupNewInput=document.getElementById('inp-group-new');
+    _inpGroup.onchange=function(){
+      if(this.value==='__new__'){
+        _groupNewRow.style.display='flex';
+        _groupNewInput.value='';
+        _groupNewInput.focus();
+      } else {
+        _groupNewRow.style.display='none';
+        upd('group',this.value);
+      }
+    };
+    var _confirmNewGroup=document.getElementById('inp-group-new-confirm');
+    if(_confirmNewGroup)_confirmNewGroup.onclick=function(){
+      var name=_groupNewInput.value.trim();
+      if(!name) return;
+      // αν υπάρχει ήδη ίδια ομάδα (διαφορετικά κεφαλαία/κενά), χρησιμοποίησε την υπάρχουσα ακριβή τιμή
+      // αντί να δημιουργήσεις σχεδόν-διπλότυπο κατά λάθος
+      var existing=getAllGroupNames().find(function(g){return normalizeGroupName(g)===normalizeGroupName(name);});
+      upd('group',existing||name);
+      renderMain();
+    };
+    var _cancelNewGroup=document.getElementById('inp-group-new-cancel');
+    if(_cancelNewGroup)_cancelNewGroup.onclick=function(){
+      _inpGroup.value=c.group||'';
+      _groupNewRow.style.display='none';
+    };
+  }
   // ⚠️ inp-sex.onchange is (re)assigned by setupFormEventListeners() below, which always runs LAST
   // in this function and would silently clobber a handler set here (same pattern as the historical
   // duplicate rateMeal/validateClientData bugs) — the pregnancy-toggle-visibility logic for sex lives

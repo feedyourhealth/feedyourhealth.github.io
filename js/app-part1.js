@@ -2558,9 +2558,52 @@ var _clientSearchTerm='';
 function filterClients(val){_clientSearchTerm=(val||'').toLowerCase().trim();renderSB();}
 var _clientFilterGoal='';
 var _clientFilterSport='';
+var _clientFilterGroup='';
+// Ενιαία πηγή αλήθειας για "ποιες ομάδες υπάρχουν" — χρησιμοποιείται και από το φίλτρο
+// στη σελίδα Πελάτες και από το επιλογέα ομάδας στο προφίλ πελάτη, ώστε να μη διαφωνήσουν ποτέ.
+function getAllGroupNames(){
+  return Array.from(new Set(clients.filter(function(c){return !c.deleted && !c.archived && c.group;}).map(function(c){return c.group;})))
+    .sort(function(a,b){return a.localeCompare(b,'el');});
+}
+// Κανονικοποίηση ονόματος ομάδας για σύγκριση: πεζά + αφαίρεση τόνων/διαλυτικών, ώστε
+// "ΑΠΟΛΛΩΝ" (κεφαλαία χωρίς τόνο, όπως συνήθως γράφεται) να ταιριάζει με "Απόλλων".
+function normalizeGroupName(s){
+  return String(s||'').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+}
+// Ενοποιεί ομάδες που διαφέρουν μόνο σε πεζά/κεφαλαία/τόνους (π.χ. δεδομένα από πριν
+// υπήρχε το dedupe-on-add στο προφίλ πελάτη) σε μία ενιαία γραφή — η πιο συχνά
+// χρησιμοποιημένη γραφή σε κάθε ομάδα γίνεται η κανονική. Idempotent, ασφαλές να τρέξει
+// σε κάθε φόρτωση δεδομένων (τοπική ή cloud). Επιστρέφει true αν άλλαξε κάτι.
+function mergeDuplicateGroupNames(list){
+  var buckets={};
+  (list||clients).forEach(function(c){
+    if(!c.group) return;
+    var key=normalizeGroupName(c.group);
+    if(!key) return;
+    (buckets[key]=buckets[key]||[]).push(c);
+  });
+  var changed=false;
+  Object.keys(buckets).forEach(function(key){
+    var group=buckets[key];
+    var counts={};
+    group.forEach(function(c){counts[c.group]=(counts[c.group]||0)+1;});
+    var rawValues=Object.keys(counts);
+    if(rawValues.length<=1) return; // ήδη ενιαία γραφή
+    rawValues.sort(function(a,b){
+      var diff=counts[b]-counts[a];
+      return diff!==0?diff:a.localeCompare(b,'el');
+    });
+    var canonical=rawValues[0];
+    group.forEach(function(c){
+      if(c.group!==canonical){c.group=canonical;changed=true;}
+    });
+  });
+  return changed;
+}
 function setClientFilter(type,val){
   if(type==='goal') _clientFilterGoal=val;
   else if(type==='sport') _clientFilterSport=val;
+  else if(type==='group') _clientFilterGroup=val;
   renderSB();
 }
 var _clientSortMode='recent'; // 'recent' | 'oldest' | 'name' | 'stale' | 'attention'
@@ -2660,6 +2703,7 @@ function renderSB(){
     if(term && (c.name||'Νέος πελάτης').toLowerCase().indexOf(term)===-1) return false;
     if(_clientFilterGoal && c.goalMain!==_clientFilterGoal) return false;
     if(_clientFilterSport && c.sport!==_clientFilterSport) return false;
+    if(_clientFilterGroup && c.group!==_clientFilterGroup) return false;
     return true;
   });
   // ✅ Sort according to the selected mode (default: most recent visit first)
@@ -2684,7 +2728,7 @@ function renderSB(){
     list.sort(function(a,b){return(b.lastAccess||0)-(a.lastAccess||0);});
   }
   var html='';
-  if((term||_clientFilterGoal||_clientFilterSport)&&list.length===0){
+  if((term||_clientFilterGoal||_clientFilterSport||_clientFilterGroup)&&list.length===0){
     html='<div style="font-size:12px;color:#bbb;padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
   } else {
     html+='<div class="clients-grid">';
@@ -2692,12 +2736,13 @@ function renderSB(){
       var hasActive = c.weekPlan && Object.keys(c.weekPlan).length > 0;
       var sportInfo=(typeof SPORT_INFO!=='undefined')?SPORT_INFO[c.sport]:null;
       var sport=sportInfo?(' • '+sportInfo.icon+' '+sportInfo.label):'';
+      var groupTag=c.group?(' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>'):'';
       html+='<div class="client-card" onclick="selectClient(\''+c.id+'\')">'
         +'<div class="cc-top">'
         +'<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'
         +'<div class="cc-headtext">'
         +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+'</div>'
-        +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+'</div>'
+        +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
         +'</div>'
         +'<div class="cc-actions">'
         +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'

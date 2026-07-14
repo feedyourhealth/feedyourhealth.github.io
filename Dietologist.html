@@ -3114,6 +3114,7 @@ function saveFoodExclusions(){
             }
             try{
               if(Array.isArray(d.clients)) window.clients=d.clients;
+              if(Array.isArray(window.clients) && typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(window.clients);
               if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
               if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
               if(d.recipeMeta && typeof saveRecipeMetaAll==='function') saveRecipeMetaAll(d.recipeMeta);

@@ -1875,6 +1875,7 @@ function getStorageKey(baseKey) {
       if(!c.foodExclude)c.foodExclude=[];
       if(c.selectedTemplate===undefined)c.selectedTemplate=null;
     });
+    if(typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(clients);
     renderSB();
   }
 })();

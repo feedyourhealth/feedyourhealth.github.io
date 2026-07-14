@@ -372,6 +372,15 @@ function renderClients(){
     html+='<option value="'+key+'"'+sel(_clientFilterSport,key)+'>'+SPORT_INFO[key].icon+' '+SPORT_INFO[key].label+'</option>';
   });
   html+='</select>';
+  var groupNames=getAllGroupNames();
+  if(groupNames.length){
+    html+='<select id="client-filter-group" class="clients-toolbar-select" aria-label="Φίλτρο ομάδας" onchange="setClientFilter(\'group\',this.value)">'
+      +'<option value=""'+sel(_clientFilterGroup,'')+'>Όλες οι ομάδες</option>';
+    groupNames.forEach(function(g){
+      html+='<option value="'+esc(g)+'"'+sel(_clientFilterGroup,g)+'>🏷️ '+esc(g)+'</option>';
+    });
+    html+='</select>';
+  }
   html+='<select id="client-sort" class="clients-toolbar-select" aria-label="Ταξινόμηση πελατών" onchange="setClientSort(this.value)">'
     +'<option value="recent"'+sel(_clientSortMode,'recent')+'>🕐 Πρόσφατη επίσκεψη πρώτα</option>'
     +'<option value="attention"'+sel(_clientSortMode,'attention')+'>🔔 Χρειάζονται προσοχή πρώτα</option>'

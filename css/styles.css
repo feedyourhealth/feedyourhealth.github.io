@@ -57,6 +57,7 @@ body.dark-mode .undo-redo-btn:disabled{color:#555}
 .cc-headtext{flex:1;min-width:0}
 .cc-name{font-weight:700;color:#025857;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-sub{font-size:11px;color:#6b6b6b;margin-top:2px}
+.cc-group-tag{display:inline-block;background:#F0F7F7;color:#025857;font-weight:600;font-size:10px;padding:1px 6px;border-radius:999px;margin-left:2px}
 .cc-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s;flex-shrink:0}
 .client-card:hover .cc-actions,.client-card:focus-within .cc-actions{opacity:1}
 /* 2026-07-10: hover-only reveal left these buttons unreachable on touch (no persistent hover state)
