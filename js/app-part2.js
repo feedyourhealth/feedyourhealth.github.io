@@ -3092,7 +3092,13 @@ function upd(k,v){
   }
 
   // ✅ PHASE 4: UPDATE CLIENT WITH UNDO/REDO
-  if(window.undoRedoManager && typeof UpdateClientCommand !== 'undefined' && k !== 'name' && oldValue !== v){
+  // All fields whose input fires oninput (every keystroke) are excluded like name —
+  // UpdateClientCommand.execute() calls renderMain(), which rebuilds #main's innerHTML
+  // and drops focus/cursor on every keystroke while typing. Fields wired to onblur/onchange
+  // instead (weight, height, bf, leanmass, formula, goal, activity, age) only fire once
+  // per edit, so a full renderMain() there is harmless and stays on the undo/redo path.
+  var LIVE_TYPING_FIELDS = {phone:1,email:1,rmr:1,lbm:1,gestationalWeek:1,prePregnancyWeight:1,allergies:1,preferences:1};
+  if(window.undoRedoManager && typeof UpdateClientCommand !== 'undefined' && k !== 'name' && !LIVE_TYPING_FIELDS[k] && oldValue !== v){
     var cmd = new UpdateClientCommand(c, k, oldValue, v);
     window.undoRedoManager.execute(cmd);
   } else {
@@ -3105,8 +3111,14 @@ function upd(k,v){
     if(headerName)headerName.textContent='👤 '+(v||'Νέος πελάτης');
     return;
   }
-  // formula/lbm changes need full re-render to update formula tag + LBM field visibility
-  if(k==='formula'||k==='lbm'){renderMain();return;}
+  // ✅ Phone/Email/Allergies/Preferences change: nothing else on screen depends on these — no re-render needed while typing
+  if(k==='phone'||k==='email'||k==='allergies'||k==='preferences'){
+    return;
+  }
+  // formula change needs full re-render to update formula tag + LBM field visibility
+  // (lbm itself is excluded above — it affects BMR under Cunningham, so it falls through
+  // to the in-place BMR/TDEE/macro recompute below instead, same as rmr)
+  if(k==='formula'){renderMain();return;}
   // ✅ Goal/Activity change: needs full re-render to update TDEE, macros, and daily targets
   if(k==='goal'||k==='activity'){renderMain();return;}
   var t=calcTDEE(c);
