@@ -54,7 +54,7 @@ function exportPDF(lang){
     logoSrc=lc2.toDataURL('image/png');
   }catch(e){}
 
-  var isMinorPdf=(c.age||0)<18;
+  var isMinorPdf=(c.age||0)<16;
   var mealNames=(weekPlanForPDF[0]||[]).map(function(m){return m.name;});
   var dayFull=isEn
     ?['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
