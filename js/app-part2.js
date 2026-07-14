@@ -2907,7 +2907,7 @@ function swTab(n){
   if(n===4 && s4)s4.style.display='block';
 
   // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1 (Page 1 only - Στοιχεία Πελάτη)
-  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','met-section-wrap'];
+  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','met-section-wrap','sec-daytgt'];
   sectionIds.forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.style.display=n===1?'block':'none';
