@@ -913,6 +913,23 @@ body.dark-mode .tooltip-text {
 .consult-date{font-size:10px;font-weight:700;color:#025857;margin-bottom:4px}
 .consult-text{font-size:11px;color:#333;line-height:1.5;white-space:pre-wrap}
 .consult-entry .met-del{position:absolute;top:8px;right:8px}
+/* ── Appointments (Ραντεβού) tab ── */
+.appt-summary-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.appt-sum-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:10px 12px}
+.appt-sum-card.appt-sum-danger{border-color:#f1b4b3;background:#fff7f7}
+.appt-sum-lbl{font-size:10px;color:#888;font-weight:600}
+.appt-sum-val{font-size:16px;font-weight:700;color:#025857;margin-top:2px}
+.appt-sum-card.appt-sum-danger .appt-sum-val{color:#c62828}
+.appt-sum-sub{font-size:10px;color:#999;margin-top:2px}
+.appt-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.appt-chip{padding:5px 11px;font-size:11px;border-radius:20px;border:1px solid #c5ddd8;background:#fff;color:#555;cursor:pointer}
+.appt-chip.active{background:#025857;border-color:#025857;color:#fff;font-weight:600}
+.appt-scale{display:flex;gap:4px}
+.appt-scale-btn{width:28px;height:28px;border-radius:50%;border:1px solid #c5ddd8;background:#fff;color:#555;font-size:11px;cursor:pointer}
+.appt-scale-btn.active{background:#025857;border-color:#025857;color:#fff;font-weight:700}
+.appt-entry{background:#f8fffe;border:1px solid #c5ddd8;border-radius:14px;padding:10px 14px;position:relative;padding-right:36px}
+.appt-entry.appt-entry-flagged{background:#fff7f7;border-color:#f1b4b3}
+.appt-entry .met-del{position:absolute;top:8px;right:8px}
 /* ── Save-as-Template panel ── */
 .save-tmpl-panel{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px 14px;background:#fff8f0;border:1px solid #f9a825;border-radius:14px;margin:0 0 8px}
 .save-tmpl-lbl{font-size:11px;color:#e65100;font-weight:700;white-space:nowrap}

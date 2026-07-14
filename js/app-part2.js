@@ -325,7 +325,7 @@ function renderMain(){
   var anthroPreview=[c.weight?c.weight+'kg':'', c.height?c.height+'cm':'', (c.weight&&c.height)?('BMI '+(Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10)):''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
   var goalPreview=(c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'}[c.goalMain]||c.goalMain):'Χωρίς στόχο')+' · '+(goalCalAdj>=0?'+':'')+goalCalAdj+' kcal';
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
-    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
+    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t3b" onclick="swTab(100)">📝 Ραντεβού</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
     +'<div id="s1">'
 
     // ✅ GOAL SELECTION REMINDER (Only show if goal not set)
@@ -580,6 +580,7 @@ function renderMain(){
     +'<div id="lib-list"></div></div></div></div>'
     +'<div id="supp-notes"></div></div>'
     +'<div id="s3" style="display:none">'+buildTrackerHtml(c)+'</div>'
+    +'<div id="s3b" style="display:none">'+buildAppointmentsHtml(c)+'</div>'
     +'<div id="s4" style="display:none">'+buildPlanHistoryHtml(c)+'</div>';
   document.getElementById('main').innerHTML=html;
 
@@ -2280,6 +2281,155 @@ function removeConsultEntry(idx){
   var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
 }
 
+// ── "📝 Ραντεβού" tab (in-appointment questionnaire/notes) ──────────────────
+var APPT_COMMON_CHIPS=['Καλή διάθεση','Κόπωση','Πείνα εκτός γευμάτων','Φούσκωμα','Δυσκοιλιότητα','Διάρροια/GI stress','Πόνος/τραυματισμός','Στρες','Λείπει ύπνος'];
+var APPT_SPORT_CHIPS={
+  boxing:['Κοντά σε ζύγιση','Cut βάρους','Camp προπόνησης'],
+  bjj:['Camp προπόνησης','Πόνος αρθρώσεων'],
+  mma:['Camp προπόνησης','Cut βάρους'],
+  weightlifting:['Meet προσεχώς','DOMS έντονο'],
+  cycling:['Long ride αυτή την εβδομάδα'],
+  running:['Αγώνας προσεχώς','DOMS έντονο'],
+  crossfit:['DOMS έντονο','WOD έντονο πρόσφατα']
+};
+function fmtDateShortAppt(iso){
+  if(!iso)return '';
+  var d=new Date(iso+'T00:00:00');if(isNaN(d.getTime()))return '';
+  return d.getDate()+'/'+(d.getMonth()+1);
+}
+function apptScaleButtons(prefix){
+  var html='';
+  for(var i=1;i<=5;i++){
+    html+='<button type="button" class="appt-scale-btn" data-val="'+i+'" onclick="setApptScale(this)">'+i+'</button>';
+  }
+  return html;
+}
+function setApptScale(btn){
+  var scale=btn.parentElement;
+  Array.prototype.forEach.call(scale.querySelectorAll('.appt-scale-btn'),function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  scale.setAttribute('data-selected',btn.getAttribute('data-val'));
+}
+function toggleApptChip(btn){
+  btn.classList.toggle('active');
+}
+function apptSparkline(log,key,color,label){
+  var pts=log.filter(function(e){return e[key]>0;});
+  if(pts.length<2)return '';
+  var W=280,H=90,padL=8,padB=16,padT=8,mn=1,mx=5;
+  var sx=function(i){return padL+(i/(pts.length-1))*(W-padL-8);};
+  var sy=function(v){return padT+(1-(v-mn)/(mx-mn))*(H-padT-padB);};
+  var polyPts=pts.map(function(e,i){return sx(i)+','+sy(e[key]);}).join(' ');
+  var svg='<div style="font-size:10px;font-weight:700;color:#025857;margin-bottom:2px">'+esc(label)+'</div><svg viewBox="0 0 '+W+' '+H+'" width="100%">';
+  svg+='<polyline points="'+polyPts+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  svg+='<circle cx="'+sx(pts.length-1)+'" cy="'+sy(pts[pts.length-1][key])+'" r="4" fill="'+color+'"/>';
+  svg+='<text x="'+padL+'" y="'+(H-4)+'" font-size="9" fill="#999">'+fmtDateShortAppt(pts[0].date)+'</text>';
+  svg+='<text x="'+(W-8)+'" y="'+(H-4)+'" font-size="9" fill="#999" text-anchor="end">'+fmtDateShortAppt(pts[pts.length-1].date)+'</text>';
+  svg+='</svg>';
+  return svg;
+}
+function buildAppointmentsHtml(c){
+  if(!c.appointments)c.appointments=[];
+  var today=new Date().toISOString().slice(0,10);
+
+  // ── Summary strip (read-only, pulled from other tabs) ──
+  var wl=c.weightLog||[];
+  var lastW=wl.length?wl[wl.length-1]:null;
+  var prevW=wl.length>1?wl[wl.length-2]:null;
+  var wDeltaHtml='—';
+  if(lastW&&prevW){
+    var wd=+(lastW.weight-prevW.weight).toFixed(1);
+    wDeltaHtml='<span style="color:'+(wd<0?'#2e7d32':wd>0?'#c62828':'#888')+'">'+(wd>0?'↑':wd<0?'↓':'→')+' '+Math.abs(wd)+' kg από '+fmtDateShortAppt(prevW.date)+'</span>';
+  }
+  var hasActive=c.weekPlan&&Object.keys(c.weekPlan).length>0;
+  var planDaysOld=c.planGeneratedAt?Math.floor((Date.now()-c.planGeneratedAt)/86400000):null;
+  var daysLeft=daysUntilEvent(c.eventDate);
+  var strip='<div class="appt-summary-strip">'
+    +'<div class="appt-sum-card"><div class="appt-sum-lbl">Τελευταία μέτρηση</div><div class="appt-sum-val">'+(lastW?lastW.weight+' kg':'—')+'</div><div class="appt-sum-sub">'+wDeltaHtml+'</div></div>'
+    +'<div class="appt-sum-card"><div class="appt-sum-lbl">Κατάσταση πλάνου</div><div class="appt-sum-val">'+(hasActive?'Ενεργό':'Χωρίς πλάνο')+'</div><div class="appt-sum-sub">'+(planDaysOld!=null?planDaysOld+' ημέρες από δημιουργία':'—')+'</div></div>'
+    +'<div class="appt-sum-card'+(daysLeft!=null&&daysLeft<=14?' appt-sum-danger':'')+'"><div class="appt-sum-lbl">🗓 Αγώνας/Weigh-in</div><div class="appt-sum-val">'+(daysLeft!=null?(daysLeft>=0?daysLeft+' μέρες':'πέρασε'):'—')+'</div><div class="appt-sum-sub">'+(c.eventDate?fmtDateShortAppt(c.eventDate):'Δεν έχει οριστεί ημερομηνία')+'</div></div>'
+    +'</div>';
+
+  // ── Trend sparklines (from appointment entries logged over time) ──
+  var trendsHtml='';
+  if(c.appointments.length>=2){
+    trendsHtml='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">'
+      +'<div style="flex:1;min-width:220px">'+apptSparkline(c.appointments,'gi','#c62828','Πεπτικά συμπτώματα')+'</div>'
+      +'<div style="flex:1;min-width:220px">'+apptSparkline(c.appointments,'compliance','#025857','Τήρηση προπόνησης')+'</div>'
+      +'</div>';
+  }
+
+  // ── New appointment entry form ──
+  var sportKey=c.sport;
+  var sportChipsList=APPT_SPORT_CHIPS[sportKey]||[];
+  var sportInfo=sportKey&&SPORT_PROFILES[sportKey]?SPORT_PROFILES[sportKey]:null;
+  var formHtml='<div class="tracker-section">'
+    +'<div class="tracker-head">📝 Νέο ραντεβού</div>'
+    +'<div style="margin-bottom:8px"><input type="date" id="appt-date" value="'+today+'" class="tracker-inp"></div>'
+    +'<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px">'
+    +'<div><div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Πεπτικά συμπτώματα</div><div class="appt-scale" id="appt-gi-scale">'+apptScaleButtons('appt-gi')+'</div></div>'
+    +'<div><div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Τήρηση προπόνησης</div><div class="appt-scale" id="appt-compliance-scale">'+apptScaleButtons('appt-compliance')+'</div></div>'
+    +'</div>'
+    +'<div class="appt-chips" id="appt-common-chips">'+APPT_COMMON_CHIPS.map(function(ch){return '<button type="button" class="appt-chip" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'
+    +(sportChipsList.length?('<div style="font-size:10px;color:#888;font-weight:600;margin:8px 0 4px">Ειδικά για '+(sportInfo?sportInfo.icon+' '+esc(sportInfo.name):'άθλημα')+'</div><div class="appt-chips" id="appt-sport-chips">'+sportChipsList.map(function(ch){return '<button type="button" class="appt-chip" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'):'')
+    +'<textarea id="appt-notes" placeholder="Σημειώσεις ραντεβού..." class="tracker-textarea" style="margin-top:8px"></textarea>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">'
+    +'<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#c62828;cursor:pointer"><input type="checkbox" id="appt-flag" style="width:14px;height:14px">🚩 Σημείωσε για παρακολούθηση</label>'
+    +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#025857;color:#fff;border:none" onclick="addAppointmentEntry()">+ Καταχώρηση</button>'
+    +'</div>'
+    +'</div>';
+
+  // ── Past entries (reverse-chronological) ──
+  var listHtml='';
+  if(c.appointments.length>0){
+    listHtml+='<div class="consult-log">';
+    c.appointments.slice().reverse().forEach(function(e,ri){
+      var i=c.appointments.length-1-ri;
+      var allChips=(e.chips||[]).concat(e.sportChips||[]);
+      listHtml+='<div class="appt-entry'+(e.flagged?' appt-entry-flagged':'')+'">'
+        +'<div class="consult-date">'+e.date+(e.flagged?' · 🚩':'')+'</div>'
+        +(allChips.length?'<div class="appt-chips" style="margin:4px 0">'+allChips.map(function(ch){return '<span class="appt-chip active" style="cursor:default">'+esc(ch)+'</span>';}).join('')+'</div>':'')
+        +(e.notes?'<div class="consult-text">'+esc(e.notes)+'</div>':'')
+        +'<button class="met-del" onclick="removeAppointmentEntry('+i+')" title="Διαγραφή">&#10005;</button>'
+        +'</div>';
+    });
+    listHtml+='</div>';
+  } else {
+    listHtml='<div class="tracker-empty">Δεν υπάρχουν καταχωρήσεις ραντεβού ακόμα. Πρόσθεσε την πρώτη!</div>';
+  }
+
+  return '<div style="padding:16px 20px">'+strip+trendsHtml+formHtml+'<div class="tracker-section"><div class="tracker-head">📋 Ιστορικό ραντεβού</div>'+listHtml+'</div></div>';
+}
+function addAppointmentEntry(){
+  var c=getC();if(!c)return;
+  if(!c.appointments)c.appointments=[];
+  var date=(document.getElementById('appt-date')||{}).value;
+  if(!date)return;
+  var giScale=document.getElementById('appt-gi-scale');
+  var compScale=document.getElementById('appt-compliance-scale');
+  var gi=giScale?(parseInt(giScale.getAttribute('data-selected'))||0):0;
+  var compliance=compScale?(parseInt(compScale.getAttribute('data-selected'))||0):0;
+  var notes=((document.getElementById('appt-notes')||{}).value||'').trim();
+  var flagged=!!(document.getElementById('appt-flag')||{}).checked;
+  var chips=[];
+  var commonWrap=document.getElementById('appt-common-chips');
+  if(commonWrap)Array.prototype.forEach.call(commonWrap.querySelectorAll('.appt-chip.active'),function(b){chips.push(b.getAttribute('data-chip'));});
+  var sportChips=[];
+  var sportWrap=document.getElementById('appt-sport-chips');
+  if(sportWrap)Array.prototype.forEach.call(sportWrap.querySelectorAll('.appt-chip.active'),function(b){sportChips.push(b.getAttribute('data-chip'));});
+  if(!notes&&!chips.length&&!sportChips.length&&!gi&&!compliance)return;
+  c.appointments.push({date:date,gi:gi,compliance:compliance,chips:chips,sportChips:sportChips,notes:notes,flagged:flagged});
+  c.appointments.sort(function(a,b){return a.date<b.date?-1:1;});
+  save();
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+}
+function removeAppointmentEntry(idx){
+  var c=getC();if(!c||!c.appointments)return;
+  c.appointments.splice(idx,1);
+  save();
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+}
+
 function setDayMacro(key,d,v){
   var c=getC();if(!c)return;
   var t=calcTDEE(c);
@@ -2734,12 +2884,14 @@ function swTab(n){
   var t1=document.getElementById('t1');if(t1)t1.classList.toggle('active',n===1);
   var t2=document.getElementById('t2');if(t2)t2.classList.toggle('active',n===2);
   var t3=document.getElementById('t3');if(t3)t3.classList.toggle('active',n===3);
+  var t3b=document.getElementById('t3b');if(t3b)t3b.classList.toggle('active',n===100);
   var t4=document.getElementById('t4');if(t4)t4.classList.toggle('active',n===4);
 
   // ✅ HIDE ALL PAGES FIRST
   var s1=document.getElementById('s1');if(s1)s1.style.display='none';
   var s2=document.getElementById('s2');if(s2)s2.style.display='none';
   var s3=document.getElementById('s3');if(s3)s3.style.display='none';
+  var s3b=document.getElementById('s3b');if(s3b)s3b.style.display='none';
   var s4=document.getElementById('s4');if(s4)s4.style.display='none';
 
   // ✅ THEN SHOW ONLY THE SELECTED PAGE
@@ -2749,6 +2901,9 @@ function swTab(n){
   // (refreshClientLogsCache) after this div was first built, and swTab() only ever
   // toggled display before, so a stale (pre-fetch) panel could get stuck showing forever.
   if(n===3 && s3){var _c=getC();if(_c)s3.innerHTML=buildTrackerHtml(_c);s3.style.display='block';}
+  // n===100 = "📝 Ραντεβού" tab (kept outside the 1-4 numbering since 5/6/7 are already used
+  // by swTab for global nav — Διατροφές/Συνταγές/Πελάτες). Rebuilt fresh each open, same reason as s3.
+  if(n===100 && s3b){var _c100=getC();if(_c100)s3b.innerHTML=buildAppointmentsHtml(_c100);s3b.style.display='block';}
   if(n===4 && s4)s4.style.display='block';
 
   // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1 (Page 1 only - Στοιχεία Πελάτη)
