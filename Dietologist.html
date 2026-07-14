@@ -1798,6 +1798,12 @@ window.renderMain = function() {
 
   setTimeout(function(){
     originalRenderMain();
+    // originalRenderMain() rebuilds #main from scratch, always defaulting to tab 1 —
+    // re-apply whichever client-detail tab (swTab argument) was actually requested most
+    // recently, so this delayed rebuild doesn't silently undo a swTab() call that ran
+    // synchronously right after renderMain() (e.g. selectClient() + swTab(N) from the
+    // sidebar quick actions), which would otherwise always land back on tab 1.
+    if(typeof swTab==='function' && window._lastTabN!=null) swTab(window._lastTabN);
     if(main) {
       main.style.opacity = '1';
       main.style.transition = 'opacity 0.3s ease-out';
