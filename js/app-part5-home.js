@@ -12,6 +12,12 @@ function homeClientsNeedingAttention(){
   var now=Date.now();
   var out=[];
   clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+    var flaggedAppt=(c.appointments||[]).slice().reverse().find(function(a){return a.flagged;});
+    if(flaggedAppt){
+      out.push({c:c,tier:-1,gap:0,label:'🚩 σημειωμένο για παρακολούθηση (ραντεβού '+flaggedAppt.date+')',
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(100);">Δες ραντεβού</button>'});
+      return;
+    }
     var hasPlan=(typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
     if(!hasPlan){
       out.push({c:c,tier:0,gap:0,label:'χωρίς πλάνο ακόμα',

@@ -2559,7 +2559,8 @@ function renderQAQuickAppt(q){
   var results=document.getElementById('qa-quickappt-results'); if(!results) return;
   var list=qaMatchingClients(q), html='';
   list.forEach(function(c){
-    var sub = (c.appointments && c.appointments.length) ? ('τελ. ραντεβού '+c.appointments[c.appointments.length-1].date) : 'καμία καταχώρηση ακόμα';
+    var lastAppt = c.appointments && c.appointments.length ? c.appointments[c.appointments.length-1] : null;
+    var sub = lastAppt ? ((clientHasFlaggedAppointment(c)?'🚩 ':'')+'τελ. ραντεβού '+lastAppt.date) : 'καμία καταχώρηση ακόμα';
     html+='<div class="qa-row" onclick="qaStartAppt(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
   });
   html+='<div class="qa-row qa-row-new" onclick="qaCreateAndAppt(document.getElementById(\'qa-quickappt-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
@@ -2695,10 +2696,16 @@ function progressBadge(c){
   return '<span style="background:'+(ok?'#E8F5E9':'#FAEEDA')+';color:'+(ok?'#1E5E24':'#633806')+';font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">'+score+'%</span>';
 }
 
-// Ένας πελάτης "χρειάζεται προσοχή" αν: δεν έχει καθόλου πλάνο, ή το δημοσιευμένο portal link του είναι
-// ξεπερασμένο, ή το πλάνο του είναι 30+ ημερών (ίδια κριτήρια με το Διατροφές "needs action"), ή έχει
-// δημοσιευμένο portal αλλά 2+ μέρες χωρίς check-in.
+// Πελάτης με τουλάχιστον μία καταχώρηση ραντεβού σημειωμένη 🚩 για παρακολούθηση. Μένει true μέχρι
+// να διαγραφεί η ίδια η καταχώρηση (δεν υπάρχει ξεχωριστό "resolved" state) — δες removeAppointmentEntry.
+function clientHasFlaggedAppointment(c){
+  return !!(c.appointments && c.appointments.some(function(a){return a.flagged;}));
+}
+// Ένας πελάτης "χρειάζεται προσοχή" αν: έχει σημειωμένο ραντεβού για παρακολούθηση, ή δεν έχει καθόλου
+// πλάνο, ή το δημοσιευμένο portal link του είναι ξεπερασμένο, ή το πλάνο του είναι 30+ ημερών (ίδια
+// κριτήρια με το Διατροφές "needs action"), ή έχει δημοσιευμένο portal αλλά 2+ μέρες χωρίς check-in.
 function clientNeedsAttention(c){
+  if(clientHasFlaggedAppointment(c)) return true;
   if(typeof dietsHasPlan==='function' && !dietsHasPlan(c)) return true;
   if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) return true;
   if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)) return true;
@@ -2763,7 +2770,7 @@ function renderSB(){
         +'<div class="cc-top">'
         +'<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'
         +'<div class="cc-headtext">'
-        +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+'</div>'
+        +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+'</div>'
         +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
         +'</div>'
         +'<div class="cc-actions">'
