@@ -801,7 +801,7 @@ function makeDayTgtDefaults(c,t){
 
     var dayP=Math.round(dayKcal*pPct/4);
     var dayF=Math.round(dayKcal*fPct/9);
-    var dayC=Math.round((dayKcal-dayP*4-dayF*9)/4);
+    var dayC=Math.max(0,Math.round((dayKcal-dayP*4-dayF*9)/4)); // floor at 0 — defense-in-depth against p%+f% together exceeding 100
 
     // Apply carb boost redistribution on top of daily macro targets
     if(extraC>0){
@@ -1497,14 +1497,26 @@ function setMacroPreset(k){
 function setMacroCustom(key,val){
   var c=getC();if(!c)return;
   var v=Math.max(5,Math.min(80,parseInt(val)||25));
-  if(key==='p')c.macroP=v;
-  else if(key==='f')c.macroF=v;
-  else if(key==='c')c.macroC=v;
+  // Rescale the other two fields so all three always sum to exactly 100 — otherwise
+  // calcTDEE's carb-as-remainder math ((target-protein-fat)/4) can go negative when
+  // protein+fat alone already exceed 100% (e.g. 50%+60%), corrupting the whole plan.
+  var cur={p:c.macroP!=null?c.macroP:25,f:c.macroF!=null?c.macroF:25,c:c.macroC!=null?c.macroC:50};
+  cur[key]=v;
+  var otherKeys=['p','f','c'].filter(function(k){return k!==key;});
+  var remaining=100-v;
+  var otherSum=cur[otherKeys[0]]+cur[otherKeys[1]];
+  if(otherSum<=0){
+    cur[otherKeys[0]]=Math.round(remaining/2);
+  } else {
+    cur[otherKeys[0]]=Math.round(remaining*cur[otherKeys[0]]/otherSum);
+  }
+  cur[otherKeys[1]]=remaining-cur[otherKeys[0]];
+  c.macroP=cur.p;c.macroF=cur.f;c.macroC=cur.c;
   save();
   // Trigger update to recalculate TDEE and update table
-  if(key==='p')upd('macroP',c.macroP);
-  else if(key==='f')upd('macroF',c.macroF);
-  else if(key==='c')upd('macroC',c.macroC);
+  upd('macroP',c.macroP);
+  upd('macroF',c.macroF);
+  upd('macroC',c.macroC);
   onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 

@@ -551,7 +551,8 @@ function safeStorageSet(key, val) {
       return false;
     }
 
-    // Silent fail for other errors - data stays in memory but won't persist
+    // Data stays in memory but won't persist — tell the user instead of failing silently
+    try { showErrorToast('❌ Η αποθήκευση απέτυχε: ' + (e.message || 'άγνωστο σφάλμα')); } catch(e2){}
     return false;
   }
 }
@@ -620,12 +621,13 @@ var LOGGER={
 */
 var _saveTimer=null;
 function _doSave(){
-  safeStorageSet('fyh_clients', clients);
-  safeStorageSet('fyh_custom_tmpls', customTemplates);
+  var okClients=safeStorageSet('fyh_clients', clients);
+  var okTmpls=safeStorageSet('fyh_custom_tmpls', customTemplates);
   try { localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); } catch(e){}
   try { _rollingSnapshot(); } catch(e){ console.warn('[BACKUP] snapshot hook', e && e.message); }
   try { _writeFileBackup(false); } catch(e){ console.warn('[BACKUP] file hook', e && e.message); }
   try { if(window.Cloud) window.Cloud.save(); } catch(e){ console.warn('[CLOUD] save hook', e && e.message); }
+  if(!okClients || !okTmpls) return; // storage write failed — safeStorageSet already told the user, don't also claim success
   var t=document.getElementById('autosave-toast');
   if(t){t.style.opacity='1';clearTimeout(t._ft);t._ft=setTimeout(function(){t.style.opacity='0';},1600);}
 }
@@ -1589,7 +1591,7 @@ function normalizeGreekText(text) {
 function calcTDEE(c){
   var bmr;
   var t={}; // Initialize tracking object for BMR method and FFM
-  var isMinor=(c.age||0)<18;
+  var isMinor=(c.age!=null && c.age>0 && c.age<18); // don't coerce a not-yet-entered age to 0 and misclassify as a minor
   var growthAdd=0;
 
   // ✅ NEW: PRIORITY 0 - Use measured RMR from indirect calorimetry if available
@@ -1753,7 +1755,7 @@ function calcTDEE(c){
   var protG=Math.round(target*pPct/4);
   var fatG=Math.round(target*fPct/9);
   // Calculate carbs as difference to maintain exact calorie matching
-  var carbG=Math.round((target-protG*4-fatG*9)/4);
+  var carbG=Math.max(0,Math.round((target-protG*4-fatG*9)/4)); // floor at 0 — defense-in-depth against p%+f% together exceeding 100
   var protGperKg=c.weight>0?+(protG/c.weight).toFixed(2):0;
   // Energy Availability = (target intake - exercise kcal) / LBM — RED-S screening
   var lbmForEA=c.lbm>0?c.lbm:0;

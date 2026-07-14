@@ -499,22 +499,22 @@ function exportPDF(lang){
       ?'<div class="hdr" style="margin-bottom:8px;padding-bottom:8px;border-bottom:2px solid #FFD166;align-items:center;">'
        +'<div class="hl">'+(logoSrc?'<img src="'+logoSrc+'" alt="fyh" style="width:46px;height:46px;border-radius:10px;">':'')+'<div class="hlurl">WWW.FEEDYOURHEALTH.ORG</div></div>'
        +'<div style="flex:1;margin:0 14px;background:linear-gradient(135deg,#06D6A0,#118AB2);border-radius:12px;padding:8px 14px;color:#fff;">'
-       +'<div style="font-size:13pt;font-weight:900;">'+esc(c.name||'Αθλητής')+'</div>'
-       +'<div style="font-size:6.5pt;margin-top:2px;opacity:.9;">'+(c.sex==='M'?'Αγόρι':'Κορίτσι')+', '+c.age+' ετών &nbsp;·&nbsp; '+c.weight+'kg / '+c.height+'cm</div>'
-       +'<div style="margin-top:5px;"><span style="background:rgba(255,255,255,.22);border-radius:20px;padding:2px 10px;font-size:7.5pt;font-weight:700;">🎯 '+avgTarget+' kcal (μέσο)</span></div>'
+       +'<div style="font-size:13pt;font-weight:900;">'+esc(c.name||(isEn?'Athlete':'Αθλητής'))+'</div>'
+       +'<div style="font-size:6.5pt;margin-top:2px;opacity:.9;">'+(isEn?(c.sex==='M'?'Boy':'Girl')+', '+c.age+' yrs old':(c.sex==='M'?'Αγόρι':'Κορίτσι')+', '+c.age+' ετών')+' &nbsp;·&nbsp; '+c.weight+'kg / '+c.height+'cm</div>'
+       +'<div style="margin-top:5px;"><span style="background:rgba(255,255,255,.22);border-radius:20px;padding:2px 10px;font-size:7.5pt;font-weight:700;">🎯 '+avgTarget+' kcal '+(isEn?'(avg)':'(μέσο)')+'</span></div>'
        +'</div>'
        +'<div style="text-align:right;">'
-       +'<div style="background:#EEF9FF;border:2px solid #118AB2;border-radius:10px;padding:5px 9px;font-size:6.5pt;font-weight:700;color:#118AB2;">💧 '+t.hydBase+'ml<br><span style="font-weight:400;font-size:5.5pt;">+500ml προπόνηση</span></div>'
+       +'<div style="background:#EEF9FF;border:2px solid #118AB2;border-radius:10px;padding:5px 9px;font-size:6.5pt;font-weight:700;color:#118AB2;">💧 '+t.hydBase+'ml<br><span style="font-weight:400;font-size:5.5pt;">'+(isEn?'+500ml training':'+500ml προπόνηση')+'</span></div>'
        +'</div>'
        +'</div>'
        // Sticker bar
        +'<div class="sticker-bar">'
-       +(t.growthAdd>0?'<span class="sticker s-orange">🔥 Growth Allowance: +'+t.growthAdd+' kcal</span>':'')
-       +(numTDays>0?'<span class="sticker s-green">💪 '+numTDays+' ημέρες προπόνηση</span>':'')
-       +'<span class="sticker s-blue">🎯 '+avgTarget+' kcal (μέσο/week)</span>'
-       +'<span class="sticker s-purple">📅 Εβδομαδιαίο Πλάνο</span>'
+       +(t.growthAdd>0?'<span class="sticker s-orange">🔥 '+(isEn?'Growth Allowance: +':'Αύξηση Ανάπτυξης: +')+t.growthAdd+' kcal</span>':'')
+       +(numTDays>0?'<span class="sticker s-green">💪 '+numTDays+' '+(isEn?'training days':'ημέρες προπόνηση')+'</span>':'')
+       +'<span class="sticker s-blue">🎯 '+avgTarget+' kcal '+(isEn?'(avg/week)':'(μέσο/εβδ.)')+'</span>'
+       +'<span class="sticker s-purple">📅 '+(isEn?'Weekly Plan':'Εβδομαδιαίο Πλάνο')+'</span>'
        +'</div>'
-       +'<div class="week-banner">📆 &nbsp; Το πλάνο σου αυτή την εβδομάδα — δώσε τα δυνατά σου! 💪</div>'
+       +'<div class="week-banner">'+(isEn?'📆 &nbsp; Your plan this week — give it your best! 💪':'📆 &nbsp; Το πλάνο σου αυτή την εβδομάδα — δώσε τα δυνατά σου! 💪')+'</div>'
       // ── ADULT HEADER ──
       :'<div class="hdr">'
        +'<div class="hl">'+(logoSrc?'<img src="'+logoSrc+'" alt="fyh">':'')+'<div class="hlurl">WWW.FEEDYOURHEALTH.ORG</div></div>'
@@ -548,7 +548,7 @@ function exportPDF(lang){
     +'<div class="shop-page">'+fxHtml+spicesHtml+(shopHtml?'</div><div class="shop-page">'+shopHtml:'')
     +'<div class="footer">'
     +(isMinorPdf
-      ?'<span class="footer-msg">🌟 Συνέχισε έτσι — κάθε γεύμα σε φέρνει πιο κοντά στον στόχο σου!</span><span style="color:#aaa">Feed Your Health © 2025</span>'
+      ?'<span class="footer-msg">'+(isEn?'🌟 Keep it up — every meal brings you closer to your goal!':'🌟 Συνέχισε έτσι — κάθε γεύμα σε φέρνει πιο κοντά στον στόχο σου!')+'</span><span style="color:#aaa">Feed Your Health © 2025</span>'
       :(isEn?'Abbreviations: g = grams &nbsp; cup = 240-250 ml &nbsp; tbsp = tablespoon (10-14g) &nbsp; tsp = teaspoon (5-7g)':'Συντομογραφίες: γρ. = γραμμάρια &nbsp; φλ. = φλυτζάνι (240-250 ml) &nbsp; Κ = κουτάλι της σούπας (10-14 gr) &nbsp; κ/κι = κουταλάκι (5-7 gr)'))
     +'</div></div>'
     // Kids: bottom rainbow band
