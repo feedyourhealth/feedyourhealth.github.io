@@ -153,34 +153,44 @@ function getMicronutrientTargets(c){
   var isAthlete=!!(trainDays>=3);
   var athleteBoost=isAthlete?1.25:1.0;
 
+  // Sport-specific published targets (ISSN/IOC-sourced, SPORT_PROTOCOLS[sport].criticalMicronutrients)
+  // take precedence over the generic sportBoost heuristic below for iron/zinc/magnesium/calcium,
+  // since they're already validated per-sport numbers rather than a generic multiplier.
+  var sportCrit=(sport&&SPORT_PROTOCOLS[sport])?SPORT_PROTOCOLS[sport].criticalMicronutrients:null;
+
   // ═════ SPORT-SPECIFIC BOOSTS (based on oxidative stress & demands) ═════
   var sportBoost={iron:1.0,zinc:1.0,magnesium:1.0,b_vitamins:1.0};
 
   if(sport){
+    // c.sport stores a SPORT_PROFILES *key* (e.g. 'boxing','crossfit'), not the display name
+    // these .includes() checks were written against (e.g. 'Boxing','CrossFit') — resolve to the
+    // real display name first, or this whole block silently never matches (case-sensitive compare
+    // against the wrong string). See dietologist-pending-work memory, 2026-07-15, for the audit that found this.
+    var sportName=(SPORT_PROFILES[sport]&&SPORT_PROFILES[sport].name)||sport;
     // ENDURANCE (Running, Cycling, Swimming, Triathlon)
-    if(sport.includes('Τρέξιμο')||sport.includes('Ποδηλασία')||sport.includes('Κολύμβηση')){
+    if(sportName.includes('Τρέξιμο')||sportName.includes('Ποδηλασία')||sportName.includes('Κολύμβηση')){
       sportBoost.iron=1.50; // +50%: increased oxidative stress, sweat losses
       sportBoost.magnesium=1.25; // +25%: muscle fatigue, 56.8% endurance athletes deficient
       sportBoost.b_vitamins=1.20; // +20%: energy metabolism demands
     }
     // STRENGTH/POWER (Weightlifting, Powerlifting, Gymnastics)
-    else if(sport.includes('Weightlifting')||sport.includes('Powerlifting')||sport.includes('Γυμναστική')){
+    else if(sportName.includes('Weightlifting')||sportName.includes('Powerlifting')||sportName.includes('Γυμναστική')){
       sportBoost.zinc=1.25; // +25%: protein synthesis, muscle growth
       sportBoost.magnesium=1.25; // +25%: muscle contraction, 300+ enzymatic reactions
     }
     // COMBAT SPORTS (MMA, Boxing, Wrestling, BJJ)
-    else if(sport.includes('MMA')||sport.includes('Boxing')||sport.includes('Wrestling')||sport.includes('Jiu Jitsu')){
+    else if(sportName.includes('MMA')||sportName.includes('Mixed Martial Arts')||sportName.includes('Boxing')||sportName.includes('Wrestling')||sportName.includes('Jiu Jitsu')){
       sportBoost.iron=1.75; // +75%: extreme oxidative stress + frequent weight cuts
       sportBoost.magnesium=1.50; // +50%: muscle cramps prevention, sweat losses
       sportBoost.zinc=1.50; // +50%: immune support (high injury risk), CO2 removal
     }
     // TEAM SPORTS (Soccer, Basketball, Volleyball)
-    else if(sport.includes('Ποδόσφαιρο')||sport.includes('Μπάσκετ')||sport.includes('Volley')){
+    else if(sportName.includes('Ποδόσφαιρο')||sportName.includes('Μπάσκετ')||sportName.includes('Volley')){
       sportBoost.iron=1.40; // +40%: high intensity intervals
       sportBoost.magnesium=1.30; // +30%: muscle fatigue
     }
     // MIXED TRAINING (CrossFit, functional fitness)
-    else if(sport.includes('CrossFit')||sport.includes('functional')){
+    else if(sportName.includes('CrossFit')||sportName.includes('functional')){
       sportBoost.iron=1.50;
       sportBoost.magnesium=1.40;
       sportBoost.zinc=1.25;
@@ -232,62 +242,75 @@ function getMicronutrientTargets(c){
   var finalCa=Math.round(baseCa*athleteBoost*dietBoost.calcium);
   var finalB12=baseB12*athleteBoost*dietBoost.b12;
 
+  // When a sport-specific published target exists (SPORT_PROTOCOLS), it already represents
+  // the intended athletic-level intake for that sport — use it as-is for `athletic` (no
+  // athleteBoost/sportBoost stacking on top, which would double-count), but still layer the
+  // diet-type/altitude adjustments on top for `adjusted`, since those are independent factors.
+  var ironCrit=sportCrit&&sportCrit.iron;
+  var zincCrit=sportCrit&&sportCrit.zinc;
+  var magCrit=sportCrit&&sportCrit.magnesium;
+  var caCrit=sportCrit&&sportCrit.calcium;
+
   return{
     iron:{
       target:baseIron,
-      unit:'mg',label:'Iron (Fe)',
-      notes:sex==='M'?'Adult male':age<51?'Menstruating female':'Postmenopausal',
-      athletic:Math.round(baseIron*athleteBoost),
-      adjusted:finalIron
+      unit:NUTRIENT_UNITS.iron,label:'Iron (Fe)',
+      notes:ironCrit?ironCrit.notes:(sex==='M'?'Adult male':age<51?'Menstruating female':'Postmenopausal'),
+      athletic:ironCrit?ironCrit.target:Math.round(baseIron*athleteBoost),
+      adjusted:ironCrit?Math.round(ironCrit.target*dietBoost.iron*envBoost.iron):finalIron,
+      sportSpecific:!!ironCrit
     },
     zinc:{
       target:baseZinc,
-      unit:'mg',label:'Zinc (Zn)',
-      notes:sex==='M'?'Adult male':'Adult female',
-      athletic:Math.round(baseZinc*athleteBoost),
-      adjusted:finalZinc
+      unit:NUTRIENT_UNITS.zinc,label:'Zinc (Zn)',
+      notes:zincCrit?zincCrit.notes:(sex==='M'?'Adult male':'Adult female'),
+      athletic:zincCrit?zincCrit.target:Math.round(baseZinc*athleteBoost),
+      adjusted:zincCrit?Math.round(zincCrit.target*dietBoost.zinc):finalZinc,
+      sportSpecific:!!zincCrit
     },
     magnesium:{
       target:baseMag,
-      unit:'mg',label:'Magnesium (Mg)',
-      notes:'Essential for muscle function & recovery',
-      athletic:Math.round(baseMag*athleteBoost),
-      adjusted:finalMag
+      unit:NUTRIENT_UNITS.magnesium,label:'Magnesium (Mg)',
+      notes:magCrit?magCrit.notes:'Essential for muscle function & recovery',
+      athletic:magCrit?magCrit.target:Math.round(baseMag*athleteBoost),
+      adjusted:magCrit?Math.round(magCrit.target*dietBoost.iron):finalMag,
+      sportSpecific:!!magCrit
     },
     calcium:{
       target:baseCa,
-      unit:'mg',label:'Calcium (Ca)',
-      notes:'Bone health & muscle function',
-      athletic:Math.round(baseCa*athleteBoost),
-      adjusted:finalCa
+      unit:NUTRIENT_UNITS.calcium,label:'Calcium (Ca)',
+      notes:caCrit?caCrit.notes:'Bone health & muscle function',
+      athletic:caCrit?caCrit.target:Math.round(baseCa*athleteBoost),
+      adjusted:caCrit?Math.round(caCrit.target*dietBoost.calcium):finalCa,
+      sportSpecific:!!caCrit
     },
     b1:{
       target:sex==='M'?1.2:1.1,
-      unit:'mg',label:'B1 (Thiamine)',
+      unit:NUTRIENT_UNITS.b1,label:'B1 (Thiamine)',
       notes:'Energy metabolism',
       athletic:Math.round((sex==='M'?1.2:1.1)*athleteBoost*sportBoost.b_vitamins*100)/100
     },
     b2:{
       target:sex==='M'?1.3:1.1,
-      unit:'mg',label:'B2 (Riboflavin)',
+      unit:NUTRIENT_UNITS.b2,label:'B2 (Riboflavin)',
       notes:'Energy & antioxidant support',
       athletic:Math.round((sex==='M'?1.3:1.1)*athleteBoost*sportBoost.b_vitamins*100)/100
     },
     b3:{
       target:sex==='M'?16:14,
-      unit:'mg NE',label:'B3 (Niacin)',
+      unit:NUTRIENT_UNITS.b3,label:'B3 (Niacin)',
       notes:'Energy metabolism',
       athletic:Math.round((sex==='M'?16:14)*athleteBoost*sportBoost.b_vitamins)
     },
     b6:{
       target:sex==='M'?1.3:1.3,
-      unit:'mg',label:'B6 (Pyridoxine)',
+      unit:NUTRIENT_UNITS.b6,label:'B6 (Pyridoxine)',
       notes:'Protein metabolism & immune',
       athletic:Math.round((sex==='M'?1.3:1.3)*athleteBoost*sportBoost.b_vitamins*100)/100
     },
     b12:{
       target:baseB12,
-      unit:'mcg',label:'B12 (Cobalamin)',
+      unit:NUTRIENT_UNITS.b12,label:'B12 (Cobalamin)',
       notes:'Nerve function & energy',
       athletic:Math.round(baseB12*athleteBoost*100)/100,
       adjusted:Math.round(finalB12*100)/100,
@@ -295,19 +318,19 @@ function getMicronutrientTargets(c){
     },
     folate:{
       target:400,
-      unit:'mcg',label:'Folate',
+      unit:NUTRIENT_UNITS.folate,label:'Folate',
       notes:'Cell division & protein metabolism',
       athletic:Math.round(400*athleteBoost*dietBoost.folate)
     },
     omega3:{
       target:sex==='M'?1.6:1.1,
-      unit:'g',label:'Omega-3 (ALA)',
+      unit:NUTRIENT_UNITS.omega3,label:'Omega-3 (ALA)',
       notes:'Anti-inflammatory, cardiovascular',
       athletic:Math.round((sex==='M'?1.6:1.1)*athleteBoost*10)/10
     },
     omega6:{
       target:sex==='M'?17:12,
-      unit:'g',label:'Omega-6 (LA)',
+      unit:NUTRIENT_UNITS.omega6,label:'Omega-6 (LA)',
       notes:'Essential fatty acid',
       athletic:Math.round((sex==='M'?17:12)*athleteBoost)
     },
@@ -315,19 +338,19 @@ function getMicronutrientTargets(c){
     // βλ. verification pass), ίδιο πρότυπο με το ηλικιακό/φύλου branching του baseIron/baseCa πιο πάνω.
     iodine:{
       target:c.pregnant?220:150,
-      unit:'mcg',label:'Ιώδιο',
+      unit:NUTRIENT_UNITS.iodine,label:'Ιώδιο',
       notes:c.pregnant?'Στόχος εγκυμοσύνης (ACOG/ODS-NIH)':'Γενικός ενήλικας',
       athletic:c.pregnant?220:150
     },
     choline:{
       target:c.pregnant?450:(sex==='M'?550:425),
-      unit:'mg',label:'Χολίνη',
+      unit:NUTRIENT_UNITS.choline,label:'Χολίνη',
       notes:c.pregnant?'Στόχος εγκυμοσύνης, ανώτατο όριο ασφαλείας 3500mg/ημ. (IOM)':'Adequate Intake (IOM)',
       athletic:c.pregnant?450:(sex==='M'?550:425)
     },
     dha:{
       target:c.pregnant?200:250,
-      unit:'mg',label:'DHA (ω-3)',
+      unit:NUTRIENT_UNITS.dha,label:'DHA (ω-3)',
       notes:c.pregnant?'Ελάχιστο εγκυμοσύνης (ACOG/Perinatal Lipid Intake Working Group)':'Γενική σύσταση EPA+DHA (όχι επίσημο DRI)',
       athletic:c.pregnant?200:250
     }
@@ -1244,11 +1267,24 @@ function getDayMicronutrients(meals){
   return result;
 }
 
+// Maps the short food-intake keys (Fe/Zn/Mg/Ca/... — used by MICRONUTRIENTS/getDayMicronutrients)
+// to the full-name keys getMicronutrientTargets() actually returns (iron/zinc/magnesium/calcium/...).
+// A plain key.toLowerCase() only happens to work for the B-vitamins/folate/omega/iodine/choline/dha
+// (their abbreviation lowercased already equals their target key) — it silently fails for Fe/Zn/Mg/Ca,
+// which caused those 4 to always fall back to an empty {} target and read as a fabricated 100%/"OK"
+// regardless of real intake. See dietologist-pending-work memory, 2026-07-15.
+var MICRONUTRIENT_KEY_MAP={
+  Fe:'iron',Zn:'zinc',Mg:'magnesium',Ca:'calcium',
+  B1:'b1',B2:'b2',B3:'b3',B6:'b6',B12:'b12',
+  Folate:'folate',Omega3:'omega3',Omega6:'omega6',
+  Iodine:'iodine',Choline:'choline',DHA:'dha'
+};
+
 // ── Check micronutrient adequacy for the day ────────────────────────────────
 function checkMicronutrientAdequacy(dayMN,targets,useAthletic){
   var result={};
   ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA'].forEach(function(key){
-    var tgt=targets[key.toLowerCase()]||targets[key]||{};
+    var tgt=targets[MICRONUTRIENT_KEY_MAP[key]]||{};
     var target=useAthletic?tgt.athletic:tgt.target;
     var actual=dayMN[key]||0;
     var pct=target?Math.round(actual/target*100):100;

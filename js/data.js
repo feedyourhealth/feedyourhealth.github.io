@@ -1380,21 +1380,34 @@ var MEAL_TIMING_PROFILES={
     desc:'Rest/low activity day — focus on nutrient density'
   }
 };
+
+// Single source of truth for "which unit does nutrient X use" — referenced by
+// SPORT_PROTOCOLS.*.criticalMicronutrients below and by getMicronutrientTargets()
+// (js/app-part1.js), so a unit can't silently drift between the two tables again
+// (see dietologist-pending-work memory, 2026-07-15 IU/vitamin-D audit).
+var NUTRIENT_UNITS={
+  iron:'mg',zinc:'mg',magnesium:'mg',calcium:'mg',sodium:'mg',potassium:'mg',
+  copper:'µg',selenium:'µg',vitaminD:'IU',
+  b1:'mg',b2:'mg',b3:'mg NE',b6:'mg',b12:'mcg',
+  folate:'mcg',omega3:'g',omega6:'g',
+  iodine:'mcg',choline:'mg',dha:'mg'
+};
+
 var SPORT_PROTOCOLS={
   running:{
     name:'Δρομείς (Τρέξιμο)',category:'Endurance',
     macros:{p:14,f:22,c:64},
     criticalMicronutrients:{
-      iron:{target:27,unit:'mg',priority:'CRITICAL',notes:'O2 transport for endurance'},
-      calcium:{target:1150,unit:'mg',priority:'CRITICAL',notes:'Bone density protection'},
-      magnesium:{target:365,unit:'mg',priority:'CRITICAL',notes:'Muscle function, energy metabolism'},
-      vitaminD:{target:1500,unit:'IU',priority:'HIGH',notes:'Many athletes deficient'},
-      potassium:{target:3500,unit:'mg',priority:'HIGH',notes:'Electrolyte balance'}
+      iron:{target:27,unit:NUTRIENT_UNITS.iron,priority:'CRITICAL',notes:'O2 transport for endurance'},
+      calcium:{target:1150,unit:NUTRIENT_UNITS.calcium,priority:'CRITICAL',notes:'Bone density protection'},
+      magnesium:{target:365,unit:NUTRIENT_UNITS.magnesium,priority:'CRITICAL',notes:'Muscle function, energy metabolism'},
+      vitaminD:{target:1500,unit:NUTRIENT_UNITS.vitaminD,priority:'HIGH',notes:'Many athletes deficient'},
+      potassium:{target:3500,unit:NUTRIENT_UNITS.potassium,priority:'HIGH',notes:'Electrolyte balance'}
     },
     recommendedSupplements:[
       {id:'iron',required:false,condition:'if serum ferritin <30µg/L women, <50µg/L men'},
-      {id:'vitaminD',required:false,condition:'if deficient'},
-      {id:'magnesium',required:false,condition:'if deficient'}
+      {id:'vit_d3',required:false,condition:'if deficient'},
+      {id:'magn',required:false,condition:'if deficient'}
     ],
     redSAlert:{risk:'Moderate',minCalories:50,details:'Monitor irregular periods (F), hormonal issues, frequent injuries'},
     hydration:{daily:35,training:40,duringEx:'400-800ml/hr',postEx:'150% weight loss / 4hr'},
@@ -1409,19 +1422,19 @@ var SPORT_PROTOCOLS={
     name:'Ποδόσφαιρο (Football/Soccer)',category:'Intermittent High-Intensity',
     macros:{p:18,f:22,c:60},
     criticalMicronutrients:{
-      iron:{target:20,unit:'mg',priority:'CRITICAL',notes:'O2 transport for repeated sprints'},
-      calcium:{target:1150,unit:'mg',priority:'CRITICAL',notes:'Bone health (frequent jumping/impact)'},
-      magnesium:{target:365,unit:'mg',priority:'CRITICAL',notes:'Muscle cramps, energy metabolism'},
-      sodium:{target:2000,unit:'mg',priority:'HIGH',notes:'during match: +500-700mg/hr'},
-      potassium:{target:3500,unit:'mg',priority:'HIGH',notes:'Electrolyte balance'},
-      zinc:{target:11,unit:'mg',priority:'HIGH',notes:'Immune function'}
+      iron:{target:20,unit:NUTRIENT_UNITS.iron,priority:'CRITICAL',notes:'O2 transport for repeated sprints'},
+      calcium:{target:1150,unit:NUTRIENT_UNITS.calcium,priority:'CRITICAL',notes:'Bone health (frequent jumping/impact)'},
+      magnesium:{target:365,unit:NUTRIENT_UNITS.magnesium,priority:'CRITICAL',notes:'Muscle cramps, energy metabolism'},
+      sodium:{target:2000,unit:NUTRIENT_UNITS.sodium,priority:'HIGH',notes:'during match: +500-700mg/hr'},
+      potassium:{target:3500,unit:NUTRIENT_UNITS.potassium,priority:'HIGH',notes:'Electrolyte balance'},
+      zinc:{target:11,unit:NUTRIENT_UNITS.zinc,priority:'HIGH',notes:'Immune function'}
     },
     recommendedSupplements:[
       {id:'creatine',required:true,dose:'3-5g/day',protocol:'Loading: 5-7g/day×5-7d, then 3-5g/day'},
       {id:'caffeine',required:false,dose:'3-6mg/kg',timing:'60min before match'},
       {id:'betaalanine',required:false,dose:'3-5g/day',protocol:'4-6 weeks loading'},
       {id:'iron',required:false,condition:'if deficient'},
-      {id:'vitaminD',required:false,condition:'if deficient'}
+      {id:'vit_d3',required:false,condition:'if deficient'}
     ],
     redSAlert:{risk:'Moderate',minCalories:50,details:'Monitor hormonal health, energy levels'},
     hydration:{daily:35,training:40,beforeMatch:'400-600ml (2-3hrs before)',duringMatch:'150-250ml every 15-20min (6-8% CHO)',postMatch:'150% weight loss / 4-6hrs'},
@@ -1437,22 +1450,22 @@ var SPORT_PROTOCOLS={
     name:'Judo (Combat Sport)',category:'Combat - Weight Categories',
     macros:{p:20,f:22,c:58},
     criticalMicronutrients:{
-      iron:{target:22,unit:'mg',priority:'CRITICAL',notes:'⚠️ HIGHEST RISK during weight cutting'},
-      calcium:{target:1300,unit:'mg',priority:'CRITICAL',notes:'Bone health, weight cycling risk'},
-      magnesium:{target:420,unit:'mg',priority:'CRITICAL',notes:'Cramp prevention during weight cut'},
-      sodium:{target:2000,unit:'mg',priority:'CRITICAL',notes:'Weight loss → significant depletion'},
-      potassium:{target:3500,unit:'mg',priority:'HIGH',notes:'Electrolyte balance'},
-      zinc:{target:11,unit:'mg',priority:'HIGH',notes:'Elevated due to stress + weight loss'},
-      copper:{target:900,unit:'µg',priority:'HIGH',notes:'Connective tissue (high injury risk)'},
-      vitaminD:{target:1700,unit:'IU',priority:'HIGH',notes:'May need higher'},
-      selenium:{target:55,unit:'µg',priority:'HIGH',notes:'Antioxidant, immune function'}
+      iron:{target:22,unit:NUTRIENT_UNITS.iron,priority:'CRITICAL',notes:'⚠️ HIGHEST RISK during weight cutting'},
+      calcium:{target:1300,unit:NUTRIENT_UNITS.calcium,priority:'CRITICAL',notes:'Bone health, weight cycling risk'},
+      magnesium:{target:420,unit:NUTRIENT_UNITS.magnesium,priority:'CRITICAL',notes:'Cramp prevention during weight cut'},
+      sodium:{target:2000,unit:NUTRIENT_UNITS.sodium,priority:'CRITICAL',notes:'Weight loss → significant depletion'},
+      potassium:{target:3500,unit:NUTRIENT_UNITS.potassium,priority:'HIGH',notes:'Electrolyte balance'},
+      zinc:{target:11,unit:NUTRIENT_UNITS.zinc,priority:'HIGH',notes:'Elevated due to stress + weight loss'},
+      copper:{target:900,unit:NUTRIENT_UNITS.copper,priority:'HIGH',notes:'Connective tissue (high injury risk)'},
+      vitaminD:{target:1700,unit:NUTRIENT_UNITS.vitaminD,priority:'HIGH',notes:'May need higher'},
+      selenium:{target:55,unit:NUTRIENT_UNITS.selenium,priority:'HIGH',notes:'Antioxidant, immune function'}
     },
     recommendedSupplements:[
       {id:'creatine',required:true,dose:'3-5g/day',notes:'Improves strength + power'},
       {id:'caffeine',required:true,dose:'3-6mg/kg',timing:'60min before competition'},
       {id:'iron',required:true,condition:'if serum ferritin <30µg/L women, <50µg/L men'},
       {id:'calcium',required:false,condition:'if dietary intake <1000mg/day'},
-      {id:'vitaminD',required:false,condition:'if deficient (likely in weight-cutters)'},
+      {id:'vit_d3',required:false,condition:'if deficient (likely in weight-cutters)'},
       {id:'betaalanine',required:false,dose:'3-5g/day',protocol:'4-6 weeks loading'}
     ],
     redSAlert:{risk:'VERY HIGH',minCalories:55,details:'⚠️ WEIGHT CYCLING HIGH RISK - Monitor irregular periods (F), low testosterone (M), frequent injuries, persistent fatigue, poor concentration'},

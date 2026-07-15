@@ -1379,6 +1379,22 @@ function initOnboarding(){
 // ✅ IMPROVED UX: Smooth animations for client cards
 // ✅ IMPROVED UX: Show onboarding on first load
 // ✅ SUPPLEMENT SELECTOR (Page 1)
+// Single shared source for the "already taking" quick-pick list — was previously
+// duplicated (with independently-editable dosage strings) in both
+// toggleSupplementSelector() and savePage1Supplements().
+var COMMON_SUPPS = [
+  { name: 'Πολυβιταμίνη', dosage: '1 δισκίο/ημέρα', timing: 'πρωί με φαγητό' },
+  { name: 'Βιταμίνη D3', dosage: '1000-2000 IU/ημέρα', timing: 'πρωί με φαγητό' },
+  { name: 'Ωμέγα-3', dosage: '1000-2000 mg/ημέρα', timing: 'με φαγητό' },
+  { name: 'Μαγνήσιο', dosage: '300-400 mg/ημέρα', timing: 'βράδυ' },
+  { name: 'Ασβέστιο', dosage: '800-1000 mg/ημέρα', timing: 'με φαγητό' },
+  { name: 'Σίδηρος', dosage: '18 mg/ημέρα', timing: 'πρωί χωρίς καφές' },
+  { name: 'Ψευδάργυρος', dosage: '10-15 mg/ημέρα', timing: 'με φαγητό' },
+  { name: 'Βιταμίνη B12', dosage: '1000 mcg/εβδομάδα', timing: 'οποιαδήποτε ώρα' },
+  { name: 'Κρεατίνη', dosage: '5 g/ημέρα', timing: 'με γεύμα' },
+  { name: 'Πρωτεΐνη Σκόνη', dosage: '25-50 g/ημέρα', timing: 'μετά την άσκηση' }
+];
+
 // ✅ NEW: Combined supplements modal (merges current + recommended)
 function openCombinedSupplementsModal() {
   toggleSupplementSelector(); // Use existing logic
@@ -1406,18 +1422,7 @@ function toggleSupplementSelector() {
   suppListHtml += '<p style="color:#666;font-size:12px;margin:0 0 15px 0;">Τικάρετε ό,τι χρησιμοποιεί ήδη τακτικά. Για προτάσεις νέων συμπληρωμάτων βάσει του πλάνου, δες «💊» στο «Εβδομαδιαίο πλάνο» — και τα δύο εμφανίζονται μαζί στο PDF.</p>';
 
   // List common supplements
-  var commonSupps = [
-    { name: 'Πολυβιταμίνη', dosage: '1 δισκίο/ημέρα', timing: 'πρωί με φαγητό' },
-    { name: 'Βιταμίνη D3', dosage: '1000-2000 IU/ημέρα', timing: 'πρωί με φαγητό' },
-    { name: 'Ωμέγα-3', dosage: '1000-2000 mg/ημέρα', timing: 'με φαγητό' },
-    { name: 'Μαγνήσιο', dosage: '300-400 mg/ημέρα', timing: 'βράδυ' },
-    { name: 'Ασβέστιο', dosage: '800-1000 mg/ημέρα', timing: 'με φαγητό' },
-    { name: 'Σίδηρος', dosage: '18 mg/ημέρα', timing: 'πρωί χωρίς καφές' },
-    { name: 'Ψευδάργυρος', dosage: '10-15 mg/ημέρα', timing: 'με φαγητό' },
-    { name: 'Βιταμίνη B12', dosage: '1000 mcg/εβδομάδα', timing: 'οποιαδήποτε ώρα' },
-    { name: 'Κρεατίνη', dosage: '5 g/ημέρα', timing: 'με γεύμα' },
-    { name: 'Πρωτεΐνη Σκόνη', dosage: '25-50 g/ημέρα', timing: 'μετά την άσκηση' }
-  ];
+  var commonSupps = COMMON_SUPPS;
 
   suppListHtml += '<div style="display:grid;gap:10px;margin:15px 0;">';
 
@@ -1462,18 +1467,7 @@ function savePage1Supplements() {
   var selectedSupps = [];
 
   // Common supplements data
-  var commonSupps = [
-    { name: 'Πολυβιταμίνη', dosage: '1 δισκίο/ημέρα' },
-    { name: 'Βιταμίνη D3', dosage: '1000-2000 IU/ημέρα' },
-    { name: 'Ωμέγα-3', dosage: '1000-2000 mg/ημέρα' },
-    { name: 'Μαγνήσιο', dosage: '300-400 mg/ημέρα' },
-    { name: 'Ασβέστιο', dosage: '800-1000 mg/ημέρα' },
-    { name: 'Σίδηρος', dosage: '18 mg/ημέρα' },
-    { name: 'Ψευδάργυρος', dosage: '10-15 mg/ημέρα' },
-    { name: 'Βιταμίνη B12', dosage: '1000 mcg/εβδομάδα' },
-    { name: 'Κρεατίνη', dosage: '5 g/ημέρα' },
-    { name: 'Πρωτεΐνη Σκόνη', dosage: '25-50 g/ημέρα' }
-  ];
+  var commonSupps = COMMON_SUPPS;
 
   checkboxes.forEach(function(cb) {
     var id = cb.id.replace('supp-cb-', '');

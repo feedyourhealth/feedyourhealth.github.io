@@ -2740,7 +2740,7 @@ function getMicronutrientHtml(c){
 
   sortedKeys.forEach(function(key){
     var adq=adequacy[key];
-    var tgt=targets[key.toLowerCase()]||targets[key]||{};
+    var tgt=targets[MICRONUTRIENT_KEY_MAP[key]]||{};
     var label=tgt.label||key;
     var unit=tgt.unit||'';
     var actualVal=Math.round(adq.actual*10)/10;
