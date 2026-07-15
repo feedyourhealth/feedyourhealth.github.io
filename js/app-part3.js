@@ -293,29 +293,15 @@ function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count, 
   var mySig = mealSignature(meal.foods);
   var slot = classifyMealSlot(meal.name);
   var lib = harvestMealLibrary(excludeClientId);
-  function dietOK(comboDiet){
-    if(!dietType || dietType==='normal') return true;
-    // Restrictive target diet (vegan/vegetarian/keto/...): an UNTAGGED source is no
-    // longer assumed safe. Legacy combos/library entries saved before dietType tagging
-    // existed could contain anything — this closed the same leak now confirmed for keto.
-    return comboDiet===dietType;
-  }
   var exclLower = (excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
-  function hasExcludedFood(foods){
-    if(!exclLower.length) return false;
-    return foods.some(function(food){
-      var nameLower=(food.n||'').toLowerCase();
-      return exclLower.some(function(excluded){ return nameLower.indexOf(excluded)!==-1; });
-    });
-  }
   var seen={};
   var cands = lib.filter(function(x){
     if(!x.foods || !x.foods.length) return false;
     var sig = mealSignature(x.foods);
     if(sig===mySig || seen[sig]) return false;
     if(x.slot!=='other' && slot!=='other' && x.slot!==slot) return false;
-    if(!dietOK(x.dietType)) return false;
-    if(hasExcludedFood(x.foods)) return false;
+    if(!comboDietOK(dietType,x.dietType)) return false;
+    if(comboHasExcludedFood(x.foods,exclLower)) return false;
     seen[sig]=true;
     return true;
   });
@@ -339,23 +325,6 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
   excl = excl || [];
   var exclLower = excl.map(function(x){return (x||'').toLowerCase();});
 
-  // ✅ Helper: Check if combo contains any excluded foods
-  function comboHasExcludedFood(foods) {
-    return foods.some(function(food){
-      var foodNameLower = (food.n||'').toLowerCase();
-      return exclLower.some(function(excluded){
-        return excluded && foodNameLower.indexOf(excluded) !== -1;
-      });
-    });
-  }
-  // Diet compatibility: a restrictive target diet only accepts same-diet sources;
-  // 'normal'/undefined target accepts anything. Legacy combos without diet info are
-  // NOT assumed safe for a restrictive diet (confirmed leak: untagged combos were
-  // matching into keto/vegan/vegetarian plans regardless of actual content).
-  function dietOK(comboDiet){
-    if(!dietType || dietType==='normal') return true;
-    return comboDiet===dietType;
-  }
   // ✅ Ένα ολόκληρο πιάτο κρέατος/ψαριού δεν είναι λογικό "Ενδιάμεσο" — χωρίς αυτό, ένα πραγματικό
   // γεύμα κρέατος/ψαριού αποθηκευμένο ως snack από έναν bodybuilding_clean πελάτη (⭐ taste library ή
   // saved combo) θα μπορούσε να καταλήξει σε ΟΠΟΙΟΥΔΗΠΟΤΕ άλλου diet type το πλάνο, αφού dietOK()
@@ -375,9 +344,9 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
     if(Math.abs(comboKcal - targetKcal) > band) continue;
     // Slot filter: skip only when both slots are known and differ
     if(slot && combo.slot && combo.slot!=='other' && combo.slot!==slot) continue;
-    if(!dietOK(combo.dietType)) continue;
+    if(!comboDietOK(dietType,combo.dietType)) continue;
     if(slot==='snack' && dietType!=='bodybuilding_clean' && isMeatOrFishSnack(combo.foods)) continue;
-    if(comboHasExcludedFood(combo.foods)) continue;
+    if(comboHasExcludedFood(combo.foods,exclLower)) continue;
     // Score: closeness to target, nudged by real-world trust (same idea as findBestRecipe's
     // recipeScore — proven meals get a small edge), then a strong penalty for meals already used this week.
     var sig=mealSignature(combo.foods);
@@ -2530,113 +2499,6 @@ function expandRecipeInPlan(d,mi,fi){
   var args=[fi,1].concat(ings);
   Array.prototype.splice.apply(c.weekPlan[d][mi].foods,args);
   save();renderWeekTable();
-}
-
-/* ── FEATURE #2: Weekly Training Schedule Management ────────────────────────── */
-function buildWeeklyTrainingScheduleHtml(c){
-  var dayNames=['Δευτέρα','Τρίτα','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
-  var dayAbbr=['Δ','Τ','Τ','Π','Π','Σ','Κ'];
-
-  var html='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
-  html+='<thead><tr style="background:#E2EEE5;border-bottom:2px solid #c5ddd8;">'
-    +'<th style="padding:8px;text-align:left;font-weight:700;color:#025857;">Ημέρα</th>'
-    +'<th style="padding:8px;text-align:left;font-weight:700;color:#025857;">Προπόνηση</th>'
-    +'<th style="padding:8px;text-align:left;font-weight:700;color:#025857;">Ώρα</th>'
-    +'<th style="padding:8px;text-align:left;font-weight:700;color:#025857;">Διάρκεια</th>'
-    +'</tr></thead>';
-  html+='<tbody>';
-
-  for(var d=0;d<7;d++){
-    var hasTraining=c.weeklyTraining&&c.weeklyTraining[d]&&c.weeklyTraining[d].training;
-    var trainingTime=c.weeklyTraining&&c.weeklyTraining[d]?c.weeklyTraining[d].time:'17:00';
-    var trainingDuration=c.weeklyTraining&&c.weeklyTraining[d]?c.weeklyTraining[d].duration:60;
-
-    html+='<tr style="border-bottom:1px solid #e0e0e0;'+(d%2===0?'background:#f9f9f9':'')+'"><td style="padding:8px;">'
-      +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;">'
-      +'<input type="checkbox" '+(hasTraining?'checked':'')+' onchange="updateWeeklyTraining('+d+',this.checked)" style="cursor:pointer;">'
-      +'<span>'+dayNames[d]+'</span>'
-      +'</label>'
-      +'</td><td style="padding:8px;">'+(hasTraining?'⚽':'😴')+'</td><td style="padding:8px;">'
-      +'<input type="time" '+(hasTraining?'':'disabled')+' id="week-train-time-'+d+'" value="'+trainingTime+'" style="width:90px;padding:4px 6px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;" onchange="updateWeeklyTraining('+d+',true,this.value)">'
-      +'</td><td style="padding:8px;">'
-      +'<input type="number" '+(hasTraining?'':'disabled')+' id="week-train-duration-'+d+'" value="'+trainingDuration+'" min="10" max="180" step="5" style="width:70px;padding:4px 6px;border:1px solid #e0e0e0;border-radius:4px;font-size:11px;" onchange="updateWeeklyTraining('+d+',true,null,this.value)"> min'
-      +'</td></tr>';
-  }
-
-  html+='</tbody></table>';
-  return html;
-}
-
-function updateWeeklyTraining(dayIndex, hasTraining, time, duration){
-  var c=getC();if(!c)return;
-  if(!c.weeklyTraining)c.weeklyTraining=[{},{},{},{},{},{},{}];
-
-  c.weeklyTraining[dayIndex].training=hasTraining;
-  if(time)c.weeklyTraining[dayIndex].time=time;
-  if(duration)c.weeklyTraining[dayIndex].duration=parseInt(duration);
-
-  // Update input states
-  document.getElementById('week-train-time-'+dayIndex).disabled=!hasTraining;
-  document.getElementById('week-train-duration-'+dayIndex).disabled=!hasTraining;
-
-  save();
-  // Recalculate if plan exists
-  if(c.weekPlan&&Object.keys(c.weekPlan).length>0){
-    initializeMealTiming(c);
-    renderWeekTable();
-  }
-}
-
-/* ── FEATURE #3: Multiple Training Times (2x/day) ────────────────────────── */
-function updateSecondTraining(dayIndex, hasTraining, time, duration){
-  var c=getC();if(!c)return;
-  if(!c.secondTraining)c.secondTraining=[{},{},{},{},{},{},{}];
-
-  c.secondTraining[dayIndex].training=hasTraining;
-  if(time)c.secondTraining[dayIndex].time=time;
-  if(duration)c.secondTraining[dayIndex].duration=parseInt(duration);
-
-  document.getElementById('second-train-time-'+dayIndex).disabled=!hasTraining;
-  document.getElementById('second-train-duration-'+dayIndex).disabled=!hasTraining;
-
-  save();
-  if(c.weekPlan&&Object.keys(c.weekPlan).length>0){
-    initializeMealTiming(c);
-    renderWeekTable();
-  }
-}
-
-function buildSecondTrainingScheduleHtml(c){
-  var dayNames=['Δευτέρα','Τρίτα','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
-
-  var html='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
-  html+='<thead><tr style="background:#FFE0B2;border-bottom:2px solid #FFB74D;">'
-    +'<th style="padding:8px;text-align:left;font-weight:700;color:#E65100;">Ημέρα</th>'
-    +'<th style="padding:8px;text-align:left;font-weight:700;color:#E65100;">2η Προπόνηση</th>'
-    +'<th style="padding:8px;text-align:left;font-weight:700;color:#E65100;">Ώρα</th>'
-    +'<th style="padding:8px;text-align:left;font-weight:700;color:#E65100;">Διάρκεια</th>'
-    +'</tr></thead>';
-  html+='<tbody>';
-
-  for(var d=0;d<7;d++){
-    var hasTraining=c.secondTraining&&c.secondTraining[d]&&c.secondTraining[d].training;
-    var trainingTime=c.secondTraining&&c.secondTraining[d]?c.secondTraining[d].time:'06:00';
-    var trainingDuration=c.secondTraining&&c.secondTraining[d]?c.secondTraining[d].duration:60;
-
-    html+='<tr style="border-bottom:1px solid #FFE0B2;'+(d%2===0?'background:#fff9e6':'')+'"><td style="padding:8px;">'
-      +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;">'
-      +'<input type="checkbox" '+(hasTraining?'checked':'')+' onchange="updateSecondTraining('+d+',this.checked)" style="cursor:pointer;">'
-      +'<span>'+dayNames[d]+'</span>'
-      +'</label>'
-      +'</td><td style="padding:8px;">'+(hasTraining?'⚽':'😴')+'</td><td style="padding:8px;">'
-      +'<input type="time" '+(hasTraining?'':'disabled')+' id="second-train-time-'+d+'" value="'+trainingTime+'" style="width:90px;padding:4px 6px;border:1px solid #FFB74D;border-radius:4px;font-size:11px;" onchange="updateSecondTraining('+d+',true,this.value)">'
-      +'</td><td style="padding:8px;">'
-      +'<input type="number" '+(hasTraining?'':'disabled')+' id="second-train-duration-'+d+'" value="'+trainingDuration+'" min="10" max="180" step="5" style="width:70px;padding:4px 6px;border:1px solid #FFB74D;border-radius:4px;font-size:11px;" onchange="updateSecondTraining('+d+',true,null,this.value)"> min'
-      +'</td></tr>';
-  }
-
-  html+='</tbody></table>';
-  return html;
 }
 
 /* ── PHASE 2: Meal Timing Management ────────────────────────────────────── */

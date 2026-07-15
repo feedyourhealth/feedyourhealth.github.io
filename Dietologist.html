@@ -741,41 +741,6 @@ function announceToScreenReaders(message) {
   }, 2000);
 }
 
-function setInputError(inputId, errorMessage) {
-  var input = document.getElementById(inputId);
-  if(input) {
-    input.classList.add('input-error');
-    announceToScreenReaders('Σφάλμα: ' + errorMessage);
-  }
-}
-
-function clearInputError(inputId) {
-  var input = document.getElementById(inputId);
-  if(input) {
-    input.classList.remove('input-error');
-  }
-}
-
-// Enhanced form submission with validation announcement
-function enhancedFormValidation(fields) {
-  var hasError = false;
-
-  fields.forEach(function(field) {
-    clearInputError(field.id);
-
-    if(!field.value || field.value.trim() === '') {
-      setInputError(field.id, field.label + ' είναι υποχρεωτικό');
-      hasError = true;
-    }
-  });
-
-  if(!hasError) {
-    announceToScreenReaders('Φόρμα έγκυρη. Αποθήκευση δεδομένων.');
-  }
-
-  return !hasError;
-}
-
 // Keyboard navigation for modals
 document.addEventListener('keydown', function(e) {
   // ESC key closes modals
@@ -824,20 +789,6 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Commented out - was causing infinite recursion
-// var originalShowErrorToast = showErrorToast;
-// window.showErrorToast = function(message) {
-//   originalShowErrorToast(message);
-//   announceToScreenReaders('Σφάλμα: ' + message);
-// };
-
-// Commented out - was causing infinite recursion
-// var originalShowSuccessToast = showSuccessToast;
-// window.showSuccessToast = function(message) {
-//   originalShowSuccessToast(message);
-//   announceToScreenReaders('Επιτυχία: ' + message);
-// };
-
 // Enable accessibility debugging mode (add ?debug=a11y to URL)
 if(window.location.search.includes('debug=a11y')) {
   window.DEBUG_ACCESSIBILITY = true;
@@ -855,26 +806,6 @@ function genSecureToken(bytes) {
   return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-// 2. Add progress entry (weight tracking)
-function addProgressEntry() {
-  var c = getC();
-  if(!c) return;
-
-  showPromptDialog('Τρέχον βάρος (kg):', '', function(weight){
-    if(!weight) return;
-    showPromptDialog('Σημειώσεις (προαιρετικό):', '', function(notes){
-      if(!c.progressLog) c.progressLog = [];
-      c.progressLog.push({
-        date: new Date().toISOString(),
-        weight: parseFloat(weight),
-        notes: notes || ''
-      });
-      upd();
-      showSuccessToast('✅ Εγγραφή προόδου!');
-    }, {title:'Σημειώσεις προόδου'});
-  }, {title:'Νέα καταγραφή προόδου', inputType:'number'});
-}
-
 // NOTE: rateMeal() is defined earlier (writes ratings to TRACKING_DATA so the
 // Meal Stats dashboard can read them, and updates the 👍/👎 button colors).
 // A second, inferior duplicate used to live here (wrote to c.mealFeedback and
@@ -885,83 +816,6 @@ function addProgressEntry() {
 // (computed from the actual weekPlan, with cooked→raw conversion). The old
 // standalone .txt generateShoppingList() here used hardcoded placeholder data
 // and was never wired to any button — removed to avoid confusion.
-
-// 5A. Auto-adjust based on feedback
-function getAutoAdjustmentHints(c) {
-  // Analyze meal feedback to improve future plans
-  if(!c.mealFeedback || Object.keys(c.mealFeedback).length === 0) return null;
-
-  var badMeals = [];  // 1-2 star meals
-  var goodMeals = []; // 5 star meals
-
-  Object.keys(c.mealFeedback).forEach(function(key) {
-    var feedback = c.mealFeedback[key];
-    if(feedback.rating <= 2) {
-      badMeals.push({key: key, rating: feedback.rating, notes: feedback.notes});
-    } else if(feedback.rating === 5) {
-      goodMeals.push({key: key, notes: feedback.notes});
-    }
-  });
-
-  return {
-    avoid: badMeals,
-    favorite: goodMeals,
-    hints: []
-  };
-}
-
-// Show auto-adjust recommendations
-function showAutoAdjustHints() {
-  var c = getC();
-  if(!c) return;
-
-  var hints = getAutoAdjustmentHints(c);
-  if(!hints || (hints.avoid.length === 0 && hints.favorite.length === 0)) {
-    showErrorToast('Δεν υπάρχει αρκετή ανατροφοδότηση ακόμα');
-    return;
-  }
-
-  var message = '💡 ΣΥΣΤΑΣΕΙΣ ΒΕΛΤΙΩΣΗΣ:\n\n';
-
-  if(hints.favorite.length > 0) {
-    message += '✅ Αγαπημένα γεύματα (χρησιμοποίησε περισσότερο):\n';
-    hints.favorite.forEach(function(meal) {
-      message += '  • ' + meal.key + '\n';
-    });
-    message += '\n';
-  }
-
-  if(hints.avoid.length > 0) {
-    message += '❌ Γεύματα που δεν αρέσουν (αποφύγετε):\n';
-    hints.avoid.forEach(function(meal) {
-      message += '  • ' + meal.key + ' (' + meal.rating + '⭐) - ' + meal.notes + '\n';
-    });
-  }
-
-  showErrorToast(message);
-}
-
-// 5B. Generate next plan with auto-adjustments
-function generateSmartPlanWithFeedback() {
-  var c = getC();
-  if(!c) return;
-
-  var hints = getAutoAdjustmentHints(c);
-  var message = '📊 Δημιουργία νέου πλάνου με AI learning:\n\n';
-
-  if(hints) {
-    message += '✅ Θα χρησιμοποιηθούν αγαπημένα γεύματα\n';
-    message += '❌ Θα αποφευχθούν προβληματικά γεύματα\n';
-  }
-
-  message += '🎯 Θα διατηρηθούν θερμίδες & macros\n\n';
-  message += 'Επιβεβαίωση;';
-
-  showConfirmDialog(message, function(){
-    genPlanWithUndo();
-    showSuccessToast('📈 Νέο πλάνο με AI adjustments!');
-  }, {icon:'📊', confirmLabel:'Δημιουργία'});
-}
 
 // ═══════════════════════════════════════════════════════════════════
 // 5B. MEDICAL CONDITIONS PROTOCOL SYSTEM
@@ -1471,47 +1325,6 @@ function applyMedicalProtocol(condition, isChecked) {
 }
 
 // 5. Generate progress report
-function generateProgressReport() {
-  var c = getC();
-  if(!c || !c.progressLog || c.progressLog.length === 0) {
-    showErrorToast('Δεν υπάρχουν καταγραφές προόδου');
-    return;
-  }
-
-  var report = 'ΑΝΑΦΟΡΑ ΠΡΟΟΔΟΥ - ' + c.name + '\n';
-  report += '═══════════════════════════════════\n\n';
-
-  var entries = c.progressLog.sort(function(a, b) {
-    return new Date(a.date) - new Date(b.date);
-  });
-
-  var firstWeight = entries[0].weight;
-  var lastWeight = entries[entries.length - 1].weight;
-  var change = lastWeight - firstWeight;
-
-  report += 'Αρχικό Βάρος: ' + firstWeight + ' kg\n';
-  report += 'Τρέχον Βάρος: ' + lastWeight + ' kg\n';
-  report += 'Μεταβολή: ' + (change > 0 ? '+' : '') + change.toFixed(1) + ' kg\n';
-  report += 'Περίοδος: ' + entries.length + ' εβδομάδες\n\n';
-
-  report += 'Ιστορικό:\n';
-  entries.forEach(function(entry, idx) {
-    var date = new Date(entry.date).toLocaleDateString('el-GR');
-    report += '  #' + (idx + 1) + ' (' + date + '): ' + entry.weight + ' kg';
-    if(entry.notes) report += ' — ' + entry.notes;
-    report += '\n';
-  });
-
-  var blob = new Blob([report], {type: 'text/plain'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = c.name + '_progress_report.txt';
-  a.click();
-
-  showSuccessToast('📊 Αναφορά λήφθηκε!');
-}
-
 // ✅ IMPROVED UX: FAB Menu Toggle
 function fabMenu(){
   var menu = document.getElementById('fab-menu');
@@ -1777,19 +1590,6 @@ window.showErrorToast = function(message) {
   if(toast) toast.classList.add('shake');
 };
 
-// ✅ IMPROVED UX: Loading state for plan generation
-function genPlanWithLoading() {
-  var fab = document.getElementById('fab-btn');
-  fab.classList.add('spin');
-  fab.disabled = true;
-
-  setTimeout(function(){
-    genPlanWithUndo();
-    fab.classList.remove('spin');
-    fab.disabled = false;
-  }, 500);
-}
-
 // ✅ IMPROVED UX: Smooth transitions for renderMain
 var originalRenderMain = renderMain;
 window.renderMain = function() {
@@ -1974,21 +1774,6 @@ function getDayStatus(dayTotals, targetTotals){
   }
 }
 
-function deleteMealAllDays(mealIndex){
-  var c = getC();
-  if(!c || !c.weekPlan) return;
-  showConfirmDialog('Σίγουρα θέλετε να διαγράψετε αυτό το γεύμα από όλες τις ημέρες;', function(){
-    // Remove from all 7 days
-    for(var d = 0; d < 7; d++){
-      if(c.weekPlan[d] && c.weekPlan[d][mealIndex]){
-        c.weekPlan[d].splice(mealIndex, 1);
-      }
-    }
-    save();
-    renderWeekTable();
-    showSuccessToast('✅ Γεύμα διαγράφηκε από όλες τις ημέρες!');
-  });
-}
 </script>
 
 <!-- VALIDATION MODAL -->
@@ -2160,71 +1945,6 @@ document.getElementById('validationModal').addEventListener('click', function(e)
 /* ════════════════════════════════════════════════════════════════════════
    ✅ PAGE 1 MODALS - 6 Pop-up Windows για καθαρότερη σελίδα
    ════════════════════════════════════════════════════════════════════════ */
-
-// ✅ MODAL 1: ΕΒΔΟΜΑΔΙΑΙΟ ΠΡΟΓΡΑΜΜΑ ΠΡΟΠΟΝΗΣΗΣ
-function openWeeklyTrainingModal(){
-  var c=getC();if(!c)return;
-  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="weeklyTrainOverlay" onclick="if(event.target===this)closeWeeklyTrainingModal()">'
-    +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
-    +'<h2 style="margin:0;color:#025857;font-size:18px">📅 Εβδομαδιαίο Πρόγραμμα Προπόνησης</h2>'
-    +'<button onclick="closeWeeklyTrainingModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
-    +'</div>'
-    +'<div id="weeklyTrainContent" style="font-size:13px"></div>'
-    +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
-    +'<button onclick="closeWeeklyTrainingModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
-    +'<button onclick="closeWeeklyTrainingModal();save()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
-    +'</div>'
-    +'</div>'
-    +'</div>';
-
-  var overlay=document.createElement('div');
-  overlay.innerHTML=html;
-  overlay.id='weeklyTrainModal';
-  document.body.appendChild(overlay);
-
-  // Populate content
-  var t=calcTDEE(c);
-  document.getElementById('weeklyTrainContent').innerHTML=buildWeeklyTrainingScheduleHtml(c);
-}
-
-function closeWeeklyTrainingModal(){
-  var m=document.getElementById('weeklyTrainModal');
-  if(m)m.remove();
-}
-
-// ✅ MODAL 2: 2η ΠΡΟΠΟΝΗΣΗ (OPTIONAL)
-function openSecondTrainingModal(){
-  var c=getC();if(!c)return;
-  var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="secondTrainOverlay" onclick="if(event.target===this)closeSecondTrainingModal()">'
-    +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
-    +'<h2 style="margin:0;color:#025857;font-size:18px">⏱️ 2η Προπόνηση (Optional)</h2>'
-    +'<button onclick="closeSecondTrainingModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
-    +'</div>'
-    +'<div style="background:#E2EEE5;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#025857">'
-    +'⚠️ Για αθλητές που προπονούνται 2 φορές την ημέρα (π.χ. Judoka, Combat Sports)'
-    +'</div>'
-    +'<div id="secondTrainContent" style="font-size:13px"></div>'
-    +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
-    +'<button onclick="closeSecondTrainingModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
-    +'<button onclick="closeSecondTrainingModal();save()" style="padding:10px 20px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer">✅ Αποθήκευση</button>'
-    +'</div>'
-    +'</div>'
-    +'</div>';
-
-  var overlay=document.createElement('div');
-  overlay.innerHTML=html;
-  overlay.id='secondTrainModal';
-  document.body.appendChild(overlay);
-
-  document.getElementById('secondTrainContent').innerHTML=buildSecondTrainingScheduleHtml(c);
-}
-
-function closeSecondTrainingModal(){
-  var m=document.getElementById('secondTrainModal');
-  if(m)m.remove();
-}
 
 // ✅ MODAL 3: CUSTOM MEAL TIMES
 function openMealTimesModal(){

@@ -1,3 +1,8 @@
+// Shared by exportPDF() and exportWord()'s shopping list: round a raw gram amount up to a
+// sensible "buy this much" increment, and format it as grams or kg for display.
+function shopRound(g){if(g<100)return Math.ceil(g/10)*10;if(g<500)return Math.ceil(g/25)*25;if(g<1000)return Math.ceil(g/50)*50;return Math.ceil(g/100)*100;}
+function shopDisp(g){if(g>=1000)return(Math.round(g/100)/10).toFixed(1)+' kg';return g+'g';}
+
 function exportPDF(lang){
   var isEn=lang==='en';
   var c=getC();
@@ -21,7 +26,6 @@ function exportPDF(lang){
     }
   }
   var t=calcTDEE(c);
-  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   // Translation helpers
   function fn(name){return (isEn&&EN_FOOD_NAMES[name])||name;}       // food name
   function tMn(name){return (isEn&&EN_MEAL_NAMES[name])||name;}      // meal name
@@ -302,8 +306,6 @@ function exportPDF(lang){
 
   // ── Shopping list ────────────────────────────────────────────────────────────
   var shopHtml='';
-  function shopRound(g){if(g<100)return Math.ceil(g/10)*10;if(g<500)return Math.ceil(g/25)*25;if(g<1000)return Math.ceil(g/50)*50;return Math.ceil(g/100)*100;}
-  function shopDisp(g){if(g>=1000)return(Math.round(g/100)/10).toFixed(1)+' kg';return g+'g';}
   var shopTotals={};
   for(var sdi=0;sdi<7;sdi++){
     (weekPlanForPDF[sdi]||[]).forEach(function(meal){meal.foods.forEach(function(food){shopTotals[food.n]=(shopTotals[food.n]||0)+food.g;});});
@@ -580,7 +582,6 @@ function escRtf(s){
 /* ── Έντυπο Λιπομέτρησης PDF ─────────────────────────────────────────────── */
 function exportLipometriaPDF(){
   var c=getC();if(!c)return;
-  function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function blank(label,w){return '<div class="field" style="width:'+(w||'auto')+'"><div class="flbl">'+label+'</div><div class="fval"></div></div>';}
   function filled(label,val,w,col){return '<div class="field" style="width:'+(w||'auto')+'"><div class="flbl">'+label+'</div><div class="fval" style="'+(col?'color:'+col+';font-weight:700':'')+'">'+esc(val)+'</div></div>';}
 
@@ -742,7 +743,6 @@ function exportLipometriaPDF(){
 function exportBodyCompPDF(){
   var c=getC();if(!c)return;
   if(!c.weightLog||!c.weightLog.length){showErrorToast('Δεν υπάρχουν εγγραφές tracker.');return;}
-  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   var sorted=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
   var latest=sorted[sorted.length-1];
   var latestBF=latest.bf>0?latest.bf:null;
@@ -1649,16 +1649,6 @@ function exportGoogleDocs(){
   }
 
   // ── Shopping List ────────────────────────────────────────────────────────────
-  function shopRound(g){
-    if(g<100)return Math.ceil(g/10)*10;
-    if(g<500)return Math.ceil(g/25)*25;
-    if(g<1000)return Math.ceil(g/50)*50;
-    return Math.ceil(g/100)*100;
-  }
-  function shopDisp(g){
-    if(g>=1000)return (Math.round(g/100)/10).toFixed(1)+' kg';
-    return g+'g';
-  }
 
   // Aggregate all food grams across the whole week
   var shopTotals2={};
@@ -2348,9 +2338,7 @@ function regeneratePlan(){
 // BEHAVIORAL TRACKING SYSTEM — Learning from your usage patterns
 // ══════════════════════════════════════════════════════════════════════════════
 
-// Data structure for tracking - ✅ MOVED TO TOP OF FILE FOR EARLY INITIALIZATION
-// var TRACKING_DATA = { ... } - Already initialized earlier in the script
-
+// TRACKING_DATA is initialized earlier in the script.
 // Load tracking data from localStorage
 function loadTrackingData(){
   var stored = safeStorageGet('dietologist_tracking', null);

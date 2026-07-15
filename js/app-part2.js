@@ -167,6 +167,7 @@ function updateUndoRedoUI(){
 }
 
 function logout(){
+  if(typeof stopAutoSaveInterval==='function') stopAutoSaveInterval(); // otherwise the 30s autosave keeps firing (and calling Cloud.save()) after logout
   // ☁️ CLOUD: πραγματική αποσύνδεση (σβήνει το session, ξαναφορτώνει στο login)
   if(window.Cloud && window.Cloud.enabled){ window.Cloud.signOut(); return; }
   // Clear current selection
@@ -250,13 +251,6 @@ function initializeApp(){
   startAutoSaveInterval();
 }
 
-// NAVIGATION: Back to Clients List (Logout)
-// ═══════════════════════════════════════════════════════════════
-function backToClientsList(){
-  if(typeof renderHome==='function') renderHome();
-  save();  // Save state to localStorage
-}
-
 function deleteCustomTmpl(id){
   showConfirmDialog('Διαγραφή αυτού του προτύπου;', function(){
     customTemplates=customTemplates.filter(function(t){return t.id!==id;});
@@ -303,8 +297,6 @@ function renderMain(){
 
   // Initialize medical conditions if not exist
   if(!c.medConditions) c.medConditions = {};
-  if(!c.progressLog) c.progressLog = [];
-  if(!c.mealFeedback) c.mealFeedback = {};
   if(!c.shareToken) c.shareToken = genSecureToken();
   var dOpts='<option value="normal"'+(c.dietType==='normal'?' selected':'')+'>🍗 Κανονική διατροφή</option><option value="vegetarian"'+(c.dietType==='vegetarian'?' selected':'')+'>🥬 Χορτοφαγική</option><option value="vegan"'+(c.dietType==='vegan'?' selected':'')+'>🌱 Веганι</option><option value="keto"'+(c.dietType==='keto'?' selected':'')+'>⚡ Κετογονική</option><option value="orthodox_fasting"'+(c.dietType==='orthodox_fasting'?' selected':'')+'>✝️ Ορθόδοξη Νηστεία</option><option value="intermittent_fasting"'+(c.dietType==='intermittent_fasting'?' selected':'')+'>⏰ Διαλείπουσα Νηστεία</option><option value="bodybuilding_clean"'+(c.dietType==='bodybuilding_clean'?' selected':'')+'>🏋️ Bodybuilding Clean</option><option value="kids_10_14"'+(c.dietType==='kids_10_14'?' selected':'')+'>👧 Παιδιά 10-14 ετών</option>';
   var fOpts='<option value="mifflin"'+(c.formula==='mifflin'||!c.formula?' selected':'')+'>Mifflin-St Jeor</option><option value="cunningham"'+(c.formula==='cunningham'?' selected':'')+'>Cunningham (αθλητές)</option>';
@@ -319,7 +311,7 @@ function renderMain(){
   var hydTrain=t.hydTrain||Math.round(hydBase+(c.trainHoursPerDay||1)*500);
   // ✅ Collapsible section state (Βασικά Στοιχεία / Άθλημα) — see getSecState()
   var secState=getSecState(c);
-  var ageForPreview=c.birthDate?calcAgeFromBirthdate(c.birthDate):c.age;
+  var ageForPreview=c.birthDate?ageAtDate(c.birthDate):c.age;
   var basicPreview=[c.name||'—', c.sex==='M'?'Άνδρας':(c.sex==='F'?'Γυναίκα':''), (ageForPreview!=null&&!isNaN(ageForPreview))?(ageForPreview+' ετών'):''].filter(function(x){return x;}).join(' · ');
   var sportPreview=[c.sport&&SPORT_PROFILES[c.sport]?SPORT_PROFILES[c.sport].name:'',{sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'}[c.activity]||''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
   var anthroPreview=[c.weight?c.weight+'kg':'', c.height?c.height+'cm':'', (c.weight&&c.height)?('BMI '+(Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10)):''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
@@ -727,10 +719,7 @@ function renderMain(){
   // ✅ Preferences handler
   var prefInp=document.getElementById('inp-preferences');
   if(prefInp)prefInp.oninput=function(){upd('preferences',this.value);};
-  // ✅ FIX: Don't render week table in s1, only render when swTab(2) is called
-  // renderFoodLib('');
-  // if(Object.keys(c.weekPlan).length){initializeMealTiming(c);renderWeekTable();}
-  // renderSuppNotes();
+  // Week table is only rendered in tab 2 (via swTab), not here in s1.
 
   // ← Setup event listeners for all form inputs (CRITICAL for auto-recalculation)
   setupFormEventListeners();
@@ -1429,49 +1418,6 @@ function buildInsightsPanelHtml(c,t){
     +'</div>';
 }
 
-function buildMacroPresetHtml(c,t){
-  var preset=c.macroPreset||'balanced';
-  var dietType=c.dietType||'normal';
-  var html='<div class="macro-preset-wrap">'
-    +'<div class="macro-preset-head">🎯 Κατανομή μακροθρεπτικών</div>'
-    +'<div class="macro-preset-btns">';
-  Object.keys(MACRO_PRESETS).forEach(function(k){
-    var pr=MACRO_PRESETS[k];
-    html+='<button class="macro-preset-btn'+(preset===k?' active':'')+'" onclick="setMacroPreset(\''+k+'\')" title="Π:'+pr.p+'% Λ:'+pr.f+'% Υ:'+pr.c+'%">'+pr.icon+' '+pr.label+'</button>';
-  });
-  html+='</div>'
-    +'<div class="macro-preset-head" style="margin-top:12px">🍽️ Τύπος Διατροφής</div>'
-    +'<div class="macro-preset-btns">'
-    +'<button class="macro-preset-btn'+(dietType==='normal'?' active':'')+'" onclick="setDietType(\'normal\')" title="Κανονική διατροφή">🍗 Κανονική</button>'
-    +'<button class="macro-preset-btn'+(dietType==='vegetarian'?' active':'')+'" onclick="setDietType(\'vegetarian\')" title="Χορτοφαγική διατροφή">🥬 Χορτοφαγική</button>'
-    +'<button class="macro-preset-btn'+(dietType==='vegan'?' active':'')+'" onclick="setDietType(\'vegan\')" title="Vegan διατροφή">🌱 Vegan</button>'
-    +'<button class="macro-preset-btn'+(dietType==='keto'?' active':'')+'" onclick="setDietType(\'keto\')" title="Κετογονική διατροφή">⚡ Κετογονική</button>'
-    +'<button class="macro-preset-btn'+(dietType==='bodybuilding_clean'?' active':'')+'" onclick="setDietType(\'bodybuilding_clean\')" title="Bodybuilding Clean Eating">🏋️ Bodybuilding Clean</button>'
-    +'<button class="macro-preset-btn'+(dietType==='intermittent_fasting'?' active':'')+'" onclick="setDietType(\'intermittent_fasting\')" title="Διαλείπουσα νηστεία">⏰ Διαλείπουσα Νηστεία</button>'
-    +'<button class="macro-preset-btn'+(dietType==='orthodox_fasting'?' active':'')+'" onclick="setDietType(\'orthodox_fasting\')" title="Ορθόδοξη νηστεία">✝️ Ορθόδοξη Νηστεία</button>'
-    +'<button class="macro-preset-btn'+(dietType==='kids_10_14'?' active':'')+'" onclick="setDietType(\'kids_10_14\')" title="Πλάνο για παιδιά 10-14 ετών">👧 Παιδιά 10-14</button>'
-    +'</div>';
-  if(preset==='custom'){
-    html+='<div class="macro-custom-row">'
-      +'<label>Πρωτεΐνη %</label><input class="macro-custom-inp" type="number" min="10" max="60" value="'+(c.macroP||25)+'" onchange="setMacroCustom(\'p\',this.value)">'
-      +'<label>Λιπαρά %</label><input class="macro-custom-inp" type="number" min="10" max="70" value="'+(c.macroF||25)+'" onchange="setMacroCustom(\'f\',this.value)">'
-      +'<label>Υδατ. %</label><input class="macro-custom-inp" type="number" min="10" max="75" value="'+(c.macroC||50)+'" onchange="setMacroCustom(\'c\',this.value)">'
-      +'</div>';
-  }
-  html+='<div class="macro-split-bar">'
-    +'<span class="macro-split-p" style="width:'+t.pPct+'%">Π '+t.pPct+'%</span>'
-    +'<span class="macro-split-f" style="width:'+t.fPct+'%">Λ '+t.fPct+'%</span>'
-    +'<span class="macro-split-c" style="width:'+t.cPct+'%">Υ '+t.cPct+'%</span>'
-    +'</div>'
-    +'<div class="macro-split-vals">'
-    +'<span class="macro-p-val">Πρωτεΐνη: '+t.p+'g&nbsp;&nbsp;('+t.pPct+'%)</span>'
-    +'<span class="macro-f-val">Λιπαρά: '+t.f+'g&nbsp;&nbsp;('+t.fPct+'%)</span>'
-    +'<span class="macro-c-val">Υδατ/κες: '+t.carb+'g&nbsp;&nbsp;('+t.cPct+'%)</span>'
-    +'</div>'
-    +'</div>';
-  return html;
-}
-
 function setDietType(dtype){
   var c=getC();if(!c)return;
   c.dietType=dtype;
@@ -2128,7 +2074,7 @@ function applyErgoCSVData(data){
   if(data.height!=null&&!c.height){c.height=data.height;profileChanged=true;}
   if(data.birthDate&&!c.birthDate&&!c.age){
     c.birthDate=data.birthDate;
-    var a=calcAgeFromBirthdate(data.birthDate);
+    var a=ageAtDate(data.birthDate);
     if(a!=null)c.age=a;
     profileChanged=true;
   }
@@ -2214,7 +2160,7 @@ function finishBatchErgoImport(texts){
     var withDob=rows.filter(function(r){return r.birthDate;})[0];
     if(withDob&&!c.birthDate&&!c.age){
       c.birthDate=withDob.birthDate;
-      var a0=calcAgeFromBirthdate(withDob.birthDate);
+      var a0=ageAtDate(withDob.birthDate);
       if(a0!=null)c.age=a0;
       profileChanged=true;
     }
@@ -3041,14 +2987,6 @@ function setGoalCalories(newGoal) {
   console.log('📊 Goal adjusted to:', newGoal, 'kcal/day');
 }
 
-// ✅ Kept for compatibility with any other caller that still adjusts by a relative delta.
-function adjGoalCalories(delta) {
-  var c = getC();
-  if(!c) return;
-  var currentGoal = (typeof c.goal === 'string' && !isNaN(parseInt(c.goal))) ? parseInt(c.goal) : 0;
-  setGoalCalories(currentGoal + delta);
-}
-
 // ✅ GOAL MACROS AUTO-ADJUSTMENT (NEW)
 function applyGoalMacros(goalType) {
   var c = getC();
@@ -3081,125 +3019,7 @@ function applyGoalMacros(goalType) {
   console.log('✅ Goal macros applied:', goalType, '→', goalDeltas[goalType], 'kcal');
 }
 
-// ✅ RED-S RISK FLAGGING (NEW)
-function flagRedSRisk(status) {
-  var c = getC();
-  if(!c) return;
-
-  if(status === 'absent') {
-    showErrorToast('⚠️ ΚΡΙΤΙΚΗ ΠΡΟΕΙΔΟΠΟΙΗΣΗ:\n\nΗ απουσία εμμήνων κύκλου δείχνει HIGH RED-S RISK!\n\nΣυστάσεις:\n• Αυξήστε τις θερμίδες σταδιακά\n• Μειώστε τον όγκο άσκησης\n• Δείτε ενδοκρινολόγο\n\nΓυναίκες αθλήτριες σε RED-S κίνδυνο δεν θα πρέπει να χάνουν >0.5kg/εβδ');
-  }
-
-  console.log('🚨 RED-S Status:', status);
-}
-
-// ✅ CURRENT SUPPLEMENTS TRACKER (NEW)
-function openCurrentSupplementsTracker() {
-  var c = getC();
-  if(!c) {
-    showErrorToast('Δημιουργήστε πρώτα ένα προφίλ πελάτη');
-    return;
-  }
-
-  // Create modal for tracking current supplements
-  var modal = document.createElement('div');
-  modal.id = 'currentSuppsModal';
-  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1002;';
-
-  var modalContent = document.createElement('div');
-  modalContent.style.cssText = 'background:white;padding:20px;border-radius:8px;max-width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
-
-  var title = document.createElement('h3');
-  title.textContent = '✅ Συμπληρώματα που παίρνει ήδη';
-  title.style.cssText = 'color:#025857;margin-bottom:15px;';
-
-  var suppList = document.createElement('div');
-  suppList.style.cssText = 'display:grid;gap:10px;';
-
-  // Show all available supplements as checkboxes
-  SUPPS.forEach(function(supp) {
-    var isChecked = (c.currentSupplements || []).some(s => s.id === supp.id);
-
-    var label = document.createElement('label');
-    label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#f5f5f5;border-radius:4px;cursor:pointer;';
-
-    var checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = isChecked;
-    checkbox.style.cssText = 'cursor:pointer;width:18px;height:18px;';
-
-    checkbox.onchange = function() {
-      if(!c.currentSupplements) c.currentSupplements = [];
-
-      if(this.checked) {
-        // Add supplement
-        if(!c.currentSupplements.find(s => s.id === supp.id)) {
-          c.currentSupplements.push({id: supp.id, name: supp.name});
-        }
-      } else {
-        // Remove supplement
-        c.currentSupplements = c.currentSupplements.filter(s => s.id !== supp.id);
-      }
-
-      saveNow();
-      updateCurrentSuppsPreview();
-    };
-
-    var text = document.createElement('span');
-    text.textContent = supp.name;
-    text.style.cssText = 'font-size:13px;';
-
-    label.appendChild(checkbox);
-    label.appendChild(text);
-    suppList.appendChild(label);
-  });
-
-  var closeBtn = document.createElement('button');
-  closeBtn.textContent = '✓ Κλείσιμο';
-  closeBtn.style.cssText = 'width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:4px;cursor:pointer;margin-top:15px;font-weight:bold;';
-  closeBtn.onclick = function() {
-    document.body.removeChild(modal);
-  };
-
-  modalContent.appendChild(title);
-  modalContent.appendChild(suppList);
-  modalContent.appendChild(closeBtn);
-
-  modal.appendChild(modalContent);
-  modal.onclick = function(e) {
-    if(e.target === this) document.body.removeChild(this);
-  };
-
-  document.body.appendChild(modal);
-}
-
-// ✅ UPDATE CURRENT SUPPLEMENTS PREVIEW
-function updateCurrentSuppsPreview() {
-  var c = getC();
-  var preview = document.getElementById('current-supp-preview');
-
-  if(!preview || !c) return;
-
-  if((c.currentSupplements || []).length > 0) {
-    var names = c.currentSupplements.map(s => s.name).slice(0, 3).join(', ');
-    var suffix = c.currentSupplements.length > 3 ? '...' : '';
-    preview.textContent = '✓ ' + names + suffix;
-  } else {
-    preview.textContent = '💡 Κάνε κλικ για να εισάγεις συμπληρώματα που παίρνει';
-  }
-}
-
 // ✅ Calculate age (in years) from a birth-date string (YYYY-MM-DD)
-function calcAgeFromBirthdate(birthDate){
-  if(!birthDate)return null;
-  var b=new Date(birthDate);if(isNaN(b.getTime()))return null;
-  var t=new Date();
-  var a=t.getFullYear()-b.getFullYear();
-  var m=t.getMonth()-b.getMonth();
-  if(m<0||(m===0&&t.getDate()<b.getDate()))a--;
-  return (a>=0&&a<=150)?a:null;
-}
-
 // ✅ Read the single native date input (already ISO "YYYY-MM-DD", same format c.birthDate
 // is stored in — no assembly needed), save it, recalc age. Replaces the old 3-dropdown
 // (day/month/year) version: same data, one field instead of three.
@@ -3208,7 +3028,7 @@ function commitBirthdate(c){
   if(!el)return;
   if(el.value){
     c.birthDate=el.value;
-    var a=calcAgeFromBirthdate(c.birthDate);
+    var a=ageAtDate(c.birthDate);
     updateAgeDisplay();
     if(a!=null){upd('age',a);}else{save();}
   }else{
@@ -3222,7 +3042,7 @@ function commitBirthdate(c){
 function updateAgeDisplay(){
   var el=document.getElementById('age-display');if(!el)return;
   var c=getC();if(!c){el.textContent='';return;}
-  var a=c.birthDate?calcAgeFromBirthdate(c.birthDate):c.age;
+  var a=c.birthDate?ageAtDate(c.birthDate):c.age;
   el.textContent=(a!=null&&!isNaN(a))?'('+a+' ετών)':'';
 }
 
