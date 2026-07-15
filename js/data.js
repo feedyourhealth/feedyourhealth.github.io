@@ -834,7 +834,8 @@ var UNIT_PLURALS={
   'κύπελλο':'κύπελλα','μπουκάλι':'μπουκάλια','συσκευασία':'συσκευασίες',
   // Αγγλικά (όταν isEn)
   'slice':'slices','serving':'servings','handful':'handfuls','cup':'cups',
-  'stick':'sticks','scoop':'scoops','pc.':'pcs.','bar':'bars','patty':'patties','bottle':'bottles'
+  'stick':'sticks','scoop':'scoops','pc.':'pcs.','bar':'bars','patty':'patties','bottle':'bottles',
+  'pinch':'pinches','grape':'grapes','package':'packages'
 };
 var COOKED_TO_RAW={
   'Κοτόπουλο στήθος (ψητό)':{f:1.33,label:'ωμό'},
@@ -1283,40 +1284,45 @@ var MET_ACTIVITIES=[
   ]}
 ];
 var SUPP_TIMINGS=["Πριν το πρωινό","Με το πρωινό","Μεσημεριανό","Πριν προπόνηση (30')","Αμέσως μετά προπόνηση","Βραδινό","Πριν τον ύπνο"];
+var EN_SUPP_TIMINGS={
+  "Πριν το πρωινό":"Before breakfast","Με το πρωινό":"With breakfast","Μεσημεριανό":"Lunch",
+  "Πριν προπόνηση (30')":"Before workout (30min)","Αμέσως μετά προπόνηση":"Immediately post-workout",
+  "Βραδινό":"Dinner","Πριν τον ύπνο":"Before bed"
+};
 var SUPPS=[
- {id:'iron',   name:'Σίδηρος',            dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Πριν το πρωινό",d:''}]},
- {id:'multivit',name:'Πολυβιταμίνη',      dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:''},{t:"Μεσημεριανό",d:''}]},
+ {id:'iron',   name:'Σίδηρος',            nameEn:'Iron',              dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Πριν το πρωινό",d:''}]},
+ {id:'multivit',name:'Πολυβιταμίνη',      nameEn:'Multivitamin',      dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:''},{t:"Μεσημεριανό",d:''}]},
  {id:'bcomplex',name:'Β-Complex',          dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Μεσημεριανό",d:''}]},
- {id:'vit_e',  name:'Βιταμίνη Ε',         dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Βραδινό",d:''}]},
- {id:'vit_d3', name:'Βιταμίνη D3',        dose:'1000-4000 IU',  cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'1000-2000 IU'},{t:"Βραδινό",d:'1000-2000 IU'}]},
- {id:'magn',   name:'Μαγνήσιο',           dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Βραδινό",d:''}]},
- {id:'vit_c',  name:'Βιταμίνη C',         dose:'500-1000mg',    cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'500mg'},{t:"Μεσημεριανό",d:'500mg'}]},
- {id:'calc',   name:'Ασβέστιο',           dose:'1000-1200mg',   cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'500mg'},{t:"Βραδινό",d:'500mg'}]},
- {id:'zinc',   name:'Ψευδάργυρος (Zinc)', dose:'15-25mg',       cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Βραδινό",d:'15-25mg'}]},
+ {id:'vit_e',  name:'Βιταμίνη Ε',         nameEn:'Vitamin E',         dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Βραδινό",d:''}]},
+ {id:'vit_d3', name:'Βιταμίνη D3',        nameEn:'Vitamin D3',        dose:'1000-4000 IU',  cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'1000-2000 IU'},{t:"Βραδινό",d:'1000-2000 IU'}]},
+ {id:'magn',   name:'Μαγνήσιο',           nameEn:'Magnesium',         dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Βραδινό",d:''}]},
+ {id:'vit_c',  name:'Βιταμίνη C',         nameEn:'Vitamin C',         dose:'500-1000mg',    cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'500mg'},{t:"Μεσημεριανό",d:'500mg'}]},
+ {id:'calc',   name:'Ασβέστιο',           nameEn:'Calcium',           dose:'1000-1200mg',   cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'500mg'},{t:"Βραδινό",d:'500mg'}]},
+ {id:'zinc',   name:'Ψευδάργυρος (Zinc)', nameEn:'Zinc',              dose:'15-25mg',       cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Βραδινό",d:'15-25mg'}]},
  {id:'omega3', name:'Omega-3 / Fish Oil',  dose:'1000-3000mg',   cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'1000mg'},{t:"Μεσημεριανό",d:'1000mg'}]},
  {id:'coq10', name:'CoQ10',                dose:'100-200mg',     cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'100-200mg'}]},
  {id:'hmb',    name:'HMB',                dose:'1g × 3/ημέρα',  cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Με το πρωινό",d:'1g'},{t:"Μεσημεριανό",d:'1g'},{t:"Βραδινό",d:'1g'}]},
- {id:'bcaa',   name:'Αμινοξέα / BCAA',    dose:'',              cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Πριν προπόνηση (30')",d:''}]},
- {id:'glutamine',name:'Γλουταμίνη',       dose:'8-10g',         cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Αμέσως μετά προπόνηση",d:'8-10g'}]},
+ {id:'bcaa',   name:'Αμινοξέα / BCAA',    nameEn:'Amino Acids / BCAA',dose:'',              cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Πριν προπόνηση (30')",d:''}]},
+ {id:'glutamine',name:'Γλουταμίνη',       nameEn:'Glutamine',         dose:'8-10g',         cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Αμέσως μετά προπόνηση",d:'8-10g'}]},
  {id:'whey',   name:'Whey Protein',        dose:'0.25-0.40g/kg', cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Αμέσως μετά προπόνηση",d:'0.25-0.40g/kg'}]},
  {id:'casein', name:'Casein',              dose:'',              cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Πριν τον ύπνο",d:''}]},
- {id:'b_alanine',name:'Β-Αλανίνη',        dose:'4g',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:'4g'}]},
- {id:'citrulline',name:'Κιτρουλλίνη',     dose:'3g',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:'3g'}]},
- {id:'l_carn', name:'Λ-Καρνιτίνη',        dose:'3g',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:'3g'}]},
- {id:'creatine',name:'Κρεατίνη',          dose:'3-5g',          cat:'Pre-Workout',          timing:[{t:"Αμέσως μετά προπόνηση",d:'3-5g'}]},
- {id:'electro',name:'Ηλεκτρολύτες',       dose:'',              cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
- {id:'carbs_pre',name:'Υδατάνθρακες (pre)',dose:'',             cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
- {id:'isotonic',name:'Υποτονικό/Ισοτονικό',dose:'',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
- {id:'soda',   name:'Μαγειρική Σόδα',      dose:'',              cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
+ {id:'b_alanine',name:'Β-Αλανίνη',        nameEn:'Beta-Alanine',      dose:'4g',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:'4g'}]},
+ {id:'citrulline',name:'Κιτρουλλίνη',     nameEn:'Citrulline',        dose:'3g',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:'3g'}]},
+ {id:'l_carn', name:'Λ-Καρνιτίνη',        nameEn:'L-Carnitine',       dose:'3g',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:'3g'}]},
+ {id:'creatine',name:'Κρεατίνη',          nameEn:'Creatine',          dose:'3-5g',          cat:'Pre-Workout',          timing:[{t:"Αμέσως μετά προπόνηση",d:'3-5g'}]},
+ {id:'electro',name:'Ηλεκτρολύτες',       nameEn:'Electrolytes',      dose:'',              cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
+ {id:'carbs_pre',name:'Υδατάνθρακες (pre)',nameEn:'Carbs (pre-workout)',dose:'',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
+ {id:'isotonic',name:'Υποτονικό/Ισοτονικό',nameEn:'Hypotonic/Isotonic Drink',dose:'',        cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
+ {id:'soda',   name:'Μαγειρική Σόδα',      nameEn:'Baking Soda',       dose:'',              cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
  {id:'tribulus',name:'Tribulus',           dose:'',              cat:'Αναβολικά & Ορμόνες', timing:[{t:"Με το πρωινό",d:''}]},
- {id:'testoboost',name:'Testoboost',       dose:'D-Ασπ.+Fenugreek',cat:'Αναβολικά & Ορμόνες',timing:[{t:"Με το πρωινό",d:''},{t:"Πριν τον ύπνο",d:'D-Ασπαρτικό + Fenugreek'}]},
+ {id:'testoboost',name:'Testoboost',       dose:'D-Ασπ.+Fenugreek',doseEn:'D-Aspartic Acid+Fenugreek',cat:'Αναβολικά & Ορμόνες',timing:[{t:"Με το πρωινό",d:''},{t:"Πριν τον ύπνο",d:'D-Ασπαρτικό + Fenugreek',dEn:'D-Aspartic Acid + Fenugreek'}]},
  {id:'ecdy',   name:'Ecdysterone',         dose:'',              cat:'Αναβολικά & Ορμόνες', timing:[{t:"Αμέσως μετά προπόνηση",d:''}]},
  {id:'hgh',    name:'HGH Boost',           dose:'',              cat:'Αναβολικά & Ορμόνες', timing:[{t:"Πριν τον ύπνο",d:''}]},
- {id:'antiflam',name:'Αντιφλεγμονώδες',   dose:'',              cat:'Αναβολικά & Ορμόνες', timing:[{t:"Αμέσως μετά προπόνηση",d:''}]},
+ {id:'antiflam',name:'Αντιφλεγμονώδες',   nameEn:'Anti-inflammatory', dose:'',              cat:'Αναβολικά & Ορμόνες', timing:[{t:"Αμέσως μετά προπόνηση",d:''}]},
  {id:'htp',    name:'5-HTP',               dose:'',              cat:'Ύπνος & Αποκατάσταση',timing:[{t:"Πριν τον ύπνο",d:''}]},
  {id:'gaba',   name:'GABA',                dose:'',              cat:'Ύπνος & Αποκατάσταση',timing:[{t:"Πριν τον ύπνο",d:''}]},
  {id:'zma',    name:'ZMA',                 dose:'',              cat:'Ύπνος & Αποκατάσταση',timing:[{t:"Πριν τον ύπνο",d:''}]},
- {id:'valerian',name:'Βαλεριάνα',          dose:'',              cat:'Ύπνος & Αποκατάσταση',timing:[{t:"Πριν τον ύπνο",d:''}]}
+ {id:'valerian',name:'Βαλεριάνα',          nameEn:'Valerian',          dose:'',              cat:'Ύπνος & Αποκατάσταση',timing:[{t:"Πριν τον ύπνο",d:''}]}
 ];
 var MACRO_PRESETS={
   balanced:{label:'Ισορροπημένο',p:25,f:25,c:50,icon:'⚖️'},
@@ -1389,6 +1395,7 @@ var SPORT_PROTOCOLS={
     ],
     redSAlert:{risk:'Moderate',minCalories:50,details:'Monitor irregular periods (F), hormonal issues, frequent injuries'},
     hydration:{daily:35,training:40,duringEx:'400-800ml/hr',postEx:'150% weight loss / 4hr'},
+    hydrationEl:{duringEx:'400-800ml/ώρα',postEx:'150% της απώλειας βάρους / 4 ώρες'},
     mealTiming:{
       preExercise:'2-3hrs before: 1-4g/kg CHO, 0.3-0.5g/kg PRO, <1g/kg FAT',
       duringExercise:'>90min: 30-60g CHO/hr + 500-700mg Na+',
@@ -1415,6 +1422,7 @@ var SPORT_PROTOCOLS={
     ],
     redSAlert:{risk:'Moderate',minCalories:50,details:'Monitor hormonal health, energy levels'},
     hydration:{daily:35,training:40,beforeMatch:'400-600ml (2-3hrs before)',duringMatch:'150-250ml every 15-20min (6-8% CHO)',postMatch:'150% weight loss / 4-6hrs'},
+    hydrationEl:{beforeMatch:'400-600ml (2-3 ώρες πριν)',duringMatch:'150-250ml κάθε 15-20 λεπτά (6-8% υδατ.)',postMatch:'150% της απώλειας βάρους / 4-6 ώρες'},
     mealTiming:{
       matchDay:'3-4hrs before: 1-4g/kg CHO, 0.3-0.5g/kg PRO',
       oneHourBefore:'50-100g CHO (banana, toast with honey)',
@@ -1446,6 +1454,7 @@ var SPORT_PROTOCOLS={
     ],
     redSAlert:{risk:'VERY HIGH',minCalories:55,details:'⚠️ WEIGHT CYCLING HIGH RISK - Monitor irregular periods (F), low testosterone (M), frequent injuries, persistent fatigue, poor concentration'},
     hydration:{daily:35,training:45,duringTraining:'150-250ml every 15-20min',postTraining:'150% weight loss'},
+    hydrationEl:{duringTraining:'150-250ml κάθε 15-20 λεπτά',postTraining:'150% της απώλειας βάρους'},
     safeWeightLoss:{
       warning:'⚠️ CRITICAL: Modern safe approach = 0.5-1% per WEEK MAX (NOT 5-10%)',
       normal5to7DaysBefore:'Normal intake, pale urine hydration, normal sodium 1500-2300mg',

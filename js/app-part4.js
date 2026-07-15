@@ -1,7 +1,9 @@
 // Shared by exportPDF() and exportWord()'s shopping list: round a raw gram amount up to a
 // sensible "buy this much" increment, and format it as grams or kg for display.
 function shopRound(g){if(g<100)return Math.ceil(g/10)*10;if(g<500)return Math.ceil(g/25)*25;if(g<1000)return Math.ceil(g/50)*50;return Math.ceil(g/100)*100;}
-function shopDisp(g){if(g>=1000)return(Math.round(g/100)/10).toFixed(1)+' kg';return g+'g';}
+// gramLabel lets callers with a language toggle (exportPDF) show 'γρ.' for Greek; omitted/undefined
+// keeps the original always-'g' behavior (exportWord has no language toggle at all).
+function shopDisp(g,gramLabel){if(g>=1000)return(Math.round(g/100)/10).toFixed(1)+' kg';return g+(gramLabel||'g');}
 
 function exportPDF(lang){
   var isEn=lang==='en';
@@ -129,8 +131,8 @@ function exportPDF(lang){
   for(var dm=0;dm<7;dm++){
     var tK=0,tP=0,tF=0,tC=0,tFiPdf=0;
     (weekPlanForPDF[dm]||[]).forEach(function(m){m.foods.forEach(function(f){var v=cm(f.n,f.g);tK+=v.k;tP+=v.p;tF+=v.f;tC+=v.c;tFiPdf+=v.fi;});});
-    tbody+='<td><b>'+Math.round(tK)+' kcal</b><br>'+(isEn?'P':'Π')+':'+Math.round(tP)+' '+(isEn?'F':'Λ')+':'+Math.round(tF)+' '+(isEn?'C':'Υ')+':'+Math.round(tC)+'g'
-      +'<br><span style="color:#795548;font-size:9px">🌾 '+(isEn?'Fiber':'Ίνες')+':'+tFiPdf.toFixed(1)+'g</span></td>';
+    tbody+='<td><b>'+Math.round(tK)+' kcal</b><br>'+(isEn?'P':'Π')+':'+Math.round(tP)+' '+(isEn?'F':'Λ')+':'+Math.round(tF)+' '+(isEn?'C':'Υ')+':'+Math.round(tC)+(isEn?'g':'γρ.')
+      +'<br><span style="color:#795548;font-size:9px">🌾 '+(isEn?'Fiber':'Ίνες')+':'+tFiPdf.toFixed(1)+(isEn?'g':'γρ.')+'</span></td>';
   }
   tbody+='</tr>';
 
@@ -146,7 +148,9 @@ function exportPDF(lang){
       sx.timing.forEach(function(ti){
         if(!sByT[ti.t])return;
         if(c.suppExclude.indexOf(id+'|'+ti.t)>-1)return;
-        sByT[ti.t].push(sx.name+(ti.d?' ('+ti.d+')':''));
+        var suppName=(isEn&&sx.nameEn)||sx.name;
+        var suppDose=ti.d&&((isEn&&ti.dEn)||ti.d);
+        sByT[ti.t].push(suppName+(suppDose?' ('+suppDose+')':''));
       });
     });
     var sAny=false;SUPP_TIMINGS.forEach(function(tm){if(sByT[tm].length)sAny=true;});
@@ -156,7 +160,7 @@ function exportPDF(lang){
       var salt=false;
       SUPP_TIMINGS.forEach(function(tm){
         if(!sByT[tm].length)return;
-        suppHtml+='<tr'+(salt?' class="alt"':'')+'><td class="st-t">'+esc(tm)+'</td><td>'+esc(sByT[tm].join('   •   '))+'</td></tr>';
+        suppHtml+='<tr'+(salt?' class="alt"':'')+'><td class="st-t">'+esc((isEn&&EN_SUPP_TIMINGS[tm])||tm)+'</td><td>'+esc(sByT[tm].join('   •   '))+'</td></tr>';
         salt=!salt;
       });
       suppHtml+='</tbody></table>';
@@ -245,8 +249,8 @@ function exportPDF(lang){
     var suppObj=SUPPS.find(function(s){return s.id===suppId;});
     if(suppObj){
       consolidatedSupps.push({
-        supplement:suppObj.name,
-        dose:suppObj.dose||'(per product label)',
+        supplement:(isEn&&suppObj.nameEn)||suppObj.name,
+        dose:suppObj.dose||(isEn?'(per product label)':'(βάσει ετικέτας προϊόντος)'),
         source:'existing',
         id:suppId
       });
@@ -289,7 +293,9 @@ function exportPDF(lang){
     var ht=t.hydTrain||(hb+500);
     var rows='<tr><td class="st-t">'+(isEn?'Daily baseline':'Ημερήσια βάση')+'</td><td>'+hb+' ml ('+(hb/1000).toFixed(1)+' L)</td></tr>';
     rows+='<tr class="alt"><td class="st-t">'+(isEn?'Training day':'Ημέρα προπόνησης')+'</td><td>'+ht+' ml ('+(ht/1000).toFixed(1)+' L)</td></tr>';
-    var sp=(c.sport&&SPORT_PROTOCOLS[c.sport])?SPORT_PROTOCOLS[c.sport].hydration:null;
+    var spProto=(c.sport&&SPORT_PROTOCOLS[c.sport])?SPORT_PROTOCOLS[c.sport]:null;
+    var sp=spProto?spProto.hydration:null;
+    var spEl=spProto?spProto.hydrationEl:null;
     if(sp){
       var labelMap=isEn
         ?{beforeMatch:'Before',preEx:'Before',duringEx:'During',duringMatch:'During',duringTraining:'During',postEx:'After',postMatch:'After',postTraining:'After'}
@@ -297,7 +303,7 @@ function exportPDF(lang){
       var order=['beforeMatch','preEx','duringEx','duringMatch','duringTraining','postEx','postMatch','postTraining'];
       var alt=false;
       order.forEach(function(k){
-        if(sp[k]){rows+='<tr'+(alt?' class="alt"':'')+'><td class="st-t">'+labelMap[k]+'</td><td>'+esc(sp[k])+'</td></tr>';alt=!alt;}
+        if(sp[k]){var val=(!isEn&&spEl&&spEl[k])||sp[k];rows+='<tr'+(alt?' class="alt"':'')+'><td class="st-t">'+labelMap[k]+'</td><td>'+esc(val)+'</td></tr>';alt=!alt;}
       });
     }
     hydrationHtml='<div class="sec-title">💧 '+(isEn?'Hydration Protocol':'Πρωτόκολλο Ενυδάτωσης')+'</div>'
@@ -318,9 +324,9 @@ function exportPDF(lang){
     var planG=Math.round(shopTotals[name]);
     var conv=COOKED_TO_RAW[name];
     var rawG,buyDisp,sublabel,changed;
-    if(conv&&conv.isEgg){rawG=planG;buyDisp=Math.ceil(planG/55)+(isEn?' pcs.':' τεμ.');sublabel='('+planG+'g)';changed=true;}
-    else if(conv){rawG=shopRound(planG*conv.f);buyDisp=shopDisp(rawG);sublabel=isEn?'raw':conv.label;changed=true;}
-    else{rawG=shopRound(planG);buyDisp=shopDisp(rawG);sublabel='';changed=false;}
+    if(conv&&conv.isEgg){rawG=planG;buyDisp=Math.ceil(planG/55)+(isEn?' pcs.':' τεμ.');sublabel='('+planG+(isEn?'g':'γρ.')+')';changed=true;}
+    else if(conv){rawG=shopRound(planG*conv.f);buyDisp=shopDisp(rawG,isEn?'g':'γρ.');sublabel=isEn?'raw':conv.label;changed=true;}
+    else{rawG=shopRound(planG);buyDisp=shopDisp(rawG,isEn?'g':'γρ.');sublabel='';changed=false;}
     shopBC[cat].push({name:name,planG:planG,buyDisp:buyDisp,sublabel:sublabel,changed:changed});
   });
   var hasSI=slCats.concat(['Άλλα']).some(function(cat){return shopBC[cat]&&shopBC[cat].length>0;});
@@ -347,7 +353,7 @@ function exportPDF(lang){
         html+='<div class="slrow'+(idx%2?' sla':'')+'">'
           +'<span class="sl-chk">☐</span>'
           +'<span class="sl-nm">'+esc(fn(item.name))+'</span>'
-          +'<span class="sl-pg">'+shopDisp(item.planG)+'</span>'
+          +'<span class="sl-pg">'+shopDisp(item.planG,isEn?'g':'γρ.')+'</span>'
           +'<span class="sl-amt">'+esc(item.buyDisp)
           +(item.sublabel?'<span class="sl-lbl"> '+esc(item.sublabel)+'</span>':'')
           +'</span>'
@@ -371,8 +377,8 @@ function exportPDF(lang){
 
   // ── Assemble HTML ─────────────────────────────────────────────────────────────
   var FF="'Century Gothic','Avant Garde',Avantgarde,'Trebuchet MS',Trebuchet,sans-serif";
-  var html='<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8">'
-    +'<title>Πλάνο - '+esc(c.name||'Πελάτης')+'</title><style>'
+  var html='<!DOCTYPE html><html lang="'+(isEn?'en':'el')+'"><head><meta charset="UTF-8">'
+    +'<title>'+(isEn?'Plan - ':'Πλάνο - ')+esc(c.name||(isEn?'Client':'Πελάτης'))+'</title><style>'
     +'@page{size:A4 landscape;margin:0}'
     +'*{box-sizing:border-box;margin:0;padding:0}'
     +'body{font-family:'+FF+';font-size:6pt;color:#1a1a1a;padding:7mm}'
@@ -521,9 +527,9 @@ function exportPDF(lang){
       :'<div class="hdr">'
        +'<div class="hl">'+(logoSrc?'<img src="'+logoSrc+'" alt="fyh">':'')+'<div class="hlurl">WWW.FEEDYOURHEALTH.ORG</div></div>'
        +'<div class="hr">'
-       +'<div class="hrname">'+esc(c.name||'Πελάτης')+'</div>'
+       +'<div class="hrname">'+esc(c.name||(isEn?'Client':'Πελάτης'))+'</div>'
        +'<div class="hrinfo">'+esc((isEn?(c.sex==='M'?'Male':'Female'):(c.sex==='M'?'Άνδρας':'Γυναίκα'))+', '+c.age+(isEn?' yrs old':' ετών')+'  |  '+c.weight+'kg / '+c.height+'cm  |  '+(goalL[c.goalMain]||''))+'</div>'
-       +'<div style="margin-top:3px;"><span style="background:#E8F5F4;border-radius:20px;padding:2px 10px;font-size:7pt;font-weight:700;color:#025857;">🎯 '+(isEn?'Goal: ':'Στόχος: ')+avgTarget+' kcal (avg)  ·  '+(isEn?'P':'Π')+':'+t.p+'g  '+(isEn?'F':'Λ')+':'+t.f+'g  '+(isEn?'C':'Υ')+':'+t.carb+'g</span></div>'
+       +'<div style="margin-top:3px;"><span style="background:#E8F5F4;border-radius:20px;padding:2px 10px;font-size:7pt;font-weight:700;color:#025857;">🎯 '+(isEn?'Goal: ':'Στόχος: ')+avgTarget+' kcal '+(isEn?'(avg)':'(μέσο)')+'  ·  '+(isEn?'P':'Π')+':'+t.p+(isEn?'g':'γρ.')+'  '+(isEn?'F':'Λ')+':'+t.f+(isEn?'g':'γρ.')+'  '+(isEn?'C':'Υ')+':'+t.carb+(isEn?'g':'γρ.')+'</span></div>'
        +(function(){
          var defDelta={mild:-250,loss:-500,maintain:0,gain:300};
          var delta=defDelta[c.goal]||0;

@@ -3262,11 +3262,13 @@ var EN_MEAL_NAMES={
   'Σνακ':'Snack','Ενδιάμεσο':'Snack','Pre-workout':'Pre-workout','Post-workout':'Post-workout',
   'Πρωινό Σνακ':'Morning Snack','Μεσνύχτιο':'Late Night Snack'
 };
+// Note: fmtFoodQty() always calls this on the bare base unit (fu.u) before the count/fraction
+// is prepended and before pluralUnit() runs — so only single, un-prefixed unit keys are ever
+// looked up here. A compound key like '17 ρόγες' can never match and was removed as dead weight.
 var EN_UNITS={
   'τεμ.':'pc.','φέτα':'slice','μερίδ.':'serving','χούφτα':'handful','stick':'stick','scoop':'scoop',
-  'φλ.':'cup','κ.σ.':'tbsp','κ.γ.':'tsp',
-  '3/4 φλ.':'3/4 cup','1/4 τεμ.':'1/4 pc.','4 τεμ.':'4 pcs.','2 τεμ.':'2 pcs.',
-  '12 τεμ.':'12 pcs.','10 τεμ.':'10 pcs.','17 ρόγες':'17 grapes','3 μισά':'3 halves'
+  'φλ.':'cup','κ.σ.':'tbsp','κ.γ.':'tsp','κ.γλ.':'tsp','πρέζα':'pinch',
+  'κύπελλο':'cup','μπουκάλι':'bottle','ρόγα':'grape','συσκευασία':'package'
 };
 var EN_FOOD_NAMES={
   // Proteins
@@ -3424,13 +3426,21 @@ var EN_FOOD_NAMES={
   'Overnight Oats P.B. & Choco (Πετρετζίκης)':'P.B. & Choco Overnight Oats (Petretzikis)',
   'Αυγά Ποσέ Air Fryer (Πετρετζίκης)':'Air Fryer Poached Eggs (Petretzikis)',
   'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)':'Turkey & Veggie Omelette (Petretzikis)',
-  'Λιγκουίνι με Γαρίδες (Πετρετζίκης)':'Linguine with Shrimp (Petretzikis)'
+  'Λιγκουίνι με Γαρίδες (Πετρετζίκης)':'Linguine with Shrimp (Petretzikis)',
+  // ✅ Foods added 2026-07-10 that were missing their English PDF translation
+  'Τορτίλια ολικής άλεσης (Alphamega)':'Whole Wheat Tortilla (Alphamega)',
+  'Fajita Wrap Κοτόπουλο':'Chicken Fajita Wrap','Γάλα καρύδας':'Coconut Milk',
+  'Σπόροι κολοκύνθης':'Pumpkin Seeds','Σπόροι λιναρόσπορου':'Flaxseed',
+  'Ξηρά δαμάσκηνα':'Dried Prunes','Κρέμα γάλακτος':'Heavy Cream',
+  'Λάχανο':'Cabbage','Soy yogurt (χωρίς ζάχαρη)':'Soy Yogurt (sugar-free)'
 };
 var EN_CAT_NAMES={
   'Κρέας':'Meat','Ψάρια':'Fish & Seafood','Αυγά/Γαλακτ.':'Eggs & Dairy',
   'Δημητριακά':'Grains','Όσπρια':'Legumes','Λαχανικά':'Vegetables',
   'Φρούτα':'Fruits','Ξηροί καρποί':'Nuts & Seeds','Λάδια':'Oils & Fats',
-  'Συνταγές FYH':'FYH Recipes','Άλλα':'Other'
+  'Συνταγές FYH':'FYH Recipes','Άλλα':'Other',
+  'Γαλακτοκομικά':'Dairy','Καρυκεύματα':'Seasonings','Μπαχαρικά':'Spices',
+  'Ροφήματα':'Beverages','Σάλτσες':'Sauces','Συνταγές':'Recipes'
 };
 
 // ── 📲 ΔΗΜΟΣΙΕΥΣΗ ΠΛΑΝΟΥ ΣΤΟΝ ΠΕΛΑΤΗ ────────────────────────────────────────
