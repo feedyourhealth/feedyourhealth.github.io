@@ -2486,6 +2486,9 @@ function saveFoodExclusions(){
     PORTAL_BASE:'https://feedyourhealth.github.io/plan.html',
     // Πόσες μέρες μένει ενεργός ο σύνδεσμος πριν λήξει αυτόματα (κάθε ξαναδημοσίευση τον ανανεώνει).
     LINK_EXPIRE_DAYS:50,
+    // Αλλάζει μόνο αν αλλάξει ο ίδιος ο αλγόριθμος του _hashPlan — έτσι ένα ήδη-δημοσιευμένο πλάνο με
+    // hash από ΠΑΛΙΟ αλγόριθμο δεν φαίνεται ψευδώς "ξεπερασμένο" μόλις ανέβει νέος κώδικας (βλ. isStale).
+    HASH_VER:2,
     // Στοιχεία επικοινωνίας γραφείου που εμφανίζονται στο κουμπί «Ρώτησέ με» του πελάτη.
     // ⬇️ Συμπλήρωσε WhatsApp/τηλέφωνο σε διεθνή μορφή (π.χ. 306900000000).
     CLINIC:{ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' },
@@ -2526,6 +2529,7 @@ function saveFoodExclusions(){
               throw res2.error;
             }
             c._publishedPlanHash=self._hashPlan(c.weekPlan);   // ώστε να ξέρουμε αν ο σύνδεσμος «μπαγιατεύει» μετά από επόμενη επεξεργασία
+            c._publishedPlanHashVer=self.HASH_VER;
             try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
             return {url:self.PORTAL_BASE+'?t='+tok, expiresAt:expiresAt};
           });
@@ -2543,6 +2547,7 @@ function saveFoodExclusions(){
         if(res.error) throw res.error;
         delete c.shareToken;
         delete c._publishedPlanHash;
+        delete c._publishedPlanHashVer;
         try{ if(typeof save==='function') save(); }catch(e){}
       });
     },
@@ -2566,8 +2571,11 @@ function saveFoodExclusions(){
     },
 
     // Το πλάνο δημοσιεύτηκε αλλά έχει επεξεργαστεί έκτοτε — ο σύνδεσμος του πελάτη δείχνει παλιά δεδομένα.
+    // Αν το αποθηκευμένο hash είναι από ΠΑΛΙΟΤΕΡΗ έκδοση του αλγορίθμου (_publishedPlanHashVer δεν ταιριάζει
+    // με το τρέχον HASH_VER), δεν το θεωρούμε "ξεπερασμένο" — απλά δεν ξέρουμε ακόμα, μέχρι την επόμενη
+    // πραγματική δημοσίευση να ξαναγράψει hash+version με τον τρέχοντα αλγόριθμο.
     isStale:function(c){
-      return !!(c && c.shareToken && c._publishedPlanHash!=null && this._hashPlan(c.weekPlan)!==c._publishedPlanHash);
+      return !!(c && c.shareToken && c._publishedPlanHash!=null && c._publishedPlanHashVer===this.HASH_VER && this._hashPlan(c.weekPlan)!==c._publishedPlanHash);
     },
 
     // Μετατρέπει τον πελάτη σε καθαρό read-only snapshot για το portal.
