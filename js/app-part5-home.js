@@ -12,6 +12,7 @@ function homeClientsNeedingAttention(){
   var now=Date.now();
   var out=[];
   clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+    if(c.attentionSnoozeUntil && now<c.attentionSnoozeUntil) return;
     var flaggedAppt=(c.appointments||[]).slice().reverse().find(function(a){return a.flagged;});
     if(flaggedAppt){
       out.push({c:c,tier:-1,gap:0,label:'🚩 σημειωμένο για παρακολούθηση (ραντεβού '+flaggedAppt.date+')',
@@ -45,8 +46,24 @@ function homeClientsNeedingAttention(){
       }
     }
   });
+  out.forEach(function(x){
+    x.action=(x.action||'')+'<button type="button" class="hm-action-btn" style="background:#F1EFE8;color:#5F5E5A" onclick="event.stopPropagation();homeSnoozeClient(\''+x.c.id+'\')" title="Απόκρυψη από τη λίστα για 7 ημέρες">🔕</button>';
+  });
   out.sort(function(a,b){ return a.tier!==b.tier ? a.tier-b.tier : b.gap-a.gap; });
   return out;
+}
+// Κρύβει έναν πελάτη από τις λίστες "χρειάζονται προσοχή" (Αρχική + Διατροφές) για 7 ημέρες —
+// η υποκείμενη κατάσταση (χωρίς πλάνο, μπαγιατεμένο κ.λπ.) δεν αλλάζει, απλά δεν ξαναφαίνεται
+// μέχρι να περάσει το διάστημα, ώστε "το είδα, θα το ξανακοιτάξω αργότερα" να μην απαιτεί να λυθεί
+// οριστικά για να φύγει από τη λίστα.
+function homeSnoozeClient(clientId){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  c.attentionSnoozeUntil=Date.now()+7*86400000;
+  save();
+  // #hm-bucket-list only exists on the Αρχική markup — a cheap way to tell which of the two
+  // screens that can show this button is currently on-page, without a separate nav-state variable.
+  if(document.getElementById('hm-bucket-list')) renderHome(); else renderDiets();
 }
 
 // Πελάτες με στόχο απώλειας/αύξησης (goalMain) που η τάση βάρους τους (τελευταίες έως 5 μετρήσεις,
@@ -134,6 +151,49 @@ function homePortalActivity(){
 // initials() moved to js/app-part1.js — it's called from renderSB() there, which can run
 // (via an early auth-callback in app-part4.js) before this later-loading file exists yet.
 
+// Ενοποιεί τα σήματα του homeClientsNeedingAttention() (tier -1/0/1 = χρειάζονται ενέργεια τώρα)
+// και του homeStaleLinks() σε ένα "🔴 Χρειάζονται προσοχή", τα πιο ήπια σήματα (tier 2/3 = μέτρηση/
+// check-in gap) σε "🟡 Μπαγιατεμένα", και όλους τους υπόλοιπους ενεργούς πελάτες σε "🟢 Εντάξει" —
+// ώστε η Αρχική να έχει ένα σημείο εισόδου αντί το ίδιο σήμα να εμφανίζεται σε 3 διαφορετικές κάρτες.
+function homeAttentionBuckets(){
+  var attn=homeClientsNeedingAttention();
+  var red=[],amber=[],redIds={};
+  attn.forEach(function(x){
+    if(x.tier<=1){ if(!redIds[x.c.id]){redIds[x.c.id]=true;red.push({c:x.c,label:x.label});} }
+    else { amber.push({c:x.c,label:x.label}); }
+  });
+  homeStaleLinks().forEach(function(c){
+    if(!redIds[c.id]){redIds[c.id]=true;red.push({c:c,label:'ο σύνδεσμος δείχνει παλιό πλάνο'});}
+  });
+  var amberIds={}; amber.forEach(function(x){amberIds[x.c.id]=true;});
+  var green=clients.filter(function(c){return !c.deleted&&!c.archived&&!redIds[c.id]&&!amberIds[c.id];})
+    .map(function(c){return {c:c,label:'ενεργό πλάνο, όλα εντάξει'};});
+  return {red:red,amber:amber,green:green};
+}
+var _homeBucketSel='red';
+function homeBucketRow(x,accent){
+  return '<div class="hm-row" onclick="selectClient(\''+x.c.id+'\')">'
+    +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(x.c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(x.c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-row-sub">'+x.label+'</span>'
+    +'</div>';
+}
+function homeRenderBucketList(){
+  var el=document.getElementById('hm-bucket-list');
+  if(!el) return;
+  var buckets=homeAttentionBuckets();
+  var accent=_homeBucketSel==='red'?'red':(_homeBucketSel==='amber'?'amber':'teal');
+  var items=buckets[_homeBucketSel]||[];
+  el.innerHTML=items.length?items.map(function(x){return homeBucketRow(x,accent);}).join(''):'<div class="hm-empty">Κανένας πελάτης σε αυτή την κατηγορία 👍</div>';
+}
+function homeSelectBucket(color){
+  _homeBucketSel=color;
+  document.querySelectorAll('.hm-tile').forEach(function(t){t.classList.remove('sel');});
+  var el=document.getElementById('hm-tile-'+color);
+  if(el) el.classList.add('sel');
+  homeRenderBucketList();
+}
+
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
@@ -204,6 +264,17 @@ function renderHome(){
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
 
+  var buckets=homeAttentionBuckets();
+  _homeBucketSel='red';
+  html+='<div class="hm-tiles">'
+    +'<div class="hm-tile hm-tile-red sel" id="hm-tile-red" onclick="homeSelectBucket(\'red\')"><div class="hm-tile-num">'+buckets.red.length+'</div><div class="hm-tile-lbl">🔴 Χρειάζονται προσοχή</div></div>'
+    +'<div class="hm-tile hm-tile-amber" id="hm-tile-amber" onclick="homeSelectBucket(\'amber\')"><div class="hm-tile-num">'+buckets.amber.length+'</div><div class="hm-tile-lbl">🟡 Μπαγιατεμένα πλάνα</div></div>'
+    +'<div class="hm-tile hm-tile-green" id="hm-tile-green" onclick="homeSelectBucket(\'green\')"><div class="hm-tile-num">'+buckets.green.length+'</div><div class="hm-tile-lbl">🟢 Ενεργοί, εντάξει</div></div>'
+    +'</div>'
+    +'<div class="hm-card" style="margin-bottom:20px" id="hm-bucket-list">'
+    +(buckets.red.length?buckets.red.map(function(x){return homeBucketRow(x,'red');}).join(''):'<div class="hm-empty">Κανένας πελάτης σε αυτή την κατηγορία 👍</div>')
+    +'</div>';
+
   var measuredToday=homeMeasuredToday();
   html+='<div class="hm-stats">'
     +'<div class="hm-stat"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
@@ -235,14 +306,29 @@ function dietsHasPlan(c){ return !!(c.weekPlan && Object.keys(c.weekPlan).length
 
 // Οι πραγματικοί πελάτες ξαναέρχονται για νέο πλάνο κάθε ~30-40 μέρες — μετά τις 30 το πλάνο
 // θεωρείται προς ανανέωση. Άγνωστη ημερομηνία δημιουργίας (πλάνα από πριν αυτό το feature) = δεν επισημαίνεται.
+// c.renewalDays υπερισχύει όταν έχει οριστεί ρητά ανά πελάτη (π.χ. 14 ημέρες για αγωνιστή σε
+// προετοιμασία, ή 45 για πελάτη διατήρησης) — βλ. setClientRenewalDays().
 var PLAN_RENEWAL_DAYS=30;
 function dietsNeedsRenewal(c){
-  return !!(c.planGeneratedAt && (Date.now()-c.planGeneratedAt)/86400000>=PLAN_RENEWAL_DAYS);
+  var threshold=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;
+  return !!(c.planGeneratedAt && (Date.now()-c.planGeneratedAt)/86400000>=threshold);
+}
+// Θέτει προσαρμοσμένο όριο ανανέωσης για έναν πελάτη (αντί του καθολικού PLAN_RENEWAL_DAYS).
+function setClientRenewalDays(clientId,val){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  var n=parseInt(val,10);
+  if(!n||n<1) return;
+  c.renewalDays=n;
+  save();
+  renderDiets();
 }
 
 // Χωρίς πλάνο ακόμα, ή με δημοσιευμένο σύνδεσμο που δείχνει ξεπερασμένο πλάνο, ή πλάνο που χρειάζεται ανανέωση.
+// Πελάτες σε αναβολή (homeSnoozeClient) εξαιρούνται προσωρινά — η υποκείμενη κατάσταση δεν αλλάζει.
 function dietsNeedsAction(){
   return clients.filter(function(c){return !c.deleted && !c.archived;})
+    .filter(function(c){ return !(c.attentionSnoozeUntil && Date.now()<c.attentionSnoozeUntil); })
     .filter(function(c){ return !dietsHasPlan(c) || (window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)) || dietsNeedsRenewal(c); });
 }
 // Ενεργός πελάτης με τρέχον πλάνο που δεν χρειάζεται ενέργεια.
@@ -309,14 +395,16 @@ function renderDiets(){
     // Προτεραιότητα: "χωρίς πλάνο" > "ξεπερασμένος σύνδεσμος" > "χρειάζεται ανανέωση" — ένας πελάτης
     // με άδειο weekPlan αλλά παλιό δημοσιευμένο hash θα δείξει isStale()=true κι αυτός, αλλά χρειάζεται
     // νέο πλάνο πρώτα, όχι απλή επαναδημοσίευση του κενού.
+    var snoozeBtn='<button type="button" class="hm-action-btn" style="background:#F1EFE8;color:#5F5E5A" onclick="event.stopPropagation();homeSnoozeClient(\''+c.id+'\')" title="Απόκρυψη για 7 ημέρες">🔕</button>';
     if(!dietsHasPlan(c)){
-      return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>', 'red');
+      return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>'+snoozeBtn, 'red');
     }
     if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)){
-      return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>', 'red');
+      return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>'+snoozeBtn, 'red');
     }
     var daysOld=Math.floor((Date.now()-c.planGeneratedAt)/86400000);
-    return dietsRow(c, 'το πλάνο έγινε πριν '+daysOld+' ημέρες', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>', 'red');
+    var thresholdInp='<span style="font-size:10px;color:#999;margin-left:6px;white-space:nowrap" title="Όριο ανανέωσης για αυτόν τον πελάτη" onclick="event.stopPropagation()">⚙ <input type="number" value="'+(c.renewalDays||PLAN_RENEWAL_DAYS)+'" min="7" max="120" style="width:34px;font-size:10px;padding:1px 3px;border:1px solid #ddd;border-radius:4px" onchange="setClientRenewalDays(\''+c.id+'\',this.value)"> ημ.</span>';
+    return dietsRow(c, 'το πλάνο έγινε πριν '+daysOld+' ημέρες'+thresholdInp, '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>'+snoozeBtn, 'red');
   }, 'Όλοι είναι εντάξει 👍', 'danger');
 
   html+=dietsSection('🟢 Ενεργά', dietsActive(), function(c){

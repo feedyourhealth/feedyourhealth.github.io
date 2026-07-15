@@ -264,6 +264,35 @@ function selectTmplForClient(id){
   save();
 }
 
+// Συνδυασμοί activity/dietType/macro-split που επαναλαμβάνονται συχνά ανά τύπο πελάτη —
+// βλ. applyClientPreset(). Οι τιμές macro% ταιριάζουν με τα όρια των πεδίων στο tab «Στοιχεία».
+var QUICK_PRESETS=[
+  {key:'martial',icon:'🥋',label:'Πολεμικές τέχνες',activity:'active',dietType:'bodybuilding_clean',macroP:30,macroF:25,macroC:45},
+  {key:'runner',icon:'🏃',label:'Δρομέας αντοχής',activity:'mod',dietType:'normal',macroP:20,macroF:20,macroC:60},
+  {key:'loss',icon:'📉',label:'Απώλεια βάρους',activity:'light',dietType:'normal',macroP:35,macroF:30,macroC:35},
+  {key:'preg',icon:'🤰',label:'Εγκυμοσύνη',activity:'sed',dietType:'normal',macroP:25,macroF:30,macroC:45,pregnant:true},
+  {key:'custom',icon:'✏️',label:'Χωρίς preset',activity:null}
+];
+// Προσυμπληρώνει PAL/τύπο διατροφής/macro split από ένα QUICK_PRESETS — όλα τα πεδία μένουν
+// επεξεργάσιμα μετά, η δ/γείος απλά δεν ξεκινάει από κενή φόρμα για τους συνηθισμένους τύπους.
+function applyClientPreset(key){
+  var c=getC();if(!c)return;
+  var p=QUICK_PRESETS.filter(function(x){return x.key===key;})[0];
+  if(!p)return;
+  c.quickPreset=key;
+  if(p.activity){
+    c.activity=p.activity;
+    c.activityFactor=0;
+    c.dietType=p.dietType;
+    c.macroP=p.macroP;
+    c.macroF=p.macroF;
+    c.macroC=p.macroC;
+    if(p.pregnant)c.pregnant=true;
+  }
+  save();
+  renderMain();
+}
+
 function renderMain(){
   var c=getC();if(!c)return;
 
@@ -319,6 +348,17 @@ function renderMain(){
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
     +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t3b" onclick="swTab(100)">📝 Ραντεβού</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
     +'<div id="s1">'
+
+    // ✅ QUICK-START PRESETS — προσυμπληρώνουν PAL/τύπο διατροφής/macro split για συνηθισμένους
+    // τύπους πελατών, ώστε η δ/γείος να μην ξαναδακτυλογραφεί τον ίδιο συνδυασμό κάθε φορά.
+    // Όλα τα πεδία παραμένουν επεξεργάσιμα μετά — το preset είναι σημείο εκκίνησης, όχι κλείδωμα.
+    +'<div style="margin-bottom:14px">'
+    +'<div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px">🚀 Γρήγορη έναρξη</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+    +QUICK_PRESETS.map(function(p){
+        return '<button type="button" onclick="applyClientPreset(\''+p.key+'\')" style="background:'+(c.quickPreset===p.key?'#025857':'#fff')+';color:'+(c.quickPreset===p.key?'#fff':'#333')+';border:1px solid '+(c.quickPreset===p.key?'#025857':'#ddd')+';border-radius:20px;padding:7px 12px;font-size:11.5px;font-weight:600;cursor:pointer">'+p.icon+' '+p.label+'</button>';
+      }).join('')
+    +'</div></div>'
 
     // ✅ GOAL SELECTION REMINDER (Only show if goal not set)
     +((!c.goal)?'<div style="background:linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);border:1.5px solid #ffd54f;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 6px rgba(255,193,7,0.15)">'
@@ -1118,7 +1158,7 @@ function buildMetHtml(c,t){
   if(useMET){
     totalStr='<div class="met-total">'
       +'<span>📊 Σύνολο άσκησης: <b>'+t.exerciseWeekly+' kcal/εβδ.</b> · <b>~'+t.exerciseDaily+' kcal/ημέρα</b></span>'
-      +'<span class="met-note">TDEE = BMR×1.37 (NEAT) + άσκηση MET</span>'
+      +'<span class="met-note">TDEE = BMR×1.2 (NEAT) + άσκηση MET</span>'
       +'</div>';
   }
 
@@ -1273,13 +1313,17 @@ function updateActivityFromSport(sportId){
     var sport=SPORT_PROFILES[sportId];
     if(!sport)return;
 
-    // ✅ Used to auto-set c.activity from sport.category here, but SPORT_PROFILES entries
-    // have no category field at all — that line threw on every single sport (undefined.includes),
-    // silently aborting the rest of this function every time. Activity level stays purely
-    // manual (the 4 PAL buttons below), which is what was actually happening in practice anyway.
+    // Suggest "Έντονα ενεργός" PAL for any real sport (SPORT_PROFILES has no category field to
+    // derive a finer band from, and a client with a sport profile is training regularly by
+    // definition). Only fills in when the dietitian hasn't already picked a PAL — never
+    // overrides a manual choice — and re-renders once so the PAL buttons reflect it.
+    var wasEmpty=(sportId!=='custom' && !c.activity && !(c.activityFactor>0));
+    if(wasEmpty) c.activity='active';
+
     updateConditionalVisibility(sportId);
     var noteDiv=document.getElementById('sport-note');
     if(noteDiv)noteDiv.textContent=sport.notes||'';
+    if(wasEmpty) renderMain();
   } else {
     // ✅ Cleared sport selection: activity isn't auto-set above, so nothing else
     // triggers a re-render — force one so the header "Άθλημα" tile reflects "—".

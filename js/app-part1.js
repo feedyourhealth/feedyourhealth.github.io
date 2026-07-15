@@ -364,8 +364,8 @@ var VALIDATION_RULES={
     name:'TDEE (Activity Factor)',
     validate:function(c,t){
       if(t.usedMET)return{ok:true,msg:'Using MET-based TDEE (not Activity Factor)'};
-      var act={sed:1.37,light:1.375,mod:1.55,active:1.725};
-      var factor=act[c.activity]||1.37;
+      var act={sed:1.2,light:1.375,mod:1.55,active:1.725};
+      var factor=act[c.activity]||1.2;
       var expected=Math.round(t.bmr*factor);
       var diff=Math.abs(t.tdee-expected);
       if(diff>5)return{ok:false,msg:'TDEE mismatch: expected '+expected+' but got '+t.tdee,diff:diff};
@@ -2566,46 +2566,6 @@ function fmtLastAccess(ts){
   if(days===1) return 'χθες';
   return 'πριν '+days+' ημέρες';
 }
-function loadTestClientBasilina(){
-  var basilina = {
-    id: 'basilina-perisiou-' + Date.now(),
-    name: 'Βασιλίνα Περίσιου',
-    sex: 'F',
-    age: 32,
-    weight: 63.1,
-    height: 165,
-    bf: null,
-    leanmass: null,
-    rmr: 1300,
-    activity: 'moderate',
-    sport: null,
-    goalMain: 'maintain',
-    goalCalAdj: 0,
-    trainDays: [true, true, false, true, true, false, false],
-    hasMultipleTrainings: false,
-    foodExclude: [],
-    allergies: '',
-    medicalConditions: [],
-    menstruCycle: 'regular',
-    suppsSelected: {},
-    mealTimes: {
-      breakfast: '08:00',
-      snack1: '11:00',
-      lunch: '13:00',
-      snack2: '15:30',
-      dinner: '19:00'
-    },
-    weekPlan: {},
-    lastAccess: Date.now(),
-    notes: 'Test Client - Ανακτήθηκε από διατροφικό πλάνο'
-  };
-  clients.push(basilina);
-  save();
-  renderSB();
-  selectClient(basilina.id);
-  showSuccessToast('✅ Βασιλίνα Περίσιου φορτώθηκε με επιτυχία!');
-}
-
 // Μικρό badge κατάστασης δίπλα σε κάθε πελάτη στη λίστα (βασισμένο στα cloud checkins από το portal).
 // Σκόπιμα διαφορετικό λεξιλόγιο από το "Ενεργό/Χωρίς σχέδιο" cc-status badge δίπλα του — αυτό εδώ αφορά
 // αποκλειστικά τη δραστηριότητα check-in στο portal, όχι αν υπάρχει πλάνο, ώστε τα δύο badges να μη
@@ -3233,16 +3193,38 @@ function buildPlanHistoryHtmlInner(c){
     html+='</div></div>'
     +'</div>';
 
-  // Plans list
-  html+='<div style="border-top:1px solid #e0e0e0;padding-top:16px">';
-  for(var i=0;i<c.savedPlans.length;i++){
+  // Plans list — timeline: newest first, one node per plan, a dot+line down to the previous
+  // node so the client's history reads as a story rather than a stack of identical cards.
+  // Same c.savedPlans data as before; only the reading order and layout changed.
+  html+='<div style="border-top:1px solid #e0e0e0;padding-top:16px">'
+    +'<div style="font-weight:700;color:#025857;margin-bottom:12px;font-size:13px">🕐 Χρονολόγιο Πλάνων</div>';
+  for(var di=c.savedPlans.length-1;di>=0;di--){
+    var i=di;
     var plan=c.savedPlans[i];
     var planId='plan-'+i;
-    html+='<div style="background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;padding:12px;margin-bottom:12px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +'<div style="font-weight:600;color:#025857;font-size:14px">📋 Πλάνο #'+plan.number+'</div>'
-      +'<div style="font-size:12px;color:#999">'+plan.date+' '+plan.time+'</div>'
+    var isOldest=(di===0);
+    var isNewest=(di===c.savedPlans.length-1);
+    var deltaTxt;
+    if(i>0){
+      var prevM=c.savedPlans[i-1].macros||{k:0,p:0,f:0,c:0};
+      var curM=plan.macros||{k:0,p:0,f:0,c:0};
+      var dk=curM.k-prevM.k, dp=curM.p-prevM.p;
+      deltaTxt=(dk>0?'+':'')+dk+' kcal, '+(dp>0?'+':'')+dp+'g πρωτ. από το προηγούμενο';
+    } else {
+      deltaTxt='πρώτο καταγεγραμμένο πλάνο';
+    }
+    html+='<div style="display:flex;gap:10px">'
+      +'<div style="width:14px;display:flex;flex-direction:column;align-items:center;flex-shrink:0">'
+      +'<div style="width:10px;height:10px;border-radius:50%;background:#025857;margin-top:5px;flex-shrink:0"></div>'
+      +(isOldest?'':'<div style="flex:1;width:2px;background:#e0e0e0;margin-top:4px"></div>')
       +'</div>'
+      +'<div style="flex:1;min-width:0;padding-bottom:16px">'
+      +'<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;cursor:pointer" onclick="var d=document.getElementById(\'tl-'+i+'\');d.style.display=d.style.display===\'none\'?\'block\':\'none\'">'
+      +'<span style="font-size:11px;color:#999;min-width:64px">'+plan.date+'</span>'
+      +'<span style="font-weight:600;color:#025857;font-size:13px">📋 Πλάνο #'+plan.number+' — '+plan.macros.k+' kcal</span>'
+      +'<span style="font-size:11px;color:#666">'+deltaTxt+'</span>'
+      +'</div>'
+      +'<div id="tl-'+i+'" style="display:'+(isNewest?'block':'none')+';margin-top:8px;background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;padding:12px">'
       +'<div style="background:#fff;padding:10px;border-radius:4px;font-size:12px;margin-bottom:8px">'
       +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'
       +'<div><strong>Kcal:</strong> <span style="color:#025857;font-weight:600">'+plan.macros.k+'</span></div>'
@@ -3287,6 +3269,8 @@ function buildPlanHistoryHtmlInner(c){
       }
     }
 
+    html+='</div>';
+    html+='</div>';
     html+='</div>';
     html+='</div>';
   }
