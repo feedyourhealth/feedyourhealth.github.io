@@ -1479,6 +1479,7 @@ function setMacroPreset(k){
   var c=getC();if(!c)return;
   var pr=MACRO_PRESETS[k];if(!pr)return;
   c.macroPreset=k;
+  c._macroPresetManual=true;  // real dietitian click — protects this choice from applyGoalMacros()'s smart default
   c.macroP=pr.p;c.macroF=pr.f;c.macroC=pr.c;
   save();
   onClientChange();  // ← TRIGGER CASCADE RECALCULATION
@@ -3047,11 +3048,14 @@ function applyGoalMacros(goalType) {
   c.goalMain = goalType;
 
   // Smart default: pre-fill a sensible macro preset for this goal — but only the first
-  // time (macroPreset still unset/at the fresh-client default 'balanced'), so nudging the
-  // goal later never silently overrides a preset the dietitian deliberately picked. Skipped
-  // entirely when a sport is selected, since sport-specific ratios already take priority
-  // (see recalculateMacros()).
-  if(!c.sport && (!c.macroPreset || c.macroPreset==='balanced')){
+  // time. Any preset OTHER than 'balanced' (custom/strength/endurance/loss/martial) is
+  // unambiguously a deliberate choice already and stays protected as before. 'balanced' is
+  // the one ambiguous value — it's BOTH the smart-default for the 'maintain' goal AND a
+  // real preset a dietitian can deliberately pick via setMacroPreset(), so a value-only
+  // check can't tell those apart; c._macroPresetManual (set only by setMacroPreset()'s real
+  // button-click path) disambiguates that one case. Skipped entirely when a sport is
+  // selected, since sport-specific ratios already take priority (see recalculateMacros()).
+  if(!c.sport && (!c.macroPreset || (c.macroPreset==='balanced' && !c._macroPresetManual))){
     var defPreset=DEFAULT_MACRO_PRESET_BY_GOAL[goalType];
     var defPr=defPreset&&MACRO_PRESETS[defPreset];
     if(defPr){ c.macroPreset=defPreset; c.macroP=defPr.p; c.macroF=defPr.f; c.macroC=defPr.c; }
