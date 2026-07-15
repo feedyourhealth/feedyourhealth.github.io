@@ -2547,9 +2547,20 @@ function saveFoodExclusions(){
       });
     },
 
+    // JSON.stringify με ταξινομημένα keys σε κάθε επίπεδο — έτσι το hash δεν αλλάζει μόνο και μόνο επειδή
+    // η σειρά των keys άλλαξε (π.χ. το jsonb column στο Supabase ΔΕΝ εγγυάται διατήρηση της αρχικής σειράς
+    // keys όταν αποθηκεύει/επιστρέφει ένα object — ένα Cloud.load() μετά τη δημοσίευση θα έδειχνε "ξεπερασμένο"
+    // σύνδεσμο ακόμα κι αν το πλάνο είναι byte-για-byte το ίδιο περιεχόμενο).
+    _stableStringify:function(v){
+      if(v===null || typeof v!=='object') return JSON.stringify(v);
+      var self=this;
+      if(Array.isArray(v)) return '['+v.map(function(x){return self._stableStringify(x);}).join(',')+']';
+      var keys=Object.keys(v).sort();
+      return '{'+keys.map(function(k){ return JSON.stringify(k)+':'+self._stableStringify(v[k]); }).join(',')+'}';
+    },
     // Απλό, μη κρυπτογραφικό hash — μόνο για να εντοπίζουμε ότι το πλάνο άλλαξε μετά τη δημοσίευση, χωρίς να διπλασιάζουμε το αποθηκευμένο μέγεθος με ολόκληρο clone.
     _hashPlan:function(weekPlan){
-      var str=JSON.stringify(weekPlan||{}), h=0;
+      var str=this._stableStringify(weekPlan||{}), h=0;
       for(var i=0;i<str.length;i++){ h=(Math.imul(31,h)+str.charCodeAt(i))|0; }
       return h;
     },
