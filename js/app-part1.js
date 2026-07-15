@@ -154,7 +154,7 @@ function getMicronutrientTargets(c){
   var athleteBoost=isAthlete?1.25:1.0;
 
   // Sport-specific published targets (ISSN/IOC-sourced, SPORT_PROTOCOLS[sport].criticalMicronutrients)
-  // take precedence over the generic sportBoost heuristic below for iron/zinc/magnesium/calcium,
+  // take precedence over the generic sportBoost heuristic below for iron/zinc/magnesium/calcium/vitaminD,
   // since they're already validated per-sport numbers rather than a generic multiplier.
   var sportCrit=(sport&&SPORT_PROTOCOLS[sport])?SPORT_PROTOCOLS[sport].criticalMicronutrients:null;
 
@@ -235,6 +235,7 @@ function getMicronutrientTargets(c){
   var baseMag=sex==='M'?(age<31?400:420):(age<31?310:320);
   var baseCa=age<51?1000:1200;
   var baseB12=2.4;
+  var baseVitD=age<71?15:20; // IOM/ODS-NIH adult RDA: 15mcg (600 IU) through age 70, 20mcg (800 IU) 71+
 
   var finalIron=Math.round(baseIron*athleteBoost*sportBoost.iron*dietBoost.iron*envBoost.iron);
   var finalZinc=Math.round(baseZinc*athleteBoost*sportBoost.zinc*dietBoost.zinc);
@@ -250,6 +251,7 @@ function getMicronutrientTargets(c){
   var zincCrit=sportCrit&&sportCrit.zinc;
   var magCrit=sportCrit&&sportCrit.magnesium;
   var caCrit=sportCrit&&sportCrit.calcium;
+  var vitDCrit=sportCrit&&sportCrit.vitaminD;
 
   return{
     iron:{
@@ -353,6 +355,14 @@ function getMicronutrientTargets(c){
       unit:NUTRIENT_UNITS.dha,label:'DHA (ω-3)',
       notes:c.pregnant?'Ελάχιστο εγκυμοσύνης (ACOG/Perinatal Lipid Intake Working Group)':'Γενική σύσταση EPA+DHA (όχι επίσημο DRI)',
       athletic:c.pregnant?200:250
+    },
+    vitaminD:{
+      target:baseVitD,
+      unit:NUTRIENT_UNITS.vitaminD,label:'Βιταμίνη D',
+      notes:vitDCrit?vitDCrit.notes:'IOM/ODS-NIH Adequate Intake',
+      athletic:vitDCrit?vitDCrit.target:baseVitD,
+      adjusted:vitDCrit?vitDCrit.target:baseVitD,
+      sportSpecific:!!vitDCrit
     }
   };
 }
@@ -1241,7 +1251,7 @@ function getFiberTarget(age,sex){
 
 // ── Calculate micronutrient totals for a day ──────────────────────────────────
 function getDayMicronutrients(meals){
-  var result={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0};
+  var result={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0,VitD:0};
   (meals||[]).forEach(function(meal){
     (meal.foods||[]).forEach(function(food){
       var mn=MICRONUTRIENTS[resolveFood(food.n)];
@@ -1261,6 +1271,7 @@ function getDayMicronutrients(meals){
         result.Iodine+=(mn.Iodine||0)*food.g/100;
         result.Choline+=(mn.Choline||0)*food.g/100;
         result.DHA+=(mn.DHA||0)*food.g/100;
+        result.VitD+=(mn.VitD||0)*food.g/100;
       }
     });
   });
@@ -1277,13 +1288,13 @@ var MICRONUTRIENT_KEY_MAP={
   Fe:'iron',Zn:'zinc',Mg:'magnesium',Ca:'calcium',
   B1:'b1',B2:'b2',B3:'b3',B6:'b6',B12:'b12',
   Folate:'folate',Omega3:'omega3',Omega6:'omega6',
-  Iodine:'iodine',Choline:'choline',DHA:'dha'
+  Iodine:'iodine',Choline:'choline',DHA:'dha',VitD:'vitaminD'
 };
 
 // ── Check micronutrient adequacy for the day ────────────────────────────────
 function checkMicronutrientAdequacy(dayMN,targets,useAthletic){
   var result={};
-  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA'].forEach(function(key){
+  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA','VitD'].forEach(function(key){
     var tgt=targets[MICRONUTRIENT_KEY_MAP[key]]||{};
     var target=useAthletic?tgt.athletic:tgt.target;
     var actual=dayMN[key]||0;
@@ -1298,7 +1309,7 @@ function getWeekMicronutrients(weekPlan){
   // INPUT: 7-day meal plan (weekPlan[0-6] each with meals)
   // OUTPUT: Weekly aggregate {Fe: 126, Ca: 8400, ...} and daily averages
 
-  var weekTotals={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0};
+  var weekTotals={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0,VitD:0};
   var dailyAverage={};
 
   for(var d=0;d<7;d++){
@@ -1349,7 +1360,8 @@ function detectMicronutrientGaps(weekAnalysis, c){
     else if(tgtKey==='b12')mnKey='B12';
     else if(tgtKey==='folate')mnKey='Folate';
     else if(tgtKey==='omega3')mnKey='Omega3';
-    else if(tgtKey==='vit_d3')mnKey='D3';
+    else if(tgtKey==='vitaminD')mnKey='VitD';
+    else if(tgtKey==='vit_d3')mnKey='D3'; // dead: no target key is ever actually named 'vit_d3' (that's a SUPPS catalog id, not a targets key)
     // 'dha' would default to 'Dha' (only first letter capitalized) via the generic rule above,
     // which never matches the all-caps 'DHA' key weekTotals/dailyAverage actually use (see
     // weekTotals init a few lines up in getWeekMicronutrients) — so DHA intake always read as 0

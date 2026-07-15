@@ -2687,14 +2687,14 @@ function getMicronutrientHtml(c){
   }
 
   // Calculate weekly average
-  var weekMN={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0};
+  var weekMN={Fe:0,Zn:0,Mg:0,Ca:0,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:0,DHA:0,VitD:0};
   Object.keys(daysMN).forEach(function(d){
     var dmn=daysMN[d];
-    ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA'].forEach(function(key){
+    ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA','VitD'].forEach(function(key){
       weekMN[key]+=dmn[key];
     });
   });
-  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA'].forEach(function(key){
+  ['Fe','Zn','Mg','Ca','B1','B2','B3','B6','B12','Folate','Omega3','Omega6','Iodine','Choline','DHA','VitD'].forEach(function(key){
     weekMN[key]=Math.round(weekMN[key]/7);
   });
 
@@ -2735,7 +2735,7 @@ function getMicronutrientHtml(c){
   html+='<tbody>';
 
   // Sort by status (critical first, then low, then ok)
-  var sortedKeys=['Fe','Zn','Mg','Ca','B12','B1','B2','B3','B6','Folate','Omega3','Omega6','Iodine','Choline','DHA'];
+  var sortedKeys=['Fe','Zn','Mg','Ca','VitD','B12','B1','B2','B3','B6','Folate','Omega3','Omega6','Iodine','Choline','DHA'];
   var rows=[];
 
   sortedKeys.forEach(function(key){

@@ -1387,7 +1387,7 @@ var MEAL_TIMING_PROFILES={
 // (see dietologist-pending-work memory, 2026-07-15 IU/vitamin-D audit).
 var NUTRIENT_UNITS={
   iron:'mg',zinc:'mg',magnesium:'mg',calcium:'mg',sodium:'mg',potassium:'mg',
-  copper:'µg',selenium:'µg',vitaminD:'IU',
+  copper:'µg',selenium:'µg',vitaminD:'mcg',
   b1:'mg',b2:'mg',b3:'mg NE',b6:'mg',b12:'mcg',
   folate:'mcg',omega3:'g',omega6:'g',
   iodine:'mcg',choline:'mg',dha:'mg'
@@ -1401,7 +1401,7 @@ var SPORT_PROTOCOLS={
       iron:{target:27,unit:NUTRIENT_UNITS.iron,priority:'CRITICAL',notes:'O2 transport for endurance'},
       calcium:{target:1150,unit:NUTRIENT_UNITS.calcium,priority:'CRITICAL',notes:'Bone density protection'},
       magnesium:{target:365,unit:NUTRIENT_UNITS.magnesium,priority:'CRITICAL',notes:'Muscle function, energy metabolism'},
-      vitaminD:{target:1500,unit:NUTRIENT_UNITS.vitaminD,priority:'HIGH',notes:'Many athletes deficient'},
+      vitaminD:{target:37.5,unit:NUTRIENT_UNITS.vitaminD,priority:'HIGH',notes:'Many athletes deficient'}, // 1500 IU ÷ 40
       potassium:{target:3500,unit:NUTRIENT_UNITS.potassium,priority:'HIGH',notes:'Electrolyte balance'}
     },
     recommendedSupplements:[
@@ -1457,7 +1457,7 @@ var SPORT_PROTOCOLS={
       potassium:{target:3500,unit:NUTRIENT_UNITS.potassium,priority:'HIGH',notes:'Electrolyte balance'},
       zinc:{target:11,unit:NUTRIENT_UNITS.zinc,priority:'HIGH',notes:'Elevated due to stress + weight loss'},
       copper:{target:900,unit:NUTRIENT_UNITS.copper,priority:'HIGH',notes:'Connective tissue (high injury risk)'},
-      vitaminD:{target:1700,unit:NUTRIENT_UNITS.vitaminD,priority:'HIGH',notes:'May need higher'},
+      vitaminD:{target:42.5,unit:NUTRIENT_UNITS.vitaminD,priority:'HIGH',notes:'May need higher'}, // 1700 IU ÷ 40
       selenium:{target:55,unit:NUTRIENT_UNITS.selenium,priority:'HIGH',notes:'Antioxidant, immune function'}
     },
     recommendedSupplements:[
@@ -1491,12 +1491,17 @@ var SPORT_PROTOCOLS={
 // pass). Οι υπόλοιπες τιμές είναι σύμφωνες με τυπικά πρότυπα σύστασης τροφίμων (πχ. αυγό=υψηλή χολίνη,
 // γαλακτοκομικά=μέτριο ιώδιο, φυτικά=~0 ιώδιο/DHA) στο ίδιο επίπεδο τεκμηρίωσης με τα υπόλοιπα 9 θρεπτικά
 // του πίνακα (ένα γενικό "USDA per 100g", όχι citation ανά κελί) — δεν έχουν όλες επαληθευτεί μεμονωμένα.
+// ✅ VitD (mcg per 100g) προστέθηκε 2026-07-15 μόνο στα τρόφιμα με ουσιαστική, καλά τεκμηριωμένη
+// περιεκτικότητα (λιπαρά ψάρια, αυγό, βούτυρο, μανιτάρια — USDA FoodData Central τυπικές τιμές).
+// Τρόφιμα χωρίς το πεδίο VitD θεωρούνται 0 (ίδια σύμβαση με τα υπόλοιπα πεδία — βλ. getDayMicronutrients'
+// (mn.VitD||0)). Ελληνικά γαλακτοκομικά ΔΕΝ θεωρήθηκαν πηγή — δεν εμπλουτίζονται εκ των προτέρων όπως
+// στις ΗΠΑ, οπότε η φυσική περιεκτικότητα είναι αμελητέα εκτός αν αναφέρεται ρητά "εμπλουτισμένο".
 var MICRONUTRIENTS={
   // Meats
   'Κοτόπουλο στήθος (ψητό)':{Fe:0.8,Zn:0.8,Mg:27,Ca:9,B1:0.07,B2:0.10,B3:9.2,B6:0.90,B12:0.3,Folate:3,Omega3:0.05,Omega6:1.5,Iodine:7,Choline:118,DHA:0},
   'Βοδινό άπαχο (ψητό)':{Fe:2.6,Zn:6.0,Mg:20,Ca:8,B1:0.06,B2:0.17,B3:5.0,B6:0.52,B12:2.4,Folate:7,Omega3:0.05,Omega6:0.9,Iodine:3,Choline:85,DHA:0},
-  'Σολομός (ψητός)':{Fe:0.8,Zn:0.8,Mg:27,Ca:13,B1:0.20,B2:0.16,B3:7.2,B6:0.80,B12:3.2,Folate:20,Omega3:2.6,Omega6:1.3,Iodine:15,Choline:90,DHA:1200},
-  'Τόνος (κονσέρβα)':{Fe:1.3,Zn:0.6,Mg:34,Ca:7,B1:0.05,B2:0.05,B3:5.1,B6:0.40,B12:1.0,Folate:1,Omega3:0.24,Omega6:0.1,Iodine:9,Choline:65,DHA:230},
+  'Σολομός (ψητός)':{Fe:0.8,Zn:0.8,Mg:27,Ca:13,B1:0.20,B2:0.16,B3:7.2,B6:0.80,B12:3.2,Folate:20,Omega3:2.6,Omega6:1.3,Iodine:15,Choline:90,DHA:1200,VitD:11},
+  'Τόνος (κονσέρβα)':{Fe:1.3,Zn:0.6,Mg:34,Ca:7,B1:0.05,B2:0.05,B3:5.1,B6:0.40,B12:1.0,Folate:1,Omega3:0.24,Omega6:0.1,Iodine:9,Choline:65,DHA:230,VitD:2},
   // Dairy & Eggs
   'Ασπράδια αυγών':{Fe:0.03,Zn:0.01,Mg:11,Ca:7,B1:0.01,B2:0.44,B3:0.10,B6:0.01,B12:0.6,Folate:8,Omega3:0,Omega6:0,Iodine:7,Choline:1,DHA:0},
   'Γάλα αγελάδος':{Fe:0.07,Zn:0.37,Mg:13,Ca:113,B1:0.04,B2:0.16,B3:0.10,B6:0.05,B12:0.44,Folate:5,Omega3:0.06,Omega6:1.2,Iodine:19,Choline:12,DHA:0},
@@ -1528,11 +1533,11 @@ var MICRONUTRIENTS={
   'Κοτόπουλο μπιφτέκι':{Fe:1.1,Zn:1.5,Mg:26,Ca:12,B1:0.08,B2:0.17,B3:10.0,B6:0.53,B12:0.38,Folate:5,Omega3:0.06,Omega6:1.5,Iodine:6,Choline:65,DHA:0},
   'Γαλοπούλα στήθος':{Fe:0.71,Zn:1.72,Mg:32,Ca:9,B1:0.035,B2:0.205,B3:11.8,B6:0.807,B12:0.39,Folate:9,Omega3:0.03,Omega6:0.6,Iodine:35,Choline:65,DHA:0},
   'Μπριζόλα άπαχη':{Fe:1.96,Zn:5.21,Mg:24,Ca:19,B1:0.072,B2:0.128,B3:7.87,B6:0.578,B12:1.91,Folate:9,Omega3:0.02,Omega6:0.3,Iodine:3,Choline:85,DHA:0},
-  'Λαβράκι (ψητό)':{Fe:0.37,Zn:0.52,Mg:53,Ca:13,B1:0.13,B2:0.15,B3:1.9,B6:0.46,B12:0.3,Folate:6,Omega3:0.86,Omega6:0.1,Iodine:30,Choline:65,DHA:400},
-  'Τσιπούρα (ψητή)':{Fe:0.4,Zn:0.5,Mg:39,Ca:20,B1:0.10,B2:0.12,B3:3.0,B6:0.40,B12:1.0,Folate:8,Omega3:0.50,Omega6:0.1,Iodine:30,Choline:65,DHA:400},
+  'Λαβράκι (ψητό)':{Fe:0.37,Zn:0.52,Mg:53,Ca:13,B1:0.13,B2:0.15,B3:1.9,B6:0.46,B12:0.3,Folate:6,Omega3:0.86,Omega6:0.1,Iodine:30,Choline:65,DHA:400,VitD:2},
+  'Τσιπούρα (ψητή)':{Fe:0.4,Zn:0.5,Mg:39,Ca:20,B1:0.10,B2:0.12,B3:3.0,B6:0.40,B12:1.0,Folate:8,Omega3:0.50,Omega6:0.1,Iodine:30,Choline:65,DHA:400,VitD:2},
   'Γαρίδες (βραστές)':{Fe:0.5,Zn:1.6,Mg:39,Ca:70,B1:0.03,B2:0.04,B3:2.6,B6:0.16,B12:1.5,Folate:19,Omega3:0.30,Omega6:0.03,Iodine:35,Choline:65,DHA:170},
   // Eggs / Dairy
-  'Αυγά (ολόκληρα)':{Fe:1.75,Zn:1.29,Mg:12,Ca:56,B1:0.04,B2:0.457,B3:3.3,B6:0.17,B12:0.89,Folate:47,Omega3:0.036,Omega6:1.53,Iodine:24,Choline:294,DHA:18},
+  'Αυγά (ολόκληρα)':{Fe:1.75,Zn:1.29,Mg:12,Ca:56,B1:0.04,B2:0.457,B3:3.3,B6:0.17,B12:0.89,Folate:47,Omega3:0.036,Omega6:1.53,Iodine:24,Choline:294,DHA:18,VitD:2},
   'Γιαούρτι 2%':{Fe:0.04,Zn:0.60,Mg:11,Ca:115,B1:0.044,B2:0.233,B3:0.197,B6:0.055,B12:0.52,Folate:12,Omega3:0.02,Omega6:0.07,Iodine:20,Choline:14,DHA:0},
   'Arla Protein Γιαουρτάκι Σοκολάτα (πουτίγκα)':{Fe:0.10,Zn:0.55,Mg:24,Ca:160,B1:0.04,B2:0.20,B3:0.15,B6:0.05,B12:0.55,Folate:6,Omega3:0.01,Omega6:0.04,Iodine:8,Choline:12,DHA:0},
   'Arla Protein Ρόφημα Σοκολάτα':{Fe:0.05,Zn:0.45,Mg:13,Ca:135,B1:0.04,B2:0.19,B3:0.12,B6:0.04,B12:0.48,Folate:5,Omega3:0.01,Omega6:0.03,Iodine:8,Choline:10,DHA:0},
@@ -1552,7 +1557,7 @@ var MICRONUTRIENTS={
   'Τομάτες':{Fe:0.27,Zn:0.17,Mg:11,Ca:10,B1:0.037,B2:0.019,B3:0.59,B6:0.08,B12:0,Folate:15,Omega3:0.003,Omega6:0.08,Iodine:0,Choline:7,DHA:0},
   'Κολοκυθάκια':{Fe:0.37,Zn:0.32,Mg:18,Ca:16,B1:0.045,B2:0.094,B3:0.45,B6:0.16,B12:0,Folate:24,Omega3:0.05,Omega6:0.02,Iodine:0,Choline:9,DHA:0},
   'Μελιτζάνες':{Fe:0.23,Zn:0.16,Mg:14,Ca:9,B1:0.04,B2:0.04,B3:0.65,B6:0.08,B12:0,Folate:22,Omega3:0.013,Omega6:0.06,Iodine:0,Choline:7,DHA:0},
-  'Μανιτάρια':{Fe:0.50,Zn:0.52,Mg:9,Ca:3,B1:0.08,B2:0.40,B3:3.6,B6:0.10,B12:0.04,Folate:17,Omega3:0,Omega6:0.13,Iodine:2,Choline:17,DHA:0},
+  'Μανιτάρια':{Fe:0.50,Zn:0.52,Mg:9,Ca:3,B1:0.08,B2:0.40,B3:3.6,B6:0.10,B12:0.04,Folate:17,Omega3:0,Omega6:0.13,Iodine:2,Choline:17,DHA:0,VitD:0.2},
   'Σπαράγγια':{Fe:2.1,Zn:0.54,Mg:14,Ca:24,B1:0.14,B2:0.14,B3:0.98,B6:0.09,B12:0,Folate:52,Omega3:0.01,Omega6:0.08,Iodine:0,Choline:16,DHA:0},
   'Φασολάκια':{Fe:1.0,Zn:0.24,Mg:25,Ca:37,B1:0.08,B2:0.10,B3:0.75,B6:0.14,B12:0,Folate:33,Omega3:0.07,Omega6:0.04,Iodine:0,Choline:15,DHA:0},
   'Σπανάκι':{Fe:2.71,Zn:0.53,Mg:79,Ca:99,B1:0.078,B2:0.189,B3:0.72,B6:0.195,B12:0,Folate:194,Omega3:0.14,Omega6:0.03,Iodine:12,Choline:19,DHA:0},
@@ -1599,8 +1604,8 @@ var MICRONUTRIENTS={
   'Grillman Chicken Burger':{Fe:1.0,Zn:1.2,Mg:22,Ca:15,B1:0.07,B2:0.12,B3:7.0,B6:0.4,B12:0.3,Folate:5,Omega3:0.05,Omega6:1.4,Iodine:5,Choline:60,DHA:0},
   'Μπιφτέκι Κοτόπουλο Πηδηχτούλης Κόκορας':{Fe:0.9,Zn:1.3,Mg:22,Ca:14,B1:0.07,B2:0.14,B3:7.5,B6:0.45,B12:0.3,Folate:5,Omega3:0.05,Omega6:1.3,Iodine:5,Choline:65,DHA:0},
   // Fish / Seafood
-  'Μπακαλιάρος (ψητός)':{Fe:0.4,Zn:0.5,Mg:33,Ca:16,B1:0.08,B2:0.06,B3:2.1,B6:0.28,B12:1.2,Folate:8,Omega3:0.2,Omega6:0.02,Iodine:110,Choline:65,DHA:130},
-  'Σκουμπρί (ψητό)':{Fe:1.6,Zn:0.8,Mg:97,Ca:15,B1:0.18,B2:0.4,B3:9.1,B6:0.4,B12:9.0,Folate:2,Omega3:2.5,Omega6:0.2,Iodine:100,Choline:80,DHA:1000},
+  'Μπακαλιάρος (ψητός)':{Fe:0.4,Zn:0.5,Mg:33,Ca:16,B1:0.08,B2:0.06,B3:2.1,B6:0.28,B12:1.2,Folate:8,Omega3:0.2,Omega6:0.02,Iodine:110,Choline:65,DHA:130,VitD:1},
+  'Σκουμπρί (ψητό)':{Fe:1.6,Zn:0.8,Mg:97,Ca:15,B1:0.18,B2:0.4,B3:9.1,B6:0.4,B12:9.0,Folate:2,Omega3:2.5,Omega6:0.2,Iodine:100,Choline:80,DHA:1000,VitD:14},
   'Χταπόδι (βρ.)':{Fe:5.3,Zn:1.7,Mg:30,Ca:106,B1:0.03,B2:0.08,B3:2.1,B6:0.36,B12:20,Folate:16,Omega3:0.16,Omega6:0.03,Iodine:20,Choline:65,DHA:130},
   'Καλαμάρι (ψητό)':{Fe:0.7,Zn:1.5,Mg:33,Ca:32,B1:0.02,B2:0.4,B3:2.2,B6:0.18,B12:1.3,Folate:5,Omega3:0.5,Omega6:0.02,Iodine:15,Choline:65,DHA:150},
   'Μύδια (βρ.)':{Fe:4.5,Zn:1.6,Mg:34,Ca:26,B1:0.16,B2:0.21,B3:1.6,B6:0.05,B12:12,Folate:42,Omega3:0.4,Omega6:0.03,Iodine:140,Choline:60,DHA:180},
@@ -1733,7 +1738,7 @@ var MICRONUTRIENTS={
   'USN Trust Crunch Bar':{Fe:2.0,Zn:2.0,Mg:40,Ca:150,B1:0.2,B2:0.2,B3:3.0,B6:0.3,B12:1.0,Folate:20,Omega3:0.1,Omega6:2.0,Iodine:0,Choline:20,DHA:0},
   'Σουσάμι':{Fe:14.6,Zn:7.75,Mg:351,Ca:975,B1:0.79,B2:0.25,B3:4.5,B6:0.79,B12:0,Folate:97,Omega3:0.4,Omega6:21,Iodine:0,Choline:25,DHA:0},
   'Λιναρόσπορος':{Fe:5.7,Zn:4.3,Mg:392,Ca:255,B1:1.6,B2:0.16,B3:3.1,B6:0.47,B12:0,Folate:87,Omega3:22.8,Omega6:5.9,Iodine:0,Choline:78,DHA:0},
-  'Βούτυρο':{Fe:0.02,Zn:0.09,Mg:2,Ca:24,B1:0.005,B2:0.03,B3:0.04,B6:0.003,B12:0.17,Folate:3,Omega3:0.3,Omega6:2.7,Iodine:5,Choline:19,DHA:0},
+  'Βούτυρο':{Fe:0.02,Zn:0.09,Mg:2,Ca:24,B1:0.005,B2:0.03,B3:0.04,B6:0.003,B12:0.17,Folate:3,Omega3:0.3,Omega6:2.7,Iodine:5,Choline:19,DHA:0,VitD:0.6},
   'Μαργαρίνη light':{Fe:0,Zn:0,Mg:0,Ca:5,B1:0,B2:0,B3:0,B6:0,B12:0,Folate:0,Omega3:1.0,Omega6:15,Iodine:0,Choline:0,DHA:0},
   'Φιστίκια':{Fe:1.3,Zn:3.3,Mg:168,Ca:92,B1:0.64,B2:0.14,B3:12.1,B6:0.35,B12:0,Folate:240,Omega3:0.003,Omega6:15.6,Iodine:0,Choline:53,DHA:0},
   'Παστέλι':{Fe:8.0,Zn:4.0,Mg:180,Ca:550,B1:0.4,B2:0.15,B3:2.5,B6:0.4,B12:0,Folate:50,Omega3:0.2,Omega6:12,Iodine:0,Choline:15,DHA:0},
@@ -1770,7 +1775,7 @@ var MICRONUTRIENTS={
   'Λευκό κρασί':{Fe:0.4,Zn:0.07,Mg:9,Ca:9,B1:0,B2:0.01,B3:0.1,B6:0.05,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:8,DHA:0},
   'Κοκος γάλα light':{Fe:0.8,Zn:0.4,Mg:20,Ca:8,B1:0.02,B2:0,B3:0.4,B6:0.02,B12:0,Folate:8,Omega3:0,Omega6:0.05,Iodine:0,Choline:4,DHA:0},
   'Πορτοκαλάδα φρέσκια':{Fe:0.2,Zn:0.07,Mg:11,Ca:11,B1:0.09,B2:0.02,B3:0.4,B6:0.06,B12:0,Folate:30,Omega3:0.01,Omega6:0.02,Iodine:0,Choline:8,DHA:0},
-  'Σαρδέλες':{Fe:2.9,Zn:1.3,Mg:39,Ca:382,B1:0.03,B2:0.23,B3:5.2,B6:0.16,B12:8.9,Folate:11,Omega3:1.5,Omega6:0.2,Iodine:35,Choline:75,DHA:500},
+  'Σαρδέλες':{Fe:2.9,Zn:1.3,Mg:39,Ca:382,B1:0.03,B2:0.23,B3:5.2,B6:0.16,B12:8.9,Folate:11,Omega3:1.5,Omega6:0.2,Iodine:35,Choline:75,DHA:500,VitD:5},
   'Πατάτες':{Fe:0.3,Zn:0.3,Mg:20,Ca:8,B1:0.08,B2:0.02,B3:1.1,B6:0.2,B12:0,Folate:8,Omega3:0.002,Omega6:0.03,Iodine:0,Choline:12,DHA:0},
   'Σάλτσα κάρι light':{Fe:0.5,Zn:0.2,Mg:12,Ca:20,B1:0.03,B2:0.05,B3:0.5,B6:0.05,B12:0,Folate:5,Omega3:0.05,Omega6:0.5,Iodine:0,Choline:8,DHA:0}
 };
