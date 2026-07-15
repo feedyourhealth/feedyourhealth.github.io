@@ -3046,6 +3046,17 @@ function applyGoalMacros(goalType) {
   c.goal = String(goalDeltas[goalType] || 0);
   c.goalMain = goalType;
 
+  // Smart default: pre-fill a sensible macro preset for this goal — but only the first
+  // time (macroPreset still unset/at the fresh-client default 'balanced'), so nudging the
+  // goal later never silently overrides a preset the dietitian deliberately picked. Skipped
+  // entirely when a sport is selected, since sport-specific ratios already take priority
+  // (see recalculateMacros()).
+  if(!c.sport && (!c.macroPreset || c.macroPreset==='balanced')){
+    var defPreset=DEFAULT_MACRO_PRESET_BY_GOAL[goalType];
+    var defPr=defPreset&&MACRO_PRESETS[defPreset];
+    if(defPr){ c.macroPreset=defPreset; c.macroP=defPr.p; c.macroF=defPr.f; c.macroC=defPr.c; }
+  }
+
   // Update display
   var goalDisplay = document.getElementById('goal-display');
   if(goalDisplay) {

@@ -281,6 +281,61 @@ function harvestMealLibrary(excludeClientId){
   return lib;
 }
 
+// ── OWN-HISTORY REUSE (Priority -1, tried before the cross-client taste library) ───────────
+// Pulls candidate meals from THIS client's own c.savedPlans instead of only ever starting
+// from other clients' meals. A saved plan's meals are only offered as candidates if the
+// client's portal check-ins (window.Cloud.checkinsFor) show they were reasonably followed
+// during that plan's period (>=60% meals completed) — a plan the client didn't actually
+// stick to shouldn't get reinforced. Clients with no check-in data (never used the portal)
+// still have their saved-plan meals considered: missing data isn't treated as a bad signal,
+// only an explicit low completion ratio is. Looks only at the last 3 saved plans so a diet
+// from long before the current goal/dietType doesn't keep resurfacing.
+function harvestOwnHistory(c){
+  var lib=[];
+  var seen={};
+  if(!c || !c.savedPlans || !c.savedPlans.length) return lib;
+
+  var checkins=(window.Cloud && typeof window.Cloud.checkinsFor==='function') ? window.Cloud.checkinsFor(c) : [];
+  var sortedPlans=c.savedPlans.slice().sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  var recentPlans=sortedPlans.slice(-3).reverse(); // most recent first
+
+  recentPlans.forEach(function(plan, idx){
+    if(!plan.weekPlan) return;
+    var periodStart=plan.date||'';
+    var periodEnd=(idx===0) ? '9999-12-31' : (recentPlans[idx-1].date||'9999-12-31'); // exclusive upper bound = next (newer) plan's date
+    var periodCheckins=checkins.filter(function(ci){ return ci.date>=periodStart && ci.date<periodEnd; });
+    if(periodCheckins.length){
+      var totalDone=0, totalTarget=0;
+      periodCheckins.forEach(function(ci){ totalDone+=(ci.meals_done||0); totalTarget+=(ci.meals_total||0); });
+      if(totalTarget>0 && (totalDone/totalTarget)<0.6) return; // poorly-followed plan — skip its meals
+    }
+    for(var d=0;d<7;d++){
+      var day=plan.weekPlan[d];
+      if(!day || !day.length) continue;
+      day.forEach(function(meal){
+        if(!meal || !meal.foods || !meal.foods.length) return;
+        var sig=mealSignature(meal.foods);
+        if(!sig || seen[sig]) return;
+        var kcal=calculateMealKcal(meal.foods);
+        if(kcal<50) return;
+        seen[sig]=true;
+        lib.push({
+          id:'own_'+plan.id+'_'+sig.length+'_'+Math.round(kcal),
+          name:meal.name||'',
+          foods:deepClone(meal.foods),
+          kcal:Math.round(kcal),
+          mealTiming:meal.mealTiming||'regular',
+          slot:classifyMealSlot(meal.name),
+          dietType:plan.dietType||c.dietType||'normal',
+          tags:['own-history'],
+          source:'own-history'
+        });
+      });
+    }
+  });
+  return lib;
+}
+
 // ── MEAL ALTERNATES (client portal swap suggestions) ───────────────────────
 // Given a meal, find up to `count` alternative meals of the same slot+diet
 // from the cross-client taste library, scaled to the meal's own kcal target.
@@ -989,12 +1044,23 @@ function pregnancyBlockCheck(c, proceedFn){
   proceedFn();
 }
 
+// ⚠️ Surfaces calcTDEE's already-computed warnings[] (double-counted activity, out-of-range
+// protein, too-low carbs, oversized deficit/surplus, GDM carb floor, etc.) as a confirm gate
+// BEFORE a plan is generated, instead of only after — same pattern as pregnancyBlockCheck above.
+function calorieConsistencyCheck(c, proceedFn){
+  var t=calcTDEE(c);
+  var warnings=t.warnings||[];
+  if(warnings.length===0){ proceedFn(); return; }
+  var msg=warnings.map(function(w){return w.msg;}).join('\n\n')+'\n\nΘέλεις να συνεχίσεις με αυτούς τους στόχους;';
+  showConfirmDialog(msg, proceedFn, {icon:'⚠️', confirmLabel:'Συνέχεια ούτως ή άλλως'});
+}
+
 // ✅ PHASE 4: GENERATE PLAN WITH UNDO/REDO WRAPPER
 function genPlanWithUndo(){
   var c=getC();if(!c)return;
   var errors=validateClientData(c);
   if(errors.length>0){ showValidationErrors(errors); return; }
-  pregnancyBlockCheck(c, function(){ _genPlanWithUndoProceed(c); });
+  pregnancyBlockCheck(c, function(){ calorieConsistencyCheck(c, function(){ _genPlanWithUndoProceed(c); }); });
 }
 
 function _genPlanWithUndoProceed(c){
@@ -1198,9 +1264,14 @@ function genPlan(){
 
   if(!isOrthodoxFasting && !isIntermittentFasting) {
     var savedCombos = getSavedCombos();
+    // 🕓 This same client's own recent, reasonably-well-followed meals (see harvestOwnHistory) —
+    // tried before the cross-client taste library, so a returning client gets their own proven
+    // meals back first instead of always starting from someone else's plan.
+    var ownHistory = harvestOwnHistory(c);
     // ⭐ Cross-client taste library: real meals from clients marked as templates
     var mealLibrary = harvestMealLibrary(c.id);
     var usedComboSigs = {};  // variety tracker shared across library + combos this week
+    console.log('Own history: '+ownHistory.length+' meals harvested from this client\'s past well-followed plans');
     console.log('Taste library: '+mealLibrary.length+' meals harvested from ⭐ template clients');
     for(var d=0;d<7;d++){
       for(var mi=0;mi<tmplDays[d].length;mi++){
@@ -1208,6 +1279,20 @@ function genPlan(){
         var targetKcal = eff[d].meals[mi].k;  // Per-meal calorie target
         var targetMacros = eff[d].meals[mi];  // {k,p,f,c} — same object, used for macro-fit scoring below
         var mealSlot = classifyMealSlot(meal.name);
+
+        // 🕓 Priority -1: this client's own history — a meal they had before and (per portal
+        // check-ins) reasonably followed. Takes precedence over every cross-client source.
+        if(ownHistory.length > 0){
+          var ownMeal = findSavedComboMatch(ownHistory, targetKcal, targetMacros, 80, excl, mealSlot, c.dietType, usedComboSigs);
+          if(ownMeal && ownMeal.foods && ownMeal.foods.length > 0){
+            meal.foods = deepClone(ownMeal.foods);
+            if(ownMeal.mealTiming) meal.mealTiming = ownMeal.mealTiming;
+            meal.fromOwnHistory = true;  // tag for UI/debug
+            meal.source = 'own-history';  // for the meal-source badge in renderWeekTable
+            meal.recipeSig = ownMeal.sig;
+            continue;
+          }
+        }
 
         // ⭐ Priority 0: Taste library — real, dietitian-made meals from ⭐ clients
         // (verbatim food combos; portions get scaled to target in PHASE 3D)
@@ -1591,6 +1676,7 @@ function mealSourceBadge(meal){
   var src = meal.source || (meal.fromLibrary ? 'library' : (meal.recipeId ? 'recipe' : null));
   if(!src) return '';
   var MAP = {
+    'own-history': {icon:'🕓', label:'Δικό του ιστορικό', bg:'#e0f2f1', color:'#00695c'},
     library:   {icon:'⭐', label:'Πρότυπο γεύσης', bg:'#fff8e1', color:'#f9a825'},
     recipe:    {icon:'👨‍🍳', label:'Recipe', bg:'#e3f2fd', color:'#1565C0'},
     saved:     {icon:'💾', label:'Αποθηκευμένο', bg:'#e8f5e9', color:'#2e7d32'},
@@ -3269,170 +3355,6 @@ var EN_UNITS={
   'τεμ.':'pc.','φέτα':'slice','μερίδ.':'serving','χούφτα':'handful','stick':'stick','scoop':'scoop',
   'φλ.':'cup','κ.σ.':'tbsp','κ.γ.':'tsp','κ.γλ.':'tsp','πρέζα':'pinch',
   'κύπελλο':'cup','μπουκάλι':'bottle','ρόγα':'grape','συσκευασία':'package'
-};
-var EN_FOOD_NAMES={
-  // Proteins
-  'Κοτόπουλο στήθος (ψητό)':'Chicken Breast (grilled)','Κοτόπουλο μπούτι (ψητό)':'Chicken Thigh (grilled)',
-  'Κοτόπουλο σουβλάκι':'Chicken Souvlaki','Κοτόπουλο μπιφτέκι':'Chicken Patty',
-  'Γαλοπούλα στήθος':'Turkey (roasted)','Βοδινό άπαχο (ψητό)':'Lean Beef (grilled)',
-  'Χοιρινό (μπριζόλα)':'Pork Chop','Αρνί (ψητό)':'Lamb (cooked)','Κουνέλι (μαγ.)':'Rabbit (cooked)',
-  'Σολομός (ψητός)':'Salmon (grilled)','Λαβράκι (ψητό)':'Sea Bass (grilled)',
-  'Τσιπούρα (ψητή)':'Sea Bream (grilled)','Τόνος (κονσέρβα)':'Tuna (canned)',
-  'Σαρδέλες':'Sardines (canned)','Γαρίδες (βραστές)':'Shrimp (boiled)',
-  'Χταπόδι (βρ.)':'Octopus (boiled)',
-  // Dairy / Eggs
-  'Αυγά (ολόκληρα)':'Eggs (whole)','Ασπράδια αυγών':'Egg Whites','Γιαούρτι 2%':'Yogurt 2%','Τυρί φέτα':'Feta Cheese',
-  'Μοτσαρέλα':'Mozzarella','Γάλα πλήρες':'Whole Milk','Γάλα αμυγδάλου':'Almond Milk',
-  'Πρωτεΐνη σκόνη (whey)':'Whey Protein Powder',
-  'Πρωτεΐνη Αμυγδάλου (Amino Animo Organic)':'Almond Protein (Amino Animo Organic)',
-  // Grains
-  'Βρώμη (ωμή)':'Oats (raw)','Ρύζι άσπρο (βρ.)':'White Rice (cooked)',
-  'Ρύζι καστανό (βρ.)':'Brown Rice (cooked)','Κινόα (βρ.)':'Quinoa (cooked)',
-  'Μακαρόνια (βρ.)':'Pasta (cooked)','Κριθαράκι (βρ.)':'Orzo (cooked)',
-  'Πλιγούρι (βρ.)':'Bulgur (cooked)','Ψωμί σίκαλης':'Rye Bread','Ψωμί λευκό':'White Bread',
-  'Πίτα αραβική':'Pita Bread','Κυπριακή πίτα':'Cypriot Pita','Ρυζογκοφρέτες':'Rice Cakes',
-  'Μούσλι':'Muesli',
-  // Legumes
-  'Φασόλια':'Beans','Ρεβίθια':'Chickpeas','Φακές':'Lentils',
-  'Μαυρομάτικα':'Black-eyed Peas','Φάβα':'Yellow Split Peas',
-  'Tofu (φυσικό)':'Tofu (plain)','Edamame (βρ.)':'Edamame (cooked)',
-  // Vegetables
-  'Αγγούρι':'Cucumber','Γλυκοπατάτα':'Sweet Potato','Καρότα':'Carrots',
-  'Κολοκυθάκια':'Zucchini','Κουνουπίδι':'Cauliflower','Μανιτάρια':'Mushrooms',
-  'Μαρούλι':'Lettuce','Μελιτζάνες':'Eggplant','Μπρόκολο':'Broccoli',
-  'Μπιζέλια (βραστά/ατμού)':'Green Peas (boiled/steamed)',
-  'Πατάτες':'Potatoes','Πιπεριές':'Bell Peppers','Σπανάκι':'Spinach','Παντζάρι (βραστό)':'Beetroot','Παντζάρι (ωμό)':'Beetroot (raw)',
-  'Σπαράγγια':'Asparagus','Τομάτες':'Tomatoes','Φασολάκια':'Green Beans',
-  'Σαλάτα εποχής':'Seasonal Salad',
-  // Fruits
-  'Ανανάς':'Pineapple','Αχλάδι':'Pear','Βερίκοκα':'Apricots','Γκρέιπφρούτ':'Grapefruit',
-  'Δαμάσκηνα':'Plums','Καρπούζι':'Watermelon','Κεράσια':'Cherries',
-  'Μανταρίνι':'Tangerine','Μήλο':'Apple','Μούρα':'Mixed Berries','Μπανάνα':'Banana',
-  'Λεμόνι':'Lemon','Νεκταρίνι':'Nectarine','Πεπόνι':'Cantaloupe','Πορτοκάλι':'Orange',
-  'Ροδάκινο':'Peach','Σταφίδες':'Raisins','Σταφύλια':'Grapes','Φράουλες':'Strawberries',
-  'Μπανάνα αποξηραμένη':'Dried Banana','Βερίκοκα αποξηραμένα':'Dried Apricots',
-  'Δαμάσκηνα αποξηραμένα':'Prunes','Cranberries αποξηραμένα':'Dried Cranberries',
-  'Μάνγκο αποξηραμένο':'Dried Mango','Ανανάς αποξηραμένος':'Dried Pineapple','Μήλο αποξηραμένο':'Dried Apple',
-  // Spices & Herbs
-  'Κουρκουμάς':'Turmeric','Μαύρο πιπέρι':'Black Pepper','Κανέλα':'Cinnamon','Τζίντζερ':'Ginger',
-  'Ρίγανη':'Oregano','Δεντρολίβανο':'Rosemary','Θυμάρι':'Thyme','Δυόσμος':'Mint','Φασκόμηλο':'Sage',
-  'Κουμίν':'Cumin','Γλυκάνισος':'Anise','Κορίανδρος':'Coriander','Τσίλι/Καυτερή πιπ.':'Chili Pepper',
-  'Κάρδαμο':'Cardamom','Μοσχοκάρυδο':'Nutmeg','Γαρύφαλλο':'Clove','Σαφράνι':'Saffron','Μάραθος':'Fennel',
-  // Nuts / Fats
-  'Αμύγδαλα':'Almonds','Καρύδια':'Walnuts','Αβοκάντο':'Avocado',
-  'Φυστικοβούτυρο':'Peanut Butter','Αμυγδαλοβούτυρο':'Almond Butter','Ταχίνι':'Tahini','Κάσιους':'Cashews',
-  'Ελαιόλαδο':'Olive Oil','Ελιές':'Olives','Μέλι άβραστο':'Raw Honey',
-  // FYH Recipes
-  'Αυγολέμονο Κυπριακό':'Cypriot Avgolemono','Κοτόπουλο Pesto & Φέτα':'Chicken Pesto & Feta',
-  'Pancakes Κυριακής (FYH)':'Sunday Pancakes (FYH)','Βρώμη Πρωινού (FYH)':'Morning Oatmeal (FYH)',
-  'Πρωινό Αυγών (FYH)':'Egg Breakfast (FYH)','Τοστ Αυγών (FYH)':'Egg Toast (FYH)',
-  'Γιαούρτι Granola (FYH)':'Yogurt & Granola (FYH)','Πίτα Αυγών (FYH)':'Egg Pita (FYH)',
-  'Σαλάτα Φακής Μεσογειακή':'Mediterranean Lentil Salad',
-  'Μπουλγκούρ-Κινόα Κοτόπουλο':'Bulgur-Quinoa Chicken','Ψάρι στο Φούρνο (FYH)':'Baked Fish (FYH)',
-  'Ρύζι-Φακές Stir Fry':'Rice-Lentil Stir Fry','Γκρανόλα χωρίς ζάχαρη':'Sugar-Free Granola',
-  'Μπανανόψωμο':'Banana Bread','Muffins Μύρτιλου':'Blueberry Muffins',
-  // ✅ Προστέθηκαν 2026-07-05 — συμπλήρωση 171 λειπόντων FOODS (code review)
-  // Meat / Poultry
-  'Κοτόπουλο βραστό':'Chicken (boiled)','Μπριζόλα άπαχη':'Lean Steak',
-  'Βοδινά φιλετάκια':'Beef Strips','Βοδινά μπιφτέκια (ψημένα)':'Beef Patties (grilled)',
-  'Μοσχάρι (ψητό)':'Veal (roasted)','Μοσχάρι κιμάς (μαγ.)':'Ground Veal (cooked)',
-  'Βοδινός κιμάς (μαγ.)':'Ground Beef (cooked)','Βοδινός κιμάς άπαχος (μαγ.)':'Lean Ground Beef (cooked)',
-  'Χοιρινός κιμάς (μαγ.)':'Ground Pork (cooked)','Κιμάς κοτόπουλο (μαγ.)':'Ground Chicken (cooked)',
-  'Γαλακτοπουλο (βρ.)':'Turkey (boiled)','Λούτζα':'Lountza (cured pork loin)',
-  'Μπιφτέκι Κοτόπουλο Πηδηχτούλης Κόκορας':'Chicken Patty (Pidichtoulis)',
-  'Moving Mountains Burger':'Moving Mountains Burger','Grillman Chicken Burger':'Grillman Chicken Burger',
-  // Fish / Seafood
-  'Μπακαλιάρος (ψητός)':'Cod (grilled)','Σκουμπρί (ψητό)':'Mackerel (grilled)',
-  'Καλαμάρι (ψητό)':'Squid (grilled)','Καλαμαράκια (ψητά)':'Baby Squid (grilled)',
-  'Μύδια (βρ.)':'Mussels (boiled)','Σούπιες (βρ.)':'Cuttlefish (cooked)',
-  'Γαρίδες γίγαντες (βρ.)':'Jumbo Shrimp (cooked)','Καβούρι (βρ.)':'Crab (cooked)',
-  'Φιδάκι (ψητό)':'Garfish (grilled)',
-  // Dairy / Eggs / Protein products
-  'Cottage cheese':'Cottage Cheese','Cream cheese':'Cream Cheese',
-  'Στραγγιστό γιαούρτι 0%':'Strained Yogurt 0%','Γιαούρτι πλήρες 5%':'Whole Milk Yogurt 5%',
-  'Ανθότυρο':'Anthotyro Cheese','Μυζήθρα':'Myzithra Cheese','Γάλα σόγιας':'Soy Milk',
-  'Γάλα βρώμης':'Oat Milk','Γάλα φρέσκο 1.5% Λιπαρά':'Fresh Milk 1.5% Fat',
-  'Koko Γιαούρτι Καρύδας (Νηστίσιμο)':'Koko Coconut Yogurt (Vegan)',
-  'Γραβιέρα':'Graviera Cheese','Κασέρι':'Kasseri Cheese','Κεφαλοτύρι':'Kefalotyri Cheese',
-  'Παρμεζάνα':'Parmesan','Quark (0%)':'Quark (0%)','Ricotta':'Ricotta','Edam light':'Edam Light',
-  'Γαλατάκι σοκολάτα delact χωρίς ζάχαρη':'Delact Sugar-Free Chocolate Milk Drink',
-  'Χαλλούμι (ψητό)':'Halloumi (grilled)','Χαλλούμι (ωμό)':'Halloumi (raw)',
-  'Arla Protein Γιαουρτάκι Σοκολάτα (πουτίγκα)':'Arla Protein Chocolate Yogurt (pudding)',
-  'Arla Protein Ρόφημα Σοκολάτα':'Arla Protein Chocolate Drink',
-  'Σαγανάκι (τηγανητό)':'Saganaki (fried cheese)','Τυρί Cheddar':'Cheddar Cheese',
-  // Grains / Bread
-  'Noodles αυγού (M&S)':'Egg Noodles (M&S)','Ψωμάκι Brioche':'Brioche Bun',
-  'Ψωμάκι Μπιφτεκιού':'Burger Bun','Τορτίλια (large)':'Tortilla (large)',
-  'Ψωμί ολικής άλεσης':'Whole Wheat Bread','Κρίθινο παξιμάδι':'Barley Rusk',
-  'Κους κους (βρ.)':'Couscous (cooked)','Σπαγγέτι ολικής (βρ.)':'Whole Wheat Spaghetti (cooked)',
-  'Τραχανάς (βρ.)':'Trahana (cooked)','Φρυγανιές':'Rusks','Wasa Φρυγανιές Σίκαλης':'Wasa Rye Crispbread',
-  'Κράκερ ολικής':'Whole Wheat Crackers','Popcorn (αέρας)':'Popcorn (air-popped)',
-  'Βρώμη (βρ.)':'Oats (cooked)','Ρύζι μαύρο (βρ.)':'Black Rice (cooked)',
-  // Legumes
-  'Γίγαντες (βρ.)':'Giant Beans (cooked)','Κουκιά (βρ.)':'Fava Beans (cooked)',
-  'Αρακάς (βρ.)':'Green Peas (cooked)','Φακές κόκκινες (βρ.)':'Red Lentils (cooked)',
-  'Λούπινα (βρ.)':'Lupini Beans (cooked)','Κανελλίνι (βρ.)':'Cannellini Beans (cooked)',
-  'Φασόλια μπορλότι (βρ.)':'Borlotti Beans (cooked)','Beyond Beef (φυτικός κιμάς)':'Beyond Beef (plant-based mince)',
-  // Vegetables
-  'Ρόκα':'Arugula','Πιπεριά κόκκινη':'Red Bell Pepper','Πιπεριά κίτρινη':'Yellow Bell Pepper',
-  'Κρεμμύδι':'Onion','Σκόρδο':'Garlic','Κέϊλ (βρ.)':'Kale (cooked)','Ραπανάκι':'Radish',
-  'Αγκινάρες (βρ.)':'Artichokes (cooked)','Αγκινάρες καρδιές (κονσ.)':'Artichoke Hearts (canned)',
-  'Κρεμμυδάκι (φρέσκο)':'Spring Onion (fresh)','Καλαμπόκι (κονσέρβα)':'Corn (canned)',
-  'Καλαμπόκι (ολόκληρο στον ατμό 200g)':'Corn on the Cob (steamed, 200g)',
-  'Καλαμπόκι (ολόκληρο στον ατμό 400g - Halvatzis)':'Corn on the Cob (steamed, 400g - Halvatzis)',
-  'Μικτά λαχανικά':'Mixed Vegetables',
-  // Fruits
-  'Σύκα φρέσκα':'Fresh Figs','Σύκα ξερά':'Dried Figs','Ρόδι':'Pomegranate','Ακτινίδιο':'Kiwi',
-  'Χουρμάδες (ξερές)':'Dates (dried)','Βύσσινο':'Sour Cherry','Κουμουατ':'Kumquat',
-  'Λεμόνι (χυμός)':'Lemon (juice)','Λεμόνι (ξύσμα)':'Lemon (zest)','Χυμό ντομάτας':'Tomato Juice',
-  'Πορτοκαλάδα φρέσκια':'Fresh Orange Juice',
-  // Nuts / Seeds / Fats
-  'Chia seeds':'Chia Seeds','Σκόνη κακάο':'Cocoa Powder','Φιστίκια Αιγίνης':'Aegina Pistachios',
-  'Φιστίκια':'Peanuts','Φουντούκια':'Hazelnuts','Κολοκυθόσποροι':'Pumpkin Seeds',
-  'Ηλιόσποροι':'Sunflower Seeds','Σουσάμι':'Sesame Seeds','Λιναρόσπορος':'Flaxseed',
-  'Βούτυρο':'Butter','Μαργαρίνη light':'Light Margarine','Dark Chocolate 70%':'Dark Chocolate 70%',
-  'Ελιές πράσινες':'Green Olives','Ελιές μαύρες':'Black Olives','Κοκος γάλα light':'Light Coconut Milk',
-  // Spices / Herbs / Sauces
-  'Βασιλικός (φρέσκος)':'Basil (fresh)','Ρίγανη (ξηρή)':'Oregano (dried)','Θυμάρι (φρέσκο)':'Thyme (fresh)',
-  'Δυόσμος/Μέντα':'Mint','Άνηθος (φρέσκος)':'Dill (fresh)','Μαϊντανός (φρέσκος)':'Parsley (fresh)',
-  'Δεντρολίβανο (φρέσκο)':'Rosemary (fresh)','Κύμινο':'Cumin','Πάπρικα':'Paprika','Μουστάρδα':'Mustard',
-  'Βασιλικό':'Basil','Μπούκοβο':'Bukovo (chili flakes)',
-  'Βαλσάμικο ξίδι':'Balsamic Vinegar','Σάλτσα γιαουρτιού-άνηθου':'Yogurt-Dill Sauce',
-  'Πέστο βασιλικού':'Basil Pesto','Σάλτσα ντομάτας (μαγειρεμένη)':'Tomato Sauce (cooked)',
-  'Ταχινοσάλτσα λεμονιού':'Lemon Tahini Sauce','Σάλτσα λεμονιού-ελαιολάδου (λαδολέμονο)':'Lemon-Olive Oil Sauce (Ladolemono)',
-  'Τζατζίκι':'Tzatziki','Σάλτσα σόγιας-μελιού':'Soy-Honey Sauce','Σάλτσα σόγιας (μειωμένο αλάτι)':'Soy Sauce (reduced salt)',
-  'Σάλσα κόκκινη':'Red Salsa',
-  'Μαγιονέζα light':'Light Mayonnaise','Μαρμελάδα φράουλας':'Strawberry Jam','Σάλτσα κάρι light':'Light Curry Sauce',
-  'Κύβο λαχανικών':'Vegetable Stock Cube','Αλάτι':'Salt','Αλάτι & μπαχαρικά':'Salt & Spices','Νερό':'Water',
-  'Ούζο':'Ouzo','Λευκό κρασί':'White Wine',
-  // Snacks / Treats
-  'Παστέλι':'Pastelli (sesame-honey bar)','Χαλβάς σεσαμιού':'Sesame Halva','USN Trust Crunch Bar':'USN Trust Crunch Bar',
-  // Meals & recipes (High-Protein/Combo)
-  'High Protein Ομελέτα Wrap':'High Protein Omelette Wrap','Wrap με τονοσαλάτα':'Tuna Salad Wrap',
-  'Chive & Onion Whipped Tofu Toast':'Chive & Onion Whipped Tofu Toast',
-  'Berries & Cream Instant Oatmeal':'Berries & Cream Instant Oatmeal',
-  'Peanut Butter & Jelly Smoothie Bowl':'Peanut Butter & Jelly Smoothie Bowl',
-  'Mixed Berry & Granola Yogurt Parfait':'Mixed Berry & Granola Yogurt Parfait',
-  'Ελεύθερο γεύμα':'Free Meal','Korean Beef Bowl':'Korean Beef Bowl','Chicken Lettuce Wraps':'Chicken Lettuce Wraps',
-  'Chia Pudding (FYH)':'Chia Pudding (FYH)','Green Protein Smoothie (FYH)':'Green Protein Smoothie (FYH)',
-  'Berry Protein Smoothie (FYH)':'Berry Protein Smoothie (FYH)','Protein Pancakes (FYH)':'Protein Pancakes (FYH)',
-  'Dark Choc Oat Bites':'Dark Choc Oat Bites','PB Coconut Truffles':'PB Coconut Truffles',
-  'Energy Bites (FYH)':'Energy Bites (FYH)','PB Protein Bars':'PB Protein Bars',
-  'Σάλτσα Ντομάτας (FYH)':'FYH Tomato Sauce',
-  'Breakfast Burrito (Πετρετζίκης)':'Breakfast Burrito (Petretzikis)',
-  'Chia Bowl Φράουλα (Πετρετζίκης)':'Strawberry Chia Bowl (Petretzikis)',
-  'Overnight Oats Banoffee (Πετρετζίκης)':'Banoffee Overnight Oats (Petretzikis)',
-  'Overnight Oats Black Forest (Πετρετζίκης)':'Black Forest Overnight Oats (Petretzikis)',
-  'Overnight Oats P.B. & Choco (Πετρετζίκης)':'P.B. & Choco Overnight Oats (Petretzikis)',
-  'Αυγά Ποσέ Air Fryer (Πετρετζίκης)':'Air Fryer Poached Eggs (Petretzikis)',
-  'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)':'Turkey & Veggie Omelette (Petretzikis)',
-  'Λιγκουίνι με Γαρίδες (Πετρετζίκης)':'Linguine with Shrimp (Petretzikis)',
-  // ✅ Foods added 2026-07-10 that were missing their English PDF translation
-  'Τορτίλια ολικής άλεσης (Alphamega)':'Whole Wheat Tortilla (Alphamega)',
-  'Fajita Wrap Κοτόπουλο':'Chicken Fajita Wrap','Γάλα καρύδας':'Coconut Milk',
-  'Σπόροι κολοκύνθης':'Pumpkin Seeds','Σπόροι λιναρόσπορου':'Flaxseed',
-  'Ξηρά δαμάσκηνα':'Dried Prunes','Κρέμα γάλακτος':'Heavy Cream',
-  'Λάχανο':'Cabbage','Soy yogurt (χωρίς ζάχαρη)':'Soy Yogurt (sugar-free)'
 };
 var EN_CAT_NAMES={
   'Κρέας':'Meat','Ψάρια':'Fish & Seafood','Αυγά/Γαλακτ.':'Eggs & Dairy',

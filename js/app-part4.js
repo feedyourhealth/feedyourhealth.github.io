@@ -29,7 +29,7 @@ function exportPDF(lang){
   }
   var t=calcTDEE(c);
   // Translation helpers
-  function fn(name){return (isEn&&EN_FOOD_NAMES[name])||name;}       // food name
+  function fn(name){var food=FOODS[name];return (isEn&&food&&food.en)||name;}       // food name
   function tMn(name){return (isEn&&EN_MEAL_NAMES[name])||name;}      // meal name
   function tu(u){return (isEn&&EN_UNITS[u])||u;}                      // unit label
   function tc(cat){return (isEn&&EN_CAT_NAMES[cat])||cat;}            // category name
