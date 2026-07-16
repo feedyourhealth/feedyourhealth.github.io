@@ -389,7 +389,7 @@ function renderMain(){
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">🥗 Διατροφή</span>'
-      +'<span id="header-diet" style="font-size:13px;font-weight:600;color:#025857">' + esc(({normal:'Κανονική',vegetarian:'Χορτοφαγική',vegan:'Vegan',keto:'Κετογονική',orthodox_fasting:'Ορθόδοξη Νηστεία',intermittent_fasting:'Διαλείπουσα Νηστεία',bodybuilding_clean:'Bodybuilding Clean',kids_10_14:'Παιδιά 10-14'}[c.dietType]||'Κανονική')) + '</span>'
+      +'<span id="header-diet" style="font-size:13px;font-weight:600;color:#025857">' + esc(({normal:'Κανονική',vegetarian:'Χορτοφαγική',vegan:'Vegan',keto:'Κετογονική',orthodox_fasting:'Ορθόδοξη Νηστεία',intermittent_fasting:'Διαλείπουσα Νηστεία',bodybuilding_clean:'Bodybuilding Clean',kids_10_14:'Παιδιά 10-14',mediterranean:'🫒 Μεσογειακή'}[c.dietType]||'Κανονική')) + '</span>'
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">🚫 Αποφυγές</span>'
