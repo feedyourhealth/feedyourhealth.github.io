@@ -198,7 +198,10 @@ function getMicronutrientTargets(c){
   }
 
   // ═════ DIET-TYPE ADJUSTMENTS (bioavailability & deficiency risks) ═════
-  var dietBoost={iron:1.0,zinc:1.0,b12:1.0,calcium:1.0,folate:1.0};
+  // magnesium:1.0 — plant-based diets are generally magnesium-rich (nuts/seeds/legumes/whole
+  // grains), unlike Fe/Zn/B12 which have real bioavailability/absence issues, so no diet-type
+  // boost is warranted here by default (was previously buggy: mistakenly reused dietBoost.iron).
+  var dietBoost={iron:1.0,zinc:1.0,b12:1.0,calcium:1.0,folate:1.0,magnesium:1.0};
 
   if(dietType){
     // VEGAN: Lower bioavailability of Fe/Zn, NO natural B12
@@ -239,7 +242,7 @@ function getMicronutrientTargets(c){
 
   var finalIron=Math.round(baseIron*athleteBoost*sportBoost.iron*dietBoost.iron*envBoost.iron);
   var finalZinc=Math.round(baseZinc*athleteBoost*sportBoost.zinc*dietBoost.zinc);
-  var finalMag=Math.round(baseMag*athleteBoost*sportBoost.magnesium*dietBoost.iron);
+  var finalMag=Math.round(baseMag*athleteBoost*sportBoost.magnesium*dietBoost.magnesium);
   var finalCa=Math.round(baseCa*athleteBoost*dietBoost.calcium);
   var finalB12=baseB12*athleteBoost*dietBoost.b12;
 
@@ -275,7 +278,7 @@ function getMicronutrientTargets(c){
       unit:NUTRIENT_UNITS.magnesium,label:'Magnesium (Mg)',
       notes:magCrit?magCrit.notes:'Essential for muscle function & recovery',
       athletic:magCrit?magCrit.target:Math.round(baseMag*athleteBoost),
-      adjusted:magCrit?Math.round(magCrit.target*dietBoost.iron):finalMag,
+      adjusted:magCrit?Math.round(magCrit.target*dietBoost.magnesium):finalMag,
       sportSpecific:!!magCrit
     },
     calcium:{
@@ -1412,7 +1415,10 @@ function matchSupplementsToGaps(gaps, supp_opts){
     'B3': 'bcomplex',
     'B6': 'bcomplex',
     'B12': 'bcomplex',
-    'D3': 'vit_d3',
+    // detectMicronutrientGaps() always names this gap 'VitD' (see the vitaminD→VitD override
+    // a few lines up in that function) — this key used to be 'D3', which never matched, so
+    // Vitamin D deficiencies silently never got a supplement recommendation.
+    'VitD': 'vit_d3',
     'Omega3': 'omega3',
     'Folate': 'multivit',
     // Iodine has no dedicated SUPPS entry — same 'multivit' catch-all already used for Folate above.
@@ -1469,7 +1475,12 @@ function calculateOptimalDose(gap, supplement){
     'zinc': {min:8,max:40},
     'magn': {min:200,max:420},
     'calc': {min:1000,max:2000},
-    'vit_d3': {min:1000,max:4000},
+    // mcg, not IU — gap.gap/gap.unit for Vitamin D are mcg-scale (NUTRIENT_UNITS.vitaminD),
+    // matching the SUPPS 'vit_d3' generic label of "1000-4000 IU" (1 mcg = 40 IU: 25-100mcg).
+    // Was previously {min:1000,max:4000} in IU, which — mixed with an mcg-scale gap — meant
+    // every Vitamin D recommendation clamped to a mislabeled "1000 mcg" (≈40,000 IU, well
+    // past the safe upper limit).
+    'vit_d3': {min:25,max:100},
     'omega3': {min:500,max:3000},
     'bcomplex': {min:1,max:100},
     'multivit': {min:1,max:2}
