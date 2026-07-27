@@ -2362,6 +2362,11 @@ function saveFoodExclusions(){
 (function(){
   var Cloud = {
     enabled:false, sb:null, user:null, _t:null, _loaded:false, _authMode:'signin', _loadRetries:0,
+    // Optimistic-locking version for user_data. 0 = "no row loaded/known yet" (safe to
+    // plain-upsert, e.g. brand-new dietitian). >0 = last version we know the cloud row is
+    // at; _pushNow() only writes if the row is still at exactly this version, otherwise
+    // another tab/device saved first and we must not silently overwrite it.
+    _version:0,
 
     init:function(){
       var self=this;
@@ -2843,10 +2848,13 @@ function saveFoodExclusions(){
       var self=this;
       return new Promise(function(resolve){
         if(!self.user){ resolve(); return; }
-        self.sb.from('user_data').select('data').eq('user_id',self.user.id).maybeSingle().then(function(res){
+        self.sb.from('user_data').select('data, version').eq('user_id',self.user.id).maybeSingle().then(function(res){
           if(res.error){ console.error('[CLOUD] load', res.error); }
           var row=(res && res.data)?res.data:null;
           var d=(row && row.data)?row.data:null;
+          // Remember the version this row is at so _pushNow() can detect a concurrent
+          // write from another tab/device instead of blindly overwriting it.
+          self._version = (row && typeof row.version==='number') ? row.version : 0;
           if(d && d.clients && d.clients.length){
             // 🛡️ Μην αντικαταστήσεις τοπικά δεδομένα που είναι πιο πρόσφατα από το cloud —
             // π.χ. αν το προηγούμενο push (δουλεύει με καθυστέρηση/debounce) δεν πρόλαβε να
@@ -2903,10 +2911,33 @@ function saveFoodExclusions(){
           savedCombos: (typeof safeStorageGet==='function'?safeStorageGet('savedCombos',[]):[]),
           updatedAt: new Date().toISOString()
         };
-        self.sb.from('user_data').upsert({user_id:self.user.id, data:blob, updated_at:new Date().toISOString()}).then(function(res){
-          if(res.error){ console.error('[CLOUD] push', res.error); resolve({ok:false,error:res.error}); }
-          else { resolve({ok:true}); }
-        }).catch(function(err){ console.error('[CLOUD] push', err); resolve({ok:false,error:err}); });
+        var expected=self._version||0;
+        if(!expected){
+          // No cloud row known yet (brand-new dietitian, or first push this session) —
+          // nothing to conflict with, plain upsert starting the version chain at 1.
+          self.sb.from('user_data').upsert({user_id:self.user.id, data:blob, updated_at:new Date().toISOString(), version:1}).then(function(res){
+            if(res.error){ console.error('[CLOUD] push', res.error); resolve({ok:false,error:res.error}); }
+            else { self._version=1; resolve({ok:true}); }
+          }).catch(function(err){ console.error('[CLOUD] push', err); resolve({ok:false,error:err}); });
+          return;
+        }
+        // 🔒 Optimistic lock: only write if the cloud row is still at the version we last
+        // saw. If another tab/device saved in between, this UPDATE matches zero rows —
+        // that's a real conflict, and the caller must NOT retry with the same blob (it
+        // would silently clobber whatever the other tab/device just wrote).
+        self.sb.from('user_data')
+          .update({data:blob, updated_at:new Date().toISOString(), version:expected+1})
+          .eq('user_id',self.user.id).eq('version',expected)
+          .select('version').then(function(res){
+            if(res.error){ console.error('[CLOUD] push', res.error); resolve({ok:false,error:res.error}); return; }
+            if(!res.data || !res.data.length){
+              console.warn('[CLOUD] push conflict — cloud row is no longer at version '+expected+' (saved elsewhere).');
+              resolve({ok:false,conflict:true});
+              return;
+            }
+            self._version=res.data[0].version;
+            resolve({ok:true});
+          }).catch(function(err){ console.error('[CLOUD] push', err); resolve({ok:false,error:err}); });
       });
     },
 
@@ -2970,11 +3001,12 @@ function saveFoodExclusions(){
         self._pushNow().then(function(result){
           if(result && result.ok===false){
             self._syncFailed=true;
-            self._showSyncError();
+            if(result.conflict){ self._showConflictError(); } else { self._showSyncError(); }
             return;
           }
           self._syncFailed=false;
           self._hideSyncError();
+          self._hideConflictError();
           var t=document.getElementById('cloud-save-toast');
           if(t){ t.style.opacity='1'; clearTimeout(t._ft); t._ft=setTimeout(function(){ t.style.opacity='0'; },1500); }
         });
@@ -2997,6 +3029,65 @@ function saveFoodExclusions(){
     _hideSyncError:function(){
       var el=document.getElementById('cloud-sync-error');
       if(el) el.style.display='none';
+    },
+
+    // ⚠️ Διαφορετικό μήνυμα από το _showSyncError: εδώ δεν είναι πρόβλημα δικτύου — κάποια
+    // άλλη συσκευή/tab αποθήκευσε ήδη νεότερα δεδομένα. Ξαναδοκιμάζοντας το ίδιο save θα
+    // ξαναπετύχαινε το ίδιο conflict (σωστά — καλύτερα να μπλοκάρει παρά να τα αντικαταστήσει
+    // σιωπηλά), οπότε δίνουμε στον διαιτολόγο ρητή επιλογή να φορτώσει τα πιο πρόσφατα.
+    _showConflictError:function(){
+      var el=document.getElementById('cloud-conflict-error');
+      if(!el){
+        el=document.createElement('div');
+        el.id='cloud-conflict-error';
+        el.style.cssText='position:fixed;bottom:20px;right:20px;background:#8a5a00;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:300px;line-height:1.4;';
+        el.innerHTML='⚠️ Έγιναν αλλαγές σε άλλη συσκευή/tab — οι αλλαγές σου εδώ δεν αποθηκεύτηκαν, για να μη σβήσουν κάτι νεότερο.<br><a href="#" id="cloud-conflict-reload" style="color:#fff;text-decoration:underline;font-weight:600;">Φόρτωσε τα πιο πρόσφατα δεδομένα</a>';
+        document.body.appendChild(el);
+        var link=el.querySelector('#cloud-conflict-reload');
+        if(link) link.addEventListener('click',function(e){ e.preventDefault(); Cloud.forceReloadFromCloud(); });
+      }
+      el.style.display='block';
+    },
+    _hideConflictError:function(){
+      var el=document.getElementById('cloud-conflict-error');
+      if(el) el.style.display='none';
+    },
+
+    // Ο διαιτολόγος επέλεξε ρητά να πετάξει τις τοπικές, μη-αποθηκευμένες αλλαγές του και να
+    // δει τα πιο πρόσφατα δεδομένα του cloud (μετά από conflict). Σε αντίθεση με load(), εδώ
+    // ΔΕΝ ελέγχουμε fyh_local_updated_at — ο σκοπός είναι ακριβώς να αντικατασταθούν τα τοπικά.
+    forceReloadFromCloud:function(){
+      var self=this;
+      this._hideConflictError();
+      this.sb.from('user_data').select('data, version').eq('user_id',self.user.id).maybeSingle().then(function(res){
+        if(res.error){ console.error('[CLOUD] forceReloadFromCloud', res.error); return; }
+        var row=(res && res.data)?res.data:null;
+        var d=(row && row.data)?row.data:null;
+        self._version=(row && typeof row.version==='number')?row.version:0;
+        if(!d) return;
+        try{
+          if(Array.isArray(d.clients)) window.clients=d.clients;
+          if(Array.isArray(window.clients) && typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(window.clients);
+          if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
+          if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
+          if(d.recipeMeta && typeof saveRecipeMetaAll==='function') saveRecipeMetaAll(d.recipeMeta);
+          if(typeof safeStorageSet==='function'){
+            safeStorageSet('fyh_clients', window.clients);
+            safeStorageSet('fyh_custom_tmpls', window.customTemplates);
+            if(Array.isArray(d.savedCombos)){
+              safeStorageSet('savedCombos', d.savedCombos);
+              window._savedCombosCache = d.savedCombos;
+            }
+          }
+          try{ localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); }catch(e){}
+        }catch(e){ console.error('[CLOUD] forceReloadFromCloud apply', e); }
+        try{
+          if(typeof renderSB==='function') renderSB();
+          if(typeof renderHome==='function') renderHome();
+          if(typeof renderMain==='function') renderMain();
+        }catch(e){ console.error('[CLOUD] forceReloadFromCloud render', e); }
+        if(typeof showSuccessToast==='function') showSuccessToast('✅ Φορτώθηκαν τα πιο πρόσφατα δεδομένα από το cloud.');
+      }).catch(function(e){ console.error('[CLOUD] forceReloadFromCloud', e); });
     },
 
     // ── 📈 ΠΡΟΟΔΟΣ ΠΕΛΑΤΗ (διάβασμα των checkins που στέλνει το plan.html) ──
