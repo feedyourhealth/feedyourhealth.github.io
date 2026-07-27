@@ -531,7 +531,16 @@ const PF_ROWS=[
   {key:'ingredients_ease',label:'Εύρεση υλικών'},
   {key:'training_energy',label:'Ενεργειακή κάλυψη προπόνησης'}
 ];
-const PF_REASONS=['Δεν είχα χρόνο','Δύσκολο να βρω υλικά','Δεν μου άρεσε η γεύση','Δεν χόρτασα','Δύσκολη συνταγή'];
+// Οι λόγοι χαμηλής βαθμολογίας διαφέρουν ανά κατηγορία (π.χ. "δύσκολη συνταγή" δεν βγάζει νόημα
+// στο "Εύρεση υλικών") — ξεχωριστό σετ chips ανά τύπο σειράς, όχι ένα κοινό σετ για όλες.
+const PF_REASONS_MEAL=['Δεν είχα χρόνο','Δεν μου άρεσε η γεύση','Δεν χόρτασα','Ήταν πολύ βαρύ'];
+const PF_REASONS_RECIPES=['Πολλά βήματα','Πήρε πολύ χρόνο','Χρειαζόταν εξοπλισμό','Δύσκολη τεχνική'];
+const PF_REASONS_INGREDIENTS=['Δεν το βρήκα','Ήταν ακριβό','Πολλά διαφορετικά μαγαζιά','Άγνωστο υλικό'];
+const PF_REASONS_TRAINING=['Πεινούσα στην προπόνηση','Δεν είχα ενέργεια','Λάθος timing γεύματος','Χρειαζόμουν κάτι μετά'];
+const PF_REASONS_BY_KEY={
+  breakfast:PF_REASONS_MEAL, snacks:PF_REASONS_MEAL, lunch:PF_REASONS_MEAL, dinner:PF_REASONS_MEAL,
+  recipes_ease:PF_REASONS_RECIPES, ingredients_ease:PF_REASONS_INGREDIENTS, training_energy:PF_REASONS_TRAINING
+};
 let pfWeekKey=null, pfRatings={}, pfReasons={}, pfNps=null;
 function getPlanFeedbackSent(weekKey){try{return (JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}'))[weekKey]===true}catch(e){return false}}
 function setPlanFeedbackSent(weekKey){try{const d=JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}');d[weekKey]=true;localStorage.setItem(lk('planfeedback'),JSON.stringify(d))}catch(e){}}
@@ -542,7 +551,8 @@ function pfStarsHtml(key){
 }
 function pfReasonsHtml(key){
   const on=pfReasons[key]||[];
-  return PF_REASONS.map(r=>'<button type="button" class="log-tag'+(on.indexOf(r)>-1?' log-tag-on':'')+'" onclick="pfToggleReason(\''+key+'\',\''+esc(r)+'\',this)">'+esc(r)+'</button>').join('');
+  const list=PF_REASONS_BY_KEY[key]||PF_REASONS_MEAL;
+  return list.map(r=>'<button type="button" class="log-tag'+(on.indexOf(r)>-1?' log-tag-on':'')+'" onclick="pfToggleReason(\''+key+'\',\''+esc(r)+'\',this)">'+esc(r)+'</button>').join('');
 }
 function pfRowHtml(row){
   const val=pfRatings[row.key]||0;
