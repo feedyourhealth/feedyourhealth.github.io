@@ -60,10 +60,10 @@ setTimeout(function(){
       <!-- Πραγματικό <form> (όχι μεμονωμένα inputs) ώστε ο browser να μπορεί να προσφέρει
            αποθήκευση/αυτόματη συμπλήρωση κωδικού — τα SPA-style onclick χωρίς φόρμα δεν το επιτρέπουν αξιόπιστα. -->
       <form id="cloud-login-form" onsubmit="event.preventDefault();window.Cloud&&window.Cloud.submit();">
-        <input id="cloud-email" type="email" placeholder="Email" autocomplete="username"
+        <input id="cloud-email" type="email" placeholder="Email" aria-label="Email" autocomplete="username"
           style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
         <div style="position:relative;margin-bottom:11px;">
-          <input id="cloud-pw" type="password" placeholder="Κωδικός" autocomplete="current-password"
+          <input id="cloud-pw" type="password" placeholder="Κωδικός" aria-label="Κωδικός" autocomplete="current-password"
             style="width:100%;padding:13px;padding-right:46px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
           <button type="button" onclick="window.Cloud&&window.Cloud.togglePw()" title="Εμφάνιση/Απόκρυψη κωδικού"
             style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;padding:6px;opacity:.6;">👁️</button>
@@ -93,7 +93,7 @@ setTimeout(function(){
     <!-- Ορισμός νέου κωδικού (μετά από reset μέσω email) -->
     <div id="cloud-recovery-section" style="display:none;">
       <p style="text-align:center;color:#025857;font-weight:700;font-size:15px;margin-bottom:14px;">🔑 Όρισε νέο κωδικό</p>
-      <input id="cloud-newpw" type="password" placeholder="Νέος κωδικός (6+ χαρακτήρες)"
+      <input id="cloud-newpw" type="password" placeholder="Νέος κωδικός (6+ χαρακτήρες)" aria-label="Νέος κωδικός"
         style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
       <button onclick="window.Cloud&&window.Cloud.setNewPassword(document.getElementById('cloud-newpw').value)"
         style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">

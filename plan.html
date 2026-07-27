@@ -237,7 +237,7 @@
   .pf-row-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .pf-lbl{font-size:13px;color:var(--ink)}
   .pf-stars{display:flex;gap:2px}
-  .pf-star{font-size:21px;line-height:1;color:var(--bord);cursor:pointer;transition:transform .08s,color .12s;user-select:none}
+  .pf-star{font-size:21px;line-height:1;color:var(--bord);cursor:pointer;transition:transform .08s,color .12s;user-select:none;border:none;background:none;padding:0;font-family:inherit}
   .pf-star.on{color:var(--teal)}
   .pf-star:active{transform:scale(.82)}
   .pf-reasons{display:none;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -548,7 +548,10 @@ function getPlanFeedbackEntry(weekKey){try{return (JSON.parse(localStorage.getIt
 function setPlanFeedbackEntry(weekKey,entry){try{const d=JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}');d[weekKey]=entry;localStorage.setItem(lk('planfeedback'),JSON.stringify(d))}catch(e){}}
 function pfStarsHtml(key){
   let h='';
-  for(let i=1;i<=5;i++)h+='<span class="pf-star'+(i<=(pfRatings[key]||0)?' on':'')+'" onclick="pfSetRating(\''+key+'\','+i+')">★</span>';
+  for(let i=1;i<=5;i++){
+    const on=i<=(pfRatings[key]||0);
+    h+='<button type="button" class="pf-star'+(on?' on':'')+'" aria-label="'+i+' από 5 αστέρια" aria-pressed="'+on+'" onclick="pfSetRating(\''+key+'\','+i+')">★</button>';
+  }
   return h;
 }
 function pfReasonsHtml(key){
@@ -577,7 +580,7 @@ function pfFormHtml(){
 function pfSetRating(key,val){
   pfRatings[key]=val;
   const starsWrap=document.getElementById('pf-stars-'+key);
-  if(starsWrap)Array.prototype.forEach.call(starsWrap.children,(s,i)=>s.classList.toggle('on',i<val));
+  if(starsWrap)Array.prototype.forEach.call(starsWrap.children,(s,i)=>{s.classList.toggle('on',i<val);s.setAttribute('aria-pressed',i<val);});
   const reasonsWrap=document.getElementById('pf-reasons-'+key);
   if(reasonsWrap){
     if(val>0&&val<=2){reasonsWrap.style.display='flex';}
