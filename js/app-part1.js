@@ -2635,11 +2635,26 @@ function progressBadge(c){
 function clientHasFlaggedAppointment(c){
   return !!(c.appointments && c.appointments.some(function(a){return a.flagged;}));
 }
-// Ένας πελάτης "χρειάζεται προσοχή" αν: έχει σημειωμένο ραντεβού για παρακολούθηση, ή δεν έχει καθόλου
-// πλάνο, ή το δημοσιευμένο portal link του είναι ξεπερασμένο, ή το πλάνο του είναι 30+ ημερών (ίδια
-// κριτήρια με το Διατροφές "needs action"), ή έχει δημοσιευμένο portal αλλά 2+ μέρες χωρίς check-in.
+// Πελάτης με χαμηλή ικανοποίηση στην πιο ΠΡΟΣΦΑΤΗ εβδομαδιαία αξιολόγηση πλάνου (plan_feedback).
+// Σε αντίθεση με το 🚩 ραντεβού flag αυτό ΔΕΝ είναι μόνιμο — ελέγχει πάντα μόνο την τελευταία
+// καταχώρηση, οπότε καθαρίζει μόνο του μόλις η επόμενη εβδομάδα βελτιωθεί.
+var PF_ATTENTION_NPS_MAX=4, PF_ATTENTION_STAR_MAX=2;
+function clientHasLowPlanFeedback(c){
+  if(!window.Cloud || typeof window.Cloud.planFeedbackFor!=='function') return false;
+  var latest=window.Cloud.planFeedbackFor(c)[0];
+  if(!latest) return false;
+  if(latest.continue_likelihood!=null && latest.continue_likelihood<=PF_ATTENTION_NPS_MAX) return true;
+  return ['breakfast','snacks','lunch','dinner','recipes_ease','ingredients_ease','training_energy'].some(function(k){
+    return latest[k]!=null && latest[k]<=PF_ATTENTION_STAR_MAX;
+  });
+}
+// Ένας πελάτης "χρειάζεται προσοχή" αν: έχει σημειωμένο ραντεβού για παρακολούθηση, ή έδωσε χαμηλή
+// αξιολόγηση πλάνου την τελευταία εβδομάδα, ή δεν έχει καθόλου πλάνο, ή το δημοσιευμένο portal link
+// του είναι ξεπερασμένο, ή το πλάνο του είναι 30+ ημερών (ίδια κριτήρια με το Διατροφές "needs action"),
+// ή έχει δημοσιευμένο portal αλλά 2+ μέρες χωρίς check-in.
 function clientNeedsAttention(c){
   if(clientHasFlaggedAppointment(c)) return true;
+  if(clientHasLowPlanFeedback(c)) return true;
   if(typeof dietsHasPlan==='function' && !dietsHasPlan(c)) return true;
   if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) return true;
   if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)) return true;
@@ -2704,7 +2719,7 @@ function renderSB(){
         +'<div class="cc-top">'
         +'<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'
         +'<div class="cc-headtext">'
-        +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+'</div>'
+        +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+'</div>'
         +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
         +'</div>'
         +'<div class="cc-actions">'

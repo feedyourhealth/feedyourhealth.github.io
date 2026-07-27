@@ -19,6 +19,13 @@ function homeClientsNeedingAttention(){
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(100);">Δες ραντεβού</button>'});
       return;
     }
+    if(typeof clientHasLowPlanFeedback==='function' && clientHasLowPlanFeedback(c)){
+      var latestPf=window.Cloud.planFeedbackFor(c)[0];
+      var npsTxt=latestPf.continue_likelihood!=null?(latestPf.continue_likelihood+'/10 πιθανότητα συνέχισης'):'χαμηλή βαθμολογία σε γεύμα';
+      out.push({c:c,tier:-1,gap:0,label:'😕 χαμηλή ικανοποίηση πλάνου ('+npsTxt+', εβδ. '+latestPf.week_start+')',
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(3);">Δες feedback</button>'});
+      return;
+    }
     var hasPlan=(typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
     if(!hasPlan){
       out.push({c:c,tier:0,gap:0,label:'χωρίς πλάνο ακόμα',
