@@ -542,8 +542,10 @@ const PF_REASONS_BY_KEY={
   recipes_ease:PF_REASONS_RECIPES, ingredients_ease:PF_REASONS_INGREDIENTS, training_energy:PF_REASONS_TRAINING
 };
 let pfWeekKey=null, pfRatings={}, pfReasons={}, pfNps=null;
-function getPlanFeedbackSent(weekKey){try{return (JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}'))[weekKey]===true}catch(e){return false}}
-function setPlanFeedbackSent(weekKey){try{const d=JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}');d[weekKey]=true;localStorage.setItem(lk('planfeedback'),JSON.stringify(d))}catch(e){}}
+// Το localStorage record κρατάει ΚΑΙ τις τιμές ΚΑΙ το synced status — όχι απλά ένα boolean "στάλθηκε" —
+// ώστε να ξέρουμε αν χρειάζεται "Δοκίμασε ξανά" (ίδιο μοτίβο με getClientLogToday/setClientLogToday).
+function getPlanFeedbackEntry(weekKey){try{return (JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}'))[weekKey]||null}catch(e){return null}}
+function setPlanFeedbackEntry(weekKey,entry){try{const d=JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}');d[weekKey]=entry;localStorage.setItem(lk('planfeedback'),JSON.stringify(d))}catch(e){}}
 function pfStarsHtml(key){
   let h='';
   for(let i=1;i<=5;i++)h+='<span class="pf-star'+(i<=(pfRatings[key]||0)?' on':'')+'" onclick="pfSetRating(\''+key+'\','+i+')">★</span>';
@@ -605,22 +607,55 @@ function pfCheckComplete(){
   const btn=document.getElementById('pf-submit-btn');
   if(btn)btn.disabled=!(allRated&&pfNps!=null);
 }
-// Best-effort αποστολή (ίδιο μοτίβο με pushCheckin) — η επιβεβαίωση στον πελάτη εμφανίζεται
-// αισιόδοξα (localStorage flag), το localStorage μένει η πηγή αλήθειας για "έχω ήδη στείλει".
+function pfSentStateHtml(entry){
+  const head='<div class="card-hdr"><i class="ti ti-star"></i>Αξιολόγηση εβδομάδας</div>';
+  // synced===false = γνωστό ότι απέτυχε/εκκρεμεί η αποστολή· οτιδήποτε άλλο = εστάλη κανονικά
+  // (ίδια σύμβαση με το logStatus του client_logs καταγραφή-σήμερα, βλ. viewProg).
+  return head+(entry.synced===false
+    ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη στον/στην διαιτολόγο σου <button onclick="retryPlanFeedbackSync()">Δοκίμασε ξανά</button></div>'
+    : '<div class="log-sent"><i class="ti ti-circle-check"></i>Ευχαριστούμε! Έστειλες την αξιολόγησή σου για αυτή την εβδομάδα.</div>');
+}
+// Σε αντίθεση με την πρώτη έκδοση, ΔΕΝ δείχνουμε "Ευχαριστούμε" πριν επιβεβαιωθεί η αποστολή —
+// ο πελάτης βλέπει αρχικά το προειδοποιητικό state (synced:false) και μεταπίπτει σε "Ευχαριστούμε"
+// μόνο αφού το RPC πράγματι πετύχει, ίδιο honest-by-default μοτίβο με syncClientLog/retryClientLogSync.
 function submitPlanFeedback(){
   const tok=token(); if(!tok)return;
   const weekKey=pfWeekKey; if(!weekKey)return;
-  const payload={
-    p_token:tok, p_week_start:weekKey,
-    p_breakfast:pfRatings.breakfast||null, p_snacks:pfRatings.snacks||null,
-    p_lunch:pfRatings.lunch||null, p_dinner:pfRatings.dinner||null,
-    p_recipes_ease:pfRatings.recipes_ease||null, p_ingredients_ease:pfRatings.ingredients_ease||null,
-    p_training_energy:pfRatings.training_energy||null, p_continue_likelihood:pfNps,
-    p_low_rating_reasons:Object.keys(pfReasons).length?pfReasons:null
+  const entry={
+    breakfast:pfRatings.breakfast||null, snacks:pfRatings.snacks||null,
+    lunch:pfRatings.lunch||null, dinner:pfRatings.dinner||null,
+    recipes_ease:pfRatings.recipes_ease||null, ingredients_ease:pfRatings.ingredients_ease||null,
+    training_energy:pfRatings.training_energy||null, continue_likelihood:pfNps,
+    low_rating_reasons:Object.keys(pfReasons).length?pfReasons:null,
+    synced:false
   };
-  setPlanFeedbackSent(weekKey);
+  setPlanFeedbackEntry(weekKey,entry);
   go('prog');
-  if(sb)sb.rpc('submit_plan_feedback',payload).then(()=>{}).catch(()=>{});
+  syncPlanFeedback(weekKey,entry);
+}
+function syncPlanFeedback(weekKey,entry){
+  const tok=token();
+  if(!sb||!tok)return;
+  sb.rpc('submit_plan_feedback',{
+    p_token:tok, p_week_start:weekKey,
+    p_breakfast:entry.breakfast, p_snacks:entry.snacks, p_lunch:entry.lunch, p_dinner:entry.dinner,
+    p_recipes_ease:entry.recipes_ease, p_ingredients_ease:entry.ingredients_ease, p_training_energy:entry.training_energy,
+    p_continue_likelihood:entry.continue_likelihood, p_low_rating_reasons:entry.low_rating_reasons
+  }).then((res)=>{
+    // Το Supabase JS client ΔΕΝ κάνει reject σε HTTP 4xx/5xx — resolve με {error} μέσα, πρέπει να το ελέγξουμε ρητά.
+    const ok=!(res&&res.error);
+    const e=getPlanFeedbackEntry(weekKey); if(e){e.synced=ok; setPlanFeedbackEntry(weekKey,e);}
+    if(curTab()==='prog')go('prog');
+  }).catch(()=>{
+    const e=getPlanFeedbackEntry(weekKey); if(e){e.synced=false; setPlanFeedbackEntry(weekKey,e);}
+    if(curTab()==='prog')go('prog');
+  });
+}
+// Καλείται από το κουμπί "Δοκίμασε ξανά" στην προειδοποίηση μη-συγχρονισμένης αξιολόγησης.
+function retryPlanFeedbackSync(){
+  const weekKey=pfWeekKey; if(!weekKey)return;
+  const e=getPlanFeedbackEntry(weekKey); if(!e)return;
+  syncPlanFeedback(weekKey,e);
 }
 
 async function boot(){
@@ -1299,13 +1334,11 @@ function viewProg(){
   {
     const weekKey=dKey(weekDatesOffset(0)[0]);
     if(pfWeekKey!==weekKey){pfWeekKey=weekKey;pfRatings={};pfReasons={};pfNps=null;}
-    const pfSent=getPlanFeedbackSent(weekKey);
+    const pfEntry=getPlanFeedbackEntry(weekKey);
     const todayIdx=weekDatesOffset(0).findIndex(d=>dKey(d)===todayKey());
-    if(pfSent||todayIdx>=4){
+    if(pfEntry||todayIdx>=4){
       const pfCard=el('div','card'); const pfCp=el('div','card-pad');
-      pfCp.innerHTML=pfSent
-        ? '<div class="card-hdr"><i class="ti ti-star"></i>Αξιολόγηση εβδομάδας</div><div class="log-sent"><i class="ti ti-circle-check"></i>Ευχαριστούμε! Έστειλες την αξιολόγησή σου για αυτή την εβδομάδα.</div>'
-        : pfFormHtml();
+      pfCp.innerHTML=pfEntry?pfSentStateHtml(pfEntry):pfFormHtml();
       pfCard.appendChild(pfCp); v.appendChild(pfCard);
     }
   }
