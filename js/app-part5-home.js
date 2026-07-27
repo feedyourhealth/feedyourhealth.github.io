@@ -292,7 +292,11 @@ function renderHome(){
     return;
   }
 
-  var metrics=(typeof ANALYTICS!=='undefined'&&ANALYTICS.getClientMetrics)?ANALYTICS.getClientMetrics():{total:clients.length,active:0};
+  var _visibleClients=clients.filter(function(c){return !c.deleted&&!c.archived;});
+  var metrics={
+    total:_visibleClients.length,
+    active:_visibleClients.filter(function(c){return c.weekPlan&&Object.keys(c.weekPlan).length>0;}).length
+  };
   var attentionRows=homeClientsNeedingAttention().map(function(x){
     return homeRow(x.c, x.label, 'red', x.action);
   });
