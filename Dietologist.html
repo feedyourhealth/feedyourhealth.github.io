@@ -3067,6 +3067,40 @@ function saveFoodExclusions(){
       var entries=(this._clientLogsCache[c.shareToken]||[]).slice();
       entries.sort(function(a,b){return a.date<b.date?1:-1;});
       return entries.slice(0,15);
+    },
+
+    // ── ⭐ ΕΒΔΟΜΑΔΙΑΙΟ FEEDBACK ΠΛΑΝΟΥ (plan_feedback — γράφει το plan.html χωρίς login) ──
+    _planFeedbackCache:{},
+    fetchAllPlanFeedback:function(tokens){
+      var self=this;
+      if(!this.enabled || !this.user || !tokens || !tokens.length) return Promise.resolve({});
+      return this.sb.from('plan_feedback')
+        .select('token,week_start,breakfast,snacks,lunch,dinner,recipes_ease,ingredients_ease,training_energy,continue_likelihood,low_rating_reasons')
+        .in('token',tokens).order('week_start',{ascending:true}).then(function(res){
+          if(res.error){ console.error('[CLOUD] fetchAllPlanFeedback', res.error); return {}; }
+          var byToken={};
+          (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
+          return byToken;
+        }).catch(function(e){ console.error('[CLOUD] fetchAllPlanFeedback network error', e && e.message); return {}; });
+    },
+    refreshPlanFeedbackCache:function(){
+      var self=this;
+      var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
+      if(!tokens.length) return Promise.resolve();
+      return this.fetchAllPlanFeedback(tokens).then(function(byToken){
+        self._planFeedbackCache=byToken;
+        var s3=document.getElementById('s3');
+        if(s3 && typeof getC==='function' && typeof buildTrackerHtml==='function'){
+          var cur=getC(); if(cur) s3.innerHTML=buildTrackerHtml(cur);
+        }
+      });
+    },
+    // Ιστορικό εβδομάδων feedback ενός πελάτη, πιο πρόσφατο πρώτα.
+    planFeedbackFor:function(c){
+      if(!c || !c.shareToken) return [];
+      var entries=(this._planFeedbackCache[c.shareToken]||[]).slice();
+      entries.sort(function(a,b){return a.week_start<b.week_start?1:-1;});
+      return entries;
     }
   };
   window.Cloud = Cloud;

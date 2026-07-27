@@ -231,6 +231,25 @@
   /* plan grid wrapper (1 col mobile) */
   .plan-grid{display:flex;flex-direction:column;gap:12px}
 
+  /* weekly plan-feedback card (⭐ ratings + reason chips + NPS scale) */
+  .pf-row{padding:9px 0;border-bottom:.5px solid var(--bord-l)}
+  .pf-row:last-of-type{border-bottom:none}
+  .pf-row-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .pf-lbl{font-size:13px;color:var(--ink)}
+  .pf-stars{display:flex;gap:2px}
+  .pf-star{font-size:21px;line-height:1;color:var(--bord);cursor:pointer;transition:transform .08s,color .12s;user-select:none}
+  .pf-star.on{color:var(--teal)}
+  .pf-star:active{transform:scale(.82)}
+  .pf-reasons{display:none;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .pf-nps-row{padding-top:2px}
+  .pf-nps-scale{display:flex;gap:4px;margin-top:9px}
+  .pf-nps-cell{flex:1;text-align:center;padding:8px 0;border-radius:8px;border:.5px solid var(--bord);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;background:var(--card)}
+  .pf-nps-cell.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .pf-nps-legend{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);margin-top:6px}
+  .pf-submit{width:100%;background:var(--teal);color:#fff;border:none;border-radius:11px;padding:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:14px}
+  .pf-submit:disabled{opacity:.4;cursor:not-allowed}
+  .pf-submit:active:not(:disabled){transform:scale(.99)}
+
   /* ───────── DESKTOP / LAPTOP ───────── */
   @media (min-width:880px){
     body{padding:26px 0}
@@ -498,6 +517,100 @@ function syncClientLog(w,n,tag){
 function retryClientLogSync(){
   const e=getClientLogToday(); if(!e)return;
   syncClientLog(e.w,e.n,e.tag);
+}
+
+// ── ΕΒΔΟΜΑΔΙΑΙΟ FEEDBACK ΠΛΑΝΟΥ (plan_feedback, χωρίς login) ────────────────
+// Ίδιο write-back μοντέλο με τα checkins/client_logs: ένα RPC ελέγχει ότι το token
+// υπάρχει στο shared_plans πριν γράψει, ο πελάτης δεν χρειάζεται λογαριασμό.
+const PF_ROWS=[
+  {key:'breakfast',label:'Πρωινό'},
+  {key:'snacks',label:'Σνακ'},
+  {key:'lunch',label:'Μεσημεριανό'},
+  {key:'dinner',label:'Βραδινό'},
+  {key:'recipes_ease',label:'Ευκολία συνταγών'},
+  {key:'ingredients_ease',label:'Εύρεση υλικών'},
+  {key:'training_energy',label:'Ενεργειακή κάλυψη προπόνησης'}
+];
+const PF_REASONS=['Δεν είχα χρόνο','Δύσκολο να βρω υλικά','Δεν μου άρεσε η γεύση','Δεν χόρτασα','Δύσκολη συνταγή'];
+let pfWeekKey=null, pfRatings={}, pfReasons={}, pfNps=null;
+function getPlanFeedbackSent(weekKey){try{return (JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}'))[weekKey]===true}catch(e){return false}}
+function setPlanFeedbackSent(weekKey){try{const d=JSON.parse(localStorage.getItem(lk('planfeedback'))||'{}');d[weekKey]=true;localStorage.setItem(lk('planfeedback'),JSON.stringify(d))}catch(e){}}
+function pfStarsHtml(key){
+  let h='';
+  for(let i=1;i<=5;i++)h+='<span class="pf-star'+(i<=(pfRatings[key]||0)?' on':'')+'" onclick="pfSetRating(\''+key+'\','+i+')">★</span>';
+  return h;
+}
+function pfReasonsHtml(key){
+  const on=pfReasons[key]||[];
+  return PF_REASONS.map(r=>'<button type="button" class="log-tag'+(on.indexOf(r)>-1?' log-tag-on':'')+'" onclick="pfToggleReason(\''+key+'\',\''+esc(r)+'\',this)">'+esc(r)+'</button>').join('');
+}
+function pfRowHtml(row){
+  const val=pfRatings[row.key]||0;
+  return '<div class="pf-row">'
+    +'<div class="pf-row-top"><span class="pf-lbl">'+esc(row.label)+'</span><div class="pf-stars" id="pf-stars-'+row.key+'">'+pfStarsHtml(row.key)+'</div></div>'
+    +'<div class="pf-reasons" id="pf-reasons-'+row.key+'" style="display:'+(val>0&&val<=2?'flex':'none')+'">'+pfReasonsHtml(row.key)+'</div>'
+    +'</div>';
+}
+function pfFormHtml(){
+  return '<div class="card-hdr"><i class="ti ti-star"></i>Πες μας πώς πήγε η εβδομάδα</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:2px">30 δευτερόλεπτα — μας βοηθάει να προσαρμόσουμε το επόμενο πλάνο σου.</div>'
+    +PF_ROWS.map(pfRowHtml).join('')
+    +'<div class="pf-row pf-nps-row" style="border-bottom:none">'
+    +'<span class="pf-lbl">Πόσο πιθανό είναι να συνεχίσεις αυτό το πλάνο και την επόμενη εβδομάδα;</span>'
+    +'<div class="pf-nps-scale" id="pf-nps-scale">'+Array.from({length:11},(_,n)=>'<button type="button" class="pf-nps-cell'+(pfNps===n?' on':'')+'" onclick="pfSetNps('+n+',this)">'+n+'</button>').join('')+'</div>'
+    +'<div class="pf-nps-legend"><span>0 · καθόλου πιθανό</span><span>10 · σίγουρα</span></div>'
+    +'</div>'
+    +'<button class="pf-submit" id="pf-submit-btn" onclick="submitPlanFeedback()" disabled>Αποστολή αξιολόγησης</button>';
+}
+function pfSetRating(key,val){
+  pfRatings[key]=val;
+  const starsWrap=document.getElementById('pf-stars-'+key);
+  if(starsWrap)Array.prototype.forEach.call(starsWrap.children,(s,i)=>s.classList.toggle('on',i<val));
+  const reasonsWrap=document.getElementById('pf-reasons-'+key);
+  if(reasonsWrap){
+    if(val>0&&val<=2){reasonsWrap.style.display='flex';}
+    else{
+      reasonsWrap.style.display='none'; delete pfReasons[key];
+      Array.prototype.forEach.call(reasonsWrap.children,c=>c.classList.remove('log-tag-on'));
+    }
+  }
+  pfCheckComplete();
+}
+function pfToggleReason(key,reason,btn){
+  const arr=pfReasons[key]=pfReasons[key]||[];
+  const idx=arr.indexOf(reason);
+  if(idx>-1)arr.splice(idx,1); else arr.push(reason);
+  if(!arr.length)delete pfReasons[key];
+  btn.classList.toggle('log-tag-on');
+}
+function pfSetNps(val,btn){
+  pfNps=val;
+  const wrap=document.getElementById('pf-nps-scale');
+  if(wrap)Array.prototype.forEach.call(wrap.children,c=>c.classList.remove('on'));
+  btn.classList.add('on');
+  pfCheckComplete();
+}
+function pfCheckComplete(){
+  const allRated=PF_ROWS.every(r=>(pfRatings[r.key]||0)>0);
+  const btn=document.getElementById('pf-submit-btn');
+  if(btn)btn.disabled=!(allRated&&pfNps!=null);
+}
+// Best-effort αποστολή (ίδιο μοτίβο με pushCheckin) — η επιβεβαίωση στον πελάτη εμφανίζεται
+// αισιόδοξα (localStorage flag), το localStorage μένει η πηγή αλήθειας για "έχω ήδη στείλει".
+function submitPlanFeedback(){
+  const tok=token(); if(!tok)return;
+  const weekKey=pfWeekKey; if(!weekKey)return;
+  const payload={
+    p_token:tok, p_week_start:weekKey,
+    p_breakfast:pfRatings.breakfast||null, p_snacks:pfRatings.snacks||null,
+    p_lunch:pfRatings.lunch||null, p_dinner:pfRatings.dinner||null,
+    p_recipes_ease:pfRatings.recipes_ease||null, p_ingredients_ease:pfRatings.ingredients_ease||null,
+    p_training_energy:pfRatings.training_energy||null, p_continue_likelihood:pfNps,
+    p_low_rating_reasons:Object.keys(pfReasons).length?pfReasons:null
+  };
+  setPlanFeedbackSent(weekKey);
+  go('prog');
+  if(sb)sb.rpc('submit_plan_feedback',payload).then(()=>{}).catch(()=>{});
 }
 
 async function boot(){
@@ -1171,6 +1284,21 @@ function viewProg(){
     +'<div class="log-tags">'+LOG_TAGS.map(t=>'<button type="button" class="log-tag'+(selectedLogTag===t.id?' log-tag-on':'')+'" onclick="toggleLogTag(\''+t.id+'\',this)"><i class="ti '+t.icon+'"></i>'+t.label+'</button>').join('')+'</div>'
     +'<button class="swap-btn" style="justify-content:center;margin-top:8px" onclick="submitClientLog()"><i class="ti ti-send"></i>Αποστολή στον/στην διαιτολόγο</button>';
   logCard.appendChild(logCp); v.appendChild(logCard);
+
+  // αξιολόγηση εβδομάδας (⭐ feedback) — εμφανίζεται Παρ/Σαβ/Κυρ, ή σαν "ευχαριστούμε" αν έχει ήδη σταλεί
+  {
+    const weekKey=dKey(weekDatesOffset(0)[0]);
+    if(pfWeekKey!==weekKey){pfWeekKey=weekKey;pfRatings={};pfReasons={};pfNps=null;}
+    const pfSent=getPlanFeedbackSent(weekKey);
+    const todayIdx=weekDatesOffset(0).findIndex(d=>dKey(d)===todayKey());
+    if(pfSent||todayIdx>=4){
+      const pfCard=el('div','card'); const pfCp=el('div','card-pad');
+      pfCp.innerHTML=pfSent
+        ? '<div class="card-hdr"><i class="ti ti-star"></i>Αξιολόγηση εβδομάδας</div><div class="log-sent"><i class="ti ti-circle-check"></i>Ευχαριστούμε! Έστειλες την αξιολόγησή σου για αυτή την εβδομάδα.</div>'
+        : pfFormHtml();
+      pfCard.appendChild(pfCp); v.appendChild(pfCard);
+    }
+  }
 
   // πυλώνες αυτής της εβδομάδας
   const wk=el('div','card'); const wp=el('div','card-pad');

@@ -14,6 +14,7 @@ function goToApp(){
     if(typeof renderHome==='function') renderHome();
     if(window.Cloud && typeof window.Cloud.refreshCheckinsCache==='function') window.Cloud.refreshCheckinsCache();
     if(window.Cloud && typeof window.Cloud.refreshClientLogsCache==='function') window.Cloud.refreshClientLogsCache();
+    if(window.Cloud && typeof window.Cloud.refreshPlanFeedbackCache==='function') window.Cloud.refreshPlanFeedbackCache();
   } catch(e) {
     console.error('Error in goToApp():', e.message);
     showErrorToast('Σφάλμα: ' + e.message);
@@ -1582,6 +1583,50 @@ function clientLogsPanelHtml(c){
     +rows+'</div>';
 }
 
+// Εβδομαδιαίο ⭐ feedback πλάνου (plan_feedback) που στέλνει ο πελάτης χωρίς login — βλ. window.Cloud.planFeedbackFor.
+// Οι λεγόμενες "reasons" εμφανίζονται μόνο όπου ο πελάτης βαθμολόγησε ≤2 αστέρια σε κάποια σειρά.
+var PF_ROW_LABELS={breakfast:'Πρωινό',snacks:'Σνακ',lunch:'Μεσημεριανό',dinner:'Βραδινό',recipes_ease:'Ευκολία συνταγών',ingredients_ease:'Εύρεση υλικών',training_energy:'Ενέργεια προπόνησης'};
+function pfStarsReadonly(val){
+  if(!val)return '<span style="color:#ccc">—</span>';
+  var s='';
+  for(var i=1;i<=5;i++)s+='<span style="color:'+(i<=val?'#025857':'#d5e6e2')+'">★</span>';
+  return s;
+}
+function planFeedbackPanelHtml(c){
+  if(!window.Cloud || typeof window.Cloud.planFeedbackFor!=='function') return '';
+  var entries=window.Cloud.planFeedbackFor(c);
+  if(!entries.length) return '';
+  var latest=entries[0];
+  var reasons=latest.low_rating_reasons||{};
+  var rowsHtml=Object.keys(PF_ROW_LABELS).map(function(key){
+    var val=latest[key];
+    var tags=(reasons[key]||[]).map(function(r){return '<span style="background:#fbe9e7;color:#c0392b;border-radius:999px;padding:2px 8px;font-size:10px;margin-left:4px;white-space:nowrap">'+esc(r)+'</span>';}).join('');
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:11px;flex-wrap:wrap">'
+      +'<span style="width:150px;flex-shrink:0;color:#444">'+PF_ROW_LABELS[key]+'</span>'
+      +'<span style="letter-spacing:1px;font-size:13px">'+pfStarsReadonly(val)+'</span>'+tags+'</div>';
+  }).join('');
+  var nps=latest.continue_likelihood;
+  var npsColor=nps==null?'#999':(nps>=8?'#2e7d32':(nps>=5?'#c77d11':'#c0392b'));
+  var npsBadge=nps==null?'':('<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:'+npsColor+'22;color:'+npsColor+'">'+nps+'/10 πιθανότητα συνέχισης</span>');
+  var histBars='';
+  var recent=entries.slice(0,4).reverse();
+  recent.forEach(function(e,idx){
+    var isLast=idx===recent.length-1;
+    var v=e.continue_likelihood;
+    var h=v==null?4:Math.max(4,Math.round(v/10*40));
+    histBars+='<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">'
+      +'<div style="width:100%;max-width:22px;height:'+h+'px;background:'+(isLast?'#025857':'#cfe8e0')+';border-radius:4px 4px 0 0"></div>'
+      +'<span style="font-size:9px;color:#888">'+esc((e.week_start||'').slice(5))+'</span></div>';
+  });
+  return '<div class="tracker-section" style="background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">'
+    +'<div style="font-size:11px;font-weight:700;color:#025857">⭐ Feedback πλάνου <span style="font-weight:400;color:#666">(εβδομάδα '+esc(latest.week_start)+')</span></div>'
+    +npsBadge+'</div>'
+    +rowsHtml
+    +(entries.length>1?('<div style="display:flex;align-items:flex-end;gap:6px;height:44px;margin-top:10px">'+histBars+'</div>'):'')
+    +'</div>';
+}
+
 function buildTrackerHtml(c){
   if(!c.weightLog)c.weightLog=[];
   if(!c.consultLog)c.consultLog=[];
@@ -1624,6 +1669,7 @@ function buildTrackerHtml(c){
     +'</div>'
     +'</div>'
     +clientLogsPanelHtml(c)
+    +planFeedbackPanelHtml(c)
     // ── Standard entry row ────────────────────────────────────────────────────
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
     +'<input type="date" id="tr-date" value="'+today+'" class="tracker-inp">'
