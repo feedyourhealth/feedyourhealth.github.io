@@ -155,6 +155,45 @@ function homePortalActivity(){
     .sort(function(a,b){return a.gap-b.gap;});
 }
 
+// Ίδιο day-of-week gate με την ⭐ κάρτα feedback στο plan.html (Παρ/Σαβ/Κυρ) — δεν έχει νόημα να
+// ζητάμε υπενθύμιση feedback τις μέρες που ο πελάτης δεν βλέπει καν τη φόρμα.
+function isFeedbackReminderWindow(){
+  var weekDates=ckWeekDates(0);
+  return weekDates.indexOf(ckDayKey(new Date()))>=4;
+}
+// Πελάτες με δημοσιευμένο portal που δεν έχουν στείλει feedback για την ΤΡΕΧΟΥΣΑ εβδομάδα ακόμα.
+// Πηγή αλήθειας: τα πραγματικά plan_feedback rows από το cloud (window.Cloud.planFeedbackFor),
+// όχι κάποιο τοπικό sync-state του πελάτη — αν η γραμμή υπάρχει εκεί, μετράει ως σταλμένη.
+function homeClientsNeedingFeedbackReminder(){
+  if(!isFeedbackReminderWindow()) return [];
+  var weekStart=ckWeekDates(0)[0];
+  if(!window.Cloud || typeof window.Cloud.planFeedbackFor!=='function') return [];
+  return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;})
+    .filter(function(c){
+      var latest=window.Cloud.planFeedbackFor(c)[0];
+      return !(latest && latest.week_start===weekStart);
+    });
+}
+// Ανοίγει WhatsApp (ή email αν δεν υπάρχει τηλέφωνο) με έτοιμο μήνυμα προς τον ΗΔΗ υπάρχοντα
+// σύνδεσμο portal — δεν ξαναδημοσιεύει το πλάνο (ο πελάτης έχει ήδη ενεργό link), απλά ζητάει feedback.
+function sendFeedbackReminder(clientId){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c || !c.shareToken) return;
+  var base=(window.Cloud&&window.Cloud.PORTAL_BASE)||'https://feedyourhealth.github.io/plan.html';
+  var url=base+'?t='+c.shareToken;
+  var fname=(c.name||'').split(' ')[0];
+  var msg='Γεια σου '+fname+'! Πριν φτιάξω το πλάνο της επόμενης εβδομάδας, πες μου γρήγορα πώς πήγε αυτή — 30 δευτερόλεπτα, στην καρτέλα Πρόοδος: '+url;
+  var phone=(c.phone||'').replace(/[^0-9]/g,'');
+  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone; // ελληνικός κωδικός χώρας, ίδιο μοτίβο με openPublishModal
+  if(phone){
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  } else if(c.email){
+    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Πες μου πώς πήγε η εβδομάδα — Feed Your Health')+'&body='+encodeURIComponent(msg);
+  } else {
+    showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
+  }
+}
+
 // initials() moved to js/app-part1.js — it's called from renderSB() there, which can run
 // (via an early auth-callback in app-part4.js) before this later-loading file exists yet.
 
@@ -267,6 +306,10 @@ function renderHome(){
   });
   var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
   var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
+  var reminderRows=homeClientsNeedingFeedbackReminder().map(function(c){
+    return homeRow(c,'δεν έχει στείλει feedback ακόμα','teal',
+      '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendFeedbackReminder(\''+c.id+'\')">🔔 Υπενθύμιση</button>');
+  });
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -296,6 +339,7 @@ function renderHome(){
   html+=homeCard('📈 Τάση βάρους', trendRows, 'Καμία ανησυχητική τάση βάρους αυτή τη στιγμή 👍', 'ακόμα', 'danger');
   html+=homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'Καμία έγκυος εκτός εύρους IOM αυτή τη στιγμή 👍', 'ακόμα', 'danger');
   html+=homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'Κανένας σύνδεσμος δεν χρειάζεται ανανέωση 👍', 'ακόμα', 'warning');
+  if(isFeedbackReminderWindow()) html+=homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'Όλοι έστειλαν feedback για αυτή την εβδομάδα 👍', 'ακόμα', 'info');
   html+=homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'Καμία πρόσφατη δραστηριότητα από το portal', 'ακόμα', 'info');
   html+='</div>';
 
