@@ -240,6 +240,41 @@ function homeSelectBucket(color){
   homeRenderBucketList();
 }
 
+// Ραντεβού με "Ενέργεια για το πλάνο" (νέο/προσαρμογή/μόνο μέτρηση, βλ. APPT_PLAN_ACTIONS στο app-part2.js)
+// που δεν έχουν σημανθεί ακόμα ως έγιναν — δίνει στην Αρχική ένα σαφές to-do "τι πλάνο έχω να ετοιμάσω, για ποιον".
+// "Ίδιο πλάνο" εξαιρείται σκόπιμα, δεν χρειάζεται καμία ενέργεια.
+function homePendingPlanActions(){
+  var out=[];
+  clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+    (c.appointments||[]).forEach(function(a,idx){
+      if(a.planAction && a.planAction!=='same' && !a.planActionDone) out.push({c:c,idx:idx,appt:a});
+    });
+  });
+  out.sort(function(a,b){ return new Date(b.appt.date)-new Date(a.appt.date); });
+  return out;
+}
+function homePendingPlanActionRow(x){
+  var m=(typeof apptPlanActionMeta==='function')?apptPlanActionMeta(x.appt.planAction):null;
+  var badge=m?'<span class="hm-plan-action-badge" style="--pa-color:'+m.color+'">'+m.icon+' '+esc(m.label)+'</span>':'';
+  var days=Math.floor((Date.now()-new Date(x.appt.date))/86400000);
+  var sub=days<=0?'ραντεβού σήμερα':(days===1?'ραντεβού χθες':'ραντεβού πριν '+days+' ημέρες');
+  return '<div class="hm-row" onclick="selectClient(\''+x.c.id+'\')">'
+    +'<div class="hm-avatar hm-avatar-teal">'+initials(x.c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(x.c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-row-sub">'+sub+'</span>'
+    +badge
+    +'<button type="button" class="hm-action-btn" style="background:#F1EFE8;color:#5F5E5A" onclick="event.stopPropagation();homeResolvePlanAction(\''+x.c.id+'\','+x.idx+')" title="Έγινε — αφαίρεση από τη λίστα">✓</button>'
+    +'</div>';
+}
+// Σημαίνει μια εκκρεμότητα πλάνου ως ολοκληρωμένη· δεν αλλάζει το ίδιο το ραντεβού/ιστορικό, μόνο κρύβεται από τη λίστα.
+function homeResolvePlanAction(clientId,apptIdx){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c || !c.appointments || !c.appointments[apptIdx]) return;
+  c.appointments[apptIdx].planActionDone=true;
+  save();
+  renderHome();
+}
+
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
@@ -314,6 +349,7 @@ function renderHome(){
     return homeRow(c,'δεν έχει στείλει feedback ακόμα','teal',
       '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendFeedbackReminder(\''+c.id+'\')">🔔 Υπενθύμιση</button>');
   });
+  var pendingPlanRows=homePendingPlanActions().map(homePendingPlanActionRow);
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -339,6 +375,7 @@ function renderHome(){
     +'</div>';
 
   html+='<div class="hm-grid">';
+  html+=homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'Καμία εκκρεμότητα πλάνου αυτή τη στιγμή 👍', 'ακόμα', 'warning');
   html+=homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'Όλοι οι πελάτες έχουν πρόσφατη μέτρηση 👍', 'ακόμα', 'danger');
   html+=homeCard('📈 Τάση βάρους', trendRows, 'Καμία ανησυχητική τάση βάρους αυτή τη στιγμή 👍', 'ακόμα', 'danger');
   html+=homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'Καμία έγκυος εκτός εύρους IOM αυτή τη στιγμή 👍', 'ακόμα', 'danger');
