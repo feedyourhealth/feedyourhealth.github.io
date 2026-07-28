@@ -23,6 +23,11 @@
   /* Σκοτεινή λειτουργία — ακολουθεί τη ρύθμιση της συσκευής. Το print παραμένει πάντα λευκό (δικό του @media). */
   @media (prefers-color-scheme: dark){
     :root{
+      /* --teal-d was missing here — it stayed the light-mode #014545 (near-black) while its
+         background partners (--tint2/--card) turned dark, so titles/values using --teal-d on
+         those backgrounds were nearly invisible (dark-on-dark). Found testing plan.html on a
+         phone with system dark mode on. */
+      --teal-d:#8fe0d4;
       --teal-l:#1a8f8a;
       --tint:#152722; --tint2:#16302a; --bord:#283b36; --bord-l:#1f2f2a;
       --ink:#e7f2ef; --muted:#8fb6af; --faint:#6f948d; --ok:#4caf50;
