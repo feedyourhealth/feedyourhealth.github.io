@@ -19,6 +19,7 @@
     --tint:#E2EEE5; --tint2:#E8F5E9; --bord:#c5ddd8; --bord-l:#eef4f2;
     --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
     --bg:#f4f8f6; --card:#ffffff; --nav-bg:#fafdfc;
+    --danger:#b71c1c; --danger-tint:#fbeaea; --on-danger-tint:#8a2020;
   }
   /* Σκοτεινή λειτουργία — ακολουθεί τη ρύθμιση της συσκευής. Το print παραμένει πάντα λευκό (δικό του @media). */
   @media (prefers-color-scheme: dark){
@@ -40,6 +41,13 @@
       --tint:#152722; --tint2:#16302a; --bord:#283b36; --bord-l:#1f2f2a;
       --ink:#e7f2ef; --muted:#8fb6af; --faint:#6f948d; --ok:#4caf50;
       --bg:#0d1614; --card:#131f1c; --nav-bg:#131f1c;
+      /* .excl-card/.excl-chip (exclusions/allergies notice) and .log-inp/.prog (below) all had
+         hardcoded #fff/light literals instead of vars, so they stayed stuck light — or in
+         .log-inp's case, its --ink text (already dark-mode-aware) landed on a hardcoded white
+         background, measuring ~1.1:1 contrast (the client's own typed weight/note was nearly
+         invisible). Same root cause as --teal-d/--teal/--nav-bg above, found by grepping for
+         every remaining hardcoded color once that pattern was known. */
+      --danger:#ff8a80; --danger-tint:#3a1f1f; --on-danger-tint:#ffb4a8;
     }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -99,7 +107,7 @@
   .swap-item .fd{font-size:12px;color:var(--muted)}
   .swap-note{font-size:11px;color:var(--faint);margin-top:8px}
 
-  .log-inp{width:100%;border:.5px solid var(--bord);border-radius:10px;padding:9px 11px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;box-sizing:border-box}
+  .log-inp{width:100%;border:.5px solid var(--bord);border-radius:10px;padding:9px 11px;font-size:16px;font-family:inherit;color:var(--ink);background:var(--card);box-sizing:border-box}
   .log-inp:focus{outline:none;border-color:var(--teal-l)}
   textarea.log-inp{resize:vertical;min-height:54px}
   .log-sent{font-size:12px;color:var(--ok);display:flex;align-items:center;gap:6px;margin-bottom:8px}
@@ -170,7 +178,7 @@
   .fxr{text-align:right;font-size:12px;color:var(--muted)}
   .fxg{color:var(--ink);font-weight:600}
 
-  .prog{height:6px;background:#fff;border-radius:999px;margin-top:10px;overflow:hidden}
+  .prog{height:6px;background:var(--card);border-radius:999px;margin-top:10px;overflow:hidden}
   .prog>div{height:100%;background:var(--teal);transition:width .25s}
 
   /* updated badge in header */
@@ -178,7 +186,7 @@
   .upd i{font-size:13px}
 
   /* personal note from the dietitian */
-  .note-coach{background:linear-gradient(135deg,var(--tint2),#fff);border:.5px solid var(--bord);border-left:3px solid var(--teal);border-radius:14px;padding:12px 14px}
+  .note-coach{background:linear-gradient(135deg,var(--tint2),var(--card));border:.5px solid var(--bord);border-left:3px solid var(--teal);border-radius:14px;padding:12px 14px}
   .note-coach .nh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--teal-d);margin-bottom:5px}
   .note-coach .nb{font-size:13.5px;color:var(--ink);line-height:1.55;white-space:pre-wrap}
 
@@ -186,10 +194,10 @@
   .legend{font-size:11px;color:var(--faint);padding:2px 2px 0;line-height:1.4}
 
   /* exclusions/allergies the plan already avoids — surfaced so the client can confirm it, not just trust it */
-  .excl-card{background:#fff;border:.5px solid var(--bord);border-left:3px solid #b71c1c;border-radius:14px;padding:12px 14px}
-  .excl-card .nh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#b71c1c;margin-bottom:7px}
+  .excl-card{background:var(--card);border:.5px solid var(--bord);border-left:3px solid var(--danger);border-radius:14px;padding:12px 14px}
+  .excl-card .nh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--danger);margin-bottom:7px}
   .excl-chips{display:flex;flex-wrap:wrap;gap:6px}
-  .excl-chip{background:#fbeaea;color:#8a2020;font-size:12px;padding:4px 10px;border-radius:999px}
+  .excl-chip{background:var(--danger-tint);color:var(--on-danger-tint);font-size:12px;padding:4px 10px;border-radius:999px}
 
   /* supplement daily check-off */
   .supp{padding:12px 0;border-bottom:.5px solid var(--bord-l)}
