@@ -243,9 +243,11 @@ function homeSelectBucket(color){
 // Ραντεβού με "Ενέργεια για το πλάνο" (νέο/προσαρμογή/μόνο μέτρηση, βλ. APPT_PLAN_ACTIONS στο app-part2.js)
 // που δεν έχουν σημανθεί ακόμα ως έγιναν — δίνει στην Αρχική ένα σαφές to-do "τι πλάνο έχω να ετοιμάσω, για ποιον".
 // "Ίδιο πλάνο" εξαιρείται σκόπιμα, δεν χρειάζεται καμία ενέργεια.
-function homePendingPlanActions(){
+// excludeIds: πελάτες που ήδη εμφανίζονται στο "⚠️ Χρειάζονται προσοχή" (π.χ. χωρίς πλάνο, σημειωμένοι,
+// χαμηλή ικανοποίηση) — δεν έχει νόημα να τους ξαναδείξουμε εδώ, η ενέργεια είναι ήδη σαφής από εκείνο το card.
+function homePendingPlanActions(excludeIds){
   var out=[];
-  clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+  clients.filter(function(c){return !c.deleted && !c.archived && !(excludeIds&&excludeIds[c.id]);}).forEach(function(c){
     (c.appointments||[]).forEach(function(a,idx){
       if(a.planAction && a.planAction!=='same' && !a.planActionDone) out.push({c:c,idx:idx,appt:a});
     });
@@ -284,14 +286,13 @@ function homeRow(c,sub,accent,actionHtml){
     +'</div>';
 }
 
-function homeCard(title,items,emptyText,moreLabel,variant){
+// Επιστρέφει '' όταν δεν υπάρχει τίποτα να δείξει — οι κάρτες της Αρχικής εμφανίζονται μόνο όταν έχουν
+// πραγματική εκκρεμότητα, αντί να γεμίζουν τη σελίδα με μόνιμα "όλα εντάξει 👍" καρτέλες.
+function homeCard(title,items,moreLabel,variant){
+  if(!items.length) return '';
   var html='<div class="hm-card hm-card-'+variant+'"><div class="hm-card-title">'+title+'</div>';
-  if(!items.length){
-    html+='<div class="hm-empty">'+emptyText+'</div>';
-  } else {
-    items.slice(0,8).forEach(function(row){ html+=row; });
-    if(items.length>8) html+='<div class="hm-more">+'+(items.length-8)+' '+moreLabel+'</div>';
-  }
+  items.slice(0,8).forEach(function(row){ html+=row; });
+  if(items.length>8) html+='<div class="hm-more">+'+(items.length-8)+' '+moreLabel+'</div>';
   html+='</div>';
   return html;
 }
@@ -332,7 +333,10 @@ function renderHome(){
     total:_visibleClients.length,
     active:_visibleClients.filter(function(c){return c.weekPlan&&Object.keys(c.weekPlan).length>0;}).length
   };
-  var attentionRows=homeClientsNeedingAttention().map(function(x){
+  var attentionList=homeClientsNeedingAttention();
+  var attentionIds={};
+  attentionList.forEach(function(x){attentionIds[x.c.id]=true;});
+  var attentionRows=attentionList.map(function(x){
     return homeRow(x.c, x.label, 'red', x.action);
   });
   var staleRows=homeStaleLinks().map(function(c){
@@ -349,7 +353,7 @@ function renderHome(){
     return homeRow(c,'δεν έχει στείλει feedback ακόμα','teal',
       '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendFeedbackReminder(\''+c.id+'\')">🔔 Υπενθύμιση</button>');
   });
-  var pendingPlanRows=homePendingPlanActions().map(homePendingPlanActionRow);
+  var pendingPlanRows=homePendingPlanActions(attentionIds).map(homePendingPlanActionRow);
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -374,15 +378,21 @@ function renderHome(){
     +'</div>'
     +'</div>';
 
-  html+='<div class="hm-grid">';
-  html+=homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'Καμία εκκρεμότητα πλάνου αυτή τη στιγμή 👍', 'ακόμα', 'warning');
-  html+=homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'Όλοι οι πελάτες έχουν πρόσφατη μέτρηση 👍', 'ακόμα', 'danger');
-  html+=homeCard('📈 Τάση βάρους', trendRows, 'Καμία ανησυχητική τάση βάρους αυτή τη στιγμή 👍', 'ακόμα', 'danger');
-  html+=homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'Καμία έγκυος εκτός εύρους IOM αυτή τη στιγμή 👍', 'ακόμα', 'danger');
-  html+=homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'Κανένας σύνδεσμος δεν χρειάζεται ανανέωση 👍', 'ακόμα', 'warning');
-  if(isFeedbackReminderWindow()) html+=homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'Όλοι έστειλαν feedback για αυτή την εβδομάδα 👍', 'ακόμα', 'info');
-  html+=homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'Καμία πρόσφατη δραστηριότητα από το portal', 'ακόμα', 'info');
-  html+='</div>';
+  var gridCards=[
+    homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'ακόμα', 'warning'),
+    homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'ακόμα', 'danger'),
+    homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
+    homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
+    homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'ακόμα', 'warning'),
+    isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info'):'',
+    homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info')
+  ].filter(function(c){return c;});
+
+  if(gridCards.length){
+    html+='<div class="hm-grid">'+gridCards.join('')+'</div>';
+  } else {
+    html+='<div class="hm-empty" style="text-align:center;padding:20px 0">Καμία εκκρεμότητα αυτή τη στιγμή — όλοι οι πελάτες είναι εντάξει 👍</div>';
+  }
 
   html+='</div>';
 
