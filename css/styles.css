@@ -1629,3 +1629,101 @@ body.dark-mode .backup-btn:focus-visible {
   margin-top: 4px;
   font-weight: 500;
 }
+
+/* ============================================================================
+   Dark-mode gap-fill (2026-07-28) — these selectors had hardcoded light
+   backgrounds/colors with NO body.dark-mode override anywhere, so they stayed
+   bright light-colored islands inside an otherwise-dark app (same root cause
+   as the --teal-d bug found and fixed in plan.html the same day — a variable
+   or literal color that adapts in one role but was never given a dark-mode
+   counterpart). Found via systematic grep for background:#hex rules with no
+   matching body.dark-mode selector.
+
+   --teal/--teal-tint/--success-tint/--danger are used throughout this file
+   both as backgrounds (fine, unchanged) AND as plain text/accent colors on
+   OTHER backgrounds that DO go dark — overriding them here at the body level
+   cascades the fix to every var(--teal) etc. usage automatically instead of
+   requiring a per-selector patch. Contrast-checked against the app's
+   established #1a1a1a dark surface: --teal 4.43:1 (was 2.1:1), --danger
+   3.5:1 text-role / 4.98:1 as a white-text button background.
+   ============================================================================ */
+body.dark-mode {
+  --teal:#1a8f8a;
+  --teal-dark:#0f6e56;
+  --teal-tint:#0f2a24;
+  --success-tint:#14301a;
+  --danger:#d32f2f;
+}
+body.dark-mode .cc-status-active{color:#8bc98f}
+body.dark-mode .meal-label{color:#e0e0e0}
+
+/* neutral card/panel/input surfaces -> match the app's established #1a1a1a/#444/#e0e0e0 dark-card convention */
+body.dark-mode .appt-chip{background:#1a1a1a;border-color:#444;color:#ccc}
+body.dark-mode .appt-entry{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .appt-scale-btn{background:#1a1a1a;border-color:#444;color:#ccc}
+body.dark-mode .appt-sum-card{background:#1a1a1a;border-color:#444}
+body.dark-mode .bottom-nav{background:#1a1a1a;border-top-color:#444}
+body.dark-mode .chip-dd{background:#1a1a1a;border-color:#444}
+body.dark-mode .chip-macro-tip{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .client-search-inp{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .consult-entry{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .day-header{background:#1a1a1a;border-color:#444}
+body.dark-mode .day-tgt-wrap{background:#1a1a1a;border-color:#444}
+body.dark-mode .excl-qbtn{background:#1a1a1a;border-color:#444;color:#ccc}
+body.dark-mode .excl-sug{background:#1a1a1a;border-color:#444}
+body.dark-mode .excl-wrap{background:#1a1a1a;border-color:#444}
+body.dark-mode .gap-modal-content{background:#1a1a1a}
+body.dark-mode .macro-preset-btn{background:#1a1a1a;border-color:#444;color:#ccc}
+body.dark-mode .macro-preset-wrap{background:#1a1a1a;border-color:#444}
+body.dark-mode .met-input-section{background:#1a1a1a;border-color:#444}
+body.dark-mode .met-item{background:#1a1a1a;border-color:#444}
+body.dark-mode .met-wrap{background:#1a1a1a;border-color:#444}
+body.dark-mode .plan-export-btn{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .plan-export-menu{background:#1a1a1a;border-color:#444}
+body.dark-mode .plan-tool-btn{background:#1a1a1a;color:#ccc}
+body.dark-mode .recipe-ingredient-row{background:#1a1a1a;color:#e0e0e0}
+body.dark-mode .section-card{background:#1a1a1a;border-left-color:#444}
+body.dark-mode .sf-panel{background:#1a1a1a;border-color:#444}
+body.dark-mode .sf-result-row{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .supp-notes{background:#1a1a1a;border-color:#444}
+body.dark-mode .supp-rec{background:#1a1a1a;border-left-color:#4fc3f7}
+body.dark-mode .supp-wrap{background:#1a1a1a;border-color:#444}
+body.dark-mode .tmpl-goal-tab{background:#1a1a1a;border-color:#444;color:#ccc}
+body.dark-mode .tmpl-sb-btn{background:#1a1a1a;border-color:#444}
+body.dark-mode .tracker-inp{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .tracker-section{background:#1a1a1a;border-color:#444}
+body.dark-mode .tracker-textarea{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .weight-chart-wrap{background:#1a1a1a;border-color:#444}
+
+/* meal-timing hour/time pickers */
+body.dark-mode .hrs-inp{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .hrs-r{background:#242424;color:#555}
+body.dark-mode .hrs-t{background:#0f2a24}
+body.dark-mode .time-inp{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .time-r{background:#242424;color:#555}
+body.dark-mode .time-t{background:#0f2a24}
+
+/* amber/warning family -> reuse the #3a2a10/#fac775 pair already established for .hm-tile-amber etc. */
+body.dark-mode .combo-item{background:#3a2a10;border-color:#6b5218;color:#e0e0e0}
+body.dark-mode .custom-tmpl-item{background:#1a1a1a;border-color:#6b5218;color:#e0e0e0}
+body.dark-mode .custom-tmpls-section{background:#3a2a10;border-color:#6b5218;color:#fac775}
+body.dark-mode .day-status-badge.close{background:#3a2a10;color:#fac775}
+body.dark-mode .ea-warn{background:#3a2a10;border-color:#6b5218;color:#fac775}
+body.dark-mode .excl-tag{background:#3a2a10;border-color:#6b5218;color:#fac775}
+body.dark-mode .formula-tag.cunningham{background:#3a2a10;color:#fac775}
+body.dark-mode .minor-banner{background:#3a2a10;border-color:#6b5218;color:#fac775}
+body.dark-mode .plan-stale-warning{background:#3a2a10;border-color:#6b5218;color:#fac775}
+body.dark-mode .save-tmpl-inp{background:#1a1a1a;border-color:#6b5218;color:#e0e0e0}
+body.dark-mode .save-tmpl-panel{background:#3a2a10;border-color:#6b5218}
+body.dark-mode .save-tmpl-sel{background:#1a1a1a;border-color:#6b5218;color:#e0e0e0}
+body.dark-mode .tmpl-sel-drop{background:#1a1a1a;border-color:#6b5218;color:#e0e0e0}
+body.dark-mode .tmpl-sel-row{background:#3a2a10;border-color:#6b5218}
+
+/* danger/red family -> reuse the #3a1a1a/#f09595 pair already established for .hm-tile-red etc. */
+body.dark-mode .day-status-badge.over{background:#3a1a1a;color:#f09595}
+body.dark-mode .ea-danger{background:#3a1a1a;border-color:#6b2020;color:#f09595}
+body.dark-mode .gap-item.critical{background:#3a1a1a;border-left-color:#e57373}
+body.dark-mode .tmpl-reset-btn{background:#1a1a1a;color:#f09595}
+body.dark-mode .appt-sum-card.appt-sum-danger{background:#3a1a1a;border-color:#6b2020}
+body.dark-mode .appt-sum-card.appt-sum-danger .appt-sum-val{color:#f09595}
+body.dark-mode .appt-entry.appt-entry-flagged{background:#3a1a1a;border-color:#6b2020}
