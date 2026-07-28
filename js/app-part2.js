@@ -1644,6 +1644,8 @@ function buildTrackerHtml(c){
     +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">'
     +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης</button>'
     +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':'')
+    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#25D366;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + WhatsApp με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'wa\')">📱 WhatsApp</button>':'')
+    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + Email με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'mail\')">📧 Email</button>':'')
     +'</div>'
     +'</div>'
     // ── Skinfold panel ────────────────────────────────────────────────────────

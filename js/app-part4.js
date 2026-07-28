@@ -935,6 +935,28 @@ function exportBodyCompPDF(){
   setTimeout(function(){w.print();},600);
 }
 
+// Ανοίγει το ίδιο έντυπο Ιστορικού (exportBodyCompPDF) για αποθήκευση ως PDF, και ταυτόχρονα
+// προετοιμάζει WhatsApp ή Email προς τον πελάτη με έτοιμο μήνυμα — ο διαιτολόγος απλά επισυνάπτει
+// το PDF που μόλις αποθήκευσε. Δεν γίνεται αυτόματη επισύναψη: τα wa.me/mailto links δεν το
+// υποστηρίζουν (browser security), ίδιος περιορισμός όπως στο sendFeedbackReminder.
+function sendBodyCompReport(channel){
+  var c=getC();if(!c)return;
+  if(!c.weightLog||!c.weightLog.length){showErrorToast('Δεν υπάρχουν εγγραφές tracker.');return;}
+  var fname=(c.name||'').split(' ')[0]||'σου';
+  var msg='Γεια σου '+fname+'! Σου στέλνω το ιστορικό μετρήσεών σου (βάρος, σύσταση σώματος) σε PDF 📎';
+  if(channel==='wa'){
+    var phone=(c.phone||'').replace(/[^0-9]/g,'');
+    if(!phone){showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.');return;}
+    if(phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone; // ελληνικός κωδικός χώρας, ίδιο μοτίβο με openPublishModal
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  } else {
+    if(!c.email){showErrorToast('Δεν υπάρχει email για τον/την '+(c.name||'πελάτη')+'.');return;}
+    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Το ιστορικό μετρήσεών σου — Feed Your Health')+'&body='+encodeURIComponent(msg);
+  }
+  exportBodyCompPDF();
+  showSuccessToast('Άνοιξε το PDF για αποθήκευση — επισύναψέ το στο μήνυμα που άνοιξε.');
+}
+
 /* ── Debug Panel / Error Reporting ──────────────────────────────────────────── */
 function showDebugPanel(){
   var existing=document.getElementById('debug-modal');
