@@ -18,7 +18,7 @@
     --teal:#025857; --teal-d:#014545; --teal-l:#037070;
     --tint:#E2EEE5; --tint2:#E8F5E9; --bord:#c5ddd8; --bord-l:#eef4f2;
     --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
-    --bg:#f4f8f6; --card:#ffffff;
+    --bg:#f4f8f6; --card:#ffffff; --nav-bg:#fafdfc;
   }
   /* Σκοτεινή λειτουργία — ακολουθεί τη ρύθμιση της συσκευής. Το print παραμένει πάντα λευκό (δικό του @media). */
   @media (prefers-color-scheme: dark){
@@ -28,10 +28,18 @@
          those backgrounds were nearly invisible (dark-on-dark). Found testing plan.html on a
          phone with system dark mode on. */
       --teal-d:#8fe0d4;
+      /* --teal itself has the same problem in its role as an ACCENT/text/icon color (streak
+         count, quantity text, links, brand-logo badge, etc. — all sit on --card/--tint2/--bg)
+         — measured contrast ~2.0:1 against dark card background, well under the ~3-4.5:1
+         WCAG minimum. --teal is ALSO used as a solid fill behind white text (header, FAB,
+         filled buttons/pills) where the light-mode value already reads fine; brightening it
+         here is a deliberate compromise that keeps white-on-teal comfortably legible
+         (contrast ~3.9-8:1 measured) while fixing the accent/text usages. */
+      --teal:#1a8f8a;
       --teal-l:#1a8f8a;
       --tint:#152722; --tint2:#16302a; --bord:#283b36; --bord-l:#1f2f2a;
       --ink:#e7f2ef; --muted:#8fb6af; --faint:#6f948d; --ok:#4caf50;
-      --bg:#0d1614; --card:#131f1c;
+      --bg:#0d1614; --card:#131f1c; --nav-bg:#131f1c;
     }
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -218,7 +226,7 @@
     .sheet{border-radius:18px;max-width:400px}
   }
 
-  .nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;display:flex;justify-content:space-around;padding:9px 4px;border-top:.5px solid var(--bord);background:#fafdfc;z-index:20}
+  .nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;display:flex;justify-content:space-around;padding:9px 4px;border-top:.5px solid var(--bord);background:var(--nav-bg);z-index:20}
   .nav button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--faint);font-size:10px;cursor:pointer;flex:1;padding:2px}
   .nav button{font-size:11px}
   .nav button i{font-size:21px}
@@ -270,7 +278,7 @@
     .hdr .sub{font-size:14px}
     .brand{font-size:14px}
     /* nav becomes a top horizontal bar */
-    .nav{position:static;max-width:none;margin:0;order:1;border-top:none;border-bottom:.5px solid var(--bord);background:#fafdfc;justify-content:flex-start;gap:2px;padding:0 18px}
+    .nav{position:static;max-width:none;margin:0;order:1;border-top:none;border-bottom:.5px solid var(--bord);background:var(--nav-bg);justify-content:flex-start;gap:2px;padding:0 18px}
     .nav button{flex:0 0 auto;flex-direction:row;gap:7px;font-size:13.5px;padding:14px 18px;border-bottom:3px solid transparent}
     .nav button i{font-size:18px}
     .nav button.on{border-bottom-color:var(--teal)}
