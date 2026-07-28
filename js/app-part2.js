@@ -2353,13 +2353,14 @@ function fmtDateShortAppt(iso){
   var d=new Date(iso+'T00:00:00');if(isNaN(d.getTime()))return '';
   return d.getDate()+'/'+(d.getMonth()+1);
 }
-function apptScaleButtons(prefix){
+function apptScaleButtons(prefix,val){
   var html='';
   for(var i=1;i<=5;i++){
-    html+='<button type="button" class="appt-scale-btn" data-val="'+i+'" onclick="setApptScale(this)">'+i+'</button>';
+    html+='<button type="button" class="appt-scale-btn'+(val&&i===val?' active':'')+'" data-val="'+i+'" onclick="setApptScale(this)">'+i+'</button>';
   }
   return html;
 }
+var _apptEditIdx=-1;
 function setApptScale(btn){
   var scale=btn.parentElement;
   Array.prototype.forEach.call(scale.querySelectorAll('.appt-scale-btn'),function(b){b.classList.remove('active');});
@@ -2441,12 +2442,37 @@ function buildAppointmentsHtml(c){
     listHtml+='<div class="consult-log">';
     c.appointments.slice().reverse().forEach(function(e,ri){
       var i=c.appointments.length-1-ri;
+      if(i===_apptEditIdx){
+        var eChips=e.chips||[],eSportChips=e.sportChips||[];
+        listHtml+='<div class="appt-entry appt-entry-editing">'
+          +'<div style="margin-bottom:8px"><input type="date" id="appt-edit-date-'+i+'" value="'+e.date+'" class="tracker-inp"></div>'
+          +'<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px">'
+          +'<div><div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Πεπτικά συμπτώματα</div><div class="appt-scale" id="appt-edit-gi-scale-'+i+'" data-selected="'+(e.gi||0)+'">'+apptScaleButtons('appt-edit-gi-'+i,e.gi)+'</div></div>'
+          +'<div><div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Τήρηση προπόνησης</div><div class="appt-scale" id="appt-edit-compliance-scale-'+i+'" data-selected="'+(e.compliance||0)+'">'+apptScaleButtons('appt-edit-compliance-'+i,e.compliance)+'</div></div>'
+          +'</div>'
+          +'<div class="appt-chips" id="appt-edit-common-chips-'+i+'">'+APPT_COMMON_CHIPS.map(function(ch){return '<button type="button" class="appt-chip'+(eChips.indexOf(ch)!==-1?' active':'')+'" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'
+          +(sportChipsList.length?('<div class="appt-chips" id="appt-edit-sport-chips-'+i+'">'+sportChipsList.map(function(ch){return '<button type="button" class="appt-chip'+(eSportChips.indexOf(ch)!==-1?' active':'')+'" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'):'')
+          +'<textarea id="appt-edit-notes-'+i+'" class="tracker-textarea" style="margin-top:8px">'+esc(e.notes||'')+'</textarea>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">'
+          +'<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#c62828;cursor:pointer"><input type="checkbox" id="appt-edit-flag-'+i+'" style="width:14px;height:14px"'+(e.flagged?' checked':'')+'>🚩 Σημείωσε για παρακολούθηση</label>'
+          +'<div style="display:flex;gap:6px">'
+          +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#888;color:#fff;border:none" onclick="cancelAppointmentEdit()">Άκυρο</button>'
+          +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#025857;color:#fff;border:none" onclick="saveAppointmentEdit('+i+')">Αποθήκευση</button>'
+          +'</div>'
+          +'</div>'
+          +'</div>';
+        return;
+      }
       var allChips=(e.chips||[]).concat(e.sportChips||[]);
       listHtml+='<div class="appt-entry'+(e.flagged?' appt-entry-flagged':'')+'">'
+        +'<div class="appt-entry-actions">'
+        +(e.flagged?'<button class="appt-action-resolve" onclick="resolveAppointmentFlag('+i+')" title="Σήμανση ως διευθετημένο">✅</button>':'')
+        +'<button class="met-del" onclick="editAppointmentEntry('+i+')" title="Επεξεργασία">✏️</button>'
+        +'<button class="met-del" onclick="removeAppointmentEntry('+i+')" title="Διαγραφή">&#10005;</button>'
+        +'</div>'
         +'<div class="consult-date">'+e.date+(e.flagged?' · 🚩':'')+'</div>'
         +(allChips.length?'<div class="appt-chips" style="margin:4px 0">'+allChips.map(function(ch){return '<span class="appt-chip active" style="cursor:default">'+esc(ch)+'</span>';}).join('')+'</div>':'')
         +(e.notes?'<div class="consult-text">'+esc(e.notes)+'</div>':'')
-        +'<button class="met-del" onclick="removeAppointmentEntry('+i+')" title="Διαγραφή">&#10005;</button>'
         +'</div>';
     });
     listHtml+='</div>';
@@ -2482,6 +2508,44 @@ function addAppointmentEntry(){
 function removeAppointmentEntry(idx){
   var c=getC();if(!c||!c.appointments)return;
   c.appointments.splice(idx,1);
+  save();
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+}
+function editAppointmentEntry(idx){
+  var c=getC();if(!c)return;
+  _apptEditIdx=idx;
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+}
+function cancelAppointmentEdit(){
+  var c=getC();if(!c)return;
+  _apptEditIdx=-1;
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+}
+function saveAppointmentEdit(idx){
+  var c=getC();if(!c||!c.appointments||!c.appointments[idx])return;
+  var date=(document.getElementById('appt-edit-date-'+idx)||{}).value;
+  if(!date)return;
+  var giScale=document.getElementById('appt-edit-gi-scale-'+idx);
+  var compScale=document.getElementById('appt-edit-compliance-scale-'+idx);
+  var gi=giScale?(parseInt(giScale.getAttribute('data-selected'))||0):0;
+  var compliance=compScale?(parseInt(compScale.getAttribute('data-selected'))||0):0;
+  var notes=((document.getElementById('appt-edit-notes-'+idx)||{}).value||'').trim();
+  var flagged=!!(document.getElementById('appt-edit-flag-'+idx)||{}).checked;
+  var chips=[];
+  var commonWrap=document.getElementById('appt-edit-common-chips-'+idx);
+  if(commonWrap)Array.prototype.forEach.call(commonWrap.querySelectorAll('.appt-chip.active'),function(b){chips.push(b.getAttribute('data-chip'));});
+  var sportChips=[];
+  var sportWrap=document.getElementById('appt-edit-sport-chips-'+idx);
+  if(sportWrap)Array.prototype.forEach.call(sportWrap.querySelectorAll('.appt-chip.active'),function(b){sportChips.push(b.getAttribute('data-chip'));});
+  c.appointments[idx]={date:date,gi:gi,compliance:compliance,chips:chips,sportChips:sportChips,notes:notes,flagged:flagged};
+  c.appointments.sort(function(a,b){return a.date<b.date?-1:1;});
+  _apptEditIdx=-1;
+  save();
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+}
+function resolveAppointmentFlag(idx){
+  var c=getC();if(!c||!c.appointments||!c.appointments[idx])return;
+  c.appointments[idx].flagged=false;
   save();
   var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
 }

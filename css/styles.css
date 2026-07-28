@@ -948,9 +948,12 @@ body.dark-mode .tooltip-text {
 .appt-scale{display:flex;gap:4px}
 .appt-scale-btn{width:28px;height:28px;border-radius:50%;border:1px solid #c5ddd8;background:#fff;color:#555;font-size:11px;cursor:pointer}
 .appt-scale-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}
-.appt-entry{background:#f8fffe;border:1px solid #c5ddd8;border-radius:14px;padding:10px 14px;position:relative;padding-right:36px}
+.appt-entry{background:#f8fffe;border:1px solid #c5ddd8;border-radius:14px;padding:10px 14px;position:relative;padding-right:88px}
 .appt-entry.appt-entry-flagged{background:#fff7f7;border-color:#f1b4b3}
-.appt-entry .met-del{position:absolute;top:8px;right:8px}
+.appt-entry-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px}
+.appt-action-resolve{background:none;border:none;cursor:pointer;color:#6b6b6b;font-size:13px;padding:0 3px;line-height:1;flex-shrink:0}
+.appt-action-resolve:hover{color:#2e7d32}
+.appt-entry-editing{background:#fff!important;border-color:var(--teal)!important}
 /* ── Save-as-Template panel ── */
 .save-tmpl-panel{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px 14px;background:#fff8f0;border:1px solid #f9a825;border-radius:14px;margin:0 0 8px}
 .save-tmpl-lbl{font-size:11px;color:#e65100;font-weight:700;white-space:nowrap}
