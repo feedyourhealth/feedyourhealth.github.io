@@ -945,6 +945,9 @@ body.dark-mode .tooltip-text {
 .appt-chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .appt-chip{padding:5px 11px;font-size:11px;border-radius:20px;border:1px solid #c5ddd8;background:#fff;color:#555;cursor:pointer}
 .appt-chip.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+.appt-plan-action-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.appt-plan-action-btn{padding:5px 10px;font-size:11px;border-radius:20px;border:1px solid var(--pa-color,#c5ddd8);background:#fff;color:var(--pa-color,#555);cursor:pointer}
+.appt-plan-action-btn.active{background:var(--pa-color,#025857);border-color:var(--pa-color,#025857);color:#fff;font-weight:600}
 .appt-scale{display:flex;gap:4px}
 .appt-scale-btn{width:28px;height:28px;border-radius:50%;border:1px solid #c5ddd8;background:#fff;color:#555;font-size:11px;cursor:pointer}
 .appt-scale-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}
@@ -1662,6 +1665,7 @@ body.dark-mode .meal-label{color:#e0e0e0}
 
 /* neutral card/panel/input surfaces -> match the app's established #1a1a1a/#444/#e0e0e0 dark-card convention */
 body.dark-mode .appt-chip{background:#1a1a1a;border-color:#444;color:#ccc}
+body.dark-mode .appt-plan-action-btn{background:#1a1a1a}
 body.dark-mode .appt-entry{background:#1a1a1a;border-color:#444;color:#e0e0e0}
 body.dark-mode .appt-scale-btn{background:#1a1a1a;border-color:#444;color:#ccc}
 body.dark-mode .appt-sum-card{background:#1a1a1a;border-color:#444}
