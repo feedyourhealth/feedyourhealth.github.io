@@ -347,7 +347,7 @@ function renderMain(){
   var anthroPreview=[c.weight?c.weight+'kg':'', c.height?c.height+'cm':'', (c.weight&&c.height)?('BMI '+(Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10)):''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
   var goalPreview=(c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'}[c.goalMain]||c.goalMain):'Χωρίς στόχο')+' · '+(goalCalAdj>=0?'+':'')+goalCalAdj+' kcal';
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
-    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Εβδομαδιαίο πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t3b" onclick="swTab(100)">📝 Ραντεβού</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
+    +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t3b" onclick="swTab('+TAB_APPOINTMENTS+')">📝 Ραντεβού</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
     +'<div id="s1">'
 
     // ✅ QUICK-START PRESETS — προσυμπληρώνουν PAL/τύπο διατροφής/macro split για συνηθισμένους
@@ -2928,6 +2928,11 @@ function setupFormEventListeners(){
   });
 }
 
+// Το "Ραντεβού" tab δεν χωράει στην αρίθμηση 1-4 των per-client tabs (5/6/7 είναι ήδη
+// πιασμένα από swTab για global nav) — named constant αντί για γυμνό 100 σε κάθε σημείο
+// που το αναφέρεται, ώστε το επόμενο νέο tab να μην χρειαστεί να μαντέψει γιατί υπάρχει (Ε5).
+var TAB_APPOINTMENTS=100;
+
 function swTab(n){
   if(n===0){ if(typeof renderHome==='function') renderHome(); return; }
   if(n===5){ if(typeof renderDiets==='function') renderDiets(); return; }
@@ -2940,7 +2945,7 @@ function swTab(n){
   var t1=document.getElementById('t1');if(t1)t1.classList.toggle('active',n===1);
   var t2=document.getElementById('t2');if(t2)t2.classList.toggle('active',n===2);
   var t3=document.getElementById('t3');if(t3)t3.classList.toggle('active',n===3);
-  var t3b=document.getElementById('t3b');if(t3b)t3b.classList.toggle('active',n===100);
+  var t3b=document.getElementById('t3b');if(t3b)t3b.classList.toggle('active',n===TAB_APPOINTMENTS);
   var t4=document.getElementById('t4');if(t4)t4.classList.toggle('active',n===4);
 
   // ✅ HIDE ALL PAGES FIRST
@@ -2957,9 +2962,9 @@ function swTab(n){
   // (refreshClientLogsCache) after this div was first built, and swTab() only ever
   // toggled display before, so a stale (pre-fetch) panel could get stuck showing forever.
   if(n===3 && s3){var _c=getC();if(_c)s3.innerHTML=buildTrackerHtml(_c);s3.style.display='block';}
-  // n===100 = "📝 Ραντεβού" tab (kept outside the 1-4 numbering since 5/6/7 are already used
-  // by swTab for global nav — Διατροφές/Συνταγές/Πελάτες). Rebuilt fresh each open, same reason as s3.
-  if(n===100 && s3b){var _c100=getC();if(_c100)s3b.innerHTML=buildAppointmentsHtml(_c100);s3b.style.display='block';}
+  // TAB_APPOINTMENTS = "📝 Ραντεβού" tab (kept outside the 1-4 numbering since 5/6/7 are already
+  // used by swTab for global nav — Διατροφές/Συνταγές/Πελάτες). Rebuilt fresh each open, same reason as s3.
+  if(n===TAB_APPOINTMENTS && s3b){var _c100=getC();if(_c100)s3b.innerHTML=buildAppointmentsHtml(_c100);s3b.style.display='block';}
   if(n===4 && s4)s4.style.display='block';
 
   // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1 (Page 1 only - Στοιχεία Πελάτη)
@@ -3224,7 +3229,7 @@ function upd(k,v){
   var validationErrors = validateClientData(tempClient);
 
   // If validation fails for critical fields, show error and reject change
-  var criticalFields = ['name', 'age', 'weight', 'height'];
+  var criticalFields = ['name', 'age', 'weight', 'height', 'bf'];
   if(criticalFields.includes(k)) {
     var fieldErrors = validationErrors.filter(function(err) {
       return err.startsWith(k + '_');

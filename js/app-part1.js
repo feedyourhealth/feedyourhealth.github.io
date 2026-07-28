@@ -669,7 +669,29 @@ function _doSave(){
 }
 function save(){clearTimeout(_saveTimer);_saveTimer=setTimeout(_doSave,800);}
 function saveNow(){clearTimeout(_saveTimer);_doSave();}
-window.addEventListener('beforeunload',function(){saveNow();});
+window.addEventListener('beforeunload',function(){
+  saveNow();
+  // Cloud.save() (called from _doSave above) only *schedules* a push 1500ms later — that
+  // debounce almost never gets to fire before the tab actually tears down, so an edit made
+  // right before closing/reloading can silently never reach the cloud (audit finding Ε3).
+  // Bypass the debounce here and push immediately, fire-and-forget.
+  try{ if(window.Cloud && typeof Cloud._pushNow==='function') Cloud._pushNow(); }catch(e){}
+});
+
+// Δύο ανοιχτές καρτέλες στην ίδια συσκευή γράφουν και οι δύο ολόκληρο το 'fyh_clients' array στο
+// localStorage χωρίς κανέναν έλεγχο εκδοχής (σε αντίθεση με το cloud path, που έχει optimistic
+// locking) — όποια αποθηκεύσει τελευταία «σβήνει» σιωπηλά τις αλλαγές της άλλης (audit finding Ε4).
+// Προειδοποιεί τον χρήστη αντί να μένει αθόρυβο.
+var _lastCrossTabWarnAt=0;
+window.addEventListener('storage', function(e){
+  if(e.key !== 'fyh_clients') return;
+  var now = Date.now();
+  if(now - _lastCrossTabWarnAt < 10000) return;
+  _lastCrossTabWarnAt = now;
+  if(typeof showErrorToast === 'function'){
+    showErrorToast('⚠️ Το Dietologist είναι ανοιχτό και σε άλλη καρτέλα.\nΟι αλλαγές εδώ μπορεί να χαθούν αν αποθηκευτεί κάτι εκεί.');
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════════════════════════
 // 🛡️ AUTOMATIC BACKUP SYSTEM
@@ -2181,6 +2203,7 @@ var VALIDATION_MESSAGES_GR = {
   'weight_invalid': '⚠️ Το βάρος πρέπει να είναι μεταξύ 20-300 kg',
   'height_required': '⚠️ Παρακαλώ εισάγετε ύψος',
   'height_invalid': '⚠️ Το ύψος πρέπει να είναι μεταξύ 100-250 cm',
+  'bf_invalid': '⚠️ Το ποσοστό λίπους πρέπει να είναι μεταξύ 3-60%',
   'activity_required': '⚠️ Παρακαλώ επιλέξτε επίπεδο δραστηριότητας',
   'goal_required': '⚠️ Παρακαλώ επιλέξτε στόχο',
   'sex_required': '⚠️ Παρακαλώ επιλέξτε φύλο',
@@ -2229,6 +2252,16 @@ function validateClientData(client) {
     var height = parseFloat(client.height);
     if(isNaN(height) || height < 100 || height > 250) {
       errors.push('height_invalid');
+    }
+  }
+
+  // Body-fat % validation — optional field, but if entered it must be in the range calcTDEE()
+  // actually clamps to (3-60); previously an out-of-range value like 95 saved silently and only
+  // got clamped invisibly at calc time, with no indication to the dietitian (audit finding Ε2).
+  if(client.bf !== undefined && client.bf !== null && client.bf !== '') {
+    var bf = parseFloat(client.bf);
+    if(isNaN(bf) || bf < 3 || bf > 60) {
+      errors.push('bf_invalid');
     }
   }
 
@@ -2553,12 +2586,12 @@ function renderQAQuickAppt(q){
 }
 function qaStartAppt(id){
   selectClient(id);
-  swTab(100);
+  swTab(TAB_APPOINTMENTS);
   closeAllQA();
 }
 function qaCreateAndAppt(name){
   addClient(name);
-  swTab(100);
+  swTab(TAB_APPOINTMENTS);
   closeAllQA();
 }
 

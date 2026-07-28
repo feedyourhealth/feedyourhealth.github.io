@@ -86,7 +86,7 @@
   .swap-item .fd{font-size:12px;color:var(--muted)}
   .swap-note{font-size:11px;color:var(--faint);margin-top:8px}
 
-  .log-inp{width:100%;border:.5px solid var(--bord);border-radius:10px;padding:9px 11px;font-size:14px;font-family:inherit;color:var(--ink);background:#fff;box-sizing:border-box}
+  .log-inp{width:100%;border:.5px solid var(--bord);border-radius:10px;padding:9px 11px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;box-sizing:border-box}
   .log-inp:focus{outline:none;border-color:var(--teal-l)}
   textarea.log-inp{resize:vertical;min-height:54px}
   .log-sent{font-size:12px;color:var(--ok);display:flex;align-items:center;gap:6px;margin-bottom:8px}
@@ -126,7 +126,7 @@
 
   .water{background:var(--tint);border-radius:14px;padding:12px 14px}
   .glasses{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-  .glass{font-size:32px;min-width:32px;min-height:32px;color:var(--faint);cursor:pointer;line-height:1;transition:transform .1s}
+  .glass{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;color:var(--faint);cursor:pointer;transition:transform .1s}
   .glass.on{color:var(--teal)}
   .glass:active{transform:scale(.85)}
 
@@ -171,6 +171,12 @@
 
   /* small legend line */
   .legend{font-size:11px;color:var(--faint);padding:2px 2px 0;line-height:1.4}
+
+  /* exclusions/allergies the plan already avoids — surfaced so the client can confirm it, not just trust it */
+  .excl-card{background:#fff;border:.5px solid var(--bord);border-left:3px solid #b71c1c;border-radius:14px;padding:12px 14px}
+  .excl-card .nh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#b71c1c;margin-bottom:7px}
+  .excl-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .excl-chip{background:#fbeaea;color:#8a2020;font-size:12px;padding:4px 10px;border-radius:999px}
 
   /* supplement daily check-off */
   .supp{padding:12px 0;border-bottom:.5px solid var(--bord-l)}
@@ -866,6 +872,14 @@ function viewHome(){
     v.appendChild(n);
   }
 
+  // αλλεργίες/εξαιρέσεις που το πλάνο ήδη αποφεύγει — ώστε ο πελάτης να το επιβεβαιώνει, όχι μόνο να το εμπιστεύεται
+  if(s.exclusions && s.exclusions.length){
+    const ex=el('div','excl-card');
+    ex.innerHTML='<div class="nh"><i class="ti ti-ban"></i>Το πλάνο αποφεύγει</div><div class="excl-chips">'
+      +s.exclusions.map(x=>'<span class="excl-chip">'+esc(x)+'</span>').join('')+'</div>';
+    v.appendChild(ex);
+  }
+
   // at-a-glance: εβδομαδιαίο σκορ / σερί / βάρος (tap → Πρόοδος)
   const glance=glanceCard();
   if(glance)v.appendChild(glance);
@@ -1008,8 +1022,10 @@ function viewPlan(){
         +'</div>';
       c.appendChild(head);
       if(!isFuture){
-        const chkEl=head.querySelector('.pm-chk');
-        chkEl.onclick=()=>{
+        // Ολόκληρη η κεφαλίδα της κάρτας είναι πλέον tap-able, όχι μόνο ο μικρός κύκλος .pm-chk —
+        // ταιριάζει με τη χειρονομία «πάτα οπουδήποτε στο γεύμα» που ήδη ισχύει στην Αρχική (Ε13).
+        head.style.cursor='pointer';
+        head.onclick=()=>{
           const e=getMealsFor(planDateKey); e[idx]=!e[idx]; setMealsFor(planDateKey,e);
           if(isPlanToday)pushCheckin();
           go('plan');
@@ -1071,6 +1087,9 @@ function buildPrintHTML(){
     +(tg.kcal?'<div class="ph-tgt">🎯 Στόχος: '+nfmt(tg.kcal)+' kcal · Π'+nfmt(tg.p||0)+' Λ'+nfmt(tg.f||0)+' Υ'+nfmt(tg.c||0)+'g</div>':'')
     +(hy.baseMl?'<div class="ph-hyd">💧 Ενυδάτωση Ανάπαυση: '+hy.baseMl+'ml / Προπόνηση: '+(hy.trainMl||hy.baseMl)+'ml</div>':'')
     +'</div></div>';
+  // legend for the Π/Λ/Υ macro letters and the "T" training-day badge used throughout this
+  // printout — spelled out once here since a printed sheet has no hover/tap explainer (Ε10, Ε11)
+  h+='<div class="legend">Π = Πρωτεΐνη · Λ = Λιπαρά · Υ = Υδατάνθρακες'+(days.some(d=>d.isTrain)?' · <span class="ptb">T</span> = ημέρα προπόνησης':'')+'</div>';
   // main weekly table
   h+='<table class="pmt"><thead><tr><th class="pmt-corner">Γεύμα</th>';
   days.forEach(d=>{ h+='<th class="pday">'+esc(d.label||'')+(d.isTrain?'<span class="ptb">T</span>':'')+'</th>'; });

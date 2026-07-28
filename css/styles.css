@@ -1434,6 +1434,34 @@ body.dark-mode #darkModeToggle {
   display: block;
 }
 
+/* Πάντα ορατό (σε αντίθεση με #darkModeToggle/#settingsToggle που εμφανίζονται μόνο σε dark
+   mode) — βλ. audit finding Ε6. Κρύβεται στο mobile γιατί τα keyboard shortcuts δεν έχουν
+   νόημα εκεί και θα συγκρουόταν οπτικά με το bottom-nav. */
+#shortcutsHintBtn {
+  position: fixed;
+  bottom: 20px;
+  left: 170px;
+  width: 40px;
+  height: 40px;
+  background: #025857;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  z-index: 999;
+}
+
+body.dark-mode #shortcutsHintBtn {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #4fc3f7;
+}
+
+@media (max-width: 768px) {
+  #shortcutsHintBtn { display: none; }
+}
+
 /* Keyboard Shortcuts Help Panel */
 #keyboardHelpPanel {
   position: fixed;

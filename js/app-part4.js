@@ -950,13 +950,13 @@ function showDebugPanel(){
   var content=document.createElement('div');
   content.style.cssText='background:#fff;border-radius:8px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
 
-  var html='<h2 style="color:#d32f2f;margin-top:0">🔧 Debug Panel - Error Reporting</h2>';
+  var html='<h2 style="color:#d32f2f;margin-top:0">🔧 Σφάλματα &amp; Αναφορά</h2>';
   html+='<div style="margin-bottom:15px;padding:10px;background:#f5f5f5;border-radius:4px;font-size:12px">';
-  html+='<strong>Summary:</strong> Errors: '+audit.total.errors+' | Warnings: '+audit.total.warnings+' | Infos: '+audit.total.infos+'</div>';
+  html+='<strong>Σύνοψη:</strong> Σφάλματα: '+audit.total.errors+' | Προειδοποιήσεις: '+audit.total.warnings+' | Πληροφορίες: '+audit.total.infos+'</div>';
 
   // Errors
   if(audit.errors.length>0){
-    html+='<h3 style="color:#d32f2f;font-size:13px;margin-top:15px">❌ Errors ('+audit.errors.length+')</h3>';
+    html+='<h3 style="color:#d32f2f;font-size:13px;margin-top:15px">❌ Σφάλματα ('+audit.errors.length+')</h3>';
     html+='<div style="background:#ffebee;border-left:4px solid #d32f2f;padding:10px;margin-bottom:10px;border-radius:3px;font-size:11px;max-height:150px;overflow-y:auto">';
     audit.errors.forEach(function(e){
       html+='<div style="padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.1)">';
@@ -969,7 +969,7 @@ function showDebugPanel(){
 
   // Warnings
   if(audit.warnings.length>0){
-    html+='<h3 style="color:#ff9800;font-size:13px;margin-top:15px">⚠️ Warnings ('+audit.warnings.length+')</h3>';
+    html+='<h3 style="color:#ff9800;font-size:13px;margin-top:15px">⚠️ Προειδοποιήσεις ('+audit.warnings.length+')</h3>';
     html+='<div style="background:#fff3e0;border-left:4px solid #ff9800;padding:10px;margin-bottom:10px;border-radius:3px;font-size:11px;max-height:150px;overflow-y:auto">';
     audit.warnings.forEach(function(w){
       html+='<div style="padding:3px 0;border-bottom:1px solid rgba(0,0,0,0.1)">';
@@ -982,9 +982,9 @@ function showDebugPanel(){
 
   // Actions
   html+='<div style="margin-top:15px;display:flex;gap:8px">';
-  html+='<button onclick="LOGGER.clear();alert(\'Logs cleared\');document.getElementById(\\\'debug-modal\\\').remove()" style="flex:1;padding:8px;background:#4caf50;color:white;border:none;border-radius:4px;cursor:pointer">Clear Logs</button>';
-  html+='<button onclick="var txt=LOGGER.exportLogs();var a=document.createElement(\'a\');a.href=\'data:text/plain,\'+encodeURIComponent(txt);a.download=\'debug_'+new Date().toISOString().slice(0,10)+'.txt\';a.click()" style="flex:1;padding:8px;background:#2196f3;color:white;border:none;border-radius:4px;cursor:pointer">Export Logs</button>';
-  html+='<button onclick="document.getElementById(\'debug-modal\').remove()" style="flex:1;padding:8px;background:#999;color:white;border:none;border-radius:4px;cursor:pointer">Close</button>';
+  html+='<button onclick="LOGGER.clear();alert(\'Τα logs διαγράφηκαν\');document.getElementById(\\\'debug-modal\\\').remove()" style="flex:1;padding:8px;background:#4caf50;color:white;border:none;border-radius:4px;cursor:pointer">Διαγραφή logs</button>';
+  html+='<button onclick="var txt=LOGGER.exportLogs();var a=document.createElement(\'a\');a.href=\'data:text/plain,\'+encodeURIComponent(txt);a.download=\'debug_'+new Date().toISOString().slice(0,10)+'.txt\';a.click()" style="flex:1;padding:8px;background:#2196f3;color:white;border:none;border-radius:4px;cursor:pointer">Εξαγωγή logs</button>';
+  html+='<button onclick="document.getElementById(\'debug-modal\').remove()" style="flex:1;padding:8px;background:#999;color:white;border:none;border-radius:4px;cursor:pointer">Κλείσιμο</button>';
   html+='</div>';
 
   content.innerHTML=html;

@@ -16,7 +16,7 @@ function homeClientsNeedingAttention(){
     var flaggedAppt=(c.appointments||[]).slice().reverse().find(function(a){return a.flagged;});
     if(flaggedAppt){
       out.push({c:c,tier:-1,gap:0,label:'🚩 σημειωμένο για παρακολούθηση (ραντεβού '+flaggedAppt.date+')',
-        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(100);">Δες ραντεβού</button>'});
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες ραντεβού</button>'});
       return;
     }
     if(typeof clientHasLowPlanFeedback==='function' && clientHasLowPlanFeedback(c)){

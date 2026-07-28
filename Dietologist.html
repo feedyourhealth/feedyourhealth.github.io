@@ -293,6 +293,10 @@ setTimeout(function(){
   🌙 Dark Mode
 </button>
 
+<!-- Πάντα ορατό κουμπί που ανοίγει τις συντομεύσεις πληκτρολογίου — πριν, μόνο το Ctrl+? τις
+     αποκάλυπτε, οπότε κανείς δεν τις έβρισκε αν δεν το ήξερε ήδη (audit finding Ε6). -->
+<button id="shortcutsHintBtn" onclick="toggleKeyboardHelp()" title="Πληκτρολογιακές συντομεύσεις (Ctrl+?)">⌨️</button>
+
 <!-- ✅ TIER 3: KEYBOARD SHORTCUTS HELP -->
 <div id="keyboardHelpPanel">
   <h4>⌨️ Πληκτρολογιακές Συντομεύσεις</h4>
@@ -388,6 +392,24 @@ setTimeout(function(){
           <option value="metric">Μετρικό (kg, cm)</option>
           <option value="imperial">Αγγλοσαξονικό (lb, in)</option>
         </select>
+      </div>
+    </div>
+
+    <!-- Στοιχεία επικοινωνίας (εμφανίζονται στον πελάτη μέσω του κουμπιού «Ρώτησέ με») -->
+    <div style="margin-bottom:24px;">
+      <h3 style="color:#333;font-size:16px;margin:0 0 4px 0;font-weight:600;">📞 Στοιχεία επικοινωνίας</h3>
+      <div style="font-size:12px;color:#666;margin-bottom:12px;">Εμφανίζονται στον πελάτη μέσω του κουμπιού «Ρώτησέ με» στο δικό του link πλάνου.</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:13px;color:#333;display:block;margin-bottom:4px;">Τηλέφωνο</label>
+        <input type="tel" id="clinicTel" placeholder="69XXXXXXXX" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:13px;color:#333;display:block;margin-bottom:4px;">WhatsApp (διεθνής μορφή, π.χ. 30690…)</label>
+        <input type="tel" id="clinicWa" placeholder="306900000000" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+      </div>
+      <div>
+        <label style="font-size:13px;color:#333;display:block;margin-bottom:4px;">Email</label>
+        <input type="email" id="clinicEmail" placeholder="you@feedyourhealth.org" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
       </div>
     </div>
 
@@ -529,29 +551,30 @@ document.addEventListener('keydown', function(e) {
     toggleDarkMode();
   }
 
-  // Ctrl+P: Create Plan
+  // Ctrl+P: Create Plan (routes through genPlanWithUndo so the shortcut gets
+  // the same validation/undo-tracking as the button — see audit finding Ε1)
   if(e.ctrlKey && e.key === 'p' && !isInput) {
     e.preventDefault();
-    var c = getC();
-    if(!c) {
+    if(!getC()) {
       showErrorToast('Παρακαλώ επιλέξτε πρώτα ένα πελάτη');
       return;
     }
-    pregnancyBlockCheck(c, function(){
-      genPlan();
-      showSuccessToast('📋 Πλάνο δημιουργήθηκε με επιτυχία');
-    });
+    genPlanWithUndo();
   }
 
   // Ctrl+?: Show Help
   if(e.ctrlKey && e.key === '?' && !isInput) {
     e.preventDefault();
-    var helpPanel = document.getElementById('keyboardHelpPanel');
-    if(helpPanel) {
-      helpPanel.style.display = helpPanel.style.display === 'block' ? 'none' : 'block';
-    }
+    toggleKeyboardHelp();
   }
 });
+
+function toggleKeyboardHelp() {
+  var helpPanel = document.getElementById('keyboardHelpPanel');
+  if(helpPanel) {
+    helpPanel.style.display = helpPanel.style.display === 'block' ? 'none' : 'block';
+  }
+}
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -595,10 +618,30 @@ function updateSettingsPanelStats() {
   // Update preferences
   document.getElementById('prefDarkMode').checked = document.body.classList.contains('dark-mode');
   document.getElementById('prefAutoSave').value = localStorage.getItem('dietologist-autosave-interval') || '30';
+
+  document.getElementById('clinicTel').value = localStorage.getItem('fyh-clinic-tel') || '';
+  document.getElementById('clinicWa').value = localStorage.getItem('fyh-clinic-wa') || '';
+  document.getElementById('clinicEmail').value = localStorage.getItem('fyh-clinic-email') || '';
 }
 
 function toggleDarkModeFromSettings() {
   toggleDarkMode();
+}
+
+// Αποθηκεύει τα στοιχεία επικοινωνίας τοπικά ΚΑΙ τα ενημερώνει άμεσα στο Cloud.CLINIC,
+// ώστε η επόμενη δημοσίευση πλάνου (χωρίς reload) να τα περιλαμβάνει ήδη — βλ. audit finding Ε16.
+function saveClinicContact() {
+  var tel = document.getElementById('clinicTel').value.trim();
+  var wa = document.getElementById('clinicWa').value.trim();
+  var email = document.getElementById('clinicEmail').value.trim();
+  localStorage.setItem('fyh-clinic-tel', tel);
+  localStorage.setItem('fyh-clinic-wa', wa);
+  localStorage.setItem('fyh-clinic-email', email);
+  if (window.Cloud && Cloud.CLINIC) {
+    Cloud.CLINIC.tel = tel;
+    Cloud.CLINIC.wa = wa;
+    Cloud.CLINIC.email = email;
+  }
 }
 
 // ✅ PHASE 2: BACKUP SYSTEM
@@ -1417,7 +1460,7 @@ function toggleSupplementSelector() {
   // Build HTML with supplement checkboxes
   var suppListHtml = '<div style="background:white;border-radius:10px;padding:25px;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">';
   suppListHtml += '<h2 style="color:#025857;margin:0 0 15px 0;">💊 Συμπληρώματα που Παίρνει Ήδη ο Πελάτης</h2>';
-  suppListHtml += '<p style="color:#666;font-size:12px;margin:0 0 15px 0;">Τικάρετε ό,τι χρησιμοποιεί ήδη τακτικά. Για προτάσεις νέων συμπληρωμάτων βάσει του πλάνου, δες «💊» στο «Εβδομαδιαίο πλάνο» — και τα δύο εμφανίζονται μαζί στο PDF.</p>';
+  suppListHtml += '<p style="color:#666;font-size:12px;margin:0 0 15px 0;">Τικάρετε ό,τι χρησιμοποιεί ήδη τακτικά. Για προτάσεις νέων συμπληρωμάτων βάσει του πλάνου, δες «💊» στο «Πλάνο» — και τα δύο εμφανίζονται μαζί στο PDF.</p>';
 
   // List common supplements
   var commonSupps = COMMON_SUPPS;
@@ -2488,8 +2531,14 @@ function saveFoodExclusions(){
     // hash από ΠΑΛΙΟ αλγόριθμο δεν φαίνεται ψευδώς "ξεπερασμένο" μόλις ανέβει νέος κώδικας (βλ. isStale).
     HASH_VER:2,
     // Στοιχεία επικοινωνίας γραφείου που εμφανίζονται στο κουμπί «Ρώτησέ με» του πελάτη.
-    // ⬇️ Συμπλήρωσε WhatsApp/τηλέφωνο σε διεθνή μορφή (π.χ. 306900000000).
-    CLINIC:{ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' },
+    // Συμπληρώνονται από τον διαιτολόγο στις Ρυθμίσεις → «Στοιχεία επικοινωνίας» (βλ. saveClinicContact()),
+    // όχι εδώ — έτσι ώστε το κουμπί να εμφανίζεται πραγματικά στον πελάτη μόλις μπουν στοιχεία.
+    CLINIC:{
+      wa:localStorage.getItem('fyh-clinic-wa')||'',
+      tel:localStorage.getItem('fyh-clinic-tel')||'',
+      email:localStorage.getItem('fyh-clinic-email')||'',
+      web:localStorage.getItem('fyh-clinic-web')||'https://feedyourhealth.org'
+    },
 
     publishPlan:function(c){
       var self=this;
@@ -2524,7 +2573,10 @@ function saveFoodExclusions(){
                 var detail=[res2.error.code,res2.error.details,res2.error.hint].filter(Boolean).join(' — ');
                 throw new Error('Δεν επιτρέπεται η αποθήκευση του συνδέσμου (κανόνας ασφαλείας της βάσης). Χρειάζεται έλεγχος στο Supabase.'+(detail?' ['+detail+']':''));
               }
-              throw res2.error;
+              // Οποιοδήποτε άλλο σφάλμα (δίκτυο, άλλος περιορισμός της βάσης) — μεταφρασμένο μήνυμα
+              // αντί για το ακατέργαστο res2.error να φτάσει αυτούσιο (συχνά στα αγγλικά) σε
+              // ελληνικό toast (audit finding Ε9). Το τεχνικό μήνυμα μένει σε παρένθεση για debugging.
+              throw new Error('Απέτυχε η δημοσίευση του πλάνου. Δοκίμασε ξανά.'+(res2.error.message?' ['+res2.error.message+']':''));
             }
             c._publishedPlanHash=self._hashPlan(c.weekPlan);   // ώστε να ξέρουμε αν ο σύνδεσμος «μπαγιατεύει» μετά από επόμενη επεξεργασία
             c._publishedPlanHashVer=self.HASH_VER;
@@ -2742,7 +2794,8 @@ function saveFoodExclusions(){
         shopping:shopping,
         supps:supps,
         fruits:fruits,
-        progress:progress
+        progress:progress,
+        exclusions:altExcl.map(shortName)
       };
     },
 
