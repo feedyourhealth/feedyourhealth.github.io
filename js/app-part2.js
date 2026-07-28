@@ -2401,9 +2401,12 @@ function buildAppointmentsHtml(c){
   var hasActive=c.weekPlan&&Object.keys(c.weekPlan).length>0;
   var planDaysOld=c.planGeneratedAt?Math.floor((Date.now()-c.planGeneratedAt)/86400000):null;
   var daysLeft=daysUntilEvent(c.eventDate);
+  var lastAppt=c.appointments.length?c.appointments[c.appointments.length-1]:null;
+  var daysSinceAppt=lastAppt?Math.floor((Date.now()-new Date(lastAppt.date))/86400000):null;
   var strip='<div class="appt-summary-strip">'
     +'<div class="appt-sum-card"><div class="appt-sum-lbl">Τελευταία μέτρηση</div><div class="appt-sum-val">'+(lastW?lastW.weight+' kg':'—')+'</div><div class="appt-sum-sub">'+wDeltaHtml+'</div></div>'
     +'<div class="appt-sum-card"><div class="appt-sum-lbl">Κατάσταση πλάνου</div><div class="appt-sum-val">'+(hasActive?'Ενεργό':'Χωρίς πλάνο')+'</div><div class="appt-sum-sub">'+(planDaysOld!=null?planDaysOld+' ημέρες από δημιουργία':'—')+'</div></div>'
+    +'<div class="appt-sum-card'+(daysSinceAppt!=null&&daysSinceAppt>30?' appt-sum-danger':'')+'"><div class="appt-sum-lbl">📅 Τελευταίο ραντεβού</div><div class="appt-sum-val">'+(daysSinceAppt!=null?daysSinceAppt+' μέρες πριν':'—')+'</div><div class="appt-sum-sub">'+(lastAppt?fmtDateShortAppt(lastAppt.date):'Καμία καταχώρηση ακόμα')+'</div></div>'
     +'<div class="appt-sum-card'+(daysLeft!=null&&daysLeft<=14?' appt-sum-danger':'')+'"><div class="appt-sum-lbl">🗓 Αγώνας/Weigh-in</div><div class="appt-sum-val">'+(daysLeft!=null?(daysLeft>=0?daysLeft+' μέρες':'πέρασε'):'—')+'</div><div class="appt-sum-sub">'+(c.eventDate?fmtDateShortAppt(c.eventDate):'Δεν έχει οριστεί ημερομηνία')+'</div></div>'
     +'</div>';
 
