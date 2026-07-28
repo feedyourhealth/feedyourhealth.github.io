@@ -1639,13 +1639,13 @@ function buildTrackerHtml(c){
   var wHtml=buildClientProgressHtml(c)+'<div class="tracker-section">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     +'<div class="tracker-head" style="margin-bottom:0">📐 Ανθρωπομετρία &amp; Σωματική Σύνθεση</div>'
-    +'<div style="display:flex;gap:6px">'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
     +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV (εργομετρικά)</button>'
     +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">'
     +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης</button>'
     +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':'')
-    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#25D366;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + WhatsApp με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'wa\')">📱 WhatsApp</button>':'')
-    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + Email με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'mail\')">📧 Email</button>':'')
+    +(c.weightLog&&c.weightLog.length?(c.phone?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#25D366;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + WhatsApp με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'wa\')">📱 WhatsApp</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:#999;border:none;cursor:not-allowed" title="Λείπει τηλέφωνο από την καρτέλα του πελάτη">📱 WhatsApp</button>'):'')
+    +(c.weightLog&&c.weightLog.length?(c.email?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + Email με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'mail\')">📧 Email</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:#999;border:none;cursor:not-allowed" title="Λείπει email από την καρτέλα του πελάτη">📧 Email</button>'):'')
     +'</div>'
     +'</div>'
     // ── Skinfold panel ────────────────────────────────────────────────────────
@@ -1755,13 +1755,15 @@ function buildTrackerHtml(c){
       // ✅ Enhanced progress summary with visual body composition
     var lastLBM=last.bf>0?+(last.weight*(1-last.bf/100)).toFixed(1):null;
     var lastFM=last.bf>0?+(last.weight-lastLBM).toFixed(1):null;
-    var lastBMI=+(last.weight/((c.height/100)*(c.height/100))).toFixed(1);
+    var lastBMI=c.height>0?+(last.weight/((c.height/100)*(c.height/100))).toFixed(1):null;
     var bmiStatus='';
-    if(lastBMI<18.5)bmiStatus='Underweight';
-    else if(lastBMI<25)bmiStatus='Normal ✓';
-    else if(lastBMI<30)bmiStatus='Overweight';
-    else bmiStatus='Obese';
-    var bmiColor=lastBMI<18.5?'#ff6b35':lastBMI<25?'#2e7d32':lastBMI<30?'#ff9800':'#c62828';
+    if(lastBMI!=null){
+      if(lastBMI<18.5)bmiStatus='Underweight';
+      else if(lastBMI<25)bmiStatus='Normal ✓';
+      else if(lastBMI<30)bmiStatus='Overweight';
+      else bmiStatus='Obese';
+    }
+    var bmiColor=lastBMI==null?'#999':lastBMI<18.5?'#ff6b35':lastBMI<25?'#2e7d32':lastBMI<30?'#ff9800':'#c62828';
 
     wHtml+='<div style="background:#f0f9f8;border:1px solid #c5ddd8;border-radius:9px;padding:12px 14px;margin-bottom:10px">'
         +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:10px">'
@@ -1769,7 +1771,7 @@ function buildTrackerHtml(c){
         +'<span style="font-size:11px">Βάρος: <b style="color:'+wCol+'">'+(wDiff>0?'+':'')+wDiff+' kg</b> ('+first.weight+'→'+last.weight+'kg)</span>'
         +(bfDiff!==null?'<span style="font-size:11px">Λίπος: <b style="color:'+(bfDiff<0?'#2e7d32':'#c62828')+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>':'')
         +(lbmDiff!==null?'<span style="font-size:11px">Lean Mass: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>':'')
-        +'<span style="font-size:11px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+' ('+bmiStatus+')</b></span>'
+        +(lastBMI!=null?'<span style="font-size:11px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+' ('+bmiStatus+')</b></span>':'')
         +'<span style="font-size:10px;color:#aaa;margin-left:auto">'+sorted2.length+' μετρήσεις</span>'
         +'</div>'
         // Visual body composition bar
