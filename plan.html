@@ -893,14 +893,6 @@ function viewHome(){
     v.appendChild(n);
   }
 
-  // αλλεργίες/εξαιρέσεις που το πλάνο ήδη αποφεύγει — ώστε ο πελάτης να το επιβεβαιώνει, όχι μόνο να το εμπιστεύεται
-  if(s.exclusions && s.exclusions.length){
-    const ex=el('div','excl-card');
-    ex.innerHTML='<div class="nh"><i class="ti ti-ban"></i>Το πλάνο αποφεύγει</div><div class="excl-chips">'
-      +s.exclusions.map(x=>'<span class="excl-chip">'+esc(x)+'</span>').join('')+'</div>';
-    v.appendChild(ex);
-  }
-
   // at-a-glance: εβδομαδιαίο σκορ / σερί / βάρος (tap → Πρόοδος)
   const glance=glanceCard();
   if(glance)v.appendChild(glance);
@@ -945,6 +937,14 @@ function viewHome(){
   q.appendChild(quickCard('spices','ti-leaf','Μπαχαρικά & βότανα','Οδηγός χρήσης'));
   if(s.fruits && s.fruits.length)q.appendChild(quickCard('fruits','ti-apple','Φρούτα','Λίστα ανταλλαγής'));
   v.appendChild(q);
+
+  // αλλεργίες/εξαιρέσεις που το πλάνο ήδη αποφεύγει — ώστε ο πελάτης να το επιβεβαιώνει, όχι μόνο να το εμπιστεύεται
+  if(s.exclusions && s.exclusions.length){
+    const ex=el('div','excl-card');
+    ex.innerHTML='<div class="nh"><i class="ti ti-ban"></i>Το πλάνο αποφεύγει</div><div class="excl-chips">'
+      +s.exclusions.map(x=>'<span class="excl-chip">'+esc(x)+'</span>').join('')+'</div>';
+    v.appendChild(ex);
+  }
   return v;
 }
 function statBox(l,v,u,ok){if(ok===undefined)ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
