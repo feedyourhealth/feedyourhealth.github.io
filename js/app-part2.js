@@ -2855,6 +2855,12 @@ function applyDietTypeCategorySafetyNet(weekPlan,dietType,exceptionsByDay,foodEx
       meal.foods=meal.foods.map(function(food){
         if(dayAllowedFoods.indexOf(food.n)!==-1)return food; // this specific food is excepted today
         var fd=FOODS[food.n];
+        // plantBased:true (data.js, e.g. Γάλα αμυγδάλου/σόγιας/βρώμης) — a dairy-free item that
+        // happens to share the 'Αυγά/Γαλακτ.' category with real milk/yogurt/cheese purely for
+        // shopping-list/macro-ratio grouping. Never restrict it for vegan/vegetarian/fasting,
+        // regardless of category (found 2026-07-29: almond milk was getting swapped for Tofu on
+        // every fasting day before this exemption existed).
+        if(fd&&fd.plantBased)return food;
         var cat=fd?fd.cat:'';
         // Composite "recipe" FOODS entries (cat:'Συνταγές'/'Συνταγές FYH', e.g. "Κοτόπουλο Pesto
         // & Φέτα" or "Ψάρι στο Φούρνο (FYH)") are tagged generically — their .cat doesn't reveal

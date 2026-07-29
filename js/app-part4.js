@@ -2574,6 +2574,7 @@ function generateDiverseAlternatives(targetCalories, dayIndex, excludedFoods, me
     if(!dayForbiddenCats.length) return false;
     if(dayAllowedFoods.indexOf(foodName)!==-1) return false;
     var fd = FOODS[foodName];
+    if(fd && fd.plantBased) return false; // e.g. almond/soy/oat milk — see data.js note
     var foodCat = fd ? fd.cat : '';
     if(dayForbiddenCats.indexOf(foodCat)!==-1) return true;
     // Same composite-dish blind spot as applyDietTypeCategorySafetyNet (js/app-part2.js) —

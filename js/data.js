@@ -56,17 +56,21 @@ var FOODS={
 'Τυρί φέτα':{k:264,p:14,c:4,f:21,fi:0,cat:'Αυγά/Γαλακτ.',en:'Feta Cheese'},
 'Μοτσαρέλα':{k:300,p:22,c:2.2,f:22,fi:0,cat:'Αυγά/Γαλακτ.',en:'Mozzarella'},
 'Γάλα πλήρες':{k:61,p:3.3,c:4.8,f:3.3,fi:0,cat:'Αυγά/Γαλακτ.',en:'Whole Milk'},
-'Γάλα αμυγδάλου':{k:17,p:0.6,c:0.5,f:1.4,fi:0.2,cat:'Αυγά/Γαλακτ.',en:'Almond Milk'},
+// plantBased:true — genuinely dairy-free despite sharing the 'Αυγά/Γαλακτ.' category with real
+// milk/yogurt/cheese (kept for shopping-list/macro-ratio/food-picker grouping, which all work
+// fine either way) — see applyDietTypeCategorySafetyNet (js/app-part2.js), which exempts any
+// plantBased food from vegan/vegetarian/orthodox_fasting restriction regardless of its .cat.
+'Γάλα αμυγδάλου':{k:17,p:0.6,c:0.5,f:1.4,fi:0.2,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Almond Milk'},
 'Πρωτεΐνη σκόνη (whey)':{k:400,p:80,c:10,f:7,fi:0,cat:'Αυγά/Γαλακτ.',en:'Whey Protein Powder'},
 'Πρωτεΐνη Αμυγδάλου (Amino Animo Organic)':{k:375,p:55,c:7,f:16,fi:0,cat:'Αυγά/Γαλακτ.',en:'Almond Protein (Amino Animo Organic)'},
 'Στραγγιστό γιαούρτι 0%':{k:59,p:10,c:3.6,f:0.4,fi:0,cat:'Αυγά/Γαλακτ.',en:'Strained Yogurt 0%'},
 'Γιαούρτι πλήρες 5%':{k:100,p:9,c:4.7,f:5.0,fi:0,cat:'Αυγά/Γαλακτ.',en:'Whole Milk Yogurt 5%'},
 'Ανθότυρο':{k:127,p:13,c:0.5,f:8,fi:0,cat:'Αυγά/Γαλακτ.',en:'Anthotyro Cheese'},
 'Μυζήθρα':{k:241,p:12,c:3,f:20,fi:0,cat:'Αυγά/Γαλακτ.',en:'Myzithra Cheese'},
-'Γάλα σόγιας':{k:54,p:3.3,c:6.3,f:1.8,fi:0.3,cat:'Αυγά/Γαλακτ.',en:'Soy Milk'},
-'Γάλα βρώμης':{k:46,p:1.0,c:8.0,f:1.5,fi:0.5,cat:'Αυγά/Γαλακτ.',en:'Oat Milk'},
+'Γάλα σόγιας':{k:54,p:3.3,c:6.3,f:1.8,fi:0.3,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Soy Milk'},
+'Γάλα βρώμης':{k:46,p:1.0,c:8.0,f:1.5,fi:0.5,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Oat Milk'},
 'Γάλα φρέσκο 1.5% Λιπαρά':{k:46,p:3.3,c:4.7,f:1.5,fi:0,cat:'Αυγά/Γαλακτ.',en:'Fresh Milk 1.5% Fat'},
-'Koko Γιαούρτι Καρύδας (Νηστίσιμο)':{k:79,p:0.6,c:8,f:4.9,fi:0.2,cat:'Αυγά/Γαλακτ.',en:'Koko Coconut Yogurt (Vegan)'},
+'Koko Γιαούρτι Καρύδας (Νηστίσιμο)':{k:79,p:0.6,c:8,f:4.9,fi:0.2,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Koko Coconut Yogurt (Vegan)'},
 'Γραβιέρα':{k:400,p:28,c:0.5,f:32,fi:0,cat:'Αυγά/Γαλακτ.',en:'Graviera Cheese'},
 'Κασέρι':{k:397,p:25,c:1.0,f:32,fi:0,cat:'Αυγά/Γαλακτ.',en:'Kasseri Cheese'},
 'Κεφαλοτύρι':{k:454,p:26,c:1.0,f:38,fi:0,cat:'Αυγά/Γαλακτ.',en:'Kefalotyri Cheese'},
@@ -328,7 +332,7 @@ var FOODS={
 /* ✅ Προστέθηκαν 2026-07-09 — ίδιο μοτίβο: τροφές που έλειπαν εντελώς από τη βάση, εντοπίστηκαν με
    αυτοματοποιημένο έλεγχο κάθε TMPLS/MEAL_RECIPES/SNACK_RECIPES έναντι FOODS+FOOD_ALIASES (βλ. αντιστοιχίσεις παρακάτω) */
 'Hummus':{k:166,p:7.9,c:14.3,f:9.6,fi:6,cat:'Όσπρια'},
-'Γάλα καρύδας':{k:180,p:1.8,c:3,f:18,fi:0,cat:'Αυγά/Γαλακτ.',en:'Coconut Milk'},
+'Γάλα καρύδας':{k:180,p:1.8,c:3,f:18,fi:0,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Coconut Milk'},
 'Σπόροι κολοκύνθης':{k:559,p:30,c:11,f:49,fi:6,cat:'Ξηροί καρποί',en:'Pumpkin Seeds'},
 'Σπόροι λιναρόσπορου':{k:534,p:18,c:29,f:42,fi:27,cat:'Ξηροί καρποί',en:'Flaxseed'},
 'Ξηρά δαμάσκηνα':{k:240,p:2.2,c:64,f:0.4,fi:7.1,cat:'Φρούτα',en:'Dried Prunes'},
@@ -338,7 +342,7 @@ var FOODS={
 /* ✅ Προστέθηκαν 2026-07-10 — 2 από τα 4 vegan "PickupLimes" υλικά στο FYH_RECIPE_EXPAND που δεν είχαν
    καμία αντιστοίχιση (βλ. FOOD_ALIASES για τα υπόλοιπα, που αντιστοιχήθηκαν σε ήδη υπάρχοντα τρόφιμα) */
 'Nutritional yeast':{k:375,p:50,c:31,f:6,fi:19,cat:'Άλλα'},
-'Soy yogurt (χωρίς ζάχαρη)':{k:55,p:3.5,c:4,f:2.5,fi:0.5,cat:'Αυγά/Γαλακτ.',en:'Soy Yogurt (sugar-free)'},
+'Soy yogurt (χωρίς ζάχαρη)':{k:55,p:3.5,c:4,f:2.5,fi:0.5,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Soy Yogurt (sugar-free)'},
 };
 var FOOD_PAIRING_DB={
   // ── PROTEINS ────────────────────────────────────────────────────────────────
