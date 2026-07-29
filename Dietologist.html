@@ -2206,6 +2206,15 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
   exceptionDays=exceptionDays||{};
   var head='<th style="text-align:left;padding:4px 6px;font-weight:600;color:#333;font-size:11px">Ημέρα</th>'
     +cats.map(function(cat){return '<th style="padding:4px 6px;font-weight:600;color:#333;font-size:11px">'+esc(cat)+'</th>';}).join('');
+  // "Select all days" row — one checkbox per category column, checks/unchecks that category for
+  // all 7 days at once (e.g. the client isn't strict about dairy at all → one click instead of 7).
+  var allDaysRow='<tr>'
+    +'<td style="padding:4px 6px;font-size:11px;font-weight:600;color:#025857">Όλες οι μέρες</td>'
+    +cats.map(function(cat){
+      var catEsc=cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return '<td style="text-align:center;padding:4px 6px"><input type="checkbox" onchange="toggleExcCategoryAllDays(this,\''+catEsc+'\')"></td>';
+    }).join('')
+    +'</tr>';
   var rows='';
   DAYS.forEach(function(dayName,d){
     var allowed=exceptionDays[d]||exceptionDays[String(d)]||[];
@@ -2219,10 +2228,18 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
   });
   return '<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">📅 Εξαιρέσεις ανά ημέρα:</label>'
-    +'<div style="font-size:11px;color:#666;margin-bottom:6px">Τσέκαρε την κατηγορία που επιτρέπεται εκείνη τη μέρα (π.χ. ψάρι σε γιορτή νηστείας) — το πλάνο θα προσπαθήσει να βάλει αντίστοιχο γεύμα αυτόματα εκείνη την ημέρα.</div>'
+    +'<div style="font-size:11px;color:#666;margin-bottom:6px">Τσέκαρε την κατηγορία που επιτρέπεται εκείνη τη μέρα (π.χ. ψάρι σε γιορτή νηστείας) — το πλάνο θα προσπαθήσει να βάλει αντίστοιχο γεύμα αυτόματα εκείνη την ημέρα. Με «Όλες οι μέρες» επιλέγεις μια κατηγορία για όλη την εβδομάδα με ένα κλικ.</div>'
     +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
-    +'<thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<thead><tr>'+head+'</tr>'+allDaysRow+'</thead><tbody>'+rows+'</tbody></table>'
     +'</div>';
+}
+// "Όλες οι μέρες" header checkbox for one category column — checks/unchecks every day's
+// exception checkbox in that category at once (buildDietExceptionsHtml's category grid).
+function toggleExcCategoryAllDays(headerCb, cat){
+  var checked=headerCb.checked;
+  document.querySelectorAll('[data-exc-cat]').forEach(function(cb){
+    if(cb.getAttribute('data-exc-cat')===cat)cb.checked=checked;
+  });
 }
 function refreshDietExceptionsSection(){
   var c=getC();if(!c)return;
