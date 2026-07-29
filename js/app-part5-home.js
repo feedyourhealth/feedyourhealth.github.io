@@ -309,6 +309,30 @@ function homeGroupsCardHtml(groups){
     +'<div class="hm-group-chips">'+groups.map(homeGroupChip).join('')+'</div></div>';
 }
 
+// Πελάτες που πλησιάζουν το όριο ανανέωσης πλάνου (βλ. dietsNeedsRenewal/PLAN_RENEWAL_DAYS πιο κάτω
+// σε αυτό το αρχείο) αλλά δεν το έχουν περάσει ακόμα — ώστε ο διαιτολόγος να προλάβει να ετοιμάσει το
+// επόμενο πλάνο πριν γίνει "μπαγιατεμένο" (tier 1 στο homeClientsNeedingAttention), όχι μόνο αφού συμβεί.
+// Πελάτες ήδη σε tier 1 (πέρασαν το όριο) εξαιρούνται σκόπιμα — αυτοί εμφανίζονται ήδη στο κόκκινο.
+var RENEWAL_WARNING_DAYS=5;
+function homeApproachingRenewal(){
+  var out=[];
+  clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+    if(c.attentionSnoozeUntil && Date.now()<c.attentionSnoozeUntil) return;
+    if(!c.planGeneratedAt || !dietsHasPlan(c) || dietsNeedsRenewal(c)) return;
+    var threshold=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;
+    var daysOld=Math.floor((Date.now()-c.planGeneratedAt)/86400000);
+    var daysLeft=threshold-daysOld;
+    if(daysLeft>0 && daysLeft<=RENEWAL_WARNING_DAYS) out.push({c:c,daysLeft:daysLeft});
+  });
+  out.sort(function(a,b){ return a.daysLeft-b.daysLeft; });
+  return out;
+}
+function homeApproachingRenewalRow(x){
+  var sub=x.daysLeft===1?'ανανέωση αύριο':'ανανέωση σε '+x.daysLeft+' ημέρες';
+  return homeRow(x.c, sub, 'amber',
+    '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+x.c.id+'\')">Δημιούργησε πλάνο τώρα</button>');
+}
+
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
@@ -391,6 +415,7 @@ function renderHome(){
       '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendFeedbackReminder(\''+c.id+'\')">🔔 Υπενθύμιση</button>');
   });
   var pendingPlanRows=homePendingPlanActions(attentionIds).map(homePendingPlanActionRow);
+  var approachingRenewalRows=homeApproachingRenewal().map(homeApproachingRenewalRow);
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -419,6 +444,7 @@ function renderHome(){
   var gridCards=[
     homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'ακόμα', 'warning'),
     homeCard(attentionCardTitle, attentionRows, 'ακόμα', 'danger'),
+    homeCard('🔜 Πλησιάζει ανανέωση', approachingRenewalRows, 'ακόμα', 'warning'),
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
     homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
     homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'ακόμα', 'warning'),
