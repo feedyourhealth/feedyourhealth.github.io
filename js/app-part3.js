@@ -1167,7 +1167,7 @@ function genPlan(){
       // vegan/vegetarian/orthodox_fasting client would otherwise carry their meat/fish/dairy over
       // completely unfiltered (confirmed live: 41 category violations in one such test). This path
       // returns early, before the same check that already runs on the template-generation path below.
-      applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType);
+      applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays);
 
       // ✅ LOG PLAN TO TRACKING SYSTEM — this path used to skip logging entirely, so plans made
       // by cloning an existing client never appeared in Στατιστικά Γευμάτων (2026-07-10 fix).
@@ -1258,11 +1258,17 @@ function genPlan(){
   }
 
   // ✅ PHASE 3B: TRY SMART GENERATION WITH 3-PRIORITY FALLBACK
-  // NOTE: Skip smart generation for Orthodox Fasting and Intermittent Fasting to preserve their template structure
+  // NOTE: Skip smart generation for Intermittent Fasting entirely (preserves its template
+  // structure). Orthodox Fasting normally skips it too (same reason) EXCEPT on a day the
+  // dietitian has marked as an exception (c.dietExceptionDays, e.g. a fasting feast day like
+  // Ευαγγελισμός/Βαΐα where fish is allowed) — that day runs the same priority chain as any
+  // other client, widened to dietType 'normal' so fish/meat recipes can actually be matched
+  // (see dietTagMap below); applyDietTypeCategorySafetyNet() still enforces that only the
+  // day's specifically-allowed categories survive, everything else gets stripped as usual.
   var isOrthodoxFasting = (c.dietType === 'orthodox_fasting');
   var isIntermittentFasting = (c.dietType === 'intermittent_fasting');
 
-  if(!isOrthodoxFasting && !isIntermittentFasting) {
+  if(!isIntermittentFasting) {
     var savedCombos = getSavedCombos();
     // 🕓 This same client's own recent, reasonably-well-followed meals (see harvestOwnHistory) —
     // tried before the cross-client taste library, so a returning client gets their own proven
@@ -1274,6 +1280,11 @@ function genPlan(){
     console.log('Own history: '+ownHistory.length+' meals harvested from this client\'s past well-followed plans');
     console.log('Taste library: '+mealLibrary.length+' meals harvested from ⭐ template clients');
     for(var d=0;d<7;d++){
+      var dayExc = (isOrthodoxFasting && c.dietExceptionDays && c.dietExceptionDays[d]) || [];
+      // Orthodox Fasting, non-exception day: leave the static fasting template untouched, exactly
+      // as before this feature existed. Only an excepted day (or any other diet type, unchanged) proceeds.
+      if(isOrthodoxFasting && dayExc.length===0) continue;
+      var dayDietType = dayExc.length ? 'normal' : c.dietType;
       for(var mi=0;mi<tmplDays[d].length;mi++){
         var meal = tmplDays[d][mi];
         var targetKcal = eff[d].meals[mi].k;  // Per-meal calorie target
@@ -1283,7 +1294,7 @@ function genPlan(){
         // 🕓 Priority -1: this client's own history — a meal they had before and (per portal
         // check-ins) reasonably followed. Takes precedence over every cross-client source.
         if(ownHistory.length > 0){
-          var ownMeal = findSavedComboMatch(ownHistory, targetKcal, targetMacros, 80, excl, mealSlot, c.dietType, usedComboSigs);
+          var ownMeal = findSavedComboMatch(ownHistory, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs);
           if(ownMeal && ownMeal.foods && ownMeal.foods.length > 0){
             meal.foods = deepClone(ownMeal.foods);
             if(ownMeal.mealTiming) meal.mealTiming = ownMeal.mealTiming;
@@ -1297,7 +1308,7 @@ function genPlan(){
         // ⭐ Priority 0: Taste library — real, dietitian-made meals from ⭐ clients
         // (verbatim food combos; portions get scaled to target in PHASE 3D)
         if(mealLibrary.length > 0){
-          var libMeal = findSavedComboMatch(mealLibrary, targetKcal, targetMacros, 80, excl, mealSlot, c.dietType, usedComboSigs);
+          var libMeal = findSavedComboMatch(mealLibrary, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs);
           if(libMeal && libMeal.foods && libMeal.foods.length > 0){
             meal.foods = deepClone(libMeal.foods);
             if(libMeal.mealTiming) meal.mealTiming = libMeal.mealTiming;
@@ -1309,7 +1320,7 @@ function genPlan(){
         }
 
         // ✨ Priority 1: Check Chef-Inspired Recipes (culinary-sensible combinations)
-        var recipeMeal = findBestRecipe(c.dietType, targetKcal, meal.name, excl, targetMacros);
+        var recipeMeal = findBestRecipe(dayDietType, targetKcal, meal.name, excl, targetMacros);
         if(recipeMeal && recipeMeal.foods && recipeMeal.foods.length > 0){
           meal.foods = deepClone(recipeMeal.foods);
           meal.recipeId = recipeMeal.recipeId;  // Track which recipe was used
@@ -1319,7 +1330,7 @@ function genPlan(){
 
         // Priority 2: Check saved combos (user-approved, slot/diet-aware)
         if(savedCombos && savedCombos.length > 0){
-          var savedMeal = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 80, excl, mealSlot, c.dietType, usedComboSigs);
+          var savedMeal = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs);
           if(savedMeal && savedMeal.foods && savedMeal.foods.length > 0){
             meal.foods = deepClone(savedMeal.foods);
             if(savedMeal.mealTiming) meal.mealTiming = savedMeal.mealTiming;
@@ -1331,7 +1342,7 @@ function genPlan(){
 
         // Priority 3: Try smart generation with chef pairing rules
         // Pass meal.name for breakfast-specific constraints, excl for food exclusions, and dietType for diet compliance
-        var smartMeal = generateSmartMeal(targetKcal, targetMacros, d, savedCombos, meal.name, excl, c.dietType);
+        var smartMeal = generateSmartMeal(targetKcal, targetMacros, d, savedCombos, meal.name, excl, dayDietType);
         if(smartMeal && smartMeal.foods && smartMeal.foods.length > 0){
           meal.foods = deepClone(smartMeal.foods);
           if(smartMeal.mealTiming) meal.mealTiming = smartMeal.mealTiming;
@@ -1500,7 +1511,7 @@ function genPlan(){
 
   // ✅ DIET-TYPE SAFETY NET: strip any food from a category the client's diet type
   // forbids, regardless of which code path (recipe, taste library, saved combo...) put it there.
-  applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType);
+  applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays);
 
   // ✅ LOG PLAN TO TRACKING SYSTEM
   logPlanGeneration(c, c.weekPlan);

@@ -2196,6 +2196,42 @@ function saveMedicalConditions(){
 }
 
 // ✅ MODAL 6: ΔΙΑΤΡΟΦΗ & ΑΠΟΚΛΕΙΣΜΟΙ
+// Per-day exception grid (e.g. fish allowed on a fasting feast day like Ευαγγελισμός/Βαΐα) —
+// only shown for diet types that actually forbid categories (DIET_TYPE_FORBIDDEN_CATS,
+// js/app-part2.js). `dietType` is passed separately from `c` so the grid can be re-rendered
+// live off the (possibly unsaved) dietType-modal select value on change.
+function buildDietExceptionsHtml(dietType, exceptionDays){
+  var cats=DIET_TYPE_FORBIDDEN_CATS[dietType];
+  if(!cats||!cats.length)return '';
+  exceptionDays=exceptionDays||{};
+  var head='<th style="text-align:left;padding:4px 6px;font-weight:600;color:#333;font-size:11px">Ημέρα</th>'
+    +cats.map(function(cat){return '<th style="padding:4px 6px;font-weight:600;color:#333;font-size:11px">'+esc(cat)+'</th>';}).join('');
+  var rows='';
+  DAYS.forEach(function(dayName,d){
+    var allowed=exceptionDays[d]||exceptionDays[String(d)]||[];
+    rows+='<tr>'
+      +'<td style="padding:4px 6px;font-size:12px">'+esc(dayName)+'</td>'
+      +cats.map(function(cat){
+        var checked=allowed.indexOf(cat)!==-1?' checked':'';
+        return '<td style="text-align:center;padding:4px 6px"><input type="checkbox" data-exc-day="'+d+'" data-exc-cat="'+esc(cat)+'"'+checked+'></td>';
+      }).join('')
+      +'</tr>';
+  });
+  return '<div style="margin-bottom:20px">'
+    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">📅 Εξαιρέσεις ανά ημέρα:</label>'
+    +'<div style="font-size:11px;color:#666;margin-bottom:6px">Τσέκαρε την κατηγορία που επιτρέπεται εκείνη τη μέρα (π.χ. ψάρι σε γιορτή νηστείας) — το πλάνο θα προσπαθήσει να βάλει αντίστοιχο γεύμα αυτόματα εκείνη την ημέρα.</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'</div>';
+}
+function refreshDietExceptionsSection(){
+  var c=getC();if(!c)return;
+  var sel=document.getElementById('dietType-modal');
+  var section=document.getElementById('diet-exceptions-section');
+  if(!sel||!section)return;
+  section.innerHTML=buildDietExceptionsHtml(sel.value, c.dietExceptionDays);
+}
+
 function openDietModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="dietOverlay" onclick="if(event.target===this)closeDietModal()">'
@@ -2206,7 +2242,7 @@ function openDietModal(){
     +'</div>'
     +'<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">📋 Τύπος Διατροφής:</label>'
-    +'<select id="dietType-modal" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px">'
+    +'<select id="dietType-modal" onchange="refreshDietExceptionsSection()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px">'
     +'<option value="normal" '+(c.dietType==='normal'?'selected':'')+'>🍗 Κανονική</option>'
     +'<option value="vegetarian" '+(c.dietType==='vegetarian'?'selected':'')+'>🥬 Χορτοφαγική</option>'
     +'<option value="vegan" '+(c.dietType==='vegan'?'selected':'')+'>🌱 Vegan</option>'
@@ -2218,6 +2254,7 @@ function openDietModal(){
     +'<option value="mediterranean" '+(c.dietType==='mediterranean'?'selected':'')+'>🫒 Μεσογειακή Διατροφή</option>'
     +'</select>'
     +'</div>'
+    +'<div id="diet-exceptions-section">'+buildDietExceptionsHtml(c.dietType, c.dietExceptionDays)+'</div>'
     +'<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">🚫 Αποκλεισμοί Τροφών:</label>'
     +'<button onclick="openFoodPickerModal()" style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;margin-bottom:8px">'
@@ -2263,6 +2300,21 @@ function saveDietSettings(){
     c.foodExclude=selectedExclusions;
   }
   c.preferences=document.getElementById('preferences-modal').value;
+
+  // ✅ Per-day diet exceptions (e.g. fish allowed on a fasting feast day) — only present in the
+  // DOM when the current dietType has forbidden categories (buildDietExceptionsHtml).
+  var excBoxes=document.querySelectorAll('[data-exc-day]');
+  if(excBoxes.length){
+    var byDay={};
+    excBoxes.forEach(function(cb){
+      if(!cb.checked)return;
+      var d=cb.getAttribute('data-exc-day');
+      var cat=cb.getAttribute('data-exc-cat');
+      if(!byDay[d])byDay[d]=[];
+      byDay[d].push(cat);
+    });
+    c.dietExceptionDays=byDay;
+  }
 
   save();
   closeDietModal();
