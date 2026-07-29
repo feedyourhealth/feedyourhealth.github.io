@@ -2200,10 +2200,31 @@ function saveMedicalConditions(){
 // only shown for diet types that actually forbid categories (DIET_TYPE_FORBIDDEN_CATS,
 // js/app-part2.js). `dietType` is passed separately from `c` so the grid can be re-rendered
 // live off the (possibly unsaved) dietType-modal select value on change.
+// Known Orthodox-fasting feast days that traditionally allow fish, offered as a shortcut so
+// the dietitian doesn't have to remember/look up the date each time — still requires picking
+// which weekday it falls on THIS week, since the plan is a repeating weekly template with no
+// real calendar anchor (see [[dietologist-taste-library]] for why: same weekday repeats forever).
+var FASTING_FEAST_PRESETS=[
+  {name:'Ευαγγελισμός (25 Μαρτίου)', cat:'Ψάρια'},
+  {name:'Κυριακή των Βαΐων', cat:'Ψάρια'},
+  {name:'Άλλη γιορτή με ψάρι', cat:'Ψάρια'}
+];
 function buildDietExceptionsHtml(dietType, exceptionDays){
   var cats=DIET_TYPE_FORBIDDEN_CATS[dietType];
   if(!cats||!cats.length)return '';
   exceptionDays=exceptionDays||{};
+  var feastPresetHtml='';
+  if(dietType==='orthodox_fasting'){
+    var feastOptions=FASTING_FEAST_PRESETS.map(function(f,i){return '<option value="'+i+'">'+esc(f.name)+'</option>';}).join('');
+    var dayOptions=DAYS.map(function(d,i){return '<option value="'+i+'">'+esc(d)+'</option>';}).join('');
+    feastPresetHtml='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:#f7faf9;border-radius:6px;font-size:11px">'
+      +'<span style="font-weight:600;color:#025857">🐟 Γνωστή γιορτή:</span>'
+      +'<select id="exc-feast-select" style="padding:3px 5px;border:1px solid #ddd;border-radius:4px;font-size:11px">'+feastOptions+'</select>'
+      +'<span style="color:#666">σε ημέρα</span>'
+      +'<select id="exc-feast-day" style="padding:3px 5px;border:1px solid #ddd;border-radius:4px;font-size:11px">'+dayOptions+'</select>'
+      +'<button type="button" onclick="applyFastingFeastPreset()" style="padding:3px 10px;background:#025857;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer">Εφαρμογή</button>'
+      +'</div>';
+  }
   var head='<th style="text-align:left;padding:4px 6px;font-weight:600;color:#333;font-size:11px">Ημέρα</th>'
     +cats.map(function(cat){return '<th style="padding:4px 6px;font-weight:600;color:#333;font-size:11px">'+esc(cat)+'</th>';}).join('');
   // "Select all days" row — one checkbox per category column, checks/unchecks that category for
@@ -2229,6 +2250,7 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
   return '<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">📅 Εξαιρέσεις ανά ημέρα:</label>'
     +'<div style="font-size:11px;color:#666;margin-bottom:6px">Τσέκαρε την κατηγορία που επιτρέπεται εκείνη τη μέρα (π.χ. ψάρι σε γιορτή νηστείας) — το πλάνο θα προσπαθήσει να βάλει αντίστοιχο γεύμα αυτόματα εκείνη την ημέρα. Με «Όλες οι μέρες» επιλέγεις μια κατηγορία για όλη την εβδομάδα με ένα κλικ.</div>'
+    +feastPresetHtml
     +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
     +'<thead><tr>'+head+'</tr>'+allDaysRow+'</thead><tbody>'+rows+'</tbody></table>'
     +'</div>';
@@ -2240,6 +2262,19 @@ function toggleExcCategoryAllDays(headerCb, cat){
   document.querySelectorAll('[data-exc-cat]').forEach(function(cb){
     if(cb.getAttribute('data-exc-cat')===cat)cb.checked=checked;
   });
+}
+// Feast-day shortcut (buildDietExceptionsHtml's "🐟 Γνωστή γιορτή" row) — just checks the
+// matching day/category checkbox for the dietitian, same as ticking it by hand.
+function applyFastingFeastPreset(){
+  var feastSel=document.getElementById('exc-feast-select');
+  var daySel=document.getElementById('exc-feast-day');
+  if(!feastSel||!daySel)return;
+  var feast=FASTING_FEAST_PRESETS[Number(feastSel.value)];
+  if(!feast)return;
+  var day=daySel.value;
+  var cb=document.querySelector('[data-exc-day="'+day+'"][data-exc-cat="'+feast.cat+'"]');
+  if(cb)cb.checked=true;
+  if(typeof dietoToast==='function')dietoToast('✓ '+feast.name+' → '+DAYS[Number(day)]+' ('+feast.cat+' επιτρέπεται)');
 }
 function refreshDietExceptionsSection(){
   var c=getC();if(!c)return;

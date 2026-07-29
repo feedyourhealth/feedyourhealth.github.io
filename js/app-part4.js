@@ -2561,6 +2561,22 @@ function generateDiverseAlternatives(targetCalories, dayIndex, excludedFoods, me
   var targetC = macroTargets.targetCarbs || 0;
   var excludeFoods = macroTargets.excludeFoods || [];
 
+  // Diet-type awareness (e.g. orthodox_fasting/vegan/vegetarian) — without this, a swap
+  // could freely suggest meat/fish/dairy for a fasting client since this generator builds
+  // candidates straight from FOODS, bypassing applyDietTypeCategorySafetyNet entirely.
+  var dietForbiddenCats = DIET_TYPE_FORBIDDEN_CATS[macroTargets.dietType] || [];
+  var dayAllowedCats = (macroTargets.dietExceptionDays &&
+    (macroTargets.dietExceptionDays[dayIndex] || macroTargets.dietExceptionDays[String(dayIndex)])) || [];
+  var dayAllowedFoods = (macroTargets.dietFoodExceptionDays &&
+    (macroTargets.dietFoodExceptionDays[dayIndex] || macroTargets.dietFoodExceptionDays[String(dayIndex)])) || [];
+  var dayForbiddenCats = dietForbiddenCats.filter(function(cat){return dayAllowedCats.indexOf(cat)===-1;});
+  function isDietForbidden(foodName){
+    if(!dayForbiddenCats.length) return false;
+    if(dayAllowedFoods.indexOf(foodName)!==-1) return false;
+    var foodCat = FOODS[foodName] ? FOODS[foodName].cat : '';
+    return dayForbiddenCats.indexOf(foodCat)!==-1;
+  }
+
   // Collect different protein options based on meal type
   var proteinOptions = [];
   var carbOptions = [];
@@ -2572,6 +2588,7 @@ function generateDiverseAlternatives(targetCalories, dayIndex, excludedFoods, me
   for(var foodName in FOODS){
     if(!FOODS.hasOwnProperty(foodName)) continue;
     if(excludedFoods && excludedFoods.indexOf(foodName) !== -1) continue;
+    if(isDietForbidden(foodName)) continue;
 
     var lower = foodName.toLowerCase();
 
@@ -2792,7 +2809,10 @@ function showMealAlternatives(dayIndex, mealIndex){
       targetProtein: currentProtein,
       targetFat: currentFat,
       targetCarbs: currentCarbs,
-      excludeFoods: currentFoodNames
+      excludeFoods: currentFoodNames,
+      dietType: c.dietType,
+      dietExceptionDays: c.dietExceptionDays,
+      dietFoodExceptionDays: c.dietFoodExceptionDays
     });
 
     // Add generated alternatives with priority flag
