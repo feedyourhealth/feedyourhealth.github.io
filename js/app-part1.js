@@ -2996,7 +2996,11 @@ function resetTmpl(goal){
 /* ── Custom Template Management ──────────────────────────────────────────── */
 function buildTmplSelectorHtml(c){
   var sel=c.selectedTemplate||'';
-  var goalLabel=GOAL_LABELS[c.goalMain]||c.goalMain;
+  // c.goalMain is genuinely unset for a brand-new client until the dietitian picks a goal
+  // (see the 2026-07-01 addClient() fix — it deliberately stopped prefilling a fake default).
+  // Without this fallback, GOAL_LABELS[undefined]||undefined stringifies to the literal
+  // text "undefined" in the option label.
+  var goalLabel=GOAL_LABELS[c.goalMain]||c.goalMain||'χωρίς στόχο';
   var opts='<option value="">📋 Προεπιλεγμένο ('+goalLabel+')</option>';
 
   // Hide this selector on page 2 and others — only show on Tab 1
