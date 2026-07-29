@@ -309,6 +309,25 @@ function homeGroupsCardHtml(groups){
     +'<div class="hm-group-chips">'+groups.map(homeGroupChip).join('')+'</div></div>';
 }
 
+// Μόνο οι πελάτες που ο διαιτολόγος έχει σημειώσει ⭐ (c.isMealTemplate, βλ. toggleMealTemplate
+// στο app-part3.js) τροφοδοτούν την κοινή "βιβλιοθήκη γεύσης" — genPlan τη χρησιμοποιεί ως
+// Priority 0, πριν τις έτοιμες συνταγές (βλ. [[dietologist-taste-library]]). Αν πολύ λίγοι είναι
+// σημειωμένοι, όλοι οι υπόλοιποι παίρνουν πιο μηχανικά πλάνα χωρίς αυτό να φαίνεται πουθενά αλλού —
+// αυτή η κάρτα το κάνει ορατό. Επιστρέφει null όταν η κάλυψη είναι ήδη αρκετή (δεν χρειάζεται νόημα).
+var TASTE_LIBRARY_LOW_THRESHOLD=3;
+function homeTasteLibraryStatus(){
+  var active=clients.filter(function(c){return !c.deleted && !c.archived;});
+  if(!active.length) return null;
+  var starred=active.filter(function(c){return c.isMealTemplate;});
+  if(starred.length>=TASTE_LIBRARY_LOW_THRESHOLD) return null;
+  return {starred:starred.length, total:active.length};
+}
+function homeTasteLibraryCardHtml(status){
+  if(!status) return '';
+  return '<div class="hm-card hm-card-info"><div class="hm-card-title">🌟 Βιβλιοθήκη γεύσης</div>'
+    +'<div class="hm-empty" style="font-style:normal">Μόνο '+status.starred+' από '+status.total+' πελάτες συνεισφέρουν ακόμα (⭐ στο πλάνο τους) — τα υπόλοιπα πλάνα βασίζονται περισσότερο σε έτοιμες συνταγές. Σημείωσε μερικά ακόμα καλά πλάνα με ⭐ για πιο ποικίλα αποτελέσματα σε όλους.</div></div>';
+}
+
 // Πελάτες που πλησιάζουν το όριο ανανέωσης πλάνου (βλ. dietsNeedsRenewal/PLAN_RENEWAL_DAYS πιο κάτω
 // σε αυτό το αρχείο) αλλά δεν το έχουν περάσει ακόμα — ώστε ο διαιτολόγος να προλάβει να ετοιμάσει το
 // επόμενο πλάνο πριν γίνει "μπαγιατεμένο" (tier 1 στο homeClientsNeedingAttention), όχι μόνο αφού συμβεί.
@@ -394,6 +413,29 @@ function homeQuickRepublish(clientId,btn){
   });
 }
 
+// Ξαναδημοσιεύει ΟΛΟΥΣ τους πελάτες με ξεπερασμένο σύνδεσμο σε ένα κλικ, αντί ένα-ένα με το
+// υπάρχον κουμπί ανά πελάτη. Σειριακά (ένα-ένα προς το cloud, όχι ταυτόχρονα) — γλιτώνει τα
+// επαναλαμβανόμενα κλικ, δεν είναι ακαριαίο. Συνεχίζει και μετά από τυχόν αποτυχία ενός πελάτη,
+// ώστε ένα σφάλμα να μην μπλοκάρει την υπόλοιπη παρτίδα.
+function homeBulkRepublish(btn){
+  var staleClients=homeStaleLinks();
+  if(!staleClients.length) return;
+  if(!window.Cloud || !window.Cloud.publishPlan){ showErrorToast('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
+  btn.disabled=true;
+  var idx=0, failed=[];
+  function next(){
+    if(idx>=staleClients.length){
+      if(failed.length) showErrorToast('Απέτυχε η δημοσίευση για: '+failed.map(function(c){return c.name||'πελάτη';}).join(', '));
+      renderHome();
+      return;
+    }
+    var c=staleClients[idx];
+    btn.textContent='Δημοσίευση... ('+(idx+1)+'/'+staleClients.length+')';
+    window.Cloud.publishPlan(c).then(function(){ idx++; next(); }).catch(function(){ failed.push(c); idx++; next(); });
+  }
+  next();
+}
+
 function renderHome(){
   curId=null;
   var main=document.getElementById('main');
@@ -426,10 +468,15 @@ function renderHome(){
   // ένας πελάτης μπορεί να εμφανίζεται εδώ αλλά όχι στο "0" του πλακιδίου, μπερδεύοντας ποιο νούμερο ισχύει.
   var attentionMildCount=attentionList.filter(function(x){return x.tier>1;}).length;
   var attentionCardTitle='⚠️ Χρειάζονται προσοχή'+(attentionMildCount?(' <span style="font-weight:400;font-size:10px;color:#999" title="Το πάνω κόκκινο πλακίδιο μετράει μόνο τα πιο επείγοντα· αυτή η κάρτα δείχνει και τα πιο ήπια θέματα.">('+attentionMildCount+' πιο ήπια 🟡)</span>'):'');
-  var staleRows=homeStaleLinks().map(function(c){
+  var staleClients=homeStaleLinks();
+  var staleRows=staleClients.map(function(c){
     return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
       '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
   });
+  // Bulk κουμπί μόνο όταν αξίζει (2+ πελάτες) — για 1 το ήδη υπάρχον ανά-γραμμή κουμπί αρκεί.
+  var staleCardTitle='🔗 Ξεπερασμένοι σύνδεσμοι'+(staleClients.length>1
+    ?(' <button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeBulkRepublish(this)">Ξαναδημοσίευσε όλους ('+staleClients.length+')</button>')
+    :'');
   var activityRows=homePortalActivity().map(function(x){
     var sub=x.gap===0?'σήμερα':(x.gap===1?'χθες':'πριν '+x.gap+' ημέρες');
     return homeRow(x.c,sub,'teal');
@@ -467,15 +514,17 @@ function renderHome(){
     +'</div>';
 
   var groupBreakdown=homeGroupBreakdown(buckets);
+  var tasteLibraryStatus=homeTasteLibraryStatus();
   var gridCards=[
     homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'ακόμα', 'warning'),
     homeCard(attentionCardTitle, attentionRows, 'ακόμα', 'danger'),
     homeCard('🔜 Πλησιάζει ανανέωση', approachingRenewalRows, 'ακόμα', 'warning'),
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
     homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
-    homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'ακόμα', 'warning'),
+    homeCard(staleCardTitle, staleRows, 'ακόμα', 'warning'),
     isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info'):'',
     groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
+    tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):'',
     homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info')
   ].filter(function(c){return c;});
 
@@ -680,6 +729,7 @@ function renderClients(){
     +'<option value="name"'+sel(_clientSortMode,'name')+'>🔤 Όνομα (Α-Ω)</option>'
     +'<option value="stale"'+sel(_clientSortMode,'stale')+'>⚠️ Μπαγιατεμένο πλάνο πρώτα</option>'
     +'</select>';
+  html+='<button class="add-btn add-btn-toolbar" onclick="toggleClientBulkMode()">'+(_clientBulkMode?'✕ Έξοδος επιλογής':'☑️ Επιλογή πολλαπλών')+'</button>';
   html+='<button class="add-btn add-btn-toolbar" onclick="addClient()">+ Νέος πελάτης</button>';
   html+='</div>';
 
@@ -688,4 +738,61 @@ function renderClients(){
 
   main.innerHTML=html;
   renderSB();
+}
+
+// ── Πολλαπλή επιλογή πελατών (bulk ανάθεση ομάδας) ──────────────────────────
+// Δεν υπήρχε κανένα bulk εργαλείο μέχρι τώρα (ανάθεση ομάδας γινόταν ένα-ένα, μέσα στο
+// προφίλ κάθε πελάτη) — αυτό αφήνει το ίδιο πάτημα καρτών, απλά αλλάζει τι κάνει το κλικ.
+function toggleClientBulkMode(){
+  _clientBulkMode=!_clientBulkMode;
+  if(!_clientBulkMode) _clientBulkSelected={};
+  renderSB();
+}
+function toggleClientBulkSelect(clientId){
+  if(_clientBulkSelected[clientId]) delete _clientBulkSelected[clientId];
+  else _clientBulkSelected[clientId]=true;
+  renderSB();
+}
+// Ίδιο μοτίβο reveal με το single-client group picker (js/app-part2.js, inp-group.onchange) —
+// "+ Νέα ομάδα…" αποκαλύπτει ένα πεδίο κειμένου αντί να δημιουργεί κατευθείαν.
+function onBulkGroupSelectChange(selEl){
+  var row=document.getElementById('bulk-group-new-row');
+  if(!row) return;
+  if(selEl.value==='__new__'){
+    row.style.display='inline-flex';
+    var inp=document.getElementById('bulk-group-new');
+    if(inp){ inp.value=''; inp.focus(); }
+  } else {
+    row.style.display='none';
+  }
+}
+function _bulkSelectedClientIds(){
+  return Object.keys(_clientBulkSelected).filter(function(id){return _clientBulkSelected[id];});
+}
+function _applyGroupToSelected(groupValue){
+  var ids=_bulkSelectedClientIds();
+  if(!ids.length) return;
+  ids.forEach(function(id){
+    var c=clients.find(function(x){return x.id===id;});
+    if(c) c.group=groupValue;
+  });
+  save();
+  _clientBulkMode=false;
+  _clientBulkSelected={};
+  renderSB();
+}
+function applyBulkGroupAssign(){
+  var sel=document.getElementById('bulk-group-select');
+  var val=sel?sel.value:'';
+  if(!val || val==='__new__') return; // "+ Νέα ομάδα…" εφαρμόζεται μέσω applyBulkGroupNew(), όχι εδώ
+  _applyGroupToSelected(val==='__none__'?'':val);
+}
+function applyBulkGroupNew(){
+  var inp=document.getElementById('bulk-group-new');
+  var name=(inp&&inp.value||'').trim();
+  if(!name) return;
+  // αν υπάρχει ήδη ίδια ομάδα (διαφορετικά κεφαλαία/κενά), χρησιμοποίησε την υπάρχουσα ακριβή τιμή
+  // αντί να δημιουργήσεις σχεδόν-διπλότυπο κατά λάθος (ίδιο σκεπτικό με το single-client picker)
+  var existing=(typeof getAllGroupNames==='function'?getAllGroupNames():[]).find(function(g){return normalizeGroupName(g)===normalizeGroupName(name);});
+  _applyGroupToSelected(existing||name);
 }

@@ -2601,6 +2601,12 @@ var _clientFilterGoal='';
 var _clientFilterSport='';
 var _clientFilterGroup='';
 var _clientFilterStatus=''; // '' | 'active' (έχει πλάνο) | 'noplan' (χωρίς πλάνο) — βλ. setClientFilter
+// Λειτουργία πολλαπλής επιλογής στη σελίδα Πελάτες (βλ. toggleClientBulkMode/applyBulkGroupAssign,
+// js/app-part5-home.js) — δηλώνονται εδώ, όχι εκεί, γιατί renderSB() (πιο κάτω σε αυτό το αρχείο) τις
+// διαβάζει και ένα early auth-callback μπορεί να καλέσει renderSB() πριν προλάβει να φορτώσει εκείνο
+// το αρχείο (ίδιο ζήτημα με το initials() πιο πάνω).
+var _clientBulkMode=false;
+var _clientBulkSelected={}; // clientId -> true
 // Ενιαία πηγή αλήθειας για "ποιες ομάδες υπάρχουν" — χρησιμοποιείται και από το φίλτρο
 // στη σελίδα Πελάτες και από το επιλογέα ομάδας στο προφίλ πελάτη, ώστε να μη διαφωνήσουν ποτέ.
 function getAllGroupNames(){
@@ -2764,17 +2770,23 @@ function renderSB(){
       var sportInfo=(typeof SPORT_INFO!=='undefined')?SPORT_INFO[c.sport]:null;
       var sport=sportInfo?(' • '+sportInfo.icon+' '+sportInfo.label):'';
       var groupTag=c.group?(' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>'):'';
-      html+='<div class="client-card" onclick="selectClient(\''+c.id+'\')">'
+      var isSel=!!_clientBulkSelected[c.id];
+      var cardClick=_clientBulkMode?('toggleClientBulkSelect(\''+c.id+'\')'):('selectClient(\''+c.id+'\')');
+      html+='<div class="client-card'+(_clientBulkMode&&isSel?' cc-selected':'')+'" onclick="'+cardClick+'">'
         +'<div class="cc-top">'
-        +'<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'
+        +(_clientBulkMode
+          ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')
+          :('<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'))
         +'<div class="cc-headtext">'
         +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+'</div>'
         +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
         +'</div>'
-        +'<div class="cc-actions">'
-        +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
-        +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
-        +'</div>'
+        +(_clientBulkMode?'':(
+          '<div class="cc-actions">'
+          +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
+          +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
+          +'</div>'
+        ))
         +'</div>'
         +'<div class="cc-bottom">'
         +'<span class="cc-status '+(hasActive?'cc-status-active':'cc-status-none')+'">'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
@@ -2784,6 +2796,26 @@ function renderSB(){
         +'</div>';
     });
     html+='</div>';
+  }
+  if(_clientBulkMode){
+    var _bulkSelCount=Object.keys(_clientBulkSelected).filter(function(id){return _clientBulkSelected[id];}).length;
+    var _bulkGroupNames=(typeof getAllGroupNames==='function')?getAllGroupNames():[];
+    var _bulkBarHtml='<div class="bulk-action-bar">'
+      +'<span class="bulk-count">'+_bulkSelCount+' επιλεγμένοι</span>'
+      +'<select id="bulk-group-select" class="clients-toolbar-select" aria-label="Ομάδα προορισμού" onchange="onBulkGroupSelectChange(this)">'
+      +'<option value="">— Επίλεξε ομάδα —</option>'
+      +'<option value="__none__">Χωρίς ομάδα (αφαίρεση)</option>'
+      +_bulkGroupNames.map(function(g){return '<option value="'+esc(g)+'">'+esc(g)+'</option>';}).join('')
+      +'<option value="__new__">+ Νέα ομάδα…</option>'
+      +'</select>'
+      +'<span id="bulk-group-new-row" style="display:none;gap:6px;align-items:center">'
+      +'<input type="text" id="bulk-group-new" placeholder="Όνομα νέας ομάδας" class="client-search-inp" style="width:160px;margin:0">'
+      +'<button type="button" class="hm-action-btn" onclick="applyBulkGroupNew()">✓ Εφαρμογή</button>'
+      +'</span>'
+      +'<button type="button" class="hm-action-btn" onclick="applyBulkGroupAssign()"'+(_bulkSelCount?'':' disabled')+'>Εφαρμογή σε '+_bulkSelCount+'</button>'
+      +'<button type="button" class="hm-action-btn" style="background:#F1EFE8;color:#5F5E5A" onclick="toggleClientBulkMode()">Άκυρο</button>'
+      +'</div>';
+    html=_bulkBarHtml+html;
   }
 
   // ✅ ARCHIVE SECTION: Show archived (but not deleted) clients

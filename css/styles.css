@@ -64,6 +64,14 @@ body.dark-mode .undo-redo-btn:disabled{color:#555}
 .cc-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
 .cc-avatar{width:38px;height:38px;border-radius:50%;background:#f0f7f7;color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .cc-avatar-active{background:var(--teal);color:#fff}
+.cc-bulk-check{width:38px;height:38px;border-radius:50%;border:2px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;background:#fff}
+.cc-bulk-check.checked{background:var(--teal);border-color:var(--teal)}
+.client-card.cc-selected{border-color:var(--teal);box-shadow:0 0 0 2px rgba(2,88,87,.15)}
+.bulk-action-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#f0f7f7;border:1px solid #b2d8d8;border-radius:12px;padding:10px 14px;margin-bottom:14px}
+.bulk-action-bar .bulk-count{font-size:12px;font-weight:700;color:var(--teal);white-space:nowrap}
+body.dark-mode .cc-bulk-check{background:#242424;border-color:#555}
+body.dark-mode .client-card.cc-selected{box-shadow:0 0 0 2px rgba(79,195,247,.2)}
+body.dark-mode .bulk-action-bar{background:#182525;border-color:#2c4a49}
 .cc-headtext{flex:1;min-width:0}
 .cc-name{font-weight:700;color:var(--teal);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-sub{font-size:11px;color:#6b6b6b;margin-top:2px}
@@ -143,7 +151,7 @@ body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f
 .hm-card-warning{border-left-color:#EF9F27}
 .hm-card-info{border-left-color:var(--teal)}
 .hm-card-success{border-left-color:#4CAF50}
-.hm-card-title{font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px}
+.hm-card-title{font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
 .hm-row{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid #f5f5f5;cursor:pointer;font-size:12px}
 .hm-row:last-child{border-bottom:none}
 .hm-row:hover{background:#fafcfc}
