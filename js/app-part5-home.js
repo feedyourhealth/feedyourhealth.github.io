@@ -277,6 +277,38 @@ function homeResolvePlanAction(clientId,apptIdx){
   renderHome();
 }
 
+// Ομαδοποίηση πελατών ανά c.group (βλ. getAllGroupNames, app-part1.js), με το ίδιο κόκκινο/κίτρινο/
+// πράσινο σήμα του homeAttentionBuckets() ώστε να φαίνεται με μια ματιά ποια ομάδα χρειάζεται προσοχή —
+// χρήσιμο όταν πολλαπλοί προπονητές/ομάδες μοιράζονται τον ίδιο λογαριασμό.
+function homeGroupBreakdown(buckets){
+  var groupNames=(typeof getAllGroupNames==='function')?getAllGroupNames():[];
+  if(!groupNames.length) return [];
+  var statusOf={};
+  buckets.red.forEach(function(x){statusOf[x.c.id]='red';});
+  buckets.amber.forEach(function(x){if(!statusOf[x.c.id])statusOf[x.c.id]='amber';});
+  var out=groupNames.map(function(g){
+    var members=clients.filter(function(c){return !c.deleted && !c.archived && c.group===g;});
+    var red=0,amber=0;
+    members.forEach(function(c){ if(statusOf[c.id]==='red')red++; else if(statusOf[c.id]==='amber')amber++; });
+    return {name:g,total:members.length,red:red,amber:amber};
+  });
+  out.sort(function(a,b){ return b.red!==a.red?b.red-a.red:b.amber-a.amber; });
+  return out;
+}
+function homeGroupChip(g){
+  var accent=g.red>0?'red':(g.amber>0?'amber':'green');
+  // Ίδιο μοτίβο διαφυγής μονού εισαγωγικού με app-part2.js (π.χ. :2818) — το group name είναι
+  // ελεύθερο κείμενο από τον χρήστη, όχι id, άρα δεν είναι ασφαλές να μπει ωμό μέσα σε onclick="...".
+  var gJs=g.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  var sub=g.red>0?(g.red+' 🔴'):(g.amber>0?(g.amber+' 🟡'):'✓ όλα εντάξει');
+  return '<span class="hm-group-chip hm-group-chip-'+accent+'" onclick="setClientFilter(\'group\',\''+gJs+'\');swTab(7)" title="Δες τους πελάτες της ομάδας '+esc(g.name)+'">🏷️ '+esc(g.name)+' · '+g.total+' · '+sub+'</span>';
+}
+function homeGroupsCardHtml(groups){
+  if(!groups.length) return '';
+  return '<div class="hm-card hm-card-info"><div class="hm-card-title">🏷️ Ανά ομάδα</div>'
+    +'<div class="hm-group-chips">'+groups.map(homeGroupChip).join('')+'</div></div>';
+}
+
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
@@ -339,6 +371,11 @@ function renderHome(){
   var attentionRows=attentionList.map(function(x){
     return homeRow(x.c, x.label, 'red', x.action);
   });
+  // Η κάρτα δείχνει ΟΛΑ τα tiers (και τα πιο ήπια 2/3 = μέτρηση/check-in gap), ενώ το κόκκινο
+  // πλακίδιο από πάνω μετράει μόνο tier<=1 (βλ. homeAttentionBuckets) — χωρίς αυτή τη διευκρίνιση
+  // ένας πελάτης μπορεί να εμφανίζεται εδώ αλλά όχι στο "0" του πλακιδίου, μπερδεύοντας ποιο νούμερο ισχύει.
+  var attentionMildCount=attentionList.filter(function(x){return x.tier>1;}).length;
+  var attentionCardTitle='⚠️ Χρειάζονται προσοχή'+(attentionMildCount?(' <span style="font-weight:400;font-size:10px;color:#999" title="Το πάνω κόκκινο πλακίδιο μετράει μόνο τα πιο επείγοντα· αυτή η κάρτα δείχνει και τα πιο ήπια θέματα.">('+attentionMildCount+' πιο ήπια 🟡)</span>'):'');
   var staleRows=homeStaleLinks().map(function(c){
     return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
       '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
@@ -373,18 +410,20 @@ function renderHome(){
   html+='<div class="hm-stats">'
     +'<div class="hm-stat"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
     +'<div class="hm-stat"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
-    +'<div class="hm-stat"><div class="hm-stat-num">'+measuredToday.length+'</div><div class="hm-stat-lbl">Μετρήσεις σήμερα</div>'
+    +'<div class="hm-stat hm-stat-clickable" onclick="toggleQA(\'qa-quickmeasure\')" onkeydown="if(event.key===\'Enter\')toggleQA(\'qa-quickmeasure\')" role="button" tabindex="0" title="Άνοιγμα γρήγορης μέτρησης"><div class="hm-stat-num">'+measuredToday.length+'</div><div class="hm-stat-lbl">Μετρήσεις σήμερα</div>'
     +(measuredToday.length?'<div class="hm-stat-names">'+measuredToday.map(function(c){return esc(c.name||'');}).join(', ')+'</div>':'')
     +'</div>'
     +'</div>';
 
+  var groupBreakdown=homeGroupBreakdown(buckets);
   var gridCards=[
     homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'ακόμα', 'warning'),
-    homeCard('⚠️ Χρειάζονται προσοχή', attentionRows, 'ακόμα', 'danger'),
+    homeCard(attentionCardTitle, attentionRows, 'ακόμα', 'danger'),
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
     homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
     homeCard('🔗 Ξεπερασμένοι σύνδεσμοι', staleRows, 'ακόμα', 'warning'),
     isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info'):'',
+    groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
     homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info')
   ].filter(function(c){return c;});
 

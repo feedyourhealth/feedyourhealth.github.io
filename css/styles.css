@@ -132,6 +132,9 @@ body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f
 .hm-stat-num{font-size:26px;font-weight:700;color:var(--teal)}
 .hm-stat-lbl{font-size:11px;color:#666;margin-top:2px}
 .hm-stat-names{font-size:9.5px;color:#6b6b6b;margin-top:4px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-stat-clickable{cursor:pointer}
+.hm-stat-clickable:hover,.hm-stat-clickable:focus-visible{background:#e3f0f0}
+.hm-stat-clickable:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
 .hm-card{background:#fff;border:1px solid #e0e0e0;border-left:4px solid #e0e0e0;border-radius:14px;padding:14px 16px;container-type:inline-size}
 .hm-card-danger{border-left-color:#E24B4A}
@@ -174,6 +177,14 @@ body.dark-mode .hm-trend-bad{background:#3a1a1a;color:#f09595}
 body.dark-mode .hm-tile-red{background:#3a1a1a;color:#f09595}
 body.dark-mode .hm-tile-amber{background:#3a2a10;color:#fac775}
 body.dark-mode .hm-tile-green{background:#14301a;color:#8bc98f}
+.hm-group-chips{display:flex;flex-wrap:wrap;gap:8px}
+.hm-group-chip{font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;cursor:pointer;white-space:nowrap;display:inline-block}
+.hm-group-chip-red{background:#FCEBEB;color:#791F1F}
+.hm-group-chip-amber{background:#FAEEDA;color:#633806}
+.hm-group-chip-green{background:var(--success-tint);color:#1E5E24}
+body.dark-mode .hm-group-chip-red{background:#3a1a1a;color:#f09595}
+body.dark-mode .hm-group-chip-amber{background:#3a2a10;color:#fac775}
+body.dark-mode .hm-group-chip-green{background:#14301a;color:#8bc98f}
 /* .hm-card is a query container (see container-type above): when it's too narrow
    for avatar+name+sub-text+action button on one line — happens both on mobile
    viewports AND on desktop in the 2-column Αρχική grid — drop the button to its
@@ -183,6 +194,7 @@ body.dark-mode .hm-tile-green{background:#14301a;color:#8bc98f}
   .hm-row .hm-action-btn{flex-basis:100%;margin-top:4px}
 }
 body.dark-mode .hm-stat{background:#1a1a1a;border-color:#444}
+body.dark-mode .hm-stat-clickable:hover,body.dark-mode .hm-stat-clickable:focus-visible{background:#243a3a}
 body.dark-mode .hm-stat-num{color:#4fc3f7}
 body.dark-mode .hm-stat-lbl{color:#aaa}
 body.dark-mode .hm-stat-names{color:#888}
