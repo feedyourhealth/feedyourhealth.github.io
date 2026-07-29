@@ -1167,7 +1167,7 @@ function genPlan(){
       // vegan/vegetarian/orthodox_fasting client would otherwise carry their meat/fish/dairy over
       // completely unfiltered (confirmed live: 41 category violations in one such test). This path
       // returns early, before the same check that already runs on the template-generation path below.
-      applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays);
+      applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays, c.dietFoodExceptionDays);
 
       // ✅ LOG PLAN TO TRACKING SYSTEM — this path used to skip logging entirely, so plans made
       // by cloning an existing client never appeared in Στατιστικά Γευμάτων (2026-07-10 fix).
@@ -1281,10 +1281,13 @@ function genPlan(){
     console.log('Taste library: '+mealLibrary.length+' meals harvested from ⭐ template clients');
     for(var d=0;d<7;d++){
       var dayExc = (isOrthodoxFasting && c.dietExceptionDays && c.dietExceptionDays[d]) || [];
+      // Finer sibling of dayExc — specific allowed foods (e.g. only "Χταπόδι") rather than a whole
+      // category — set via the food-picker's "📅 Εξαιρέσεις ημέρας" tab (buildFoodDayExceptionsHtml).
+      var dayFoodExc = (isOrthodoxFasting && c.dietFoodExceptionDays && c.dietFoodExceptionDays[d]) || [];
       // Orthodox Fasting, non-exception day: leave the static fasting template untouched, exactly
       // as before this feature existed. Only an excepted day (or any other diet type, unchanged) proceeds.
-      if(isOrthodoxFasting && dayExc.length===0) continue;
-      var dayDietType = dayExc.length ? 'normal' : c.dietType;
+      if(isOrthodoxFasting && dayExc.length===0 && dayFoodExc.length===0) continue;
+      var dayDietType = (dayExc.length || dayFoodExc.length) ? 'normal' : c.dietType;
       for(var mi=0;mi<tmplDays[d].length;mi++){
         var meal = tmplDays[d][mi];
         var targetKcal = eff[d].meals[mi].k;  // Per-meal calorie target
@@ -1511,7 +1514,7 @@ function genPlan(){
 
   // ✅ DIET-TYPE SAFETY NET: strip any food from a category the client's diet type
   // forbids, regardless of which code path (recipe, taste library, saved combo...) put it there.
-  applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays);
+  applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays, c.dietFoodExceptionDays);
 
   // ✅ LOG PLAN TO TRACKING SYSTEM
   logPlanGeneration(c, c.weekPlan);

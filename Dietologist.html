@@ -2322,7 +2322,44 @@ function saveDietSettings(){
   renderMain();
 }
 
-// ✅ MODAL 7: FOOD PICKER (for exclusions)
+// Per-day FOOD-level exceptions (finer than the category grid in buildDietExceptionsHtml —
+// e.g. only "Χταπόδι" allowed on a given day, not the whole Ψάρια category). Only foods from
+// the client's dietType's forbidden categories are listed (picking a day-exception for a food
+// that's already allowed every day would be meaningless). Stored separately from
+// c.dietExceptionDays (category-level) as c.dietFoodExceptionDays — {dayIndex:[foodName,...]} —
+// so the two UIs (Διατροφή modal's grid vs this food-picker tab) never clobber each other.
+function buildFoodDayExceptionsHtml(c){
+  var cats=DIET_TYPE_FORBIDDEN_CATS[c.dietType];
+  if(!cats||!cats.length){
+    return '<div style="padding:20px;color:#999;font-style:italic;text-align:center">Δεν ισχύουν εξαιρέσεις για τον τύπο διατροφής «'+esc(c.dietType||'normal')+'».</div>';
+  }
+  var dayAbbr=DAYS.map(function(d){return d.substring(0,3);});
+  var exc=c.dietFoodExceptionDays||{};
+  var html='<div style="font-size:11px;color:#666;margin-bottom:10px">Τσέκαρε τις μέρες που επιτρέπεται ΣΥΓΚΕΚΡΙΜΕΝΑ αυτό το τρόφιμο (π.χ. μόνο «Χταπόδι» σε γιορτή, όχι όλη η κατηγορία Ψάρια).</div>';
+  cats.forEach(function(cat){
+    var foodsInCat=Object.keys(FOODS).filter(function(n){return FOODS[n]&&FOODS[n].cat===cat;}).sort();
+    if(!foodsInCat.length)return;
+    html+='<div style="margin-bottom:16px">'
+      +'<div style="font-weight:700;color:#025857;padding:8px 10px;background:#E2EEE5;border-radius:6px;margin-bottom:8px">📁 '+esc(cat)+'</div>';
+    foodsInCat.forEach(function(foodName){
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:5px 8px;border-bottom:1px solid #f0f0f0">'
+        +'<span style="font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(foodName)+'</span>'
+        +'<div style="display:flex;gap:4px">';
+      dayAbbr.forEach(function(abbr,d){
+        var allowed=(exc[d]||exc[String(d)]||[]).indexOf(foodName)!==-1;
+        html+='<label title="'+DAYS[d]+'" style="display:flex;flex-direction:column;align-items:center;font-size:9px;color:#666;cursor:pointer">'
+          +abbr
+          +'<input type="checkbox" data-food-day-exc="'+esc(foodName)+'" data-food-day-exc-day="'+d+'" '+(allowed?'checked':'')+' style="width:13px;height:13px;cursor:pointer;margin-top:2px">'
+          +'</label>';
+      });
+      html+='</div></div>';
+    });
+    html+='</div>';
+  });
+  return html;
+}
+
+// ✅ MODAL 7: FOOD PICKER (for exclusions + per-day food exceptions)
 function openFoodPickerModal(){
   var c=getC();if(!c)return;
 
@@ -2335,6 +2372,8 @@ function openFoodPickerModal(){
     foodsByCategory[cat].push(foodName);
   }
 
+  var hasExceptionTab=!!(DIET_TYPE_FORBIDDEN_CATS[c.dietType]&&DIET_TYPE_FORBIDDEN_CATS[c.dietType].length);
+
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="foodPickerOverlay" onclick="if(event.target===this)closeFoodPickerModal()">'
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
@@ -2342,6 +2381,14 @@ function openFoodPickerModal(){
     +'<button onclick="closeFoodPickerModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
     +'</div>'
 
+    +(hasExceptionTab
+      ?'<div style="display:flex;gap:6px;margin-bottom:15px;border-bottom:1px solid #eee">'
+        +'<button id="fp-tab-btn-excl" onclick="switchFoodPickerTab(\'excl\')" style="padding:8px 14px;border:none;background:none;border-bottom:2px solid #025857;color:#025857;font-weight:600;cursor:pointer;font-size:13px">🚫 Αποκλεισμοί</button>'
+        +'<button id="fp-tab-btn-dayexc" onclick="switchFoodPickerTab(\'dayexc\')" style="padding:8px 14px;border:none;background:none;border-bottom:2px solid transparent;color:#666;font-weight:600;cursor:pointer;font-size:13px">📅 Εξαιρέσεις ημέρας</button>'
+        +'</div>'
+      :'')
+
+    +'<div id="fp-tab-excl">'
     +'<div style="margin-bottom:15px">'
     +'<input type="text" id="foodSearch" placeholder="🔍 Αναζήτησε τρόφιμο..." style="width:100%;padding:12px;border:1px solid #ddd;border-radius:6px;font-size:14px" oninput="filterFoodPicker(this.value)">'
     +'</div>'
@@ -2352,6 +2399,11 @@ function openFoodPickerModal(){
     +'<div style="border-top:2px solid #ddd;padding-top:15px;margin-top:15px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:10px">✅ ΕΠΙΛΕΓΜΕΝΑ:</label>'
     +'<div id="selectedFoodsChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px"></div>'
+    +'</div>'
+    +'</div>'
+
+    +'<div id="fp-tab-dayexc" style="display:none;max-height:400px;overflow-y:auto">'
+    +(hasExceptionTab?buildFoodDayExceptionsHtml(c):'')
     +'</div>'
 
     +'<div style="display:flex;gap:10px;justify-content:flex-end">'
@@ -2387,6 +2439,20 @@ function openFoodPickerModal(){
 
   document.getElementById('foodPickerContent').innerHTML=contentHtml;
   updateFoodChips();
+}
+
+function switchFoodPickerTab(tab){
+  var exclDiv=document.getElementById('fp-tab-excl');
+  var dayexcDiv=document.getElementById('fp-tab-dayexc');
+  var exclBtn=document.getElementById('fp-tab-btn-excl');
+  var dayexcBtn=document.getElementById('fp-tab-btn-dayexc');
+  if(!exclDiv||!dayexcDiv)return;
+  exclDiv.style.display=(tab==='excl')?'block':'none';
+  dayexcDiv.style.display=(tab==='dayexc')?'block':'none';
+  if(exclBtn)exclBtn.style.borderBottomColor=(tab==='excl')?'#025857':'transparent';
+  if(exclBtn)exclBtn.style.color=(tab==='excl')?'#025857':'#666';
+  if(dayexcBtn)dayexcBtn.style.borderBottomColor=(tab==='dayexc')?'#025857':'transparent';
+  if(dayexcBtn)dayexcBtn.style.color=(tab==='dayexc')?'#025857':'#666';
 }
 
 function closeFoodPickerModal(){
@@ -2438,6 +2504,23 @@ function saveFoodExclusions(){
   });
 
   c.foodExclude=selected;
+
+  // ✅ Per-day FOOD-level exceptions (finer-grained sibling of c.dietExceptionDays' category
+  // grid — see buildFoodDayExceptionsHtml). Stored under its own key so this save never clobbers
+  // the category-level exceptions set via the Διατροφή modal, and vice versa.
+  var dayExcBoxes=document.querySelectorAll('[data-food-day-exc]');
+  if(dayExcBoxes.length){
+    var byDay={};
+    dayExcBoxes.forEach(function(cb){
+      if(!cb.checked)return;
+      var foodName=cb.getAttribute('data-food-day-exc');
+      var d=cb.getAttribute('data-food-day-exc-day');
+      if(!byDay[d])byDay[d]=[];
+      byDay[d].push(foodName);
+    });
+    c.dietFoodExceptionDays=byDay;
+  }
+
   save();
   closeFoodPickerModal();
   showSuccessToast('✅ Αποκλεισμοί τροφών αποθηκεύτηκαν! ('+(selected.length)+' τρόφιμα)');

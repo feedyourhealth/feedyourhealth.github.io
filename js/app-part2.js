@@ -2769,7 +2769,10 @@ var DIET_TYPE_FORBIDDEN_CATS={
 // exceptionsByDay: optional {dayIndexString: [category,...]} — categories a specific day is
 // allowed to keep despite dietType's normal ban (e.g. Ψάρια on a fasting feast day). See
 // [[dietologist-taste-library]]/per-day-exceptions plan — c.dietExceptionDays is the caller.
-function applyDietTypeCategorySafetyNet(weekPlan,dietType,exceptionsByDay){
+// foodExceptionsByDay: optional {dayIndexString: [foodName,...]} — finer sibling (c.dietFoodExceptionDays)
+// letting one specific food through on a day even when its whole category is still forbidden
+// that day (e.g. only "Χταπόδι" allowed, not all of Ψάρια).
+function applyDietTypeCategorySafetyNet(weekPlan,dietType,exceptionsByDay,foodExceptionsByDay){
   var forbiddenCats=DIET_TYPE_FORBIDDEN_CATS[dietType];
   if(!forbiddenCats||!forbiddenCats.length||!weekPlan)return weekPlan;
   // c.weekPlan is a plain object keyed '0'..'6' (NOT a real Array — c.weekPlan={} then
@@ -2778,11 +2781,13 @@ function applyDietTypeCategorySafetyNet(weekPlan,dietType,exceptionsByDay){
   Object.keys(weekPlan).forEach(function(d){
     if(!weekPlan[d])return;
     var dayAllowed=(exceptionsByDay&&exceptionsByDay[d])||[];
+    var dayAllowedFoods=(foodExceptionsByDay&&foodExceptionsByDay[d])||[];
     var dayForbidden=dayAllowed.length ? forbiddenCats.filter(function(cat){return dayAllowed.indexOf(cat)===-1;}) : forbiddenCats;
     for(var mi=0;mi<weekPlan[d].length;mi++){
       var meal=weekPlan[d][mi];
       if(!meal.foods||!meal.foods.length)continue;
       meal.foods=meal.foods.map(function(food){
+        if(dayAllowedFoods.indexOf(food.n)!==-1)return food; // this specific food is excepted today
         var cat=FOODS[food.n]?FOODS[food.n].cat:'';
         if(dayForbidden.indexOf(cat)===-1)return food;
         // Find a substitute via the existing substitution chain, restricted to allowed categories
