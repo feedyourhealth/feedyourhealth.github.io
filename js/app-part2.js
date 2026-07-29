@@ -2753,6 +2753,68 @@ function applyFoodExclusions(tmplDays,excludeList,allergyList){
   return result;
 }
 
+// Builds the same merged exclusion list genPlan() itself uses (c.foodExclude + active medical
+// protocols' avoidFoods + parsed c.allergies) — used so a live re-scrub of an ALREADY-generated
+// plan (see scrubExcludedFoodsFromWeekPlan below) matches exactly what a fresh regenerate would
+// exclude, not just the picker's own list.
+function buildEffectiveExclusionList(c){
+  var excl=(c.foodExclude||[]).slice();
+  var protocolAvoidFoods=(typeof getProtocolAvoidFoods==='function')?getProtocolAvoidFoods(c):[];
+  protocolAvoidFoods.forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
+  if(c.allergies){
+    var allergyList=parseAllergies(c.allergies);
+    allergyList.forEach(function(a){ if(excl.indexOf(a)===-1) excl.push(a); });
+  }
+  return excl;
+}
+
+// Same substitution logic as applyFoodExclusions() above, but mutates an ALREADY-generated
+// c.weekPlan in place (a plain object keyed '0'..'6', not an array — see the same note on
+// applyDietTypeCategorySafetyNet below) instead of a fresh tmplDays array. Without this, saving
+// new exclusions/diet-type rules only takes effect on the NEXT full "Δημιουργία πλάνου" —
+// the food the dietitian just excluded keeps showing in the plan already on screen until then,
+// which reads as "the save didn't work" even though it did.
+function scrubExcludedFoodsFromWeekPlan(weekPlan, excludeList, allergyList){
+  if(!weekPlan) return;
+  if((!excludeList||!excludeList.length)&&(!allergyList||!allergyList.length)) return;
+  Object.keys(weekPlan).forEach(function(d){
+    if(!weekPlan[d]) return;
+    weekPlan[d].forEach(function(meal){
+      if(!meal.foods||!meal.foods.length) return;
+      meal.foods = meal.foods.map(function(food){
+        var isExcluded = excludeList && excludeList.indexOf(food.n) !== -1;
+        var isAllergy = isFoodAllergy(food.n, allergyList);
+        if(!isExcluded && !isAllergy) return food;
+        var cat=FOODS[food.n]?FOODS[food.n].cat:'';
+        var order=SUBST_ORDER[cat]||[cat];
+        var sub=null;
+        for(var i=0;i<order.length&&!sub;i++){
+          var candidates=Object.keys(FOODS).filter(function(n){
+            if(!FOODS[n])return false;
+            var notExcluded = !excludeList || excludeList.indexOf(n) === -1;
+            var notAllergy = !isFoodAllergy(n, allergyList);
+            return FOODS[n].cat===order[i] && notExcluded && notAllergy;
+          });
+          if(candidates.length){
+            var origDens=FOODS[food.n]?FOODS[food.n].k:100;
+            candidates.sort(function(a,b){
+              if(!FOODS[a]||!FOODS[b])return 0;
+              return Math.abs(FOODS[a].k-origDens)-Math.abs(FOODS[b].k-origDens);
+            });
+            sub=candidates[0];
+          }
+        }
+        if(sub){
+          var origK=FOODS[food.n]?FOODS[food.n].k:100;
+          var subK=FOODS[sub].k||100;
+          return{n:sub,g:Math.max(10,Math.round(food.g*(origK/subK)))};
+        }
+        return{n:'__EXCLUDED__',g:0};
+      }).filter(function(f){return f.n!=='__EXCLUDED__';});
+    });
+  });
+}
+
 // ── Diet-Type Category Safety Net ────────────────────────────────────────────
 // Final defense-in-depth pass: regardless of WHICH code path put a food into a meal
 // (Mediterranean rules, chef recipes, taste library, saved combos...), this strips
@@ -2763,7 +2825,11 @@ function applyFoodExclusions(tmplDays,excludeList,allergyList){
 var DIET_TYPE_FORBIDDEN_CATS={
   'vegan':['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Γαλακτοκομικά'],
   'vegetarian':['Κρέας','Ψάρια'],
-  'orthodox_fasting':['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Γαλακτοκομικά']
+  // 'Λάδια' (oil) added 2026-07-29 per dietitian request — lets the per-day exceptions grid
+  // (buildDietExceptionsHtml) control oil the same way as meat/fish/eggs/dairy: forbidden by
+  // default every day, dietitian ticks the days it's allowed (use "Όλες οι μέρες" to allow the
+  // whole week in one click, then untick just the strict ξηροφαγία days).
+  'orthodox_fasting':['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Γαλακτοκομικά','Λάδια']
 };
 
 // exceptionsByDay: optional {dayIndexString: [category,...]} — categories a specific day is

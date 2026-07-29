@@ -2368,6 +2368,13 @@ function saveDietSettings(){
     c.dietExceptionDays=byDay;
   }
 
+  // ✅ Apply the just-saved exclusions/diet-type rules to the ALREADY-generated plan too, not
+  // just the next full regenerate — see scrubExcludedFoodsFromWeekPlan (js/app-part2.js) for why.
+  if(c.weekPlan && Object.keys(c.weekPlan).length){
+    scrubExcludedFoodsFromWeekPlan(c.weekPlan, buildEffectiveExclusionList(c));
+    applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays, c.dietFoodExceptionDays);
+  }
+
   save();
   closeDietModal();
   showSuccessToast('✅ Διατροφικές ρυθμίσεις αποθηκεύτηκαν!');
@@ -2573,9 +2580,24 @@ function saveFoodExclusions(){
     c.dietFoodExceptionDays=byDay;
   }
 
+  // ✅ Apply immediately to the already-generated plan too (see saveDietSettings for why —
+  // otherwise a food just excluded here keeps showing in the plan until the next regenerate).
+  if(c.weekPlan && Object.keys(c.weekPlan).length){
+    scrubExcludedFoodsFromWeekPlan(c.weekPlan, buildEffectiveExclusionList(c));
+    applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays, c.dietFoodExceptionDays);
+  }
+
   save();
   closeFoodPickerModal();
   showSuccessToast('✅ Αποκλεισμοί τροφών αποθηκεύτηκαν! ('+(selected.length)+' τρόφιμα)');
+
+  // The underlying Διατροφή modal (if still open behind this one) built its exclusion-count
+  // button/summary text from the OLD c.foodExclude at open time — refresh it so it doesn't
+  // keep showing a stale count/list after this save.
+  if(document.getElementById('dietModal')){
+    closeDietModal();
+    openDietModal();
+  }
 }
 </script>
 
