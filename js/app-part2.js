@@ -2854,10 +2854,20 @@ function applyDietTypeCategorySafetyNet(weekPlan,dietType,exceptionsByDay,foodEx
       if(!meal.foods||!meal.foods.length)continue;
       meal.foods=meal.foods.map(function(food){
         if(dayAllowedFoods.indexOf(food.n)!==-1)return food; // this specific food is excepted today
-        var cat=FOODS[food.n]?FOODS[food.n].cat:'';
-        if(dayForbidden.indexOf(cat)===-1)return food;
+        var fd=FOODS[food.n];
+        var cat=fd?fd.cat:'';
+        // Composite "recipe" FOODS entries (cat:'Συνταγές'/'Συνταγές FYH', e.g. "Κοτόπουλο Pesto
+        // & Φέτα" or "Ψάρι στο Φούρνο (FYH)") are tagged generically — their .cat doesn't reveal
+        // the meat/fish/egg/dairy actually inside the dish, so without this check they sailed
+        // through this safety net completely untouched (found 2026-07-29: a real client reported
+        // forbidden foods still appearing in a fasting plan with zero exceptions set). 'containsCats'
+        // (data.js) lists any forbidden-category ingredients hiding inside such a dish.
+        var hiddenForbidden=(fd&&fd.containsCats)?fd.containsCats.filter(function(hc){return dayForbidden.indexOf(hc)!==-1;}):[];
+        if(dayForbidden.indexOf(cat)===-1 && !hiddenForbidden.length)return food;
         // Find a substitute via the existing substitution chain, restricted to allowed categories
-        var order=SUBST_ORDER[cat]||[cat];
+        // (for a composite dish, substitute based on its first hidden forbidden category, since
+        // its own .cat — e.g. 'Συνταγές FYH' — has no meaningful SUBST_ORDER entry)
+        var order=SUBST_ORDER[hiddenForbidden.length?hiddenForbidden[0]:cat]||[hiddenForbidden.length?hiddenForbidden[0]:cat];
         var sub=null;
         for(var i=0;i<order.length&&!sub;i++){
           if(dayForbidden.indexOf(order[i])!==-1)continue; // still forbidden, skip

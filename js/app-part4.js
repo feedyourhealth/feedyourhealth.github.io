@@ -2573,8 +2573,12 @@ function generateDiverseAlternatives(targetCalories, dayIndex, excludedFoods, me
   function isDietForbidden(foodName){
     if(!dayForbiddenCats.length) return false;
     if(dayAllowedFoods.indexOf(foodName)!==-1) return false;
-    var foodCat = FOODS[foodName] ? FOODS[foodName].cat : '';
-    return dayForbiddenCats.indexOf(foodCat)!==-1;
+    var fd = FOODS[foodName];
+    var foodCat = fd ? fd.cat : '';
+    if(dayForbiddenCats.indexOf(foodCat)!==-1) return true;
+    // Same composite-dish blind spot as applyDietTypeCategorySafetyNet (js/app-part2.js) —
+    // a "Συνταγές FYH"-tagged dish can hide meat/fish/eggs that its own .cat doesn't reveal.
+    return !!(fd && fd.containsCats && fd.containsCats.some(function(hc){return dayForbiddenCats.indexOf(hc)!==-1;}));
   }
 
   // Collect different protein options based on meal type
