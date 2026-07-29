@@ -270,12 +270,12 @@ function harvestMealLibrary(excludeClientId){
       harvestDays(cl.weekPlan, 'lib_'+cl.id, cl.dietType||'normal', cl.name);
     });
   }
-  // Named templates have no dietType field (only a calorie/goal category) — default to 'normal'
-  // like unset-dietType clients above, so restrictive-diet clients (vegan/keto/…) correctly skip them.
+  // Templates saved before 2026-07-29 have no dietType field — default to 'normal' like
+  // unset-dietType clients above, so restrictive-diet clients (vegan/keto/…) correctly skip them.
   if(typeof customTemplates!=='undefined' && customTemplates && customTemplates.length){
     customTemplates.forEach(function(ct){
       if(!ct || !ct.days) return;
-      harvestDays(ct.days, 'tmpl_'+ct.id, 'normal', ct.name);
+      harvestDays(ct.days, 'tmpl_'+ct.id, ct.dietType||'normal', ct.name);
     });
   }
   return lib;

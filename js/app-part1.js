@@ -2890,10 +2890,11 @@ function renderTemplateEditor(){
       +'<div class="custom-tmpls-list">';
     customTemplates.forEach(function(ct){
       var gl=GOAL_LABELS[ct.goal]||ct.goal;
+      var db=DIET_TYPE_BADGE[ct.dietType||'normal'];
       custHtml+='<div class="custom-tmpl-item">'
         +'<div class="custom-tmpl-info">'
         +'<span class="custom-tmpl-name">'+esc(ct.name)+'</span>'
-        +'<span class="custom-tmpl-meta">'+gl+' · '+esc(ct.createdAt)+(ct.clientName?' · από: '+esc(ct.clientName):'')+'</span>'
+        +'<span class="custom-tmpl-meta">'+gl+(db?' · '+db:'')+' · '+esc(ct.createdAt)+(ct.clientName?' · από: '+esc(ct.clientName):'')+'</span>'
         +'</div>'
         +'<button class="met-del" onclick="deleteCustomTmpl(\''+ct.id+'\')" title="Διαγραφή">&#10005;</button>'
         +'</div>';
@@ -3007,22 +3008,34 @@ function buildTmplSelectorHtml(c){
   kcalKeys.forEach(function(k){
     opts+='<option value="__kcal_'+k+'"'+(sel==='__kcal_'+k?' selected':'')+'>📊 '+GOAL_LABELS[k]+'</option>';
   });
-  // User-saved custom templates
+  // User-saved custom templates — same-diet templates first (e.g. a fasting client sees their
+  // "Νηστεία" templates at the top of the list instead of buried among unrelated ones).
+  var sameDietTmpls=[], otherTmpls=[];
   customTemplates.forEach(function(ct){
-    var gl=GOAL_LABELS[ct.goal]||ct.goal;
-    opts+='<option value="'+ct.id+'"'+(sel===ct.id?' selected':'')+'>⭐ '+esc(ct.name)+' — '+gl+' ('+esc(ct.createdAt)+')</option>';
+    ((ct.dietType||'normal')===(c.dietType||'normal') ? sameDietTmpls : otherTmpls).push(ct);
   });
-  // Existing clients' plans (as basis for new plans)
+  sameDietTmpls.concat(otherTmpls).forEach(function(ct){
+    var gl=GOAL_LABELS[ct.goal]||ct.goal;
+    var db=DIET_TYPE_BADGE[ct.dietType||'normal'];
+    opts+='<option value="'+ct.id+'"'+(sel===ct.id?' selected':'')+'>⭐ '+esc(ct.name)+' — '+gl+(db?' · '+db:'')+' ('+esc(ct.createdAt)+')</option>';
+  });
+  // Existing clients' plans (as basis for new plans) — same-diet clients first, same reasoning.
   var clientsWithPlans=clients.filter(function(cl){
     var hasWeekPlan=Object.keys(cl.weekPlan||{}).length>0;
     return cl.id!==c.id && hasWeekPlan;
   });
+  var sameDietClients=[], otherClients=[];
+  clientsWithPlans.forEach(function(cl){
+    ((cl.dietType||'normal')===(c.dietType||'normal') ? sameDietClients : otherClients).push(cl);
+  });
+  clientsWithPlans=sameDietClients.concat(otherClients);
   if(clientsWithPlans.length>0){
     opts+='<optgroup label="━━━ Υπάρχοντα πλάνα πελατών ━━━">';
     clientsWithPlans.forEach(function(cl){
       var cGoal=GOAL_LABELS[cl.goalMain]||cl.goalMain;
       var cName=cl.name||'Νέος πελάτης';
-      opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+esc(cName)+' — '+cGoal+'</option>';
+      var cdb=DIET_TYPE_BADGE[cl.dietType||'normal'];
+      opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+esc(cName)+' — '+cGoal+(cdb?' · '+cdb:'')+'</option>';
     });
     opts+='</optgroup>';
   }
@@ -3050,7 +3063,7 @@ function doSaveAsTmpl(){
   var days=[];
   for(var d=0;d<7;d++)days.push(deepClone(c.weekPlan[d]||[]));
   var id='ct'+Date.now();
-  customTemplates.push({id:id,name:name,goal:goal,days:days,
+  customTemplates.push({id:id,name:name,goal:goal,days:days,dietType:c.dietType||'normal',
     createdAt:new Date().toISOString().slice(0,10),
     clientName:c.name||''});
   save();
