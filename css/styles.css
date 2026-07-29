@@ -121,6 +121,8 @@ body.dark-mode .qa-input{background:#242424;border-color:#444;color:#e0e0e0}
 body.dark-mode .qa-row:hover{background:#333}
 body.dark-mode .qa-row-sub{color:#888}
 .hm-nav-btn{display:block;width:calc(100% - 16px);margin:8px 8px 4px;padding:9px 12px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-align:left}
+.home-nav-badge{background:#E24B4A;color:#fff;font-size:9px;font-weight:700;border-radius:999px;padding:0 5px;min-width:14px;height:14px;line-height:14px;display:inline-block;text-align:center;margin-left:6px;vertical-align:middle}
+.home-nav-badge-mobile{position:absolute;top:2px;right:14px;margin-left:0}
 .hm-nav-btn:hover{background:#037070}
 .hm-nav-btn-alt{background:#f0f7f7;color:var(--teal);border:1px solid #b2d8d8;margin-top:0}
 .hm-nav-btn-alt:hover{background:var(--teal-tint)}
@@ -318,7 +320,7 @@ body.dark-mode .rd-delete-btn:hover{background:#3a1f1f}
    width-based media queries here; this was one of 4 overlapping breakpoint systems that
    caused a real collision exactly at 767/768px (fixed 2026-07-12, see [[dietologist-pending-work]]). */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e0e0e0;z-index:99;flex-direction:row;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
-.bottom-nav button{flex:1;background:none;border:none;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#6b6b6b;transition:all .2s}
+.bottom-nav button{position:relative;flex:1;background:none;border:none;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#6b6b6b;transition:all .2s}
 .bottom-nav button.active{color:var(--teal);font-weight:600}
 .bottom-nav button span{font-size:20px}
 

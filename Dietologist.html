@@ -117,7 +117,7 @@ setTimeout(function(){
     <button id="undoBtnGlobal" class="undo-redo-btn" onclick="undo()" title="Αναίρεση (Ctrl+Z)" aria-label="Αναίρεση τελευταίας ενέργειας" disabled>↩</button>
     <button id="redoBtnGlobal" class="undo-redo-btn" onclick="redo()" title="Επανάληψη (Ctrl+Y)" aria-label="Επανάληψη ενέργειας" disabled>↪</button>
   </div>
-  <button type="button" class="hm-nav-btn" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική</button>
+  <button type="button" class="hm-nav-btn" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική<span id="home-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(7)" aria-label="Πελάτες">👥 Πελάτες</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(6)" aria-label="Συνταγές">🍽️ Συνταγές</button>
@@ -213,6 +213,7 @@ setTimeout(function(){
   <button onclick="swTab(0)" class="bottom-nav-btn active" data-tab="0">
     <span>🏠</span>
     <span>Αρχική</span>
+    <span id="home-nav-badge-mobile" class="home-nav-badge home-nav-badge-mobile" style="display:none">0</span>
   </button>
   <button onclick="swTab(1)" class="bottom-nav-btn" data-tab="1">
     <span>📋</span>

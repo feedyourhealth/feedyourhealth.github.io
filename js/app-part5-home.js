@@ -333,6 +333,32 @@ function homeApproachingRenewalRow(x){
     '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+x.c.id+'\')">Δημιούργησε πλάνο τώρα</button>');
 }
 
+// Πάει στη σελίδα Πελάτες με καθαρά φίλτρα + μόνο το ζητούμενο status, ώστε ο αριθμός που έδειξε το
+// στατιστικό στην Αρχική να ταιριάζει ακριβώς με ό,τι θα δει ο χρήστης μετά το κλικ — αντί να
+// κληρονομήσει ένα τυχόν παλιό φίλτρο goal/sport/group/αναζήτησης που έχει μείνει ενεργό από πριν.
+function homeGoToClients(status){
+  _clientSearchTerm='';
+  _clientFilterGoal='';
+  _clientFilterSport='';
+  _clientFilterGroup='';
+  setClientFilter('status',status);
+  swTab(7);
+}
+
+// Ενημερώνει το κόκκινο badge πάνω στο κουμπί "Αρχική" (sidebar + mobile bottom-nav) με το ίδιο
+// νούμερο του κόκκινου tile της Αρχικής, ώστε η εκκρεμότητα να φαίνεται ακόμα κι όταν βρίσκεσαι
+// σε άλλο tab. Καλείται από renderSB() (app-part1.js), που τρέχει μετά από σχεδόν κάθε ενέργεια.
+function updateHomeNavBadge(){
+  var n=0;
+  try{ n=homeAttentionBuckets().red.length; }catch(e){ n=0; }
+  ['home-nav-badge','home-nav-badge-mobile'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    el.textContent=n>99?'99+':String(n);
+    el.style.display=n>0?'inline-block':'none';
+  });
+}
+
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
@@ -433,8 +459,8 @@ function renderHome(){
 
   var measuredToday=homeMeasuredToday();
   html+='<div class="hm-stats">'
-    +'<div class="hm-stat"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
-    +'<div class="hm-stat"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
+    +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Δες όλους τους πελάτες"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
+    +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'active\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'active\')" role="button" tabindex="0" title="Δες πελάτες με ενεργό πλάνο"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="toggleQA(\'qa-quickmeasure\')" onkeydown="if(event.key===\'Enter\')toggleQA(\'qa-quickmeasure\')" role="button" tabindex="0" title="Άνοιγμα γρήγορης μέτρησης"><div class="hm-stat-num">'+measuredToday.length+'</div><div class="hm-stat-lbl">Μετρήσεις σήμερα</div>'
     +(measuredToday.length?'<div class="hm-stat-names">'+measuredToday.map(function(c){return esc(c.name||'');}).join(', ')+'</div>':'')
     +'</div>'
@@ -626,6 +652,11 @@ function renderClients(){
     +'<option value="mild"'+sel(_clientFilterGoal,'mild')+'>Ήπια απώλεια</option>'
     +'<option value="maintain"'+sel(_clientFilterGoal,'maintain')+'>Διατήρηση</option>'
     +'<option value="gain"'+sel(_clientFilterGoal,'gain')+'>Αύξηση μάζας</option>'
+    +'</select>';
+  html+='<select id="client-filter-status" class="clients-toolbar-select" aria-label="Φίλτρο κατάστασης πλάνου" onchange="setClientFilter(\'status\',this.value)">'
+    +'<option value=""'+sel(_clientFilterStatus,'')+'>Κάθε κατάσταση πλάνου</option>'
+    +'<option value="active"'+sel(_clientFilterStatus,'active')+'>📊 Έχει ενεργό πλάνο</option>'
+    +'<option value="noplan"'+sel(_clientFilterStatus,'noplan')+'>⭕ Χωρίς πλάνο</option>'
     +'</select>';
   html+='<select id="client-filter-sport" class="clients-toolbar-select" aria-label="Φίλτρο αθλήματος" onchange="setClientFilter(\'sport\',this.value)">'
     +'<option value=""'+sel(_clientFilterSport,'')+'>Όλα τα αθλήματα</option>';
