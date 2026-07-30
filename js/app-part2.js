@@ -2800,18 +2800,43 @@ function applyFoodExclusions(tmplDays,excludeList,allergyList){
 }
 
 // Λέξεις-κλειδιά που δηλώνουν ρητή αποφυγή μέσα σε μια φράση των ελεύθερων "Προτιμήσεων".
-var PREF_AVOID_MARKERS=['οχι ','αποφυγη','χωρις ','μη '];
-// Ειδικές φράσεις που ΔΕΝ πρέπει να λυθούν στη γενική τους κατηγορία (π.χ. "κόκκινο κρέας" σημαίνει
-// συγκεκριμένα RED_MEAT_FOODS, όχι όλη την κατηγορία "Κρέας" — αλλιώς θα αποκλειόταν και το κοτόπουλο).
+var PREF_AVOID_MARKERS=['οχι ','αποφυγη','αποφευγει','χωρις ','μη ','δεν θελω','δεν τρωει','δεν τρωω','μακρια απο','καθολου '];
+// Ειδικές πολυλεκτικές φράσεις που ΔΕΝ πρέπει να λυθούν στη γενική τους κατηγορία (π.χ. "κόκκινο
+// κρέας" σημαίνει συγκεκριμένα RED_MEAT_FOODS, όχι όλη την κατηγορία "Κρέας" — αλλιώς θα
+// αποκλειόταν και το κοτόπουλο).
 var PREF_PHRASE_MAP={'κοκκινο κρεας':function(){return (typeof RED_MEAT_FOODS!=='undefined')?RED_MEAT_FOODS:[];}};
+
+// Ελληνικά ουσιαστικά/επίθετα κλίνονται (π.χ. "κρέας"→"κρέατος", "Φιστίκια"→"Φιστικιών") — ένα
+// σκέτο substring-match σε ολόκληρη τη λέξη χάνει κλιτούς τύπους. Αντί για πλήρη μορφολογική
+// ανάλυση (ρίσκο/πολυπλοκότητα εκτός εμβέλειας εδώ), συγκρίνουμε κοινή "ρίζα": πρόθεμα τουλάχιστον
+// 4 χαρακτήρων (ή του 70% της μικρότερης λέξης, όποιο είναι μεγαλύτερο) — αρκετό για τις
+// συνηθισμένες καταλήξεις πτώσης/πληθυντικού, αρκετά αυστηρό ώστε να μην ταιριάζει τυχαία σε
+// άσχετες μικρές λέξεις (π.χ. "Καρύδια" έναντι "Καρότα" ΔΕΝ ταιριάζουν με αυτό το κατώφλι).
+function wordsMatchLoosely(a,b){
+  if(!a||!b)return false;
+  if(a===b)return true;
+  var minLen=Math.min(a.length,b.length);
+  if(minLen<4)return false;
+  var stemLen=Math.max(4,Math.ceil(minLen*0.7));
+  return a.substring(0,stemLen)===b.substring(0,stemLen);
+}
+// Ελέγχει αν ΟΛΕΣ οι λέξεις μιας φράσης (π.χ. ["κοκκινο","κρεας"]) εμφανίζονται —έστω και σε κλιτό
+// τύπο— κάπου μέσα στις λέξεις της πρότασης του πελάτη.
+function clauseContainsPhrase(clauseWords,phraseWords){
+  if(!phraseWords.length)return false; // άδεια φράση δεν πρέπει ΠΟΤΕ να «ταιριάζει με τα πάντα»
+  return phraseWords.every(function(pw){
+    return clauseWords.some(function(cw){return wordsMatchLoosely(cw,pw);});
+  });
+}
 
 // Σαρώνει το ελεύθερο κείμενο "Προτιμήσεις" (π.χ. "Όχι κόκκινο κρέας, Περισσότερο ψάρι") για ρητές
 // προτάσεις αποφυγής και τις μετατρέπει σε πραγματικά ονόματα τροφίμων — ώστε το πεδίο να κάνει
 // πράγματι αυτό που υπόσχεται στον διαιτολόγο, αντί να είναι σκέτη σημείωση που ο αλγόριθμος ποτέ
 // δεν διάβαζε (confirmed 2026-07-30: c.preferences δεν είχε ΚΑΝΕΝΑ call site εκτός του input field).
 // Συντηρητική σάρωση, επίτηδες: ταιριάζει ΜΟΝΟ φράσεις με ρητή λέξη-αποφυγής + γνωστή κατηγορία/
-// τρόφιμο. Προτάσεις χωρίς λέξη-αποφυγής (π.χ. μόνο "Περισσότερο ψάρι") δεν αγγίζονται καθόλου —
-// μένουν απλή σημείωση όπως πριν, δεν κάνουμε μαντεψιά σε ασαφές κείμενο σε εργαλείο διατροφής.
+// τρόφιμο (έστω και κλιτό — βλ. wordsMatchLoosely). Προτάσεις χωρίς λέξη-αποφυγής (π.χ. μόνο
+// "Περισσότερο ψάρι") δεν αγγίζονται καθόλου — μένουν απλή σημείωση όπως πριν, δεν κάνουμε
+// μαντεψιά σε ασαφές κείμενο σε εργαλείο διατροφής.
 function parsePreferenceAvoidFoods(preferencesText){
   if(!preferencesText)return [];
   var clauses=preferencesText.split(/[,\n;]+/);
@@ -2822,24 +2847,31 @@ function parsePreferenceAvoidFoods(preferencesText){
     var norm=' '+normalizeGreekText(clause)+' ';
     var hasMarker=PREF_AVOID_MARKERS.some(function(m){return norm.indexOf(m)!==-1;});
     if(!hasMarker)return;
+    var clauseWords=norm.split(/\s+/).filter(Boolean);
+
     // Ειδική φράση πρώτα (πιο συγκεκριμένη από τη γενική κατηγορία)
     var matchedPhrase=false;
     Object.keys(PREF_PHRASE_MAP).forEach(function(phrase){
-      if(norm.indexOf(phrase)!==-1){ foods=foods.concat(PREF_PHRASE_MAP[phrase]()); matchedPhrase=true; }
+      if(clauseContainsPhrase(clauseWords,phrase.split(' '))){ foods=foods.concat(PREF_PHRASE_MAP[phrase]()); matchedPhrase=true; }
     });
     if(matchedPhrase)return;
-    // Ολόκληρη κατηγορία (π.χ. "κρέας" → όλα τα τρόφιμα της κατηγορίας "Κρέας")
+
+    // Ολόκληρη κατηγορία (π.χ. "κρέας"/"κρέατος" → όλα τα τρόφιμα της κατηγορίας "Κρέας")
     var matchedCat=false;
     allCats.forEach(function(cat){
-      if(norm.indexOf(normalizeGreekText(cat))!==-1){
+      var catWords=normalizeGreekText(cat).split(/\s+/).filter(Boolean);
+      if(clauseContainsPhrase(clauseWords,catWords)){
         Object.keys(FOODS).forEach(function(n){ if(FOODS[n]&&FOODS[n].cat===cat) foods.push(n); });
         matchedCat=true;
       }
     });
     if(matchedCat)return;
-    // Συγκεκριμένο τρόφιμο, αναφερμένο με το ακριβές του όνομα
+
+    // Συγκεκριμένο τρόφιμο — απαιτεί ΟΛΕΣ τις ουσιαστικές λέξεις (≥4 χαρακτήρες, αγνοώντας
+    // παρενθέσεις) του ονόματός του να εμφανίζονται στην πρόταση, έστω σε κλιτό τύπο.
     Object.keys(FOODS).forEach(function(n){
-      if(normalizeGreekText(n).length>=4 && norm.indexOf(normalizeGreekText(n))!==-1) foods.push(n);
+      var nameWords=normalizeGreekText(n).replace(/[()]/g,' ').split(/\s+/).filter(function(w){return w.length>=4;});
+      if(nameWords.length && clauseContainsPhrase(clauseWords,nameWords)) foods.push(n);
     });
   });
   return foods.filter(function(f,i){return foods.indexOf(f)===i;});
