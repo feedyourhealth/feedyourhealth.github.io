@@ -1703,14 +1703,17 @@ function buildTrackerHtml(c){
     var latestLBM=latest.bf>0?+(latest.weight*(1-latest.bf/100)).toFixed(1):null;
     var latestFM=latest.bf>0?+(latest.weight-latestLBM).toFixed(1):null;
     var latestBMI=c.height>0?+(latest.weight/((c.height/100)*(c.height/100))).toFixed(1):null; // no height yet — don't divide by 0
+    // ⚠️ Τα σταθερά όρια (18.5/25/30) είναι κατηγοριοποίηση ενηλίκων (WHO) — δεν ισχύουν κλινικά
+    // για ανήλικους (χρειάζεται BMI-for-age percentile). Για ανήλικους δείχνουμε μόνο τον αριθμό,
+    // χωρίς χαρακτηρισμό/χρωματισμό που θα ήταν παραπλανητικός.
     var latestBMIStatus='';
-    if(latestBMI!=null){
-      if(latestBMI<18.5)latestBMIStatus='Underweight ℹ️';
-      else if(latestBMI<25)latestBMIStatus='Normal ✓';
-      else if(latestBMI<30)latestBMIStatus='Overweight ⚠️';
-      else latestBMIStatus='Obese 🔴';
+    if(latestBMI!=null && !isMinorC){
+      if(latestBMI<18.5)latestBMIStatus='Λιποβαρής ℹ️';
+      else if(latestBMI<25)latestBMIStatus='Φυσιολογικό ✓';
+      else if(latestBMI<30)latestBMIStatus='Υπέρβαρος ⚠️';
+      else latestBMIStatus='Παχυσαρκία 🔴';
     }
-    var latestBMIColor=latestBMI==null?'#999':latestBMI<18.5?'#ff6b35':latestBMI<25?'#2e7d32':latestBMI<30?'#ff9800':'#c62828';
+    var latestBMIColor=(latestBMI==null||isMinorC)?'#999':latestBMI<18.5?'#ff6b35':latestBMI<25?'#2e7d32':latestBMI<30?'#ff9800':'#c62828';
 
     wHtml+='<div style="background:#fff8e1;border:1px solid #ffb74d;border-radius:8px;padding:12px;margin-bottom:10px">'
       +'<div style="font-size:10px;color:#e65100;font-weight:700;margin-bottom:8px">📊 Τρέχουσα Κατάσταση ('+latest.date+')</div>'
@@ -1720,7 +1723,7 @@ function buildTrackerHtml(c){
       +(latest.bf?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #ff9999"><div style="color:#666">Λίπος</div><div style="font-size:14px;font-weight:700;color:#c62828">'+latest.bf+'%</div></div>':'')
       +(latestLBM?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #1565C0"><div style="color:#666">Lean Mass</div><div style="font-size:14px;font-weight:700;color:#1565C0">'+latestLBM+' kg</div></div>':'')
       +(latestBMI!=null?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid '+latestBMIColor+'">'
-      +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+' ('+latestBMIStatus+')</div></div>':'')
+      +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+(latestBMIStatus?' ('+latestBMIStatus+')':'')+'</div></div>':'')
       +(latest.waist?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #9c27b0"><div style="color:#666">Μέση</div><div style="font-size:14px;font-weight:700;color:#9c27b0">'+latest.waist+' cm</div></div>':'')
       +(latest.hip?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #f57c00"><div style="color:#666">Γοφοί</div><div style="font-size:14px;font-weight:700;color:#f57c00">'+latest.hip+' cm</div></div>':'')
       +'</div>'
@@ -1756,14 +1759,16 @@ function buildTrackerHtml(c){
     var lastLBM=last.bf>0?+(last.weight*(1-last.bf/100)).toFixed(1):null;
     var lastFM=last.bf>0?+(last.weight-lastLBM).toFixed(1):null;
     var lastBMI=c.height>0?+(last.weight/((c.height/100)*(c.height/100))).toFixed(1):null;
+    // ⚠️ Ίδιος περιορισμός με το latestBMIStatus παραπάνω — τα όρια ενηλίκων δεν ισχύουν κλινικά
+    // για ανήλικους (isMinorC, ήδη υπολογισμένο στην αρχή αυτής της συνάρτησης).
     var bmiStatus='';
-    if(lastBMI!=null){
-      if(lastBMI<18.5)bmiStatus='Underweight';
-      else if(lastBMI<25)bmiStatus='Normal ✓';
-      else if(lastBMI<30)bmiStatus='Overweight';
-      else bmiStatus='Obese';
+    if(lastBMI!=null && !isMinorC){
+      if(lastBMI<18.5)bmiStatus='Λιποβαρής';
+      else if(lastBMI<25)bmiStatus='Φυσιολογικό ✓';
+      else if(lastBMI<30)bmiStatus='Υπέρβαρος';
+      else bmiStatus='Παχυσαρκία';
     }
-    var bmiColor=lastBMI==null?'#999':lastBMI<18.5?'#ff6b35':lastBMI<25?'#2e7d32':lastBMI<30?'#ff9800':'#c62828';
+    var bmiColor=(lastBMI==null||isMinorC)?'#999':lastBMI<18.5?'#ff6b35':lastBMI<25?'#2e7d32':lastBMI<30?'#ff9800':'#c62828';
 
     wHtml+='<div style="background:#f0f9f8;border:1px solid #c5ddd8;border-radius:9px;padding:12px 14px;margin-bottom:10px">'
         +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:10px">'
@@ -1771,7 +1776,7 @@ function buildTrackerHtml(c){
         +'<span style="font-size:11px">Βάρος: <b style="color:'+wCol+'">'+(wDiff>0?'+':'')+wDiff+' kg</b> ('+first.weight+'→'+last.weight+'kg)</span>'
         +(bfDiff!==null?'<span style="font-size:11px">Λίπος: <b style="color:'+(bfDiff<0?'#2e7d32':'#c62828')+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>':'')
         +(lbmDiff!==null?'<span style="font-size:11px">Lean Mass: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>':'')
-        +(lastBMI!=null?'<span style="font-size:11px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+' ('+bmiStatus+')</b></span>':'')
+        +(lastBMI!=null?'<span style="font-size:11px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+(bmiStatus?' ('+bmiStatus+')':'')+'</b></span>':'')
         +'<span style="font-size:10px;color:#aaa;margin-left:auto">'+sorted2.length+' μετρήσεις</span>'
         +'</div>'
         // Visual body composition bar
@@ -2312,10 +2317,13 @@ function addWeightEntry(){
 }
 
 function removeWeightEntry(idx){
-  var c=getC();if(!c||!c.weightLog)return;
-  c.weightLog.splice(idx,1);
-  save();
-  var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
+  var c=getC();if(!c||!c.weightLog||!c.weightLog[idx])return;
+  var entry=c.weightLog[idx];
+  showConfirmDialog('Διαγραφή της μέτρησης της '+entry.date+' ('+entry.weight+'kg);', function(){
+    c.weightLog.splice(idx,1);
+    save();
+    var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
+  }, {icon:'🗑️', confirmLabel:'Διαγραφή'});
 }
 
 function addConsultEntry(){
@@ -2331,10 +2339,13 @@ function addConsultEntry(){
 }
 
 function removeConsultEntry(idx){
-  var c=getC();if(!c||!c.consultLog)return;
-  c.consultLog.splice(idx,1);
-  save();
-  var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
+  var c=getC();if(!c||!c.consultLog||!c.consultLog[idx])return;
+  var entry=c.consultLog[idx];
+  showConfirmDialog('Διαγραφή της σημείωσης συμβουλευτικής της '+entry.date+';', function(){
+    c.consultLog.splice(idx,1);
+    save();
+    var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
+  }, {icon:'🗑️', confirmLabel:'Διαγραφή'});
 }
 
 // ── "📝 Ραντεβού" tab (in-appointment questionnaire/notes) ──────────────────
@@ -2698,14 +2709,49 @@ function isFoodAllergy(foodName, allergyList) {
   });
 }
 
+// Ένα σύνθετο πιάτο (π.χ. "High Protein Ομελέτα Wrap") μπορεί να περιέχει ένα αποκλεισμένο
+// τρόφιμο ΜΕΣΑ στα συστατικά του (FOODS[name].ingredients ή FYH_RECIPE_EXPAND[name].ing) χωρίς
+// το ίδιο το όνομα του πιάτου να το φανερώνει καθόλου. Κάθε άλλος έλεγχος αποκλεισμού σε αυτό το
+// αρχείο συγκρίνει μόνο το όνομα του τροφίμου/πιάτου με τη λίστα αποκλεισμού — ένα πιάτο-συνταγή
+// με αποκλεισμένο συστατικό γλιστράει απαρατήρητο από όλα αυτά. Confirmed live 2026-07-30: πελάτης
+// με "Αυγά (ολόκληρα)" στη λίστα αποκλεισμού συνέχιζε να παίρνει "High Protein Ομελέτα Wrap"
+// (περιέχει "Αυγά" ως συστατικό) σε κάθε διαδρομή δημιουργίας πλάνου.
+function foodIsExcludedByNameOrIngredient(foodName,exclNormalized){
+  if(!foodName||!exclNormalized||!exclNormalized.length)return false;
+  var nameNorm=normalizeGreekText(foodName);
+  for(var i=0;i<exclNormalized.length;i++){
+    if(nameNorm.indexOf(exclNormalized[i])!==-1)return true;
+  }
+  var fd=FOODS[foodName];
+  if(fd&&fd.ingredients&&fd.ingredients.length){
+    for(var j=0;j<fd.ingredients.length;j++){
+      var ingNorm=normalizeGreekText(fd.ingredients[j].item||'');
+      for(var k=0;k<exclNormalized.length;k++){
+        if(ingNorm.indexOf(exclNormalized[k])!==-1)return true;
+      }
+    }
+  }
+  if(typeof FYH_RECIPE_EXPAND!=='undefined'&&FYH_RECIPE_EXPAND[foodName]&&FYH_RECIPE_EXPAND[foodName].ing){
+    var rx=FYH_RECIPE_EXPAND[foodName].ing;
+    for(var m=0;m<rx.length;m++){
+      var rxNorm=normalizeGreekText(rx[m].n||'');
+      for(var n=0;n<exclNormalized.length;n++){
+        if(rxNorm.indexOf(exclNormalized[n])!==-1)return true;
+      }
+    }
+  }
+  return false;
+}
+
 function applyFoodExclusions(tmplDays,excludeList,allergyList){
   if((!excludeList||!excludeList.length)&&(!allergyList||!allergyList.length))return tmplDays;
+  var exclNormalized=(excludeList||[]).map(function(x){return normalizeGreekText(x);});
   var result=deepClone(tmplDays);
   result.forEach(function(meals){
     meals.forEach(function(meal){
       meal.foods=meal.foods.map(function(food){
-        // ✅ FIX #2: Check both excludeList AND allergies
-        var isExcluded = excludeList && excludeList.indexOf(food.n) !== -1;
+        // ✅ FIX #2: Check both excludeList AND allergies — name match OR a recipe's own ingredients
+        var isExcluded = foodIsExcludedByNameOrIngredient(food.n,exclNormalized);
         var isAllergy = isFoodAllergy(food.n, allergyList);
 
         if(!isExcluded && !isAllergy) return food;
@@ -2717,7 +2763,7 @@ function applyFoodExclusions(tmplDays,excludeList,allergyList){
         for(var i=0;i<order.length&&!sub;i++){
           var candidates=Object.keys(FOODS).filter(function(n){
             if(!FOODS[n])return false;
-            var notExcluded = !excludeList || excludeList.indexOf(n) === -1;
+            var notExcluded = !foodIsExcludedByNameOrIngredient(n,exclNormalized);
             var notAllergy = !isFoodAllergy(n, allergyList);
             return FOODS[n].cat===order[i] && notExcluded && notAllergy;
           });
@@ -2777,12 +2823,13 @@ function buildEffectiveExclusionList(c){
 function scrubExcludedFoodsFromWeekPlan(weekPlan, excludeList, allergyList){
   if(!weekPlan) return;
   if((!excludeList||!excludeList.length)&&(!allergyList||!allergyList.length)) return;
+  var exclNormalized=(excludeList||[]).map(function(x){return normalizeGreekText(x);});
   Object.keys(weekPlan).forEach(function(d){
     if(!weekPlan[d]) return;
     weekPlan[d].forEach(function(meal){
       if(!meal.foods||!meal.foods.length) return;
       meal.foods = meal.foods.map(function(food){
-        var isExcluded = excludeList && excludeList.indexOf(food.n) !== -1;
+        var isExcluded = foodIsExcludedByNameOrIngredient(food.n,exclNormalized);
         var isAllergy = isFoodAllergy(food.n, allergyList);
         if(!isExcluded && !isAllergy) return food;
         var cat=FOODS[food.n]?FOODS[food.n].cat:'';
@@ -2791,7 +2838,7 @@ function scrubExcludedFoodsFromWeekPlan(weekPlan, excludeList, allergyList){
         for(var i=0;i<order.length&&!sub;i++){
           var candidates=Object.keys(FOODS).filter(function(n){
             if(!FOODS[n])return false;
-            var notExcluded = !excludeList || excludeList.indexOf(n) === -1;
+            var notExcluded = !foodIsExcludedByNameOrIngredient(n,exclNormalized);
             var notAllergy = !isFoodAllergy(n, allergyList);
             return FOODS[n].cat===order[i] && notExcluded && notAllergy;
           });

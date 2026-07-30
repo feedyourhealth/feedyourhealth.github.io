@@ -1139,20 +1139,13 @@ function genPlan(){
       // catching anything enforceRedMeatFrequency's own substitutions might have reintroduced.
       if(excl.length>0){
         var exclNormalized=excl.map(function(x){return normalizeGreekText(x);});
-        var exclExact=excl.map(function(x){return (x||'');});
         for(var d=0;d<7;d++){
           if(!c.weekPlan[d])continue;
           for(var mi=0;mi<c.weekPlan[d].length;mi++){
             var meal=c.weekPlan[d][mi];
             if(meal.foods&&meal.foods.length>0){
               meal.foods=meal.foods.filter(function(food){
-                var foodName=(food.n||'');
-                var foodNameNormalized=normalizeGreekText(foodName);
-                if(exclExact.indexOf(foodName)!==-1)return false;
-                for(var ei=0;ei<exclNormalized.length;ei++){
-                  if(foodNameNormalized.indexOf(exclNormalized[ei])!==-1)return false;
-                }
-                return true;
+                return !foodIsExcludedByNameOrIngredient(food.n,exclNormalized);
               });
               meal.foods=meal.foods.filter(function(food){
                 return food.n && (food.n||'').trim().length>0;
@@ -1474,7 +1467,6 @@ function genPlan(){
   if(excl.length > 0) {
     // Normalize exclusions to handle Greek accents properly
     var exclNormalized = excl.map(function(x){return normalizeGreekText(x);});
-    var exclExact = excl.map(function(x){return (x||'');});  // Keep exact case for direct matches
 
     for(var d=0;d<7;d++){
       for(var mi=0;mi<c.weekPlan[d].length;mi++){
@@ -1482,41 +1474,15 @@ function genPlan(){
         if(meal.foods && meal.foods.length > 0) {
           var exclTargetK = 0;
           meal.foods.forEach(function(food){exclTargetK += cm(food.n, food.g).k;});
-          // LAYER 1: Remove foods that match exclusions (exact, normalized, or substring)
+          // LAYER 1: Remove foods that match exclusions by name OR by a recipe's own ingredients
+          // (exact, normalized-accent, or substring — see foodIsExcludedByNameOrIngredient)
           meal.foods = meal.foods.filter(function(food){
-            var foodName = (food.n||'');
-            var foodNameExact = foodName;
-            var foodNameLower = foodName.toLowerCase();
-            var foodNameNormalized = normalizeGreekText(foodName);
-
-            // Check exact match first
-            if(exclExact.indexOf(foodName) !== -1) return false;
-
-            // Check substring match with normalized Greek (no accents)
-            for(var ei=0;ei<exclNormalized.length;ei++){
-              if(foodNameNormalized.indexOf(exclNormalized[ei]) !== -1){
-                return false;  // Exclude this food
-              }
-            }
-            return true;  // Keep this food
+            return !foodIsExcludedByNameOrIngredient(food.n,exclNormalized);
           });
 
           // LAYER 2: Remove foods with empty/invalid names
           meal.foods = meal.foods.filter(function(food){
             return food.n && (food.n||'').trim().length > 0;
-          });
-
-          // LAYER 3: Remove foods that weren't substituted properly
-          // (if applyFoodExclusions failed to find a substitute)
-          meal.foods = meal.foods.filter(function(food){
-            var foodNameNormalized = normalizeGreekText(food.n||'');
-            // Double-check against all normalized exclusions (paranoia mode)
-            for(var ei=0;ei<exclNormalized.length;ei++){
-              if(foodNameNormalized.indexOf(exclNormalized[ei]) !== -1){
-                return false;  // Still excluded, remove it
-              }
-            }
-            return true;
           });
 
           reconcileMealCaloriesAfterRemoval(meal, exclTargetK);

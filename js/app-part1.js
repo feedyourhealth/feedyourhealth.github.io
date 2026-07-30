@@ -3246,10 +3246,12 @@ function loadPlanAsActive(planIndex){
   var c=getC();
   if(!c||!c.savedPlans||!c.savedPlans[planIndex])return;
   var plan=c.savedPlans[planIndex];
-  c.weekPlan=deepClone(plan.weekPlan);
-  save();
-  showSuccessToast('✅ Πλάνο #'+plan.number+' φορτώθηκε! Πήγαινε στο "Εβδομαδιαίο πλάνο" για να το δεις.');
-  renderMain();
+  showConfirmDialog('Φόρτωση του πλάνου #'+plan.number+' ως ενεργό; Θα αντικαταστήσει το τρέχον εβδομαδιαίο πλάνο.', function(){
+    c.weekPlan=deepClone(plan.weekPlan);
+    save();
+    showSuccessToast('✅ Πλάνο #'+plan.number+' φορτώθηκε! Πήγαινε στο "Εβδομαδιαίο πλάνο" για να το δεις.');
+    renderMain();
+  }, {icon:'📥', confirmLabel:'Φόρτωση'});
 }
 
 function deletePlanFromHistory(planIndex){
@@ -3260,7 +3262,6 @@ function deletePlanFromHistory(planIndex){
     save();
     var s4=document.getElementById('s4');
     if(s4)s4.innerHTML=buildPlanHistoryHtml(c);
-    console.log('[PLAN HISTORY] Deleted plan at index',planIndex);
   });
 }
 
