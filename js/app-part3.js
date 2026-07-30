@@ -1951,7 +1951,6 @@ function renderWeekTable(){
           +' <span style="color:#E65100;font-weight:700">&middot; '+Math.round(mK2)+' kcal</span></div>';
       }
       html+='<button class="chip-add" onclick="addF('+d+','+mi+')">+</button>';
-      console.log('DEBUG: Day '+d+', Meal '+mi+', Foods: '+foods.length);
       if(foods.length){
         var menuId='meal-menu-'+d+'-'+mi;
         html+='<div style="display:inline-block;position:relative;margin-left:8px;">'

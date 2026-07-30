@@ -2346,19 +2346,21 @@ function regeneratePlan(){
   var errors=validateClientData(c);
   if(errors.length>0){ showValidationErrors(errors); return; }
   pregnancyBlockCheck(c, function(){
-    // Find and mark the last plan as regenerated (negative signal)
-    var lastPlanIndex = TRACKING_DATA.plans.length - 1;
-    logRegenerate(lastPlanIndex);
+    showConfirmDialog('Αναδημιουργία ολόκληρου του εβδομαδιαίου πλάνου; Όλες οι μέρες θα αντικατασταθούν.', function(){
+      // Find and mark the last plan as regenerated (negative signal)
+      var lastPlanIndex = TRACKING_DATA.plans.length - 1;
+      logRegenerate(lastPlanIndex);
 
-    // Generate new plan (through undo/redo so this regeneration can be undone too)
-    var oldPlan = deepClone(c.weekPlan);
-    if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
-      var cmd = new GeneratePlanCommand(c, oldPlan);
-      window.undoRedoManager.execute(cmd);
-    } else {
-      genPlan();
-    }
-    showErrorToast('Το σχέδιο δημιουργήθηκε ξανά. Το σύστημα θα μάθει από αυτό!');
+      // Generate new plan (through undo/redo so this regeneration can be undone too)
+      var oldPlan = deepClone(c.weekPlan);
+      if(window.undoRedoManager && typeof GeneratePlanCommand !== 'undefined'){
+        var cmd = new GeneratePlanCommand(c, oldPlan);
+        window.undoRedoManager.execute(cmd);
+      } else {
+        genPlan();
+      }
+      showErrorToast('Το σχέδιο δημιουργήθηκε ξανά. Το σύστημα θα μάθει από αυτό!');
+    }, {icon:'🔄', confirmLabel:'Αναδημιουργία'});
   });
 }
 
