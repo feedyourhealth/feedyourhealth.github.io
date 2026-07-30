@@ -1705,7 +1705,7 @@ function mealSourceBadge(meal){
   var MAP = {
     'own-history': {icon:'🕓', label:'Δικό του ιστορικό', bg:'#e0f2f1', color:'#00695c'},
     library:   {icon:'⭐', label:'Πρότυπο γεύσης', bg:'#fff8e1', color:'#f9a825'},
-    recipe:    {icon:'👨‍🍳', label:'Recipe', bg:'#e3f2fd', color:'#1565C0'},
+    recipe:    {icon:'👨‍🍳', label:'Συνταγή', bg:'#e3f2fd', color:'#1565C0'},
     saved:     {icon:'💾', label:'Αποθηκευμένο', bg:'#e8f5e9', color:'#2e7d32'},
     generated: {icon:'✨', label:'Δημιουργήθηκε', bg:'#f3e5f5', color:'#8e24aa'},
     template:  {icon:'📋', label:'Πρότυπο', bg:'#f5f5f5', color:'#757575'}

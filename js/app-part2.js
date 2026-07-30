@@ -579,7 +579,7 @@ function renderMain(){
     +((window.Cloud && window.Cloud.isStale(c))?'<div class="plan-stale-warning" title="Το πλάνο άλλαξε μετά την τελευταία δημοσίευση. Πάτα «Στείλε στον πελάτη» ξανά για να ενημερωθεί ο σύνδεσμος του πελάτη.">&#9888;&#65039; Ο σύνδεσμος πελάτη είναι ξεπερασμένος</div>':'')
     +'<div class="plan-links-row">'
       +'<button class="btn tertiary" onclick="swTab(1)">&#8592; Στοιχεία</button>'
-      +'<button class="btn tertiary" onclick="regeneratePlan()">&#8635; Αναδημιουργία</button>'
+      +'<button class="btn tertiary regen-plan-btn" onclick="regeneratePlan()" title="Αντικαθιστά ΟΛΗ την εβδομάδα με νέο πλάνο">&#8635; Αναδημιουργία</button>'
       +'<button class="btn tertiary" id="star-tmpl-btn" onclick="toggleMealTemplate()" title="Χρήση των γευμάτων αυτού του πελάτη ως έμπνευση σε νέα πλάνα">'+(c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης')+'</button>'
       +'<button class="btn tertiary save-tmpl-btn" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button>'
     +'</div>'
