@@ -370,7 +370,7 @@ function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count, 
 
 // Find the best matching saved combo / library meal for a target.
 // Now slot- and diet-aware, with a variety penalty (usedSigs) to avoid repeats.
-function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, excl, slot, dietType, usedSigs) {
+function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, excl, slot, dietType, usedSigs, dislikedIds) {
   if(!savedCombos || savedCombos.length === 0) return null;
   tolerance = tolerance || 50; // base ±kcal tolerance
   // Proportional band: meals get scaled afterward, so accept a generous range
@@ -405,6 +405,10 @@ function findSavedComboMatch(savedCombos, targetKcal, targetMacros, tolerance, e
     // Score: closeness to target, nudged by real-world trust (same idea as findBestRecipe's
     // recipeScore — proven meals get a small edge), then a strong penalty for meals already used this week.
     var sig=mealSignature(combo.foods);
+    // ✅ Skip a combo this specific client already 👎'd (js/app-part4.js rateMeal) — soft preference,
+    // not a hard exclusion, so no "never leave zero candidates" fallback needed: genPlan()'s own
+    // multi-tier priority chain already handles this function returning null gracefully.
+    if(dislikedIds && dislikedIds.indexOf(sig)!==-1) continue;
     var usedCount=(usedSigs && usedSigs[sig])?usedSigs[sig]:0;
     var trustBonus=getRecipeTrustScore(sig)*targetKcal*0.08;
     // ✅ MACRO-FIT PENALTY: candidates get portion-scaled to hit targetKcal afterward, but scaling
@@ -454,7 +458,17 @@ function calculateMealKcal(foods) {
 function calculateTrustScore(trackingEntry){
   if(!trackingEntry || !trackingEntry.timesUsed) return 0.5;
   var success = 1 - (trackingEntry.regenerateCount||0) / trackingEntry.timesUsed;
-  return Math.max(0, Math.min(1, success));
+  success = Math.max(0, Math.min(1, success));
+  var up=trackingEntry.thumbsUp||0, down=trackingEntry.thumbsDown||0;
+  // No explicit 👍/👎 yet (true for every recipe before this feature existed) — unchanged from
+  // before, so this is zero-impact on current behavior until ratings actually start coming in.
+  if(up===0 && down===0) return success;
+  // Laplace-smoothed 👍/👎 signal (+2/+4 pseudo-counts) — starts neutral (0.5) and moves gradually,
+  // so a single vote nudges rather than dominates the score; blended as a minority (30%) weight
+  // alongside the existing regenerate-based signal (70%), same reasoning as the macro/calorie
+  // score blends already used in findBestRecipe/findSavedComboMatch.
+  var ratingSignal=(up-down+2)/(up+down+4);
+  return Math.max(0, Math.min(1, success*0.7 + ratingSignal*0.3));
 }
 function getRecipeTrustScore(recipeId){
   var entry = (typeof TRACKING_DATA!=='undefined' && TRACKING_DATA.recipes) ? TRACKING_DATA.recipes[recipeId] : null;
@@ -463,7 +477,7 @@ function getRecipeTrustScore(recipeId){
 
 // ── Chef-Inspired Recipe Selection ────────────────────────────────────────────
 // Finds the best pre-defined recipe for a meal based on diet type and calories
-function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros){
+function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros, dislikedIds){
   // ✅ SNACK DETECTION: If meal name is "Ενδιάμεσο" (Snack), use SNACK_RECIPES
   var isSnack = mealType && mealType.toLowerCase().includes('ενδιάμεσο');
   var recipeDB = isSnack ? SNACK_RECIPES : MEAL_RECIPES;
@@ -548,6 +562,13 @@ function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros){
     candidates=recipeDB.filter(matchesBase);
   }
 
+  // ✅ Skip this specific client's 👎'd recipes (js/app-part4.js rateMeal) — soft preference, so no
+  // "never leave zero candidates" fallback needed here either: a null return just falls through to
+  // genPlan()'s next priority tier (saved combos → smart generation → template), same as always.
+  if(dislikedIds && dislikedIds.length){
+    candidates=candidates.filter(function(r){return dislikedIds.indexOf(r.id)===-1;});
+  }
+
   if(!candidates.length)return null;
 
   // Rank by calorie closeness, nudged by real-world trust (proven recipes vs. ones that keep getting
@@ -586,7 +607,7 @@ function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros){
 }
 
 // Smart meal generation with pairing rules + saved combos + BREAKFAST CONSTRAINTS
-function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName, excl, dietType) {
+function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName, excl, dietType, dislikedIds) {
   // Normalize exclusion list
   excl = excl || [];
   var exclLower = excl.map(function(x){return (x||'').toLowerCase();});
@@ -600,7 +621,7 @@ function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName,
   }
 
   // Priority 1: Check saved combos first (respecting food exclusions, slot & diet)
-  var mealFromSaved = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 60, excl, classifyMealSlot(mealName), dietType);
+  var mealFromSaved = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 60, excl, classifyMealSlot(mealName), dietType, undefined, dislikedIds);
   if(mealFromSaved) {
     return mealFromSaved;
   }
@@ -1268,6 +1289,10 @@ function genPlan(){
 
   if(!isIntermittentFasting) {
     var savedCombos = getSavedCombos();
+    // 👎 Recipes/combos this specific client has explicitly disliked (js/app-part4.js rateMeal) —
+    // a soft per-client preference, skipped by findBestRecipe/findSavedComboMatch below so a
+    // regenerate doesn't just bring the same disliked meal straight back.
+    var dislikedIds = c.dislikedRecipeIds || [];
     // 🕓 This same client's own recent, reasonably-well-followed meals (see harvestOwnHistory) —
     // tried before the cross-client taste library, so a returning client gets their own proven
     // meals back first instead of always starting from someone else's plan.
@@ -1308,7 +1333,7 @@ function genPlan(){
         // 🕓 Priority -1: this client's own history — a meal they had before and (per portal
         // check-ins) reasonably followed. Takes precedence over every cross-client source.
         if(ownHistory.length > 0){
-          var ownMeal = findSavedComboMatch(ownHistory, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs);
+          var ownMeal = findSavedComboMatch(ownHistory, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs, dislikedIds);
           if(ownMeal && ownMeal.foods && ownMeal.foods.length > 0){
             meal.foods = deepClone(ownMeal.foods);
             if(ownMeal.mealTiming) meal.mealTiming = ownMeal.mealTiming;
@@ -1322,7 +1347,7 @@ function genPlan(){
         // ⭐ Priority 0: Taste library — real, dietitian-made meals from ⭐ clients
         // (verbatim food combos; portions get scaled to target in PHASE 3D)
         if(mealLibrary.length > 0){
-          var libMeal = findSavedComboMatch(mealLibrary, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs);
+          var libMeal = findSavedComboMatch(mealLibrary, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs, dislikedIds);
           if(libMeal && libMeal.foods && libMeal.foods.length > 0){
             meal.foods = deepClone(libMeal.foods);
             if(libMeal.mealTiming) meal.mealTiming = libMeal.mealTiming;
@@ -1334,7 +1359,7 @@ function genPlan(){
         }
 
         // ✨ Priority 1: Check Chef-Inspired Recipes (culinary-sensible combinations)
-        var recipeMeal = findBestRecipe(dayDietType, targetKcal, meal.name, excl, targetMacros);
+        var recipeMeal = findBestRecipe(dayDietType, targetKcal, meal.name, excl, targetMacros, dislikedIds);
         if(recipeMeal && recipeMeal.foods && recipeMeal.foods.length > 0){
           meal.foods = deepClone(recipeMeal.foods);
           meal.recipeId = recipeMeal.recipeId;  // Track which recipe was used
@@ -1344,7 +1369,7 @@ function genPlan(){
 
         // Priority 2: Check saved combos (user-approved, slot/diet-aware)
         if(savedCombos && savedCombos.length > 0){
-          var savedMeal = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs);
+          var savedMeal = findSavedComboMatch(savedCombos, targetKcal, targetMacros, 80, excl, mealSlot, dayDietType, usedComboSigs, dislikedIds);
           if(savedMeal && savedMeal.foods && savedMeal.foods.length > 0){
             meal.foods = deepClone(savedMeal.foods);
             if(savedMeal.mealTiming) meal.mealTiming = savedMeal.mealTiming;
@@ -1356,7 +1381,7 @@ function genPlan(){
 
         // Priority 3: Try smart generation with chef pairing rules
         // Pass meal.name for breakfast-specific constraints, excl for food exclusions, and dietType for diet compliance
-        var smartMeal = generateSmartMeal(targetKcal, targetMacros, d, savedCombos, meal.name, excl, dayDietType);
+        var smartMeal = generateSmartMeal(targetKcal, targetMacros, d, savedCombos, meal.name, excl, dayDietType, dislikedIds);
         if(smartMeal && smartMeal.foods && smartMeal.foods.length > 0){
           meal.foods = deepClone(smartMeal.foods);
           if(smartMeal.mealTiming) meal.mealTiming = smartMeal.mealTiming;

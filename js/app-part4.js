@@ -2401,6 +2401,27 @@ function getMealDisplayName(meal){
   return meal.name || 'Γεύμα';
 }
 
+// Shared init for a TRACKING_DATA.recipes[trackKey] entry — used by both logPlanGeneration (usage
+// stats) and rateMeal (👍/👎), so a rating on a recipe that hasn't been logged yet (edge case) still
+// has somewhere real to land instead of throwing.
+function ensureRecipeTrackingEntry(trackKey, name){
+  if(!TRACKING_DATA.recipes[trackKey]){
+    TRACKING_DATA.recipes[trackKey] = {
+      id: trackKey,
+      name: name || trackKey,
+      timesUsed: 0,
+      successCount: 0,
+      regenerateCount: 0,
+      clientsUsedWith: [],
+      lastUsed: null,
+      ratings: [],           // {date, rating: 1 or -1, clientName}
+      thumbsUp: 0,
+      thumbsDown: 0
+    };
+  }
+  return TRACKING_DATA.recipes[trackKey];
+}
+
 // Log plan generation
 function logPlanGeneration(client, weekPlan){
   if(!client || !weekPlan)return;
@@ -2435,20 +2456,7 @@ function logPlanGeneration(client, weekPlan){
           });
 
           // Update recipe stats
-          if(!TRACKING_DATA.recipes[trackKey]){
-            TRACKING_DATA.recipes[trackKey] = {
-              id: trackKey,
-              name: getMealDisplayName(meal),
-              timesUsed: 0,
-              successCount: 0,
-              regenerateCount: 0,
-              clientsUsedWith: [],
-              lastUsed: null,
-              ratings: [],           // {date, rating: 1 or -1, clientName}
-              thumbsUp: 0,
-              thumbsDown: 0
-            };
-          }
+          ensureRecipeTrackingEntry(trackKey, getMealDisplayName(meal));
           TRACKING_DATA.recipes[trackKey].timesUsed++;
           TRACKING_DATA.recipes[trackKey].lastUsed = new Date().toISOString();
 
@@ -2528,6 +2536,32 @@ function rateMeal(dayIndex, mealIndex, rating){
     mealName: mealName,
     foods: meal && meal.foods ? meal.foods.map(f => f.n).join(', ') : ''
   };
+
+  // ✅ Feed the rating into the SAME recipeId/recipeSig trust-score store logPlanGeneration()
+  // already populates (TRACKING_DATA.recipes[trackKey]) — until this fix, thumbsUp/thumbsDown/
+  // ratings existed in the schema but were never written or read anywhere (confirmed 2026-07-30,
+  // see [[dietologist-pending-work]]), so 👎 had zero effect beyond a history-log entry no future
+  // plan generation ever consulted. A single vote is a weak, personal-taste signal (not necessarily
+  // "this recipe is bad"), so it only nudges the global trust score (see calculateTrustScore's
+  // Laplace smoothing, js/app-part3.js) — the stronger, immediate effect is per-client below.
+  var trackKey = meal && (meal.recipeId || meal.recipeSig);
+  if(trackKey){
+    var entry = ensureRecipeTrackingEntry(trackKey, mealName);
+    entry.ratings.push({date: new Date().toISOString(), rating: rating, clientName: c.name || ''});
+    if(rating > 0) entry.thumbsUp++; else if(rating < 0) entry.thumbsDown++;
+
+    // ✅ Per-client hard block: a 👎'd recipe/combo should not be re-offered to THIS client on a
+    // future regenerate (whole-week or per-day) — the global trust nudge above is too weak to
+    // reliably keep one disliked dish from resurfacing for the same person. genPlan()'s recipe/
+    // combo lookups (findBestRecipe/findSavedComboMatch/generateSmartMeal) skip anything in
+    // c.dislikedRecipeIds. A later 👍 on the same recipe reverses it — reachable if it's cloned
+    // into this client's plan again via "Βάση πλάνου" from a different client, or manually re-added.
+    c.dislikedRecipeIds = c.dislikedRecipeIds || [];
+    var idx = c.dislikedRecipeIds.indexOf(trackKey);
+    if(rating < 0 && idx === -1) c.dislikedRecipeIds.push(trackKey);
+    else if(rating > 0 && idx !== -1) c.dislikedRecipeIds.splice(idx, 1);
+    save();
+  }
 
   // Update UI feedback - change button colors
   var upBtn = document.querySelector('[data-meal-rating="' + mealKey + '"][data-rating="up"]');
