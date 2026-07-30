@@ -2167,6 +2167,7 @@ function openFoodSelectorModal(d,mi){
       +'<button id="food-selector-tab-foods" onclick="setFoodSelectorTab(\'foods\')" style="flex:1;background:#025857;color:#fff;border:none;border-radius:6px;padding:7px;cursor:pointer;font-size:12px;font-weight:600">🥗 Τρόφιμα</button>'
       +'<button id="food-selector-tab-recipes" onclick="setFoodSelectorTab(\'recipes\')" style="flex:1;background:#eee;color:#333;border:none;border-radius:6px;padding:7px;cursor:pointer;font-size:12px;font-weight:600">📖 Συνταγές</button>'
     +'</div>'
+    +'<div id="recipe-diet-filter-row" style="display:none;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>'
     +'<input id="food-search-input" class="food-lib-search" type="text" placeholder="Αναζήτηση τροφίμου..." style="width:100%;margin-bottom:15px" oninput="onFoodSelectorSearchInput(this.value)">'
     +'<div id="food-selector-list" style="max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px"></div>'
     +'<div id="recipe-selector-list" style="display:none;max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px"></div>';
@@ -2177,8 +2178,9 @@ function openFoodSelectorModal(d,mi){
   // Store context for food selection
   window.currentFoodContext={d:d,mi:mi};
 
-  // Initial render — πάντα ξεκινάει από την καρτέλα Τρόφιμα
+  // Initial render — πάντα ξεκινάει από την καρτέλα Τρόφιμα, χωρίς ενεργά φίλτρα διατροφικού τύπου
   _foodSelectorTab='foods';
+  _foodSelectorRecipeDietFilters=[];
   updateFoodSelector('');
 
   // Close on overlay click
@@ -2283,6 +2285,9 @@ function confirmFoodQuantity(foodId,foodName){
 // μια ολόκληρη έτοιμη συνταγή (js/data.js MEAL_RECIPES/SNACK_RECIPES + δικές σου custom)
 // στο τρέχον γεύμα του πλάνου, αντί να ψάχνεις τρόφιμο-τρόφιμο. ──
 var _foodSelectorTab='foods';
+// Ενεργά diet-type φίλτρα (κλειδιά από RECIPE_DIET_TAG_DEFS, js/app-part6-recipes.js) στην
+// καρτέλα Συνταγές — OR μεταξύ τους (π.χ. Vegan + High Protein επιλεγμένα = φαίνονται και τα δύο).
+var _foodSelectorRecipeDietFilters=[];
 
 function onFoodSelectorSearchInput(val){
   if(_foodSelectorTab==='recipes') updateRecipeSelectorForPlan(val);
@@ -2295,17 +2300,47 @@ function setFoodSelectorTab(tab){
   var recipesBtn=document.getElementById('food-selector-tab-recipes');
   var foodsList=document.getElementById('food-selector-list');
   var recipesList=document.getElementById('recipe-selector-list');
+  var dietFilterRow=document.getElementById('recipe-diet-filter-row');
   var searchInput=document.getElementById('food-search-input');
   var showRecipes=(tab==='recipes');
   if(foodsBtn){foodsBtn.style.background=showRecipes?'#eee':'#025857';foodsBtn.style.color=showRecipes?'#333':'#fff';}
   if(recipesBtn){recipesBtn.style.background=showRecipes?'#025857':'#eee';recipesBtn.style.color=showRecipes?'#fff':'#333';}
   if(foodsList)foodsList.style.display=showRecipes?'none':'block';
   if(recipesList)recipesList.style.display=showRecipes?'block':'none';
+  if(dietFilterRow)dietFilterRow.style.display=showRecipes?'flex':'none';
+  if(showRecipes)renderRecipeDietFilterChips();
   if(searchInput){
     searchInput.placeholder=showRecipes?'Αναζήτηση συνταγής...':'Αναζήτηση τροφίμου...';
     if(showRecipes)updateRecipeSelectorForPlan(searchInput.value);
     else updateFoodSelector(searchInput.value);
   }
+}
+
+function renderRecipeDietFilterChips(){
+  var row=document.getElementById('recipe-diet-filter-row');
+  if(!row)return;
+  var defs=(typeof availableRecipeDietTags==='function')?availableRecipeDietTags():[];
+  row.innerHTML=defs.map(function(def){
+    var active=_foodSelectorRecipeDietFilters.indexOf(def.key)>-1;
+    return '<button onclick="toggleFoodSelectorDietFilter(\''+def.key+'\')" style="background:'+(active?'#025857':'#eee')+';color:'+(active?'#fff':'#333')+';border:none;border-radius:12px;padding:4px 11px;cursor:pointer;font-size:11px;font-weight:'+(active?'600':'400')+'">'+esc(def.label)+'</button>';
+  }).join('');
+}
+
+function toggleFoodSelectorDietFilter(key){
+  var idx=_foodSelectorRecipeDietFilters.indexOf(key);
+  if(idx>-1)_foodSelectorRecipeDietFilters.splice(idx,1);
+  else _foodSelectorRecipeDietFilters.push(key);
+  renderRecipeDietFilterChips();
+  var searchInput=document.getElementById('food-search-input');
+  updateRecipeSelectorForPlan(searchInput?searchInput.value:'');
+}
+
+// 0 = ταιριάζει στην ώρα του τρέχοντος γεύματος, 1 = χωρίς ώρα ορισμένη ("οποιοδήποτε γεύμα"),
+// 2 = ορισμένη για άλλη ώρα γεύματος — έτσι οι άσχετες συνταγές δεν κρύβονται, απλά βουλιάζουν κάτω.
+function rankRecipeForMealTime(recipe,targetCategory){
+  var times=(typeof getRecipeMealTimes==='function')?getRecipeMealTimes(recipe):(recipe.mealTimes||[]);
+  if(!times||!times.length)return 1;
+  return times.indexOf(targetCategory)>-1?0:2;
 }
 
 function updateRecipeSelectorForPlan(query){
@@ -2314,11 +2349,34 @@ function updateRecipeSelectorForPlan(query){
   var q=(query||'').toLowerCase().trim();
   var all=(typeof allRecipesForBrowsing==='function')?allRecipesForBrowsing():[];
   var filtered=all.filter(function(r){return !q||(r.name||'').toLowerCase().indexOf(q)>-1;});
+
+  // Diet-type φίλτρα (chips) — OR μεταξύ επιλεγμένων (π.χ. Vegan + High Protein = φαίνονται και τα δύο).
+  if(_foodSelectorRecipeDietFilters.length && typeof recipeHasDietTag==='function'){
+    filtered=filtered.filter(function(r){
+      return _foodSelectorRecipeDietFilters.some(function(key){return recipeHasDietTag(r,key);});
+    });
+  }
+
+  // Ταξινόμηση με βάση την ώρα του γεύματος που επεξεργαζόμαστε (π.χ. πρώτα τα πρωινά όταν
+  // προσθέτουμε σε πρωινό) — μόνο όταν αναγνωρίζεται η ώρα, αλλιώς μένει η αρχική σειρά.
+  var targetCategory=null;
+  var ctx=window.currentFoodContext;
+  if(ctx){
+    var c=getC();
+    var meal=c&&c.weekPlan&&c.weekPlan[ctx.d]&&c.weekPlan[ctx.d][ctx.mi];
+    if(meal)targetCategory=mealTypeToCategory(meal.name);
+  }
+  if(targetCategory){
+    filtered=filtered.map(function(r,idx){return {r:r,idx:idx};}).sort(function(a,b){
+      return rankRecipeForMealTime(a.r,targetCategory)-rankRecipeForMealTime(b.r,targetCategory)||a.idx-b.idx;
+    }).map(function(x){return x.r;});
+  }
+
   if(!filtered.length){
     list.innerHTML='<div style="color:#bbb;font-size:11px;padding:10px">Δεν βρέθηκε συνταγή</div>';
     return;
   }
-  var html='';
+  var html=targetCategory?('<div style="padding:6px 10px;font-size:10.5px;color:#025857;background:#F3F9F4;border-bottom:1px solid #E2EEE5">↑ Πρώτα συνταγές για: '+esc(targetCategory)+'</div>'):'';
   filtered.forEach(function(r){
     var tagsHtml=(r.tags||[]).slice(0,3).map(function(t){return '<span style="background:#E2EEE5;color:#025857;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px">'+esc(t)+'</span>';}).join('');
     var ingCount=(r.foods||[]).length;
