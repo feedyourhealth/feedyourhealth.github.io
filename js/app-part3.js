@@ -1279,15 +1279,28 @@ function genPlan(){
     var usedComboSigs = {};  // variety tracker shared across library + combos this week
     console.log('Own history: '+ownHistory.length+' meals harvested from this client\'s past well-followed plans');
     console.log('Taste library: '+mealLibrary.length+' meals harvested from ⭐ template clients');
+    // Only these categories actually need a DIFFERENT dish matched via smart-gen/recipe search —
+    // the static orthodox_fasting template has zero meat/fish/egg/dairy dishes to reveal even when
+    // excepted. 'Λάδια' (oil) is NOT dish-level: the template already includes olive oil in every
+    // day's lunch/dinner (only ever stripped by applyDietTypeCategorySafetyNet on non-exception
+    // days) — diverting an oil-only exception day to smart-gen actually backfires, since generated
+    // recipes/combos rarely list cooking oil as an explicit food item, so the day ends up with LESS
+    // oil than doing nothing. Found 2026-07-29: a dietitian ticked "Όλες οι μέρες" for Λάδια and the
+    // generated plan still had zero oil on any day.
+    var DISH_LEVEL_EXC_CATS = ['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Γαλακτοκομικά'];
     for(var d=0;d<7;d++){
       var dayExc = (isOrthodoxFasting && c.dietExceptionDays && c.dietExceptionDays[d]) || [];
       // Finer sibling of dayExc — specific allowed foods (e.g. only "Χταπόδι") rather than a whole
       // category — set via the food-picker's "📅 Εξαιρέσεις ημέρας" tab (buildFoodDayExceptionsHtml).
       var dayFoodExc = (isOrthodoxFasting && c.dietFoodExceptionDays && c.dietFoodExceptionDays[d]) || [];
-      // Orthodox Fasting, non-exception day: leave the static fasting template untouched, exactly
-      // as before this feature existed. Only an excepted day (or any other diet type, unchanged) proceeds.
-      if(isOrthodoxFasting && dayExc.length===0 && dayFoodExc.length===0) continue;
-      var dayDietType = (dayExc.length || dayFoodExc.length) ? 'normal' : c.dietType;
+      var dayExcDishLevel = dayExc.filter(function(cat){return DISH_LEVEL_EXC_CATS.indexOf(cat)!==-1;});
+      var dayFoodExcDishLevel = dayFoodExc.filter(function(fn){var fd=FOODS[fn];return fd&&DISH_LEVEL_EXC_CATS.indexOf(fd.cat)!==-1;});
+      // Orthodox Fasting, non-exception (or oil-only-exception) day: leave the static fasting
+      // template untouched — applyDietTypeCategorySafetyNet still uses the FULL (unfiltered)
+      // c.dietExceptionDays/c.dietFoodExceptionDays afterwards, so an oil exception still correctly
+      // keeps the template's own Ελαιόλαδο entries that day instead of stripping them.
+      if(isOrthodoxFasting && dayExcDishLevel.length===0 && dayFoodExcDishLevel.length===0) continue;
+      var dayDietType = (dayExcDishLevel.length || dayFoodExcDishLevel.length) ? 'normal' : c.dietType;
       for(var mi=0;mi<tmplDays[d].length;mi++){
         var meal = tmplDays[d][mi];
         var targetKcal = eff[d].meals[mi].k;  // Per-meal calorie target
