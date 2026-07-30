@@ -2163,8 +2163,13 @@ function openFoodSelectorModal(d,mi){
     +'<h2 style="color:#025857;margin:0">🔍 Επιλογή Τροφίματος</h2>'
     +'<div>'+pasteBtn+'<button onclick="document.getElementById(\'food-selector-modal\').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#666">&times;</button></div>'
     +'</div>'
-    +'<input id="food-search-input" class="food-lib-search" type="text" placeholder="Αναζήτηση τροφίμου..." style="width:100%;margin-bottom:15px" oninput="updateFoodSelector(this.value)">'
-    +'<div id="food-selector-list" style="max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px"></div>';
+    +'<div style="display:flex;gap:6px;margin-bottom:10px">'
+      +'<button id="food-selector-tab-foods" onclick="setFoodSelectorTab(\'foods\')" style="flex:1;background:#025857;color:#fff;border:none;border-radius:6px;padding:7px;cursor:pointer;font-size:12px;font-weight:600">🥗 Τρόφιμα</button>'
+      +'<button id="food-selector-tab-recipes" onclick="setFoodSelectorTab(\'recipes\')" style="flex:1;background:#eee;color:#333;border:none;border-radius:6px;padding:7px;cursor:pointer;font-size:12px;font-weight:600">📖 Συνταγές</button>'
+    +'</div>'
+    +'<input id="food-search-input" class="food-lib-search" type="text" placeholder="Αναζήτηση τροφίμου..." style="width:100%;margin-bottom:15px" oninput="onFoodSelectorSearchInput(this.value)">'
+    +'<div id="food-selector-list" style="max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px"></div>'
+    +'<div id="recipe-selector-list" style="display:none;max-height:500px;overflow-y:auto;border:1px solid #ddd;border-radius:6px"></div>';
 
   modal.appendChild(content);
   document.body.appendChild(modal);
@@ -2172,7 +2177,8 @@ function openFoodSelectorModal(d,mi){
   // Store context for food selection
   window.currentFoodContext={d:d,mi:mi};
 
-  // Initial render
+  // Initial render — πάντα ξεκινάει από την καρτέλα Τρόφιμα
+  _foodSelectorTab='foods';
   updateFoodSelector('');
 
   // Close on overlay click
@@ -2269,6 +2275,76 @@ function confirmFoodQuantity(foodId,foodName){
   renderWeekTable();
 
   // Close modal
+  var modal=document.getElementById('food-selector-modal');
+  if(modal)modal.remove();
+}
+
+// ── Καρτέλα "Συνταγές" μέσα στο food-selector-modal — επιτρέπει να προσθέσεις
+// μια ολόκληρη έτοιμη συνταγή (js/data.js MEAL_RECIPES/SNACK_RECIPES + δικές σου custom)
+// στο τρέχον γεύμα του πλάνου, αντί να ψάχνεις τρόφιμο-τρόφιμο. ──
+var _foodSelectorTab='foods';
+
+function onFoodSelectorSearchInput(val){
+  if(_foodSelectorTab==='recipes') updateRecipeSelectorForPlan(val);
+  else updateFoodSelector(val);
+}
+
+function setFoodSelectorTab(tab){
+  _foodSelectorTab=tab;
+  var foodsBtn=document.getElementById('food-selector-tab-foods');
+  var recipesBtn=document.getElementById('food-selector-tab-recipes');
+  var foodsList=document.getElementById('food-selector-list');
+  var recipesList=document.getElementById('recipe-selector-list');
+  var searchInput=document.getElementById('food-search-input');
+  var showRecipes=(tab==='recipes');
+  if(foodsBtn){foodsBtn.style.background=showRecipes?'#eee':'#025857';foodsBtn.style.color=showRecipes?'#333':'#fff';}
+  if(recipesBtn){recipesBtn.style.background=showRecipes?'#025857':'#eee';recipesBtn.style.color=showRecipes?'#fff':'#333';}
+  if(foodsList)foodsList.style.display=showRecipes?'none':'block';
+  if(recipesList)recipesList.style.display=showRecipes?'block':'none';
+  if(searchInput){
+    searchInput.placeholder=showRecipes?'Αναζήτηση συνταγής...':'Αναζήτηση τροφίμου...';
+    if(showRecipes)updateRecipeSelectorForPlan(searchInput.value);
+    else updateFoodSelector(searchInput.value);
+  }
+}
+
+function updateRecipeSelectorForPlan(query){
+  var list=document.getElementById('recipe-selector-list');
+  if(!list)return;
+  var q=(query||'').toLowerCase().trim();
+  var all=(typeof allRecipesForBrowsing==='function')?allRecipesForBrowsing():[];
+  var filtered=all.filter(function(r){return !q||(r.name||'').toLowerCase().indexOf(q)>-1;});
+  if(!filtered.length){
+    list.innerHTML='<div style="color:#bbb;font-size:11px;padding:10px">Δεν βρέθηκε συνταγή</div>';
+    return;
+  }
+  var html='';
+  filtered.forEach(function(r){
+    var tagsHtml=(r.tags||[]).slice(0,3).map(function(t){return '<span style="background:#E2EEE5;color:#025857;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px">'+esc(t)+'</span>';}).join('');
+    var ingCount=(r.foods||[]).length;
+    html+='<div style="border-bottom:1px solid #f0f0f0;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px">'
+      +'<div style="min-width:0">'
+        +'<div style="font-weight:600;font-size:12.5px;color:#222">'+esc(r.name)+'</div>'
+        +'<div style="font-size:10.5px;color:#999">'+(r.kcal||0)+' kcal · '+ingCount+' υλικά '+tagsHtml+'</div>'
+      +'</div>'
+      +'<button onclick="confirmAddRecipeToMeal(\''+r.id+'\')" style="background:#025857;color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">➕ Προσθήκη</button>'
+    +'</div>';
+  });
+  list.innerHTML=html;
+}
+
+function confirmAddRecipeToMeal(recipeId){
+  var ctx=window.currentFoodContext;
+  if(!ctx)return;
+  var c=getC();
+  if(!c)return;
+  var recipe=(typeof findRecipeById==='function')?findRecipeById(recipeId):null;
+  if(!recipe){showErrorToast('Η συνταγή δεν βρέθηκε.');return;}
+  (recipe.foods||[]).forEach(function(f){
+    c.weekPlan[ctx.d][ctx.mi].foods.push({n:f.n,g:f.g});
+  });
+  save();
+  renderWeekTable();
   var modal=document.getElementById('food-selector-modal');
   if(modal)modal.remove();
 }
