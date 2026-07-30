@@ -1760,27 +1760,17 @@ function renderWeekTable(){
   var goalLabel = goalL[c.goalMain] || c.goalMain;
   var bmiVal = (c.weight && c.height) ? (c.weight / ((c.height/100) * (c.height/100))).toFixed(1) : '—';
 
-  var summaryCard = '<div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1.5px solid #c8e6c9;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">👤 Πελάτης</span>'
-      +'<span style="font-size:13px;font-weight:700;color:#025857">' + esc(c.name) + '</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">📊 Μέτρα</span>'
-      +'<span style="font-size:13px;font-weight:600;color:#025857">' + c.weight + 'kg / ' + c.height + 'cm (BMI: ' + bmiVal + ')</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">🎯 Στόχος</span>'
-      +'<span style="font-size:13px;font-weight:600;color:#025857">' + goalLabel + '</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">🔥 Στόχος Ημέρας</span>'
-      +'<span style="font-size:13px;font-weight:600;color:#e65100">' + Math.round(tdeeInfo.target) + ' kcal</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">Μακρο</span>'
-      +'<span style="font-size:12px;font-weight:600;color:#555">Π:' + Math.round(tdeeInfo.p) + 'g | Λ:' + Math.round(tdeeInfo.f) + 'g | Υ:' + Math.round(tdeeInfo.carb) + 'g</span>'
-    +'</div>'
+  var divider='<span style="width:1px;height:16px;background:#e0e0e0"></span>';
+  var summaryCard = '<div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:8px 14px;margin-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
+    +'<span style="font-size:13px;font-weight:700;color:#025857">👤 ' + esc(c.name) + '</span>'
+    +divider
+    +'<span style="font-size:12px;color:#555">📊 ' + c.weight + 'kg / ' + c.height + 'cm · BMI ' + bmiVal + '</span>'
+    +divider
+    +'<span style="font-size:12px;color:#555">🎯 ' + goalLabel + '</span>'
+    +divider
+    +'<span style="font-size:12px;font-weight:700;color:#e65100">🔥 ' + Math.round(tdeeInfo.target) + ' kcal</span>'
+    +divider
+    +'<span style="font-size:12px;color:#555">Π:' + Math.round(tdeeInfo.p) + 'g · Λ:' + Math.round(tdeeInfo.f) + 'g · Υ:' + Math.round(tdeeInfo.carb) + 'g</span>'
     +'</div>';
 
   // ✅ Legend για τις χρωματιστές κουκκίδες τροφίμων — ίδια hex codes με getFoodColorHex()
