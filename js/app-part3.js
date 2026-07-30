@@ -2181,6 +2181,8 @@ function openFoodSelectorModal(d,mi){
   // Initial render — πάντα ξεκινάει από την καρτέλα Τρόφιμα, χωρίς ενεργά φίλτρα διατροφικού τύπου
   _foodSelectorTab='foods';
   _foodSelectorRecipeDietFilters=[];
+  _foodSelectorFavoritesOnly=false;
+  _expandedFoodSelectorRecipeIds={};
   updateFoodSelector('');
 
   // Close on overlay click
@@ -2288,6 +2290,15 @@ var _foodSelectorTab='foods';
 // Ενεργά diet-type φίλτρα (κλειδιά από RECIPE_DIET_TAG_DEFS, js/app-part6-recipes.js) στην
 // καρτέλα Συνταγές — OR μεταξύ τους (π.χ. Vegan + High Protein επιλεγμένα = φαίνονται και τα δύο).
 var _foodSelectorRecipeDietFilters=[];
+// Ποιες κάρτες συνταγών έχουν ανοιχτή την προεπισκόπηση υλικών (ίδιο pattern με
+// _expandedRecipeIds στο app-part6-recipes.js, αλλά ξεχωριστό state — άλλη λίστα, άλλο context).
+var _expandedFoodSelectorRecipeIds={};
+
+function toggleFoodSelectorRecipeExpand(recipeId){
+  _expandedFoodSelectorRecipeIds[recipeId]=!_expandedFoodSelectorRecipeIds[recipeId];
+  var searchInput=document.getElementById('food-search-input');
+  updateRecipeSelectorForPlan(searchInput?searchInput.value:'');
+}
 
 function onFoodSelectorSearchInput(val){
   if(_foodSelectorTab==='recipes') updateRecipeSelectorForPlan(val);
@@ -2316,14 +2327,26 @@ function setFoodSelectorTab(tab){
   }
 }
 
+// Χρησιμοποιεί το ήδη υπάρχον "⭐ δημοφιλές" σημάδι ανά συνταγή (isRecipePopular, js/app-part6-recipes.js
+// — η ίδια σημαία που φαίνεται στην κύρια καρτέλα Συνταγές), απλά το κάνει διαθέσιμο κι εδώ ως φίλτρο.
+var _foodSelectorFavoritesOnly=false;
+
 function renderRecipeDietFilterChips(){
   var row=document.getElementById('recipe-diet-filter-row');
   if(!row)return;
+  var favChip='<button onclick="toggleFoodSelectorFavoritesOnly()" style="background:'+(_foodSelectorFavoritesOnly?'#025857':'#eee')+';color:'+(_foodSelectorFavoritesOnly?'#fff':'#333')+';border:none;border-radius:12px;padding:4px 11px;cursor:pointer;font-size:11px;font-weight:'+(_foodSelectorFavoritesOnly?'600':'400')+'">⭐ Μόνο αγαπημένα</button>';
   var defs=(typeof availableRecipeDietTags==='function')?availableRecipeDietTags():[];
-  row.innerHTML=defs.map(function(def){
+  row.innerHTML=favChip+defs.map(function(def){
     var active=_foodSelectorRecipeDietFilters.indexOf(def.key)>-1;
     return '<button onclick="toggleFoodSelectorDietFilter(\''+def.key+'\')" style="background:'+(active?'#025857':'#eee')+';color:'+(active?'#fff':'#333')+';border:none;border-radius:12px;padding:4px 11px;cursor:pointer;font-size:11px;font-weight:'+(active?'600':'400')+'">'+esc(def.label)+'</button>';
   }).join('');
+}
+
+function toggleFoodSelectorFavoritesOnly(){
+  _foodSelectorFavoritesOnly=!_foodSelectorFavoritesOnly;
+  renderRecipeDietFilterChips();
+  var searchInput=document.getElementById('food-search-input');
+  updateRecipeSelectorForPlan(searchInput?searchInput.value:'');
 }
 
 function toggleFoodSelectorDietFilter(key){
@@ -2357,20 +2380,35 @@ function updateRecipeSelectorForPlan(query){
     });
   }
 
-  // Ταξινόμηση με βάση την ώρα του γεύματος που επεξεργαζόμαστε (π.χ. πρώτα τα πρωινά όταν
-  // προσθέτουμε σε πρωινό) — μόνο όταν αναγνωρίζεται η ώρα, αλλιώς μένει η αρχική σειρά.
+  // "⭐ Μόνο αγαπημένα" chip — κρατάει μόνο τις συνταγές που ο διαιτολόγος έχει ήδη σημαδέψει
+  // ως δημοφιλείς (isRecipePopular, js/app-part6-recipes.js).
+  if(_foodSelectorFavoritesOnly && typeof isRecipePopular==='function'){
+    filtered=filtered.filter(function(r){return isRecipePopular(r);});
+  }
+
+  // Ταξινόμηση: πρώτα κατά ώρα γεύματος, μετά όχι-απορριγμένες-από-τον-πελάτη, μετά αγαπημένες
+  // (⭐), μετά όσες ο ΙΔΙΟΣ πελάτης έχει ξαναβαθμολογήσει θετικά (👍) — μόνο όταν αναγνωρίζεται
+  // η ώρα του γεύματος γίνεται το πρώτο tier, αλλιώς όλες στο ίδιο ουδέτερο tier.
   var targetCategory=null;
   var ctx=window.currentFoodContext;
-  if(ctx){
-    var c=getC();
-    var meal=c&&c.weekPlan&&c.weekPlan[ctx.d]&&c.weekPlan[ctx.d][ctx.mi];
+  var c=getC();
+  if(ctx&&c){
+    var meal=c.weekPlan&&c.weekPlan[ctx.d]&&c.weekPlan[ctx.d][ctx.mi];
     if(meal)targetCategory=mealTypeToCategory(meal.name);
   }
-  if(targetCategory){
-    filtered=filtered.map(function(r,idx){return {r:r,idx:idx};}).sort(function(a,b){
-      return rankRecipeForMealTime(a.r,targetCategory)-rankRecipeForMealTime(b.r,targetCategory)||a.idx-b.idx;
-    }).map(function(x){return x.r;});
-  }
+  filtered=filtered.map(function(r,idx){return {r:r,idx:idx};}).sort(function(a,b){
+    var rankDiff=targetCategory?(rankRecipeForMealTime(a.r,targetCategory)-rankRecipeForMealTime(b.r,targetCategory)):0;
+    if(rankDiff)return rankDiff;
+    var fbA=getClientRecipeFeedback(a.r,c), fbB=getClientRecipeFeedback(b.r,c);
+    var dislikeDiff=(fbA.disliked?1:0)-(fbB.disliked?1:0);
+    if(dislikeDiff)return dislikeDiff;
+    var favA=(typeof isRecipePopular==='function'&&isRecipePopular(a.r))?0:1;
+    var favB=(typeof isRecipePopular==='function'&&isRecipePopular(b.r))?0:1;
+    if(favA-favB)return favA-favB;
+    var likeDiff=fbB.liked-fbA.liked;
+    if(likeDiff)return likeDiff;
+    return a.idx-b.idx;
+  }).map(function(x){return x.r;});
 
   if(!filtered.length){
     list.innerHTML='<div style="color:#bbb;font-size:11px;padding:10px">Δεν βρέθηκε συνταγή</div>';
@@ -2380,15 +2418,72 @@ function updateRecipeSelectorForPlan(query){
   filtered.forEach(function(r){
     var tagsHtml=(r.tags||[]).slice(0,3).map(function(t){return '<span style="background:#E2EEE5;color:#025857;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px">'+esc(t)+'</span>';}).join('');
     var ingCount=(r.foods||[]).length;
-    html+='<div style="border-bottom:1px solid #f0f0f0;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px">'
-      +'<div style="min-width:0">'
-        +'<div style="font-weight:600;font-size:12.5px;color:#222">'+esc(r.name)+'</div>'
-        +'<div style="font-size:10.5px;color:#999">'+(r.kcal||0)+' kcal · '+ingCount+' υλικά '+tagsHtml+'</div>'
+    var conflicts=c?getRecipeExclusionConflicts(r,c):[];
+    var feedback=getClientRecipeFeedback(r,c);
+    var warnHtml=conflicts.length?('<div style="font-size:10.5px;color:#c62828;margin-top:2px">⚠️ Περιέχει αποκλεισμένο: '+esc(conflicts.map(function(f){return f.n;}).join(', '))+'</div>'):'';
+    var feedbackHtml=feedback.disliked
+      ?'<div style="font-size:10.5px;color:#c62828;margin-top:2px">🚫 Ο πελάτης το απέρριψε πριν (👎)</div>'
+      :(feedback.liked>0?'<div style="font-size:10.5px;color:#2e7d32;margin-top:2px">👍 Άρεσε στον πελάτη '+feedback.liked+' '+(feedback.liked===1?'φορά':'φορές')+'</div>':'');
+    var expanded=!!_expandedFoodSelectorRecipeIds[r.id];
+    var favorite=typeof isRecipePopular==='function'&&isRecipePopular(r);
+    var expandBtn='<button type="button" title="Υλικά" aria-label="Προβολή υλικών" onclick="toggleFoodSelectorRecipeExpand(\''+r.id+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;padding:2px 4px 2px 0;flex-shrink:0;color:#999">'+(expanded?'🔼':'🔽')+'</button>';
+    var ingredientsHtml=expanded?('<div style="padding:2px 10px 8px 26px;display:flex;flex-wrap:wrap;gap:5px">'+(r.foods||[]).map(function(f){return '<span style="background:#f5f5f5;font-size:10.5px;padding:3px 8px;border-radius:4px;color:#666">'+esc(f.n)+' · '+f.g+'g</span>';}).join('')+'</div>'):'';
+    html+='<div style="border-bottom:1px solid #f0f0f0">'
+      +'<div style="padding:8px 10px 8px 6px;display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        +'<div style="display:flex;align-items:flex-start;gap:2px;min-width:0">'
+          +expandBtn
+          +'<div style="min-width:0">'
+            +'<div style="font-weight:600;font-size:12.5px;color:#222">'+(favorite?'⭐ ':'')+esc(r.name)+'</div>'
+            +'<div style="font-size:10.5px;color:#999">'+(r.kcal||0)+' kcal · '+ingCount+' υλικά '+tagsHtml+'</div>'
+            +warnHtml
+            +feedbackHtml
+          +'</div>'
+        +'</div>'
+        +'<button onclick="confirmAddRecipeToMeal(\''+r.id+'\')" style="background:'+((conflicts.length||feedback.disliked)?'#c62828':'#025857')+';color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">➕ Προσθήκη</button>'
       +'</div>'
-      +'<button onclick="confirmAddRecipeToMeal(\''+r.id+'\')" style="background:#025857;color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">➕ Προσθήκη</button>'
+      +ingredientsHtml
     +'</div>';
   });
   list.innerHTML=html;
+}
+
+// Ελέγχει τα υλικά μιας συνταγής (recipe.foods) έναντι της ΙΔΙΑΣ merged λίστας αποκλεισμού που
+// χρησιμοποιεί ήδη το genPlan()/scrubExcludedFoodsFromWeekPlan (js/app-part2.js: buildEffectiveExclusionList
+// + foodIsExcludedByNameOrIngredient) — foodExclude + πρωτόκολλα + αλλεργίες + preferences.
+// Επαναχρησιμοποιούμε αυτή την ήδη-διορθωμένη λογική αντί να ξαναγράψουμε δικό μας name-matching
+// (βλ. το bugfix του ίδιου αρχείου στις 2026-07-30 για σύνθετα πιάτα με κρυμμένο αποκλεισμένο συστατικό).
+function getRecipeExclusionConflicts(recipe,c){
+  if(typeof buildEffectiveExclusionList!=='function'||typeof foodIsExcludedByNameOrIngredient!=='function'||typeof normalizeGreekText!=='function')return [];
+  var exclList=buildEffectiveExclusionList(c);
+  if(!exclList||!exclList.length)return [];
+  var exclNormalized=exclList.map(function(x){return normalizeGreekText(x);});
+  return (recipe.foods||[]).filter(function(f){return foodIsExcludedByNameOrIngredient(f.n,exclNormalized);});
+}
+
+// Διαβάζει το ΙΔΙΟ trust/dislike store που ήδη γεμίζει το 👍/👎 σύστημα του πλάνου (js/app-part4.js
+// rateMeal/logPlanGeneration): meal.recipeId ΓΙΑ ΣΥΝΤΑΓΕΣ ΣΕΦ (MEAL_RECIPES/SNACK_RECIPES/custom) είναι
+// πάντα το ίδιο recipe.id — άρα c.dislikedRecipeIds/TRACKING_DATA.recipes[id] είναι απευθείας συγκρίσιμα
+// με το recipe.id εδώ, χωρίς να χρειάζεται να ξαναϋπολογίσουμε recipeSig (αυτό αφορά μόνο taste-library/
+// saved-combo γεύματα, που δεν εμφανίζονται σε αυτό το picker).
+function getClientRecipeFeedback(recipe,c){
+  var disliked=!!(c&&c.dislikedRecipeIds&&c.dislikedRecipeIds.indexOf(recipe.id)>-1);
+  var liked=0;
+  if(typeof TRACKING_DATA!=='undefined'&&TRACKING_DATA.recipes&&TRACKING_DATA.recipes[recipe.id]&&c){
+    liked=(TRACKING_DATA.recipes[recipe.id].ratings||[]).filter(function(r2){return r2.clientName===c.name&&r2.rating>0;}).length;
+  }
+  return {disliked:disliked,liked:liked};
+}
+
+function insertRecipeFoodsIntoMeal(recipe,ctx){
+  var c=getC();
+  if(!c)return;
+  (recipe.foods||[]).forEach(function(f){
+    c.weekPlan[ctx.d][ctx.mi].foods.push({n:f.n,g:f.g});
+  });
+  save();
+  renderWeekTable();
+  var modal=document.getElementById('food-selector-modal');
+  if(modal)modal.remove();
 }
 
 function confirmAddRecipeToMeal(recipeId){
@@ -2398,13 +2493,20 @@ function confirmAddRecipeToMeal(recipeId){
   if(!c)return;
   var recipe=(typeof findRecipeById==='function')?findRecipeById(recipeId):null;
   if(!recipe){showErrorToast('Η συνταγή δεν βρέθηκε.');return;}
-  (recipe.foods||[]).forEach(function(f){
-    c.weekPlan[ctx.d][ctx.mi].foods.push({n:f.n,g:f.g});
-  });
-  save();
-  renderWeekTable();
-  var modal=document.getElementById('food-selector-modal');
-  if(modal)modal.remove();
+  var conflicts=getRecipeExclusionConflicts(recipe,c);
+  var feedback=getClientRecipeFeedback(recipe,c);
+  var reasons=[];
+  if(conflicts.length)reasons.push('περιέχει '+conflicts.map(function(f){return f.n;}).join(', ')+' — αποκλεισμένο/αλλεργία για τον πελάτη');
+  if(feedback.disliked)reasons.push('ο πελάτης την είχε απορρίψει (👎) σε προηγούμενο πλάνο');
+  if(reasons.length && typeof showConfirmDialog==='function'){
+    showConfirmDialog(
+      'Η συνταγή «'+recipe.name+'» '+reasons.join(' και ')+'. Προσθήκη παρόλα αυτά;',
+      function(){insertRecipeFoodsIntoMeal(recipe,ctx);},
+      {title:'Προσοχή',icon:'⚠️',confirmLabel:'Προσθήκη παρόλα αυτά'}
+    );
+  } else {
+    insertRecipeFoodsIntoMeal(recipe,ctx);
+  }
 }
 
 function delF(d,mi,fi){var c=getC();if(!c)return;c.weekPlan[d][mi].foods.splice(fi,1);save();renderWeekTable();}
