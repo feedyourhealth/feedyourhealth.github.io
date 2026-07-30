@@ -2799,10 +2799,56 @@ function applyFoodExclusions(tmplDays,excludeList,allergyList){
   return result;
 }
 
+// Λέξεις-κλειδιά που δηλώνουν ρητή αποφυγή μέσα σε μια φράση των ελεύθερων "Προτιμήσεων".
+var PREF_AVOID_MARKERS=['οχι ','αποφυγη','χωρις ','μη '];
+// Ειδικές φράσεις που ΔΕΝ πρέπει να λυθούν στη γενική τους κατηγορία (π.χ. "κόκκινο κρέας" σημαίνει
+// συγκεκριμένα RED_MEAT_FOODS, όχι όλη την κατηγορία "Κρέας" — αλλιώς θα αποκλειόταν και το κοτόπουλο).
+var PREF_PHRASE_MAP={'κοκκινο κρεας':function(){return (typeof RED_MEAT_FOODS!=='undefined')?RED_MEAT_FOODS:[];}};
+
+// Σαρώνει το ελεύθερο κείμενο "Προτιμήσεις" (π.χ. "Όχι κόκκινο κρέας, Περισσότερο ψάρι") για ρητές
+// προτάσεις αποφυγής και τις μετατρέπει σε πραγματικά ονόματα τροφίμων — ώστε το πεδίο να κάνει
+// πράγματι αυτό που υπόσχεται στον διαιτολόγο, αντί να είναι σκέτη σημείωση που ο αλγόριθμος ποτέ
+// δεν διάβαζε (confirmed 2026-07-30: c.preferences δεν είχε ΚΑΝΕΝΑ call site εκτός του input field).
+// Συντηρητική σάρωση, επίτηδες: ταιριάζει ΜΟΝΟ φράσεις με ρητή λέξη-αποφυγής + γνωστή κατηγορία/
+// τρόφιμο. Προτάσεις χωρίς λέξη-αποφυγής (π.χ. μόνο "Περισσότερο ψάρι") δεν αγγίζονται καθόλου —
+// μένουν απλή σημείωση όπως πριν, δεν κάνουμε μαντεψιά σε ασαφές κείμενο σε εργαλείο διατροφής.
+function parsePreferenceAvoidFoods(preferencesText){
+  if(!preferencesText)return [];
+  var clauses=preferencesText.split(/[,\n;]+/);
+  var allCats=[];
+  Object.keys(FOODS).forEach(function(n){var c=FOODS[n]&&FOODS[n].cat;if(c&&allCats.indexOf(c)===-1)allCats.push(c);});
+  var foods=[];
+  clauses.forEach(function(clause){
+    var norm=' '+normalizeGreekText(clause)+' ';
+    var hasMarker=PREF_AVOID_MARKERS.some(function(m){return norm.indexOf(m)!==-1;});
+    if(!hasMarker)return;
+    // Ειδική φράση πρώτα (πιο συγκεκριμένη από τη γενική κατηγορία)
+    var matchedPhrase=false;
+    Object.keys(PREF_PHRASE_MAP).forEach(function(phrase){
+      if(norm.indexOf(phrase)!==-1){ foods=foods.concat(PREF_PHRASE_MAP[phrase]()); matchedPhrase=true; }
+    });
+    if(matchedPhrase)return;
+    // Ολόκληρη κατηγορία (π.χ. "κρέας" → όλα τα τρόφιμα της κατηγορίας "Κρέας")
+    var matchedCat=false;
+    allCats.forEach(function(cat){
+      if(norm.indexOf(normalizeGreekText(cat))!==-1){
+        Object.keys(FOODS).forEach(function(n){ if(FOODS[n]&&FOODS[n].cat===cat) foods.push(n); });
+        matchedCat=true;
+      }
+    });
+    if(matchedCat)return;
+    // Συγκεκριμένο τρόφιμο, αναφερμένο με το ακριβές του όνομα
+    Object.keys(FOODS).forEach(function(n){
+      if(normalizeGreekText(n).length>=4 && norm.indexOf(normalizeGreekText(n))!==-1) foods.push(n);
+    });
+  });
+  return foods.filter(function(f,i){return foods.indexOf(f)===i;});
+}
+
 // Builds the same merged exclusion list genPlan() itself uses (c.foodExclude + active medical
-// protocols' avoidFoods + parsed c.allergies) — used so a live re-scrub of an ALREADY-generated
-// plan (see scrubExcludedFoodsFromWeekPlan below) matches exactly what a fresh regenerate would
-// exclude, not just the picker's own list.
+// protocols' avoidFoods + parsed c.allergies + avoid-phrases parsed from c.preferences) — used so a
+// live re-scrub of an ALREADY-generated plan (see scrubExcludedFoodsFromWeekPlan below) matches
+// exactly what a fresh regenerate would exclude, not just the picker's own list.
 function buildEffectiveExclusionList(c){
   var excl=(c.foodExclude||[]).slice();
   var protocolAvoidFoods=(typeof getProtocolAvoidFoods==='function')?getProtocolAvoidFoods(c):[];
@@ -2811,6 +2857,7 @@ function buildEffectiveExclusionList(c){
     var allergyList=parseAllergies(c.allergies);
     allergyList.forEach(function(a){ if(excl.indexOf(a)===-1) excl.push(a); });
   }
+  parsePreferenceAvoidFoods(c.preferences).forEach(function(f){ if(excl.indexOf(f)===-1) excl.push(f); });
   return excl;
 }
 

@@ -1091,6 +1091,7 @@ function genPlan(){
       // Apply food exclusions to the cloned plan
       var excl=c.foodExclude||[];
       protocolAvoidFoods.forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
+      parsePreferenceAvoidFoods(c.preferences).forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
       if(excl.length>0){
         for(var d=0;d<7;d++){
           if(c.weekPlan[d]){
@@ -1238,6 +1239,10 @@ function genPlan(){
       if(excl.indexOf(allergy)===-1)excl.push(allergy);
     });
   }
+  // ✅ Ρητές προτάσεις αποφυγής μέσα στο ελεύθερο κείμενο "Προτιμήσεις" (π.χ. "Όχι κόκκινο κρέας")
+  parsePreferenceAvoidFoods(c.preferences).forEach(function(food){
+    if(excl.indexOf(food)===-1)excl.push(food);
+  });
   // ✅ Reorder meals to standard sequence before other operations
   tmplDays=reorderMealsToStandardSequence(tmplDays);
   // Initial Mediterranean pipeline on templates ONLY

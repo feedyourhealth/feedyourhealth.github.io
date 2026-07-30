@@ -2318,7 +2318,9 @@ function openDietModal(){
     +'</div>'
     +'<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">💡 Προτιμήσεις (comma-separated):</label>'
-    +'<textarea id="preferences-modal" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px;height:80px;font-family:monospace" placeholder="π.χ. Όχι κόκκινο κρέας, Περισσότερο ψάρι">'+(c.preferences||'')+'</textarea>'
+    +'<textarea id="preferences-modal" oninput="updatePreferencesDetectedHint()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px;height:80px;font-family:monospace" placeholder="π.χ. Όχι κόκκινο κρέας, Περισσότερο ψάρι">'+(c.preferences||'')+'</textarea>'
+    +'<div id="preferences-detected-hint" style="font-size:11px;color:#025857;margin-top:6px"></div>'
+    +'<div style="font-size:10px;color:#999;margin-top:2px">Μόνο ρητές φράσεις αποφυγής (π.χ. «Όχι…», «Αποφυγή…») μετατρέπονται αυτόματα σε αποκλεισμό τροφίμων — όλα τα άλλα παραμένουν απλή σημείωση.</div>'
     +'</div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeDietModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
@@ -2331,6 +2333,17 @@ function openDietModal(){
   overlay.innerHTML=html;
   overlay.id='dietModal';
   document.body.appendChild(overlay);
+  updatePreferencesDetectedHint();
+}
+
+// Δείχνει στον διαιτολόγο, ζωντανά καθώς γράφει, ποια τρόφιμα εντόπισε το parsePreferenceAvoidFoods
+// (js/app-part2.js) στο ελεύθερο κείμενο — ώστε ο αυτόματος αποκλεισμός να μην είναι μαύρο κουτί.
+function updatePreferencesDetectedHint(){
+  var ta=document.getElementById('preferences-modal');
+  var hint=document.getElementById('preferences-detected-hint');
+  if(!ta||!hint)return;
+  var foods=parsePreferenceAvoidFoods(ta.value);
+  hint.textContent=foods.length?('🔍 Εντοπίστηκε αποφυγή: '+foods.join(', ')):'';
 }
 
 function closeDietModal(){
