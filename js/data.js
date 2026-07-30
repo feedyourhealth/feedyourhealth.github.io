@@ -228,16 +228,19 @@ var FOODS={
 'Korean Beef Bowl':{k:149,p:11.8,c:17.7,f:3.9,fi:1.5,cat:'Συνταγές FYH',containsCats:['Κρέας'],en:'Korean Beef Bowl'},
 'Chicken Lettuce Wraps':{k:138,p:22,c:4.4,f:3,fi:1.5,cat:'Συνταγές FYH',containsCats:['Κρέας'],en:'Chicken Lettuce Wraps'},
 'Κοτόπουλο Pesto & Φέτα':{k:200,p:24,c:1.3,f:10,fi:0.5,cat:'Συνταγές FYH',containsCats:['Κρέας','Αυγά/Γαλακτ.'],en:'Chicken Pesto & Feta'},
+// Still genuinely ambiguous, no ingredients found anywhere in this file — flagged, not tagged:
 'Pancakes Κυριακής (FYH)':{k:188,p:13,c:19,f:6,fi:1.5,cat:'Συνταγές FYH',en:'Sunday Pancakes (FYH)'},
-'Βρώμη Πρωινού (FYH)':{k:125,p:5,c:17,f:5,fi:4.0,cat:'Συνταγές FYH',en:'Morning Oatmeal (FYH)'},
+'Βρώμη Πρωινού (FYH)':{k:125,p:5,c:17,f:5,fi:4.0,cat:'Συνταγές FYH',en:'Morning Oatmeal (FYH)'}, // CLEAN 2026-07-30 — almond milk only, no dairy/egg (see FYH_RECIPE_EXPAND)
 'Fajita Wrap Κοτόπουλο':{k:157,p:13.2,c:10.7,f:6.7,fi:1.2,cat:'Συνταγές FYH',containsCats:['Κρέας'],en:'Chicken Fajita Wrap'},
 'Πρωινό Αυγών (FYH)':{k:168,p:9,c:12,f:10,fi:0.8,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Egg Breakfast (FYH)'},
 'Τοστ Αυγών (FYH)':{k:179,p:11,c:18,f:7,fi:2.2,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Egg Toast (FYH)'},
 'Γιαούρτι Granola (FYH)':{k:106,p:5,c:17,f:3,fi:3.5,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Yogurt & Granola (FYH)'},
 'Chia Pudding (FYH)':{k:80,p:3,c:11,f:4,fi:8.0,cat:'Συνταγές FYH',en:'Chia Pudding (FYH)'},
 'Πίτα Αυγών (FYH)':{k:147,p:9,c:11,f:8,fi:1.8,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Egg Pita (FYH)'},
-'Green Protein Smoothie (FYH)':{k:81,p:8,c:6,f:3,fi:2.5,cat:'Συνταγές FYH',en:'Green Protein Smoothie (FYH)'},
-'Berry Protein Smoothie (FYH)':{k:131,p:16,c:12,f:3,fi:3.5,cat:'Συνταγές FYH',en:'Berry Protein Smoothie (FYH)'},
+// containsCats resolved 2026-07-30 from the real ingredient breakdown in FYH_RECIPE_EXPAND below
+// (was previously left untagged/ambiguous, no ingredients visible from this object alone):
+'Green Protein Smoothie (FYH)':{k:81,p:8,c:6,f:3,fi:2.5,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Green Protein Smoothie (FYH)'}, // whey protein powder
+'Berry Protein Smoothie (FYH)':{k:131,p:16,c:12,f:3,fi:3.5,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Berry Protein Smoothie (FYH)'}, // real yogurt + whey
 'Protein Pancakes (FYH)':{k:141,p:10.6,c:14.3,f:3.8,fi:2.0,cat:'Συνταγές FYH',en:'Protein Pancakes (FYH)'},
 'Σαλάτα Φακής Μεσογειακή':{k:110,p:5.4,c:8.8,f:5.6,fi:5.5,cat:'Συνταγές FYH',en:'Mediterranean Lentil Salad'},
 'Μπουλγκούρ-Κινόα Κοτόπουλο':{k:175,p:11.5,c:13,f:6,fi:3.0,cat:'Συνταγές FYH',containsCats:['Κρέας'],en:'Bulgur-Quinoa Chicken'},
@@ -252,11 +255,12 @@ var FOODS={
 'PB Protein Bars':{k:370,p:15,c:35,f:19,fi:3.5,cat:'Συνταγές FYH',en:'PB Protein Bars'},
 'Σάλτσα Ντομάτας (FYH)':{k:133,p:1.2,c:8,f:11,fi:1.3,cat:'Συνταγές FYH',en:'FYH Tomato Sauce'},
 // Petretzeakis Breakfast Recipes
-'Breakfast Burrito (Πετρετζίκης)':{k:420,p:18,c:48,f:16,fi:4.5,cat:'Συνταγές FYH',en:'Breakfast Burrito (Petretzikis)'},
-'Chia Bowl Φράουλα (Πετρετζίκης)':{k:385,p:15,c:52,f:12,fi:8.0,cat:'Συνταγές FYH',en:'Strawberry Chia Bowl (Petretzikis)'},
+'Breakfast Burrito (Πετρετζίκης)':{k:420,p:18,c:48,f:16,fi:4.5,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Breakfast Burrito (Petretzikis)'}, // real eggs + Κασέρι cheese
+'Chia Bowl Φράουλα (Πετρετζίκης)':{k:385,p:15,c:52,f:12,fi:8.0,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Strawberry Chia Bowl (Petretzikis)'}, // real yogurt
+// Confirmed CLEAN 2026-07-30 (uses Γάλα αμυγδάλου/almond milk, no real dairy or egg) — no tag needed:
 'Overnight Oats Banoffee (Πετρετζίκης)':{k:430,p:13,c:54,f:18,fi:7.0,cat:'Συνταγές FYH',en:'Banoffee Overnight Oats (Petretzikis)'},
-'Overnight Oats Black Forest (Πετρετζίκης)':{k:425,p:18,c:56,f:12,fi:8.0,cat:'Συνταγές FYH',en:'Black Forest Overnight Oats (Petretzikis)'},
-'Overnight Oats P.B. & Choco (Πετρετζίκης)':{k:470,p:16,c:55,f:20,fi:8.0,cat:'Συνταγές FYH',en:'P.B. & Choco Overnight Oats (Petretzikis)'},
+'Overnight Oats Black Forest (Πετρετζίκης)':{k:425,p:18,c:56,f:12,fi:8.0,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Black Forest Overnight Oats (Petretzikis)'}, // real whole milk + whey
+'Overnight Oats P.B. & Choco (Πετρετζίκης)':{k:470,p:16,c:55,f:20,fi:8.0,cat:'Συνταγές FYH',en:'P.B. & Choco Overnight Oats (Petretzikis)'}, // almond milk, clean
 'Αυγά Ποσέ Air Fryer (Πετρετζίκης)':{k:370,p:16,c:38,f:18,fi:6.0,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Air Fryer Poached Eggs (Petretzikis)'},
 'Ομελέτα Γαλοπούλα & Λαχ. (Πετρετζίκης)':{k:360,p:32,c:20,f:15,fi:3.0,cat:'Συνταγές FYH',containsCats:['Κρέας','Αυγά/Γαλακτ.'],en:'Turkey & Veggie Omelette (Petretzikis)'},
 // Main Course Recipes - Petretzeakis
