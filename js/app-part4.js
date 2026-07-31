@@ -590,79 +590,163 @@ function exportLipometriaPDF(){
   var c=getC();if(!c)return;
   function blank(label,w){return '<div class="field" style="width:'+(w||'auto')+'"><div class="flbl">'+label+'</div><div class="fval"></div></div>';}
   function filled(label,val,w,col){return '<div class="field" style="width:'+(w||'auto')+'"><div class="flbl">'+label+'</div><div class="fval" style="'+(col?'color:'+col+';font-weight:700':'')+'">'+esc(val)+'</div></div>';}
+  function pct(v,min,max){return Math.max(0,Math.min(100,(v-min)/(max-min)*100));}
+  function gradientCSS(boundaries,max){
+    var stops=[];
+    for(var i=0;i<boundaries.length;i++){
+      var startPct=pct(boundaries[i].v,boundaries[0].v,max);
+      stops.push(boundaries[i].col+' '+startPct.toFixed(0)+'%');
+      if(i<boundaries.length-1){var endPct=pct(boundaries[i+1].v,boundaries[0].v,max);stops.push(boundaries[i].col+' '+endPct.toFixed(0)+'%');}
+    }
+    return 'linear-gradient(90deg,'+stops.join(',')+')';
+  }
+  function deltaSpan(delta,decimals,unit,goodDir){
+    if(delta==null||isNaN(delta))return '';
+    var eps=decimals===0?0.5:(decimals===2?0.005:0.05);
+    var flat=Math.abs(delta)<eps;
+    var improving=goodDir==='down'?delta<0:delta>0;
+    var col=flat?'#8a9490':(improving?'#2e7d32':'#c62828');
+    var arrow=flat?'—':(delta>0?'▲':'▼');
+    return ' <span style="color:'+col+';font-weight:700">'+arrow+Math.abs(delta).toFixed(decimals)+(unit||'')+'</span>';
+  }
+  function rangeBar(label,valTxt,valCol,catTxt,deltaHtmlStr,boundaries,max,curVal,goalVal){
+    var curPct=curVal!=null?pct(curVal,boundaries[0].v,max):null;
+    var goalPct=goalVal!=null?pct(goalVal,boundaries[0].v,max):null;
+    return '<div style="margin-bottom:11px">'
+      +'<div style="display:flex;justify-content:space-between;font-size:7.5pt;color:#5b6b67;margin-bottom:3px"><span>'+label+'</span><b style="color:'+valCol+'">'+valTxt+(deltaHtmlStr||'')+(catTxt?' · '+catTxt:'')+'</b></div>'
+      +'<div style="height:7px;border-radius:4px;background:'+gradientCSS(boundaries,max)+';position:relative">'
+      +(curPct!=null?'<div style="position:absolute;left:'+curPct.toFixed(1)+'%;top:-3px;width:2px;height:13px;background:#111"></div>':'')
+      +(goalPct!=null?'<div style="position:absolute;left:'+goalPct.toFixed(1)+'%;top:-9px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #025857"></div>':'')
+      +'</div></div>';
+  }
+  function sparkline(vals,color){
+    var v=vals.filter(function(x){return x!=null;});
+    if(v.length<2)return '<div style="font-size:7.5pt;color:#ccc;padding:16px 0;text-align:center">Ανεπαρκή δεδομένα</div>';
+    var min=Math.min.apply(null,v),max=Math.max.apply(null,v),range=(max-min)||1,n=v.length;
+    var pts=v.map(function(x,i){return (5+i/(n-1)*90).toFixed(1)+','+(5+(1-(x-min)/range)*40).toFixed(1);}).join(' ');
+    return '<svg viewBox="0 0 100 50" width="100%" height="42"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2"/></svg>';
+  }
 
   // Use latest tracker entry if available, else use client profile
-  var entry=null;
+  var entry=null,sorted=null,prevEntry=null;
   if(c.weightLog&&c.weightLog.length){
-    var sorted=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
+    sorted=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
     entry=sorted[sorted.length-1];
+    prevEntry=sorted.length>1?sorted[sorted.length-2]:null;
   }
   var today=new Date().toISOString().slice(0,10);
   var entryDate=entry?entry.date:today;
-  var weight=entry?entry.weight:(c.weight||'—');
+  var weight=entry?entry.weight:(c.weight||null);
   var bf=entry&&entry.bf>0?entry.bf:(c.bf>0?c.bf:null);
-  var lbm=bf?+(weight*(1-bf/100)).toFixed(1):null;
-  var fm=bf?+(weight*bf/100).toFixed(1):null;
+  var lbm=(bf&&weight)?+(weight*(1-bf/100)).toFixed(1):null;
+  var fm=(bf&&weight)?+(weight*bf/100).toFixed(1):null;
   var h=c.height||0;
-  var bmi=h>0?+(weight/((h/100)*(h/100))).toFixed(1):null;
+  var bmi=(h>0&&weight)?+(weight/((h/100)*(h/100))).toFixed(1):null;
   var bmiCat=bmi?bmi<18.5?'Ελλιποβαρές':bmi<25?'Φυσιολογικό':bmi<30?'Υπέρβαρο':bmi<35?'Παχυσαρκία Ι':bmi<40?'Παχυσαρκία ΙΙ':'Παχυσαρκία ΙΙΙ':'—';
-  var bmiCol=bmi?bmi<18.5?'#1565C0':bmi<25?'#2e7d32':bmi<30?'#f57c00':'#c62828':null;
+  var bmiCol=bmi?bmi<18.5?'#1565C0':bmi<25?'#2e7d32':bmi<30?'#f57c00':'#c62828':'#555';
   var isFem=(c.sex||'M')==='F';
   var waist=entry&&entry.waist?entry.waist:null;
   var hip=entry&&entry.hip?entry.hip:null;
-  var arm=entry&&entry.arm?entry.arm:null;
   var whr=waist&&hip?+(waist/hip).toFixed(2):null;
-  var whtr=waist&&h>0?+(waist/h).toFixed(2):null;
+  var whtr=(waist&&h>0)?+(waist/h).toFixed(2):null;
+  var whtrCatLabel=whtr!=null?(whtr<0.5?'Φυσιολογικό':whtr<0.6?'Αυξημένος κίνδυνος':'Υψηλός κίνδυνος'):'—';
+  var whtrCatCol=whtr!=null?(whtr<0.5?'#2e7d32':whtr<0.6?'#f57c00':'#c62828'):'#555';
+  var bmr=(h>0&&weight&&c.age)?Math.round(10*weight+6.25*h-5*c.age+(isFem?-161:5)):null;
 
   // Skinfold raw data from latest entry
   var sfProto=entry&&entry.sfProtocol?entry.sfProtocol:null;
   var sfFields=entry&&entry.sfFields?entry.sfFields:{};
-  var sfSum=sfProto?Object.values(sfFields).reduce(function(s,v){return s+v;},0):null;
+  var sfKeys=Object.keys(sfFields);
+  var sfSum=sfKeys.length?Object.values(sfFields).reduce(function(s,v){return s+v;},0):null;
   var sfProtoLabel={jp4:'Jackson & Pollock 4-site (1985)',jp3:'Jackson & Pollock 3-site',jp7:'Jackson & Pollock 7-site',slaughter:'Slaughter (1988)'};
   var sfNames={tricep:'Τρικέφαλος',subscapular:'Υποπλάτιο',abdomen:'Κοιλιά',suprailiac:'Υπερλαγόνιο',thigh:'Μηρός',chest:'Στήθος',midaxillary:'Μεσομάσχαλο',calf:'Γαστροκνήμιος'};
+  var isJp4Layout=!sfProto||sfProto==='jp4';
+  var prevSfSum=null;
+  if(prevEntry&&prevEntry.sfFields){var pv=Object.values(prevEntry.sfFields);if(pv.length)prevSfSum=pv.reduce(function(s,v){return s+v;},0);}
+  var sfSumDelta=(sfSum!=null&&prevSfSum!=null)?Math.round(sfSum-prevSfSum):null;
 
-  // BF% category (ACSM)
+  // ACSM %BF reference categories (used for both category lookup and the range bar)
+  var bfRefs=isFem
+    ?[{lo:10,hi:13,lbl:'Απαραίτητο',col:'#1565C0'},{lo:14,hi:20,lbl:'Αθλητικό',col:'#2e7d32'},{lo:21,hi:24,lbl:'Φυσιολογικό',col:'#558b2f'},{lo:25,hi:31,lbl:'Αποδεκτό',col:'#f57c00'},{lo:32,hi:60,lbl:'Παχυσαρκία',col:'#c62828'}]
+    :[{lo:2,hi:5,lbl:'Απαραίτητο',col:'#1565C0'},{lo:6,hi:13,lbl:'Αθλητικό',col:'#2e7d32'},{lo:14,hi:17,lbl:'Φυσιολογικό',col:'#558b2f'},{lo:18,hi:24,lbl:'Αποδεκτό',col:'#f57c00'},{lo:25,hi:60,lbl:'Παχυσαρκία',col:'#c62828'}];
   var bfCatLabel='—',bfCatCol='#555';
-  if(bf){
-    var bfRefs=isFem
-      ?[{lo:10,hi:13,lbl:'Απαραίτητο',col:'#1565C0'},{lo:14,hi:20,lbl:'Αθλητικό',col:'#2e7d32'},{lo:21,hi:24,lbl:'Φυσιολογικό',col:'#558b2f'},{lo:25,hi:31,lbl:'Αποδεκτό',col:'#f57c00'},{lo:32,hi:60,lbl:'Παχυσαρκία',col:'#c62828'}]
-      :[{lo:2,hi:5,lbl:'Απαραίτητο',col:'#1565C0'},{lo:6,hi:13,lbl:'Αθλητικό',col:'#2e7d32'},{lo:14,hi:17,lbl:'Φυσιολογικό',col:'#558b2f'},{lo:18,hi:24,lbl:'Αποδεκτό',col:'#f57c00'},{lo:25,hi:60,lbl:'Παχυσαρκία',col:'#c62828'}];
-    bfRefs.forEach(function(r){if(bf>=r.lo&&bf<=r.hi){bfCatLabel=r.lbl;bfCatCol=r.col;}});
+  if(bf){bfRefs.forEach(function(r){if(bf>=r.lo&&bf<=r.hi){bfCatLabel=r.lbl;bfCatCol=r.col;}});}
+  var bfGoal=bfRefs[2].hi; // upper bound of "Φυσιολογικό"
+
+  // Deltas vs previous tracker entry
+  var wDelta=(prevEntry&&prevEntry.weight!=null&&weight!=null)?+(weight-prevEntry.weight).toFixed(1):null;
+  var prevBf=prevEntry&&prevEntry.bf>0?prevEntry.bf:null;
+  var bfDelta=(bf&&prevBf)?+(bf-prevBf).toFixed(1):null;
+  var prevLbm=(prevEntry&&prevBf&&prevEntry.weight)?+(prevEntry.weight*(1-prevBf/100)).toFixed(1):null;
+  var lbmDelta=(lbm&&prevLbm)?+(lbm-prevLbm).toFixed(1):null;
+  var bmiDelta=null;
+  if(prevEntry&&prevEntry.weight&&h>0&&bmi){bmiDelta=+(bmi-(prevEntry.weight/((h/100)*(h/100)))).toFixed(1);}
+  var waistDelta=(waist&&prevEntry&&prevEntry.waist)?+(waist-prevEntry.waist).toFixed(1):null;
+  var whtrDelta=null;
+  if(whtr!=null&&prevEntry&&prevEntry.waist&&h>0){whtrDelta=+(whtr-(prevEntry.waist/h)).toFixed(2);}
+
+  // Auto-generated suggestion (no arbitrary score — grounded in ACSM category + trend)
+  function buildSuggestion(){
+    if(!bf)return 'Συμπλήρωσε δερματοπτυχές σε τουλάχιστον μία μέτρηση για αυτόματη πρόταση.';
+    var parts=[];
+    if(bfDelta!=null){
+      if(bfDelta<0)parts.push('Καλή πορεία — το % λίπους μειώθηκε κατά '+Math.abs(bfDelta).toFixed(1)+'% από την προηγούμενη μέτρηση.');
+      else if(bfDelta>0)parts.push('Το % λίπους αυξήθηκε κατά '+bfDelta.toFixed(1)+'% από την προηγούμενη μέτρηση — αξίζει επανεξέταση προσλαμβανόμενων θερμίδων.');
+      else parts.push('Το % λίπους παρέμεινε σταθερό από την προηγούμενη μέτρηση.');
+    }
+    if(bf>bfGoal){
+      var fmGoalKg=+(weight*(bf-bfGoal)/100).toFixed(1);
+      parts.push('Στόχος: %BF εντός φυσιολογικού εύρους (~'+fmGoalKg+'kg λιπώδης μάζα ακόμα).');
+    } else {
+      parts.push('Το %BF είναι ήδη εντός φυσιολογικού εύρους — στόχος διατήρηση.');
+    }
+    parts.push('Διατήρησε πρωτεϊνική πρόσληψη ~1.6g/kg σωματικού βάρους για προστασία της άλιπης μάζας.');
+    return parts.join(' ');
   }
 
   // Logo
   var logoSrc='';
   try{var lc=document.createElement('canvas');lc.width=80;lc.height=80;var lx=lc.getContext('2d');lx.fillStyle='#025857';lx.fillRect(0,0,80,80);lx.fillStyle='#fff';lx.font='bold 34px Georgia,serif';lx.textAlign='center';lx.textBaseline='middle';lx.fillText('fyh',40,40);logoSrc=lc.toDataURL('image/png');}catch(e){}
 
+  // Body outline (shared path for the skinfold-site diagram)
+  var BODY_PATH='M 129.9,45.4 Q 135,43 140.1,45.4 L 153.9,51.6 Q 159,54 160.1,61.6 L 163.8,79.4 Q 165,86 164.1,92.8 L 161.8,109.2 Q 161,116 160.1,117.6 L 157.8,121.4 Q 157,123 155.4,121.8 L 151.6,118.2 Q 150,117 149.8,110.8 L 149.2,93.2 Q 149,86 148.3,80.6 L 146.3,65.4 Q 145.6,60 144.4,71.7 L 141.2,98.3 Q 140,109 141.8,112.6 L 146.5,121.4 Q 148.5,125 148,134 L 146.8,157 Q 146.3,166 145.3,172.4 L 142.9,189 Q 142,195.5 141.5,202.2 L 140.3,219.6 Q 140,226 141.4,227.4 L 145,231 Q 146.5,232.4 144.3,231.3 L 138.9,228.5 Q 136.7,227.4 136,220.1 L 134.2,202 Q 133.7,195 133.4,180.6 L 132.8,144.4 Q 132.6,130 133,129.1 L 134.2,126.7 Q 134.7,125.8 135.2,126.7 L 136.4,129.1 Q 136.8,130 136.6,144.4 L 136,180.6 Q 135.7,195 135,202 L 133.2,220.1 Q 132.5,227.4 130.2,228.5 L 124.8,231.3 Q 122.6,232.4 124.1,231 L 127.7,227.4 Q 129.1,226 128.8,219.6 L 127.6,202.2 Q 127.1,195.5 126.2,189 L 123.8,172.4 Q 122.8,166 122.3,157 L 121.1,134 Q 120.6,125 122.6,121.4 L 127.3,112.6 Q 129.1,109 127.9,98.3 L 124.7,71.7 Q 123.5,60 122.8,65.4 L 120.8,80.6 Q 120.1,86 119.9,93.2 L 119.3,110.8 Q 119.1,117 117.5,118.2 L 113.7,121.8 Q 112.1,123 111.3,121.4 L 109,117.6 Q 108.1,116 107.3,109.2 L 105,92.8 Q 104.1,86 105.3,79.4 L 109,61.6 Q 110.1,54 115.2,51.6 L 129.9,45.4 Z';
+  var siteMeta={
+    tricep:{x:150,y:90,lx:215,ly:70,anchor:'start',label:'Τρικέφαλος'},
+    suprailiac:{x:120,y:87,lx:30,ly:65,anchor:'start',label:'Υπερλαγόνιο'},
+    abdomen:{x:137,y:135,lx:215,ly:150,anchor:'start',label:'Κοιλιά'},
+    thigh:{x:127,y:165,lx:30,ly:180,anchor:'start',label:'Μηρός'}
+  };
+  function skinfoldDiagram(){
+    var svg='<svg viewBox="0 0 260 300" width="230" height="265">'
+      +'<path d="'+BODY_PATH+'" fill="#eef4f3" stroke="#025857" stroke-width="1.6" stroke-linejoin="round"/>'
+      +'<circle cx="135" cy="27" r="17" fill="#eef4f3" stroke="#025857" stroke-width="1.6"/>';
+    Object.keys(siteMeta).forEach(function(k){
+      var m=siteMeta[k];var v=sfFields[k];
+      svg+='<circle cx="'+m.x+'" cy="'+m.y+'" r="3" fill="'+(v!=null?'#c62828':'#ccc')+'"/>'
+        +'<line x1="'+m.x+'" y1="'+m.y+'" x2="'+m.lx+'" y2="'+m.ly+'" stroke="#c5ddd8" stroke-width="1"/>'
+        +'<text x="'+m.lx+'" y="'+(m.ly-4)+'" font-size="9" fill="#5b6b67">'+m.label+'</text>'
+        +'<text x="'+m.lx+'" y="'+(m.ly+8)+'" font-size="10" font-weight="700" fill="'+(v!=null?'#025857':'#ccc')+'">'+(v!=null?v+' mm':'___ mm')+'</text>';
+    });
+    svg+='</svg>';
+    return svg;
+  }
+
   var html='<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8"><title>Έντυπο Λιπομέτρησης</title><style>'
     +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#111;background:#fff;padding:8mm 10mm}'
-    +'.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #025857;padding-bottom:6px;margin-bottom:10px}'
+    +'.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #025857;padding-bottom:6px;margin-bottom:12px}'
     +'.brand{display:flex;align-items:center;gap:8px}.brand img{width:38px;height:38px;border-radius:6px}'
-    +'.brand-name{font-size:14pt;font-weight:700;color:#025857;letter-spacing:1px}'
-    +'.brand-url{font-size:7pt;color:#888}'
-    +'.doc-title{text-align:right;font-size:11pt;font-weight:700;color:#025857}'
-    +'.doc-date{font-size:7.5pt;color:#888}'
-    +'.sec{margin-bottom:8px;border:1px solid #c5ddd8;border-radius:6px;overflow:hidden}'
-    +'.sec-hdr{background:#025857;color:#fff;font-size:8pt;font-weight:700;padding:4px 8px;letter-spacing:.3px}'
-    +'.sec-body{padding:7px 8px;display:flex;flex-wrap:wrap;gap:6px 14px}'
-    +'.field{display:flex;flex-direction:column;min-width:70px}'
+    +'.brand-name{font-size:11pt;font-weight:700;color:#025857;letter-spacing:.5px}'
+    +'.brand-sub{font-size:7.5pt;color:#8a9490;margin-top:1px}'
+    +'.doc-date{text-align:right;font-size:7.5pt;color:#8a9490}'
+    +'.card{border:1px solid #e3ece9;border-radius:8px;padding:10px 12px;margin-bottom:11px}'
+    +'.card-lbl{font-size:7.5pt;font-weight:700;color:#025857;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px}'
+    +'.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}'
+    +'.field{display:flex;flex-direction:column;min-width:60px}'
     +'.flbl{font-size:6.5pt;color:#888;text-transform:uppercase;letter-spacing:.3px;margin-bottom:1px}'
-    +'.fval{font-size:9pt;font-weight:600;color:#111;border-bottom:1px solid #ccc;min-width:70px;padding-bottom:1px;min-height:15px}'
-    +'.sf-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 16px;padding:7px 8px}'
-    +'.sf-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;padding:2px 0}'
-    +'.sf-lbl{font-size:7.5pt;color:#444}'
-    +'.sf-val{font-size:8.5pt;font-weight:700;color:#025857;min-width:50px;text-align:right}'
-    +'.result-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:7px 8px}'
-    +'.kpi{text-align:center;background:#f0f9f8;border-radius:6px;padding:6px 4px}'
-    +'.kpi-lbl{font-size:6pt;color:#666;text-transform:uppercase;letter-spacing:.3px}'
-    +'.kpi-val{font-size:13pt;font-weight:700;color:#025857;line-height:1.2;margin-top:1px}'
-    +'.kpi-sub{font-size:6.5pt;margin-top:1px}'
-    +'.ref-wrap{padding:6px 8px}'
-    +'.ref-bar{display:flex;height:10px;border-radius:4px;overflow:hidden;margin-bottom:4px}'
-    +'.ref-labels{display:flex;gap:8px;flex-wrap:wrap;font-size:6.5pt}'
-    +'.notes-area{padding:6px 8px;min-height:36px}'
+    +'.fval{font-size:9pt;font-weight:600;color:#111;border-bottom:1px solid #ccc;min-width:60px;padding-bottom:1px;min-height:15px}'
     +'.notes-line{border-bottom:1px solid #ddd;margin-bottom:8px;height:16px}'
-    +'.footer{margin-top:8px;padding-top:4px;border-top:1px solid #c5ddd8;display:flex;justify-content:space-between;font-size:6.5pt;color:#888}'
+    +'.footer{margin-top:6px;padding-top:4px;border-top:1px solid #c5ddd8;font-size:6.5pt;color:#888}'
+    +'.footer-row{display:flex;justify-content:space-between}'
     +'@media print{.no-print{display:none}body{color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}*{color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
     +'</style></head><body>'
     +'<div class="no-print" style="margin-bottom:8px;display:flex;gap:8px;align-items:center">'
@@ -670,73 +754,96 @@ function exportLipometriaPDF(){
     +'<span style="font-size:11px;color:#666">Portrait · Χωρίς κεφαλίδες/υποσέλιδα</span></div>'
     // Header
     +'<div class="hdr">'
-    +'<div class="brand">'+(logoSrc?'<img src="'+logoSrc+'" alt="FYH">':'')+'<div><div class="brand-name">FEED YOUR HEALTH</div><div class="brand-url">www.feedyourhealth.org</div></div></div>'
-    +'<div><div class="doc-title">ΈΝΤΥΠΟ ΛΙΠΟΜΕΤΡΗΣΗΣ</div><div class="doc-date">Ημερομηνία: '+esc(entryDate)+'</div></div>'
+    +'<div class="brand">'+(logoSrc?'<img src="'+logoSrc+'" alt="FYH">':'')+'<div><div class="brand-name">ΑΝΑΛΥΣΗ ΣΩΜΑΤΙΚΗΣ ΣΥΝΘΕΣΗΣ</div><div class="brand-sub">'+esc(c.name||'')+' · '+(isFem?'Γυναίκα':'Άνδρας')+(c.age?' · '+c.age+' ετών':'')+(h?' · '+h+' cm':'')+'</div></div></div>'
+    +'<div class="doc-date">Ημερομηνία μέτρησης'+(prevEntry?' · προηγούμενη':'')+'<br><b style="color:#3d4d49;font-size:9pt">'+esc(entryDate)+'</b>'+(prevEntry?' <span style="color:#b3bab8">(vs '+esc(prevEntry.date)+')</span>':'')+'</div>'
     +'</div>'
-    // Στοιχεία πελάτη
-    +'<div class="sec"><div class="sec-hdr">ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ</div><div class="sec-body">'
-    +filled('Ονοματεπώνυμο',c.name,'220px')
-    +filled('Ηλικία',c.age?c.age+' έτη':'','60px')
-    +filled('Φύλο',isFem?'Γυναίκα':'Άνδρας','75px')
-    +filled('Ύψος',h?h+' cm':'','65px')
-    +filled('Βάρος',weight?weight+' kg':'','65px')
-    +(bmi?filled('ΔΜΣ',bmi+' kg/m²','80px')+filled('Κατηγορία ΔΜΣ',bmiCat,'90px',bmiCol):'')
-    +'</div></div>'
-    // Δερματοπτυχές
-    +(sfProto?
-      '<div class="sec"><div class="sec-hdr">ΔΕΡΜΑΤΟΠΤΥΧΕΣ &mdash; '+esc(sfProtoLabel[sfProto]||sfProto)+'</div>'
-      +'<div class="sf-grid">'
-      +Object.keys(sfFields).map(function(k,i){
-        return '<div class="sf-item"><span class="sf-lbl">'+(i+1)+'. '+(sfNames[k]||k)+'</span><span class="sf-val">'+sfFields[k]+' mm</span></div>';
-      }).join('')
-      +'<div class="sf-item"><span class="sf-lbl" style="font-weight:700">Σύνολο</span><span class="sf-val" style="color:#111">'+Math.round(sfSum)+' mm</span></div>'
-      +'</div></div>'
+
+    // Donut + Overall analysis
+    +'<div class="grid2">'
+    +'<div class="card" style="text-align:center">'
+    +'<div class="card-lbl">Σύσταση βάρους (kg)</div>'
+    +(weight&&lbm&&fm?(
+      '<svg viewBox="0 0 140 140" width="120" height="120" style="margin:0 auto;display:block">'
+      +'<circle cx="70" cy="70" r="52" fill="none" stroke="#eef4f3" stroke-width="16"/>'
+      +'<circle cx="70" cy="70" r="52" fill="none" stroke="#1565C0" stroke-width="16" stroke-dasharray="'+(326.7*lbm/weight).toFixed(1)+' 326.7" transform="rotate(-90 70 70)"/>'
+      +'<circle cx="70" cy="70" r="52" fill="none" stroke="#e65100" stroke-width="16" stroke-dasharray="'+(326.7*fm/weight).toFixed(1)+' 326.7" stroke-dashoffset="-'+(326.7*lbm/weight).toFixed(1)+'" transform="rotate(-90 70 70)"/>'
+      +'<text x="70" y="63" text-anchor="middle" font-size="18" font-weight="700" fill="#3d4d49">'+weight+'</text>'
+      +'<text x="70" y="77" text-anchor="middle" font-size="7" fill="#8a9490">kg ΣΥΝΟΛΟ</text>'
+      +(wDelta!=null?'<text x="70" y="90" text-anchor="middle" font-size="7.5" font-weight="700" fill="'+(wDelta<0?'#2e7d32':wDelta>0?'#c62828':'#8a9490')+'">'+(wDelta<0?'▼':wDelta>0?'▲':'—')+Math.abs(wDelta).toFixed(1)+'kg</text>':'')
+      +'</svg>'
+      +'<div style="display:flex;justify-content:center;gap:12px;margin-top:4px;font-size:8pt">'
+      +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1565C0;margin-right:3px"></span>Άλιπη '+lbm+'kg</span>'
+      +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e65100;margin-right:3px"></span>Λίπος '+fm+'kg</span>'
+      +'</div>'
+    ):'<div style="padding:40px 0;color:#ccc;font-size:8pt">Συμπλήρωσε βάρος και δερματοπτυχές</div>')
+    +'</div>'
+
+    +'<div class="card">'
+    +'<div class="card-lbl">Συνολική ανάλυση <span style="font-weight:400;color:#b3bab8;text-transform:none">· ◆ στόχος</span></div>'
+    +rangeBar('ΔΜΣ',bmi?String(bmi):'—',bmiCol,bmi?bmiCat:null,deltaSpan(bmiDelta,1,'','down'),[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmi,24.9)
+    +rangeBar('% Λίπους',bf?bf+'%':'—',bfCatCol,bf?bfCatLabel:null,deltaSpan(bfDelta,1,'','down'),[{v:isFem?5:0,col:bfRefs[0].col},{v:bfRefs[1].lo,col:bfRefs[1].col},{v:bfRefs[2].lo,col:bfRefs[2].col},{v:bfRefs[3].lo,col:bfRefs[3].col},{v:bfRefs[4].lo,col:bfRefs[4].col}],isFem?45:35,bf,bfGoal)
+    +rangeBar('WHtR',whtr!=null?String(whtr):'—',whtrCatCol,whtr!=null?whtrCatLabel:null,deltaSpan(whtrDelta,2,'','down'),[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtr,0.5)
+    +'</div>'
+    +'</div>'
+
+    // Suggestion
+    +'<div class="card" style="border-color:#f0dcb8;background:#fffaf0">'
+    +'<div class="card-lbl" style="color:#8a5a00">Πρόταση</div>'
+    +'<div style="font-size:8.5pt;color:#3d4d49;line-height:1.5">'+esc(buildSuggestion())+'</div>'
+    +'</div>'
+
+    // Skinfold sites
+    +'<div class="card">'
+    +'<div class="card-lbl">Σημεία δερματοπτυχών — '+esc(isJp4Layout?sfProtoLabel.jp4:(sfProtoLabel[sfProto]||sfProto))+'</div>'
+    +(isJp4Layout?
+      '<div style="display:flex;justify-content:center">'+skinfoldDiagram()+'</div>'
+      +'<div style="text-align:center;font-size:7.5pt;color:#8a9490;margin-top:2px">Σύνολο δερματοπτυχών: '+(sfSum!=null?Math.round(sfSum)+' mm':'—')+(sfSumDelta!=null?deltaSpan(sfSumDelta,0,'mm','down'):'')+'</div>'
     :
-      '<div class="sec"><div class="sec-hdr">ΔΕΡΜΑΤΟΠΤΥΧΕΣ — Jackson &amp; Pollock 4-site (1985)</div>'
-      +'<div class="sf-grid">'
-      +['1. Κοιλιά','2. Υπερλαγόνιο','3. Τρικέφαλος','4. Μηρός'].map(function(s){
-        return '<div class="sf-item"><span class="sf-lbl">'+s+'</span><span class="sf-val" style="color:#ccc">_____ mm</span></div>';
-      }).join('')
-      +'<div class="sf-item"><span class="sf-lbl" style="font-weight:700">Σύνολο</span><span class="sf-val" style="color:#ccc">_____</span></div>'
-      +'</div></div>'
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 16px">'
+      +sfKeys.map(function(k,i){return '<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:2px 0"><span style="font-size:7.5pt;color:#444">'+(i+1)+'. '+(sfNames[k]||k)+'</span><span style="font-size:8.5pt;font-weight:700;color:#025857">'+sfFields[k]+' mm</span></div>';}).join('')
+      +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:2px 0"><span style="font-size:7.5pt;font-weight:700">Σύνολο</span><span style="font-size:8.5pt;font-weight:700">'+Math.round(sfSum)+' mm</span></div>'
+      +'</div>'
     )
-    // Αποτελέσματα
-    +'<div class="sec"><div class="sec-hdr">ΑΠΟΤΕΛΕΣΜΑΤΑ ΣΩΜΑΤΙΚΗΣ ΣΥΝΘΕΣΗΣ</div>'
-    +'<div class="result-row">'
-    +(bf?'<div class="kpi"><div class="kpi-lbl">% Λίπους</div><div class="kpi-val" style="color:'+bfCatCol+'">'+bf+'%</div><div class="kpi-sub" style="color:'+bfCatCol+'">'+bfCatLabel+'</div></div>':'<div class="kpi"><div class="kpi-lbl">% Λίπους</div><div class="kpi-val" style="color:#ccc">—</div><div class="kpi-sub">&nbsp;</div></div>')
-    +(lbm?'<div class="kpi"><div class="kpi-lbl">Άλιπη Μάζα (LBM)</div><div class="kpi-val" style="color:#1565C0">'+lbm+' kg</div><div class="kpi-sub">&nbsp;</div></div>':'<div class="kpi"><div class="kpi-lbl">Άλιπη Μάζα (LBM)</div><div class="kpi-val" style="color:#ccc">—</div><div class="kpi-sub">&nbsp;</div></div>')
-    +(fm?'<div class="kpi"><div class="kpi-lbl">Λιπώδης Μάζα (FM)</div><div class="kpi-val" style="color:#e65100">'+fm+' kg</div><div class="kpi-sub">&nbsp;</div></div>':'<div class="kpi"><div class="kpi-lbl">Λιπώδης Μάζα (FM)</div><div class="kpi-val" style="color:#ccc">—</div><div class="kpi-sub">&nbsp;</div></div>')
-    +(bmi?'<div class="kpi"><div class="kpi-lbl">ΔΜΣ</div><div class="kpi-val" style="color:'+bmiCol+'">'+bmi+'</div><div class="kpi-sub" style="color:'+bmiCol+'">'+bmiCat+'</div></div>':'<div class="kpi"><div class="kpi-lbl">ΔΜΣ</div><div class="kpi-val" style="color:#ccc">—</div><div class="kpi-sub">&nbsp;</div></div>')
     +'</div>'
-    // Ref bar
-    +'<div class="ref-wrap"><div style="font-size:6.5pt;color:#888;margin-bottom:3px">Τιμές αναφοράς %BF — ACSM ('+( isFem?'Γυναίκες':'Άνδρες')+')</div>'
-    +'<div class="ref-bar">'
-    +(isFem
-      ?'<div style="flex:3;background:#1565C0;opacity:.75"></div><div style="flex:6;background:#2e7d32;opacity:.75"></div><div style="flex:3;background:#558b2f;opacity:.75"></div><div style="flex:6;background:#f57c00;opacity:.75"></div><div style="flex:10;background:#c62828;opacity:.75"></div>'
-      :'<div style="flex:3;background:#1565C0;opacity:.75"></div><div style="flex:7;background:#2e7d32;opacity:.75"></div><div style="flex:3;background:#558b2f;opacity:.75"></div><div style="flex:6;background:#f57c00;opacity:.75"></div><div style="flex:8;background:#c62828;opacity:.75"></div>'
-    )
-    +'</div><div class="ref-labels">'
-    +(isFem
-      ?'<span><span style="display:inline-block;width:8px;height:8px;background:#1565C0;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Απαραίτητο 10-13%</span><span><span style="display:inline-block;width:8px;height:8px;background:#2e7d32;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Αθλητικό 14-20%</span><span><span style="display:inline-block;width:8px;height:8px;background:#558b2f;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Φυσιολογικό 21-24%</span><span><span style="display:inline-block;width:8px;height:8px;background:#f57c00;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Αποδεκτό 25-31%</span><span><span style="display:inline-block;width:8px;height:8px;background:#c62828;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Παχυσαρκία ≥32%</span>'
-      :'<span><span style="display:inline-block;width:8px;height:8px;background:#1565C0;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Απαραίτητο 2-5%</span><span><span style="display:inline-block;width:8px;height:8px;background:#2e7d32;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Αθλητικό 6-13%</span><span><span style="display:inline-block;width:8px;height:8px;background:#558b2f;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Φυσιολογικό 14-17%</span><span><span style="display:inline-block;width:8px;height:8px;background:#f57c00;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Αποδεκτό 18-24%</span><span><span style="display:inline-block;width:8px;height:8px;background:#c62828;border-radius:2px;vertical-align:middle;opacity:.8;margin-right:2px"></span>Παχυσαρκία ≥25%</span>'
-    )
-    +'</div></div></div>'
-    // Περιφέρειες
-    +'<div class="sec"><div class="sec-hdr">ΠΕΡΙΦΕΡΕΙΕΣ &amp; ΔΕΙΚΤΕΣ</div><div class="sec-body">'
-    +(waist?filled('Μέση',waist+' cm','70px'):blank('Μέση','70px'))
-    +(hip?filled('Γοφοί',hip+' cm','70px'):blank('Γοφοί','70px'))
-    +(arm?filled('Δικέφαλος',arm+' cm','80px'):blank('Δικέφαλος','80px'))
-    +blank('Γαστροκν.','80px')
-    +(whr?filled('WHR',whr,'60px',whr>(isFem?0.85:0.90)?'#c62828':'#2e7d32'):blank('WHR','60px'))
-    +(whtr?filled('WHtR',whtr,'60px',whtr>0.5?'#f57c00':'#2e7d32'):blank('WHtR','60px'))
-    +'</div></div>'
-    // Σχόλια / Στόχοι
-    +'<div class="sec"><div class="sec-hdr">ΣΧΟΛΙΑ &amp; ΣΤΟΧΟΙ</div>'
-    +'<div class="notes-area"><div class="notes-line"></div><div class="notes-line"></div><div class="notes-line"></div></div></div>'
+
+    // History
+    +'<div class="card">'
+    +'<div class="card-lbl">Ιστορικό</div>'
+    +(sorted&&sorted.length>1?(function(){
+      var hist=sorted.slice(-8);
+      var hw=hist.map(function(e){return e.weight;});
+      var hb=hist.map(function(e){return e.bf>0?e.bf:null;});
+      var hl=hist.map(function(e){return e.bf>0?+(e.weight*(1-e.bf/100)).toFixed(1):null;});
+      return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+        +'<div style="text-align:center">'+sparkline(hw,'#1565C0')+'<div style="font-size:7pt;color:#8a9490">Βάρος</div><div style="font-size:9pt;font-weight:700;color:#1565C0">'+(weight||'—')+' kg'+deltaSpan(wDelta,1,'','down')+'</div></div>'
+        +'<div style="text-align:center">'+sparkline(hb,'#c62828')+'<div style="font-size:7pt;color:#8a9490">% Λίπους</div><div style="font-size:9pt;font-weight:700;color:#c62828">'+(bf?bf+'%':'—')+deltaSpan(bfDelta,1,'','down')+'</div></div>'
+        +'<div style="text-align:center">'+sparkline(hl,'#2e7d32')+'<div style="font-size:7pt;color:#8a9490">Άλιπη μάζα</div><div style="font-size:9pt;font-weight:700;color:#2e7d32">'+(lbm||'—')+' kg'+deltaSpan(lbmDelta,1,'','up')+'</div></div>'
+        +'</div>';
+    })():'<div style="font-size:8pt;color:#ccc;text-align:center;padding:10px 0">Χρειάζονται τουλάχιστον 2 καταχωρήσεις tracker</div>')
+    +'</div>'
+
+    // Other indicators + comments
+    +'<div class="grid2">'
+    +'<div class="card">'
+    +'<div class="card-lbl">Λοιποί δείκτες</div>'
+    +'<table style="width:100%;font-size:8pt;border-collapse:collapse">'
+    +'<tr><td style="padding:3px 0;color:#5b6b67">Μέση</td><td style="text-align:right;font-weight:700">'+(waist?waist+' cm':'—')+deltaSpan(waistDelta,1,'','down')+'</td></tr>'
+    +'<tr><td style="padding:3px 0;color:#5b6b67">Γοφοί</td><td style="text-align:right;font-weight:700">'+(hip?hip+' cm':'—')+'</td></tr>'
+    +'<tr><td style="padding:3px 0;color:#5b6b67">WHR</td><td style="text-align:right;font-weight:700">'+(whr!=null?whr:'—')+'</td></tr>'
+    +'<tr><td style="padding:3px 0;color:#5b6b67">Βασικός μεταβολισμός (BMR)*</td><td style="text-align:right;font-weight:700">'+(bmr?bmr+' kcal':'—')+'</td></tr>'
+    +'</table>'
+    +'<div style="font-size:6.5pt;color:#b3bab8;margin-top:5px">*εκτίμηση Mifflin-St Jeor, όχι μέτρηση BIA</div>'
+    +'</div>'
+    +'<div class="card">'
+    +'<div class="card-lbl">Σχόλια</div>'
+    +'<div class="notes-line"></div><div class="notes-line"></div><div class="notes-line"></div>'
+    +'</div>'
+    +'</div>'
+
     // Footer
     +'<div class="footer">'
-    +'<span>Feed Your Health &mdash; Έντυπο Λιπομέτρησης &nbsp;|&nbsp; Jackson &amp; Pollock (1985) &nbsp;|&nbsp; ACSM Reference Ranges</span>'
-    +'<span>'+esc(c.name||'')+'&nbsp;&nbsp;Επόμενο ραντεβού: ________________</span>'
+    +'<div class="footer-row"><span>Feed Your Health &mdash; Ανάλυση Σωματικής Σύνθεσης &nbsp;|&nbsp; ACSM Reference Ranges</span><span>Επόμενο ραντεβού: ________________</span></div>'
+    +'<div style="margin-top:2px;color:#b3bab8">Οι τάσεις (▲▼) συγκρίνουν με την προηγούμενη καταχώρηση tracker. Χωρίς ζυγαριά βιοηλεκτρικής εμπέδησης (BIA) — δεν εμφανίζονται νερό/πρωτεΐνη/οστά/σπλαχνικό λίπος.</div>'
     +'</div></body></html>';
 
   var w=window.open('','_blank');
