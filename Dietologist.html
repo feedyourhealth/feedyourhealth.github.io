@@ -3008,6 +3008,7 @@ function saveFoodExclusions(){
         v:1,
         name:c.name||'',
         sex:c.sex||'M',
+        height:c.height||null,
         publishedAt:new Date().toISOString(),
         coachNote:(c.portalNote||'').trim(),
         contact:hasContact?{wa:clinic.wa||'',tel:clinic.tel||'',email:clinic.email||'',web:clinic.web||''}:null,

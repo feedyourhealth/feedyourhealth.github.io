@@ -1458,6 +1458,47 @@ function viewProg(){
       cp.innerHTML='<div style="font-size:12px;color:var(--muted)">Άλιπη μάζα (kg)</div><div class="empty-glass-note">Χρειάζονται τουλάχιστον 2 μετρήσεις για γράφημα εξέλιξης.</div>';
       c.appendChild(cp);v.appendChild(c);
     }
+    // ── Donut σύστασης σώματος (βάρος = άλιπη + λίπος) ──
+    const fatKgNow=(p.current!=null&&p.lbm!=null)?Math.round((p.current-p.lbm)*10)/10:null;
+    if(p.current!=null&&p.lbm!=null&&fatKgNow!=null&&fatKgNow>=0){
+      const c=el('div','card');const cp=el('div','card-pad');
+      const lbmFrac=p.lbm/p.current, fatFrac=fatKgNow/p.current;
+      let dh='<div class="card-hdr"><i class="ti ti-chart-donut"></i>Σύσταση σώματος</div>'
+        +'<div style="text-align:center">'
+        +'<svg viewBox="0 0 140 140" width="128" height="128" style="margin:0 auto;display:block">'
+        +'<circle cx="70" cy="70" r="52" fill="none" stroke="var(--tint2)" stroke-width="16"/>'
+        +'<circle cx="70" cy="70" r="52" fill="none" stroke="#1565C0" stroke-width="16" stroke-dasharray="'+(326.7*lbmFrac).toFixed(1)+' 326.7" transform="rotate(-90 70 70)"/>'
+        +'<circle cx="70" cy="70" r="52" fill="none" stroke="#e65100" stroke-width="16" stroke-dasharray="'+(326.7*fatFrac).toFixed(1)+' 326.7" stroke-dashoffset="-'+(326.7*lbmFrac).toFixed(1)+'" transform="rotate(-90 70 70)"/>'
+        +'<text x="70" y="63" text-anchor="middle" font-size="19" font-weight="700" fill="var(--teal-d)">'+String(p.current).replace('.',',')+'</text>'
+        +'<text x="70" y="78" text-anchor="middle" font-size="8" fill="var(--muted)">kg ΣΥΝΟΛΟ</text>'
+        +'</svg>'
+        +'<div style="display:flex;justify-content:center;gap:14px;margin-top:4px;font-size:12px">'
+        +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1565C0;margin-right:4px"></span>Άλιπη '+String(p.lbm).replace('.',',')+'kg</span>'
+        +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e65100;margin-right:4px"></span>Λίπος '+String(fatKgNow).replace('.',',')+'kg</span>'
+        +'</div></div>';
+      cp.innerHTML=dh; c.appendChild(cp); v.appendChild(c);
+    }
+    // ── Ανάλυση: μπάρες ΔΜΣ / %Λίπους / WHtR με στόχο (το ΔΜΣ/WHtR χρειάζονται ύψος στο snapshot) ──
+    const bmiNow=(s.height&&p.current)?+(p.current/((s.height/100)*(s.height/100))).toFixed(1):null;
+    const bmiCatNow=bmiNow!=null?(bmiNow<18.5?'Ελλιποβαρές':bmiNow<25?'Φυσιολογικό':bmiNow<30?'Υπέρβαρο':bmiNow<35?'Παχυσαρκία Ι':bmiNow<40?'Παχυσαρκία ΙΙ':'Παχυσαρκία ΙΙΙ'):null;
+    const bmiColNow=bmiNow!=null?(bmiNow<18.5?'#1565C0':bmiNow<25?'#2e7d32':bmiNow<30?'#f57c00':'#c62828'):null;
+    const bfBandsNow=bfBands(s.sex);
+    const bfLabelsNow=['Απαραίτητο','Αθλητικό','Φυσιολογικό','Αποδεκτό','Παχυσαρκία'];
+    let bfCatNow=null,bfColNow=null;
+    if(p.bodyfat!=null){bfBandsNow.forEach((b,i)=>{if(p.bodyfat>=b.lo&&p.bodyfat<=b.hi){bfCatNow=bfLabelsNow[i];bfColNow=b.col;}});}
+    const whtrNow=(p.waist&&s.height)?+(p.waist/s.height).toFixed(2):null;
+    const whtrCatNow=whtrNow!=null?(whtrNow<0.5?'Φυσιολογικό':whtrNow<0.6?'Αυξημένος κίνδυνος':'Υψηλός κίνδυνος'):null;
+    const whtrColNow=whtrNow!=null?(whtrNow<0.5?'#2e7d32':whtrNow<0.6?'#f57c00':'#c62828'):null;
+    if(bmiNow!=null||p.bodyfat!=null||whtrNow!=null){
+      const c=el('div','card');const cp=el('div','card-pad');
+      let ah='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+        +'<div class="card-hdr" style="margin-bottom:0"><i class="ti ti-activity"></i>Ανάλυση</div>'
+        +'<span style="font-size:10px;color:var(--faint)">◆ στόχος</span></div>';
+      if(bmiNow!=null)ah+=rangeBar('ΔΜΣ',String(bmiNow).replace('.',','),bmiColNow,bmiCatNow,[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmiNow,24.9);
+      if(p.bodyfat!=null)ah+=rangeBar('% Λίπους',String(p.bodyfat).replace('.',',')+'%',bfColNow,bfCatNow,[{v:s.sex==='F'?5:0,col:bfBandsNow[0].col},{v:bfBandsNow[1].lo,col:bfBandsNow[1].col},{v:bfBandsNow[2].lo,col:bfBandsNow[2].col},{v:bfBandsNow[3].lo,col:bfBandsNow[3].col},{v:bfBandsNow[4].lo,col:bfBandsNow[4].col}],s.sex==='F'?45:35,p.bodyfat,bfBandsNow[2].hi);
+      if(whtrNow!=null)ah+=rangeBar('WHtR',String(whtrNow).replace('.',','),whtrColNow,whtrCatNow,[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtrNow,0.5);
+      cp.innerHTML=ah; c.appendChild(cp); v.appendChild(c);
+    }
     if(p.waist||p.bodyfat||p.lbm){
       const c=el('div','card');const cp=el('div','card-pad');
       cp.appendChild(el('div','card-hdr','<i class="ti ti-ruler-2"></i>Τελευταία μέτρηση'));
@@ -1497,6 +1538,27 @@ function bfBandsLegend(sex){
   let items='';
   bands.forEach((b,i)=>{items+='<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><span style="width:8px;height:8px;border-radius:2px;background:'+b.col+';display:inline-block"></span>'+labels[i]+'</span>';});
   return el('div',null,'<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8">'+items+'<div style="margin-top:2px">Τιμές αναφοράς ACSM</div></div>');
+}
+// Μπάρα αναφοράς Low→High (ΔΜΣ/%Λίπους/WHtR) με ◆ δείκτη στόχου — ίδια λογική με το έντυπο λιπομέτρησης.
+function rbPct(v,min,max){return Math.max(0,Math.min(100,(v-min)/(max-min)*100));}
+function rbGradient(boundaries,max){
+  const stops=[];
+  boundaries.forEach((b,i)=>{
+    const startPct=rbPct(b.v,boundaries[0].v,max);
+    stops.push(b.col+' '+startPct.toFixed(0)+'%');
+    if(i<boundaries.length-1){const endPct=rbPct(boundaries[i+1].v,boundaries[0].v,max);stops.push(b.col+' '+endPct.toFixed(0)+'%');}
+  });
+  return 'linear-gradient(90deg,'+stops.join(',')+')';
+}
+function rangeBar(label,valTxt,valCol,catTxt,boundaries,max,curVal,goalVal){
+  const curPct=curVal!=null?rbPct(curVal,boundaries[0].v,max):null;
+  const goalPct=goalVal!=null?rbPct(goalVal,boundaries[0].v,max):null;
+  return '<div style="margin-bottom:13px">'
+    +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span>'+label+'</span><b style="color:'+valCol+'">'+valTxt+(catTxt?' · '+catTxt:'')+'</b></div>'
+    +'<div style="height:8px;border-radius:4px;background:'+rbGradient(boundaries,max)+';position:relative">'
+    +(curPct!=null?'<div style="position:absolute;left:'+curPct.toFixed(1)+'%;top:-3px;width:2px;height:14px;background:var(--ink)"></div>':'')
+    +(goalPct!=null?'<div style="position:absolute;left:'+goalPct.toFixed(1)+'%;top:-9px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--teal-d)"></div>':'')
+    +'</div></div>';
 }
 function fmtDateShort(iso){
   if(!iso)return '';
