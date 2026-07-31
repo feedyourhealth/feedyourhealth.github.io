@@ -27,7 +27,6 @@ function exportPDF(lang){
       expandedWeekPlan[d]=deepClone(c.weekPlan[d]);
     }
   }
-  var t=calcTDEE(c);
   // Translation helpers
   function fn(name){var food=FOODS[name];return (isEn&&food&&food.en)||name;}       // food name
   function tMn(name){return (isEn&&EN_MEAL_NAMES[name])||name;}      // meal name
