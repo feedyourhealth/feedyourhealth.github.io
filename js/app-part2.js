@@ -1634,7 +1634,7 @@ function buildTrackerHtml(c){
   var today=new Date().toISOString().slice(0,10);
 
   // Weight / body composition section
-  var isMinorC=(c.age||0)<18;
+  var isMinorC=(c.age!=null && c.age>0 && c.age<18); // don't coerce a not-yet-entered age to 0 and misclassify as a minor
   var defaultProto=isMinorC?'slaughter':'jp4';
   var wHtml=buildClientProgressHtml(c)+'<div class="tracker-section">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'

@@ -610,6 +610,13 @@ function exportLipometriaPDF(){
     return ' <span style="color:'+col+';font-weight:700">'+arrow+Math.abs(delta).toFixed(decimals)+(unit||'')+'</span>';
   }
   function rangeBar(label,valTxt,valCol,catTxt,deltaHtmlStr,boundaries,max,curVal,goalVal){
+    // boundaries=null → plain number row, no adult reference bands (used for minors, where the
+    // adult category/color bands would still visually characterize them even without the text label)
+    if(!boundaries){
+      return '<div style="margin-bottom:11px">'
+        +'<div style="display:flex;justify-content:space-between;font-size:7.5pt;color:#5b6b67"><span>'+label+'</span><b style="color:'+valCol+'">'+valTxt+(deltaHtmlStr||'')+'</b></div>'
+        +'</div>';
+    }
     var curPct=curVal!=null?pct(curVal,boundaries[0].v,max):null;
     var goalPct=goalVal!=null?pct(goalVal,boundaries[0].v,max):null;
     return '<div style="margin-bottom:11px">'
@@ -642,8 +649,9 @@ function exportLipometriaPDF(){
   var fm=(bf&&weight)?+(weight*bf/100).toFixed(1):null;
   var h=c.height||0;
   var bmi=(h>0&&weight)?+(weight/((h/100)*(h/100))).toFixed(1):null;
-  var bmiCat=bmi?bmi<18.5?'Ελλιποβαρές':bmi<25?'Φυσιολογικό':bmi<30?'Υπέρβαρο':bmi<35?'Παχυσαρκία Ι':bmi<40?'Παχυσαρκία ΙΙ':'Παχυσαρκία ΙΙΙ':'—';
-  var bmiCol=bmi?bmi<18.5?'#1565C0':bmi<25?'#2e7d32':bmi<30?'#f57c00':'#c62828':'#555';
+  var isMinor=(c.age!=null && c.age>0 && c.age<18); // adult WHO BMI cutoffs (18.5/25/30) don't clinically apply to minors — number only, no category
+  var bmiCat=(bmi&&!isMinor)?bmi<18.5?'Ελλιποβαρές':bmi<25?'Φυσιολογικό':bmi<30?'Υπέρβαρο':bmi<35?'Παχυσαρκία Ι':bmi<40?'Παχυσαρκία ΙΙ':'Παχυσαρκία ΙΙΙ':'—';
+  var bmiCol=(bmi&&!isMinor)?bmi<18.5?'#1565C0':bmi<25?'#2e7d32':bmi<30?'#f57c00':'#c62828':'#555';
   var isFem=(c.sex||'M')==='F';
   var waist=entry&&entry.waist?entry.waist:null;
   var hip=entry&&entry.hip?entry.hip:null;
@@ -780,9 +788,9 @@ function exportLipometriaPDF(){
 
     +'<div class="card">'
     +'<div class="card-lbl">Συνολική ανάλυση <span style="font-weight:400;color:#b3bab8;text-transform:none">· ◆ στόχος</span></div>'
-    +rangeBar('ΔΜΣ',bmi?String(bmi):'—',bmiCol,bmi?bmiCat:null,deltaSpan(bmiDelta,1,'','down'),[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmi,24.9)
+    +rangeBar('ΔΜΣ',bmi?String(bmi):'—',bmiCol,(bmi&&!isMinor)?bmiCat:null,deltaSpan(bmiDelta,1,'','down'),isMinor?null:[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmi,24.9)
     +rangeBar('% Λίπους',bf?bf+'%':'—',bfCatCol,bf?bfCatLabel:null,deltaSpan(bfDelta,1,'','down'),[{v:isFem?5:0,col:bfRefs[0].col},{v:bfRefs[1].lo,col:bfRefs[1].col},{v:bfRefs[2].lo,col:bfRefs[2].col},{v:bfRefs[3].lo,col:bfRefs[3].col},{v:bfRefs[4].lo,col:bfRefs[4].col}],isFem?45:35,bf,bfGoal)
-    +rangeBar('WHtR',whtr!=null?String(whtr):'—',whtrCatCol,whtr!=null?whtrCatLabel:null,deltaSpan(whtrDelta,2,'','down'),[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtr,0.5)
+    +(whtr!=null?rangeBar('WHtR',String(whtr),whtrCatCol,whtrCatLabel,deltaSpan(whtrDelta,2,'','down'),[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtr,0.5):'')
     +'</div>'
     +'</div>'
 
@@ -827,9 +835,9 @@ function exportLipometriaPDF(){
     +'<div class="card">'
     +'<div class="card-lbl">Λοιποί δείκτες</div>'
     +'<table style="width:100%;font-size:8pt;border-collapse:collapse">'
-    +'<tr><td style="padding:3px 0;color:#5b6b67">Μέση</td><td style="text-align:right;font-weight:700">'+(waist?waist+' cm':'—')+deltaSpan(waistDelta,1,'','down')+'</td></tr>'
-    +'<tr><td style="padding:3px 0;color:#5b6b67">Γοφοί</td><td style="text-align:right;font-weight:700">'+(hip?hip+' cm':'—')+'</td></tr>'
-    +'<tr><td style="padding:3px 0;color:#5b6b67">WHR</td><td style="text-align:right;font-weight:700">'+(whr!=null?whr:'—')+'</td></tr>'
+    +(waist?'<tr><td style="padding:3px 0;color:#5b6b67">Μέση</td><td style="text-align:right;font-weight:700">'+waist+' cm'+deltaSpan(waistDelta,1,'','down')+'</td></tr>':'')
+    +(hip?'<tr><td style="padding:3px 0;color:#5b6b67">Γοφοί</td><td style="text-align:right;font-weight:700">'+hip+' cm</td></tr>':'')
+    +(whr!=null?'<tr><td style="padding:3px 0;color:#5b6b67">WHR</td><td style="text-align:right;font-weight:700">'+whr+'</td></tr>':'')
     +'<tr><td style="padding:3px 0;color:#5b6b67">Βασικός μεταβολισμός (BMR)*</td><td style="text-align:right;font-weight:700">'+(bmr?bmr+' kcal':'—')+'</td></tr>'
     +'</table>'
     +'<div style="font-size:6.5pt;color:#b3bab8;margin-top:5px">*εκτίμηση Mifflin-St Jeor, όχι μέτρηση BIA</div>'
