@@ -71,6 +71,23 @@ function toggleRecipePopular(recipe){
 function allRecipesForBrowsing(){
   return (typeof MEAL_RECIPES!=='undefined'?MEAL_RECIPES:[]).concat(typeof SNACK_RECIPES!=='undefined'?SNACK_RECIPES:[]).concat(window.customRecipes||[]);
 }
+
+// Custom recipes store diet tags as the lowercase RECIPE_DIET_TAG_DEFS keys (e.g. 'mediterranean',
+// 'keto', 'vegan') since that's what the tag-picker in the new-recipe form writes. findBestRecipe's
+// dietTagMap (js/app-part3.js) matches against the differently-cased vocabulary already used by the
+// static MEAL_RECIPES/SNACK_RECIPES ('Mediterranean','Keto','LowCarb','Vegan','Vegetarian') — without
+// translating, a custom recipe would never match ANY dietType there, no matter what the dietitian tags
+// it as. 'bodybuilding_clean'/'high_protein' already match as-is, so they're left out of this map.
+var CUSTOM_RECIPE_TAG_CANON={mediterranean:'Mediterranean',keto:'Keto',lowcarb:'LowCarb',vegan:'Vegan',vegetarian:'Vegetarian'};
+// Custom recipes, adapted for findBestRecipe()'s auto-generation matching (js/app-part3.js). Adds the
+// canonical-cased tag alongside the original (never removes/mutates it) and never mutates
+// window.customRecipes itself — only a per-call clone, so nothing persisted changes.
+function customRecipesForGeneration(){
+  return (window.customRecipes||[]).map(function(r){
+    var canonExtra=(r.tags||[]).map(function(t){return CUSTOM_RECIPE_TAG_CANON[t];}).filter(Boolean);
+    return canonExtra.length?Object.assign({},r,{tags:(r.tags||[]).concat(canonExtra)}):r;
+  });
+}
 function findRecipeById(id){
   return allRecipesForBrowsing().find(function(r){return r.id===id;});
 }

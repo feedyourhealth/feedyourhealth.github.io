@@ -484,6 +484,14 @@ function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros, disl
 
   if(!recipeDB || !recipeDB.length)return null;
 
+  // ✅ Include the dietitian's own custom recipes (Συνταγές page, js/app-part6-recipes.js) so they're
+  // eligible for auto-generation too — until now they only showed up in the Recipes page and the
+  // manual food-selector's recipe tab, never here. matchesBase/matchesMealTime below apply unchanged
+  // to them (calorie window, exclusions, meal-time tag, snack meat/fish guard, etc.), same as any
+  // static recipe; customRecipesForGeneration() just canonicalizes their diet-tag casing first.
+  var customPool = (typeof customRecipesForGeneration==='function') ? customRecipesForGeneration() : [];
+  if(customPool.length) recipeDB = recipeDB.concat(customPool);
+
   // Normalize exclusion list (handle both strings and case-sensitivity)
   excl = excl || [];
   var exclLower = excl.map(function(x){return (x||'').toLowerCase();});
