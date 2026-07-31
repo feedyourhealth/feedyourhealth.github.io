@@ -550,6 +550,14 @@ function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros, disl
       }
     } else {
       dietMatch = dietTags.some(function(tag){return recipe.tags.indexOf(tag)!==-1;});
+      // ✅ Custom recipes aren't curated like MEAL_RECIPES — a dietitian can tag one "Keto" in the
+      // Συνταγές page without the auto-computed carbs actually being low (easy to miss, since macros
+      // come from summing ingredients, not a manual gut-check). Reuses the exact same carb-sanity bar
+      // already applied to snacks just above (recipe.macro.c<=10), scoped only to custom recipes so
+      // no already-tuned static-recipe matching changes.
+      if(dietMatch && dietType==='keto' && recipe.source==='custom'){
+        dietMatch = recipe.macro && recipe.macro.c<=10;
+      }
     }
     var calMatch=(recipe.kcal >= targetKcal*0.80) && (recipe.kcal <= targetKcal*1.20);
     var noExcludedFoods = !recipeHasExcludedFood(recipe);

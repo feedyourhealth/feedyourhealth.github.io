@@ -270,7 +270,7 @@ function selectTmplForClient(id){
 var QUICK_PRESETS=[
   {key:'martial',icon:'🥋',label:'Πολεμικές τέχνες',activity:'active',dietType:'bodybuilding_clean',macroP:30,macroF:25,macroC:45},
   {key:'runner',icon:'🏃',label:'Δρομέας αντοχής',activity:'mod',dietType:'normal',macroP:20,macroF:20,macroC:60},
-  {key:'loss',icon:'📉',label:'Απώλεια βάρους',activity:'light',dietType:'normal',macroP:35,macroF:30,macroC:35},
+  {key:'loss',icon:'📉',label:'Απώλεια βάρους',activity:'light',dietType:'normal',macroP:35,macroF:30,macroC:35,goal:'loss'},
   {key:'preg',icon:'🤰',label:'Εγκυμοσύνη',activity:'sed',dietType:'normal',macroP:25,macroF:30,macroC:45,pregnant:true},
   {key:'custom',icon:'✏️',label:'Χωρίς preset',activity:null}
 ];
@@ -289,6 +289,19 @@ function applyClientPreset(key){
     c.macroF=p.macroF;
     c.macroC=p.macroC;
     if(p.pregnant)c.pregnant=true;
+    // ✅ "Απώλεια βάρους" is literally named after its goal, but until now the preset only set
+    // activity/dietType/macros — c.goalMain/c.goal (what the ΚΥΡΙΟΣ ΣΤΟΧΟΣ radio + validateClientData
+    // actually check) stayed empty, so clicking it and hitting "Δημιουργία πλάνου" right away always
+    // failed with "Παρακαλώ επιλέξτε στόχο". Only 'loss' gets this (the only preset whose own label
+    // states an unambiguous calorie direction — martial/runner/preg are genuinely ambiguous either
+    // way, so left for the dietitian to pick manually as before). Sets goal/goalMain directly instead
+    // of calling applyGoalMacros(), which would also overwrite the macroP/F/C just set above via its
+    // own smart-macro-default logic.
+    if(p.goal){
+      var goalDeltas={loss:-500,maintain:0,gain:300};
+      c.goal=String(goalDeltas[p.goal]!==undefined?goalDeltas[p.goal]:0);
+      c.goalMain=p.goal;
+    }
   }
   save();
   renderMain();
@@ -1627,6 +1640,41 @@ function planFeedbackPanelHtml(c){
     +'</div>';
 }
 
+// 👎'd recipes/combos block this client from getting them again (js/app-part4.js rateMeal,
+// js/app-part3.js findBestRecipe/findSavedComboMatch/generateSmartMeal all skip anything in
+// c.dislikedRecipeIds) but until now there was no way to SEE or reverse that list except by
+// re-👍'ing the exact same meal if it ever got manually re-added — practically a one-way door.
+// Resolves each id to a real name via findRecipeById() (static/custom recipes); falls back to
+// the tracked name (TRACKING_DATA.recipes[id].name — for saved-combo signatures this is only the
+// meal-slot label, e.g. "Μεσημεριανό", not a dish title — a known display-only limitation, not
+// fixed here) or the raw id as a last resort so nothing renders blank.
+function dislikedRecipesPanelHtml(c){
+  var ids=c.dislikedRecipeIds||[];
+  if(!ids.length) return '';
+  var rowsHtml=ids.map(function(id){
+    var recipe=(typeof findRecipeById==='function')?findRecipeById(id):null;
+    var entry=(typeof TRACKING_DATA!=='undefined'&&TRACKING_DATA.recipes)?TRACKING_DATA.recipes[id]:null;
+    var label=recipe?recipe.name:(entry?entry.name:id);
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #f3d4d0;font-size:11.5px">'
+      +'<span style="color:#444" title="'+esc(id)+'">'+esc(label)+'</span>'
+      +'<button type="button" class="btn" style="padding:3px 9px;font-size:10.5px;background:#fff;color:#025857;border:1px solid #cfe8e0" onclick="restoreDislikedRecipe(\''+esc(id).replace(/'/g,"\\'")+'\')">↩️ Επαναφορά</button>'
+      +'</div>';
+  }).join('');
+  return '<div class="tracker-section" style="background:#fdf3f2;border:1px solid #f3d4d0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:700;color:#c0392b;margin-bottom:6px">👎 Συνταγές που δεν άρεσαν ('+ids.length+')</div>'
+    +rowsHtml
+    +'</div>';
+}
+function restoreDislikedRecipe(id){
+  var c=getC();if(!c||!c.dislikedRecipeIds)return;
+  var idx=c.dislikedRecipeIds.indexOf(id);
+  if(idx===-1)return;
+  c.dislikedRecipeIds.splice(idx,1);
+  save();
+  var s3=document.getElementById('s3');
+  if(s3)s3.innerHTML=buildTrackerHtml(c);
+}
+
 function buildTrackerHtml(c){
   if(!c.weightLog)c.weightLog=[];
   if(!c.consultLog)c.consultLog=[];
@@ -1672,6 +1720,7 @@ function buildTrackerHtml(c){
     +'</div>'
     +clientLogsPanelHtml(c)
     +planFeedbackPanelHtml(c)
+    +dislikedRecipesPanelHtml(c)
     // ── Standard entry row ────────────────────────────────────────────────────
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
     +'<input type="date" id="tr-date" value="'+today+'" class="tracker-inp">'
