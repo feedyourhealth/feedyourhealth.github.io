@@ -2700,6 +2700,21 @@ function clientHasLowPlanFeedback(c){
     return latest[k]!=null && latest[k]<=PF_ATTENTION_STAR_MAX;
   });
 }
+// Πελάτης με πρόσφατη ΓΡΑΠΤΗ σημείωση από το portal (client_logs.note, χωρίς login — βλ.
+// clientLogsPanelHtml στο js/app-part2.js) τις τελευταίες 2 μέρες. Ίδιο κατώφλι "πρόσφατο" με το
+// ckDaysSinceLast/progressBadge, ίδιο αυτο-καθαριζόμενο μοτίβο με το clientHasLowPlanFeedback
+// (κοιτάει πάντα την πιο πρόσφατη καταχώρηση, όχι μόνιμη σημαία σαν το 🚩) — δεν χρειάζεται νέο
+// "διαβάστηκε/δεν διαβάστηκε" state. Μόνο καταχωρήσεις με πραγματικό κείμενο μετράνε — μια
+// καταχώρηση μόνο βάρους ήδη φαίνεται αλλού (buildClientProgressHtml) και δεν είναι "μήνυμα".
+function clientHasNewClientNote(c){
+  if(!window.Cloud || typeof window.Cloud.allClientLogsFor!=='function') return false;
+  var latest=window.Cloud.allClientLogsFor(c)[0];
+  if(!latest) return false;
+  var noteText=(latest.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
+  if(!noteText) return false;
+  var d0=new Date(latest.date+'T00:00:00'), d1=new Date(); d1.setHours(0,0,0,0);
+  return Math.round((d1-d0)/86400000)<2;
+}
 // Ένας πελάτης "χρειάζεται προσοχή" αν: έχει σημειωμένο ραντεβού για παρακολούθηση, ή έδωσε χαμηλή
 // αξιολόγηση πλάνου την τελευταία εβδομάδα, ή δεν έχει καθόλου πλάνο, ή το δημοσιευμένο portal link
 // του είναι ξεπερασμένο, ή το πλάνο του είναι 30+ ημερών (ίδια κριτήρια με το Διατροφές "needs action"),
@@ -2778,7 +2793,7 @@ function renderSB(){
           ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')
           :('<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'))
         +'<div class="cc-headtext">'
-        +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+'</div>'
+        +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+'</div>'
         +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
         +'</div>'
         +(_clientBulkMode?'':(
