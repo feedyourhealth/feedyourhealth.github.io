@@ -193,6 +193,14 @@ function onRecipeScaleInput(recipeId,targetKcalStr,scope){
   var targetKcal=parseInt(targetKcalStr,10);
   if(!targetKcal) return;
   var scaled=scalePlan([{name:recipe.name,foods:recipe.foods}],null,[{k:targetKcal}])[0];
+  // ✅ scalePlan floors every food at minScaleG(n) (js/app-part1.js — half its typical single-unit
+  // size), a sane guard for whole-day plan generation but one that can silently override proportional
+  // scaling here: on a big single-recipe scale-down, an ingredient already near/under that floor can
+  // end up BIGGER than it started (confirmed live: 555→300kcal target on a salmon/rice/broccoli recipe
+  // grew the rice 80g→88g while everything else shrank). Flag any ingredient whose grams moved the
+  // "wrong way" relative to the recipe's own original amount and the overall scaling direction, so the
+  // dietitian sees why instead of reading it as an unexplained inconsistency.
+  var scalingDown=targetKcal<recipe.kcal, scalingUp=targetKcal>recipe.kcal;
   var totals={k:0,p:0,f:0,c:0};
   scaled.foods.forEach(function(f,idx){
     var v=cm(f.n,f.g);
@@ -206,6 +214,10 @@ function onRecipeScaleInput(recipeId,targetKcalStr,scope){
     if(nameEl) nameEl.textContent=f.n;
     var swapPanel=document.getElementById('rd-swap-panel-'+recipeId+'-'+idx);
     if(swapPanel){ swapPanel.style.display='none'; swapPanel.innerHTML=''; }
+    var origG=recipe.foods[idx]?recipe.foods[idx].g:0;
+    var hitFloor=origG>0&&((scalingDown&&f.g>origG)||(scalingUp&&f.g<origG));
+    var flagEl=document.getElementById('rcp-ing-flag-'+scope+'-'+recipeId+'-'+idx);
+    if(flagEl) flagEl.style.display=hitFloor?'':'none';
   });
   var kcalOut=document.getElementById('rcp-scale-kcal-'+scope+'-'+recipeId);
   if(kcalOut) kcalOut.textContent=Math.round(totals.k)+' kcal';
@@ -223,7 +235,7 @@ function recipeRow(recipe){
   var m=recipe.macro||{};
   var expanded=!!_expandedRecipeIds[recipe.id];
   var ingredientsHtml=expanded
-    ?'<div class="rcp-ingredients">'+(recipe.foods||[]).map(function(f,idx){return '<span class="rcp-ing">'+esc(f.n)+' · <span id="rcp-ing-g-row-'+recipe.id+'-'+idx+'">'+f.g+'g</span></span>';}).join('')+'</div>'+recipeScalerHtml(recipe,'row')
+    ?'<div class="rcp-ingredients">'+(recipe.foods||[]).map(function(f,idx){return '<span class="rcp-ing">'+esc(f.n)+' · <span id="rcp-ing-g-row-'+recipe.id+'-'+idx+'">'+f.g+'g</span><span class="rcp-ing-floor-flag" id="rcp-ing-flag-row-'+recipe.id+'-'+idx+'" style="display:none" title="Έφτασε στην ελάχιστη λογική μερίδα αυτού του υλικού — δεν μπόρεσε να ακολουθήσει αναλογικά τον στόχο θερμίδων">⚠️</span></span>';}).join('')+'</div>'+recipeScalerHtml(recipe,'row')
     :'';
   return '<div class="rcp-row">'
     +'<div class="rcp-row-top">'
@@ -503,6 +515,7 @@ function recipeDetailModalHtml(recipe){
     return '<div class="rd-ing-row">'
       +'<span class="rd-ing-name" id="rcp-ing-n-modal-'+recipe.id+'-'+idx+'">'+esc(f.n)+'</span>'
       +'<span class="rd-ing-g" id="rcp-ing-g-modal-'+recipe.id+'-'+idx+'">'+f.g+'g</span>'
+      +'<span class="rcp-ing-floor-flag" id="rcp-ing-flag-modal-'+recipe.id+'-'+idx+'" style="display:none" title="Έφτασε στην ελάχιστη λογική μερίδα αυτού του υλικού — δεν μπόρεσε να ακολουθήσει αναλογικά τον στόχο θερμίδων">⚠️</span>'
       +'<button type="button" class="rd-swap-btn" title="Αντικατέστησε υλικό" aria-label="Αντικατέστησε υλικό" onclick="toggleSwapPanel(\''+recipe.id+'\','+idx+')">⇄</button>'
       +'</div>'
       +'<div class="rd-swap-panel" id="rd-swap-panel-'+recipe.id+'-'+idx+'" style="display:none"></div>';

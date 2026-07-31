@@ -280,6 +280,7 @@ body.dark-mode .hm-row-name{color:#e0e0e0}
 .rd-ing-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #f0f0ee;font-size:12.5px}
 .rd-ing-name{flex:1;color:#333}
 .rd-ing-g{color:#6b6b6b;font-size:11.5px}
+.rcp-ing-floor-flag{cursor:help;font-size:11px;margin-left:4px}
 .rd-swap-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--teal);opacity:.6;padding:2px 4px;line-height:1}
 .rd-swap-btn:hover{opacity:1}
 .rd-swap-panel{margin:0 0 6px;padding:6px 8px;background:#f7f7f5;border-radius:8px}
