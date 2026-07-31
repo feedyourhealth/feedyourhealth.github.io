@@ -801,7 +801,7 @@ function exportLipometriaPDF(){
     :
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 16px">'
       +sfKeys.map(function(k,i){return '<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:2px 0"><span style="font-size:7.5pt;color:#444">'+(i+1)+'. '+(sfNames[k]||k)+'</span><span style="font-size:8.5pt;font-weight:700;color:#025857">'+sfFields[k]+' mm</span></div>';}).join('')
-      +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:2px 0"><span style="font-size:7.5pt;font-weight:700">Σύνολο</span><span style="font-size:8.5pt;font-weight:700">'+Math.round(sfSum)+' mm</span></div>'
+      +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:2px 0"><span style="font-size:7.5pt;font-weight:700">Σύνολο</span><span style="font-size:8.5pt;font-weight:700">'+(sfSum!=null?Math.round(sfSum)+' mm':'—')+'</span></div>'
       +'</div>'
     )
     +'</div>'
