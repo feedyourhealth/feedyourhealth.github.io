@@ -670,7 +670,7 @@ function exportLipometriaPDF(){
     ?[{lo:10,hi:13,lbl:'Απαραίτητο',col:'#1565C0'},{lo:14,hi:20,lbl:'Αθλητικό',col:'#2e7d32'},{lo:21,hi:24,lbl:'Φυσιολογικό',col:'#558b2f'},{lo:25,hi:31,lbl:'Αποδεκτό',col:'#f57c00'},{lo:32,hi:60,lbl:'Παχυσαρκία',col:'#c62828'}]
     :[{lo:2,hi:5,lbl:'Απαραίτητο',col:'#1565C0'},{lo:6,hi:13,lbl:'Αθλητικό',col:'#2e7d32'},{lo:14,hi:17,lbl:'Φυσιολογικό',col:'#558b2f'},{lo:18,hi:24,lbl:'Αποδεκτό',col:'#f57c00'},{lo:25,hi:60,lbl:'Παχυσαρκία',col:'#c62828'}];
   var bfCatLabel='—',bfCatCol='#555';
-  if(bf){bfRefs.forEach(function(r){if(bf>=r.lo&&bf<=r.hi){bfCatLabel=r.lbl;bfCatCol=r.col;}});}
+  if(bf){bfRefs.forEach(function(r){if(bf>=r.lo){bfCatLabel=r.lbl;bfCatCol=r.col;}});}
   var bfGoal=bfRefs[2].hi; // upper bound of "Φυσιολογικό"
 
   // Deltas vs previous tracker entry
@@ -867,12 +867,12 @@ function exportBodyCompPDF(){
 
   // ACSM Body Fat Reference Ranges by sex
   var bfRefs=isFem
-    ?[{lbl:'Απαραίτητο',lo:10,hi:13,col:'#1565C0'},{lbl:'Αθλητικό',lo:14,hi:20,col:'#2e7d32'},{lbl:'Φυσιολογικό',lo:21,hi:24,col:'#558b2f'},{lbl:'Αποδεκτό',lo:25,hi:31,col:'#f57c00'},{lbl:'Παχυσαρκία',lo:32,hi:45,col:'#c62828'}]
-    :[{lbl:'Απαραίτητο',lo:2,hi:5,col:'#1565C0'},{lbl:'Αθλητικό',lo:6,hi:13,col:'#2e7d32'},{lbl:'Φυσιολογικό',lo:14,hi:17,col:'#558b2f'},{lbl:'Αποδεκτό',lo:18,hi:24,col:'#f57c00'},{lbl:'Παχυσαρκία',lo:25,hi:45,col:'#c62828'}];
+    ?[{lbl:'Απαραίτητο',lo:10,hi:13,col:'#1565C0'},{lbl:'Αθλητικό',lo:14,hi:20,col:'#2e7d32'},{lbl:'Φυσιολογικό',lo:21,hi:24,col:'#558b2f'},{lbl:'Αποδεκτό',lo:25,hi:31,col:'#f57c00'},{lbl:'Παχυσαρκία',lo:32,hi:60,col:'#c62828'}]
+    :[{lbl:'Απαραίτητο',lo:2,hi:5,col:'#1565C0'},{lbl:'Αθλητικό',lo:6,hi:13,col:'#2e7d32'},{lbl:'Φυσιολογικό',lo:14,hi:17,col:'#558b2f'},{lbl:'Αποδεκτό',lo:18,hi:24,col:'#f57c00'},{lbl:'Παχυσαρκία',lo:25,hi:60,col:'#c62828'}];
   // Find current category
   var bfCatLabel='—',bfCatCol='#555';
   if(latestBF){
-    bfRefs.forEach(function(r){if(latestBF>=r.lo&&latestBF<=r.hi){bfCatLabel=r.lbl;bfCatCol=r.col;}});
+    bfRefs.forEach(function(r){if(latestBF>=r.lo){bfCatLabel=r.lbl;bfCatCol=r.col;}});
   }
 
   // ── SVG dual chart ─────────────────────────────────────────────────────────

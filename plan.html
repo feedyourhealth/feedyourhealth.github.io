@@ -1485,7 +1485,7 @@ function viewProg(){
     const bfBandsNow=bfBands(s.sex);
     const bfLabelsNow=['Απαραίτητο','Αθλητικό','Φυσιολογικό','Αποδεκτό','Παχυσαρκία'];
     let bfCatNow=null,bfColNow=null;
-    if(p.bodyfat!=null){bfBandsNow.forEach((b,i)=>{if(p.bodyfat>=b.lo&&p.bodyfat<=b.hi){bfCatNow=bfLabelsNow[i];bfColNow=b.col;}});}
+    if(p.bodyfat!=null){bfBandsNow.forEach((b,i)=>{if(p.bodyfat>=b.lo){bfCatNow=bfLabelsNow[i];bfColNow=b.col;}});}
     const whtrNow=(p.waist&&s.height)?+(p.waist/s.height).toFixed(2):null;
     const whtrCatNow=whtrNow!=null?(whtrNow<0.5?'Φυσιολογικό':whtrNow<0.6?'Αυξημένος κίνδυνος':'Υψηλός κίνδυνος'):null;
     const whtrColNow=whtrNow!=null?(whtrNow<0.5?'#2e7d32':whtrNow<0.6?'#f57c00':'#c62828'):null;
