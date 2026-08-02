@@ -1088,8 +1088,10 @@ function calorieConsistencyCheck(c, proceedFn){
   var t=calcTDEE(c);
   var warnings=t.warnings||[];
   if(warnings.length===0){ proceedFn(); return; }
+  // opts.items renders each warning as its own colored row (κόκκινο='alert' πάνω, κίτρινο='warn' κάτω)
+  // αντί για ένα αδιαφοροποίητο μπλοκ κειμένου — msg μένει ως fallback για το window.confirm() branch.
   var msg=warnings.map(function(w){return w.msg;}).join('\n\n')+'\n\nΘέλεις να συνεχίσεις με αυτούς τους στόχους;';
-  showConfirmDialog(msg, proceedFn, {icon:'⚠️', confirmLabel:'Συνέχεια ούτως ή άλλως'});
+  showConfirmDialog(msg, proceedFn, {icon:'⚠️', confirmLabel:'Συνέχεια ούτως ή άλλως', items:warnings, itemsFooter:'Θέλεις να συνεχίσεις με αυτούς τους στόχους;'});
 }
 
 // ✅ PHASE 4: GENERATE PLAN WITH UNDO/REDO WRAPPER
@@ -1823,9 +1825,16 @@ function renderWeekTable(){
     if(trainD[di]&&c.sport){
       sportStr='<div class="sport-header-dietitian" style="font-size:10px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
     }
-    var copyBtn='<button class="day-copy-btn" onclick="copyDayPrompt(this,'+di+')" title="Αντιγραφή ημέρας σε άλλες" aria-label="Αντιγραφή ημέρας σε άλλες">📋</button>';
-    var regenDayBtn='<button class="day-regen-btn" onclick="regenerateDay('+di+')" title="Αναδημιουργία μόνο αυτής της ημέρας" aria-label="Αναδημιουργία μόνο αυτής της ημέρας">🔄</button>';
-    html+='<th>'+d+badge+timeStr+sportStr+copyBtn+regenDayBtn+'</th>';
+    // ✅ Ένα κουμπί "⋮" αντί για 2 γυμνά εικονίδια — το μενού που ανοίγει έχει ορατό κείμενο
+    // ("Αντιγραφή σε άλλες ημέρες" κ.λπ.) αντί να βασίζεται μόνο σε tooltip πάνω σε 2 μικρά
+    // εικονίδια δίπλα-δίπλα, δύσκολα να τα ανακαλύψει κανείς την πρώτη φορά.
+    var dayMenuId='day-menu-'+di;
+    var dayMenuBtn='<button class="day-menu-btn" onclick="event.stopPropagation();toggleDayMenu(\''+dayMenuId+'\')" title="Ενέργειες ημέρας" aria-label="Ενέργειες ημέρας">⋮</button>';
+    var dayMenuDropdown='<div id="'+dayMenuId+'" class="day-menu-dropdown">'
+      +'<button onclick="copyDayPrompt(this,'+di+');closeDayMenu(\''+dayMenuId+'\')">📋 Αντιγραφή σε άλλες ημέρες</button>'
+      +'<button onclick="regenerateDay('+di+');closeDayMenu(\''+dayMenuId+'\')">🔄 Αναδημιουργία μόνο αυτής</button>'
+      +'</div>';
+    html+='<th style="position:relative">'+d+badge+timeStr+sportStr+dayMenuBtn+dayMenuDropdown+'</th>';
   });
   html+='</tr></thead><tbody>';
 
@@ -2068,17 +2077,15 @@ function renderWeekTable(){
     +'<div style="display:flex;gap:5px;align-items:center">'+dotHtml+'</div>'
     +(wkFiPct<65?'<span style="font-size:10px;color:#B71C1C;font-weight:600">⚠ Χαμηλή πρόσληψη ινών — στόχος '+getFiberTarget(c.age,c.sex)+'g/ημ. (DRI AI)</span>':'')
   +'</div>';
-  // Instead of displaying micronutrients inline, add a button to open the modal
-  con.innerHTML=scoreHtml+fiberBannerHtml+tunaWarnHtml+html;
-
-  // ✅ VALIDATE FOOD DISTRIBUTION
+  // ✅ VALIDATE FOOD DISTRIBUTION — μαζί με τα άλλα validation widgets (Μεσογειακή βαθμολογία,
+  // ίνες) πριν το εβδομαδιαίο grid, όχι μετά από αυτό — οι παραβιάσεις (π.χ. «πρέπει ακριβώς 2
+  // ημέρες κόκκινο κρέας») είναι ακριβώς αυτό που χρειάζεται να δει η δ/γείος ΕΝΩ χτίζει το πλάνο,
+  // όχι αφού περάσει scroll από ολόκληρο το πλέγμα.
   var foodValidation = validateFoodDistribution(c.weekPlan);
   var validationHtml = displayFoodDistributionResults(foodValidation);
 
-  // Create validation container and insert after meal table
-  var valDiv = document.createElement('div');
-  valDiv.innerHTML = validationHtml;
-  con.appendChild(valDiv);
+  // Instead of displaying micronutrients inline, add a button to open the modal
+  con.innerHTML=scoreHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
 
   // Enable drag & drop for meals
   enableMealDragDrop();
@@ -2121,34 +2128,69 @@ function renderWeekTable(){
   valBtn.onclick=openValidationModal;
   btnContainer.appendChild(valBtn);
 
-  // Attach drag-and-drop to each day-cell
+  // Attach drag-and-drop + click-to-select to each day-cell
   con.querySelectorAll('.day-cell').forEach(function(cell){
     cell.addEventListener('dragover',function(e){e.preventDefault();cell.classList.add('drag-over');});
     cell.addEventListener('dragleave',function(e){if(!cell.contains(e.relatedTarget))cell.classList.remove('drag-over');});
     cell.addEventListener('drop',function(e){
       e.preventDefault();cell.classList.remove('drag-over');
       var data=e.dataTransfer.getData('text/plain');
-      var c2=getC();if(!c2)return;
-      var dd=parseInt(cell.dataset.d),mmi=parseInt(cell.dataset.mi);
-      if(data.indexOf('combo:')===0){
-        // Insert all foods from saved combo
-        var cid=data.slice(6);
-        var combo=getSavedCombos().filter(function(x){return x.id===cid;})[0];
-        if(combo){
-          var exclLower2=(c2.foodExclude||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
-          if(!comboDietOK(c2.dietType, combo.dietType) || comboHasExcludedFood(combo.foods, exclLower2)){
-            showErrorToast('⚠️ Ο συνδυασμός δεν ταιριάζει με το diet type / τις εξαιρέσεις τροφίμων αυτού του πελάτη.');
-            return;
-          }
-          combo.foods.forEach(function(f){c2.weekPlan[dd][mmi].foods.push({n:f.n,g:f.g});});
-        }
-      } else {
-        if(!FOODS[data])return;
-        c2.weekPlan[dd][mmi].foods.push({n:data,g:100});
-      }
-      renderWeekTable();
+      if(insertPlanItemIntoCell(parseInt(cell.dataset.d),parseInt(cell.dataset.mi),data))renderWeekTable();
+    });
+    // ✅ Click-to-add target: πάτημα σε κελί το κάνει "ενεργό" ώστε το επόμενο κλικ σε
+    // τρόφιμο/συνδυασμό απ' τη βιβλιοθήκη να μπαίνει κατευθείαν εκεί, χωρίς drag.
+    cell.addEventListener('click',function(){
+      setActiveMealTarget(parseInt(cell.dataset.d),parseInt(cell.dataset.mi));
     });
   });
+  refreshActiveMealIndicator();
+}
+
+// Εισάγει τρόφιμο/συνδυασμό σε συγκεκριμένο κελί — κοινή λογική για drag&drop ΚΑΙ click-to-add,
+// ώστε οι δύο τρόποι προσθήκης να συμπεριφέρονται πάντα ίδια (ίδιοι έλεγχοι diet/εξαιρέσεων).
+function insertPlanItemIntoCell(d,mi,data){
+  var c2=getC();if(!c2||!c2.weekPlan[d]||!c2.weekPlan[d][mi])return false;
+  if(data.indexOf('combo:')===0){
+    var cid=data.slice(6);
+    var combo=getSavedCombos().filter(function(x){return x.id===cid;})[0];
+    if(!combo)return false;
+    var exclLower2=(c2.foodExclude||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+    if(!comboDietOK(c2.dietType, combo.dietType) || comboHasExcludedFood(combo.foods, exclLower2)){
+      showErrorToast('⚠️ Ο συνδυασμός δεν ταιριάζει με το diet type / τις εξαιρέσεις τροφίμων αυτού του πελάτη.');
+      return false;
+    }
+    combo.foods.forEach(function(f){c2.weekPlan[d][mi].foods.push({n:f.n,g:f.g});});
+  } else {
+    if(!FOODS[data])return false;
+    c2.weekPlan[d][mi].foods.push({n:data,g:100});
+  }
+  save();
+  return true;
+}
+
+// Ποιο κελί (ημέρα, γεύμα) στοχεύουν τα κλικ στη βιβλιοθήκη τροφίμων — βλ. insertPlanItemIntoCell.
+window._activeMealTarget=window._activeMealTarget||null;
+function setActiveMealTarget(d,mi){
+  window._activeMealTarget={d:d,mi:mi};
+  refreshActiveMealIndicator();
+}
+function addLibItemToActiveTarget(data){
+  var t=window._activeMealTarget;
+  if(!t){showErrorToast('👆 Πάτα πρώτα σε ένα γεύμα, μετά πάτα το τρόφιμο για να προστεθεί εκεί.');return;}
+  if(insertPlanItemIntoCell(t.d,t.mi,data))renderWeekTable();
+}
+function refreshActiveMealIndicator(){
+  document.querySelectorAll('.day-cell.active-target').forEach(function(el){el.classList.remove('active-target');});
+  var el=document.getElementById('active-meal-indicator');
+  var c=getC();var t=window._activeMealTarget;
+  if(t&&c&&c.weekPlan[t.d]&&c.weekPlan[t.d][t.mi]){
+    var cell=document.querySelector('.day-cell[data-d="'+t.d+'"][data-mi="'+t.mi+'"]');
+    if(cell)cell.classList.add('active-target');
+    if(el){el.className='active-meal-indicator set';el.textContent='🎯 Ενεργό: '+DAYS[t.d]+' · '+c.weekPlan[t.d][t.mi].name;}
+  } else if(el){
+    el.className='active-meal-indicator';
+    el.textContent='👆 Πάτα σε ένα γεύμα για να διαλέξεις πού θα προστεθούν τα τρόφιμα με κλικ';
+  }
 }
 
 function updG(d,mi,fi,v){var c=getC();if(!c)return;c.weekPlan[d][mi].foods[fi].g=Math.max(0,parseInt(v)||0);save();renderWeekTable();}
@@ -2629,6 +2671,37 @@ function deleteMealSlot(mi){
     showSuccessToast('🗑️ Διαγράφηκε το γεύμα «'+nm+'»');
   });
 }
+function toggleDayMenu(id){
+  document.querySelectorAll('.day-menu-dropdown.open').forEach(function(el){if(el.id!==id)el.classList.remove('open');});
+  var el=document.getElementById(id);if(!el)return;
+  var opening=!el.classList.contains('open');
+  el.classList.toggle('open',opening);
+  if(opening){
+    setTimeout(function(){
+      function outside(e){if(!el.contains(e.target)){el.classList.remove('open');document.removeEventListener('mousedown',outside);}}
+      document.addEventListener('mousedown',outside);
+    },0);
+  }
+}
+function closeDayMenu(id){var el=document.getElementById(id);if(el)el.classList.remove('open');}
+
+// Το μενού "⋮" κάθε γεύματος (💾 Αποθήκευση / ⚖️ Ισορροπία / ❐ Αντιγραφή / 👍👎) καλούσε
+// toggleMealMenu/closeMealMenu που δεν υπήρχαν πουθενά στον κώδικα — το κουμπί δεν έκανε τίποτα.
+// Ίδια λογική με toggleDayMenu/closeDayMenu, αλλά μέσω style.display (όχι CSS class) γιατί το
+// markup του μενού ήδη έχει display:none inline, χωρίς αντίστοιχο CSS hook.
+function toggleMealMenu(id){
+  document.querySelectorAll('.meal-menu-dropdown').forEach(function(el){if(el.id!==id)el.style.display='none';});
+  var el=document.getElementById(id);if(!el)return;
+  var opening=el.style.display==='none'||!el.style.display;
+  el.style.display=opening?'block':'none';
+  if(opening){
+    setTimeout(function(){
+      function outside(e){if(!el.contains(e.target)){el.style.display='none';document.removeEventListener('mousedown',outside);}}
+      document.addEventListener('mousedown',outside);
+    },0);
+  }
+}
+function closeMealMenu(id){var el=document.getElementById(id);if(el)el.style.display='none';}
 function copyDayPrompt(btn,fromDay){
   var c=getC();if(!c||!c.weekPlan[fromDay]||!c.weekPlan[fromDay].length)return;
   var dayNames=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
@@ -3583,6 +3656,7 @@ function renderFoodLib(q){
     });
   });
   el.innerHTML=html;
+  refreshActiveMealIndicator();
   // Drag: saved combos
   el.querySelectorAll('.combo-item').forEach(function(item){
     item.addEventListener('dragstart',function(e){
@@ -3591,6 +3665,11 @@ function renderFoodLib(q){
       setTimeout(function(){item.classList.add('dragging');},0);
     });
     item.addEventListener('dragend',function(){item.classList.remove('dragging');});
+    // ✅ Click-to-add: πάτημα σε συνδυασμό τον προσθέτει στο ενεργό γεύμα (βλ. setActiveMealTarget)
+    item.addEventListener('click',function(e){
+      if(e.target.closest('.combo-del'))return;
+      addLibItemToActiveTarget('combo:'+item.dataset.combo);
+    });
   });
   // Drag: foods
   el.querySelectorAll('.lib-item').forEach(function(item){
@@ -3600,6 +3679,12 @@ function renderFoodLib(q){
       setTimeout(function(){item.classList.add('dragging');},0);
     });
     item.addEventListener('dragend',function(){item.classList.remove('dragging');});
+    // ✅ Click-to-add: πάτημα σε τρόφιμο το προσθέτει στο ενεργό γεύμα (βλ. setActiveMealTarget) —
+    // εναλλακτικό στο drag, χρήσιμο όταν στόχος/βιβλιοθήκη δεν χωράνε ταυτόχρονα στην οθόνη.
+    item.addEventListener('click',function(e){
+      if(e.target.closest('.lib-recipe-btn'))return;
+      addLibItemToActiveTarget(item.dataset.food);
+    });
   });
 }
 function filterLib(inp){renderFoodLib(inp.value);}

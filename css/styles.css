@@ -76,6 +76,7 @@ body.dark-mode .bulk-action-bar{background:#182525;border-color:#2c4a49}
 .cc-name{font-weight:700;color:var(--teal);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cc-sub{font-size:11px;color:#6b6b6b;margin-top:2px}
 .cc-group-tag{display:inline-block;background:#F0F7F7;color:var(--teal);font-weight:600;font-size:10px;padding:1px 6px;border-radius:999px;margin-left:2px}
+.cc-ea-badge{display:inline-block;background:#fdecea;color:#c62828;font-weight:600;font-size:10px;padding:1px 6px;border-radius:999px;margin-left:2px}
 .cc-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s;flex-shrink:0}
 .client-card:hover .cc-actions,.client-card:focus-within .cc-actions{opacity:1}
 /* 2026-07-10: hover-only reveal left these buttons unreachable on touch (no persistent hover state)
@@ -145,7 +146,7 @@ body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f
 .hm-stat-clickable{cursor:pointer}
 .hm-stat-clickable:hover,.hm-stat-clickable:focus-visible{background:#e3f0f0}
 .hm-stat-clickable:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-.hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px}
 .hm-card{background:#fff;border:1px solid #e0e0e0;border-left:4px solid #e0e0e0;border-radius:14px;padding:14px 16px;container-type:inline-size}
 .hm-card-danger{border-left-color:#E24B4A}
 .hm-card-warning{border-left-color:#EF9F27}
@@ -451,6 +452,7 @@ body.dark-mode .rd-delete-btn:hover{background:#3a1f1f}
 .day-cell:hover::before{opacity:1}
 .day-cell:hover{background:#f9f9f9;border-color:#ddd}
 .day-cell.drag-over{background:var(--teal-tint);border:2px solid var(--teal)}
+.day-cell.active-target{border:2px solid var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}
 .day-cell.meal-drag-over{background:var(--teal-tint);border:2px dashed var(--teal);box-shadow:inset 0 0 4px rgba(2,88,87,.2)}
 /* ✅ Phase 3: Meal timing hover tooltips */
 .meal-label{position:relative;cursor:help}
@@ -596,6 +598,8 @@ body.dark-mode .rd-delete-btn:hover{background:#3a1f1f}
 .food-lib-toggle:hover{background:#c5ddd8}
 .food-lib.collapsed .food-lib-toggle{transform:rotate(180deg)}
 .food-lib-title{font-size:10px;font-weight:700;color:var(--teal);margin-bottom:7px;text-transform:uppercase;letter-spacing:.4px}
+.active-meal-indicator{font-size:10px;color:#999;border:1px dashed #ddd;border-radius:8px;padding:5px 8px;margin-bottom:7px;text-align:center}
+.active-meal-indicator.set{background:var(--teal);color:#fff;border:1px solid var(--teal);font-weight:600}
 .food-lib-search{width:100%;padding:5px 8px;border:1px solid #ddd;border-radius:10px;font-size:11px;margin-bottom:7px;font-family:inherit}
 .food-lib-search:focus{outline:none;border-color:var(--teal)}
 .lib-cat{font-size:9px;font-weight:700;color:#6b6b6b;padding:5px 0 2px;text-transform:uppercase;letter-spacing:.4px}
@@ -864,12 +868,15 @@ body.dark-mode .tooltip-text {
 .ea-ok{background:var(--success-tint);border:1px solid #a5d6a7;color:#2e7d32}
 .ea-warn{background:#fff8e1;border:1px solid #ffd54f;color:#e65100}
 .ea-danger{background:#ffebee;border:1px solid #ef9a9a;color:#c62828}
-/* ── Day copy button ── */
-/* ✅ Shared style for the two day-header icon buttons (📋 copy day / 🔄 regenerate day) — previously
-   .day-copy-btn was styled translucent-white (low contrast on the light mint header) and
-   .day-regen-btn had no rule at all (fell back to default browser button chrome) */
-.day-copy-btn,.day-regen-btn{background:none;border:1px solid rgba(2,88,87,.35);border-radius:4px;cursor:pointer;color:var(--teal);font-size:9px;padding:1px 4px;margin-left:3px;vertical-align:middle;line-height:1}
-.day-copy-btn:hover,.day-regen-btn:hover{background:rgba(2,88,87,.12);border-color:var(--teal)}
+/* ── Day header actions menu (copy day / regenerate day) ── */
+/* ✅ Ένα κουμπί "⋮" αντί για 2 γυμνά εικονίδια δίπλα-δίπλα — το dropdown που ανοίγει έχει
+   ορατό κείμενο, όχι μόνο tooltip, ώστε οι ενέργειες να είναι εύκολα ανακαλύψιμες. */
+.day-menu-btn{background:none;border:1px solid rgba(2,88,87,.35);border-radius:4px;cursor:pointer;color:var(--teal);font-size:11px;font-weight:700;padding:1px 5px;margin-left:3px;vertical-align:middle;line-height:1.4}
+.day-menu-btn:hover{background:rgba(2,88,87,.12);border-color:var(--teal)}
+.day-menu-dropdown{display:none;position:absolute;right:0;top:100%;background:#fff;border:1px solid #ddd;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:50;min-width:190px;margin-top:4px;text-align:left}
+.day-menu-dropdown.open{display:block}
+.day-menu-dropdown button{display:block;width:100%;text-align:left;padding:9px 12px;background:none;border:none;cursor:pointer;color:#333;font-size:11.5px;font-weight:400;white-space:nowrap}
+.day-menu-dropdown button:hover{background:#f5f5f5}
 /* ── Protein per-meal warning ── */
 .prot-warn{display:inline-block;font-size:9px;color:#c62828;margin-right:2px;cursor:default}
 /* ── MET Activities panel ── */
@@ -954,7 +961,7 @@ body.dark-mode .tooltip-text {
 .sf-header:hover{color:#037070}
 .sf-result-row{background:#f0f9f8;border:1px solid #c5ddd8;border-radius:10px;padding:8px 12px;font-size:11px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 /* Autosave toast */
-#autosave-toast{position:fixed;bottom:14px;right:16px;background:var(--teal);color:#fff;border-radius:20px;padding:5px 13px;font-size:11px;font-weight:600;opacity:0;transition:opacity .35s;pointer-events:none;z-index:99999;display:flex;align-items:center;gap:5px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+#autosave-toast{position:fixed;top:14px;right:16px;background:var(--teal);color:#fff;border-radius:20px;padding:5px 13px;font-size:11px;font-weight:600;opacity:0;transition:opacity .35s;pointer-events:none;z-index:99999;display:flex;align-items:center;gap:5px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
 .consult-log{display:flex;flex-direction:column;gap:8px}
 .consult-entry{background:#f8fffe;border:1px solid #c5ddd8;border-radius:14px;padding:10px 14px;position:relative;padding-right:36px}
 .consult-date{font-size:10px;font-weight:700;color:var(--teal);margin-bottom:4px}
@@ -1340,15 +1347,23 @@ body.dark-mode .week-table thead th {
 
 /* Header background is solid teal in dark mode, so the teal-on-transparent button style from
    the light-mode rule above would be invisible here — go back to translucent white instead. */
-body.dark-mode .day-copy-btn,
-body.dark-mode .day-regen-btn {
+body.dark-mode .day-menu-btn {
   border-color: rgba(255,255,255,.4);
   color: rgba(255,255,255,.7);
 }
-body.dark-mode .day-copy-btn:hover,
-body.dark-mode .day-regen-btn:hover {
+body.dark-mode .day-menu-btn:hover {
   background: rgba(255,255,255,.2);
   color: #fff;
+}
+body.dark-mode .day-menu-dropdown {
+  background: #2a2a2a;
+  border-color: #444;
+}
+body.dark-mode .day-menu-dropdown button {
+  color: #e0e0e0;
+}
+body.dark-mode .day-menu-dropdown button:hover {
+  background: #383838;
 }
 
 body.dark-mode .day-cell {

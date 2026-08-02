@@ -259,7 +259,7 @@ setTimeout(function(){
     <div style="text-align:center;margin-bottom:24px;">
       <div id="confirmIcon" style="font-size:48px;margin-bottom:12px;">⚠️</div>
       <h3 id="confirmTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Επιβεβαίωση</h3>
-      <p id="confirmMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;"></p>
+      <div id="confirmMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;text-align:left;"></div>
     </div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <button onclick="closeConfirmDialog()" aria-label="Ακύρωση διαλόγου" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
@@ -869,7 +869,10 @@ var MEDICAL_PROTOCOLS = {
     name: 'Σακχαρώδης Διαβήτης',
     icon: '🩺',
     restrictions: {
-      avoidFoods: ['Σοκολάτα', 'Γλυκίσματα', 'Αναψυκτικά', 'Γλυκά δημητριακά'],
+      // ✅ 2026-08-01: added 'Μέλι' — concentrated sugar in the same vein as the 4 items already
+      // here, but was missing, so raw honey appeared repeatedly (9x/week confirmed live) in
+      // diabetic clients' plans unfiltered.
+      avoidFoods: ['Σοκολάτα', 'Γλυκίσματα', 'Αναψυκτικά', 'Γλυκά δημητριακά', 'Μέλι'],
       reduceCarbs: true,
       carbPercentage: 40,
       increaseProtein: true,
@@ -995,7 +998,19 @@ var MEDICAL_PROTOCOLS = {
     name: 'Δυσανεξία Λακτόζης',
     icon: '🥛',
     restrictions: {
-      avoidFoods: ['Γάλα', 'Κρέμα', 'Πάγωτο'],
+      // ✅ 2026-08-01 fix: bare 'Γάλα' matched as a SUBSTRING (foodIsExcludedByNameOrIngredient),
+      // so it was ALSO wrongly excluding the plant-milk replacements this same protocol recommends
+      // below ('Γάλα αμυγδάλου'/'Γάλα σόγιας'/'Γάλα βρώμης' all contain 'Γάλα'). Replaced with the
+      // two actual dairy-milk product names. Also added real cheese/yogurt items (φέτα, γιαούρτι,
+      // ανθότυρο, μυζήθρα, etc.) — foodReplacements below already implied these needed a swap, but
+      // they were never in avoidFoods (the array genPlan() actually filters against), so a lactose
+      // client's plan could still fill up with feta/yogurt/soft cheese unfiltered (confirmed live:
+      // 15 dairy hits across one week for a lactose-intolerant client).
+      avoidFoods: ['Γάλα πλήρες', 'Γάλα φρέσκο 1.5% Λιπαρά', 'Κρέμα', 'Πάγωτο',
+        'Γιαούρτι 2%', 'Γιαούρτι πλήρες 5%', 'Στραγγιστό γιαούρτι 0%',
+        'Τυρί φέτα', 'Μοτσαρέλα', 'Ανθότυρο', 'Μυζήθρα',
+        'Cottage cheese', 'Cream cheese', 'Γραβιέρα', 'Κασέρι', 'Κεφαλοτύρι',
+        'Παρμεζάνα', 'Quark (0%)', 'Ricotta', 'Edam light', 'Σαγανάκι (τηγανητό)'],
       lactoseFree: true
     },
     foodReplacements: {
@@ -3390,9 +3405,11 @@ function saveFoodExclusions(){
         self._checkinsCache=byToken;
         if(typeof renderSB==='function') renderSB();
         if(curId===null && typeof renderHome==='function') renderHome();
-        var s3=document.getElementById('s3');
-        if(s3 && typeof getC==='function' && typeof buildTrackerHtml==='function'){
-          var cur=getC(); if(cur) s3.innerHTML=buildTrackerHtml(cur);
+        // ✅ 2026-08-01: το feedback πελάτη (progress/notes/plan-feedback) μετακόμισε στο "📝 Ραντεβού"
+        // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
+        var s3b=document.getElementById('s3b');
+        if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
+          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
         }
       });
     },
@@ -3421,9 +3438,17 @@ function saveFoodExclusions(){
       if(!tokens.length) return Promise.resolve();
       return this.fetchAllClientLogs(tokens).then(function(byToken){
         self._clientLogsCache=byToken;
-        var s3=document.getElementById('s3');
-        if(s3 && typeof getC==='function' && typeof buildTrackerHtml==='function'){
-          var cur=getC(); if(cur) s3.innerHTML=buildTrackerHtml(cur);
+        // ✅ 2026-08-01: πριν έλειπε από εδώ (μόνο το refreshCheckinsCache το έκανε) — το 💬 badge στη
+        // λίστα πελατών/Αρχική διαβάζει clientHasNewClientNote() που εξαρτάται ΑΚΡΙΒΩΣ από αυτό το
+        // cache, οπότε χωρίς αυτό το badge έμενε στο παλιό αποτέλεσμα μέχρι να τρέξει τυχαία κάποιο
+        // άλλο re-render.
+        if(typeof renderSB==='function') renderSB();
+        if(curId===null && typeof renderHome==='function') renderHome();
+        // ✅ 2026-08-01: το feedback πελάτη (progress/notes/plan-feedback) μετακόμισε στο "📝 Ραντεβού"
+        // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
+        var s3b=document.getElementById('s3b');
+        if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
+          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
         }
       });
     },
@@ -3456,9 +3481,15 @@ function saveFoodExclusions(){
       if(!tokens.length) return Promise.resolve();
       return this.fetchAllPlanFeedback(tokens).then(function(byToken){
         self._planFeedbackCache=byToken;
-        var s3=document.getElementById('s3');
-        if(s3 && typeof getC==='function' && typeof buildTrackerHtml==='function'){
-          var cur=getC(); if(cur) s3.innerHTML=buildTrackerHtml(cur);
+        // ✅ 2026-08-01: πριν έλειπε από εδώ (μόνο το refreshCheckinsCache το έκανε) — το 😕 badge
+        // στη λίστα πελατών/Αρχική εξαρτάται ΑΚΡΙΒΩΣ από αυτό το cache (clientHasLowPlanFeedback).
+        if(typeof renderSB==='function') renderSB();
+        if(curId===null && typeof renderHome==='function') renderHome();
+        // ✅ 2026-08-01: το feedback πελάτη (progress/notes/plan-feedback) μετακόμισε στο "📝 Ραντεβού"
+        // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
+        var s3b=document.getElementById('s3b');
+        if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
+          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
         }
       });
     },

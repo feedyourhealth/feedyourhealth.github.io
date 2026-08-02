@@ -22,8 +22,19 @@ function homeClientsNeedingAttention(){
     if(typeof clientHasLowPlanFeedback==='function' && clientHasLowPlanFeedback(c)){
       var latestPf=window.Cloud.planFeedbackFor(c)[0];
       var npsTxt=latestPf.continue_likelihood!=null?(latestPf.continue_likelihood+'/10 πιθανότητα συνέχισης'):'χαμηλή βαθμολογία σε γεύμα';
+      // ✅ 2026-08-01: swTab(3) ήταν η Ανθρωπομετρία, όπου παλιά ζούσε το plan-feedback panel — μετά
+      // τη μεταφορά του στο Ραντεβού tab, το κουμπί έδειχνε σε άδεια σελίδα. Διορθώθηκε σε TAB_APPOINTMENTS.
       out.push({c:c,tier:-1,gap:0,label:'😕 χαμηλή ικανοποίηση πλάνου ('+npsTxt+', εβδ. '+latestPf.week_start+')',
-        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(3);">Δες feedback</button>'});
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες feedback</button>'});
+      return;
+    }
+    // ✅ 2026-08-01: νέα γραπτή σημείωση πελάτη (client_logs, portal, χωρίς login) — πριν δεν
+    // εμφανιζόταν πουθενά στην Αρχική, μόνο ως 💬 badge στη λίστα Πελάτες, οπότε ο διαιτολόγος έπρεπε
+    // να ανοίξει κάθε πελάτη για να το δει. Ίδιο tier -1 με 🚩/😕, ίδιο μοτίβο.
+    if(typeof clientHasNewClientNote==='function' && clientHasNewClientNote(c)){
+      var latestLog=window.Cloud.allClientLogsFor(c)[0];
+      out.push({c:c,tier:-1,gap:0,label:'💬 νέα σημείωση πελάτη ('+esc(latestLog.date)+')',
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες σημείωση</button>'});
       return;
     }
     var hasPlan=(typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
@@ -49,7 +60,8 @@ function homeClientsNeedingAttention(){
       var rows=window.Cloud.checkinsFor(c);
       var ckGap=rows.length?ckDaysSinceLast(rows):Infinity;
       if(rows.length && ckGap>=CHECKIN_GAP_DAYS){
-        out.push({c:c,tier:3,gap:ckGap,label:'χωρίς check-in στο portal '+ckGap+' ημέρες'});
+        out.push({c:c,tier:3,gap:ckGap,label:'χωρίς check-in στο portal '+ckGap+' ημέρες',
+          action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendActivityNudge(\''+c.id+'\')">🔔 Υπενθύμιση</button>'});
       }
     }
   });
@@ -189,6 +201,80 @@ function sendFeedbackReminder(clientId){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
     location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Πες μου πώς πήγε η εβδομάδα — Feed Your Health')+'&body='+encodeURIComponent(msg);
+  } else {
+    showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
+  }
+}
+
+// Μεταβολή βάρους αυτής της εβδομάδας για το ανακεφαλαιωτικό μήνυμα: τελευταία μέτρηση έναντι
+// της πιο πρόσφατης μέτρησης πριν από 7+ ημέρες (όχι απλά "πρώτη vs τελευταία αυτής της εβδομάδας"
+// — έτσι ο πελάτης βλέπει πραγματική εβδομαδιαία τάση ακόμα κι αν μετριέται σπάνια).
+function weeklyWeightDeltaText(c){
+  var wl=(c.weightLog||[]).slice().sort(function(a,b){return a.date<b.date?-1:(a.date>b.date?1:0);});
+  if(wl.length<2) return null;
+  var last=wl[wl.length-1];
+  var cutoff=new Date(last.date+'T00:00:00'); cutoff.setDate(cutoff.getDate()-7);
+  var cutoffKey=fmtDateLocal(cutoff);
+  var base=null;
+  for(var i=wl.length-2;i>=0;i--){ if(wl[i].date<=cutoffKey){ base=wl[i]; break; } }
+  if(!base) base=wl[0];
+  if(base===last) return null;
+  var d=Math.round((last.weight-base.weight)*10)/10;
+  if(d===0) return null;
+  return (d<0?'−':'+')+Math.abs(d).toString().replace('.',',')+'kg';
+}
+// Πραγματικό ανακεφαλαιωτικό κείμενο εβδομάδας — σκορ/σερί από τα ίδια ckWeekScore/ckStreak που
+// υπολογίζουν το πλακίδιο "Χρειάζονται παρακολούθηση" (ίδια πηγή αλήθειας, τα cloud checkins),
+// όχι νέα λογική. null αν δεν υπάρχει ΤΙΠΟΤΑ ακόμα να πούμε (νέος πελάτης, καμία δραστηριότητα).
+function buildWeeklyRecapText(c){
+  if(!window.Cloud || !window.Cloud.checkinsFor) return null;
+  var rows=window.Cloud.checkinsFor(c);
+  var byDate=ckRowsByDate(rows);
+  var score=ckWeekScore(byDate,0);
+  var streak=ckStreak(byDate);
+  var wDelta=weeklyWeightDeltaText(c);
+  var fname=(c.name||'').split(' ')[0];
+  var parts=[];
+  if(score!=null) parts.push(score+'% τήρηση αυτή την εβδομάδα');
+  if(wDelta) parts.push(wDelta+' βάρος');
+  if(streak>0) parts.push('🔥 '+streak+' '+(streak===1?'μέρα':'μέρες')+' σερί');
+  if(!parts.length) return null;
+  return 'Καλή Κυριακή '+fname+'! Η εβδομάδα σου: '+parts.join(', ')+' 👏';
+}
+// Στέλνει το πραγματικό ανακεφαλαιωτικό (σκορ/βάρος/σερί) ΣΤΟΝ πελάτη — το αντίστροφο του κουμπιού
+// «Κοινοποίησε την πρόοδό σου» στο plan.html, που ο πελάτης πρέπει ο ίδιος να το πατήσει και να
+// το μοιραστεί. Εδώ το κείμενο είναι ήδη έτοιμο με πραγματικούς αριθμούς — ένα κλικ του διαιτολόγου.
+function sendWeeklyRecap(clientId){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c || !c.shareToken) return;
+  var msg=buildWeeklyRecapText(c);
+  if(!msg){ showErrorToast('Δεν υπάρχουν ακόμα δεδομένα προόδου για '+(c.name||'τον/την πελάτη')+'.'); return; }
+  var phone=(c.phone||'').replace(/[^0-9]/g,'');
+  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone;
+  if(phone){
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  } else if(c.email){
+    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Η εβδομάδα σου — Feed Your Health')+'&body='+encodeURIComponent(msg);
+  } else {
+    showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
+  }
+}
+// Ίδιο μοτίβο με sendFeedbackReminder, αλλά για πελάτες που δεν έχουν κάνει ΚΑΝΕΝΑ check-in στο
+// portal εδώ και μέρες (tier 3 στο homeClientsNeedingAttention) — διαφορετικό μήνυμα, ρωτάει αν
+// όλα καλά αντί να ζητάει feedback για πλάνο που ίσως δεν έχει καν ανοίξει.
+function sendActivityNudge(clientId){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c || !c.shareToken) return;
+  var base=(window.Cloud&&window.Cloud.PORTAL_BASE)||'https://feedyourhealth.github.io/plan.html';
+  var url=base+'?t='+c.shareToken;
+  var fname=(c.name||'').split(' ')[0];
+  var msg='Γεια σου '+fname+'! Είδα ότι δεν έχεις τσεκάρει τίποτα στο πλάνο σου τελευταία — όλα καλά; Το link είναι εδώ αν θες να ρίξεις μια ματιά: '+url;
+  var phone=(c.phone||'').replace(/[^0-9]/g,'');
+  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone;
+  if(phone){
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  } else if(c.email){
+    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Πώς πάει; — Feed Your Health')+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
   }
@@ -464,10 +550,10 @@ function renderHome(){
     return homeRow(x.c, x.label, 'red', x.action);
   });
   // Η κάρτα δείχνει ΟΛΑ τα tiers (και τα πιο ήπια 2/3 = μέτρηση/check-in gap), ενώ το κόκκινο
-  // πλακίδιο από πάνω μετράει μόνο tier<=1 (βλ. homeAttentionBuckets) — χωρίς αυτή τη διευκρίνιση
-  // ένας πελάτης μπορεί να εμφανίζεται εδώ αλλά όχι στο "0" του πλακιδίου, μπερδεύοντας ποιο νούμερο ισχύει.
-  var attentionMildCount=attentionList.filter(function(x){return x.tier>1;}).length;
-  var attentionCardTitle='⚠️ Χρειάζονται προσοχή'+(attentionMildCount?(' <span style="font-weight:400;font-size:10px;color:#999" title="Το πάνω κόκκινο πλακίδιο μετράει μόνο τα πιο επείγοντα· αυτή η κάρτα δείχνει και τα πιο ήπια θέματα.">('+attentionMildCount+' πιο ήπια 🟡)</span>'):'');
+  // πλακίδιο από πάνω μετράει μόνο tier<=1 (βλ. homeAttentionBuckets). Επίτηδες διαφορετικό label
+  // από το πλακίδιο ("παρακολούθηση" αντί "προσοχή") ώστε το "0" του πλακιδίου να μη διαβάζεται σαν
+  // αντίφαση με το σύνολο της λίστας από κάτω.
+  var attentionCardTitle='⚠️ Χρειάζονται παρακολούθηση'+(attentionList.length?(' <span style="font-weight:400;font-size:10px;color:#999">('+attentionList.length+')</span>'):'');
   var staleClients=homeStaleLinks();
   var staleRows=staleClients.map(function(c){
     return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
@@ -485,7 +571,8 @@ function renderHome(){
   var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
   var reminderRows=homeClientsNeedingFeedbackReminder().map(function(c){
     return homeRow(c,'δεν έχει στείλει feedback ακόμα','teal',
-      '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendFeedbackReminder(\''+c.id+'\')">🔔 Υπενθύμιση</button>');
+      '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendFeedbackReminder(\''+c.id+'\')">🔔 Υπενθύμιση</button>'
+      +'<button type="button" class="hm-action-btn" style="background:#e8f5e9;color:#2e7d32" onclick="event.stopPropagation();sendWeeklyRecap(\''+c.id+'\')" title="Στείλε έτοιμη ανακεφαλαίωση με σκορ/βάρος/σερί">📊 Ανακεφαλαίωση</button>');
   });
   var pendingPlanRows=homePendingPlanActions(attentionIds).map(homePendingPlanActionRow);
   var approachingRenewalRows=homeApproachingRenewal().map(homeApproachingRenewalRow);

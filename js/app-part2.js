@@ -56,12 +56,34 @@ var _confirmPendingSecondary = null;
 
 // opts.secondary = {label, onClick} — προσθέτει ένα 3ο κουμπί (π.χ. "Αντικατάσταση" ανάμεσα σε
 // "Άκυρο"/"Συγχώνευση") για επιλογές με 3 πραγματικές εκβάσεις αντί για confirm()'s true/false.
+// opts.items = [{type:'alert'|'warn', msg}] — προαιρετική δομημένη λίστα προειδοποιήσεων (π.χ. από
+// calcTDEE().warnings), εμφανίζεται ως ξεχωριστές έγχρωμες σειρές (κόκκινο='alert' πάνω από κίτρινο=
+// 'warn') αντί για ένα αδιαφοροποίητο μπλοκ κειμένου — έτσι μια κρίσιμη προειδοποίηση (π.χ. RED-S) δεν
+// χάνεται ανάμεσα σε δευτερεύουσες. Όταν δεν δίνεται, η συμπεριφορά είναι ίδια με πριν (plain text).
 function showConfirmDialog(message, onConfirm, opts){
   opts = opts || {};
   var dlg = document.getElementById('confirmDialog');
   if(!dlg){ if(window.confirm(message)) onConfirm(); return; }
   document.getElementById('confirmTitle').textContent = opts.title || 'Επιβεβαίωση';
-  document.getElementById('confirmMessage').textContent = message;
+  var msgEl = document.getElementById('confirmMessage');
+  if(opts.items && opts.items.length){
+    var rows = opts.items.slice().sort(function(a,b){
+      return (a.type==='alert'?0:1) - (b.type==='alert'?0:1);
+    }).map(function(w){
+      var isAlert = w.type==='alert';
+      // Το msg συχνά ξεκινάει ήδη με το ίδιο emoji (π.χ. RED-S με 🔴) — αφαιρείται εδώ ώστε να μη
+      // διπλασιάζεται με το row icon· άλλα emoji (🤰/🚫/⚠️) μένουν, δίνουν επιπλέον νόημα πέρα από τη σοβαρότητα.
+      var text = w.msg.replace(isAlert?/^🔴\s*/:/^🟡\s*/,'');
+      return '<div style="display:flex;gap:8px;align-items:flex-start;background:'+(isAlert?'#fdecea':'#fff8e1')+';'
+        +'border-radius:8px;padding:8px 10px;margin-bottom:8px;">'
+        +'<span style="font-size:15px;line-height:1.4;">'+(isAlert?'🔴':'🟡')+'</span>'
+        +'<span style="font-size:13px;color:'+(isAlert?'#c62828':'#8a6100')+';line-height:1.5;">'+esc(text)+'</span>'
+        +'</div>';
+    }).join('');
+    msgEl.innerHTML = rows + (opts.itemsFooter?'<div style="margin-top:2px;">'+esc(opts.itemsFooter)+'</div>':'');
+  } else {
+    msgEl.textContent = message;
+  }
   document.getElementById('confirmIcon').textContent = opts.icon || '⚠️';
   document.getElementById('confirmBtn').textContent = opts.confirmLabel || 'Διαγραφή';
   var secBtn = document.getElementById('confirmSecondaryBtn');
@@ -359,7 +381,7 @@ function renderMain(){
   var sportPreview=[c.sport&&SPORT_PROFILES[c.sport]?SPORT_PROFILES[c.sport].name:'',{sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'}[c.activity]||''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
   var anthroPreview=[c.weight?c.weight+'kg':'', c.height?c.height+'cm':'', (c.weight&&c.height)?('BMI '+(Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10)):''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
   var goalPreview=(c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'}[c.goalMain]||c.goalMain):'Χωρίς στόχο')+' · '+(goalCalAdj>=0?'+':'')+goalCalAdj+' kcal';
-  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#ff6b35;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div style="display:flex;gap:8px;align-items:center;"><button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#eee;color:#555;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
     +'<div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t3b" onclick="swTab('+TAB_APPOINTMENTS+')">📝 Ραντεβού</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div>'
     +'<div id="s1">'
 
@@ -367,12 +389,16 @@ function renderMain(){
     // τύπους πελατών, ώστε η δ/γείος να μην ξαναδακτυλογραφεί τον ίδιο συνδυασμό κάθε φορά.
     // Όλα τα πεδία παραμένουν επεξεργάσιμα μετά — το preset είναι σημείο εκκίνησης, όχι κλείδωμα.
     +'<div style="margin-bottom:14px">'
-    +'<div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px">🚀 Γρήγορη έναρξη</div>'
+    +'<div onclick="toggleSec(\'quickstart\')" style="display:flex;justify-content:space-between;align-items:center;background:#f0f7f7;border:1px solid #b2d8d8;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#025857">'
+    +'<span>🚀 Γρήγορη έναρξη'+(secState.quickstart&&c.quickPreset?(' <span style="font-weight:400;color:#6b6b6b">— '+esc((QUICK_PRESETS.filter(function(p){return p.key===c.quickPreset;})[0]||{}).label||'')+'</span>'):'')+'</span>'
+    +'<span style="transition:transform .15s;'+(secState.quickstart?'':'transform:rotate(90deg)')+'">›</span>'
+    +'</div>'
+    +'<div style="display:'+(secState.quickstart?'none':'block')+';margin-top:8px">'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
     +QUICK_PRESETS.map(function(p){
         return '<button type="button" onclick="applyClientPreset(\''+p.key+'\')" style="background:'+(c.quickPreset===p.key?'#025857':'#fff')+';color:'+(c.quickPreset===p.key?'#fff':'#333')+';border:1px solid '+(c.quickPreset===p.key?'#025857':'#ddd')+';border-radius:20px;padding:7px 12px;font-size:11.5px;font-weight:600;cursor:pointer">'+p.icon+' '+p.label+'</button>';
       }).join('')
-    +'</div></div>'
+    +'</div></div></div>'
 
     // ✅ GOAL SELECTION REMINDER (Only show if goal not set)
     +((!c.goal)?'<div style="background:linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);border:1.5px solid #ffd54f;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 6px rgba(255,193,7,0.15)">'
@@ -622,6 +648,7 @@ function renderMain(){
     +'<div class="food-lib'+(isFoodLibCollapsed()?' collapsed':'')+'" id="food-lib">'
     +'<button class="food-lib-toggle" onclick="toggleFoodLib()" title="Απόκρυψη/εμφάνιση τροφίμων" aria-label="Απόκρυψη/εμφάνιση τροφίμων">'+(isFoodLibCollapsed()?'‹':'›')+'</button>'
     +'<div class="food-lib-body"><div class="food-lib-title">Τρόφιμα</div>'
+    +'<div id="active-meal-indicator" class="active-meal-indicator"></div>'
     +'<input class="food-lib-search" type="text" placeholder="Αναζήτηση..." oninput="filterLib(this)">'
     +'<div id="lib-list"></div></div></div></div>'
     +'<div id="supp-notes"></div></div>'
@@ -1437,11 +1464,18 @@ function buildInsightsPanelHtml(c,t){
 
   // RED-S / energy availability — thresholds per IOC Consensus Statement on RED-S (2018):
   // EA<30 kcal/kgLBM/day = critical, <45 = borderline. Nothing shown when healthy/unmeasurable.
+  // ✅ 2026-08-01: "RED-S" is athlete-specific IOC terminology (Relative Energy Deficiency in
+  // SPORT) — for a client with no c.sport, use the generic "χαμηλή ενεργειακή διαθεσιμότητα"
+  // wording and drop the sport-specific IOC citation link (same threshold, different label).
   if(t.ea!=null && t.ea<45){
     var isCrit=t.ea<30;
+    var isAthlete=!!c.sport;
+    var eaLabel=isAthlete
+      ?(isCrit?'🔴 Κίνδυνος RED-S':'🟡 Οριακή Ενεργειακή Διαθεσιμότητα')
+      :(isCrit?'🔴 Χαμηλή ενεργειακή διαθεσιμότητα':'🟡 Οριακή ενεργειακή πρόσληψη');
     items.push({sev:isCrit?'bad':'warn', text:
-      '<b>'+(isCrit?'🔴 Κίνδυνος RED-S':'🟡 Οριακή Ενεργειακή Διαθεσιμότητα')+':</b> EA='+t.ea+' kcal/kgLBM ('+(isCrit?'κατώφλι &lt;30':'στόχος &gt;45')+')'
-      +' <a href="https://stillmed.olympics.com/media/Documents/Athletes/Medical-Scientific/Consensus-Statements/REDs/IOC-consensus-statement-Relative-Energy-Deficiency-in-Sport-2018.pdf" target="_blank" style="color:inherit;text-decoration:underline">IOC Consensus 2018 ↗</a>'
+      '<b>'+eaLabel+':</b> EA='+t.ea+' kcal/kgLBM ('+(isCrit?'κατώφλι &lt;30':'στόχος &gt;45')+')'
+      +(isAthlete?(' <a href="https://stillmed.olympics.com/media/Documents/Athletes/Medical-Scientific/Consensus-Statements/REDs/IOC-consensus-statement-Relative-Energy-Deficiency-in-Sport-2018.pdf" target="_blank" style="color:inherit;text-decoration:underline">IOC Consensus 2018 ↗</a>'):'')
     });
   }
 
@@ -1685,7 +1719,11 @@ function buildTrackerHtml(c){
   // Weight / body composition section
   var isMinorC=(c.age!=null && c.age>0 && c.age<18); // don't coerce a not-yet-entered age to 0 and misclassify as a minor
   var defaultProto=isMinorC?'slaughter':'jp4';
-  var wHtml=buildClientProgressHtml(c)+'<div class="tracker-section">'
+  // ✅ 2026-08-01: buildClientProgressHtml/clientLogsPanelHtml/planFeedbackPanelHtml moved to the
+  // "📝 Ραντεβού" tab (buildAppointmentsHtml) — αυτά είναι το feedback του πελάτη (portal check-ins,
+  // δικές του σημειώσεις, αξιολόγηση πλάνου), όχι σωματομετρικά, οπότε ανήκουν εκεί όπου γίνεται η
+  // απόφαση για το πλάνο, όχι θαμμένα πάνω από τις δερματοπτυχές.
+  var wHtml='<div class="tracker-section">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     +'<div class="tracker-head" style="margin-bottom:0">📐 Ανθρωπομετρία &amp; Σωματική Σύνθεση</div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
@@ -1719,8 +1757,6 @@ function buildTrackerHtml(c){
     +'<div id="sf-result" style="display:none"></div>'
     +'</div>'
     +'</div>'
-    +clientLogsPanelHtml(c)
-    +planFeedbackPanelHtml(c)
     +dislikedRecipesPanelHtml(c)
     // ── Standard entry row ────────────────────────────────────────────────────
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
@@ -2404,9 +2440,12 @@ var APPT_SPORT_CHIPS={
   boxing:['Κοντά σε ζύγιση','Cut βάρους','Camp προπόνησης'],
   bjj:['Camp προπόνησης','Πόνος αρθρώσεων'],
   mma:['Camp προπόνησης','Cut βάρους'],
+  football:['Κοντά σε αγώνα','Back-to-back αγώνες','Περίοδος μεταγραφών/έντασης'],
+  basketball:['Κοντά σε αγώνα','Back-to-back αγώνες','Πολλά λεπτά συμμετοχής'],
   weightlifting:['Meet προσεχώς','DOMS έντονο'],
   cycling:['Long ride αυτή την εβδομάδα'],
   running:['Αγώνας προσεχώς','DOMS έντονο'],
+  swimming:['Διπλή προπόνηση (πρωί/απόγευμα)','Taper πριν αγώνα','Ερεθισμός χλωρίου/δέρμα'],
   crossfit:['DOMS έντονο','WOD έντονο πρόσφατα']
 };
 var APPT_PLAN_ACTIONS=[
@@ -2472,9 +2511,35 @@ function apptSparkline(log,key,color,label){
   svg+='</svg>';
   return svg;
 }
+// ✅ Χειροκίνητο "🔄 Ανανέωση" — τα portal caches (check-ins/σημειώσεις/plan feedback) ανανεώνονται
+// αλλιώς μόνο μία φορά, στο login. Το κουμπί ξαναφέρνει τα 3 caches on-demand χωρίς να χρειάζεται
+// reload· κάθε refresh*Cache() ήδη ξανασχεδιάζει μόνο του το #s3b/renderSB/renderHome όταν τελειώσει.
+function refreshClientPortalFeedback(btn){
+  if(!window.Cloud) return;
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Ανανέωση...'; }
+  var restore=function(){ if(btn){ btn.disabled=false; btn.textContent='🔄 Ανανέωση'; } };
+  Promise.all([
+    typeof Cloud.refreshCheckinsCache==='function'?Cloud.refreshCheckinsCache():Promise.resolve(),
+    typeof Cloud.refreshClientLogsCache==='function'?Cloud.refreshClientLogsCache():Promise.resolve(),
+    typeof Cloud.refreshPlanFeedbackCache==='function'?Cloud.refreshPlanFeedbackCache():Promise.resolve()
+  ]).then(restore).catch(restore);
+}
 function buildAppointmentsHtml(c){
   if(!c.appointments)c.appointments=[];
   var today=new Date().toISOString().slice(0,10);
+
+  // ✅ 2026-08-01: Το feedback του πελάτη (portal check-ins, δικές του σημειώσεις, ⭐ αξιολόγηση
+  // πλάνου) μπήκε εδώ πάνω-πάνω αντί στην Ανθρωπομετρία — εδώ είναι το σημείο απόφασης "νέο πλάνο/
+  // προσαρμογή/ίδιο", οπότε έχει νόημα να βλέπεις τι λέει ο πελάτης πριν αποφασίσεις. Κάθε πάνελ
+  // επιστρέφει '' μόνο του όταν δεν υπάρχουν δεδομένα (χωρίς shareToken/χωρίς καταχωρήσεις).
+  var portalFeedbackBody=buildClientProgressHtml(c)+clientLogsPanelHtml(c)+planFeedbackPanelHtml(c);
+  // Το κουμπί ανανέωσης φαίνεται μόνο όταν ο πελάτης έχει portal link (αλλιώς δεν υπάρχει τίποτα να
+  // ανανεωθεί) — ακόμα κι όταν δεν έχει στείλει τίποτα ακόμα, χρήσιμο να το δει η διαιτολόγος αμέσως.
+  var portalFeedbackHtml=c.shareToken
+    ?('<div style="display:flex;justify-content:flex-end;margin-bottom:6px">'
+      +'<button type="button" class="btn" style="padding:4px 11px;font-size:11px;background:#fff;color:#025857;border:1px solid #cfe8e0" onclick="refreshClientPortalFeedback(this)">🔄 Ανανέωση</button>'
+      +'</div>'+portalFeedbackBody)
+    :portalFeedbackBody;
 
   // ── Summary strip (read-only, pulled from other tabs) ──
   var wl=c.weightLog||[];
@@ -2575,7 +2640,7 @@ function buildAppointmentsHtml(c){
     listHtml='<div class="tracker-empty">Δεν υπάρχουν καταχωρήσεις ραντεβού ακόμα. Πρόσθεσε την πρώτη!</div>';
   }
 
-  return '<div style="padding:16px 20px">'+strip+trendsHtml+formHtml+'<div class="tracker-section"><div class="tracker-head">📋 Ιστορικό ραντεβού</div>'+listHtml+'</div></div>';
+  return '<div style="padding:16px 20px">'+portalFeedbackHtml+strip+trendsHtml+formHtml+'<div class="tracker-section"><div class="tracker-head">📋 Ιστορικό ραντεβού</div>'+listHtml+'</div></div>';
 }
 function addAppointmentEntry(){
   var c=getC();if(!c)return;
@@ -3068,7 +3133,12 @@ function applyDietTypeCategorySafetyNet(weekPlan,dietType,exceptionsByDay,foodEx
         // forbidden foods still appearing in a fasting plan with zero exceptions set). 'containsCats'
         // (data.js) lists any forbidden-category ingredients hiding inside such a dish.
         var hiddenForbidden=(fd&&fd.containsCats)?fd.containsCats.filter(function(hc){return dayForbidden.indexOf(hc)!==-1;}):[];
-        if(dayForbidden.indexOf(cat)===-1 && !hiddenForbidden.length)return food;
+        // Explicit vegan:false flag (data.js) — catches animal-derived items whose .cat is too
+        // broad to forbid wholesale (e.g. Μέλι άβραστο/honey is cat:'Άλλα', shared with plant-safe
+        // items like soy sauce/spices, so DIET_TYPE_FORBIDDEN_CATS can't just ban the category).
+        // Found 2026-08-01: honey was appearing in every day of vegan clients' plans, unfiltered.
+        var explicitlyForbidden=dietType==='vegan' && fd && fd.vegan===false;
+        if(dayForbidden.indexOf(cat)===-1 && !hiddenForbidden.length && !explicitlyForbidden)return food;
         // Find a substitute via the existing substitution chain, restricted to allowed categories
         // (for a composite dish, substitute based on its first hidden forbidden category, since
         // its own .cat — e.g. 'Συνταγές FYH' — has no meaningful SUBST_ORDER entry)
@@ -3077,6 +3147,12 @@ function applyDietTypeCategorySafetyNet(weekPlan,dietType,exceptionsByDay,foodEx
         for(var i=0;i<order.length&&!sub;i++){
           if(dayForbidden.indexOf(order[i])!==-1)continue; // still forbidden, skip
           var candidates=Object.keys(FOODS).filter(function(n){
+            // Never "substitute" a forbidden food with itself (e.g. honey has no same-category
+            // gluten/dairy/meat peers, so the closest-kcal match within its own 'Άλλα' category
+            // was honey itself — a zero-distance match — silently defeating the vegan:false
+            // exclusion above). Also skip any other vegan:false item for vegan clients.
+            if(n===food.n)return false;
+            if(dietType==='vegan' && FOODS[n] && FOODS[n].vegan===false)return false;
             return FOODS[n]&&FOODS[n].cat===order[i];
           });
           if(candidates.length){
@@ -3566,6 +3642,9 @@ function getSecState(c){
       // hide the very field the dietitian needs to fix.
       basic: !!(c.name && c.sex && c.age),
       sport: !!(c.sport && c.activity),
+      // ✅ Presets είναι σημείο εκκίνησης μιας φοράς, όχι κάτι που ξαναχρειάζεται συνέχεια —
+      // κλειστό by default ώστε στο κινητό να μη σκεπάζει τα στοιχεία πελάτη πριν καν τα δεις.
+      quickstart: true,
       macros: (c.macroPreset||'balanced')!=='custom',
       daytgt: true,
       // ✅ Ανθρωπομετρία / Στόχος stay open by default (edited on most visits) —
@@ -3599,12 +3678,50 @@ function toggleFoodLib(){
 // ✅ Safety net: if plan-generation validation fails on a field that lives inside a
 // collapsed accordion (Βασικά Στοιχεία / Άθλημα / Κατανομή Μακρο), force it open so the
 // error is actually visible instead of the dietitian hunting for a hidden input.
+// ✅ 2026-08-01: added weight/height/bf (→'anthro') and goal_required (→'goal') — these had no
+// entry at all, so an error on any of them left "Ανθρωπομετρία"/"Στόχος & Προσαρμογή" collapsed
+// (if the dietitian had manually closed it) with nothing forcing it back open.
 var SEC_FOR_ERROR={
   name_required:'basic', name_short:'basic', name_long:'basic',
   age_required:'basic', age_invalid:'basic', sex_required:'basic',
   activity_required:'sport',
+  weight_required:'anthro', weight_invalid:'anthro',
+  height_required:'anthro', height_invalid:'anthro',
+  bf_invalid:'anthro',
+  goal_required:'goal',
   macros_invalid:'macros'
 };
+// ✅ 2026-08-01: the error toast told the dietitian WHAT was wrong but never WHERE — on a long
+// client form (7+ accordion sections) that meant scrolling around hunting for the actual input.
+// Maps each validation error to the input it belongs to, so showValidationErrors() can scroll to
+// and briefly highlight it.
+var FIELD_ID_FOR_ERROR={
+  name_required:'inp-name', name_short:'inp-name', name_long:'inp-name',
+  age_required:'inp-birthdate', age_invalid:'inp-birthdate',
+  sex_required:'inp-sex',
+  weight_required:'inp-weight', weight_invalid:'inp-weight',
+  height_required:'inp-height', height_invalid:'inp-height',
+  bf_invalid:'inp-bf',
+  activity_required:'inp-activity-factor'
+};
+function scrollToAndHighlightField(errors){
+  var fieldId=null;
+  for(var i=0;i<(errors||[]).length&&!fieldId;i++){ fieldId=FIELD_ID_FOR_ERROR[errors[i]]; }
+  if(!fieldId)return;
+  var el=document.getElementById(fieldId);
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  el.focus();
+  var prevBg=el.style.background, prevBorder=el.style.borderColor, prevShadow=el.style.boxShadow;
+  el.style.background='#ffebee';
+  el.style.borderColor='#e53935';
+  el.style.boxShadow='0 0 0 3px rgba(229,57,53,0.25)';
+  setTimeout(function(){
+    el.style.background=prevBg;
+    el.style.borderColor=prevBorder;
+    el.style.boxShadow=prevShadow;
+  },1800);
+}
 function revealSectionsForErrors(errors){
   var c=getC();if(!c)return;
   var st=getSecState(c);
@@ -3722,7 +3839,7 @@ function upd(k,v){
   var eaEl=document.getElementById('ea-row');
   if(t.ea!==null){
     var eaCls='ea-row '+(t.ea<30?'ea-danger':t.ea<45?'ea-warn':'ea-ok');
-    var eaTxt='⚡ Energy Availability: <b>'+t.ea+' kcal/kgLBM</b> &nbsp;'+(t.ea<30?'🔴 Κίνδυνος RED-S — ανεπαρκής ενεργειακή διαθεσιμότητα':t.ea<45?'🟡 Οριακή EA — παρακολούθηση απαραίτητη':'🟢 Φυσιολογική EA');
+    var eaTxt='⚡ Energy Availability: <b>'+t.ea+' kcal/kgLBM</b> &nbsp;'+(t.ea<30?(c.sport?'🔴 Κίνδυνος RED-S — ανεπαρκής ενεργειακή διαθεσιμότητα':'🔴 Χαμηλή ενεργειακή διαθεσιμότητα'):t.ea<45?'🟡 Οριακή EA — παρακολούθηση απαραίτητη':'🟢 Φυσιολογική EA');
     if(eaEl){eaEl.className=eaCls;eaEl.innerHTML=eaTxt;}
   } else if(eaEl){eaEl.style.display='none';}
   // Refresh MET totals if weight changed (kcal depends on weight)

@@ -193,6 +193,20 @@
   /* small legend line */
   .legend{font-size:11px;color:var(--faint);padding:2px 2px 0;line-height:1.4}
 
+  /* dismissible inline notice — shared by the install-app banner and the "no activity yet" nudge */
+  .inline-notice{display:flex;align-items:flex-start;gap:10px;background:var(--tint2);border:.5px solid var(--bord);border-radius:14px;padding:12px 34px 12px 14px;position:relative}
+  .inline-notice .in-ic{color:var(--teal);font-size:18px;flex-shrink:0;margin-top:1px}
+  .inline-notice .in-txt{flex:1;min-width:0}
+  .inline-notice .in-t{font-size:13px;font-weight:700;color:var(--teal-d);margin-bottom:2px}
+  .inline-notice .in-s{font-size:12px;color:var(--muted);line-height:1.45}
+  .inline-notice .in-btn{background:var(--teal);color:#fff;border:none;border-radius:9px;font-size:12.5px;font-weight:700;padding:7px 12px;margin-top:8px;font-family:inherit;cursor:pointer}
+  .inline-notice .in-x{position:absolute;top:8px;right:8px;width:24px;height:24px;border:none;background:none;color:var(--faint);font-size:15px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer}
+  .inline-notice .in-x:active{background:var(--bord-l)}
+
+  /* streak-freeze chip on the milestone card */
+  .freeze-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--teal-d);background:var(--tint);padding:5px 10px;border-radius:999px;margin-top:10px}
+  .freeze-chip.used{color:var(--faint);background:var(--bord-l)}
+
   /* exclusions/allergies the plan already avoids — surfaced so the client can confirm it, not just trust it */
   .excl-card{background:var(--card);border:.5px solid var(--bord);border-left:3px solid var(--danger);border-radius:14px;padding:12px 14px}
   .excl-card .nh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--danger);margin-bottom:7px}
@@ -418,6 +432,19 @@ const LOG_TAGS=[
 ];
 
 let SNAP=null, curDay=0, sb=null, curView='home', selectedLogTag=null;
+
+// ── «Πρόσθεσε στην αρχική οθόνη» — Android/Chrome στέλνει το native prompt event, το κρατάμε
+// για να το πυροδοτήσουμε εμείς όταν ο πελάτης πατήσει το δικό μας κουμπί (το browser prompt
+// από μόνο του είναι αόρατο/απρόβλεπτο). Το iOS Safari δεν στέλνει ποτέ αυτό το event — δεν έχει
+// προγραμματιστικό API, μόνο το χειροκίνητο μενού Κοινοποίηση→Προσθήκη, οπότε εκεί δείχνουμε οδηγίες.
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  if(curView==='home')go('home'); // ξαναφτιάχνει το home ώστε να εμφανιστεί το banner χωρίς αλληλεπίδραση του πελάτη
+});
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream}
+function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true}
 
 function $(s){return document.querySelector(s)}
 function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
@@ -893,6 +920,9 @@ function viewHome(){
     v.appendChild(n);
   }
 
+  // «πρόσθεσε στην αρχική οθόνη» — μόνο όταν πραγματικά διαθέσιμο, ποτέ μετά το πρώτο κλείσιμο
+  const ib=installBanner(); if(ib)v.appendChild(ib);
+
   // at-a-glance: εβδομαδιαίο σκορ / σερί / βάρος (tap → Πρόοδος)
   const glance=glanceCard();
   if(glance)v.appendChild(glance);
@@ -909,6 +939,7 @@ function viewHome(){
   const meals=(day&&day.meals)||[];
   const eaten=getMeals();
   let done=0; meals.forEach((m,i)=>{if(eaten[i])done++;});
+  const nudge=activityNudge(meals,done); if(nudge)v.appendChild(nudge);
   const c=el('div','card'); const cp=el('div','card-pad');
   cp.innerHTML='<div class="card-hdr" style="margin-bottom:8px"><i class="ti ti-tools-kitchen-2"></i>Η διατροφή μου σήμερα'
     +(meals.length?'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+meals.length+'</span>':'')+'</div>'
@@ -971,6 +1002,50 @@ function goalHero(){
   const c=el('div','goalhero');
   c.innerHTML='<div class="lbl">Ο στόχος σου</div><div class="val">'+String(p.goal).replace('.',',')+' kg</div>'
     +'<div class="arrow"><i class="ti '+dirIcon+'"></i>Από '+String(start).replace('.',',')+' kg — '+String(diff).replace('.',',')+' kg να πάμε!</div>';
+  return c;
+}
+// «Πρόσθεσε στην αρχική οθόνη» — δείχνεται μόνο όταν είναι πραγματικά δυνατό (Android/Chrome
+// έστειλε το beforeinstallprompt event, ή iOS Safari όπου δείχνουμε τα χειροκίνητα βήματα),
+// ποτέ αν ο πελάτης το έχει ήδη εγκαταστήσει (standalone) ή το έχει κλείσει μία φορά.
+function installBanner(){
+  if(isStandalone())return null;
+  try{if(localStorage.getItem(lk('installDismissed'))==='1')return null;}catch(e){}
+  const ios=isIOS();
+  if(!deferredInstallPrompt && !ios)return null;
+  const c=el('div','inline-notice');
+  c.innerHTML='<i class="ti ti-download in-ic"></i><div class="in-txt">'
+    +'<div class="in-t">Πρόσθεσε το πλάνο σου στην αρχική οθόνη</div>'
+    +'<div class="in-s">'+(deferredInstallPrompt
+      ?'Ανοίγει σαν εφαρμογή, χωρίς να ψάχνεις το link στο WhatsApp κάθε φορά.'
+      :'Πάτα <i class="ti ti-share-2"></i> Κοινοποίηση, μετά «Προσθήκη στην Αρχική οθόνη».')+'</div>'
+    +(deferredInstallPrompt?'<button class="in-btn" type="button">Εγκατάσταση</button>':'')
+    +'</div><button class="in-x" type="button" aria-label="Κλείσιμο"><i class="ti ti-x"></i></button>';
+  const btn=c.querySelector('.in-btn');
+  if(btn)btn.onclick=async()=>{
+    if(!deferredInstallPrompt)return;
+    deferredInstallPrompt.prompt();
+    try{await deferredInstallPrompt.userChoice;}catch(e){}
+    deferredInstallPrompt=null;
+    dismissInstallBanner();
+  };
+  c.querySelector('.in-x').onclick=()=>{dismissInstallBanner();go('home');};
+  return c;
+}
+function dismissInstallBanner(){try{localStorage.setItem(lk('installDismissed'),'1')}catch(e){}}
+
+// Ήπια υπενθύμιση μέσα στην ίδια τη σελίδα όταν ο πελάτης δεν έχει τσεκάρει τίποτα ακόμα αργά
+// μέσα στη μέρα — δεν χρειάζεται push/WhatsApp υποδομή, απλά ένα ευγενικό nudge όταν ήδη είναι εδώ.
+// Κλείνει για τη ΣΗΜΕΡΙΝΗ μέρα μόνο (ξαναδείχνεται αύριο αν χρειαστεί).
+function activityNudge(meals,done){
+  if(!meals||!meals.length||done>0)return null;
+  if(new Date().getHours()<14)return null;
+  try{if(localStorage.getItem(lk('nudgeDismissed'))===todayKey())return null;}catch(e){}
+  const c=el('div','inline-notice');
+  c.innerHTML='<i class="ti ti-bell-ringing in-ic"></i><div class="in-txt">'
+    +'<div class="in-t">Δεν έχεις τσεκάρει τίποτα σήμερα ακόμα</div>'
+    +'<div class="in-s">Πάτα ένα γεύμα παρακάτω μόλις το ολοκληρώσεις — έτσι χτίζεις το σερί σου.</div>'
+    +'</div><button class="in-x" type="button" aria-label="Κλείσιμο"><i class="ti ti-x"></i></button>';
+  c.querySelector('.in-x').onclick=()=>{try{localStorage.setItem(lk('nudgeDismissed'),todayKey())}catch(e){}go('home');};
   return c;
 }
 function quickCard(tab,icon,title,sub){const c=el('div','card');const p=el('div','card-pad');p.onclick=()=>go(tab);p.innerHTML='<i class="ti '+icon+'" style="font-size:18px"></i><div class="qt">'+title+'</div><div class="qs">'+esc(sub)+'</div>';c.appendChild(p);return c}
@@ -1226,33 +1301,61 @@ function overallScore(st){
   const ps=[]; if(st.dietTot)ps.push(st.dietDone/st.dietTot); if(st.supTot)ps.push(st.supDone/st.supTot); if(st.watTot)ps.push(st.watDone/st.watTot);
   if(!ps.length)return null; return Math.round(ps.reduce((a,b)=>a+b,0)/ps.length*100);
 }
-// Σερί: συνεχόμενες «τέλειες» ημέρες (όλοι οι πυλώνες ✓) μέχρι σήμερα.
-function streakDays(){
+// Σερί: συνεχόμενες «τέλειες» ημέρες (όλοι οι πυλώνες ✓) μέχρι σήμερα — ΜΕ ένα «πάγωμα» τον μήνα:
+// η πρώτη χαμένη μέρα μέσα σε έναν ημερολογιακό μήνα δεν σπάει το σερί (καλύπτεται αυτόματα),
+// η δεύτερη μέσα στον ίδιο μήνα το σπάει κανονικά. Στόχος: μια κακή μέρα να μη μηδενίζει
+// εβδομάδες συνέπειας, χωρίς να αδειάζει εντελώς το νόημα του σερί.
+function streakInfo(){
   const s=SNAP, h=s.hydration||{}, per=h.glassMl||250;
   let mealsAll={},waterAll={}; try{mealsAll=JSON.parse(localStorage.getItem(lk('meals'))||'{}')}catch(e){} try{waterAll=JSON.parse(localStorage.getItem(lk('water'))||'{}')}catch(e){}
   const suppAll=getSuppLog(), supCount=(s.supps||[]).length;
-  function good(d){
-    const pd=planForDate(d); if(!pd)return false; const k=dKey(d);
+  // 'good' | 'missed' | 'noplan' — ξεχωρίζουμε "δεν υπήρχε καν πλάνο τότε" (πριν ξεκινήσει ο
+  // πελάτης· σταματάμε το μέτρημα εκεί, δεν είναι χαμένη μέρα) από "υπήρχε πλάνο, δεν έγινε".
+  // Μια μέρα χωρίς ΚΑΜΙΑ καταγραφή (ούτε γεύμα, ούτε νερό, ούτε συμπλήρωμα) μετράει επίσης ως
+  // 'noplan' — διαφορετικά το πάγωμα θα "έσωζε" αναδρομικά μέρες πριν καν ανοίξει ο πελάτης το
+  // link του, αντί να καλύπτει μόνο μια πραγματική κακή μέρα.
+  function status(d){
+    const pd=planForDate(d); if(!pd)return 'noplan'; const k=dKey(d);
+    const mLog=mealsAll[k], wLog=waterAll[k], sLog=suppAll[k];
+    const touched=(mLog&&Object.keys(mLog).length)||(wLog!=null)||(sLog&&Object.keys(sLog).length);
+    if(!touched)return 'noplan';
     const mealsN=(pd.meals||[]).length;
-    if(mealsN){const lg=mealsAll[k]||{}; let e=0; for(let j=0;j<mealsN;j++)if(lg[j])e++; if(e<mealsN)return false;}
-    if(supCount){const lg=suppAll[k]||{}; let c=0;(s.supps||[]).forEach(su=>{if(lg[su.name])c++}); if(c<supCount)return false;}
+    if(mealsN){let e=0; for(let j=0;j<mealsN;j++)if(mLog&&mLog[j])e++; if(e<mealsN)return 'missed';}
+    if(supCount){let c=0;(s.supps||[]).forEach(su=>{if(sLog&&sLog[su.name])c++}); if(c<supCount)return 'missed';}
     const goalMl=(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000); const tg=Math.max(6,Math.round(goalMl/per));
-    if((waterAll[k]||0)<tg)return false; return true;
+    if((wLog||0)<tg)return 'missed'; return 'good';
   }
+  const monthKey=dd=>dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0');
   let n=0; const d=new Date(); d.setHours(0,0,0,0);
-  if(!good(d))d.setDate(d.getDate()-1);
-  while(good(d)){n++; d.setDate(d.getDate()-1); if(n>365)break;} return n;
+  let st=status(d);
+  if(st!=='good')d.setDate(d.getDate()-1); // σημερινή μέρα σε εξέλιξη — ούτε μετράει ούτε σπάει τίποτα
+  const usedFreezeMonths={};
+  for(;;){
+    st=status(d);
+    if(st==='good'){n++;}
+    else if(st==='missed'){
+      const mk=monthKey(d);
+      if(usedFreezeMonths[mk])break; // δεύτερη χαμένη μέρα τον ίδιο μήνα — το σερί σπάει κανονικά
+      usedFreezeMonths[mk]=true; n++; // πάγωμα: η μέρα καλύπτεται, το σερί συνεχίζει
+    }else break; // 'noplan' — πριν ξεκινήσει ο πελάτης, σταμάτα το μέτρημα εδώ
+    d.setDate(d.getDate()-1);
+    if(n>365)break;
+  }
+  return {days:n, freezeAvailable:!usedFreezeMonths[monthKey(new Date())]};
 }
+function streakDays(){return streakInfo().days}
 // Ορόσημα σερί — καθαρά υπολογισμένο strip κατάστασης (όχι εφάπαξ animation), οπότε δεν χρειάζεται
 // να θυμάται τι έχει ήδη "γιορτάσει" — απλά δείχνει την τρέχουσα κατάσταση κάθε φορά.
 const STREAK_MILESTONES=[7,14,30];
-function milestoneCard(streak){
+function milestoneCard(streak,freezeAvailable){
   if(streak<=0)return null;
   const next=STREAK_MILESTONES.find(m=>m>streak);
   const c=el('div','card'); const cp=el('div','card-pad');
   cp.innerHTML='<div class="milestone"><i class="ti ti-flame"></i><div><div class="mtitle">'+streak+' '+(streak===1?'μέρα':'μέρες')+' σερί!</div>'
     +'<div class="msub">'+(next?('Συνέχισε έτσι — το επόμενο ορόσημο είναι στις '+next):'Απίστευτο σερί — συνέχισε έτσι!')+'</div></div></div>'
-    +'<div class="mstrip">'+STREAK_MILESTONES.map(m=>'<div class="mbadge'+(streak>=m?' done':'')+'"><i class="ti '+(streak>=m?'ti-check':'ti-lock')+'"></i><div class="n">'+m+' μέρες</div></div>').join('')+'</div>';
+    +'<div class="mstrip">'+STREAK_MILESTONES.map(m=>'<div class="mbadge'+(streak>=m?' done':'')+'"><i class="ti '+(streak>=m?'ti-check':'ti-lock')+'"></i><div class="n">'+m+' μέρες</div></div>').join('')+'</div>'
+    +'<div class="freeze-chip'+(freezeAvailable?'':' used')+'"><i class="ti ti-'+(freezeAvailable?'snowflake':'ban')+'"></i>'
+    +(freezeAvailable?'1 πάγωμα διαθέσιμο αυτόν τον μήνα — μια χαμένη μέρα δεν σπάει το σερί σου':'Το πάγωμα του μήνα χρησιμοποιήθηκε ήδη')+'</div>';
   c.appendChild(cp);
   return c;
 }
@@ -1324,7 +1427,7 @@ function viewProg(){
   const prev=pillarStats(weekDatesOffset(-1),{upToToday:false});
   const score=cur.anyData?overallScore(cur):null;
   const totDone=cur.dietDone+cur.supDone+cur.watDone, totTot=cur.dietTot+cur.supTot+cur.watTot;
-  const streak=streakDays();
+  const streakSt=streakInfo(), streak=streakSt.days;
 
   // hero: σκορ εβδομάδας
   const hero=el('div','card'); const hp=el('div','card-pad');
@@ -1348,7 +1451,7 @@ function viewProg(){
   hero.appendChild(hp); v.appendChild(hero);
 
   // ορόσημα σερί (7/14/30 μέρες) — καθαρά υπολογισμένο, δεν αποθηκεύει τίποτα δικό του
-  const ms=milestoneCard(streak); if(ms)v.appendChild(ms);
+  const ms=milestoneCard(streak,streakSt.freezeAvailable); if(ms)v.appendChild(ms);
 
   // καταγραφή βάρους/σημείωσης από τον ίδιο τον πελάτη
   const already=getClientLogToday();

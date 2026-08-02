@@ -1784,6 +1784,36 @@ function calcTDEE(c){
   if(protGperKg>3.0){
     warnings.push({type:'warn',msg:'⚠️ Πρωτείνη υψηλή: '+protGperKg+'g/kg (μέγιστο 3.0)'});
   }
+  // ✅ 2026-08-01: RED-S / Energy Availability was already fully computed (`ea` above) and shown
+  // as a badge (app-part2.js ~3774) + cited protocol (IOC Consensus Statement, app-part4.js) + a
+  // dedicated validator entry (app-part1.js ~495-502) — but never pushed into THIS warnings[]
+  // array, which is what calorieConsistencyCheck() actually reads to block/confirm BEFORE
+  // "Δημιουργία πλάνου" proceeds. So a client at critical EA (e.g. a cutting combat-sports
+  // athlete, or amenorrhea+underweight — confirmed live on two such test profiles) generated a
+  // plan with zero interactive warning, while a merely-borderline protein% did interrupt the flow.
+  // Only gate on the CRITICAL <30 tier (same threshold/copy as the existing 🔴 badge) — the 🟡
+  // 30-45 "monitor" tier stays badge-only as before: live-tested, it fires for most trained
+  // clients even at plain maintenance (e.g. a maintenance-goal BJJ athlete came out at EA=32),
+  // so gating the confirm-dialog on it too would interrupt routine plan generation constantly
+  // and risk the dietitian reflexively clicking through every warning, critical ones included.
+  if(ea!=null&&ea<30){
+    // Plain '<' not '&lt;' — unlike the badge (set via innerHTML), this message is read by
+    // calorieConsistencyCheck() into a confirm dialog / error toast that render it as plain text
+    // (textContent), which doesn't decode HTML entities — '&lt;' would show up literally.
+    // ✅ 2026-08-01: "RED-S" (Relative Energy Deficiency in SPORT) is athlete-specific IOC
+    // terminology — misleading on a non-athlete (no c.sport, e.g. a sedentary diabetic on an
+    // aggressive deficit). The underlying signal (too little intake vs. lean mass) still applies
+    // to everyone, so it stays gated on the same EA<30 threshold — only the label changes.
+    if(c.sport){
+      warnings.push({type:'alert',msg:'🔴 Κίνδυνος RED-S: EA='+ea+' kcal/kgLBM (κατώφλι <30, IOC Consensus Statement RED-S) — ρίσκος απώλειας οστικής πυκνότητας, εμμηνορροϊκής δυσλειτουργίας, τραυματισμού.'});
+    } else {
+      // Χωρίς άθλημα: γενική διατύπωση χωρίς "RED-S"/"τραυματισμός" (αθλητικοί όροι) — και χωρίς
+      // την αναφορά σε εμμηνορροϊκή δυσλειτουργία όταν ο πελάτης δεν είναι γυναίκα (π.χ. C1, M, 55y
+      // βρέθηκε live σε αυτόν ακριβώς τον έλεγχο).
+      var femaleConsequence=c.sex==='F'?' και εμμηνορροϊκής δυσλειτουργίας':'';
+      warnings.push({type:'alert',msg:'🔴 Χαμηλή ενεργειακή διαθεσιμότητα: EA='+ea+' kcal/kgLBM (κατώφλι <30) — ρίσκος απώλειας οστικής πυκνότητας'+femaleConsequence+' σε παρατεταμένο πολύ χαμηλό θερμιδικό ισοζύγιο.'});
+    }
+  }
   if(carbG<20&&target>1200){
     warnings.push({type:'warn',msg:'⚠️ Πολύ λίγοι υδατάνθρακες: '+carbG+'g (ίσως συντακτικό λάθος;)'});
   }
@@ -2258,7 +2288,13 @@ function validateClientData(client) {
   // Body-fat % validation — optional field, but if entered it must be in the range calcTDEE()
   // actually clamps to (3-60); previously an out-of-range value like 95 saved silently and only
   // got clamped invisibly at calc time, with no indication to the dietitian (audit finding Ε2).
-  if(client.bf !== undefined && client.bf !== null && client.bf !== '') {
+  // ✅ 2026-08-01 fix: addClient() defaults new clients to bf:0, and the old `!==undefined &&
+  // !==null && !==''` guard treated that untouched 0 as "entered", so bf_invalid fired on every
+  // brand-new client's very first "Δημιουργία πλάνου" before they'd ever touched this field
+  // (confirmed live). 0 is never a real entered value here — bf is always ≥3 physiologically —
+  // and every other bf read in this codebase already treats bf<=0 as "not set" (`c.bf>0`,
+  // `c.bf||0`, etc.), so a plain truthy check matches existing convention.
+  if(client.bf) {
     var bf = parseFloat(client.bf);
     if(isNaN(bf) || bf < 3 || bf > 60) {
       errors.push('bf_invalid');
@@ -2301,6 +2337,10 @@ function showValidationErrors(errors) {
   if(errors.length === 0) return true;
 
   if(typeof revealSectionsForErrors==='function') revealSectionsForErrors(errors);
+  // ✅ 2026-08-01: scroll to + briefly highlight the first offending field, instead of leaving the
+  // dietitian to hunt for it after just reading the toast message (see scrollToAndHighlightField,
+  // js/app-part2.js, for why).
+  if(typeof scrollToAndHighlightField==='function') scrollToAndHighlightField(errors);
 
   var message = 'Παρακαλώ διορθώστε τα εξής σφάλματα:\n\n';
   errors.forEach(function(err) {
@@ -2464,6 +2504,7 @@ function permanentlyDeleteClient(id){
 function selectClient(id){
   try {
     curId=id;
+    window._activeMealTarget=null; // δεν έχει νόημα το target ενός πελάτη σε άλλον πελάτη
     // ✅ Update lastAccess timestamp for sorting
     var c=clients.find(function(x){return x.id===id;});
     if(c){
@@ -2715,6 +2756,16 @@ function clientHasNewClientNote(c){
   var d0=new Date(latest.date+'T00:00:00'), d1=new Date(); d1.setHours(0,0,0,0);
   return Math.round((d1-d0)/86400000)<2;
 }
+// EA (Energy Availability) στην κρίσιμη ζώνη RED-S (<30 kcal/kgLBM, ίδιο κατώφλι με το confirm-gate
+// στο calorieConsistencyCheck) — πριν αυτό υπήρχε μόνο μέσα στο breakdown ενός συγκεκριμένου πελάτη,
+// έπρεπε να ανοίξεις κάθε προφίλ για να το δεις. try/catch γιατί τρέχει για ΚΑΘΕ πελάτη σε κάθε
+// render της λίστας — ένα σφάλμα εδώ δεν πρέπει ποτέ να ρίξει ολόκληρη τη λίστα πελατών.
+function clientCriticalEA(c){
+  try{
+    var t=(typeof calcTDEE==='function')?calcTDEE(c):null;
+    return !!(t && t.ea!=null && t.ea<30);
+  }catch(e){ return false; }
+}
 // Ένας πελάτης "χρειάζεται προσοχή" αν: έχει σημειωμένο ραντεβού για παρακολούθηση, ή έδωσε χαμηλή
 // αξιολόγηση πλάνου την τελευταία εβδομάδα, ή δεν έχει καθόλου πλάνο, ή το δημοσιευμένο portal link
 // του είναι ξεπερασμένο, ή το πλάνο του είναι 30+ ημερών (ίδια κριτήρια με το Διατροφές "needs action"),
@@ -2793,7 +2844,7 @@ function renderSB(){
           ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')
           :('<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'))
         +'<div class="cc-headtext">'
-        +'<div class="cc-name">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+'</div>'
+        +'<div class="cc-name" title="'+esc(c.name||'Νέος πελάτης')+'">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'')+'</div>'
         +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
         +'</div>'
         +(_clientBulkMode?'':(
