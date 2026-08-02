@@ -121,6 +121,20 @@
   .log-tag i{font-size:14px}
   .log-tag-on{background:var(--tint2);border-color:var(--teal-l);color:var(--teal-d)}
   .log-tag-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 8px;border-radius:999px;background:var(--tint2);color:var(--teal-d);white-space:nowrap}
+
+  /* «Στείλε ένα μήνυμα» στην Αρχική — μαζεμένο μέχρι να το πατήσεις, ώστε να μη βαραίνει οπτικά
+     την Αρχική όταν δεν χρειάζεται. Ίδιο .log-inp/.log-tags/.swap-btn με την Πρόοδο, ώστε μήνυμα
+     και καταγραφή βάρους να μοιάζουν σαν μέρος του ίδιου συστήματος παρόλο που είναι πια χωριστά. */
+  .composer{background:var(--card);border:.5px solid var(--bord);border-radius:14px}
+  .composer .row{display:flex;align-items:center;gap:9px;padding:11px 13px;cursor:pointer}
+  .composer .row i{font-size:18px;color:var(--teal);flex-shrink:0}
+  .composer .row span{font-size:12.5px;color:var(--muted);flex:1}
+  .composer .row .chev{font-size:13px;color:var(--faint);transition:transform .15s;flex:0 0 auto}
+  .composer.open .row .chev{transform:rotate(90deg)}
+  .composer .expand{max-height:0;overflow:hidden;transition:max-height .22s ease}
+  .composer.open .expand{max-height:280px}
+  .composer .expand-in{padding:0 13px 12px}
+
   .milestone{display:flex;align-items:center;gap:12px;background:var(--tint2);border-radius:14px;padding:12px}
   .milestone i{font-size:26px;color:var(--teal)}
   .mtitle{font-size:14px;font-weight:600;color:var(--teal-d)}
@@ -431,7 +445,7 @@ const LOG_TAGS=[
   {id:'sick',icon:'ti-thermometer',label:'Άρρωστος/η'}
 ];
 
-let SNAP=null, curDay=0, sb=null, curView='home', selectedLogTag=null;
+let SNAP=null, curDay=0, sb=null, curView='home', selectedLogTag=null, editingNote=false;
 
 // ── «Πρόσθεσε στην αρχική οθόνη» — Android/Chrome στέλνει το native prompt event, το κρατάμε
 // για να το πυροδοτήσουμε εμείς όταν ο πελάτης πατήσει το δικό μας κουμπί (το browser prompt
@@ -508,44 +522,102 @@ function pushCheckin(){
   }catch(e){}
 }
 
-// Εναλλάσσει το επιλεγμένο tag πλαισίου ημέρας. Ενημερώνει τα chips απευθείας στο DOM (όχι go('prog') —
-// ένα πλήρες re-render θα έσβηνε ό,τι έχει ήδη γράψει ο πελάτης στο βάρος/σημείωση πριν προλάβει να στείλει).
+// Εναλλάσσει το επιλεγμένο tag πλαισίου ημέρας μέσα στο μήνυμα-composer. Ενημερώνει τα chips
+// απευθείας στο DOM (όχι go('home') — ένα πλήρες re-render θα έσβηνε ό,τι έχει ήδη γράψει ο
+// πελάτης στο μήνυμα πριν προλάβει να το στείλει).
 function toggleLogTag(id,btn){
   selectedLogTag=(selectedLogTag===id?null:id);
   const group=btn.parentElement;
   Array.prototype.forEach.call(group.children,c=>c.classList.remove('log-tag-on'));
   if(selectedLogTag)btn.classList.add('log-tag-on');
 }
-// Ο πελάτης καταγράφει μόνος του βάρος/σημείωση από το Πρόοδος tab (write-only, χωρίς login).
-function submitClientLog(){
-  const wEl=$('#log-weight'), nEl=$('#log-note'), errEl=$('#log-err');
-  if(errEl)errEl.classList.remove('show');
-  const wRaw=wEl&&wEl.value?wEl.value.trim():'';
-  let w=null;
-  if(wRaw){
-    w=parseFloat(wRaw);
-    if(!isFinite(w)||w<20||w>300){
-      if(errEl){errEl.textContent='Το βάρος πρέπει να είναι ένας αριθμός μεταξύ 20 και 300 kg.';errEl.classList.add('show');}
-      return;
-    }
+// ── «Στείλε ένα μήνυμα» (Αρχική) ─────────────────────────────────────────────
+// Πριν ήταν ένα ενιαίο πεδίο κειμένου θαμμένο κάτω από το σκορ/σερί στην Πρόοδο, μαζί με το βάρος —
+// ο πελάτης έπρεπε να ξέρει ότι εκεί "στέλνονται μηνύματα". Τώρα είναι πάντα ορατό στην Αρχική,
+// μαζεμένο σε μια γραμμή μέχρι να το πατήσεις. Γράφει στην ΙΔΙΑ ημερήσια client_logs εγγραφή με
+// το βάρος, μέσω saveClientLogPatch — βλέπε το σχόλιο εκεί για το γιατί χρειάζεται merge.
+function messageComposer(){
+  const already=getClientLogToday();
+  const hasMsg=!!(already && (already.n || already.tag));
+  const c=el('div','composer'); c.id='msgComposer';
+
+  if(hasMsg && !editingNote){
+    const tagDef=already.tag&&LOG_TAGS.find(t=>t.id===already.tag);
+    const tagBadge=tagDef?(' <span class="log-tag-badge"><i class="ti '+tagDef.icon+'"></i>'+tagDef.label+'</span>'):'';
+    const detail=(already.n?esc(already.n):'')+tagBadge;
+    c.innerHTML = already.synced===false
+      ? '<div class="log-warn" style="margin:0;padding:11px 13px"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη'+(detail?': '+detail:'')+' <button onclick="retryClientLogSync()">Δοκίμασε ξανά</button></div>'
+      : '<div class="log-sent" style="margin:0;padding:11px 13px"><i class="ti ti-circle-check"></i><span style="flex:1">Στάλθηκε'+(detail?': '+detail:' σήμερα')+'</span><button type="button" onclick="editClientNote()" style="background:none;border:none;color:var(--teal);font-weight:600;cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0">επεξεργασία</button></div>';
+    return c;
   }
-  const n=nEl&&nEl.value?nEl.value.trim():'';
-  const tag=selectedLogTag;
-  if(!w && !n && !tag)return;
-  const todK=dKey(new Date());
-  setClientLogToday({w:w,n:n,tag:tag,synced:false});
-  if(w){
+
+  const editing=hasMsg && editingNote;
+  c.className='composer'+(editing?' open':'');
+  if(editing)selectedLogTag=already.tag||null;
+  const prefill=editing?(already.n||''):'';
+  c.innerHTML='<div class="row"'+(editing?'':' onclick="toggleMessageComposer()"')+'>'
+    +'<i class="ti ti-message-circle-2"></i>'
+    +'<span>'+(editing?'Επεξεργασία μηνύματος':'Στείλε κάτι στον/στην διαιτολόγο σου')+'</span>'
+    +(editing?'':'<i class="ti ti-chevron-right chev"></i>')
+    +'</div>'
+    +'<div class="expand"><div class="expand-in">'
+    +'<textarea class="log-inp" id="home-msg-text" placeholder="π.χ. Πείνασα πολύ σήμερα, το μεσημεριανό μού φάνηκε λίγο">'+esc(prefill)+'</textarea>'
+    +'<div class="log-tags" style="margin-top:8px">'+LOG_TAGS.map(t=>'<button type="button" class="log-tag'+(selectedLogTag===t.id?' log-tag-on':'')+'" onclick="toggleLogTag(\''+t.id+'\',this)"><i class="ti '+t.icon+'"></i>'+t.label+'</button>').join('')+'</div>'
+    +'<button class="swap-btn" style="justify-content:center;margin-top:4px" onclick="submitClientNote()"><i class="ti ti-send"></i>Στείλε</button>'
+    +'</div></div>';
+  return c;
+}
+function toggleMessageComposer(){
+  const c=document.getElementById('msgComposer'); if(c)c.classList.toggle('open');
+}
+// Ξανανοίγει το composer προσυμπληρωμένο με το σημερινό μήνυμα — ΔΕΝ σβήνει τίποτα μέχρι ο
+// πελάτης να πατήσει ξανά «Στείλε» (submitClientNote θα αντικαταστήσει το παλιό μήνυμα τότε).
+function editClientNote(){ editingNote=true; go('home'); }
+// Το βάρος (Πρόοδος) και το μήνυμα (Αρχική, messageComposer) στέλνονται πλέον από ξεχωριστές
+// φόρμες, αλλά μοιράζονται την ΙΔΙΑ ημερήσια εγγραφή client_logs στο Supabase — το RPC αντικαθιστά
+// ολόκληρη τη γραμμή σε κάθε κλήση (δεν κάνει partial update από μόνο του), οπότε ΕΔΩ κάνουμε το
+// merge: ό,τι ΔΕΝ περιλαμβάνεται στο patch διατηρείται από την προηγούμενη τοπική εγγραφή, αλλιώς
+// π.χ. ένα μήνυμα που στέλνεται το απόγευμα θα έσβηνε ένα βάρος που καταγράφηκε το πρωί.
+function saveClientLogPatch(patch){
+  const existing=getClientLogToday()||{};
+  const merged=Object.assign({},existing,patch,{synced:false});
+  setClientLogToday(merged);
+  if(merged.w){
     SNAP.progress=SNAP.progress||{};
     const log=SNAP.progress.log=SNAP.progress.log||[];
-    const idx=log.findIndex(e=>e.date===todK);
-    if(idx>-1)log[idx]=Object.assign({},log[idx],{kg:w}); else log.push({date:todK,kg:w});
+    const idx=log.findIndex(e=>e.date===todayKey());
+    if(idx>-1)log[idx]=Object.assign({},log[idx],{kg:merged.w}); else log.push({date:todayKey(),kg:merged.w});
     log.sort((a,b)=>a.date<b.date?-1:1);
-    SNAP.progress.current=w;
-    if(!SNAP.progress.start)SNAP.progress.start=w;
+    SNAP.progress.current=merged.w;
+    if(!SNAP.progress.start)SNAP.progress.start=merged.w;
   }
-  syncClientLog(w,n,tag);
-  selectedLogTag=null;
+  syncClientLog(merged.w||null, merged.n||'', merged.tag||null);
+  return merged;
+}
+// Καταγραφή βάρους από το Πρόοδος tab (write-only, χωρίς login).
+function submitWeightLog(){
+  const wEl=$('#log-weight'), errEl=$('#log-err');
+  if(errEl)errEl.classList.remove('show');
+  const wRaw=wEl&&wEl.value?wEl.value.trim():'';
+  if(!wRaw)return;
+  const w=parseFloat(wRaw);
+  if(!isFinite(w)||w<20||w>300){
+    if(errEl){errEl.textContent='Το βάρος πρέπει να είναι ένας αριθμός μεταξύ 20 και 300 kg.';errEl.classList.add('show');}
+    return;
+  }
+  saveClientLogPatch({w:w});
   go('prog');
+}
+// Ελεύθερο μήνυμα από το composer της Αρχικής (write-only, χωρίς login).
+function submitClientNote(){
+  const nEl=$('#home-msg-text');
+  const n=nEl&&nEl.value?nEl.value.trim():'';
+  const tag=selectedLogTag;
+  if(!n && !tag)return;
+  saveClientLogPatch({n:n,tag:tag});
+  selectedLogTag=null;
+  editingNote=false;
+  go('home');
 }
 // Best-effort αποστολή στο Supabase. Σε αντίθεση με πριν, ΔΕΝ κρύβουμε σιωπηλά την αποτυχία —
 // αν δεν περάσει (offline, session κλπ.) ο πελάτης βλέπει προειδοποίηση + κουμπί "Δοκίμασε ξανά"
@@ -561,10 +633,10 @@ function syncClientLog(w,n,tag){
     // Πρέπει να το ελέγξουμε ρητά, αλλιώς ένα απορριφθέν αίτημα (π.χ. άκυρο token) θα φαινόταν "εστάλη".
     const ok=!(res&&res.error);
     const e=getClientLogToday(); if(e){e.synced=ok; setClientLogToday(e);}
-    if(curTab()==='prog')go('prog');
+    if(curTab()==='prog'||curTab()==='home')go(curTab());
   }).catch(()=>{
     const e=getClientLogToday(); if(e){e.synced=false; setClientLogToday(e);}
-    if(curTab()==='prog')go('prog');
+    if(curTab()==='prog'||curTab()==='home')go(curTab());
   });
 }
 // Καλείται από το κουμπί "Δοκίμασε ξανά" στην προειδοποίηση μη-συγχρονισμένης καταγραφής.
@@ -922,6 +994,9 @@ function viewHome(){
 
   // «πρόσθεσε στην αρχική οθόνη» — μόνο όταν πραγματικά διαθέσιμο, ποτέ μετά το πρώτο κλείσιμο
   const ib=installBanner(); if(ib)v.appendChild(ib);
+
+  // «στείλε ένα μήνυμα» — πάντα ορατό εδώ, ξεχωριστό από την καταγραφή βάρους (έμεινε στην Πρόοδο)
+  v.appendChild(messageComposer());
 
   // at-a-glance: εβδομαδιαίο σκορ / σερί / βάρος (tap → Πρόοδος)
   const glance=glanceCard();
@@ -1453,27 +1528,26 @@ function viewProg(){
   // ορόσημα σερί (7/14/30 μέρες) — καθαρά υπολογισμένο, δεν αποθηκεύει τίποτα δικό του
   const ms=milestoneCard(streak,streakSt.freezeAvailable); if(ms)v.appendChild(ms);
 
-  // καταγραφή βάρους/σημείωσης από τον ίδιο τον πελάτη
+  // καταγραφή βάρους από τον ίδιο τον πελάτη — το ελεύθερο μήνυμα μετακόμισε στην Αρχική
+  // (messageComposer, viewHome), αυτή η κάρτα μένει καθαρά για βάρος. Ίδια ημερήσια εγγραφή
+  // client_logs από κάτω, απλά μερικό patch τώρα (δες saveClientLogPatch).
   const already=getClientLogToday();
-  let logStatus='';
-  if(already){
-    const tagDef=already.tag&&LOG_TAGS.find(t=>t.id===already.tag);
-    const tagBadge=tagDef?(' <span class="log-tag-badge"><i class="ti '+tagDef.icon+'"></i>'+tagDef.label+'</span>'):'';
-    const detail=(already.w?(': '+String(already.w).replace('.',',')+' kg'):'')+(already.n?(' — '+esc(already.n)):'')+tagBadge;
+  let wStatus='';
+  if(already && already.w!=null){
+    const wTxt=String(already.w).replace('.',',')+' kg';
     // synced===false = γνωστό ότι απέτυχε η αποστολή· οτιδήποτε άλλο (true ή παλιά εγγραφή χωρίς το πεδίο) = εστάλη κανονικά
-    logStatus = already.synced===false
-      ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη στον/στην διαιτολόγο σου'+detail+' <button onclick="retryClientLogSync()">Δοκίμασε ξανά</button></div>'
-      : '<div class="log-sent"><i class="ti ti-circle-check"></i>Καταγράφηκε'+detail+'</div>';
+    wStatus = already.synced===false
+      ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη: '+wTxt+' <button onclick="retryClientLogSync()">Δοκίμασε ξανά</button></div>'
+      : '<div class="log-sent"><i class="ti ti-circle-check"></i>Καταγράφηκε: '+wTxt+'</div>';
   }
   const logCard=el('div','card'); const logCp=el('div','card-pad');
-  logCp.innerHTML='<div class="card-hdr"><i class="ti ti-notebook"></i>Καταγραφή σήμερα</div>'
-    +logStatus
-    +'<input type="number" class="log-inp" id="log-weight" placeholder="Βάρος σήμερα (kg)" step="0.1" min="20" max="300" style="width:140px">'
-    +'<div class="log-err" id="log-err"></div>'
-    +'<textarea class="log-inp" id="log-note" placeholder="Πώς πήγε η μέρα; (προαιρετικό)" style="margin-top:8px"></textarea>'
-    +'<div class="log-tag-label">Πλαίσιο ημέρας (προαιρετικό)</div>'
-    +'<div class="log-tags">'+LOG_TAGS.map(t=>'<button type="button" class="log-tag'+(selectedLogTag===t.id?' log-tag-on':'')+'" onclick="toggleLogTag(\''+t.id+'\',this)"><i class="ti '+t.icon+'"></i>'+t.label+'</button>').join('')+'</div>'
-    +'<button class="swap-btn" style="justify-content:center;margin-top:8px" onclick="submitClientLog()"><i class="ti ti-send"></i>Αποστολή στον/στην διαιτολόγο</button>';
+  logCp.innerHTML='<div class="card-hdr"><i class="ti ti-scale"></i>Βάρος σήμερα</div>'
+    +wStatus
+    +'<div style="display:flex;gap:8px">'
+    +'<input type="number" class="log-inp" id="log-weight" placeholder="π.χ. 82,4 kg" step="0.1" min="20" max="300" style="flex:1">'
+    +'<button class="swap-btn" style="width:auto;justify-content:center;padding:9px 16px;flex-shrink:0" onclick="submitWeightLog()"><i class="ti ti-check"></i>Καταγραφή</button>'
+    +'</div>'
+    +'<div class="log-err" id="log-err"></div>';
   logCard.appendChild(logCp); v.appendChild(logCard);
 
   // αξιολόγηση εβδομάδας (⭐ feedback) — εμφανίζεται Παρ/Σαβ/Κυρ, ή σαν "ευχαριστούμε" αν έχει ήδη σταλεί
