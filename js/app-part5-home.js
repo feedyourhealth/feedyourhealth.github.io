@@ -197,8 +197,7 @@ function sendFeedbackReminder(clientId){
   var url=base+'?t='+c.shareToken;
   var fname=(c.name||'').split(' ')[0];
   var msg='Γεια σου '+fname+'! Πριν φτιάξω το πλάνο της επόμενης εβδομάδας, πες μου γρήγορα πώς πήγε αυτή — 30 δευτερόλεπτα, στην καρτέλα Πρόοδος: '+url;
-  var phone=(c.phone||'').replace(/[^0-9]/g,'');
-  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone; // ελληνικός κωδικός χώρας, ίδιο μοτίβο με openPublishModal
+  var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
@@ -251,8 +250,7 @@ function sendWeeklyRecap(clientId){
   if(!c || !c.shareToken) return;
   var msg=buildWeeklyRecapText(c);
   if(!msg){ showErrorToast('Δεν υπάρχουν ακόμα δεδομένα προόδου για '+(c.name||'τον/την πελάτη')+'.'); return; }
-  var phone=(c.phone||'').replace(/[^0-9]/g,'');
-  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone;
+  var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
@@ -271,8 +269,7 @@ function sendActivityNudge(clientId){
   var url=base+'?t='+c.shareToken;
   var fname=(c.name||'').split(' ')[0];
   var msg='Γεια σου '+fname+'! Είδα ότι δεν έχεις τσεκάρει τίποτα στο πλάνο σου τελευταία — όλα καλά; Το link είναι εδώ αν θες να ρίξεις μια ματιά: '+url;
-  var phone=(c.phone||'').replace(/[^0-9]/g,'');
-  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone;
+  var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){

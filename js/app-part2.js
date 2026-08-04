@@ -1639,8 +1639,7 @@ function replyToClientNote(clientId,date,noteRaw){
   if(!c) return;
   var fname=(c.name||'').split(' ')[0];
   var msg='Γεια σου '+fname+'! Είδα το μήνυμά σου: «'+noteRaw+'» — ';
-  var phone=(c.phone||'').replace(/[^0-9]/g,'');
-  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone;
+  var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
@@ -1674,8 +1673,7 @@ function replyToPlanFeedback(clientId,weekStart,key){
   } else {
     msg='Γεια σου '+fname+'! Είδα το feedback σου για το πλάνο αυτής της εβδομάδας — θέλω να το προσαρμόσουμε ώστε να σου ταιριάζει καλύτερα. Πες μου τι σε δυσκόλεψε περισσότερο.';
   }
-  var phone=(c.phone||'').replace(/[^0-9]/g,'');
-  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone;
+  var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){

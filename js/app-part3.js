@@ -3749,8 +3749,7 @@ function openPublishModal(){
     var fname=(c.name||'').split(' ')[0];
     var msg='Γεια σου '+fname+'! Εδώ είναι το διατροφικό σου πλάνο: '+url;
     // WhatsApp: αν υπάρχει τηλέφωνο, στείλε κατευθείαν σε αυτό
-    var phone=(c.phone||'').replace(/[^0-9]/g,'');
-    if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone; // ελληνικός κωδικός χώρας
+    var phone=normalizePhoneIntl(c.phone);
     var wa='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(msg);
     // Email: άνοιγμα του email προγράμματος με συμπληρωμένα στοιχεία
     var subj='Το διατροφικό σου πλάνο — Feed Your Health';

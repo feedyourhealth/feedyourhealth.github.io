@@ -1059,9 +1059,8 @@ function sendBodyCompReport(channel){
   var fname=(c.name||'').split(' ')[0]||'σου';
   var msg='Γεια σου '+fname+'! Σου στέλνω το ιστορικό μετρήσεών σου (βάρος, σύσταση σώματος) σε PDF 📎';
   if(channel==='wa'){
-    var phone=(c.phone||'').replace(/[^0-9]/g,'');
+    var phone=normalizePhoneIntl(c.phone);
     if(!phone){showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.');return;}
-    if(phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone; // ελληνικός κωδικός χώρας, ίδιο μοτίβο με openPublishModal
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else {
     if(!c.email){showErrorToast('Δεν υπάρχει email για τον/την '+(c.name||'πελάτη')+'.');return;}

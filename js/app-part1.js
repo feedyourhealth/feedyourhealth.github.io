@@ -2,6 +2,22 @@
 // before it is injected into innerHTML. Prevents broken markup / XSS.
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 var DAYS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+// Κοινή κανονικοποίηση τηλεφώνου για wa.me links — πελάτες σε Ελλάδα (10ψήφιο, χωρίς/με 30) ΚΑΙ
+// Κύπρο (8ψήφιο, χωρίς/με 357) μοιράζονται τον ίδιο λογαριασμό, οπότε ΔΕΝ μπορούμε να υποθέσουμε
+// πάντα +30 όπως έκανε παλιότερα ο κώδικας (έσπαγε τους Κύπριους πελάτες). Το μήκος χωρίς κωδικό
+// χώρας αρκεί για να ξεχωρίσει τις δύο χώρες αξιόπιστα (καμία επικάλυψη: 8 vs 10 ψηφία), οπότε δεν
+// χρειάζεται νέο πεδίο "χώρα" στην καρτέλα πελάτη. Αφαιρεί αρχικά μηδενικά (διεθνές 00-πρόθεμα ή
+// τυπογραφικό λάθος) πριν τον έλεγχο μήκους.
+function normalizePhoneIntl(raw){
+  var phone=(raw||'').replace(/[^0-9]/g,'');
+  if(!phone) return '';
+  if(phone.charAt(0)==='0') phone=phone.replace(/^0+/,'');
+  if(phone.indexOf('30')===0 && phone.length===12) return phone;
+  if(phone.indexOf('357')===0 && phone.length===11) return phone;
+  if(phone.length===8) return '357'+phone;
+  if(phone.length===10) return '30'+phone;
+  return phone;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ✅ PHASE 1: FOOD PAIRING DATABASE — Chef-Inspired Meal Combinations
