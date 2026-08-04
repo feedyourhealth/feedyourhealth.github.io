@@ -1933,6 +1933,17 @@ try {
 // generator can't shrink a banana to ~5g while the chip still reads "1 τεμ.".
 function minScaleG(n){var u=FOOD_UNITS[n];return (u&&u.g)?Math.max(5,Math.round(u.g*0.5)):5;}
 
+// Σκαλάρει τα γραμμάρια ενός τροφίμου κατά r, χωρίς να αφήνει το minScaleG floor να ΑΥΞΗΣΕΙ ένα υλικό
+// σε scale-down (πραγματικό bug, βρέθηκε σε QA: 555→300kcal σε μια συνταγή σολομού/ρυζιού/μπρόκολου
+// αύξανε το ρύζι 80g→88g ενώ όλα τα άλλα μίκραιναν — το minScaleG(n) είναι σταθερό, δεν ήξερε τι
+// ποσότητα είχε το υλικό ΠΡΙΝ, οπότε ένα υλικό ήδη κάτω από το κατώφλι του σπρωχνόταν ΠΑΝΩ σε αυτό).
+// Όταν r<1, το κατώφλι δεν μπορεί να ξεπεράσει το ΑΡΧΙΚΟ ποσό — εξακολουθεί να εμποδίζει εξωφρενικά
+// μικρές ποσότητες, αλλά ποτέ δεν αντιστρέφει την κατεύθυνση του σκαλίσματος.
+function scaledG(n,origG,r){
+  var floor=r<1?Math.min(minScaleG(n),origG):minScaleG(n);
+  return Math.max(floor,Math.round(origG*r));
+}
+
 function scalePlan(tmpl,tgt,mealTargets){
   var p=deepClone(tmpl);
 
@@ -1991,7 +2002,7 @@ function scalePlan(tmpl,tgt,mealTargets){
         var r=mt==='p'?ratioP:mt==='c'?ratioC:mt==='f'?ratioF:ratioK;
         var cap=SCALE_CATS[cat];
         if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
-        f.g=snapWholeG(f.n,Math.max(minScaleG(f.n),Math.round(f.g*r)));
+        f.g=snapWholeG(f.n,scaledG(f.n,f.g,r));
       });
 
       // ✅ ΤΕΛΙΚΟΣ ΕΛΕΓΧΟΣ ΘΕΡΜΙΔΩΝ: κάθε τρόφιμο μόλις σκαλώθηκε από τον ΔΙΚΟ ΤΟΥ macro-type λόγο
@@ -2012,7 +2023,7 @@ function scalePlan(tmpl,tgt,mealTargets){
             var cap=SCALE_CATS[cat];
             var r=reconcile;
             if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
-            f.g=snapWholeG(f.n,Math.max(minScaleG(f.n),Math.round(f.g*r)));
+            f.g=snapWholeG(f.n,scaledG(f.n,f.g,r));
           });
         }
       }
@@ -2061,7 +2072,7 @@ function scalePlan(tmpl,tgt,mealTargets){
       var r=mt==='p'?ratioP:mt==='c'?ratioC:mt==='f'?ratioF:ratioK;
       var cap=SCALE_CATS[cat];
       if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
-      f.g=snapWholeG(f.n,Math.max(minScaleG(f.n),Math.round(f.g*r)));
+      f.g=snapWholeG(f.n,scaledG(f.n,f.g,r));
     });
   });
   return p;
@@ -2084,7 +2095,7 @@ function reconcileMealCaloriesAfterRemoval(meal,targetK){
     var cap=SCALE_CATS[cat];
     var r=ratio;
     if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
-    f.g=snapWholeG(f.n,Math.max(minScaleG(f.n),Math.round(f.g*r)));
+    f.g=snapWholeG(f.n,scaledG(f.n,f.g,r));
   });
 }
 
