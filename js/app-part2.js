@@ -1655,12 +1655,24 @@ function replyToClientNote(clientId,date,noteRaw){
     var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
   }
 }
+// Μόνο για annotation στο ιστορικό — δεν ξέρει τίποτα για το εβδομαδιαίο override του πελάτη
+// (αυτό ζει μόνο στο localStorage του πελάτη, ποτέ δεν φτάνει στο cloud), δείχνει μόνο τον
+// ΜΟΝΙΜΟ κανόνα (c.matchDays) ώστε ο διαιτολόγος να ξέρει "αυτή η μέρα ήταν συνήθως αγώνας"
+// όταν διαβάζει μια παλιά σημείωση/καταγραφή πελάτη.
+function isMatchDate(c,dateStr){
+  if(!c || !c.matchDays) return false;
+  var dt=new Date(dateStr+'T12:00:00');
+  if(isNaN(dt.getTime())) return false;
+  var map=[6,0,1,2,3,4,5];
+  return !!c.matchDays[map[dt.getDay()]];
+}
 function clientLogsPanelHtml(c){
   if(!window.Cloud || typeof window.Cloud.allClientLogsFor!=='function') return '';
   var entries=window.Cloud.allClientLogsFor(c);
   if(!entries.length) return '';
   var rows=entries.map(function(e){
     var w=e.weight_kg?('<b>'+e.weight_kg+' kg</b>'):'';
+    var matchBadge=isMatchDate(c,e.date)?'<span title="Συνήθως μέρα αγώνα (μόνιμος κανόνας — μπορεί να άλλαξε αυτή τη βδομάδα από τον πελάτη)" style="margin-right:4px">⚽</span>':'';
     var noteRaw=e.note||'';
     var tagMatch=/^\[tag:(travel|party|sick)\]\s*/.exec(noteRaw);
     var tagHtml='';
@@ -1678,7 +1690,7 @@ function clientLogsPanelHtml(c){
       replyBtn='<button type="button" class="note-reply-btn'+(replied?' replied':'')+'" onclick="event.stopPropagation();replyToClientNote(\''+c.id+'\',\''+e.date+'\',\''+noteJs+'\')">↩️ Απάντησε'+(replied?' ✓':'')+'</button>';
     }
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:11px">'
-      +'<div style="flex:1;min-width:0">'+tagHtml+'<span>'+e.date+' — '+w+(w&&n?' · ':'')+n+'</span></div>'
+      +'<div style="flex:1;min-width:0">'+tagHtml+'<span>'+matchBadge+e.date+' — '+w+(w&&n?' · ':'')+n+'</span></div>'
       +replyBtn+'</div>';
   }).join('');
   return '<div class="tracker-section" style="background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
