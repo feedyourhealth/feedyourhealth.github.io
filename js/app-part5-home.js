@@ -293,7 +293,7 @@ function homeAttentionBuckets(){
   // Ξεχωριστός φακός πάνω στα ίδια tier -1 στοιχεία (🚩/😕/💬) — επίτηδες μετράει ΚΑΙ εδώ ΚΑΙ στο
   // red bucket παρακάτω, ώστε το πλακίδιο "Νέα από πελάτες" να δείχνει μόνο ό,τι ήρθε από τον ίδιο
   // τον πελάτη, χωρίς να ανακατεύεται με "χωρίς πλάνο"/"μπαγιατεμένο" που είναι διαχειριστικά, όχι δραστηριότητα.
-  var activity=attn.filter(function(x){return x.tier===-1;}).map(function(x){return {c:x.c,label:x.label};});
+  var activity=attn.filter(function(x){return x.tier===-1;}).map(function(x){return {c:x.c,label:x.label,action:x.action};});
   attn.forEach(function(x){
     if(x.tier<=1){ if(!redIds[x.c.id]){redIds[x.c.id]=true;red.push({c:x.c,label:x.label});} }
     else { amber.push({c:x.c,label:x.label}); }
@@ -312,6 +312,7 @@ function homeBucketRow(x,accent){
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(x.c.name)+'</div>'
     +'<span class="hm-row-name">'+esc(x.c.name||'Νέος πελάτης')+'</span>'
     +'<span class="hm-row-sub">'+x.label+'</span>'
+    +(x.action||'')
     +'</div>';
 }
 function homeRenderBucketList(){
