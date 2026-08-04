@@ -290,6 +290,10 @@ function sendActivityNudge(clientId){
 function homeAttentionBuckets(){
   var attn=homeClientsNeedingAttention();
   var red=[],amber=[],redIds={};
+  // Ξεχωριστός φακός πάνω στα ίδια tier -1 στοιχεία (🚩/😕/💬) — επίτηδες μετράει ΚΑΙ εδώ ΚΑΙ στο
+  // red bucket παρακάτω, ώστε το πλακίδιο "Νέα από πελάτες" να δείχνει μόνο ό,τι ήρθε από τον ίδιο
+  // τον πελάτη, χωρίς να ανακατεύεται με "χωρίς πλάνο"/"μπαγιατεμένο" που είναι διαχειριστικά, όχι δραστηριότητα.
+  var activity=attn.filter(function(x){return x.tier===-1;}).map(function(x){return {c:x.c,label:x.label};});
   attn.forEach(function(x){
     if(x.tier<=1){ if(!redIds[x.c.id]){redIds[x.c.id]=true;red.push({c:x.c,label:x.label});} }
     else { amber.push({c:x.c,label:x.label}); }
@@ -300,7 +304,7 @@ function homeAttentionBuckets(){
   var amberIds={}; amber.forEach(function(x){amberIds[x.c.id]=true;});
   var green=clients.filter(function(c){return !c.deleted&&!c.archived&&!redIds[c.id]&&!amberIds[c.id];})
     .map(function(c){return {c:c,label:'ενεργό πλάνο, όλα εντάξει'};});
-  return {red:red,amber:amber,green:green};
+  return {red:red,amber:amber,green:green,activity:activity};
 }
 var _homeBucketSel='red';
 function homeBucketRow(x,accent){
@@ -586,6 +590,7 @@ function renderHome(){
     +'<div class="hm-tile hm-tile-red sel" id="hm-tile-red" onclick="homeSelectBucket(\'red\')"><div class="hm-tile-num">'+buckets.red.length+'</div><div class="hm-tile-lbl">🔴 Χρειάζονται προσοχή</div></div>'
     +'<div class="hm-tile hm-tile-amber" id="hm-tile-amber" onclick="homeSelectBucket(\'amber\')"><div class="hm-tile-num">'+buckets.amber.length+'</div><div class="hm-tile-lbl">🟡 Μπαγιατεμένα πλάνα</div></div>'
     +'<div class="hm-tile hm-tile-green" id="hm-tile-green" onclick="homeSelectBucket(\'green\')"><div class="hm-tile-num">'+buckets.green.length+'</div><div class="hm-tile-lbl">🟢 Ενεργοί, εντάξει</div></div>'
+    +'<div class="hm-tile hm-tile-teal" id="hm-tile-activity" onclick="homeSelectBucket(\'activity\')"><div class="hm-tile-num">'+buckets.activity.length+'</div><div class="hm-tile-lbl">💬 Νέα από πελάτες</div></div>'
     +'</div>'
     +'<div class="hm-card" style="margin-bottom:20px" id="hm-bucket-list">'
     +(buckets.red.length?buckets.red.map(function(x){return homeBucketRow(x,'red');}).join(''):'<div class="hm-empty">Κανένας πελάτης σε αυτή την κατηγορία 👍</div>')

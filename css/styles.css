@@ -188,9 +188,11 @@ body.dark-mode .hm-trend-bad{background:#3a1a1a;color:#f09595}
 .hm-tile-red{background:#FCEBEB;color:#791F1F}
 .hm-tile-amber{background:#FAEEDA;color:#633806}
 .hm-tile-green{background:var(--success-tint);color:#1E5E24}
+.hm-tile-teal{background:#E1F5EE;color:#085041}
 body.dark-mode .hm-tile-red{background:#3a1a1a;color:#f09595}
 body.dark-mode .hm-tile-amber{background:#3a2a10;color:#fac775}
 body.dark-mode .hm-tile-green{background:#14301a;color:#8bc98f}
+body.dark-mode .hm-tile-teal{background:#0f2a24;color:#5dcaa5}
 .hm-group-chips{display:flex;flex-wrap:wrap;gap:8px}
 .hm-group-chip{font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;cursor:pointer;white-space:nowrap;display:inline-block}
 .hm-group-chip-red{background:#FCEBEB;color:#791F1F}
