@@ -2872,7 +2872,17 @@ function saveFoodExclusions(){
     // Μετατρέπει τον πελάτη σε καθαρό read-only snapshot για το portal.
     _buildSnapshot:function(c){
       var t=(typeof calcTDEE==='function')?calcTDEE(c):{};
-      var DAYS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+      // lang-aware helpers — μεταφράζουν ονόματα τροφίμων/γευμάτων/ημερών μία φορά, στη γλώσσα του
+      // πελάτη (c.lang), κατά το publish. Το plan.html είναι standalone αρχείο χωρίς πρόσβαση στη
+      // βάση FOODS/EN_MEAL_NAMES, οπότε η μετάφραση περιεχομένου ΠΡΕΠΕΙ να γίνει εδώ, όχι client-side.
+      // Σκόπιμα ΔΕΝ μεταφράζεται το matchTimeBucket (πρωί/μεσημέρι/απόγευμα/βράδυ) — το plan.html's
+      // MATCH_TIME_H lookup είναι keyed σε αυτές τις ελληνικές λέξεις για τον υπολογισμό πριν/μετά
+      // τον αγώνα· μια μεταφρασμένη τιμή θα έσπαγε σιωπηλά αυτόν τον υπολογισμό.
+      var isEn=(c.lang||'el')==='en';
+      var EN_DOW=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+      var DAYS=isEn?EN_DOW:['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+      function fName(n){return (isEn&&typeof FOODS!=='undefined'&&FOODS[n]&&FOODS[n].en)||n;}
+      function mLabel(n){return (n&&isEn&&typeof EN_MEAL_NAMES!=='undefined'&&EN_MEAL_NAMES[n])||n||(isEn?'Meal':'Γεύμα');}
       var TIMES={
         'Πρωινό':(c.mealTimes&&c.mealTimes.breakfast)||'08:00',
         'Ενδιάμεσο':(c.mealTimes&&c.mealTimes.snack)||'11:00',
@@ -2907,7 +2917,7 @@ function saveFoodExclusions(){
             var v=macro(f.n,f.g);
             mk+=v.k; mp+=v.p; mc+=v.c; mf+=v.f; mfi+=(v.fi||0);
             var q=fmtQ(f);
-            foods.push({name:f.n, qty:q.main, sub:q.sub||''});
+            foods.push({name:fName(f.n), qty:q.main, sub:q.sub||''});
           });
           dayK+=mk; dP+=mp; dC+=mc; dF+=mf; dFi+=mfi;
           var title=foods.map(function(x){return shortName(x.name);}).slice(0,3).join(', ')+(foods.length>3?'…':'');
@@ -2919,14 +2929,14 @@ function saveFoodExclusions(){
                 var v=macro(f.n,f.g);
                 ak+=v.k;
                 var q=fmtQ(f);
-                af.push({name:shortName(f.n), qty:q.main, sub:q.sub||''});
+                af.push({name:shortName(fName(f.n)), qty:q.main, sub:q.sub||''});
               });
               var altTitle=af.map(function(x){return x.name;}).slice(0,3).join(', ')+(af.length>3?'…':'');
               alternates.push({name:altTitle, kcal:Math.round(ak), foods:af});
             });
           }
           meals.push({
-            label:meal.name||'Γεύμα',
+            label:mLabel(meal.name),
             time:TIMES[meal.name]||'',
             title:title,
             kcal:Math.round(mk),
@@ -2948,45 +2958,62 @@ function saveFoodExclusions(){
       }
 
       // ── Λίστα ψώνια (ίδια λογική με το PDF) ──
+      // rawLabel: μεταφράζει τα ελάχιστα ελληνικά γένη/πληθυντικούς του COOKED_TO_RAW.label
+      // ('ωμό'/'ωμά'/'ωμές'/'ωμή'/'ωμός'/'ξερά'/'ξερές'/'ξερή'/'τεμ.'/'κονσέρβα (στρ.)') σε μία
+      // ενιαία αγγλική λέξη — δεν χρειάζεται γραμματικό γένος στα αγγλικά.
+      var EN_RAW_LABEL={'ωμό':'raw','ωμά':'raw','ωμές':'raw','ωμή':'raw','ωμός':'raw','ξερά':'dried','ξερές':'dried','ξερή':'dried','τεμ.':'pc.','κονσέρβα (στρ.)':'canned (drained)'};
+      function rawLabel(lbl){return (isEn&&EN_RAW_LABEL[lbl])||lbl;}
       function shopRound(g){if(g<100)return Math.ceil(g/10)*10;if(g<500)return Math.ceil(g/25)*25;if(g<1000)return Math.ceil(g/50)*50;return Math.ceil(g/100)*100;}
-      function shopDisp(g){if(g>=1000)return(Math.round(g/100)/10).toFixed(1).replace('.',',')+' kg';return g+' g';}
+      function shopDisp(g){if(g>=1000)return decSep((Math.round(g/100)/10).toFixed(1))+' kg';return g+' g';}
+      function decSep(s){return isEn?s:String(s).replace('.',',');}
       var totals={};
       for(var sd=0; sd<7; sd++){ (wp[sd]||[]).forEach(function(m){(m.foods||[]).forEach(function(f){totals[f.n]=(totals[f.n]||0)+f.g;});}); }
       var slCats=['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Δημητριακά','Όσπρια','Λαχανικά','Φρούτα','Ξηροί καρποί','Λάδια','Συνταγές FYH'];
+      var EN_CAT_FALLBACK={'Άλλα':'Other'};
+      function catLabel(cat){return (isEn&&((typeof EN_CAT_NAMES!=='undefined'&&EN_CAT_NAMES[cat])||EN_CAT_FALLBACK[cat]))||cat;}
       var byCat={};
       Object.keys(totals).forEach(function(name){
         var cat=(typeof FOODS!=='undefined'&&FOODS[name]&&FOODS[name].cat)||'Άλλα';
         var planG=Math.round(totals[name]);
         var conv=(typeof COOKED_TO_RAW!=='undefined')?COOKED_TO_RAW[name]:null;
         var buy,raw='';
-        if(conv&&conv.isEgg){ buy=Math.ceil(planG/55)+' τεμ.'; raw='('+planG+' g)'; }
-        else if(conv){ buy=shopDisp(shopRound(planG*conv.f)); raw=conv.label; }
+        if(conv&&conv.isEgg){ buy=Math.ceil(planG/55)+' '+rawLabel('τεμ.'); raw='('+planG+' g)'; }
+        else if(conv){ buy=shopDisp(shopRound(planG*conv.f)); raw=rawLabel(conv.label); }
         else { buy=shopDisp(shopRound(planG)); }
-        (byCat[cat]=byCat[cat]||[]).push({name:shortName(name), buy:buy, raw:raw});
+        (byCat[cat]=byCat[cat]||[]).push({name:shortName(fName(name)), buy:buy, raw:raw});
       });
       var shopping=[];
-      slCats.concat(['Άλλα']).forEach(function(cat){ if(byCat[cat]&&byCat[cat].length) shopping.push({cat:cat,items:byCat[cat]}); });
+      slCats.concat(['Άλλα']).forEach(function(cat){ if(byCat[cat]&&byCat[cat].length) shopping.push({cat:cat,catLabel:catLabel(cat),items:byCat[cat]}); });
 
       // ── Συμπληρώματα (ίδια λογική με το PDF: Page 1 c.supps + Page 2 c.selectedSupplements) ──
+      // EN_SUPP_TIMING: οι λίγες σταθερές ώρες λήψης (ti.t) που εμφανίζονται σε ΟΛΑ τα SUPPS — δεν
+      // υπάρχει ανά-item αγγλική εκδοχή τους στη βάση (μόνο τα ονόματα έχουν nameEn), οπότε μεταφράζονται εδώ.
+      var EN_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Right after training','Βραδινό':'Dinner','Με το πρωινό':'With breakfast','Μεσημεριανό':'Lunch',"Πριν προπόνηση (30')":"Before training (30')",'Πριν το πρωινό':'Before breakfast','Πριν τον ύπνο':'Before bed'};
+      function suppTime(t){return (isEn&&EN_SUPP_TIMING[t])||t;}
+      function suppNameByText(n){
+        if(!isEn||typeof SUPPS==='undefined')return n;
+        var f=null; SUPPS.forEach(function(x){if(x.name===n)f=x;});
+        return (f&&f.nameEn)||n;
+      }
       var supps=[], suppSeen={};
       // Step 1: όσα λαμβάνει ήδη (από τα checkboxes, με ώρες λήψης)
       (c.supps||[]).forEach(function(id){
         var sx=null; if(typeof SUPPS!=='undefined') SUPPS.forEach(function(x){if(x.id===id)sx=x;});
         if(!sx)return;
-        var times=[], dose='';
+        var times=[], dose='', doseEn='';
         (sx.timing||[]).forEach(function(ti){
           if(c.suppExclude && c.suppExclude.indexOf(id+'|'+ti.t)>-1) return;
-          times.push(ti.t); if(!dose&&ti.d)dose=ti.d;
+          times.push(suppTime(ti.t)); if(!dose&&ti.d){dose=ti.d;doseEn=ti.dEn||ti.d;}
         });
         if(!times.length)return;
         suppSeen[sx.name]=1;
-        supps.push({name:sx.name, dose:dose||sx.dose||'', timing:times.join(', ')});
+        supps.push({name:(isEn&&sx.nameEn)||sx.name, dose:(isEn?(doseEn||sx.doseEn):dose)||sx.dose||'', timing:times.join(', ')});
       });
       // Step 2: προτεινόμενα από την ανάλυση κενών (δεν υπάρχουν ώρες λήψης εδώ)
       (c.selectedSupplements||[]).forEach(function(su){
         var nm=su&&su.supplement; if(!nm||suppSeen[nm])return;
         suppSeen[nm]=1;
-        supps.push({name:nm, dose:(su.dose||su.info||''), timing:''});
+        supps.push({name:suppNameByText(nm), dose:(su.dose||su.info||''), timing:''});
       });
 
       // ── Πρόοδος ──
@@ -3019,7 +3046,7 @@ function saveFoodExclusions(){
       if(c.dietType!=='keto' && typeof FX!=='undefined'){
         FX.forEach(function(fx){
           var kcal=(typeof FOODS!=='undefined'&&FOODS[fx.n])?Math.round(FOODS[fx.n].k*fx.g/100):null;
-          fruits.push({name:fx.n, portion:fx.por, g:fx.g, kcal:kcal});
+          fruits.push({name:fName(fx.n), portion:(isEn&&fx.porEn)||fx.por, g:fx.g, kcal:kcal});
         });
       }
 
@@ -3027,6 +3054,7 @@ function saveFoodExclusions(){
       var hasContact=!!(clinic.wa||clinic.tel||clinic.email||clinic.web);
       return {
         v:1,
+        lang:c.lang||'el',
         name:c.name||'',
         sex:c.sex||'M',
         age:c.age||null,
@@ -3041,7 +3069,7 @@ function saveFoodExclusions(){
         supps:supps,
         fruits:fruits,
         progress:progress,
-        exclusions:altExcl.map(shortName)
+        exclusions:altExcl.map(function(x){return shortName(fName(x));})
       };
     },
 

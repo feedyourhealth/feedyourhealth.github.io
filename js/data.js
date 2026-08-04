@@ -111,7 +111,7 @@ var FOODS={
 'Τραχανάς (βρ.)':{k:87,p:3.2,c:17,f:0.8,fi:2.1,cat:'Δημητριακά',en:'Trahana (cooked)'},
 'Φρυγανιές':{k:385,p:9.5,c:74,f:4,fi:3.5,cat:'Δημητριακά',en:'Rusks'},
 'Wasa Φρυγανιές Σίκαλης':{k:336,p:9,c:62,f:1.5,fi:19,cat:'Δημητριακά',en:'Wasa Rye Crispbread'},
-'Dark Rye Crispbread (Ryvita)':{k:349,p:10.6,c:67.5,f:0.9,fi:14.3,cat:'Δημητριακά'},
+'Dark Rye Crispbread (Ryvita)':{k:349,p:10.6,c:67.5,f:0.9,fi:14.3,cat:'Δημητριακά',en:'Dark Rye Crispbread (Ryvita)'},
 'Κράκερ ολικής':{k:431,p:10,c:68,f:13,fi:8.5,cat:'Δημητριακά',en:'Whole Wheat Crackers'},
 'Popcorn (αέρας)':{k:387,p:12.9,c:77.8,f:4.5,fi:14.5,cat:'Δημητριακά',en:'Popcorn (air-popped)'},
 /* Όσπρια (βρασμένα) — εξαιρετικές πηγές φυτικών ινών */
@@ -340,7 +340,7 @@ var FOODS={
 'Ρύζι μαύρο (βρ.)':{k:123,p:2.7,c:25.6,f:1,fi:1.6,cat:'Δημητριακά',en:'Black Rice (cooked)'},
 /* ✅ Προστέθηκαν 2026-07-09 — ίδιο μοτίβο: τροφές που έλειπαν εντελώς από τη βάση, εντοπίστηκαν με
    αυτοματοποιημένο έλεγχο κάθε TMPLS/MEAL_RECIPES/SNACK_RECIPES έναντι FOODS+FOOD_ALIASES (βλ. αντιστοιχίσεις παρακάτω) */
-'Hummus':{k:166,p:7.9,c:14.3,f:9.6,fi:6,cat:'Όσπρια'},
+'Hummus':{k:166,p:7.9,c:14.3,f:9.6,fi:6,cat:'Όσπρια',en:'Hummus'},
 'Χούμους σπιτικό':{k:237,p:7.8,c:15.0,f:17.8,fi:5.5,cat:'Όσπρια',en:'Homemade Hummus'},
 'Γάλα καρύδας':{k:180,p:1.8,c:3,f:18,fi:0,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Coconut Milk'},
 'Σπόροι κολοκύνθης':{k:559,p:30,c:11,f:49,fi:6,cat:'Ξηροί καρποί',en:'Pumpkin Seeds'},
@@ -348,10 +348,10 @@ var FOODS={
 'Ξηρά δαμάσκηνα':{k:240,p:2.2,c:64,f:0.4,fi:7.1,cat:'Φρούτα',en:'Dried Prunes'},
 'Κρέμα γάλακτος':{k:340,p:2.1,c:2.8,f:36,fi:0,cat:'Αυγά/Γαλακτ.',en:'Heavy Cream'},
 'Λάχανο':{k:25,p:1.3,c:5.8,f:0.1,fi:2.5,cat:'Λαχανικά',en:'Cabbage'},
-'Ψάρι - SKIP':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα'}, // σκόπιμο placeholder με g:0 σε μερικά vegetarian templates — όχι λείπον τρόφιμο
+'Ψάρι - SKIP':{k:0,p:0,c:0,f:0,fi:0,cat:'Άλλα',en:'Fish - SKIP'}, // σκόπιμο placeholder με g:0 σε μερικά vegetarian templates — όχι λείπον τρόφιμο
 /* ✅ Προστέθηκαν 2026-07-10 — 2 από τα 4 vegan "PickupLimes" υλικά στο FYH_RECIPE_EXPAND που δεν είχαν
    καμία αντιστοίχιση (βλ. FOOD_ALIASES για τα υπόλοιπα, που αντιστοιχήθηκαν σε ήδη υπάρχοντα τρόφιμα) */
-'Nutritional yeast':{k:375,p:50,c:31,f:6,fi:19,cat:'Άλλα'},
+'Nutritional yeast':{k:375,p:50,c:31,f:6,fi:19,cat:'Άλλα',en:'Nutritional Yeast'},
 'Soy yogurt (χωρίς ζάχαρη)':{k:55,p:3.5,c:4,f:2.5,fi:0.5,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Soy Yogurt (sugar-free)'},
 };
 var FOOD_PAIRING_DB={
@@ -1323,7 +1323,7 @@ var EN_SUPP_TIMINGS={
 var SUPPS=[
  {id:'iron',   name:'Σίδηρος',            nameEn:'Iron',              dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Πριν το πρωινό",d:''}]},
  {id:'multivit',name:'Πολυβιταμίνη',      nameEn:'Multivitamin',      dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:''},{t:"Μεσημεριανό",d:''}]},
- {id:'bcomplex',name:'Β-Complex',          dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Μεσημεριανό",d:''}]},
+ {id:'bcomplex',name:'Β-Complex',          nameEn:'B-Complex',         dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Μεσημεριανό",d:''}]},
  {id:'vit_e',  name:'Βιταμίνη Ε',         nameEn:'Vitamin E',         dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Βραδινό",d:''}]},
  {id:'vit_d3', name:'Βιταμίνη D3',        nameEn:'Vitamin D3',        dose:'1000-4000 IU',  cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Με το πρωινό",d:'1000-2000 IU'},{t:"Βραδινό",d:'1000-2000 IU'}]},
  {id:'magn',   name:'Μαγνήσιο',           nameEn:'Magnesium',         dose:'',              cat:'Βιταμίνες & Μέταλλα', timing:[{t:"Βραδινό",d:''}]},

@@ -410,27 +410,30 @@ const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 const DOW=['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
 const SLOT_ICON={'Πρωινό':'ti-coffee','Δεκατιανό':'ti-apple','Σνακ':'ti-apple','Μεσημεριανό':'ti-tools-kitchen-2','Απογευματινό':'ti-cheese','Βραδινό':'ti-moon','Προ προπόνησης':'ti-barbell','Μετά προπόνηση':'ti-barbell'};
 const CAT_ICON={'Κρέας':'ti-meat','Ψάρια':'ti-fish','Αυγά/Γαλακτ.':'ti-egg','Δημητριακά':'ti-wheat','Όσπρια':'ti-seeding','Λαχανικά':'ti-carrot','Φρούτα':'ti-apple','Ξηροί καρποί':'ti-seeding','Λάδια':'ti-droplet','Συνταγές FYH':'ti-tools-kitchen-2','Άλλα':'ti-package'};
+// Ίδιο περιεχόμενο με το SPICES μέσα στο js/app-part4.js (χρησιμοποιείται εκεί για το PDF) —
+// κρατήστε τα δύο σε sync αν προστεθεί/αλλάξει μπαχαρικό (δεν μοιράζονται module, plan.html
+// είναι standalone αρχείο χωρίς πρόσβαση στα js/app-part*.js).
 const SPICES=[
-  {n:'Κουρκουμάς',ben:'Αντιφλεγμονώδες, αντιοξειδωτικό',use:'1-3 γρ./ημέρα (1 κ.γλ.)',note:'Με μαύρο πιπέρι για απορρόφηση'},
-  {n:'Μαύρο πιπέρι',ben:'Βελτίωση απορρόφησης θρεπτικών, αντιμικροβιακό',use:'1-2 γρ./ημέρα',note:'Συνδυάζεται με κουρκουμά'},
-  {n:'Κανέλα',ben:'Ρύθμιση σακχάρου, αντιοξειδωτικό',use:'1-4 γρ./ημέρα (1 κ.γλ.)',note:'Προτιμήστε Κεϋλάνης για ασφάλεια'},
-  {n:'Τζίντζερ',ben:'Αντιφλεγμονώδες, πέψη, ναυτία',use:'2-5 γρ./ημέρα (1-2 κ.γλ.)',note:'Φρέσκο ή σκόνη'},
-  {n:'Σκόρδο',ben:'Καρδιοπροστασία, αντιμικροβιακό',use:'1-2 σκελίδες/ημέρα',note:'Καλύτερο ωμό'},
-  {n:'Ρίγανη',ben:'Αντιμικροβιακό, αντιοξειδωτικό',use:'1-2 γρ./ημέρα (1 κ.γλ.)',note:'Ρίγανη ελληνική ισχυρή'},
-  {n:'Δεντρολίβανο',ben:'Γνωστική λειτουργία, αντιοξειδωτικό',use:'1-2 γρ./ημέρα (1 κ.γλ.)',note:'Φρέσκο ή αποξηραμένο'},
-  {n:'Θυμάρι',ben:'Αντιμικροβιακό, αναπνευστική υγεία',use:'1-2 γρ./ημέρα',note:'Χρήση σε ροφήματα'},
-  {n:'Βασιλικός',ben:'Αντιφλεγμονώδες, καρδιαγγειακή υγεία',use:'2-5 γρ./ημέρα (φρέσκα φύλλα)',note:'Προτιμήστε φρέσκο'},
-  {n:'Δυόσμος',ben:'Πέψη, αναπνευστικό',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Ανακουφίζει από φούσκωμα'},
-  {n:'Φασκόμηλο',ben:'Μνήμη, αντιφλεγμονώδες',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Σε γυναίκες βοηθά και στην εμμηνόπαυση'},
-  {n:'Κουμίν',ben:'Πέψη, αντιοξειδωτικό',use:'1-3 γρ./ημέρα (1 κ.γλ.)',note:'Συνήθως με φακές/όσπρια'},
-  {n:'Γλυκάνισος',ben:'Αναπνευστικό, πέψη',use:'1-2 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Χρήση σε ροφήματα'},
-  {n:'Κορίανδρος',ben:'Ρύθμιση σακχάρου, πέψη',use:'1-3 γρ./ημέρα',note:'Φρέσκο ή σπόροι'},
-  {n:'Τσίλι/Καυτερή πιπ.',ben:'Μεταβολισμός, αντιφλεγμονώδες',use:'0.5-1 γρ./ημέρα (1/4 κ.γλ.)',note:'Προσοχή σε στομάχι'},
-  {n:'Κάρδαμο',ben:'Πέψη, αντιοξειδωτικό',use:'1-2 γρ./ημέρα',note:'Χρήση σε τσάι'},
-  {n:'Μοσχοκάρυδο',ben:'Χαλάρωση, πέψη',use:'Μικρή ποσότητα (0.5-1 γρ.)',note:'Υπερβολή → τοξικό'},
-  {n:'Γαρύφαλλο',ben:'Αντιμικροβιακό, αντιοξειδωτικό',use:'0.5-1 γρ./ημέρα (1/4-1/2 κ.γλ.)',note:'Ισχυρή δράση'},
-  {n:'Σαφράνι',ben:'Διάθεση, αντιοξειδωτικό',use:'30-50 mg/ημέρα',note:'Ακριβό, μικρή δόση'},
-  {n:'Μάραθος',ben:'Πέψη, αντιφλεγμονώδες',use:'1-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',note:'Χρήση σε βραστά'}
+  {n:'Κουρκουμάς',en:'Turmeric',ben:'Αντιφλεγμονώδες, αντιοξειδωτικό',benEn:'Anti-inflammatory, antioxidant',use:'1-3 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Με μαύρο πιπέρι για απορρόφηση',noteEn:'With black pepper for absorption'},
+  {n:'Μαύρο πιπέρι',en:'Black Pepper',ben:'Βελτίωση απορρόφησης θρεπτικών, αντιμικροβιακό',benEn:'Nutrient absorption, antimicrobial',use:'1-2 γρ./ημέρα',useEn:'½ tsp/day',note:'Συνδυάζεται με κουρκουμά',noteEn:'Pairs with turmeric'},
+  {n:'Κανέλα',en:'Cinnamon',ben:'Ρύθμιση σακχάρου, αντιοξειδωτικό',benEn:'Blood sugar control, antioxidant',use:'1-4 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Προτιμήστε Κεϋλάνης για ασφάλεια',noteEn:'Prefer Ceylon for safety'},
+  {n:'Τζίντζερ',en:'Ginger',ben:'Αντιφλεγμονώδες, πέψη, ναυτία',benEn:'Anti-inflammatory, digestion, nausea relief',use:'2-5 γρ./ημέρα (1-2 κ.γλ.)',useEn:'1-2 tsp/day',note:'Φρέσκο ή σκόνη',noteEn:'Fresh or powder'},
+  {n:'Σκόρδο',en:'Garlic',ben:'Καρδιοπροστασία, αντιμικροβιακό',benEn:'Cardiovascular, antimicrobial',use:'1-2 σκελίδες/ημέρα',useEn:'1-2 cloves/day',note:'Καλύτερο ωμό',noteEn:'Best raw'},
+  {n:'Ρίγανη',en:'Oregano',ben:'Αντιμικροβιακό, αντιοξειδωτικό',benEn:'Antimicrobial, antioxidant',use:'1-2 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Ρίγανη ελληνική ισχυρή',noteEn:'Greek oregano is potent'},
+  {n:'Δεντρολίβανο',en:'Rosemary',ben:'Γνωστική λειτουργία, αντιοξειδωτικό',benEn:'Cognitive support, antioxidant',use:'1-2 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Φρέσκο ή αποξηραμένο',noteEn:'Fresh or dried'},
+  {n:'Θυμάρι',en:'Thyme',ben:'Αντιμικροβιακό, αναπνευστική υγεία',benEn:'Antimicrobial, respiratory health',use:'1-2 γρ./ημέρα',useEn:'1 tsp/day',note:'Χρήση σε ροφήματα',noteEn:'Use in teas/infusions'},
+  {n:'Βασιλικός',en:'Basil',ben:'Αντιφλεγμονώδες, καρδιαγγειακή υγεία',benEn:'Anti-inflammatory, cardiovascular health',use:'2-5 γρ./ημέρα (φρέσκα φύλλα)',useEn:'Few leaves/day',note:'Προτιμήστε φρέσκο',noteEn:'Prefer fresh'},
+  {n:'Δυόσμος',en:'Mint',ben:'Πέψη, αναπνευστικό',benEn:'Digestion, respiratory',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Ανακουφίζει από φούσκωμα',noteEn:'Relieves bloating'},
+  {n:'Φασκόμηλο',en:'Sage',ben:'Μνήμη, αντιφλεγμονώδες',benEn:'Memory support, anti-inflammatory',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Σε γυναίκες βοηθά και στην εμμηνόπαυση',noteEn:'May help women in menopause'},
+  {n:'Κουμίν',en:'Cumin',ben:'Πέψη, αντιοξειδωτικό',benEn:'Digestion, antioxidant',use:'1-3 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Συνήθως με φακές/όσπρια',noteEn:'Usually with lentils/legumes'},
+  {n:'Γλυκάνισος',en:'Anise',ben:'Αναπνευστικό, πέψη',benEn:'Respiratory, digestion',use:'1-2 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Χρήση σε ροφήματα',noteEn:'Use in teas/infusions'},
+  {n:'Κορίανδρος',en:'Coriander',ben:'Ρύθμιση σακχάρου, πέψη',benEn:'Blood sugar control, digestion',use:'1-3 γρ./ημέρα',useEn:'1 tsp/day',note:'Φρέσκο ή σπόροι',noteEn:'Fresh or seeds'},
+  {n:'Τσίλι/Καυτερή πιπ.',en:'Chili Pepper',ben:'Μεταβολισμός, αντιφλεγμονώδες',benEn:'Metabolism boost, anti-inflammatory',use:'0.5-1 γρ./ημέρα (1/4 κ.γλ.)',useEn:'1/4 tsp/day',note:'Προσοχή σε στομάχι',noteEn:'Caution with sensitive stomach'},
+  {n:'Κάρδαμο',en:'Cardamom',ben:'Πέψη, αντιοξειδωτικό',benEn:'Digestion, antioxidant',use:'1-2 γρ./ημέρα',useEn:'1 tsp/day',note:'Χρήση σε τσάι',noteEn:'Use in tea'},
+  {n:'Μοσχοκάρυδο',en:'Nutmeg',ben:'Χαλάρωση, πέψη',benEn:'Relaxation, digestion',use:'Μικρή ποσότητα (0.5-1 γρ.)',useEn:'1/4 tsp/day',note:'Υπερβολή → τοξικό',noteEn:'Excess is toxic'},
+  {n:'Γαρύφαλλο',en:'Clove',ben:'Αντιμικροβιακό, αντιοξειδωτικό',benEn:'Antimicrobial, antioxidant',use:'0.5-1 γρ./ημέρα (1/4-1/2 κ.γλ.)',useEn:'1/4 tsp/day',note:'Ισχυρή δράση',noteEn:'Potent action'},
+  {n:'Σαφράνι',en:'Saffron',ben:'Διάθεση, αντιοξειδωτικό',benEn:'Mood, antioxidant',use:'30-50 mg/ημέρα',useEn:'30-50 mg/day',note:'Ακριβό, μικρή δόση',noteEn:'Expensive, small dose'},
+  {n:'Μάραθος',en:'Fennel',ben:'Πέψη, αντιφλεγμονώδες',benEn:'Digestion, anti-inflammatory',use:'1-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Χρήση σε βραστά',noteEn:'Use in cooked dishes'}
 ];
 
 // Επικοινωνία με το διαιτολογικό γραφείο (fallback αν δεν έρθει από το πλάνο).
@@ -439,11 +442,208 @@ const COACH={ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' };
 
 // Πλαίσιο ημέρας που μπορεί προαιρετικά να επιλέξει ο πελάτης όταν καταγράφει βάρος/σημείωση —
 // βοηθά τον διαιτολόγο να καταλάβει ΓΙΑΤΙ έπεσε η τήρηση μια μέρα, χωρίς να μαντεύει.
-const LOG_TAGS=[
+const LOG_TAGS_EL=[
   {id:'travel',icon:'ti-plane',label:'Ταξίδι'},
   {id:'party',icon:'ti-gift',label:'Γιορτή'},
   {id:'sick',icon:'ti-thermometer',label:'Άρρωστος/η'}
 ];
+const LOG_TAGS_EN=[
+  {id:'travel',icon:'ti-plane',label:'Travel'},
+  {id:'party',icon:'ti-gift',label:'Celebration'},
+  {id:'sick',icon:'ti-thermometer',label:'Sick'}
+];
+function logTags(){return LANG==='en'?LOG_TAGS_EN:LOG_TAGS_EL}
+
+// ── i18n (Φάση 1: Header/Nav + Αρχική tab — βλ. σχόλιο πριν το boot() για το πώς ορίζεται το LANG) ──
+// Οι τιμές τροφίμων/γευμάτων/ημερών ΔΕΝ μεταφράζονται εδώ — έρχονται ήδη στη σωστή γλώσσα μέσα
+// στο SNAP (χτισμένες server-side από το _buildSnapshot στο Dietologist.html, που έχει πρόσβαση
+// στη βάση FOODS/SUPPS· το plan.html είναι standalone αρχείο χωρίς αυτή την πρόσβαση).
+let LANG='el';
+const I18N={
+  el:{
+    greeting:'Γεια σου',
+    refreshTip:'Έλεγχος για ενημερωμένο πλάνο', pdfBtn:'PDF', pdfTip:'Εκτύπωση ή αποθήκευση ως PDF',
+    updatedPrefix:'Ενημερώθηκε',
+    nav_home:'Αρχική', nav_plan:'Πλάνο', nav_shop:'Ψώνια', nav_water:'Νερό', nav_supps:'Συμπλ.', nav_prog:'Πρόοδος',
+    trainDaySuffix:'ημέρα προπόνησης', matchDaySuffix:'ημέρα αγώνα',
+    statGoal:'Στόχος', statProtein:'Πρωτεΐνη', statCarbs:'Υδατ/κες', statFat:'Λιπαρά',
+    coachNoteHdr:'Μήνυμα από τη διαιτολόγο σου',
+    todayMealsHdr:'Η διατροφή μου σήμερα', matchBadge:'Αγώνας', tapMealHint:'Πάτα ένα γεύμα όταν το ολοκληρώσεις.',
+    noMealsToday:'Δεν υπάρχει πλάνο για σήμερα.', mealFallback:'Γεύμα', beforeMatch:'πριν τον αγώνα', afterMatch:'μετά τον αγώνα',
+    quickShop:'Λίστα ψώνια', quickSupps:'Συμπληρώματα', quickSpices:'Μπαχαρικά & βότανα', quickSpicesSub:'Οδηγός χρήσης',
+    quickFruits:'Φρούτα', quickFruitsSub:'Λίστα ανταλλαγής', suppsNone:'—', suppsProgress:'{d} από {t} σήμερα', shopProgress:'{d} από {t} ✓',
+    exclHdr:'Το πλάνο αποφεύγει',
+    fabAsk:'Ρώτησέ με', contactHdr:'Επικοινωνία', contactSub:'Ρώτησέ με ό,τι χρειάζεσαι για το πλάνο σου.',
+    contactWa:'WhatsApp', contactTel:'Τηλεφώνησε', contactMail:'Email', contactWeb:'Ιστοσελίδα', contactClose:'Κλείσιμο',
+    contactGreeting:'Γεια σας! Είμαι ο/η {name} και έχω μια ερώτηση για το πλάνο μου.', contactFallbackName:'πελάτης/πελάτισσα',
+    contactQSubject:'Ερώτηση για το πλάνο μου',
+    obTitle1:'Το πλάνο σου', obSub1:'Εδώ βλέπεις τα γεύματά σου κάθε μέρα, με ποσότητες και θερμίδες.',
+    obTitle2:'Τσέκαρε ό,τι τρως', obSub2:'Πάτα ένα γεύμα όταν το ολοκληρώσεις — έτσι χτίζεις το σερί σου.',
+    obTitle3:'Δες την πρόοδό σου', obSub3:'Σκορ, σερί και βάρος σε μία ματιά — ενημέρωσέ τα όποτε θες.',
+    obNext:'Επόμενο', obStart:'Ξεκίνα', obSkip:'Παράλειψη',
+    installTitle:'Πρόσθεσε το πλάνο σου στην αρχική οθόνη',
+    installSubAuto:'Ανοίγει σαν εφαρμογή, χωρίς να ψάχνεις το link στο WhatsApp κάθε φορά.',
+    installSubIOS:'Πάτα <i class="ti ti-share-2"></i> Κοινοποίηση, μετά «Προσθήκη στην Αρχική οθόνη».',
+    installBtn:'Εγκατάσταση', installClose:'Κλείσιμο',
+    nudgeTitle:'Δεν έχεις τσεκάρει τίποτα σήμερα ακόμα', nudgeSub:'Πάτα ένα γεύμα παρακάτω μόλις το ολοκληρώσεις — έτσι χτίζεις το σερί σου.',
+    composerPrompt:'Στείλε κάτι στον/στην διαιτολόγο σου', composerEditing:'Επεξεργασία μηνύματος',
+    composerPlaceholder:'π.χ. Πείνασα πολύ σήμερα, το μεσημεριανό μού φάνηκε λίγο', composerSend:'Στείλε',
+    composerNotSent:'Δεν στάλθηκε ακόμη', composerSentToday:'Στάλθηκε σήμερα', composerSentPrefix:'Στάλθηκε',
+    composerRetry:'Δοκίμασε ξανά', composerEdit:'επεξεργασία',
+    matchLabel:'Αγώνας', matchNone:'καμία', matchThisWeek:'(αυτή τη βδομάδα)', matchChange:'άλλαξε', matchCloseBtn:'κλείσε', matchOff:'Καμία',
+    matchDefaultNote:'Το {day} παραμένει η κανονική μέρα αγώνα τις άλλες βδομάδες.', matchOverrideNote:'Ισχύει μόνο αυτή τη βδομάδα.',
+    glanceScore:'σκορ εβδ.', glanceStreak:'σερί', glanceWeight:'βάρος kg', scoreWord:'σκορ',
+    goalHeroLbl:'Ο στόχος σου', goalHeroArrow:'Από {start} kg — {diff} kg να πάμε!',
+    waterLabel:'Ενυδάτωση', waterMatchNote:'Αυξημένος στόχος λόγω αγώνα σήμερα.',
+    dayMon:'Δευ',dayTue:'Τρι',dayWed:'Τετ',dayThu:'Πεμ',dayFri:'Παρ',daySat:'Σαβ',daySun:'Κυρ',
+    subPlan:'Το εβδομαδιαίο πλάνο μου', subProg:'Η πρόοδός μου', subShop:'Λίστα για ψώνια', subWater:'Ενυδάτωση',
+    subSupps:'Τα συμπληρώματά μου', subSpices:'Μπαχαρικά & βότανα', subFruits:'Λίστα ανταλλαγής φρούτων',
+    noMealsForDay:'Δεν υπάρχει πλάνο για αυτή την ημέρα.', alternates:'Εναλλακτικά', alternatesNote:'Ισοδύναμες επιλογές βάσει των προτιμήσεών σου',
+    macroP:'Π', macroC:'Υ', macroF:'Λ',
+    shopHdr:'Λίστα για ψώνια', shopEmpty:'Δεν υπάρχει λίστα ακόμη.', shopRawLegend:'Η ποσότητα είναι αυτή που αγοράζεις · σε παρένθεση το ωμό/μη-μαγειρεμένο βάρος όπου διαφέρει.',
+    waterProtocolHdr:'Πρωτόκολλο ενυδάτωσης', waterProtocolBody:'Στόχος βάσει βάρους · +500 ml τις ημέρες προπόνησης · 1 ποτήρι πριν από κάθε γεύμα.', waterHint:'Πάτα ένα ποτήρι για να καταγράψεις πόσο νερό ήπιες σήμερα.',
+    suppsHdr:'Τα συμπληρώματά μου', suppsToday:'σήμερα', suppsEmpty:'Δεν έχουν οριστεί συμπληρώματα στο πλάνο σου.',
+    suppsTipHdr:'Συμβουλή', suppsTipBody:'Πάτα την ημέρα όταν πάρεις το συμπλήρωμα. Λάβε το στην ώρα που αναγράφεται, μαζί με το γεύμα — εκτός αν σου έχει πει αλλιώς ο/η διαιτολόγος σου.',
+    dowD:'Δ',dowT1:'Τ',dowT2:'Τ',dowP1:'Π',dowP2:'Π',dowS1:'Σ',dowK:'Κ',
+    spicesHdr:'Οδηγός Μπαχαρικών & Βοτάνων', spicesBody:'Θεραπευτικά μπαχαρικά & βότανα — ενδεικτική ημερήσια χρήση. Δεν υποκαθιστά ιατρική συμβουλή.',
+    spicesBenefits:'Οφέλη', spicesUse:'Χρήση', spicesNote:'Σημείωση',
+    fruitsHdr:'Λίστα Ανταλλαγής Φρούτων', fruitsBody:'Κάθε επιλογή αντιστοιχεί σε 1 μερίδα φρούτου — αλλάζτε ελεύθερα μεταξύ τους.',
+    pfBreakfast:'Πρωινό', pfSnacks:'Σνακ', pfLunch:'Μεσημεριανό', pfDinner:'Βραδινό',
+    pfRecipesEase:'Ευκολία συνταγών', pfIngredientsEase:'Εύρεση υλικών', pfTrainingEnergy:'Ενεργειακή κάλυψη προπόνησης',
+    pfReasonNoTime:'Δεν είχα χρόνο', pfReasonNoTaste:'Δεν μου άρεσε η γεύση', pfReasonNotFull:'Δεν χόρτασα', pfReasonHeavy:'Ήταν πολύ βαρύ',
+    pfReasonSteps:'Πολλά βήματα', pfReasonLong:'Πήρε πολύ χρόνο', pfReasonEquip:'Χρειαζόταν εξοπλισμό', pfReasonTechnique:'Δύσκολη τεχνική',
+    pfReasonNotFound:'Δεν το βρήκα', pfReasonExpensive:'Ήταν ακριβό', pfReasonManyShops:'Πολλά διαφορετικά μαγαζιά', pfReasonUnknown:'Άγνωστο υλικό',
+    pfReasonHungry:'Πεινούσα στην προπόνηση', pfReasonNoEnergy:'Δεν είχα ενέργεια', pfReasonTiming:'Λάθος timing γεύματος', pfReasonAfter:'Χρειαζόμουν κάτι μετά',
+    pfStarAria:'{n} από 5 αστέρια',
+    pfFormHdr:'Πες μας πώς πήγε η εβδομάδα', pfFormSub:'30 δευτερόλεπτα — μας βοηθάει να προσαρμόσουμε το επόμενο πλάνο σου.',
+    pfNpsQ:'Πόσο πιθανό είναι να συνεχίσεις αυτό το πλάνο και την επόμενη εβδομάδα;', pfNpsLow:'καθόλου πιθανό', pfNpsHigh:'σίγουρα',
+    pfSubmit:'Αποστολή αξιολόγησης', pfSentHdr:'Αξιολόγηση εβδομάδας',
+    pfNotSent:'Δεν στάλθηκε ακόμη στον/στην διαιτολόγο σου', pfThanks:'Ευχαριστούμε! Έστειλες την αξιολόγησή σου για αυτή την εβδομάδα.',
+    milestoneDay:'μέρα', milestoneDays:'μέρες', milestoneStreak:'σερί!', milestoneNext:'Συνέχισε έτσι — το επόμενο ορόσημο είναι στις {n}',
+    milestoneAmazing:'Απίστευτο σερί — συνέχισε έτσι!', milestoneDaysUnit:'μέρες',
+    freezeAvail:'1 πάγωμα διαθέσιμο αυτόν τον μήνα — μια χαμένη μέρα δεν σπάει το σερί σου', freezeUsed:'Το πάγωμα του μήνα χρησιμοποιήθηκε ήδη',
+    shareText:'Πέτυχα {score}% τήρηση αυτή την εβδομάδα!', shareStreak:'{n} {dn} σερί', shareFooter:'με το πλάνο μου από το Feed Your Health 💪',
+    shareBtn:'Κοινοποίησε την πρόοδό σου', shareCopied:'Αντιγράφηκε!',
+    tipStartHint:'Μόλις αρχίσεις να τσεκάρεις τα γεύματα, τα συμπληρώματα και το νερό, θα βλέπεις εδώ προσωπικές συμβουλές.',
+    tipDietLow:'Η διατροφή δυσκόλεψε αυτή την εβδομάδα. Ετοίμασε τα γεύματα από το προηγούμενο βράδυ.',
+    tipDietMid:'Έχασες {n} {dn} στη διατροφή. Λίγη προετοιμασία κάνει τη διαφορά.', tipDietOk:'Σταθερή διατροφή όλη την εβδομάδα — μπράβο!',
+    tipSuppLow:'Τα συμπληρώματα ξεχάστηκαν αρκετά. Βάλε υπενθύμιση ή άφησέ τα δίπλα στο πρωινό.',
+    tipSuppMid:'Ξέχασες τα συμπληρώματα {n} {dn}. Δοκίμασε να τα αφήσεις δίπλα στο πρωινό.', tipSuppOk:'Συνέπεια στα συμπληρώματα — τέλεια!',
+    tipWaterLow:'Η ενυδάτωση χρειάζεται προσοχή. Κράτα ένα μπουκάλι μαζί σου όλη μέρα.',
+    tipWaterMid:'Λίγο πιο κάτω στο νερό ({n} {dn}). Ένα ποτήρι πριν από κάθε γεύμα κλείνει το κενό.', tipWaterOk:'Τέλεια ενυδάτωση — κράτα το!',
+    tipUp:'Ανέβηκες +{diff}% από την προηγούμενη εβδομάδα. Μπράβο!', tipDown:'Λίγο πιο κάτω από την προηγούμενη εβδομάδα. Καμία πίεση — νέα αρχή!',
+    tipGoodWeek:'Καλή δουλειά αυτή την εβδομάδα! Συνέχισε έτσι.',
+    greetStart:'Ξεκίνα να καταγράφεις!', greetExcellent:'Εξαιρετική εβδομάδα!', greetGood:'Καλή εβδομάδα!', greetOk:'Καλή προσπάθεια!', greetNew:'Νέα εβδομάδα, νέα αρχή!',
+    heroGoals:'{d} από {t} στόχους ✓', heroPrompt:'Τσέκαρε τα γεύματα, τα συμπληρώματα και το νερό σου.', heroStreak:'σερί',
+    weightTodayHdr:'Βάρος σήμερα', weightPlaceholder:'π.χ. 82,4 kg', weightBtn:'Καταγραφή', weightNotSent:'Δεν στάλθηκε ακόμη', weightRecorded:'Καταγράφηκε',
+    weightErr:'Το βάρος πρέπει να είναι ένας αριθμός μεταξύ 20 και 300 kg.',
+    thisWeekHdr:'Αυτή την εβδομάδα', pillarDiet:'Διατροφή', pillarSupps:'Συμπληρώματα', pillarWater:'Νερό',
+    tipsHdr:'Συμβουλές για την επόμενη εβδομάδα', historyHdr:'Ιστορικό', historyNow:'Τώρα',
+    progStart:'Έναρξη', progNow:'Τώρα', progGoal:'Στόχος', weightChartLbl:'Βάρος (kg)',
+    bfChartLbl:'Σωματικό λίπος (%)', bfNeed2:'Χρειάζονται τουλάχιστον 2 μετρήσεις για γράφημα εξέλιξης.',
+    lbmChartLbl:'Άλιπη μάζα (kg)', bodyCompHdr:'Σύσταση σώματος', bodyCompTotal:'kg ΣΥΝΟΛΟ', bodyCompLean:'Άλιπη', bodyCompFat:'Λίπος',
+    analysisHdr:'Ανάλυση', analysisGoalLegend:'◆ στόχος', bmiLbl:'ΔΜΣ', bfPctLbl:'% Λίπους', whtrLbl:'WHtR',
+    bmiUnderweight:'Ελλιποβαρές', bmiNormal:'Φυσιολογικό', bmiOverweight:'Υπέρβαρο', bmiObese1:'Παχυσαρκία Ι', bmiObese2:'Παχυσαρκία ΙΙ', bmiObese3:'Παχυσαρκία ΙΙΙ',
+    whtrNormal:'Φυσιολογικό', whtrElevated:'Αυξημένος κίνδυνος', whtrHigh:'Υψηλός κίνδυνος',
+    bfEssential:'Απαραίτητο', bfAthletic:'Αθλητικό', bfFit:'Φυσιολογικό', bfAcceptable:'Αποδεκτό', bfObese:'Παχυσαρκία',
+    acsmRef:'Τιμές αναφοράς ACSM', lastMeasureHdr:'Τελευταία μέτρηση', waistLbl:'Περιφέρεια μέσης', bodyfatLbl:'Σωματικό λίπος', lbmLbl:'Άλιπη μάζα',
+    sinceStart:'από την αρχή', chartAriaLabel:'Γράφημα', chartGoalLbl:'στόχος'
+  },
+  en:{
+    greeting:'Hi',
+    refreshTip:'Check for an updated plan', pdfBtn:'PDF', pdfTip:'Print or save as PDF',
+    updatedPrefix:'Updated',
+    nav_home:'Home', nav_plan:'Plan', nav_shop:'Shopping', nav_water:'Water', nav_supps:'Supps', nav_prog:'Progress',
+    trainDaySuffix:'training day', matchDaySuffix:'match day',
+    statGoal:'Target', statProtein:'Protein', statCarbs:'Carbs', statFat:'Fat',
+    coachNoteHdr:'A note from your dietitian',
+    todayMealsHdr:'My meals today', matchBadge:'Match', tapMealHint:'Tap a meal once you finish it.',
+    noMealsToday:'No plan for today.', mealFallback:'Meal', beforeMatch:'before the match', afterMatch:'after the match',
+    quickShop:'Shopping list', quickSupps:'Supplements', quickSpices:'Spices & herbs', quickSpicesSub:'Usage guide',
+    quickFruits:'Fruits', quickFruitsSub:'Exchange list', suppsNone:'—', suppsProgress:'{d} of {t} today', shopProgress:'{d} of {t} ✓',
+    exclHdr:'This plan avoids',
+    fabAsk:'Ask me', contactHdr:'Contact', contactSub:'Ask me anything about your plan.',
+    contactWa:'WhatsApp', contactTel:'Call', contactMail:'Email', contactWeb:'Website', contactClose:'Close',
+    contactGreeting:'Hi! I\'m {name} and I have a question about my plan.', contactFallbackName:'your client',
+    contactQSubject:'Question about my plan',
+    obTitle1:'Your plan', obSub1:'Here you see your meals every day, with quantities and calories.',
+    obTitle2:'Check off what you eat', obSub2:'Tap a meal once you finish it — that builds your streak.',
+    obTitle3:'See your progress', obSub3:'Score, streak and weight at a glance — update anytime.',
+    obNext:'Next', obStart:'Start', obSkip:'Skip',
+    installTitle:'Add your plan to your home screen',
+    installSubAuto:'Opens like an app, no need to dig up the WhatsApp link every time.',
+    installSubIOS:'Tap <i class="ti ti-share-2"></i> Share, then "Add to Home Screen".',
+    installBtn:'Install', installClose:'Close',
+    nudgeTitle:'You haven\'t checked anything off today yet', nudgeSub:'Tap a meal below once you finish it — that builds your streak.',
+    composerPrompt:'Send your dietitian a message', composerEditing:'Editing message',
+    composerPlaceholder:'e.g. I was really hungry today, lunch felt a bit small', composerSend:'Send',
+    composerNotSent:'Not sent yet', composerSentToday:'Sent today', composerSentPrefix:'Sent',
+    composerRetry:'Try again', composerEdit:'edit',
+    matchLabel:'Match', matchNone:'none', matchThisWeek:'(this week)', matchChange:'change', matchCloseBtn:'close', matchOff:'None',
+    matchDefaultNote:'{day} stays the regular match day on other weeks.', matchOverrideNote:'Applies only this week.',
+    glanceScore:'week score', glanceStreak:'streak', glanceWeight:'weight kg', scoreWord:'score',
+    goalHeroLbl:'Your goal', goalHeroArrow:'From {start} kg — {diff} kg to go!',
+    waterLabel:'Hydration', waterMatchNote:'Higher target due to today\'s match.',
+    dayMon:'Mon',dayTue:'Tue',dayWed:'Wed',dayThu:'Thu',dayFri:'Fri',daySat:'Sat',daySun:'Sun',
+    subPlan:'My weekly plan', subProg:'My progress', subShop:'Shopping list', subWater:'Hydration',
+    subSupps:'My supplements', subSpices:'Spices & herbs', subFruits:'Fruit exchange list',
+    noMealsForDay:'No plan for this day.', alternates:'Alternatives', alternatesNote:'Equivalent options based on your preferences',
+    macroP:'P', macroC:'C', macroF:'F',
+    shopHdr:'Shopping list', shopEmpty:'No list yet.', shopRawLegend:'The amount shown is what you buy · the raw/uncooked weight is in parentheses where it differs.',
+    waterProtocolHdr:'Hydration protocol', waterProtocolBody:'Target based on weight · +500 ml on training days · 1 glass before each meal.', waterHint:'Tap a glass to log how much water you drank today.',
+    suppsHdr:'My supplements', suppsToday:'today', suppsEmpty:'No supplements have been set in your plan.',
+    suppsTipHdr:'Tip', suppsTipBody:'Tap the day once you take the supplement. Take it at the time shown, with the meal — unless your dietitian told you otherwise.',
+    dowD:'M',dowT1:'T',dowT2:'W',dowP1:'T',dowP2:'F',dowS1:'S',dowK:'S',
+    spicesHdr:'Spices & Herbs Guide', spicesBody:'Therapeutic spices & herbs — suggested daily use. Not a substitute for medical advice.',
+    spicesBenefits:'Benefits', spicesUse:'Use', spicesNote:'Note',
+    fruitsHdr:'Fruit Exchange List', fruitsBody:'Each option is equivalent to 1 fruit serving — swap freely between them.',
+    pfBreakfast:'Breakfast', pfSnacks:'Snacks', pfLunch:'Lunch', pfDinner:'Dinner',
+    pfRecipesEase:'How easy the recipes were', pfIngredientsEase:'Finding the ingredients', pfTrainingEnergy:'Energy for training',
+    pfReasonNoTime:'No time', pfReasonNoTaste:"Didn't like the taste", pfReasonNotFull:"Wasn't filling", pfReasonHeavy:'Too heavy',
+    pfReasonSteps:'Too many steps', pfReasonLong:'Took too long', pfReasonEquip:'Needed equipment', pfReasonTechnique:'Difficult technique',
+    pfReasonNotFound:"Couldn't find it", pfReasonExpensive:'Too expensive', pfReasonManyShops:'Too many different shops', pfReasonUnknown:'Unfamiliar ingredient',
+    pfReasonHungry:'Was hungry during training', pfReasonNoEnergy:'Had no energy', pfReasonTiming:'Wrong meal timing', pfReasonAfter:'Needed something after',
+    pfStarAria:'{n} of 5 stars',
+    pfFormHdr:'Tell us how the week went', pfFormSub:'30 seconds — helps us fine-tune your next plan.',
+    pfNpsQ:'How likely are you to continue this plan next week too?', pfNpsLow:'not likely at all', pfNpsHigh:'definitely',
+    pfSubmit:'Submit rating', pfSentHdr:'Weekly rating',
+    pfNotSent:"Not sent to your dietitian yet", pfThanks:"Thank you! You've sent your rating for this week.",
+    milestoneDay:'day', milestoneDays:'days', milestoneStreak:'streak!', milestoneNext:'Keep it up — the next milestone is at {n}',
+    milestoneAmazing:'Amazing streak — keep it going!', milestoneDaysUnit:'days',
+    freezeAvail:'1 freeze available this month — a missed day won\'t break your streak', freezeUsed:"This month's freeze has already been used",
+    shareText:'I hit {score}% adherence this week!', shareStreak:'{n} {dn} streak', shareFooter:'with my plan from Feed Your Health 💪',
+    shareBtn:'Share your progress', shareCopied:'Copied!',
+    tipStartHint:"Once you start checking off meals, supplements and water, you'll see personal tips here.",
+    tipDietLow:'Nutrition was tough this week. Prep your meals the night before.',
+    tipDietMid:"You missed {n} {dn} on nutrition. A little prep makes a difference.", tipDietOk:'Consistent nutrition all week — well done!',
+    tipSuppLow:'Supplements were forgotten a lot. Set a reminder or keep them next to breakfast.',
+    tipSuppMid:'You missed supplements {n} {dn}. Try keeping them next to breakfast.', tipSuppOk:'Consistent with supplements — great!',
+    tipWaterLow:'Hydration needs attention. Keep a bottle with you all day.',
+    tipWaterMid:"A bit behind on water ({n} {dn}). A glass before each meal closes the gap.", tipWaterOk:'Great hydration — keep it up!',
+    tipUp:"You're up +{diff}% from last week. Well done!", tipDown:'A bit lower than last week. No pressure — fresh start!',
+    tipGoodWeek:'Good work this week! Keep it up.',
+    greetStart:'Start logging!', greetExcellent:'Excellent week!', greetGood:'Good week!', greetOk:'Good effort!', greetNew:'New week, fresh start!',
+    heroGoals:'{d} of {t} goals ✓', heroPrompt:'Check off your meals, supplements and water.', heroStreak:'streak',
+    weightTodayHdr:"Today's weight", weightPlaceholder:'e.g. 82.4 kg', weightBtn:'Log', weightNotSent:'Not sent yet', weightRecorded:'Logged',
+    weightErr:'Weight must be a number between 20 and 300 kg.',
+    thisWeekHdr:'This week', pillarDiet:'Nutrition', pillarSupps:'Supplements', pillarWater:'Water',
+    tipsHdr:'Tips for next week', historyHdr:'History', historyNow:'Now',
+    progStart:'Start', progNow:'Now', progGoal:'Goal', weightChartLbl:'Weight (kg)',
+    bfChartLbl:'Body fat (%)', bfNeed2:'At least 2 measurements are needed for a trend chart.',
+    lbmChartLbl:'Lean mass (kg)', bodyCompHdr:'Body composition', bodyCompTotal:'kg TOTAL', bodyCompLean:'Lean', bodyCompFat:'Fat',
+    analysisHdr:'Analysis', analysisGoalLegend:'◆ goal', bmiLbl:'BMI', bfPctLbl:'Body fat %', whtrLbl:'WHtR',
+    bmiUnderweight:'Underweight', bmiNormal:'Normal', bmiOverweight:'Overweight', bmiObese1:'Obese I', bmiObese2:'Obese II', bmiObese3:'Obese III',
+    whtrNormal:'Normal', whtrElevated:'Elevated risk', whtrHigh:'High risk',
+    bfEssential:'Essential', bfAthletic:'Athletic', bfFit:'Fit', bfAcceptable:'Acceptable', bfObese:'Obese',
+    acsmRef:'ACSM reference values', lastMeasureHdr:'Latest measurement', waistLbl:'Waist circumference', bodyfatLbl:'Body fat', lbmLbl:'Lean mass',
+    sinceStart:'since the start', chartAriaLabel:'Chart', chartGoalLbl:'goal'
+  }
+};
+function T(key,vars){
+  let s=(I18N[LANG]&&I18N[LANG][key])!=null?I18N[LANG][key]:(I18N.el[key]!=null?I18N.el[key]:key);
+  if(vars)Object.keys(vars).forEach(k=>{s=s.replace('{'+k+'}',vars[k]);});
+  return s;
+}
 
 let SNAP=null, curDay=0, sb=null, curView='home', selectedLogTag=null, editingNote=false, matchCardOpen=false;
 
@@ -462,8 +662,9 @@ function isStandalone(){return window.matchMedia('(display-mode: standalone)').m
 
 function $(s){return document.querySelector(s)}
 function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
-function L(ml){return (ml/1000).toFixed(1).replace('.',',')+' L'}
-function nfmt(n){return (Math.round(n)).toLocaleString('el-GR')}
+function decSep(s){return LANG==='en'?s:String(s).replace('.',',')}
+function L(ml){return decSep((ml/1000).toFixed(1))+' L'}
+function nfmt(n){return (Math.round(n)).toLocaleString(LANG==='en'?'en-US':'el-GR')}
 function token(){const p=new URLSearchParams(location.search);return p.get('t')||p.get('plan')}
 
 // ── local persistence (per token, per day) ────────────────────────────────
@@ -490,6 +691,9 @@ function setSuppLog(o){try{localStorage.setItem(lk('supps'),JSON.stringify(o))}c
 const DAY_LABELS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
 const MATCH_TIMES=['πρωί','μεσημέρι','απόγευμα','βράδυ'];
 const MATCH_TIME_H={'πρωί':9,'μεσημέρι':13,'απόγευμα':17,'βράδυ':20};
+// Το SNAP.days[i].label είναι ήδη στη σωστή γλώσσα (server-baked στο _buildSnapshot) — προτιμάται
+// από το τοπικό DAY_LABELS (πάντα ελληνικά) όπου δείχνουμε πλήρες όνομα ημέρας στον πελάτη.
+function dayFullName(i){return (SNAP&&SNAP.days&&SNAP.days[i]&&SNAP.days[i].label)||DAY_LABELS[i]}
 function curWeekKey(){return dKey(weekDates()[0])}
 function getMatchOverride(){try{const o=JSON.parse(localStorage.getItem(lk('matchOverride'))||'{}');return o.week===curWeekKey()?o:null}catch(e){return null}}
 function setMatchOverride(dayIdx,time){try{localStorage.setItem(lk('matchOverride'),JSON.stringify({week:curWeekKey(),day:dayIdx,time:time}))}catch(e){}}
@@ -512,7 +716,7 @@ function matchRelTag(mealTime,bucket){
   if(!mealTime)return '';
   const hh=parseInt(String(mealTime).split(':')[0],10); if(isNaN(hh))return '';
   const bh=MATCH_TIME_H[bucket]||17;
-  return hh<bh?'πριν τον αγώνα':(hh>bh?'μετά τον αγώνα':'');
+  return hh<bh?T('beforeMatch'):(hh>bh?T('afterMatch'):'');
 }
 // Συμπτυγμένο by default — μία γραμμή επιβεβαίωσης, ώστε να μην καταλαμβάνει την Αρχική τις
 // υπόλοιπες 6 μέρες της εβδομάδας που δεν αφορά κανέναν. Ανοίγει μόνο αν ο πελάτης πατήσει "άλλαξε".
@@ -522,12 +726,12 @@ function matchCard(){
   if(defDay<0 && !ov)return null;
   const curDayIdx=ov?ov.day:defDay;
   const curTime=ov?ov.time:defaultMatchTime();
-  const summary=curDayIdx>=0?(DAY_LABELS[curDayIdx]+', '+curTime):'καμία';
+  const summary=curDayIdx>=0?(dayFullName(curDayIdx)+', '+curTime):T('matchNone');
   const c=el('div','card'); const cp=el('div','card-pad');
   const head=el('div',null); head.style.cssText='display:flex;align-items:center;gap:8px';
   head.innerHTML='<i class="ti ti-ball-football" style="color:var(--teal);font-size:16px;flex-shrink:0"></i>'
-    +'<span style="font-size:13px;color:var(--muted);flex:1">Αγώνας: '+esc(summary)+(ov?' <span style="color:var(--faint);font-size:11px">(αυτή τη βδομάδα)</span>':'')+'</span>';
-  const toggleBtn=el('button','swap-btn',matchCardOpen?'κλείσε':'άλλαξε');
+    +'<span style="font-size:13px;color:var(--muted);flex:1">'+T('matchLabel')+': '+esc(summary)+(ov?' <span style="color:var(--faint);font-size:11px">'+T('matchThisWeek')+'</span>':'')+'</span>';
+  const toggleBtn=el('button','swap-btn',matchCardOpen?T('matchCloseBtn'):T('matchChange'));
   toggleBtn.type='button';
   toggleBtn.style.cssText='width:auto;margin-top:0;padding:5px 10px;font-size:11px;flex-shrink:0';
   toggleBtn.onclick=()=>{matchCardOpen=!matchCardOpen;go('home')};
@@ -536,12 +740,13 @@ function matchCard(){
   if(matchCardOpen){
     const body=el('div',null); body.style.cssText='margin-top:10px;padding-top:10px;border-top:.5px solid var(--bord-l)';
     const dayRow=el('div',null); dayRow.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px';
+    const DOW_KEYS=['dayMon','dayTue','dayWed','dayThu','dayFri','daySat','daySun'];
     DAY_LABELS.forEach((lbl,idx)=>{
-      const p=el('button','log-tag'+(curDayIdx===idx?' log-tag-on':''),shortDay(lbl)); p.type='button';
+      const p=el('button','log-tag'+(curDayIdx===idx?' log-tag-on':''),T(DOW_KEYS[idx])); p.type='button';
       p.onclick=()=>{setMatchOverride(idx,curTime||'απόγευμα');go('home')};
       dayRow.appendChild(p);
     });
-    const offP=el('button','log-tag'+(curDayIdx<0?' log-tag-on':''),'Καμία'); offP.type='button';
+    const offP=el('button','log-tag'+(curDayIdx<0?' log-tag-on':''),T('matchOff')); offP.type='button';
     offP.onclick=()=>{setMatchOverride(-1,null);go('home')};
     dayRow.appendChild(offP);
     body.appendChild(dayRow);
@@ -553,7 +758,7 @@ function matchCard(){
     });
     body.appendChild(timeRow);
     if(ov){
-      const note=defDay>=0?('Το '+DAY_LABELS[defDay]+' παραμένει η κανονική μέρα αγώνα τις άλλες βδομάδες.'):'Ισχύει μόνο αυτή τη βδομάδα.';
+      const note=defDay>=0?T('matchDefaultNote',{day:dayFullName(defDay)}):T('matchOverrideNote');
       body.appendChild(el('div','swap-note',note));
     }
     cp.appendChild(body);
@@ -578,7 +783,20 @@ function weekDates(){ // Δευτέρα → Κυριακή της τρέχουσ
 }
 // Στέλνει σήμερα's σύνοψη adherence στο Supabase (checkins table) ώστε ο διαιτολόγος να τη δει.
 // Best-effort: αν αποτύχει (offline κτλ) δεν πειράζει, τα localStorage δεδομένα μένουν πάντα η πηγή αλήθειας.
+// ✅ Debounced (400ms): ένα γεύμα/ποτήρι/συμπλήρωμα-tap καλεί pushCheckin() συγχρονισμένα από το δικό
+// του onclick, οπότε 2 γρήγορα διαδοχικά taps (π.χ. 2 συμπληρώματα) παλιά έστελναν 2 ανεξάρτητα
+// RPC calls ταυτόχρονα — race condition όπου το αίτημα με το ΠΑΛΙΟΤΕΡΟ (μικρότερο) σύνολο μπορούσε να
+// απαντήσει ΤΕΛΕΥΤΑΙΟ στον server και να «κερδίσει» το upsert, αφήνοντας τον διαιτολόγο να βλέπει π.χ.
+// 1/2 συμπληρώματα ενώ ο πελάτης πραγματικά είχε κάνει 2/2. Το debounce μαζεύει διαδοχικά taps σε ΕΝΑ
+// αίτημα που διαβάζει το localStorage στο τέλος (πάντα το πιο πρόσφατο σύνολο), οπότε δεν υπάρχουν πια
+// 2 ταυτόχρονα αιτήματα να παίξουν κούρσα μεταξύ τους.
+let _pushCheckinTimer=null;
 function pushCheckin(){
+  if(_pushCheckinTimer)clearTimeout(_pushCheckinTimer);
+  _pushCheckinTimer=setTimeout(_pushCheckinNow,400);
+}
+function _pushCheckinNow(){
+  _pushCheckinTimer=null;
   if(!sb || !SNAP)return;
   const tok=token(); if(!tok)return;
   try{
@@ -601,6 +819,11 @@ function pushCheckin(){
     }).then(()=>{}).catch(()=>{});
   }catch(e){}
 }
+// Στέλνει αμέσως ό,τι εκκρεμεί στο debounce (π.χ. πριν κρυφτεί η σελίδα) αντί να χαθεί σιωπηλά.
+function flushPushCheckin(){
+  if(_pushCheckinTimer){clearTimeout(_pushCheckinTimer);_pushCheckinNow();}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushPushCheckin();});
 
 // Εναλλάσσει το επιλεγμένο tag πλαισίου ημέρας μέσα στο μήνυμα-composer. Ενημερώνει τα chips
 // απευθείας στο DOM (όχι go('home') — ένα πλήρες re-render θα έσβηνε ό,τι έχει ήδη γράψει ο
@@ -622,12 +845,12 @@ function messageComposer(){
   const c=el('div','composer'); c.id='msgComposer';
 
   if(hasMsg && !editingNote){
-    const tagDef=already.tag&&LOG_TAGS.find(t=>t.id===already.tag);
+    const tagDef=already.tag&&logTags().find(t=>t.id===already.tag);
     const tagBadge=tagDef?(' <span class="log-tag-badge"><i class="ti '+tagDef.icon+'"></i>'+tagDef.label+'</span>'):'';
     const detail=(already.n?esc(already.n):'')+tagBadge;
     c.innerHTML = already.synced===false
-      ? '<div class="log-warn" style="margin:0;padding:11px 13px"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη'+(detail?': '+detail:'')+' <button onclick="retryClientLogSync()">Δοκίμασε ξανά</button></div>'
-      : '<div class="log-sent" style="margin:0;padding:11px 13px"><i class="ti ti-circle-check"></i><span style="flex:1">Στάλθηκε'+(detail?': '+detail:' σήμερα')+'</span><button type="button" onclick="editClientNote()" style="background:none;border:none;color:var(--teal);font-weight:600;cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0">επεξεργασία</button></div>';
+      ? '<div class="log-warn" style="margin:0;padding:11px 13px"><i class="ti ti-alert-triangle"></i>'+T('composerNotSent')+(detail?': '+detail:'')+' <button onclick="retryClientLogSync()">'+T('composerRetry')+'</button></div>'
+      : '<div class="log-sent" style="margin:0;padding:11px 13px"><i class="ti ti-circle-check"></i><span style="flex:1">'+(detail?T('composerSentPrefix')+': '+detail:T('composerSentToday'))+'</span><button type="button" onclick="editClientNote()" style="background:none;border:none;color:var(--teal);font-weight:600;cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0">'+T('composerEdit')+'</button></div>';
     return c;
   }
 
@@ -637,13 +860,13 @@ function messageComposer(){
   const prefill=editing?(already.n||''):'';
   c.innerHTML='<div class="row"'+(editing?'':' onclick="toggleMessageComposer()"')+'>'
     +'<i class="ti ti-message-circle-2"></i>'
-    +'<span>'+(editing?'Επεξεργασία μηνύματος':'Στείλε κάτι στον/στην διαιτολόγο σου')+'</span>'
+    +'<span>'+(editing?T('composerEditing'):T('composerPrompt'))+'</span>'
     +(editing?'':'<i class="ti ti-chevron-right chev"></i>')
     +'</div>'
     +'<div class="expand"><div class="expand-in">'
-    +'<textarea class="log-inp" id="home-msg-text" placeholder="π.χ. Πείνασα πολύ σήμερα, το μεσημεριανό μού φάνηκε λίγο">'+esc(prefill)+'</textarea>'
-    +'<div class="log-tags" style="margin-top:8px">'+LOG_TAGS.map(t=>'<button type="button" class="log-tag'+(selectedLogTag===t.id?' log-tag-on':'')+'" onclick="toggleLogTag(\''+t.id+'\',this)"><i class="ti '+t.icon+'"></i>'+t.label+'</button>').join('')+'</div>'
-    +'<button class="swap-btn" style="justify-content:center;margin-top:4px" onclick="submitClientNote()"><i class="ti ti-send"></i>Στείλε</button>'
+    +'<textarea class="log-inp" id="home-msg-text" placeholder="'+esc(T('composerPlaceholder'))+'">'+esc(prefill)+'</textarea>'
+    +'<div class="log-tags" style="margin-top:8px">'+logTags().map(t=>'<button type="button" class="log-tag'+(selectedLogTag===t.id?' log-tag-on':'')+'" onclick="toggleLogTag(\''+t.id+'\',this)"><i class="ti '+t.icon+'"></i>'+t.label+'</button>').join('')+'</div>'
+    +'<button class="swap-btn" style="justify-content:center;margin-top:4px" onclick="submitClientNote()"><i class="ti ti-send"></i>'+T('composerSend')+'</button>'
     +'</div></div>';
   return c;
 }
@@ -682,7 +905,7 @@ function submitWeightLog(){
   if(!wRaw)return;
   const w=parseFloat(wRaw);
   if(!isFinite(w)||w<20||w>300){
-    if(errEl){errEl.textContent='Το βάρος πρέπει να είναι ένας αριθμός μεταξύ 20 και 300 kg.';errEl.classList.add('show');}
+    if(errEl){errEl.textContent=T('weightErr');errEl.classList.add('show');}
     return;
   }
   saveClientLogPatch({w:w});
@@ -728,25 +951,28 @@ function retryClientLogSync(){
 // ── ΕΒΔΟΜΑΔΙΑΙΟ FEEDBACK ΠΛΑΝΟΥ (plan_feedback, χωρίς login) ────────────────
 // Ίδιο write-back μοντέλο με τα checkins/client_logs: ένα RPC ελέγχει ότι το token
 // υπάρχει στο shared_plans πριν γράψει, ο πελάτης δεν χρειάζεται λογαριασμό.
-const PF_ROWS=[
-  {key:'breakfast',label:'Πρωινό'},
-  {key:'snacks',label:'Σνακ'},
-  {key:'lunch',label:'Μεσημεριανό'},
-  {key:'dinner',label:'Βραδινό'},
-  {key:'recipes_ease',label:'Ευκολία συνταγών'},
-  {key:'ingredients_ease',label:'Εύρεση υλικών'},
-  {key:'training_energy',label:'Ενεργειακή κάλυψη προπόνησης'}
-];
+function pfRows(){
+  return [
+    {key:'breakfast',label:T('pfBreakfast')},
+    {key:'snacks',label:T('pfSnacks')},
+    {key:'lunch',label:T('pfLunch')},
+    {key:'dinner',label:T('pfDinner')},
+    {key:'recipes_ease',label:T('pfRecipesEase')},
+    {key:'ingredients_ease',label:T('pfIngredientsEase')},
+    {key:'training_energy',label:T('pfTrainingEnergy')}
+  ];
+}
 // Οι λόγοι χαμηλής βαθμολογίας διαφέρουν ανά κατηγορία (π.χ. "δύσκολη συνταγή" δεν βγάζει νόημα
 // στο "Εύρεση υλικών") — ξεχωριστό σετ chips ανά τύπο σειράς, όχι ένα κοινό σετ για όλες.
-const PF_REASONS_MEAL=['Δεν είχα χρόνο','Δεν μου άρεσε η γεύση','Δεν χόρτασα','Ήταν πολύ βαρύ'];
-const PF_REASONS_RECIPES=['Πολλά βήματα','Πήρε πολύ χρόνο','Χρειαζόταν εξοπλισμό','Δύσκολη τεχνική'];
-const PF_REASONS_INGREDIENTS=['Δεν το βρήκα','Ήταν ακριβό','Πολλά διαφορετικά μαγαζιά','Άγνωστο υλικό'];
-const PF_REASONS_TRAINING=['Πεινούσα στην προπόνηση','Δεν είχα ενέργεια','Λάθος timing γεύματος','Χρειαζόμουν κάτι μετά'];
-const PF_REASONS_BY_KEY={
-  breakfast:PF_REASONS_MEAL, snacks:PF_REASONS_MEAL, lunch:PF_REASONS_MEAL, dinner:PF_REASONS_MEAL,
-  recipes_ease:PF_REASONS_RECIPES, ingredients_ease:PF_REASONS_INGREDIENTS, training_energy:PF_REASONS_TRAINING
-};
+function pfReasonsMeal(){return [T('pfReasonNoTime'),T('pfReasonNoTaste'),T('pfReasonNotFull'),T('pfReasonHeavy')]}
+function pfReasonsRecipes(){return [T('pfReasonSteps'),T('pfReasonLong'),T('pfReasonEquip'),T('pfReasonTechnique')]}
+function pfReasonsIngredients(){return [T('pfReasonNotFound'),T('pfReasonExpensive'),T('pfReasonManyShops'),T('pfReasonUnknown')]}
+function pfReasonsTraining(){return [T('pfReasonHungry'),T('pfReasonNoEnergy'),T('pfReasonTiming'),T('pfReasonAfter')]}
+function pfReasonsByKey(key){
+  const map={breakfast:pfReasonsMeal, snacks:pfReasonsMeal, lunch:pfReasonsMeal, dinner:pfReasonsMeal,
+    recipes_ease:pfReasonsRecipes, ingredients_ease:pfReasonsIngredients, training_energy:pfReasonsTraining};
+  return (map[key]||pfReasonsMeal)();
+}
 let pfWeekKey=null, pfRatings={}, pfReasons={}, pfNps=null;
 // Το localStorage record κρατάει ΚΑΙ τις τιμές ΚΑΙ το synced status — όχι απλά ένα boolean "στάλθηκε" —
 // ώστε να ξέρουμε αν χρειάζεται "Δοκίμασε ξανά" (ίδιο μοτίβο με getClientLogToday/setClientLogToday).
@@ -756,13 +982,13 @@ function pfStarsHtml(key){
   let h='';
   for(let i=1;i<=5;i++){
     const on=i<=(pfRatings[key]||0);
-    h+='<button type="button" class="pf-star'+(on?' on':'')+'" aria-label="'+i+' από 5 αστέρια" aria-pressed="'+on+'" onclick="pfSetRating(\''+key+'\','+i+')">★</button>';
+    h+='<button type="button" class="pf-star'+(on?' on':'')+'" aria-label="'+T('pfStarAria',{n:i})+'" aria-pressed="'+on+'" onclick="pfSetRating(\''+key+'\','+i+')">★</button>';
   }
   return h;
 }
 function pfReasonsHtml(key){
   const on=pfReasons[key]||[];
-  const list=PF_REASONS_BY_KEY[key]||PF_REASONS_MEAL;
+  const list=pfReasonsByKey(key);
   return list.map(r=>'<button type="button" class="log-tag'+(on.indexOf(r)>-1?' log-tag-on':'')+'" onclick="pfToggleReason(\''+key+'\',\''+esc(r)+'\',this)">'+esc(r)+'</button>').join('');
 }
 function pfRowHtml(row){
@@ -773,15 +999,15 @@ function pfRowHtml(row){
     +'</div>';
 }
 function pfFormHtml(){
-  return '<div class="card-hdr"><i class="ti ti-star"></i>Πες μας πώς πήγε η εβδομάδα</div>'
-    +'<div style="font-size:12px;color:var(--muted);margin-bottom:2px">30 δευτερόλεπτα — μας βοηθάει να προσαρμόσουμε το επόμενο πλάνο σου.</div>'
-    +PF_ROWS.map(pfRowHtml).join('')
+  return '<div class="card-hdr"><i class="ti ti-star"></i>'+T('pfFormHdr')+'</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:2px">'+T('pfFormSub')+'</div>'
+    +pfRows().map(pfRowHtml).join('')
     +'<div class="pf-row pf-nps-row" style="border-bottom:none">'
-    +'<span class="pf-lbl">Πόσο πιθανό είναι να συνεχίσεις αυτό το πλάνο και την επόμενη εβδομάδα;</span>'
+    +'<span class="pf-lbl">'+T('pfNpsQ')+'</span>'
     +'<div class="pf-nps-scale" id="pf-nps-scale">'+Array.from({length:11},(_,n)=>'<button type="button" class="pf-nps-cell'+(pfNps===n?' on':'')+'" onclick="pfSetNps('+n+',this)">'+n+'</button>').join('')+'</div>'
-    +'<div class="pf-nps-legend"><span>0 · καθόλου πιθανό</span><span>10 · σίγουρα</span></div>'
+    +'<div class="pf-nps-legend"><span>0 · '+T('pfNpsLow')+'</span><span>10 · '+T('pfNpsHigh')+'</span></div>'
     +'</div>'
-    +'<button class="pf-submit" id="pf-submit-btn" onclick="submitPlanFeedback()" disabled>Αποστολή αξιολόγησης</button>';
+    +'<button class="pf-submit" id="pf-submit-btn" onclick="submitPlanFeedback()" disabled>'+T('pfSubmit')+'</button>';
 }
 function pfSetRating(key,val){
   pfRatings[key]=val;
@@ -812,17 +1038,17 @@ function pfSetNps(val,btn){
   pfCheckComplete();
 }
 function pfCheckComplete(){
-  const allRated=PF_ROWS.every(r=>(pfRatings[r.key]||0)>0);
+  const allRated=pfRows().every(r=>(pfRatings[r.key]||0)>0);
   const btn=document.getElementById('pf-submit-btn');
   if(btn)btn.disabled=!(allRated&&pfNps!=null);
 }
 function pfSentStateHtml(entry){
-  const head='<div class="card-hdr"><i class="ti ti-star"></i>Αξιολόγηση εβδομάδας</div>';
+  const head='<div class="card-hdr"><i class="ti ti-star"></i>'+T('pfSentHdr')+'</div>';
   // synced===false = γνωστό ότι απέτυχε/εκκρεμεί η αποστολή· οτιδήποτε άλλο = εστάλη κανονικά
   // (ίδια σύμβαση με το logStatus του client_logs καταγραφή-σήμερα, βλ. viewProg).
   return head+(entry.synced===false
-    ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη στον/στην διαιτολόγο σου <button onclick="retryPlanFeedbackSync()">Δοκίμασε ξανά</button></div>'
-    : '<div class="log-sent"><i class="ti ti-circle-check"></i>Ευχαριστούμε! Έστειλες την αξιολόγησή σου για αυτή την εβδομάδα.</div>');
+    ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>'+T('pfNotSent')+' <button onclick="retryPlanFeedbackSync()">'+T('composerRetry')+'</button></div>'
+    : '<div class="log-sent"><i class="ti ti-circle-check"></i>'+T('pfThanks')+'</div>');
 }
 // Σε αντίθεση με την πρώτη έκδοση, ΔΕΝ δείχνουμε "Ευχαριστούμε" πριν επιβεβαιωθεί η αποστολή —
 // ο πελάτης βλέπει αρχικά το προειδοποιητικό state (synced:false) και μεταπίπτει σε "Ευχαριστούμε"
@@ -876,6 +1102,7 @@ async function boot(){
     if(error||!data){console.error('[FYH portal] get_shared_plan:',error); return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να έληξε ή να αποσύρθηκε. Ζήτησε νέο link από τον διαιτολόγο σου. Αν μόλις σου το έστειλε, δοκίμασε ξανά.',true)}
     if(data.expires_at && new Date(data.expires_at)<new Date()){return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο σου να στείλει νέο link.')}
     SNAP=data.snapshot; SNAP._updated=data.updated_at;
+    LANG=(SNAP.lang==='en')?'en':'el';
     render();
   }catch(e){
     // Το ακριβές τεχνικό μήνυμα (π.χ. αγγλικό "Failed to fetch") πάει μόνο στο console για εμάς —
@@ -901,6 +1128,7 @@ async function refreshPlan(){
     const {data,error}=await sb.rpc('get_shared_plan',{p_token:t}).single();
     if(!error&&data){
       SNAP=data.snapshot; SNAP._updated=data.updated_at;
+      LANG=(SNAP.lang==='en')?'en':'el';
       const badge=$('#upd-badge'); if(badge)badge.innerHTML=updatedBadge();
       go(curTab());
     }else{console.error('[FYH portal] refreshPlan:',error);}
@@ -926,9 +1154,9 @@ function render(){
   const hdr=el('div','hdr');
   hdr.innerHTML=
     '<div class="hdr-top"><div class="brand"><span class="brand-logo">FY</span>Feed Your Health</div>'
-    +'<div style="display:flex;gap:6px"><button class="hdr-btn" id="refresh-btn" onclick="refreshPlan()" title="Έλεγχος για ενημερωμένο πλάνο"><i class="ti ti-refresh"></i></button>'
-    +'<button class="hdr-btn" onclick="doPrint()" title="Εκτύπωση ή αποθήκευση ως PDF"><i class="ti ti-printer"></i>PDF</button></div></div>'
-    +'<h1>Γεια σου, '+esc((s.name||'').split(' ')[0]||'')+'</h1>'
+    +'<div style="display:flex;gap:6px"><button class="hdr-btn" id="refresh-btn" onclick="refreshPlan()" title="'+T('refreshTip')+'"><i class="ti ti-refresh"></i></button>'
+    +'<button class="hdr-btn" onclick="doPrint()" title="'+T('pdfTip')+'"><i class="ti ti-printer"></i>'+T('pdfBtn')+'</button></div></div>'
+    +'<h1>'+T('greeting')+', '+esc((s.name||'').split(' ')[0]||'')+'</h1>'
     +'<div class="sub" id="hdr-sub"></div>'
     +'<div id="upd-badge">'+updatedBadge()+'</div>';
   app.appendChild(hdr);
@@ -938,18 +1166,18 @@ function render(){
   app.appendChild(scroll);
 
   const nav=el('div','nav');
-  nav.innerHTML=tabBtn('home','ti-home','Αρχική')+tabBtn('plan','ti-calendar-week','Πλάνο')
-    +tabBtn('shop','ti-shopping-cart','Ψώνια')
-    +tabBtn('water','ti-droplet','Νερό')
-    +tabBtn('supps','ti-pill','Συμπλ.')
-    +tabBtn('prog','ti-chart-line','Πρόοδος');
+  nav.innerHTML=tabBtn('home','ti-home',T('nav_home'))+tabBtn('plan','ti-calendar-week',T('nav_plan'))
+    +tabBtn('shop','ti-shopping-cart',T('nav_shop'))
+    +tabBtn('water','ti-droplet',T('nav_water'))
+    +tabBtn('supps','ti-pill',T('nav_supps'))
+    +tabBtn('prog','ti-chart-line',T('nav_prog'));
   app.appendChild(nav);
 
   // Το FAB εμφανίζεται μόνο αν υπάρχει ΠΡΑΓΜΑΤΙΚΟΣ τρόπος επικοινωνίας (WhatsApp/τηλέφωνο/email) —
   // μόνο το γενικό site link (COACH.web) δεν μετράει σαν «Ρώτησέ με», μπερδεύει τον πελάτη χωρίς λόγο.
   if(hasDirectContact()){
     const fab=el('button','fab');
-    fab.innerHTML='<i class="ti ti-message-circle"></i>Ρώτησέ με';
+    fab.innerHTML='<i class="ti ti-message-circle"></i>'+T('fabAsk');
     fab.onclick=openContact;
     app.appendChild(fab);
   }
@@ -965,8 +1193,8 @@ function updatedBadge(){
   if(!iso)return '';
   let d; try{d=new Date(iso)}catch(e){return ''}
   if(isNaN(d))return '';
-  const txt=d.toLocaleDateString('el-GR',{day:'numeric',month:'long',year:'numeric'});
-  return '<div class="upd"><i class="ti ti-refresh"></i>Ενημερώθηκε '+esc(txt)+'</div>';
+  const txt=d.toLocaleDateString(LANG==='en'?'en-GB':'el-GR',{day:'numeric',month:'long',year:'numeric'});
+  return '<div class="upd"><i class="ti ti-refresh"></i>'+T('updatedPrefix')+' '+esc(txt)+'</div>';
 }
 
 // PWA: manifest που κρατάει το token (ώστε το «Πρόσθεσε στην οθόνη» να ανοίγει το σωστό πλάνο).
@@ -995,28 +1223,31 @@ function hasDirectContact(){const c=contactInfo();return !!(c.wa||c.tel||c.email
 function openContact(){
   const c=contactInfo();
   const fname=((SNAP&&SNAP.name||'').split(' ')[0])||'';
-  const msg=encodeURIComponent('Γεια σας! Είμαι ο/η '+(fname||'πελάτης/πελάτισσα')+' και έχω μια ερώτηση για το πλάνο μου.');
+  const msg=encodeURIComponent(T('contactGreeting',{name:fname||T('contactFallbackName')}));
   const bg=el('div','sheet-bg'); bg.onclick=e=>{if(e.target===bg)bg.remove()};
   let opts='';
-  if(c.wa)opts+='<a class="opt wa" href="https://wa.me/'+esc(String(c.wa).replace(/[^0-9]/g,''))+'?text='+msg+'" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i>WhatsApp</a>';
-  if(c.tel)opts+='<a class="opt tel" href="tel:'+esc(c.tel)+'"><i class="ti ti-phone"></i>Τηλεφώνησε</a>';
-  if(c.email)opts+='<a class="opt mail" href="mailto:'+esc(c.email)+'?subject='+encodeURIComponent('Ερώτηση για το πλάνο μου')+'"><i class="ti ti-mail"></i>Email</a>';
-  if(c.web)opts+='<a class="opt web" href="'+esc(c.web)+'" target="_blank" rel="noopener"><i class="ti ti-world"></i>Ιστοσελίδα</a>';
-  bg.innerHTML='<div class="sheet"><h3>Επικοινωνία</h3><div class="ssub">Ρώτησέ με ό,τι χρειάζεσαι για το πλάνο σου.</div>'
-    +opts+'<button class="close" onclick="this.closest(\'.sheet-bg\').remove()">Κλείσιμο</button></div>';
+  if(c.wa)opts+='<a class="opt wa" href="https://wa.me/'+esc(String(c.wa).replace(/[^0-9]/g,''))+'?text='+msg+'" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i>'+T('contactWa')+'</a>';
+  if(c.tel)opts+='<a class="opt tel" href="tel:'+esc(c.tel)+'"><i class="ti ti-phone"></i>'+T('contactTel')+'</a>';
+  if(c.email)opts+='<a class="opt mail" href="mailto:'+esc(c.email)+'?subject='+encodeURIComponent(T('contactQSubject'))+'"><i class="ti ti-mail"></i>'+T('contactMail')+'</a>';
+  if(c.web)opts+='<a class="opt web" href="'+esc(c.web)+'" target="_blank" rel="noopener"><i class="ti ti-world"></i>'+T('contactWeb')+'</a>';
+  bg.innerHTML='<div class="sheet"><h3>'+T('contactHdr')+'</h3><div class="ssub">'+T('contactSub')+'</div>'
+    +opts+'<button class="close" onclick="this.closest(\'.sheet-bg\').remove()">'+T('contactClose')+'</button></div>';
   document.body.appendChild(bg);
 }
 // Ελαφρύ tour 3 οθονών, δείχνεται ΜΙΑ φορά συνολικά (setOnboardingSeen κλειδώνει αμέσως στο κλείσιμο/παράλειψη).
 // bg προστίθεται στο document ΠΡΙΝ το πρώτο paint(), αλλιώς το $('#ob-next') (global querySelector) δεν θα έβρισκε
 // τα στοιχεία — δεν υπάρχουν ακόμη στο DOM όσο είναι μέσα σε ένα detached div.
-const ONBOARD_SCREENS=[
-  {icon:'ti-calendar-week',title:'Το πλάνο σου',sub:'Εδώ βλέπεις τα γεύματά σου κάθε μέρα, με ποσότητες και θερμίδες.'},
-  {icon:'ti-square-check',title:'Τσέκαρε ό,τι τρως',sub:'Πάτα ένα γεύμα όταν το ολοκληρώσεις — έτσι χτίζεις το σερί σου.'},
-  {icon:'ti-chart-line',title:'Δες την πρόοδό σου',sub:'Σκορ, σερί και βάρος σε μία ματιά — ενημέρωσέ τα όποτε θες.'}
-];
+function onboardScreens(){
+  return [
+    {icon:'ti-calendar-week',title:T('obTitle1'),sub:T('obSub1')},
+    {icon:'ti-square-check',title:T('obTitle2'),sub:T('obSub2')},
+    {icon:'ti-chart-line',title:T('obTitle3'),sub:T('obSub3')}
+  ];
+}
 function showOnboarding(){
   if(getOnboardingSeen())return;
   let step=0;
+  const ONBOARD_SCREENS=onboardScreens();
   const bg=el('div','sheet-bg');
   bg.onclick=e=>{if(e.target===bg)finish();};
   document.body.appendChild(bg);
@@ -1027,8 +1258,8 @@ function showOnboarding(){
       +'<div class="obtitle">'+sc.title+'</div>'
       +'<div class="obsub">'+sc.sub+'</div>'
       +'<div class="obdots">'+ONBOARD_SCREENS.map((_,i)=>'<span class="obdot'+(i===step?' on':'')+'"></span>').join('')+'</div>'
-      +'<button class="close" id="ob-next">'+(last?'Ξεκίνα':'Επόμενο')+'</button>'
-      +(last?'':'<div class="obskip" id="ob-skip">Παράλειψη</div>')+'</div>';
+      +'<button class="close" id="ob-next">'+(last?T('obStart'):T('obNext'))+'</button>'
+      +(last?'':'<div class="obskip" id="ob-skip">'+T('obSkip')+'</div>')+'</div>';
     $('#ob-next').onclick=()=>{ if(last){finish();}else{step++;paint();} };
     const sk=$('#ob-skip'); if(sk)sk.onclick=finish;
   }
@@ -1044,7 +1275,7 @@ function go(tab){
   sc.innerHTML=''; sc.appendChild(fn());
   const sub=$('#hdr-sub');
   if(sub){
-    const labels={home:dayHeader(defaultDay(),false),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση',supps:'Τα συμπληρώματά μου',spices:'Μπαχαρικά & βότανα',fruits:'Λίστα ανταλλαγής φρούτων'};
+    const labels={home:dayHeader(defaultDay(),false),plan:T('subPlan'),prog:T('subProg'),shop:T('subShop'),water:T('subWater'),supps:T('subSupps'),spices:T('subSpices'),fruits:T('subFruits')};
     sub.textContent=labels[tab]||'';
   }
 }
@@ -1055,7 +1286,7 @@ function dayHeader(i,withMatch){
   const d=SNAP.days&&SNAP.days[i];
   if(!d)return '';
   const mi=matchInfoFor(i);
-  return (d.label||'')+(d.isTrain?' — ημέρα προπόνησης':'')+((withMatch!==false&&mi.isMatch)?' — ημέρα αγώνα ('+mi.time+')':'');
+  return (d.label||'')+(d.isTrain?' — '+T('trainDaySuffix'):'')+((withMatch!==false&&mi.isMatch)?' — '+T('matchDaySuffix')+' ('+mi.time+')':'');
 }
 
 // ── HOME ──────────────────────────────────────────────────────────────────
@@ -1071,7 +1302,7 @@ function viewHome(){
   // personal note from the dietitian
   if(s.coachNote){
     const n=el('div','note-coach');
-    n.innerHTML='<div class="nh"><i class="ti ti-message-2"></i>Μήνυμα από τη διαιτολόγο σου</div><div class="nb">'+esc(s.coachNote)+'</div>';
+    n.innerHTML='<div class="nh"><i class="ti ti-message-2"></i>'+T('coachNoteHdr')+'</div><div class="nb">'+esc(s.coachNote)+'</div>';
     v.appendChild(n);
   }
 
@@ -1089,12 +1320,13 @@ function viewHome(){
   const mCard=matchCard(); if(mCard)v.appendChild(mCard);
   const mi=matchInfoFor(defaultDay());
 
+  const unitG=LANG==='en'?'g':'γρ';
   const stats=el('div','stats stats-4');
   stats.innerHTML=
-    statBox('Στόχος',nfmt(tg.kcal||0),'kcal')
-    +statBox('Πρωτεΐνη',nfmt(tg.p||0),'γρ')
-    +statBox('Υδατ/κες',nfmt(tg.c||0),'γρ')
-    +statBox('Λιπαρά',nfmt(tg.f||0),'γρ');
+    statBox(T('statGoal'),nfmt(tg.kcal||0),'kcal')
+    +statBox(T('statProtein'),nfmt(tg.p||0),unitG)
+    +statBox(T('statCarbs'),nfmt(tg.c||0),unitG)
+    +statBox(T('statFat'),nfmt(tg.f||0),unitG);
   v.appendChild(stats);
 
   // today meals — with check-off
@@ -1103,8 +1335,8 @@ function viewHome(){
   let done=0; meals.forEach((m,i)=>{if(eaten[i])done++;});
   const nudge=activityNudge(meals,done); if(nudge)v.appendChild(nudge);
   const c=el('div','card'); const cp=el('div','card-pad');
-  cp.innerHTML='<div class="card-hdr" style="margin-bottom:8px"><i class="ti ti-tools-kitchen-2"></i>Η διατροφή μου σήμερα'
-    +(mi.isMatch?' <span class="log-tag-badge"><i class="ti ti-ball-football"></i>Αγώνας · '+esc(mi.time)+'</span>':'')
+  cp.innerHTML='<div class="card-hdr" style="margin-bottom:8px"><i class="ti ti-tools-kitchen-2"></i>'+T('todayMealsHdr')
+    +(mi.isMatch?' <span class="log-tag-badge"><i class="ti ti-ball-football"></i>'+T('matchBadge')+' · '+esc(mi.time)+'</span>':'')
     +(meals.length?'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+meals.length+'</span>':'')+'</div>'
     +(meals.length?'<div class="prog" style="margin:0 0 4px"><div style="width:'+Math.round(done/meals.length*100)+'%"></div></div>':'');
   if(meals.length){
@@ -1114,12 +1346,12 @@ function viewHome(){
       const relTag=mi.isMatch?matchRelTag(m.time,mi.time):'';
       mm.innerHTML='<span class="mc">'+(eaten[idx]?'<i class="ti ti-check"></i>':'')+'</span>'
         +'<div class="t">'+esc(m.time||'')+'</div>'
-        +'<div style="flex:1"><div class="nm">'+esc(m.title||m.label||'Γεύμα')+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
+        +'<div style="flex:1"><div class="nm">'+esc(m.title||m.label||T('mealFallback'))+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
       mm.onclick=()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);pushCheckin();go('home');};
       cp.appendChild(mm);
     });
-    cp.appendChild(el('div','empty-glass-note','Πάτα ένα γεύμα όταν το ολοκληρώσεις.'));
-  }else{cp.appendChild(el('div','mi','Δεν υπάρχει πλάνο για σήμερα.'));}
+    cp.appendChild(el('div','empty-glass-note',T('tapMealHint')));
+  }else{cp.appendChild(el('div','mi',T('noMealsToday')));}
   c.appendChild(cp); v.appendChild(c);
 
   // water mini
@@ -1127,23 +1359,23 @@ function viewHome(){
 
   // quick links
   const q=el('div','quick');
-  q.appendChild(quickCard('shop','ti-shopping-cart','Λίστα ψώνια',shopProgressText()));
-  q.appendChild(quickCard('supps','ti-pill','Συμπληρώματα',suppsProgressText()));
-  q.appendChild(quickCard('spices','ti-leaf','Μπαχαρικά & βότανα','Οδηγός χρήσης'));
-  if(s.fruits && s.fruits.length)q.appendChild(quickCard('fruits','ti-apple','Φρούτα','Λίστα ανταλλαγής'));
+  q.appendChild(quickCard('shop','ti-shopping-cart',T('quickShop'),shopProgressText()));
+  q.appendChild(quickCard('supps','ti-pill',T('quickSupps'),suppsProgressText()));
+  q.appendChild(quickCard('spices','ti-leaf',T('quickSpices'),T('quickSpicesSub')));
+  if(s.fruits && s.fruits.length)q.appendChild(quickCard('fruits','ti-apple',T('quickFruits'),T('quickFruitsSub')));
   v.appendChild(q);
 
   // αλλεργίες/εξαιρέσεις που το πλάνο ήδη αποφεύγει — ώστε ο πελάτης να το επιβεβαιώνει, όχι μόνο να το εμπιστεύεται
   if(s.exclusions && s.exclusions.length){
     const ex=el('div','excl-card');
-    ex.innerHTML='<div class="nh"><i class="ti ti-ban"></i>Το πλάνο αποφεύγει</div><div class="excl-chips">'
+    ex.innerHTML='<div class="nh"><i class="ti ti-ban"></i>'+T('exclHdr')+'</div><div class="excl-chips">'
       +s.exclusions.map(x=>'<span class="excl-chip">'+esc(x)+'</span>').join('')+'</div>';
     v.appendChild(ex);
   }
   return v;
 }
 function statBox(l,v,u,ok){if(ok===undefined)ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
-function deltaU(p){if(p.start&&p.current){const d=Math.round((p.current-p.start)*10)/10;return (d<=0?'−':'+')+Math.abs(d).toString().replace('.',',')+' kg'}return 'kg'}
+function deltaU(p){if(p.start&&p.current){const d=Math.round((p.current-p.start)*10)/10;return (d<=0?'−':'+')+decSep(Math.abs(d).toString())+' kg'}return 'kg'}
 // Η κατεύθυνση αλλαγής βάρους είναι "καλή" ανάλογα με τον στόχο (goalWeight) του πελάτη —
 // π.χ. σε πρόγραμμα μυϊκής αύξησης η αύξηση βάρους είναι επιθυμητή, όχι πάντα η μείωση.
 function deltaGood(p){
@@ -1164,8 +1396,8 @@ function goalHero(){
   const diff=Math.round(Math.abs(p.goal-start)*10)/10;
   const dirIcon=p.goal<start?'ti-trending-down':'ti-trending-up';
   const c=el('div','goalhero');
-  c.innerHTML='<div class="lbl">Ο στόχος σου</div><div class="val">'+String(p.goal).replace('.',',')+' kg</div>'
-    +'<div class="arrow"><i class="ti '+dirIcon+'"></i>Από '+String(start).replace('.',',')+' kg — '+String(diff).replace('.',',')+' kg να πάμε!</div>';
+  c.innerHTML='<div class="lbl">'+T('goalHeroLbl')+'</div><div class="val">'+decSep(String(p.goal))+' kg</div>'
+    +'<div class="arrow"><i class="ti '+dirIcon+'"></i>'+T('goalHeroArrow',{start:decSep(String(start)),diff:decSep(String(diff))})+'</div>';
   return c;
 }
 // «Πρόσθεσε στην αρχική οθόνη» — δείχνεται μόνο όταν είναι πραγματικά δυνατό (Android/Chrome
@@ -1178,12 +1410,10 @@ function installBanner(){
   if(!deferredInstallPrompt && !ios)return null;
   const c=el('div','inline-notice');
   c.innerHTML='<i class="ti ti-download in-ic"></i><div class="in-txt">'
-    +'<div class="in-t">Πρόσθεσε το πλάνο σου στην αρχική οθόνη</div>'
-    +'<div class="in-s">'+(deferredInstallPrompt
-      ?'Ανοίγει σαν εφαρμογή, χωρίς να ψάχνεις το link στο WhatsApp κάθε φορά.'
-      :'Πάτα <i class="ti ti-share-2"></i> Κοινοποίηση, μετά «Προσθήκη στην Αρχική οθόνη».')+'</div>'
-    +(deferredInstallPrompt?'<button class="in-btn" type="button">Εγκατάσταση</button>':'')
-    +'</div><button class="in-x" type="button" aria-label="Κλείσιμο"><i class="ti ti-x"></i></button>';
+    +'<div class="in-t">'+T('installTitle')+'</div>'
+    +'<div class="in-s">'+(deferredInstallPrompt?T('installSubAuto'):T('installSubIOS'))+'</div>'
+    +(deferredInstallPrompt?'<button class="in-btn" type="button">'+T('installBtn')+'</button>':'')
+    +'</div><button class="in-x" type="button" aria-label="'+T('installClose')+'"><i class="ti ti-x"></i></button>';
   const btn=c.querySelector('.in-btn');
   if(btn)btn.onclick=async()=>{
     if(!deferredInstallPrompt)return;
@@ -1206,19 +1436,19 @@ function activityNudge(meals,done){
   try{if(localStorage.getItem(lk('nudgeDismissed'))===todayKey())return null;}catch(e){}
   const c=el('div','inline-notice');
   c.innerHTML='<i class="ti ti-bell-ringing in-ic"></i><div class="in-txt">'
-    +'<div class="in-t">Δεν έχεις τσεκάρει τίποτα σήμερα ακόμα</div>'
-    +'<div class="in-s">Πάτα ένα γεύμα παρακάτω μόλις το ολοκληρώσεις — έτσι χτίζεις το σερί σου.</div>'
-    +'</div><button class="in-x" type="button" aria-label="Κλείσιμο"><i class="ti ti-x"></i></button>';
+    +'<div class="in-t">'+T('nudgeTitle')+'</div>'
+    +'<div class="in-s">'+T('nudgeSub')+'</div>'
+    +'</div><button class="in-x" type="button" aria-label="'+T('installClose')+'"><i class="ti ti-x"></i></button>';
   c.querySelector('.in-x').onclick=()=>{try{localStorage.setItem(lk('nudgeDismissed'),todayKey())}catch(e){}go('home');};
   return c;
 }
 function quickCard(tab,icon,title,sub){const c=el('div','card');const p=el('div','card-pad');p.onclick=()=>go(tab);p.innerHTML='<i class="ti '+icon+'" style="font-size:18px"></i><div class="qt">'+title+'</div><div class="qs">'+esc(sub)+'</div>';c.appendChild(p);return c}
 function suppsProgressText(){
   const s=SNAP;
-  if(!s.supps||!s.supps.length)return '—';
+  if(!s.supps||!s.supps.length)return T('suppsNone');
   const log=getSuppLog(), todK=dKey(new Date());
   let done=0; s.supps.forEach(su=>{ if(log[todK]&&log[todK][su.name])done++; });
-  return done+' από '+s.supps.length+' σήμερα';
+  return T('suppsProgress',{d:done,t:s.supps.length});
 }
 // Widget «με μια ματιά»: σκορ εβδομάδας / σερί / βάρος — tap πάει στην Πρόοδο.
 // Κρύβεται εντελώς αν δεν υπάρχει καμία καταγραφή ή μέτρηση βάρους ακόμη (νέος πελάτης).
@@ -1236,9 +1466,9 @@ function glanceCard(){
   const cp=el('div','card-pad');
   cp.style.cssText='display:flex;align-items:center;gap:4px';
   cp.innerHTML=
-    cell(score==null?'—':score+'%','σκορ εβδ.')
-    +div+cell(streak>0?streak+' 🔥':'0','σερί')
-    +div+cell(hasWeight?wDelta:'—','βάρος kg');
+    cell(score==null?'—':score+'%',T('glanceScore'))
+    +div+cell(streak>0?streak+' 🔥':'0',T('glanceStreak'))
+    +div+cell(hasWeight?wDelta:'—',T('glanceWeight'));
   c.appendChild(cp); return c;
 }
 
@@ -1274,7 +1504,7 @@ function viewPlan(){
       const icon=SLOT_ICON[m.label]||'ti-tools-kitchen-2';
       const head=el('div',null);
       head.style.cssText='background:var(--tint2);padding:11px 14px;display:flex;align-items:center;justify-content:space-between';
-      head.innerHTML='<div style="display:flex;align-items:center;gap:8px"><i class="ti '+icon+'" style="color:var(--teal);font-size:18px"></i><div><div style="font-size:11px;color:var(--teal-l)">'+esc((m.time?m.time+' · ':'')+(m.label||''))+'</div><div style="font-size:14px;font-weight:600;color:var(--teal-d)">'+esc(m.title||'Γεύμα')+'</div></div></div>'
+      head.innerHTML='<div style="display:flex;align-items:center;gap:8px"><i class="ti '+icon+'" style="color:var(--teal);font-size:18px"></i><div><div style="font-size:11px;color:var(--teal-l)">'+esc((m.time?m.time+' · ':'')+(m.label||''))+'</div><div style="font-size:14px;font-weight:600;color:var(--teal-d)">'+esc(m.title||T('mealFallback'))+'</div></div></div>'
         +'<div style="display:flex;align-items:center;gap:8px">'
         +(m.kcal?'<span style="font-size:12px;color:var(--teal-l)">'+nfmt(m.kcal)+' kcal</span>':'')
         // Check-off μόνο για σήμερα ή παλαιότερα — δεν έχει νόημα να «τσεκάρεις» ένα μελλοντικό γεύμα.
@@ -1298,12 +1528,12 @@ function viewPlan(){
       if(m.macros){
         const mc=el('div',null);
         mc.style.cssText='display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:.5px solid var(--bord-l);font-size:11px;color:var(--muted)';
-        mc.innerHTML='<span>Π '+nfmt(m.macros.p)+'g</span><span>Υ '+nfmt(m.macros.c)+'g</span><span>Λ '+nfmt(m.macros.f)+'g</span>';
+        mc.innerHTML='<span>'+T('macroP')+' '+nfmt(m.macros.p)+'g</span><span>'+T('macroC')+' '+nfmt(m.macros.c)+'g</span><span>'+T('macroF')+' '+nfmt(m.macros.f)+'g</span>';
         body.appendChild(mc);
       }
       if(m.alternates&&m.alternates.length){
         const btn=el('button','swap-btn');
-        btn.innerHTML='<span style="display:flex;align-items:center;gap:6px"><i class="ti ti-refresh"></i>Εναλλακτικά</span><i class="ti ti-chevron-down chev"></i>';
+        btn.innerHTML='<span style="display:flex;align-items:center;gap:6px"><i class="ti ti-refresh"></i>'+T('alternates')+'</span><i class="ti ti-chevron-down chev"></i>';
         const list=el('div','swap-list');
         m.alternates.forEach(a=>{
           const item=el('div','swap-item');
@@ -1311,7 +1541,7 @@ function viewPlan(){
           item.innerHTML='<span class="nm">'+esc(a.name||'')+'</span><span class="fd">'+esc(foodsStr)+'</span>';
           list.appendChild(item);
         });
-        const note=el('div','swap-note','Ισοδύναμες επιλογές βάσει των προτιμήσεών σου');
+        const note=el('div','swap-note',T('alternatesNote'));
         list.appendChild(note);
         btn.onclick=()=>{btn.classList.toggle('open');list.classList.toggle('open')};
         body.appendChild(btn);
@@ -1321,7 +1551,7 @@ function viewPlan(){
       grid.appendChild(c);
     });
     v.appendChild(grid);
-  }else{v.appendChild(el('div','mi','Δεν υπάρχει πλάνο για αυτή την ημέρα.'));}
+  }else{v.appendChild(el('div','mi',T('noMealsForDay')));}
   return v;
 }
 function shortDay(l){return (l||'').slice(0,3)}
@@ -1513,56 +1743,51 @@ function streakDays(){return streakInfo().days}
 // Ορόσημα σερί — καθαρά υπολογισμένο strip κατάστασης (όχι εφάπαξ animation), οπότε δεν χρειάζεται
 // να θυμάται τι έχει ήδη "γιορτάσει" — απλά δείχνει την τρέχουσα κατάσταση κάθε φορά.
 const STREAK_MILESTONES=[7,14,30];
+function dayWord(n){return n===1?T('milestoneDay'):T('milestoneDays')}
 function milestoneCard(streak,freezeAvailable){
   if(streak<=0)return null;
   const next=STREAK_MILESTONES.find(m=>m>streak);
   const c=el('div','card'); const cp=el('div','card-pad');
-  cp.innerHTML='<div class="milestone"><i class="ti ti-flame"></i><div><div class="mtitle">'+streak+' '+(streak===1?'μέρα':'μέρες')+' σερί!</div>'
-    +'<div class="msub">'+(next?('Συνέχισε έτσι — το επόμενο ορόσημο είναι στις '+next):'Απίστευτο σερί — συνέχισε έτσι!')+'</div></div></div>'
-    +'<div class="mstrip">'+STREAK_MILESTONES.map(m=>'<div class="mbadge'+(streak>=m?' done':'')+'"><i class="ti '+(streak>=m?'ti-check':'ti-lock')+'"></i><div class="n">'+m+' μέρες</div></div>').join('')+'</div>'
+  cp.innerHTML='<div class="milestone"><i class="ti ti-flame"></i><div><div class="mtitle">'+streak+' '+dayWord(streak)+' '+T('milestoneStreak')+'</div>'
+    +'<div class="msub">'+(next?T('milestoneNext',{n:next}):T('milestoneAmazing'))+'</div></div></div>'
+    +'<div class="mstrip">'+STREAK_MILESTONES.map(m=>'<div class="mbadge'+(streak>=m?' done':'')+'"><i class="ti '+(streak>=m?'ti-check':'ti-lock')+'"></i><div class="n">'+m+' '+T('milestoneDaysUnit')+'</div></div>').join('')+'</div>'
     +'<div class="freeze-chip'+(freezeAvailable?'':' used')+'"><i class="ti ti-'+(freezeAvailable?'snowflake':'ban')+'"></i>'
-    +(freezeAvailable?'1 πάγωμα διαθέσιμο αυτόν τον μήνα — μια χαμένη μέρα δεν σπάει το σερί σου':'Το πάγωμα του μήνα χρησιμοποιήθηκε ήδη')+'</div>';
+    +(freezeAvailable?T('freezeAvail'):T('freezeUsed'))+'</div>';
   c.appendChild(cp);
   return c;
 }
 // Κοινοποίηση προόδου: native share όπου υποστηρίζεται, αλλιώς αντιγραφή στο clipboard με οπτική επιβεβαίωση.
 function shareProgress(btn,score,streak){
-  const parts=['Πέτυχα '+score+'% τήρηση αυτή την εβδομάδα!'];
-  if(streak>0)parts.push('🔥 '+streak+' '+(streak===1?'μέρα':'μέρες')+' σερί');
-  parts.push('με το πλάνο μου από το Feed Your Health 💪');
+  const parts=[T('shareText',{score:score})];
+  if(streak>0)parts.push('🔥 '+T('shareStreak',{n:streak,dn:dayWord(streak)}));
+  parts.push(T('shareFooter'));
   const text=parts.join(' ');
   if(navigator.share){
     navigator.share({text:text}).catch(()=>{});
   }else if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(()=>{
       const old=btn.innerHTML;
-      btn.innerHTML='<i class="ti ti-check"></i>Αντιγράφηκε!';
+      btn.innerHTML='<i class="ti ti-check"></i>'+T('shareCopied');
       setTimeout(()=>{btn.innerHTML=old;},1500);
     }).catch(()=>{});
   }
 }
 // Αυτόματες συμβουλές βάσει αποτελεσμάτων (κανόνες, max 3).
 function buildTips(cur,prev){
-  const out=[], P=(d,t)=>t?Math.round(d/t*100):-1, dn=n=>n===1?'μέρα':'μέρες';
+  const out=[], P=(d,t)=>t?Math.round(d/t*100):-1, dn=dayWord;
   const pillars=[
     {pct:P(cur.dietDone,cur.dietTot),miss:cur.dietTot-cur.dietDone,
-      low:'Η διατροφή δυσκόλεψε αυτή την εβδομάδα. Ετοίμασε τα γεύματα από το προηγούμενο βράδυ.',
-      mid:'Έχασες {n} {dn} στη διατροφή. Λίγη προετοιμασία κάνει τη διαφορά.',
-      ok:'Σταθερή διατροφή όλη την εβδομάδα — μπράβο!'},
+      low:T('tipDietLow'), mid:T('tipDietMid'), ok:T('tipDietOk')},
     {pct:P(cur.supDone,cur.supTot),miss:cur.supTot-cur.supDone,
-      low:'Τα συμπληρώματα ξεχάστηκαν αρκετά. Βάλε υπενθύμιση ή άφησέ τα δίπλα στο πρωινό.',
-      mid:'Ξέχασες τα συμπληρώματα {n} {dn}. Δοκίμασε να τα αφήσεις δίπλα στο πρωινό.',
-      ok:'Συνέπεια στα συμπληρώματα — τέλεια!'},
+      low:T('tipSuppLow'), mid:T('tipSuppMid'), ok:T('tipSuppOk')},
     {pct:P(cur.watDone,cur.watTot),miss:cur.watTot-cur.watDone,
-      low:'Η ενυδάτωση χρειάζεται προσοχή. Κράτα ένα μπουκάλι μαζί σου όλη μέρα.',
-      mid:'Λίγο πιο κάτω στο νερό ({n} {dn}). Ένα ποτήρι πριν από κάθε γεύμα κλείνει το κενό.',
-      ok:'Τέλεια ενυδάτωση — κράτα το!'}
+      low:T('tipWaterLow'), mid:T('tipWaterMid'), ok:T('tipWaterOk')}
   ];
   if(prev&&prev.anyData){
     const c=overallScore(cur), p=overallScore(prev);
     if(c!=null&&p!=null){const diff=c-p;
-      if(diff>=5)out.push({t:'up',x:'Ανέβηκες +'+diff+'% από την προηγούμενη εβδομάδα. Μπράβο!'});
-      else if(diff<=-5)out.push({t:'info',x:'Λίγο πιο κάτω από την προηγούμενη εβδομάδα. Καμία πίεση — νέα αρχή!'});
+      if(diff>=5)out.push({t:'up',x:T('tipUp',{diff:diff})});
+      else if(diff<=-5)out.push({t:'info',x:T('tipDown')});
     }
   }
   pillars.filter(p=>p.pct>=0&&p.pct<85).sort((a,b)=>a.pct-b.pct).forEach(p=>{
@@ -1570,13 +1795,13 @@ function buildTips(cur,prev){
     out.push({t:'warn',x:p.pct<50?p.low:p.mid.replace('{n}',p.miss).replace('{dn}',dn(p.miss))});
   });
   pillars.filter(p=>p.pct>=90).sort((a,b)=>b.pct-a.pct).forEach(p=>{ if(out.length<3)out.push({t:'ok',x:p.ok}); });
-  if(!out.length)out.push({t:'ok',x:'Καλή δουλειά αυτή την εβδομάδα! Συνέχισε έτσι.'});
+  if(!out.length)out.push({t:'ok',x:T('tipGoodWeek')});
   return out.slice(0,3);
 }
 function scoreGreeting(sc){
-  if(sc==null)return 'Ξεκίνα να καταγράφεις!';
-  if(sc>=85)return 'Εξαιρετική εβδομάδα!'; if(sc>=70)return 'Καλή εβδομάδα!';
-  if(sc>=50)return 'Καλή προσπάθεια!'; return 'Νέα εβδομάδα, νέα αρχή!';
+  if(sc==null)return T('greetStart');
+  if(sc>=85)return T('greetExcellent'); if(sc>=70)return T('greetGood');
+  if(sc>=50)return T('greetOk'); return T('greetNew');
 }
 function pillarRow(icon,label,done,tot){
   const pct=tot?Math.round(done/tot*100):0;
@@ -1603,14 +1828,14 @@ function viewProg(){
     +'<circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--teal)" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="'+(score||0)+' 100"/>'
     +'</svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">'
     +'<span style="font-size:22px;font-weight:700;color:var(--teal-d);line-height:1">'+(score==null?'—':score+'%')+'</span>'
-    +'<span style="font-size:10px;color:var(--muted)">σκορ</span></div></div>'
+    +'<span style="font-size:10px;color:var(--muted)">'+T('scoreWord')+'</span></div></div>'
     +'<div style="flex:1"><p style="margin:0 0 4px;font-size:14px;font-weight:600;color:var(--teal-d)">'+scoreGreeting(score)+'</p>'
-    +'<p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5">'+(cur.anyData?totDone+' από '+totTot+' στόχους ✓':'Τσέκαρε τα γεύματα, τα συμπληρώματα και το νερό σου.')
-    +(streak>0?' · σερί <span style="color:var(--teal);font-weight:600">'+streak+' '+(streak===1?'μέρα':'μέρες')+'</span>':'')+'</p></div></div>';
+    +'<p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5">'+(cur.anyData?T('heroGoals',{d:totDone,t:totTot}):T('heroPrompt'))
+    +(streak>0?' · '+T('heroStreak')+' <span style="color:var(--teal);font-weight:600">'+streak+' '+dayWord(streak)+'</span>':'')+'</p></div></div>';
   if(score!=null){
     const shareBtn=el('button','sharebtn');
     shareBtn.type='button';
-    shareBtn.innerHTML='<i class="ti ti-share-2"></i>Κοινοποίησε την πρόοδό σου';
+    shareBtn.innerHTML='<i class="ti ti-share-2"></i>'+T('shareBtn');
     shareBtn.onclick=()=>shareProgress(shareBtn,score,streak);
     hp.appendChild(shareBtn);
   }
@@ -1625,18 +1850,18 @@ function viewProg(){
   const already=getClientLogToday();
   let wStatus='';
   if(already && already.w!=null){
-    const wTxt=String(already.w).replace('.',',')+' kg';
+    const wTxt=decSep(String(already.w))+' kg';
     // synced===false = γνωστό ότι απέτυχε η αποστολή· οτιδήποτε άλλο (true ή παλιά εγγραφή χωρίς το πεδίο) = εστάλη κανονικά
     wStatus = already.synced===false
-      ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>Δεν στάλθηκε ακόμη: '+wTxt+' <button onclick="retryClientLogSync()">Δοκίμασε ξανά</button></div>'
-      : '<div class="log-sent"><i class="ti ti-circle-check"></i>Καταγράφηκε: '+wTxt+'</div>';
+      ? '<div class="log-warn"><i class="ti ti-alert-triangle"></i>'+T('weightNotSent')+': '+wTxt+' <button onclick="retryClientLogSync()">'+T('composerRetry')+'</button></div>'
+      : '<div class="log-sent"><i class="ti ti-circle-check"></i>'+T('weightRecorded')+': '+wTxt+'</div>';
   }
   const logCard=el('div','card'); const logCp=el('div','card-pad');
-  logCp.innerHTML='<div class="card-hdr"><i class="ti ti-scale"></i>Βάρος σήμερα</div>'
+  logCp.innerHTML='<div class="card-hdr"><i class="ti ti-scale"></i>'+T('weightTodayHdr')+'</div>'
     +wStatus
     +'<div style="display:flex;gap:8px">'
-    +'<input type="number" class="log-inp" id="log-weight" placeholder="π.χ. 82,4 kg" step="0.1" min="20" max="300" style="flex:1">'
-    +'<button class="swap-btn" style="width:auto;justify-content:center;padding:9px 16px;flex-shrink:0" onclick="submitWeightLog()"><i class="ti ti-check"></i>Καταγραφή</button>'
+    +'<input type="number" class="log-inp" id="log-weight" placeholder="'+esc(T('weightPlaceholder'))+'" step="0.1" min="20" max="300" style="flex:1">'
+    +'<button class="swap-btn" style="width:auto;justify-content:center;padding:9px 16px;flex-shrink:0" onclick="submitWeightLog()"><i class="ti ti-check"></i>'+T('weightBtn')+'</button>'
     +'</div>'
     +'<div class="log-err" id="log-err"></div>';
   logCard.appendChild(logCp); v.appendChild(logCard);
@@ -1656,31 +1881,31 @@ function viewProg(){
 
   // πυλώνες αυτής της εβδομάδας
   const wk=el('div','card'); const wp=el('div','card-pad');
-  wp.innerHTML='<div class="card-hdr"><i class="ti ti-chart-bar"></i>Αυτή την εβδομάδα</div>'
-    +pillarRow('ti-salad','Διατροφή',cur.dietDone,cur.dietTot)
-    +pillarRow('ti-pill','Συμπληρώματα',cur.supDone,cur.supTot)
-    +pillarRow('ti-droplet','Νερό',cur.watDone,cur.watTot);
+  wp.innerHTML='<div class="card-hdr"><i class="ti ti-chart-bar"></i>'+T('thisWeekHdr')+'</div>'
+    +pillarRow('ti-salad',T('pillarDiet'),cur.dietDone,cur.dietTot)
+    +pillarRow('ti-pill',T('pillarSupps'),cur.supDone,cur.supTot)
+    +pillarRow('ti-droplet',T('pillarWater'),cur.watDone,cur.watTot);
   wk.appendChild(wp); v.appendChild(wk);
 
   // αυτόματες συμβουλές
-  const tips=cur.anyData?buildTips(cur,prev):[{t:'info',x:'Μόλις αρχίσεις να τσεκάρεις τα γεύματα, τα συμπληρώματα και το νερό, θα βλέπεις εδώ προσωπικές συμβουλές.'}];
+  const tips=cur.anyData?buildTips(cur,prev):[{t:'info',x:T('tipStartHint')}];
   const tc=el('div','note-coach');
   const ICO={ok:'ti-circle-check',warn:'ti-alert-circle',up:'ti-trending-up',info:'ti-info-circle'};
   const COL={ok:'var(--ok)',warn:'#c77d11',up:'var(--teal)',info:'var(--muted)'};
-  let th='<div class="nh"><i class="ti ti-bulb"></i>Συμβουλές για την επόμενη εβδομάδα</div><div style="display:flex;flex-direction:column;gap:9px">';
+  let th='<div class="nh"><i class="ti ti-bulb"></i>'+T('tipsHdr')+'</div><div style="display:flex;flex-direction:column;gap:9px">';
   tips.forEach(t=>{th+='<div style="display:flex;gap:8px;font-size:13px;color:var(--ink);line-height:1.5"><i class="ti '+(ICO[t.t]||ICO.info)+'" style="color:'+(COL[t.t]||COL.info)+';margin-top:2px;flex-shrink:0"></i><span>'+esc(t.x)+'</span></div>'});
   th+='</div>'; tc.innerHTML=th; v.appendChild(tc);
 
   // ιστορικό 4 εβδομάδων
   const weeks=[-3,-2,-1,0].map(o=>{const st=pillarStats(weekDatesOffset(o),{upToToday:o===0});return {o,st,score:overallScore(st)}});
   const hc=el('div','card'); const hcp=el('div','card-pad');
-  let hh='<div class="card-hdr"><i class="ti ti-history"></i>Ιστορικό</div>'
+  let hh='<div class="card-hdr"><i class="ti ti-history"></i>'+T('historyHdr')+'</div>'
     +'<div style="display:flex;align-items:flex-end;justify-content:space-around;height:84px;gap:12px">';
   weeks.forEach(w=>{
     const has=w.st.anyData&&w.score!=null, cur0=w.o===0;
     const hgt=has?Math.max(12,Math.round(w.score/100*58)):12;
     const col=has?(cur0?'var(--teal)':'#9fcabf'):'var(--tint2)';
-    const mon=weekDatesOffset(w.o)[0], lbl=cur0?'Τώρα':(mon.getDate()+'/'+(mon.getMonth()+1));
+    const mon=weekDatesOffset(w.o)[0], lbl=cur0?T('historyNow'):(mon.getDate()+'/'+(mon.getMonth()+1));
     hh+='<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1'+(has?'':';opacity:.5')+'">'
       +'<span style="font-size:11px;color:'+(cur0&&has?'var(--teal-d)':'var(--muted)')+';font-weight:'+(cur0?'600':'400')+'">'+(has?w.score+'%':'—')+'</span>'
       +'<div style="width:100%;max-width:28px;height:'+hgt+'px;background:'+col+';border-radius:6px"></div>'
@@ -1692,38 +1917,38 @@ function viewProg(){
   const p=s.progress||{}, log=(p.log||[]).filter(x=>x&&x.kg);
   if(log.length>=2 || p.waist || p.bodyfat || p.lbm || p.start || p.current || p.goal){
     const stats=el('div','stats');
-    stats.innerHTML=statBox('Έναρξη',p.start?String(p.start).replace('.',','):'—','kg')
-      +statBox('Τώρα',p.current?String(p.current).replace('.',','):'—',deltaU(p),deltaGood(p))
-      +statBox('Στόχος',p.goal?String(p.goal).replace('.',','):'—','kg');
+    stats.innerHTML=statBox(T('progStart'),p.start?decSep(String(p.start)):'—','kg')
+      +statBox(T('progNow'),p.current?decSep(String(p.current)):'—',deltaU(p),deltaGood(p))
+      +statBox(T('progGoal'),p.goal?decSep(String(p.goal)):'—','kg');
     v.appendChild(stats);
     if(log.length>=2){
       const c=el('div','card');const cp=el('div','card-pad');
-      cp.appendChild(el('div',null,'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Βάρος (kg)</div>'));
+      cp.appendChild(el('div',null,'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">'+T('weightChartLbl')+'</div>'));
       cp.appendChild(sparklineKey(log,'kg',p.goal,'var(--teal)'));
       c.appendChild(cp);v.appendChild(c);
     }
     const bfLog=(p.log||[]).filter(x=>x&&x.bf!=null);
     if(bfLog.length>=2){
       const c=el('div','card');const cp=el('div','card-pad');
-      cp.appendChild(chartHeader('Σωματικό λίπος (%)',bfLog[bfLog.length-1].bf,'%',bfLog[0].bf,-1));
+      cp.appendChild(chartHeader(T('bfChartLbl'),bfLog[bfLog.length-1].bf,'%',bfLog[0].bf,-1));
       const bands=(p.showBFBands&&s.sex)?bfBands(s.sex):null;
       cp.appendChild(sparklineKey(bfLog,'bf',p.goalBF,'#c77d11',{bands:bands}));
       if(bands)cp.appendChild(bfBandsLegend(s.sex));
       c.appendChild(cp);v.appendChild(c);
     }else if(p.bodyfat!=null){
       const c=el('div','card');const cp=el('div','card-pad');
-      cp.innerHTML='<div style="font-size:12px;color:var(--muted)">Σωματικό λίπος (%)</div><div class="empty-glass-note">Χρειάζονται τουλάχιστον 2 μετρήσεις για γράφημα εξέλιξης.</div>';
+      cp.innerHTML='<div style="font-size:12px;color:var(--muted)">'+T('bfChartLbl')+'</div><div class="empty-glass-note">'+T('bfNeed2')+'</div>';
       c.appendChild(cp);v.appendChild(c);
     }
     const lbmLog=(p.log||[]).filter(x=>x&&x.lbm!=null);
     if(lbmLog.length>=2){
       const c=el('div','card');const cp=el('div','card-pad');
-      cp.appendChild(chartHeader('Άλιπη μάζα (kg)',lbmLog[lbmLog.length-1].lbm,' kg',lbmLog[0].lbm,1));
+      cp.appendChild(chartHeader(T('lbmChartLbl'),lbmLog[lbmLog.length-1].lbm,' kg',lbmLog[0].lbm,1));
       cp.appendChild(sparklineKey(lbmLog,'lbm',null,'#1565C0'));
       c.appendChild(cp);v.appendChild(c);
     }else if(p.lbm!=null){
       const c=el('div','card');const cp=el('div','card-pad');
-      cp.innerHTML='<div style="font-size:12px;color:var(--muted)">Άλιπη μάζα (kg)</div><div class="empty-glass-note">Χρειάζονται τουλάχιστον 2 μετρήσεις για γράφημα εξέλιξης.</div>';
+      cp.innerHTML='<div style="font-size:12px;color:var(--muted)">'+T('lbmChartLbl')+'</div><div class="empty-glass-note">'+T('bfNeed2')+'</div>';
       c.appendChild(cp);v.appendChild(c);
     }
     // ── Donut σύστασης σώματος (βάρος = άλιπη + λίπος) ──
@@ -1731,50 +1956,50 @@ function viewProg(){
     if(p.current!=null&&p.lbm!=null&&fatKgNow!=null&&fatKgNow>=0){
       const c=el('div','card');const cp=el('div','card-pad');
       const lbmFrac=p.lbm/p.current, fatFrac=fatKgNow/p.current;
-      let dh='<div class="card-hdr"><i class="ti ti-chart-donut"></i>Σύσταση σώματος</div>'
+      let dh='<div class="card-hdr"><i class="ti ti-chart-donut"></i>'+T('bodyCompHdr')+'</div>'
         +'<div style="text-align:center">'
         +'<svg viewBox="0 0 140 140" width="128" height="128" style="margin:0 auto;display:block">'
         +'<circle cx="70" cy="70" r="52" fill="none" stroke="var(--tint2)" stroke-width="16"/>'
         +'<circle cx="70" cy="70" r="52" fill="none" stroke="#1565C0" stroke-width="16" stroke-dasharray="'+(326.7*lbmFrac).toFixed(1)+' 326.7" transform="rotate(-90 70 70)"/>'
         +'<circle cx="70" cy="70" r="52" fill="none" stroke="#e65100" stroke-width="16" stroke-dasharray="'+(326.7*fatFrac).toFixed(1)+' 326.7" stroke-dashoffset="-'+(326.7*lbmFrac).toFixed(1)+'" transform="rotate(-90 70 70)"/>'
-        +'<text x="70" y="63" text-anchor="middle" font-size="19" font-weight="700" fill="var(--teal-d)">'+String(p.current).replace('.',',')+'</text>'
-        +'<text x="70" y="78" text-anchor="middle" font-size="8" fill="var(--muted)">kg ΣΥΝΟΛΟ</text>'
+        +'<text x="70" y="63" text-anchor="middle" font-size="19" font-weight="700" fill="var(--teal-d)">'+decSep(String(p.current))+'</text>'
+        +'<text x="70" y="78" text-anchor="middle" font-size="8" fill="var(--muted)">'+T('bodyCompTotal')+'</text>'
         +'</svg>'
         +'<div style="display:flex;justify-content:center;gap:14px;margin-top:4px;font-size:12px">'
-        +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1565C0;margin-right:4px"></span>Άλιπη '+String(p.lbm).replace('.',',')+'kg</span>'
-        +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e65100;margin-right:4px"></span>Λίπος '+String(fatKgNow).replace('.',',')+'kg</span>'
+        +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1565C0;margin-right:4px"></span>'+T('bodyCompLean')+' '+decSep(String(p.lbm))+'kg</span>'
+        +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e65100;margin-right:4px"></span>'+T('bodyCompFat')+' '+decSep(String(fatKgNow))+'kg</span>'
         +'</div></div>';
       cp.innerHTML=dh; c.appendChild(cp); v.appendChild(c);
     }
     // ── Ανάλυση: μπάρες ΔΜΣ / %Λίπους / WHtR με στόχο (το ΔΜΣ/WHtR χρειάζονται ύψος στο snapshot) ──
     const bmiNow=(s.height&&p.current)?+(p.current/((s.height/100)*(s.height/100))).toFixed(1):null;
     const isMinorNow=(s.age!=null && s.age>0 && s.age<18); // adult WHO BMI cutoffs don't clinically apply to minors
-    const bmiCatNow=(bmiNow!=null&&!isMinorNow)?(bmiNow<18.5?'Ελλιποβαρές':bmiNow<25?'Φυσιολογικό':bmiNow<30?'Υπέρβαρο':bmiNow<35?'Παχυσαρκία Ι':bmiNow<40?'Παχυσαρκία ΙΙ':'Παχυσαρκία ΙΙΙ'):null;
+    const bmiCatNow=(bmiNow!=null&&!isMinorNow)?(bmiNow<18.5?T('bmiUnderweight'):bmiNow<25?T('bmiNormal'):bmiNow<30?T('bmiOverweight'):bmiNow<35?T('bmiObese1'):bmiNow<40?T('bmiObese2'):T('bmiObese3')):null;
     const bmiColNow=(bmiNow!=null&&!isMinorNow)?(bmiNow<18.5?'#1565C0':bmiNow<25?'#2e7d32':bmiNow<30?'#f57c00':'#c62828'):null;
     const bfBandsNow=bfBands(s.sex);
-    const bfLabelsNow=['Απαραίτητο','Αθλητικό','Φυσιολογικό','Αποδεκτό','Παχυσαρκία'];
+    const bfLabelsNow=[T('bfEssential'),T('bfAthletic'),T('bfFit'),T('bfAcceptable'),T('bfObese')];
     let bfCatNow=null,bfColNow=null;
     if(p.bodyfat!=null){bfBandsNow.forEach((b,i)=>{if(p.bodyfat>=b.lo){bfCatNow=bfLabelsNow[i];bfColNow=b.col;}});}
     const whtrNow=(p.waist&&s.height)?+(p.waist/s.height).toFixed(2):null;
-    const whtrCatNow=whtrNow!=null?(whtrNow<0.5?'Φυσιολογικό':whtrNow<0.6?'Αυξημένος κίνδυνος':'Υψηλός κίνδυνος'):null;
+    const whtrCatNow=whtrNow!=null?(whtrNow<0.5?T('whtrNormal'):whtrNow<0.6?T('whtrElevated'):T('whtrHigh')):null;
     const whtrColNow=whtrNow!=null?(whtrNow<0.5?'#2e7d32':whtrNow<0.6?'#f57c00':'#c62828'):null;
     if(bmiNow!=null||p.bodyfat!=null||whtrNow!=null){
       const c=el('div','card');const cp=el('div','card-pad');
       let ah='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-        +'<div class="card-hdr" style="margin-bottom:0"><i class="ti ti-activity"></i>Ανάλυση</div>'
-        +'<span style="font-size:10px;color:var(--faint)">◆ στόχος</span></div>';
-      if(bmiNow!=null)ah+=rangeBar('ΔΜΣ',String(bmiNow).replace('.',','),bmiColNow||'var(--ink)',bmiCatNow,isMinorNow?null:[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmiNow,24.9);
-      if(p.bodyfat!=null)ah+=rangeBar('% Λίπους',String(p.bodyfat).replace('.',',')+'%',bfColNow,bfCatNow,[{v:s.sex==='F'?5:0,col:bfBandsNow[0].col},{v:bfBandsNow[1].lo,col:bfBandsNow[1].col},{v:bfBandsNow[2].lo,col:bfBandsNow[2].col},{v:bfBandsNow[3].lo,col:bfBandsNow[3].col},{v:bfBandsNow[4].lo,col:bfBandsNow[4].col}],s.sex==='F'?45:35,p.bodyfat,bfBandsNow[2].hi);
-      if(whtrNow!=null)ah+=rangeBar('WHtR',String(whtrNow).replace('.',','),whtrColNow,whtrCatNow,[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtrNow,0.5);
+        +'<div class="card-hdr" style="margin-bottom:0"><i class="ti ti-activity"></i>'+T('analysisHdr')+'</div>'
+        +'<span style="font-size:10px;color:var(--faint)">'+T('analysisGoalLegend')+'</span></div>';
+      if(bmiNow!=null)ah+=rangeBar(T('bmiLbl'),decSep(String(bmiNow)),bmiColNow||'var(--ink)',bmiCatNow,isMinorNow?null:[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmiNow,24.9);
+      if(p.bodyfat!=null)ah+=rangeBar(T('bfPctLbl'),decSep(String(p.bodyfat))+'%',bfColNow,bfCatNow,[{v:s.sex==='F'?5:0,col:bfBandsNow[0].col},{v:bfBandsNow[1].lo,col:bfBandsNow[1].col},{v:bfBandsNow[2].lo,col:bfBandsNow[2].col},{v:bfBandsNow[3].lo,col:bfBandsNow[3].col},{v:bfBandsNow[4].lo,col:bfBandsNow[4].col}],s.sex==='F'?45:35,p.bodyfat,bfBandsNow[2].hi);
+      if(whtrNow!=null)ah+=rangeBar(T('whtrLbl'),decSep(String(whtrNow)),whtrColNow,whtrCatNow,[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtrNow,0.5);
       cp.innerHTML=ah; c.appendChild(cp); v.appendChild(c);
     }
     if(p.waist||p.bodyfat||p.lbm){
       const c=el('div','card');const cp=el('div','card-pad');
-      cp.appendChild(el('div','card-hdr','<i class="ti ti-ruler-2"></i>Τελευταία μέτρηση'));
+      cp.appendChild(el('div','card-hdr','<i class="ti ti-ruler-2"></i>'+T('lastMeasureHdr')));
       let t='<table class="stbl">';
-      if(p.waist)t+='<tr><td class="lab">Περιφέρεια μέσης</td><td class="val">'+esc(p.waist)+' cm</td></tr>';
-      if(p.bodyfat)t+='<tr><td class="lab">Σωματικό λίπος</td><td class="val">'+esc(p.bodyfat)+'%</td></tr>';
-      if(p.lbm)t+='<tr><td class="lab">Άλιπη μάζα</td><td class="val">'+esc(p.lbm)+' kg</td></tr>';
+      if(p.waist)t+='<tr><td class="lab">'+T('waistLbl')+'</td><td class="val">'+esc(p.waist)+' cm</td></tr>';
+      if(p.bodyfat)t+='<tr><td class="lab">'+T('bodyfatLbl')+'</td><td class="val">'+esc(p.bodyfat)+'%</td></tr>';
+      if(p.lbm)t+='<tr><td class="lab">'+T('lbmLbl')+'</td><td class="val">'+esc(p.lbm)+' kg</td></tr>';
       t+='</table>';cp.innerHTML+=t;c.appendChild(cp);v.appendChild(c);
     }
   }
@@ -1877,19 +2102,19 @@ function viewShop(){
   cats.forEach(c=>c.items.forEach(it=>{total++;if(checks[it.name])done++}));
 
   const head=el('div','card');const hp=el('div','card-pad');
-  hp.innerHTML='<div class="card-hdr" style="margin:0"><i class="ti ti-shopping-cart"></i>Λίστα για ψώνια<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+total+'</span></div><div class="prog"><div style="width:'+(total?Math.round(done/total*100):0)+'%"></div></div>';
+  hp.innerHTML='<div class="card-hdr" style="margin:0"><i class="ti ti-shopping-cart"></i>'+T('shopHdr')+'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+total+'</span></div><div class="prog"><div style="width:'+(total?Math.round(done/total*100):0)+'%"></div></div>';
   head.appendChild(hp);v.appendChild(head);
 
-  if(!cats.length){v.appendChild(el('div','mi','Δεν υπάρχει λίστα ακόμη.'));return v}
+  if(!cats.length){v.appendChild(el('div','mi',T('shopEmpty')));return v}
 
   if(cats.some(c=>c.items.some(it=>it.raw)))
-    v.appendChild(el('div','legend','Η ποσότητα είναι αυτή που αγοράζεις · σε παρένθεση το ωμό/μη-μαγειρεμένο βάρος όπου διαφέρει.'));
+    v.appendChild(el('div','legend',T('shopRawLegend')));
 
   const c=el('div','card');const cp=el('div','card-pad');
   cats.forEach(cat=>{
     const sec=el('div','slcat');
     const icon=CAT_ICON[cat.cat]||'ti-package';
-    sec.appendChild(el('div','slcat-h','<i class="ti '+icon+'"></i>'+esc(cat.cat)));
+    sec.appendChild(el('div','slcat-h','<i class="ti '+icon+'"></i>'+esc(cat.catLabel||cat.cat)));
     cat.items.forEach(it=>{
       const r=el('div','slrow'+(checks[it.name]?' done':''));
       r.innerHTML='<span class="chk">'+(checks[it.name]?'<i class="ti ti-check"></i>':'')+'</span><span class="nm">'+esc(it.name)+'</span><span class="amt">'+esc(it.buy)+(it.raw?' <span class="raw">'+esc(it.raw)+'</span>':'')+'</span>';
@@ -1904,7 +2129,7 @@ function viewShop(){
 function shopProgressText(){
   const cats=SNAP.shopping||[];const checks=getShop();let t=0,d=0;
   cats.forEach(c=>c.items.forEach(it=>{t++;if(checks[it.name])d++}));
-  return t?(d+' από '+t+' ✓'):'—';
+  return t?T('shopProgress',{d:d,t:t}):T('suppsNone');
 }
 
 // ── WATER ───────────────────────────────────────────────────────────────────
@@ -1914,7 +2139,7 @@ function viewWater(){
   // protocol note
   const note=el('div',null);
   note.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
-  note.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Πρωτόκολλο ενυδάτωσης</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Στόχος βάσει βάρους · +500 ml τις ημέρες προπόνησης · 1 ποτήρι πριν από κάθε γεύμα.</div>';
+  note.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">'+T('waterProtocolHdr')+'</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">'+T('waterProtocolBody')+'</div>';
   v.appendChild(note);
   return v;
 }
@@ -1923,15 +2148,15 @@ function viewWater(){
 function viewSupps(){
   const s=SNAP, v=el('div','view active');
   if(s.supps&&s.supps.length){
-    const DN=['Δ','Τ','Τ','Π','Π','Σ','Κ'];
+    const DN=[T('dowD'),T('dowT1'),T('dowT2'),T('dowP1'),T('dowP2'),T('dowS1'),T('dowK')];
     const week=weekDates(), todK=dKey(new Date());
     const log=getSuppLog();
     // πόσα πάρθηκαν σήμερα
     let doneToday=0; s.supps.forEach(su=>{ if(log[todK]&&log[todK][su.name])doneToday++; });
 
     const c=el('div','card');const cp=el('div','card-pad');
-    cp.innerHTML='<div class="card-hdr" style="margin-bottom:6px"><i class="ti ti-pill"></i>Τα συμπληρώματά μου'
-      +'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+doneToday+' / '+s.supps.length+' σήμερα</span></div>'
+    cp.innerHTML='<div class="card-hdr" style="margin-bottom:6px"><i class="ti ti-pill"></i>'+T('suppsHdr')
+      +'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+doneToday+' / '+s.supps.length+' '+T('suppsToday')+'</span></div>'
       +'<div class="prog" style="margin:0 0 4px"><div style="width:'+Math.round(doneToday/s.supps.length*100)+'%"></div></div>';
 
     s.supps.forEach(su=>{
@@ -1957,10 +2182,10 @@ function viewSupps(){
 
     const tip=el('div',null);
     tip.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
-    tip.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Συμβουλή</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Πάτα την ημέρα όταν πάρεις το συμπλήρωμα. Λάβε το στην ώρα που αναγράφεται, μαζί με το γεύμα — εκτός αν σου έχει πει αλλιώς ο/η διαιτολόγος σου.</div>';
+    tip.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-bulb" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">'+T('suppsTipHdr')+'</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">'+T('suppsTipBody')+'</div>';
     v.appendChild(tip);
   }else{
-    v.appendChild(el('div','mi','Δεν έχουν οριστεί συμπληρώματα στο πλάνο σου.'));
+    v.appendChild(el('div','mi',T('suppsEmpty')));
   }
   return v;
 }
@@ -1970,15 +2195,16 @@ function viewSpices(){
   const v=el('div','view active');
   const intro=el('div',null);
   intro.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
-  intro.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-leaf" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Οδηγός Μπαχαρικών &amp; Βοτάνων</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Θεραπευτικά μπαχαρικά &amp; βότανα — ενδεικτική ημερήσια χρήση. Δεν υποκαθιστά ιατρική συμβουλή.</div>';
+  intro.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-leaf" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">'+T('spicesHdr')+'</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">'+T('spicesBody')+'</div>';
   v.appendChild(intro);
+  const isEn=LANG==='en';
   SPICES.forEach(sp=>{
     const c=el('div','card');const cp=el('div','card-pad');
-    cp.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--teal-d);margin-bottom:6px">🌿 '+esc(sp.n)+'</div>'
+    cp.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--teal-d);margin-bottom:6px">🌿 '+esc(isEn?sp.en:sp.n)+'</div>'
       +'<table class="stbl">'
-      +'<tr><td class="lab" style="width:38%">Οφέλη</td><td style="font-size:13px">'+esc(sp.ben)+'</td></tr>'
-      +'<tr><td class="lab">Χρήση</td><td style="font-size:13px;color:var(--teal);font-weight:600">'+esc(sp.use)+'</td></tr>'
-      +'<tr><td class="lab">Σημείωση</td><td style="font-size:13px">'+esc(sp.note)+'</td></tr>'
+      +'<tr><td class="lab" style="width:38%">'+T('spicesBenefits')+'</td><td style="font-size:13px">'+esc(isEn?sp.benEn:sp.ben)+'</td></tr>'
+      +'<tr><td class="lab">'+T('spicesUse')+'</td><td style="font-size:13px;color:var(--teal);font-weight:600">'+esc(isEn?sp.useEn:sp.use)+'</td></tr>'
+      +'<tr><td class="lab">'+T('spicesNote')+'</td><td style="font-size:13px">'+esc(isEn?sp.noteEn:sp.note)+'</td></tr>'
       +'</table>';
     c.appendChild(cp);v.appendChild(c);
   });
@@ -1988,7 +2214,7 @@ function viewFruits(){
   const v=el('div','view active');
   const intro=el('div',null);
   intro.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
-  intro.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-apple" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">Λίστα Ανταλλαγής Φρούτων</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">Κάθε επιλογή αντιστοιχεί σε 1 μερίδα φρούτου — αλλάζτε ελεύθερα μεταξύ τους.</div>';
+  intro.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-apple" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">'+T('fruitsHdr')+'</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">'+T('fruitsBody')+'</div>';
   v.appendChild(intro);
   const fruits=(SNAP&&SNAP.fruits)||[];
   const c=el('div','card'); const cp=el('div','card-pad');
@@ -2006,7 +2232,7 @@ function waterCard(mini){
   const have=getWater();
   const c=el('div','water');
   const haveMl=have*per;
-  c.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><i class="ti ti-droplet" style="color:var(--teal);font-size:18px"></i><span style="font-size:14px;font-weight:600;color:var(--teal-d)">Ενυδάτωση</span></div><span style="font-size:12px;color:var(--teal-l)">'+L(haveMl)+' / '+L(goalMl)+'</span></div>';
+  c.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><i class="ti ti-droplet" style="color:var(--teal);font-size:18px"></i><span style="font-size:14px;font-weight:600;color:var(--teal-d)">'+T('waterLabel')+'</span></div><span style="font-size:12px;color:var(--teal-l)">'+L(haveMl)+' / '+L(goalMl)+'</span></div>';
   const g=el('div','glasses');
   for(let i=0;i<totalGlasses;i++){
     const gl=el('span','glass'+(i<have?' on':''),i<have?'':''); // ti-glass-full / ti-glass (use class instead)
@@ -2015,8 +2241,8 @@ function waterCard(mini){
     g.appendChild(gl);
   }
   c.appendChild(g);
-  if(mi.isMatch&&h.matchMl)c.appendChild(el('div','swap-note','Αυξημένος στόχος λόγω αγώνα σήμερα.'));
-  if(!mini)c.appendChild(el('div','empty-glass-note','Πάτα ένα ποτήρι για να καταγράψεις πόσο νερό ήπιες σήμερα.'));
+  if(mi.isMatch&&h.matchMl)c.appendChild(el('div','swap-note',T('waterMatchNote')));
+  if(!mini)c.appendChild(el('div','empty-glass-note',T('waterHint')));
   return c;
 }
 function curTab(){return curView}
