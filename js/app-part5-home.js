@@ -25,7 +25,7 @@ function homeClientsNeedingAttention(){
       // ✅ 2026-08-01: swTab(3) ήταν η Ανθρωπομετρία, όπου παλιά ζούσε το plan-feedback panel — μετά
       // τη μεταφορά του στο Ραντεβού tab, το κουμπί έδειχνε σε άδεια σελίδα. Διορθώθηκε σε TAB_APPOINTMENTS.
       out.push({c:c,tier:-1,gap:0,label:'😕 χαμηλή ικανοποίηση πλάνου ('+npsTxt+', εβδ. '+latestPf.week_start+')',
-        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες feedback</button>'});
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();replyToPlanFeedback(\''+c.id+'\',\''+latestPf.week_start+'\',null)">↩️ Απάντησε</button>'});
       return;
     }
     // ✅ 2026-08-01: νέα γραπτή σημείωση πελάτη (client_logs, portal, χωρίς login) — πριν δεν

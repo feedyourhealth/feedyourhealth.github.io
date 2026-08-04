@@ -1655,6 +1655,41 @@ function replyToClientNote(clientId,date,noteRaw){
     var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
   }
 }
+function pfReplyKey(token,weekStart,key){ return 'fyh-pf-replied-'+token+'-'+weekStart+'-'+(key||'_general'); }
+// ↩️ Απάντησε σε feedback πλάνου — ίδιο μοτίβο με replyToClientNote. key=null (κουμπί δίπλα στο NPS)
+// → γενικό μήνυμα, key='breakfast' κλπ (κουμπί πάνω σε συγκεκριμένη χαμηλή βαθμολογία) → μήνυμα με
+// το όνομα της κατηγορίας και τους λόγους (low_rating_reasons) που επέλεξε ο πελάτης στο portal.
+function replyToPlanFeedback(clientId,weekStart,key){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  var entries=window.Cloud&&window.Cloud.planFeedbackFor?window.Cloud.planFeedbackFor(c):[];
+  var entry=entries.filter(function(e){return e.week_start===weekStart;})[0];
+  if(!entry) return;
+  var fname=(c.name||'').split(' ')[0];
+  var msg;
+  if(key){
+    var reasons=((entry.low_rating_reasons||{})[key]||[]).join(', ');
+    var lbl=(typeof PF_ROW_LABELS!=='undefined'&&PF_ROW_LABELS[key])||key;
+    msg='Γεια σου '+fname+'! Είδα ότι το '+lbl+' σου φάνηκε λίγο'+(reasons?(' ('+reasons+')'):'')+' αυτή την εβδομάδα — ας το προσαρμόσουμε μαζί, πες μου τι θα σε βόλευε καλύτερα.';
+  } else {
+    msg='Γεια σου '+fname+'! Είδα το feedback σου για το πλάνο αυτής της εβδομάδας — θέλω να το προσαρμόσουμε ώστε να σου ταιριάζει καλύτερα. Πες μου τι σε δυσκόλεψε περισσότερο.';
+  }
+  var phone=(c.phone||'').replace(/[^0-9]/g,'');
+  if(phone && phone.length<=10 && phone.charAt(0)!=='3') phone='30'+phone;
+  if(phone){
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  } else if(c.email){
+    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Απάντηση — Feed Your Health')+'&body='+encodeURIComponent(msg);
+  } else {
+    showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
+    return;
+  }
+  if(c.shareToken){ try{ localStorage.setItem(pfReplyKey(c.shareToken,weekStart,key),'1'); }catch(err){} }
+  var s3b=document.getElementById('s3b');
+  if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
+    var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+  }
+}
 // Μόνο για annotation στο ιστορικό — δεν ξέρει τίποτα για το εβδομαδιαίο override του πελάτη
 // (αυτό ζει μόνο στο localStorage του πελάτη, ποτέ δεν φτάνει στο cloud), δείχνει μόνο τον
 // ΜΟΝΙΜΟ κανόνα (c.matchDays) ώστε ο διαιτολόγος να ξέρει "αυτή η μέρα ήταν συνήθως αγώνας"
@@ -1716,13 +1751,25 @@ function planFeedbackPanelHtml(c){
   var rowsHtml=Object.keys(PF_ROW_LABELS).map(function(key){
     var val=latest[key];
     var tags=(reasons[key]||[]).map(function(r){return '<span style="background:#fbe9e7;color:#c0392b;border-radius:999px;padding:2px 8px;font-size:10px;margin-left:4px;white-space:nowrap">'+esc(r)+'</span>';}).join('');
+    var replyBtn='';
+    if(val>0&&val<=2){
+      var rowReplied=false;
+      if(c.shareToken){ try{ rowReplied=localStorage.getItem(pfReplyKey(c.shareToken,latest.week_start,key))==='1'; }catch(err){} }
+      replyBtn='<button type="button" class="note-reply-btn'+(rowReplied?' replied':'')+'" style="margin-left:auto" onclick="event.stopPropagation();replyToPlanFeedback(\''+c.id+'\',\''+latest.week_start+'\',\''+key+'\')">↩️ Απάντησε'+(rowReplied?' ✓':'')+'</button>';
+    }
     return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:11px;flex-wrap:wrap">'
       +'<span style="width:150px;flex-shrink:0;color:#444">'+PF_ROW_LABELS[key]+'</span>'
-      +'<span style="letter-spacing:1px;font-size:13px">'+pfStarsReadonly(val)+'</span>'+tags+'</div>';
+      +'<span style="letter-spacing:1px;font-size:13px">'+pfStarsReadonly(val)+'</span>'+tags+replyBtn+'</div>';
   }).join('');
   var nps=latest.continue_likelihood;
   var npsColor=nps==null?'#999':(nps>=8?'#2e7d32':(nps>=5?'#c77d11':'#c0392b'));
   var npsBadge=nps==null?'':('<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:'+npsColor+'22;color:'+npsColor+'">'+nps+'/10 πιθανότητα συνέχισης</span>');
+  var npsReplyBtn='';
+  if(nps!=null && typeof PF_ATTENTION_NPS_MAX!=='undefined' && nps<=PF_ATTENTION_NPS_MAX){
+    var npsReplied=false;
+    if(c.shareToken){ try{ npsReplied=localStorage.getItem(pfReplyKey(c.shareToken,latest.week_start,null))==='1'; }catch(err){} }
+    npsReplyBtn='<button type="button" class="note-reply-btn'+(npsReplied?' replied':'')+'" onclick="event.stopPropagation();replyToPlanFeedback(\''+c.id+'\',\''+latest.week_start+'\',null)">↩️ Απάντησε'+(npsReplied?' ✓':'')+'</button>';
+  }
   var histBars='';
   var recent=entries.slice(0,4).reverse();
   recent.forEach(function(e,idx){
@@ -1736,7 +1783,7 @@ function planFeedbackPanelHtml(c){
   return '<div class="tracker-section" style="background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">'
     +'<div style="font-size:11px;font-weight:700;color:#025857">⭐ Feedback πλάνου <span style="font-weight:400;color:#666">(εβδομάδα '+esc(latest.week_start)+')</span></div>'
-    +npsBadge+'</div>'
+    +'<div style="display:flex;align-items:center;gap:6px">'+npsBadge+npsReplyBtn+'</div></div>'
     +rowsHtml
     +(entries.length>1?('<div style="display:flex;align-items:flex-end;gap:6px;height:44px;margin-top:10px">'+histBars+'</div>'):'')
     +'</div>';
