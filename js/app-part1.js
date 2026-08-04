@@ -673,6 +673,14 @@ var LOGGER={
 */
 var _saveTimer=null;
 function _doSave(){
+  // 🔒 CROSS-TAB LOCK: a tab that doesn't hold the edit lock never writes — see the lock
+  // system below (_tabLockTick/_isLockOwner). Silently skipping here (instead of e.g.
+  // throwing) is deliberate: reads/navigation must keep working in a read-only tab, only
+  // persistence is suppressed.
+  if(!_isLockOwner){
+    console.warn('[LOCK] save skipped — this tab does not hold the edit lock (see cross-tab banner)');
+    return;
+  }
   var okClients=safeStorageSet('fyh_clients', clients);
   var okTmpls=safeStorageSet('fyh_custom_tmpls', customTemplates);
   try { localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); } catch(e){}
@@ -694,20 +702,101 @@ window.addEventListener('beforeunload',function(){
   try{ if(window.Cloud && typeof Cloud._pushNow==='function') Cloud._pushNow(); }catch(e){}
 });
 
-// Δύο ανοιχτές καρτέλες στην ίδια συσκευή γράφουν και οι δύο ολόκληρο το 'fyh_clients' array στο
-// localStorage χωρίς κανέναν έλεγχο εκδοχής (σε αντίθεση με το cloud path, που έχει optimistic
-// locking) — όποια αποθηκεύσει τελευταία «σβήνει» σιωπηλά τις αλλαγές της άλλης (audit finding Ε4).
-// Προειδοποιεί τον χρήστη αντί να μένει αθόρυβο.
-var _lastCrossTabWarnAt=0;
+// ═══════════════════════════════════════════════════════════════════════════════════
+// 🔒 CROSS-TAB EDIT LOCK (2026-08-04, audit finding Ε4 — actually fixed, not just flagged)
+// Two open tabs on the same device used to both write the whole 'fyh_clients' array with no
+// version check — whichever saved last silently erased the other's edits, with only a passive
+// warning toast (no actual prevention). Now: exactly ONE tab may hold the "edit lock" at a
+// time (tracked via a heartbeat in localStorage, since tabs can't otherwise coordinate). Any
+// OTHER tab opened on the same device goes read-only automatically — _doSave() (above) refuses
+// to persist anything while _isLockOwner is false — and shows a banner with a manual
+// "Ανάλαβε εδώ" override for when the lock-holding tab was actually closed/crashed.
+// ═══════════════════════════════════════════════════════════════════════════════════
+var TAB_LOCK_KEY='fyh_active_tab_lock';
+var TAB_LOCK_TICK_MS=4000;   // heartbeat renewal / stale-lock retry interval
+var TAB_LOCK_STALE_MS=9000;  // >2 missed heartbeats ⇒ previous owner tab probably closed/crashed
+var _tabId=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+var _isLockOwner=false;
+
+function _readTabLock(){
+  try{ var raw=localStorage.getItem(TAB_LOCK_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+}
+function _writeTabLock(){
+  try{ localStorage.setItem(TAB_LOCK_KEY, JSON.stringify({tabId:_tabId, ts:Date.now()})); }catch(e){}
+}
+function _releaseTabLockIfOwner(){
+  if(!_isLockOwner) return;
+  try{
+    var lock=_readTabLock();
+    if(lock && lock.tabId===_tabId) localStorage.removeItem(TAB_LOCK_KEY);
+  }catch(e){}
+}
+
+function _showTabLockBanner(){
+  var b=document.getElementById('tab-lock-banner');
+  if(!b){
+    b=document.createElement('div');
+    b.id='tab-lock-banner';
+    b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#c62828;color:#fff;'
+      +'padding:10px 16px;text-align:center;font-size:13px;font-weight:600;display:flex;'
+      +'align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+    b.innerHTML='⚠️ Το Dietologist είναι ήδη ανοιχτό σε άλλη καρτέλα — εδώ είναι ΜΟΝΟ ΓΙΑ ΑΝΑΓΝΩΣΗ, οι αλλαγές ΔΕΝ αποθηκεύονται.'
+      +' <button id="tab-lock-takeover-btn" style="background:#fff;color:#c62828;border:none;border-radius:6px;'
+      +'padding:4px 10px;font-weight:700;cursor:pointer">Ανάλαβε εδώ</button>';
+    document.body.appendChild(b);
+    document.getElementById('tab-lock-takeover-btn').addEventListener('click', function(){
+      if(confirm('Αν αναλάβεις εδώ, η άλλη καρτέλα θα γίνει read-only. Τυχόν μη αποθηκευμένες αλλαγές εκεί θα χαθούν. Συνέχεια;')){
+        _writeTabLock();
+        _isLockOwner=true;
+        _hideTabLockBanner();
+      }
+    });
+  }
+  b.style.display='flex';
+}
+function _hideTabLockBanner(){
+  var b=document.getElementById('tab-lock-banner');
+  if(b) b.style.display='none';
+}
+
+function _tabLockTick(){
+  var lock=_readTabLock();
+  var stale=!lock || (Date.now()-(lock.ts||0))>TAB_LOCK_STALE_MS;
+  if(!lock || lock.tabId===_tabId || stale){
+    // Free, ours already, or the previous owner went silent long enough to assume gone —
+    // claim/renew it.
+    _writeTabLock();
+    if(!_isLockOwner){ _isLockOwner=true; _hideTabLockBanner(); }
+  } else if(_isLockOwner){
+    // We thought we were the owner but a fresher heartbeat from a different tab is present
+    // (shouldn't normally happen since we renew every tick, but stay safe) — step down.
+    _isLockOwner=false;
+    _showTabLockBanner();
+  } else {
+    _showTabLockBanner();
+  }
+}
+_tabLockTick();
+setInterval(_tabLockTick, TAB_LOCK_TICK_MS);
+
+// Near-instant reaction when ANOTHER tab explicitly clicks "Ανάλαβε εδώ" (don't wait for the
+// next tick) — otherwise a just-preempted tab could still slip in one more save before noticing.
 window.addEventListener('storage', function(e){
-  if(e.key !== 'fyh_clients') return;
-  var now = Date.now();
-  if(now - _lastCrossTabWarnAt < 10000) return;
-  _lastCrossTabWarnAt = now;
-  if(typeof showErrorToast === 'function'){
-    showErrorToast('⚠️ Το Dietologist είναι ανοιχτό και σε άλλη καρτέλα.\nΟι αλλαγές εδώ μπορεί να χαθούν αν αποθηκευτεί κάτι εκεί.');
+  if(e.key !== TAB_LOCK_KEY) return;
+  var lock=_readTabLock();
+  if(lock && lock.tabId!==_tabId && _isLockOwner){
+    _isLockOwner=false;
+    _showTabLockBanner();
+    if(typeof showErrorToast === 'function'){
+      showErrorToast('⚠️ Μια άλλη καρτέλα ανέλαβε την επεξεργασία εδώ.\nΑυτή η καρτέλα είναι πλέον μόνο για ανάγνωση.');
+    }
+  } else if(lock && lock.tabId===_tabId && !_isLockOwner){
+    _isLockOwner=true;
+    _hideTabLockBanner();
   }
 });
+
+window.addEventListener('beforeunload', _releaseTabLockIfOwner);
 
 // ═══════════════════════════════════════════════════════════════════════════════════
 // 🛡️ AUTOMATIC BACKUP SYSTEM
