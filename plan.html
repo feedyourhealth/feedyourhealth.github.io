@@ -492,6 +492,7 @@ const I18N={
     composerRetry:'Δοκίμασε ξανά', composerEdit:'επεξεργασία',
     matchLabel:'Αγώνας', matchNone:'καμία', matchThisWeek:'(αυτή τη βδομάδα)', matchChange:'άλλαξε', matchCloseBtn:'κλείσε', matchOff:'Καμία',
     matchDefaultNote:'Το {day} παραμένει η κανονική μέρα αγώνα τις άλλες βδομάδες.', matchOverrideNote:'Ισχύει μόνο αυτή τη βδομάδα.',
+    mtMorning:'πρωί', mtNoon:'μεσημέρι', mtAfternoon:'απόγευμα', mtEvening:'βράδυ',
     glanceScore:'σκορ εβδ.', glanceStreak:'σερί', glanceWeight:'βάρος kg', scoreWord:'σκορ',
     goalHeroLbl:'Ο στόχος σου', goalHeroArrow:'Από {start} kg — {diff} kg να πάμε!',
     waterLabel:'Ενυδάτωση', waterMatchNote:'Αυξημένος στόχος λόγω αγώνα σήμερα.',
@@ -587,6 +588,7 @@ const I18N={
     composerRetry:'Try again', composerEdit:'edit',
     matchLabel:'Match', matchNone:'none', matchThisWeek:'(this week)', matchChange:'change', matchCloseBtn:'close', matchOff:'None',
     matchDefaultNote:'{day} stays the regular match day on other weeks.', matchOverrideNote:'Applies only this week.',
+    mtMorning:'Morning', mtNoon:'Noon', mtAfternoon:'Afternoon', mtEvening:'Evening',
     glanceScore:'week score', glanceStreak:'streak', glanceWeight:'weight kg', scoreWord:'score',
     goalHeroLbl:'Your goal', goalHeroArrow:'From {start} kg — {diff} kg to go!',
     waterLabel:'Hydration', waterMatchNote:'Higher target due to today\'s match.',
@@ -706,6 +708,11 @@ const MATCH_TIME_H={'πρωί':9,'μεσημέρι':13,'απόγευμα':17,'β
 // Το SNAP.days[i].label είναι ήδη στη σωστή γλώσσα (server-baked στο _buildSnapshot) — προτιμάται
 // από το τοπικό DAY_LABELS (πάντα ελληνικά) όπου δείχνουμε πλήρες όνομα ημέρας στον πελάτη.
 function dayFullName(i){return (SNAP&&SNAP.days&&SNAP.days[i]&&SNAP.days[i].label)||DAY_LABELS[i]}
+// Display-only translation of the match-time bucket. Οι ίδιες οι ελληνικές λέξεις ('πρωί' κτλ) πρέπει
+// να παραμείνουν αναλλοίωτες ως ΤΙΜΕΣ (MATCH_TIMES/MATCH_TIME_H keys, localStorage, ov.time) — αυτό
+// εδώ μεταφράζει μόνο ό,τι φαίνεται στην οθόνη του πελάτη.
+const MATCH_TIME_KEYS={'πρωί':'mtMorning','μεσημέρι':'mtNoon','απόγευμα':'mtAfternoon','βράδυ':'mtEvening'};
+function matchTimeLabel(t){return T(MATCH_TIME_KEYS[t]||'mtAfternoon')}
 function curWeekKey(){return dKey(weekDates()[0])}
 function getMatchOverride(){try{const o=JSON.parse(localStorage.getItem(lk('matchOverride'))||'{}');return o.week===curWeekKey()?o:null}catch(e){return null}}
 function setMatchOverride(dayIdx,time){try{localStorage.setItem(lk('matchOverride'),JSON.stringify({week:curWeekKey(),day:dayIdx,time:time}))}catch(e){}}
@@ -738,7 +745,7 @@ function matchCard(){
   if(defDay<0 && !ov)return null;
   const curDayIdx=ov?ov.day:defDay;
   const curTime=ov?ov.time:defaultMatchTime();
-  const summary=curDayIdx>=0?(dayFullName(curDayIdx)+', '+curTime):T('matchNone');
+  const summary=curDayIdx>=0?(dayFullName(curDayIdx)+', '+matchTimeLabel(curTime)):T('matchNone');
   const c=el('div','card'); const cp=el('div','card-pad');
   const head=el('div',null); head.style.cssText='display:flex;align-items:center;gap:8px';
   head.innerHTML='<i class="ti ti-ball-football" style="color:var(--teal);font-size:16px;flex-shrink:0"></i>'
@@ -764,7 +771,7 @@ function matchCard(){
     body.appendChild(dayRow);
     const timeRow=el('div',null); timeRow.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
     MATCH_TIMES.forEach(t=>{
-      const p=el('button','log-tag'+(curTime===t?' log-tag-on':''),t); p.type='button';
+      const p=el('button','log-tag'+(curTime===t?' log-tag-on':''),matchTimeLabel(t)); p.type='button';
       p.onclick=()=>{if(curDayIdx>=0){setMatchOverride(curDayIdx,t);go('home')}};
       timeRow.appendChild(p);
     });
@@ -1298,7 +1305,7 @@ function dayHeader(i,withMatch){
   const d=SNAP.days&&SNAP.days[i];
   if(!d)return '';
   const mi=matchInfoFor(i);
-  return (d.label||'')+(d.isTrain?' — '+T('trainDaySuffix'):'')+((withMatch!==false&&mi.isMatch)?' — '+T('matchDaySuffix')+' ('+mi.time+')':'');
+  return (d.label||'')+(d.isTrain?' — '+T('trainDaySuffix'):'')+((withMatch!==false&&mi.isMatch)?' — '+T('matchDaySuffix')+' ('+matchTimeLabel(mi.time)+')':'');
 }
 
 // ── HOME ──────────────────────────────────────────────────────────────────
@@ -1348,7 +1355,7 @@ function viewHome(){
   const nudge=activityNudge(meals,done); if(nudge)v.appendChild(nudge);
   const c=el('div','card'); const cp=el('div','card-pad');
   cp.innerHTML='<div class="card-hdr" style="margin-bottom:8px"><i class="ti ti-tools-kitchen-2"></i>'+T('todayMealsHdr')
-    +(mi.isMatch?' <span class="log-tag-badge"><i class="ti ti-ball-football"></i>'+T('matchBadge')+' · '+esc(mi.time)+'</span>':'')
+    +(mi.isMatch?' <span class="log-tag-badge"><i class="ti ti-ball-football"></i>'+T('matchBadge')+' · '+esc(matchTimeLabel(mi.time))+'</span>':'')
     +(meals.length?'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+meals.length+'</span>':'')+'</div>'
     +(meals.length?'<div class="prog" style="margin:0 0 4px"><div style="width:'+Math.round(done/meals.length*100)+'%"></div></div>':'');
   if(meals.length){

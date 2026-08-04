@@ -2906,7 +2906,12 @@ function saveFoodExclusions(){
 
       // ── Ημερήσια πλάνα ──
       var wp=c.weekPlan||{};
-      var fmtQ=(typeof fmtFoodQty==='function')?function(f){return fmtFoodQty(f,'γρ.',function(u){return u;});}:function(f){return {main:Math.round(f.g)+' γρ.',sub:''};};
+      // gLbl/tUnit: μεταφράζουν το "γρ." και τις μονάδες μέτρησης (φλ./τεμ./κ.σ./κ.γ./χούφτα κτλ, μέσω
+      // του υπάρχοντος EN_UNITS) στην αγγλική έκδοση του πλάνου — πριν ο τρίτος tuFn ήταν πάντα identity,
+      // οπότε οι ποσότητες έμεναν ελληνικές ακόμα και σε isEn=true (πραγματικό bug, βρέθηκε σε QA).
+      var gLbl=isEn?'g':'γρ.';
+      function tUnit(u){return (isEn&&typeof EN_UNITS!=='undefined'&&EN_UNITS[u])||u;}
+      var fmtQ=(typeof fmtFoodQty==='function')?function(f){return fmtFoodQty(f,gLbl,tUnit);}:function(f){return {main:Math.round(f.g)+' '+gLbl,sub:''};};
       var days=[];
       for(var d=0; d<7; d++){
         var dm=wp[d]||[];
