@@ -479,7 +479,7 @@ function getRecipeTrustScore(recipeId){
 // Finds the best pre-defined recipe for a meal based on diet type and calories
 function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros, dislikedIds){
   // ✅ SNACK DETECTION: If meal name is "Ενδιάμεσο" (Snack), use SNACK_RECIPES
-  var isSnack = mealType && mealType.toLowerCase().includes('ενδιάμεσο');
+  var isSnack = classifyMealSlot(mealType)==='snack';
   var recipeDB = isSnack ? SNACK_RECIPES : MEAL_RECIPES;
 
   if(!recipeDB || !recipeDB.length)return null;
@@ -643,8 +643,9 @@ function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName,
   }
 
   // Priority 2: Build from pairing rules - with meal-type AND diet-type awareness
-  var isBreakfast = mealName && mealName.toLowerCase().includes('πρωινό');
-  var isSnack = mealName && mealName.toLowerCase().includes('ενδιάμεσο');
+  var mealSlot = classifyMealSlot(mealName);
+  var isBreakfast = mealSlot==='breakfast';
+  var isSnack = mealSlot==='snack';
   dietType = dietType || 'normal';
 
   var proteins = Object.keys(FOODS).filter(function(f) {
@@ -816,10 +817,9 @@ function removeOatsFromMainMeals(tmplDays) {
   for(var d=0; d<7; d++) {
     for(var mi=0; mi<tmplDays[d].length; mi++) {
       var meal = tmplDays[d][mi];
-      var mealName = (meal.name || '').toLowerCase();
 
       // Skip breakfast meals - oats are allowed there
-      if(mealName.includes('πρωινό')) continue;
+      if(classifyMealSlot(meal.name)==='breakfast') continue;
 
       // For lunch/dinner, remove oats completely
       if(meal.foods && meal.foods.length > 0) {
@@ -835,20 +835,42 @@ function removeOatsFromMainMeals(tmplDays) {
 }
 
 // ✅ Reorder meals to standard sequence: Πρωινό → Ενδιάμεσο → Μεσημεριανό → Ενδιάμεσο → Βραδινό
+//
+// 🔧 FIX (2026-08-04, audit finding #1): the previous version matched slots with raw,
+// non-lowercased `.includes('Πρωινό')`/etc. substring checks and simply DROPPED any meal
+// that didn't match one of the 4 expected names — a custom meal slot (added via
+// openAddMealSlotModal), a renamed/lowercased slot, or a 3rd+ "Ενδιάμεσο" silently
+// vanished from the plan on every genPlan() call. This now uses the same classifyMealSlot()
+// classifier used elsewhere in the pipeline (case-insensitive, stem-based — consistent with
+// harvestMealLibrary/findMealAlternates/generateSmartMeal), and — critically — every meal
+// from the input day is guaranteed to appear somewhere in the output: only the FIRST
+// breakfast/lunch/dinner and the first two snacks are placed in the standard sequence;
+// anything left over (extra snacks, duplicate main meals, unrecognized custom slots) is
+// appended afterward in its original order instead of being discarded.
 function reorderMealsToStandardSequence(tmplDays){
   var reorderedDays=[];
   tmplDays.forEach(function(day){
+    if(!day || !day.length){ reorderedDays.push(day||[]); return; }
+    var breakfast=null, lunch=null, dinner=null, snacks=[];
+    day.forEach(function(m){
+      var slot=classifyMealSlot(m && m.name);
+      if(slot==='breakfast' && !breakfast) breakfast=m;
+      else if(slot==='lunch' && !lunch) lunch=m;
+      else if(slot==='dinner' && !dinner) dinner=m;
+      else if(slot==='snack') snacks.push(m);
+      // else: 'other' (unrecognized name) or a duplicate breakfast/lunch/dinner —
+      // preserved below as a leftover instead of being lost.
+    });
+    var placed=[];
     var newDay=[];
-    var breakfast=day.find(function(m){return m.name.includes('Πρωινό');});
-    var lunch=day.find(function(m){return m.name.includes('Μεσημεριανό');});
-    var snacks=day.filter(function(m){return m.name.includes('Ενδιάμεσο');});
-    var dinner=day.find(function(m){return m.name.includes('Βραδινό');});
-    if(breakfast)newDay.push(breakfast);
-    if(snacks&&snacks.length>0)newDay.push(snacks[0]); // First snack (between breakfast and lunch)
-    if(lunch)newDay.push(lunch);
-    if(snacks&&snacks.length>1)newDay.push(snacks[1]); // Second snack (between lunch and dinner)
-    if(dinner)newDay.push(dinner);
-    if(newDay.length===0)newDay=day;
+    if(breakfast){newDay.push(breakfast); placed.push(breakfast);}
+    if(snacks.length>0){newDay.push(snacks[0]); placed.push(snacks[0]);} // 1st snack (breakfast↔lunch)
+    if(lunch){newDay.push(lunch); placed.push(lunch);}
+    if(snacks.length>1){newDay.push(snacks[1]); placed.push(snacks[1]);} // 2nd snack (lunch↔dinner)
+    if(dinner){newDay.push(dinner); placed.push(dinner);}
+    day.forEach(function(m){
+      if(placed.indexOf(m)===-1) newDay.push(m); // leftovers, original relative order, nothing lost
+    });
     reorderedDays.push(newDay);
   });
   return reorderedDays;
@@ -1165,8 +1187,7 @@ function genPlan(){
         if(!c.weekPlan[d])continue;
         for(var mi=0;mi<c.weekPlan[d].length;mi++){
           var meal=c.weekPlan[d][mi];
-          var mealName=(meal.name||'').toLowerCase();
-          if(mealName.includes('πρωινό'))continue;
+          if(classifyMealSlot(meal.name)==='breakfast')continue;
           if(meal.foods&&meal.foods.length>0){
             meal.foods=meal.foods.filter(function(food){
               return !(food.n||'').toLowerCase().includes('βρώμη');
@@ -1490,10 +1511,9 @@ function genPlan(){
   for(var d=0;d<7;d++){
     for(var mi=0;mi<c.weekPlan[d].length;mi++){
       var meal = c.weekPlan[d][mi];
-      var mealName = (meal.name || '').toLowerCase();
 
       // Skip breakfast - oats are allowed there
-      if(mealName.includes('πρωινό')) continue;
+      if(classifyMealSlot(meal.name)==='breakfast') continue;
 
       // For all non-breakfast meals, remove oats
       if(meal.foods && meal.foods.length > 0) {

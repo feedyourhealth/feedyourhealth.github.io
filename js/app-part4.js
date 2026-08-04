@@ -2697,12 +2697,13 @@ function generateDiverseAlternatives(targetCalories, dayIndex, excludedFoods, me
   var alternatives = [];
   macroTargets = macroTargets || {};
 
-  // Determine meal type from name
-  var lower = (mealName || '').toLowerCase();
-  var isBreakfast = lower.includes('πρωινό');
-  var isSnack = lower.includes('ενδιάμεσο');
-  var isLunch = lower.includes('μεσημεριανό');
-  var isDinner = lower.includes('βραδινό');
+  // Determine meal type from name (classifyMealSlot — same classifier the plan-generation
+  // pipeline uses, js/app-part3.js — keeps this consistent with genPlan's own meal typing)
+  var _slot = classifyMealSlot(mealName);
+  var isBreakfast = _slot==='breakfast';
+  var isSnack = _slot==='snack';
+  var isLunch = _slot==='lunch';
+  var isDinner = _slot==='dinner';
 
   // Macro targets to match
   var targetP = macroTargets.targetProtein || 0;
