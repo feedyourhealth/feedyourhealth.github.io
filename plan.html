@@ -547,7 +547,13 @@ const I18N={
     whtrNormal:'Φυσιολογικό', whtrElevated:'Αυξημένος κίνδυνος', whtrHigh:'Υψηλός κίνδυνος',
     bfEssential:'Απαραίτητο', bfAthletic:'Αθλητικό', bfFit:'Φυσιολογικό', bfAcceptable:'Αποδεκτό', bfObese:'Παχυσαρκία',
     acsmRef:'Τιμές αναφοράς ACSM', lastMeasureHdr:'Τελευταία μέτρηση', waistLbl:'Περιφέρεια μέσης', bodyfatLbl:'Σωματικό λίπος', lbmLbl:'Άλιπη μάζα',
-    sinceStart:'από την αρχή', chartAriaLabel:'Γράφημα', chartGoalLbl:'στόχος'
+    sinceStart:'από την αρχή', chartAriaLabel:'Γράφημα', chartGoalLbl:'στόχος',
+    pdfLegend:'Π = Πρωτεΐνη · Λ = Λιπαρά · Υ = Υδατάνθρακες', pdfTrainBadge:'ημέρα προπόνησης',
+    pdfMealCol:'Γεύμα', pdfTotals:'Σύνολα', pdfFiber:'Ίνες',
+    pdfSuppsHdr:'Πρωτόκολλο Συμπληρωμάτων', pdfSuppsTime:'Χρόνος Λήψης', pdfSuppsDose:'Συμπληρώματα &amp; Δοσολογία',
+    pdfHydHdr:'Πρωτόκολλο Ενυδάτωσης', pdfHydTime:'Χρόνος', pdfHydAmount:'Ποσότητα', pdfHydBase:'Ημερήσια βάση', pdfHydTrain:'Ημέρα προπόνησης',
+    pdfShopHdr:'Λίστα Αγορών Εβδομάδας', pdfFooter:'Feed Your Health — Εργαλείο Διαιτολόγου',
+    pdfTargetLbl:'Στόχος', pdfHydRest:'Ανάπαυση', pdfHydTrainLbl:'Προπόνηση'
   },
   en:{
     greeting:'Hi',
@@ -636,7 +642,13 @@ const I18N={
     whtrNormal:'Normal', whtrElevated:'Elevated risk', whtrHigh:'High risk',
     bfEssential:'Essential', bfAthletic:'Athletic', bfFit:'Fit', bfAcceptable:'Acceptable', bfObese:'Obese',
     acsmRef:'ACSM reference values', lastMeasureHdr:'Latest measurement', waistLbl:'Waist circumference', bodyfatLbl:'Body fat', lbmLbl:'Lean mass',
-    sinceStart:'since the start', chartAriaLabel:'Chart', chartGoalLbl:'goal'
+    sinceStart:'since the start', chartAriaLabel:'Chart', chartGoalLbl:'goal',
+    pdfLegend:'P = Protein · F = Fat · C = Carbs', pdfTrainBadge:'training day',
+    pdfMealCol:'Meal', pdfTotals:'Totals', pdfFiber:'Fiber',
+    pdfSuppsHdr:'Supplement Protocol', pdfSuppsTime:'Timing', pdfSuppsDose:'Supplements &amp; Dosage',
+    pdfHydHdr:'Hydration Protocol', pdfHydTime:'Time', pdfHydAmount:'Amount', pdfHydBase:'Daily base', pdfHydTrain:'Training day',
+    pdfShopHdr:'Weekly Shopping List', pdfFooter:'Feed Your Health — Dietitian Tool',
+    pdfTargetLbl:'Target', pdfHydRest:'Rest', pdfHydTrainLbl:'Training'
   }
 };
 function T(key,vars){
@@ -1559,9 +1571,9 @@ function shortDay(l){return (l||'').slice(0,3)}
 // ── PRINT / PDF (ίδια μορφή με το PDF της εφαρμογής: εβδομαδιαίος πίνακας) ─────
 function pMealType(label){
   const n=(label||'').toLowerCase();
-  if(n.indexOf('πρω')>-1)return'b';
-  if(n.indexOf('μεσημ')>-1)return'l';
-  if(n.indexOf('βραδ')>-1)return'd';
+  if(n.indexOf('πρω')>-1||n.indexOf('breakfast')>-1)return'b';
+  if(n.indexOf('μεσημ')>-1||n.indexOf('lunch')>-1)return'l';
+  if(n.indexOf('βραδ')>-1||n.indexOf('dinner')>-1)return'd';
   return's';
 }
 function buildPrintHTML(){
@@ -1569,19 +1581,19 @@ function buildPrintHTML(){
   const days=s.days||[];
   // rows aligned by meal INDEX (like the app PDF) so duplicate labels (π.χ. 2× Ενδιάμεσο) stay distinct
   const maxMeals=days.reduce((m,d)=>Math.max(m,(d.meals||[]).length),0);
-  const rowLabel=mi=>{ for(let i=0;i<days.length;i++){ const m=(days[i].meals||[])[mi]; if(m)return m.label||'Γεύμα'; } return 'Γεύμα'; };
+  const rowLabel=mi=>{ for(let i=0;i<days.length;i++){ const m=(days[i].meals||[])[mi]; if(m)return m.label||T('mealFallback'); } return T('mealFallback'); };
   let h='';
   // header
   h+='<div class="ph"><div class="ph-l"><div class="ph-logo">fyh</div><div class="ph-url">WWW.FEEDYOURHEALTH.ORG</div></div>'
     +'<div class="ph-r"><div class="ph-name">'+esc(s.name||'')+'</div>'
-    +(tg.kcal?'<div class="ph-tgt">🎯 Στόχος: '+nfmt(tg.kcal)+' kcal · Π'+nfmt(tg.p||0)+' Λ'+nfmt(tg.f||0)+' Υ'+nfmt(tg.c||0)+'g</div>':'')
-    +(hy.baseMl?'<div class="ph-hyd">💧 Ενυδάτωση Ανάπαυση: '+hy.baseMl+'ml / Προπόνηση: '+(hy.trainMl||hy.baseMl)+'ml</div>':'')
+    +(tg.kcal?'<div class="ph-tgt">🎯 '+T('pdfTargetLbl')+': '+nfmt(tg.kcal)+' kcal · '+T('macroP')+nfmt(tg.p||0)+' '+T('macroF')+nfmt(tg.f||0)+' '+T('macroC')+nfmt(tg.c||0)+'g</div>':'')
+    +(hy.baseMl?'<div class="ph-hyd">💧 '+T('waterLabel')+' '+T('pdfHydRest')+': '+hy.baseMl+'ml / '+T('pdfHydTrainLbl')+': '+(hy.trainMl||hy.baseMl)+'ml</div>':'')
     +'</div></div>';
   // legend for the Π/Λ/Υ macro letters and the "T" training-day badge used throughout this
   // printout — spelled out once here since a printed sheet has no hover/tap explainer (Ε10, Ε11)
-  h+='<div class="legend">Π = Πρωτεΐνη · Λ = Λιπαρά · Υ = Υδατάνθρακες'+(days.some(d=>d.isTrain)?' · <span class="ptb">T</span> = ημέρα προπόνησης':'')+'</div>';
+  h+='<div class="legend">'+T('pdfLegend')+(days.some(d=>d.isTrain)?' · <span class="ptb">T</span> = '+T('pdfTrainBadge'):'')+'</div>';
   // main weekly table
-  h+='<table class="pmt"><thead><tr><th class="pmt-corner">Γεύμα</th>';
+  h+='<table class="pmt"><thead><tr><th class="pmt-corner">'+T('pdfMealCol')+'</th>';
   days.forEach(d=>{ h+='<th class="pday">'+esc(d.label||'')+(d.isTrain?'<span class="ptb">T</span>':'')+'</th>'; });
   h+='</tr></thead><tbody>';
   for(let mi=0; mi<maxMeals; mi++){
@@ -1602,17 +1614,17 @@ function buildPrintHTML(){
     h+='</tr>';
   }
   // totals row
-  h+='<tr class="pmac"><td class="pmac-lbl">Σύνολα</td>';
+  h+='<tr class="pmac"><td class="pmac-lbl">'+T('pdfTotals')+'</td>';
   days.forEach(d=>{
     const mac=d.macros||{};
-    h+='<td><b>'+nfmt(d.kcal||0)+' kcal</b><br>Π:'+nfmt(mac.p||0)+' Λ:'+nfmt(mac.f||0)+' Υ:'+nfmt(mac.c||0)+'g'
-      +(d.fiber!=null?'<br><span style="color:#795548">🌾 Ίνες:'+(Math.round(d.fiber*10)/10)+'g</span>':'')+'</td>';
+    h+='<td><b>'+nfmt(d.kcal||0)+' kcal</b><br>'+T('macroP')+':'+nfmt(mac.p||0)+' '+T('macroF')+':'+nfmt(mac.f||0)+' '+T('macroC')+':'+nfmt(mac.c||0)+'g'
+      +(d.fiber!=null?'<br><span style="color:#795548">🌾 '+T('pdfFiber')+':'+(Math.round(d.fiber*10)/10)+'g</span>':'')+'</td>';
   });
   h+='</tr></tbody></table>';
   // supplements
   if(s.supps&&s.supps.length){
-    h+='<div class="psec">Πρωτόκολλο Συμπληρωμάτων</div>';
-    h+='<table class="pst"><thead><tr><th class="pst-t">Χρόνος Λήψης</th><th>Συμπληρώματα &amp; Δοσολογία</th></tr></thead><tbody>';
+    h+='<div class="psec">'+T('pdfSuppsHdr')+'</div>';
+    h+='<table class="pst"><thead><tr><th class="pst-t">'+T('pdfSuppsTime')+'</th><th>'+T('pdfSuppsDose')+'</th></tr></thead><tbody>';
     const byT={}, order=[];
     s.supps.forEach(su=>{const tk=su.timing||'—'; if(!byT[tk]){byT[tk]=[];order.push(tk);} byT[tk].push(su.name+(su.dose?' ('+su.dose+')':''));});
     let alt=false;
@@ -1621,10 +1633,10 @@ function buildPrintHTML(){
   }
   // hydration
   if(hy.baseMl){
-    h+='<div class="psec">💧 Πρωτόκολλο Ενυδάτωσης</div>';
-    h+='<table class="pst"><thead><tr><th class="pst-t">Χρόνος</th><th>Ποσότητα</th></tr></thead><tbody>';
-    h+='<tr><td class="pst-t">Ημερήσια βάση</td><td>'+hy.baseMl+' ml ('+L(hy.baseMl)+')</td></tr>';
-    h+='<tr class="alt"><td class="pst-t">Ημέρα προπόνησης</td><td>'+(hy.trainMl||hy.baseMl)+' ml ('+L(hy.trainMl||hy.baseMl)+')</td></tr>';
+    h+='<div class="psec">💧 '+T('pdfHydHdr')+'</div>';
+    h+='<table class="pst"><thead><tr><th class="pst-t">'+T('pdfHydTime')+'</th><th>'+T('pdfHydAmount')+'</th></tr></thead><tbody>';
+    h+='<tr><td class="pst-t">'+T('pdfHydBase')+'</td><td>'+hy.baseMl+' ml ('+L(hy.baseMl)+')</td></tr>';
+    h+='<tr class="alt"><td class="pst-t">'+T('pdfHydTrain')+'</td><td>'+(hy.trainMl||hy.baseMl)+' ml ('+L(hy.trainMl||hy.baseMl)+')</td></tr>';
     h+='</tbody></table>';
   }
   // shopping list (new page, 2 columns)
@@ -1635,19 +1647,19 @@ function buildPrintHTML(){
     const col1=[],col2=[]; let n1=0,sw=false;
     cats.forEach(c=>{ if(!sw && n1>=Math.ceil(total/2) && col1.length){sw=true;} if(!sw){col1.push(c);n1+=c.items.length;}else col2.push(c); });
     const card=cat=>{
-      let hh='<div class="pslcard"><div class="pslcard-h">'+(emoji[cat.cat]||'•')+' '+esc(cat.cat)+'</div>';
+      let hh='<div class="pslcard"><div class="pslcard-h">'+(emoji[cat.cat]||'•')+' '+esc(cat.catLabel||cat.cat)+'</div>';
       (cat.items||[]).forEach((it,i)=>{ hh+='<div class="pslrow'+(i%2?' alt':'')+'"><span class="pslchk">☐</span><span class="pslnm">'+esc(it.name)+'</span><span class="pslamt">'+esc(it.buy)+(it.raw?'<span class="psllbl"> '+esc(it.raw)+'</span>':'')+'</span></div>'; });
       return hh+'</div>';
     };
-    h+='<div class="pshop"><div class="psec">🛒 Λίστα Αγορών Εβδομάδας</div>';
+    h+='<div class="pshop"><div class="psec">🛒 '+T('pdfShopHdr')+'</div>';
     h+='<table class="psl2"><tr><td class="pslcol"><div class="pslcards">';
     col1.forEach(c=>h+=card(c));
     h+='</div></td><td class="pslcol"><div class="pslcards">';
     col2.forEach(c=>h+=card(c));
     h+='</div></td></tr></table>';
-    h+='<div class="pfoot">Feed Your Health — Εργαλείο Διαιτολόγου · '+new Date().toLocaleDateString('el-GR')+'</div></div>';
+    h+='<div class="pfoot">'+T('pdfFooter')+' · '+new Date().toLocaleDateString(LANG==='en'?'en-GB':'el-GR')+'</div></div>';
   } else {
-    h+='<div class="pfoot">Feed Your Health — Εργαλείο Διαιτολόγου · '+new Date().toLocaleDateString('el-GR')+'</div>';
+    h+='<div class="pfoot">'+T('pdfFooter')+' · '+new Date().toLocaleDateString(LANG==='en'?'en-GB':'el-GR')+'</div>';
   }
   return h;
 }
@@ -2008,14 +2020,14 @@ function viewProg(){
 // Headline value + Δ από την αρχή, πάνω από κάθε γράφημα σωματικής σύνθεσης.
 // goodDir: -1 = η μείωση είναι θετική (λίπος), +1 = η αύξηση είναι θετική (άλιπη μάζα).
 function chartHeader(title,curVal,unit,startVal,goodDir){
-  const big='<span style="font-size:18px;font-weight:600;color:var(--teal-d)">'+(curVal!=null?String(curVal).replace('.',','):'—')+unit+'</span>';
+  const big='<span style="font-size:18px;font-weight:600;color:var(--teal-d)">'+(curVal!=null?decSep(String(curVal)):'—')+unit+'</span>';
   let deltaTxt='';
   if(startVal!=null&&curVal!=null){
     const d=Math.round((curVal-startVal)*10)/10;
     if(d!==0){
       const down=d<0;
       const good=(goodDir<0&&down)||(goodDir>0&&!down);
-      deltaTxt='<span style="font-size:11px;color:'+(good?'var(--ok)':'var(--muted)')+';margin-left:6px">'+(down?'▼':'▲')+' '+Math.abs(d).toString().replace('.',',')+unit+' από την αρχή</span>';
+      deltaTxt='<span style="font-size:11px;color:'+(good?'var(--ok)':'var(--muted)')+';margin-left:6px">'+(down?'▼':'▲')+' '+decSep(Math.abs(d).toString())+unit+' '+T('sinceStart')+'</span>';
     }
   }
   return el('div',null,'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px"><span style="font-size:12px;color:var(--muted)">'+title+'</span><span>'+big+deltaTxt+'</span></div>');
@@ -2027,11 +2039,11 @@ function bfBands(sex){
     :[{lo:2,hi:5,col:'#1565C0'},{lo:6,hi:13,col:'#2e7d32'},{lo:14,hi:17,col:'#558b2f'},{lo:18,hi:24,col:'#f57c00'},{lo:25,hi:60,col:'#c62828'}];
 }
 function bfBandsLegend(sex){
-  const labels=['Απαραίτητο','Αθλητικό','Φυσιολογικό','Αποδεκτό','Παχυσαρκία'];
+  const labels=[T('bfEssential'),T('bfAthletic'),T('bfFit'),T('bfAcceptable'),T('bfObese')];
   const bands=bfBands(sex);
   let items='';
   bands.forEach((b,i)=>{items+='<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><span style="width:8px;height:8px;border-radius:2px;background:'+b.col+';display:inline-block"></span>'+labels[i]+'</span>';});
-  return el('div',null,'<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8">'+items+'<div style="margin-top:2px">Τιμές αναφοράς ACSM</div></div>');
+  return el('div',null,'<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8">'+items+'<div style="margin-top:2px">'+T('acsmRef')+'</div></div>');
 }
 // Μπάρα αναφοράς Low→High (ΔΜΣ/%Λίπους/WHtR) με ◆ δείκτη στόχου — ίδια λογική με το έντυπο λιπομέτρησης.
 function rbPct(v,min,max){return Math.max(0,Math.min(100,(v-min)/(max-min)*100));}
@@ -2073,7 +2085,7 @@ function sparklineKey(log,key,goal,color,opts){
   const vpad=(mx-mn)*0.15; mn-=vpad; mx+=vpad;
   const sx=i=>padL+ (i/(log.length-1))*(W-padL-8);
   const sy=v=>padT+(1-(v-mn)/(mx-mn))*(H-padT-padB);
-  let svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Γράφημα">';
+  let svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+T('chartAriaLabel')+'">';
   if(opts.bands){
     opts.bands.forEach(b=>{
       const lo=Math.max(b.lo,mn), hi=Math.min(b.hi,mx);
@@ -2082,7 +2094,7 @@ function sparklineKey(log,key,goal,color,opts){
       svg+='<rect x="'+padL+'" y="'+y1+'" width="'+(W-padL-8)+'" height="'+(y2-y1)+'" fill="'+b.col+'" opacity="0.12"/>';
     });
   }
-  if(goal!=null){const gy=sy(goal);svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-8)+'" y2="'+gy+'" stroke="#9fcabf" stroke-width="1" stroke-dasharray="3 3"/><text x="'+(W-46)+'" y="'+(gy-3)+'" font-size="8" fill="var(--teal-l)">στόχος</text>'}
+  if(goal!=null){const gy=sy(goal);svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-8)+'" y2="'+gy+'" stroke="#9fcabf" stroke-width="1" stroke-dasharray="3 3"/><text x="'+(W-46)+'" y="'+(gy-3)+'" font-size="8" fill="var(--teal-l)">'+T('chartGoalLbl')+'</text>'}
   let pts=log.map((x,i)=>sx(i)+','+sy(x[key])).join(' ');
   svg+='<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
   svg+='<circle cx="'+sx(0)+'" cy="'+sy(log[0][key])+'" r="3" fill="'+color+'"/>';
