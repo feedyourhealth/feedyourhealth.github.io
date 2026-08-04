@@ -1134,6 +1134,97 @@ function _genPlanWithUndoProceed(c){
   }
 }
 
+// ✅ Shared exclusion-list assembly — used by BOTH plan-generation paths inside genPlan()
+// below (clone-from-client and template-based). Extracted 2026-08-04 (audit finding #2):
+// before this, the clone-from-client path built its own, SHORTER `excl` list (only
+// c.foodExclude + medical-protocol avoidFoods + parsed "avoid X" free-text preferences) —
+// missing c.foodExclusions (the food-exclusion picker) and c.allergies entirely. A client
+// created via "Βάση πλάνου" = clone-from-another-client who had allergies or picker-based
+// exclusions set got a plan where those foods were never actually filtered out. The
+// template path already built the full list correctly; both paths now share it so they
+// can't silently diverge again.
+function buildClientExclusionList(c, protocolAvoidFoods){
+  var excl=c.foodExclude||[];
+  (protocolAvoidFoods||[]).forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
+  if(c.foodExclusions && Array.isArray(c.foodExclusions)){
+    c.foodExclusions.forEach(function(food){
+      if(excl.indexOf(food)===-1)excl.push(food);
+    });
+  }
+  if(c.allergies){
+    var allergyList=parseAllergies(c.allergies);
+    allergyList.forEach(function(allergy){
+      if(excl.indexOf(allergy)===-1)excl.push(allergy);
+    });
+  }
+  parsePreferenceAvoidFoods(c.preferences).forEach(function(food){
+    if(excl.indexOf(food)===-1)excl.push(food);
+  });
+  return excl;
+}
+
+// ✅ Shared post-generation cleanup pipeline — runs identically after BOTH plan-generation
+// paths inside genPlan() finish building c.weekPlan. Extracted 2026-08-04 (audit finding #2)
+// after the two paths were found to have drifted from each other at least 3 times historically
+// (missed red-meat cap, missed tracking-log, and — found while extracting this — a calorie-
+// reconciliation gap: the clone-from-client path never called reconcileMealCaloriesAfterRemoval
+// after stripping oats/exclusions, so a cloned plan could silently land under its calorie
+// target for that meal, while the template path always compensated). Single source of truth
+// for these 5 steps from now on — a future rule change only needs to happen here once.
+function applyPostGenerationCleanup(c, excl){
+  // 1) Red meat frequency cap (max 2x/week, for cholesterol)
+  c.weekPlan = enforceRedMeatFrequency(c.weekPlan, excl, c.dietType);
+
+  // 2) Remove oats from non-breakfast meals (oats only belong in breakfast), reconciling
+  // each meal's calories for whatever got removed.
+  for(var d=0;d<7;d++){
+    if(!c.weekPlan[d])continue;
+    for(var mi=0;mi<c.weekPlan[d].length;mi++){
+      var meal=c.weekPlan[d][mi];
+      if(classifyMealSlot(meal.name)==='breakfast')continue;
+      if(meal.foods&&meal.foods.length>0){
+        var oatsTargetK=0;
+        meal.foods.forEach(function(food){oatsTargetK+=cm(food.n,food.g).k;});
+        meal.foods=meal.foods.filter(function(food){
+          return !(food.n||'').toLowerCase().includes('βρώμη');
+        });
+        reconcileMealCaloriesAfterRemoval(meal, oatsTargetK);
+      }
+    }
+  }
+
+  // 3) Three-layer exclusion cleanup (name match → normalized-accent match → recipe-ingredient
+  // substring match), last-resort paranoia pass regardless of which generation method put the
+  // food there — reconciling calories for what was removed.
+  if(excl.length>0){
+    var exclNormalized=excl.map(function(x){return normalizeGreekText(x);});
+    for(var d=0;d<7;d++){
+      if(!c.weekPlan[d])continue;
+      for(var mi=0;mi<c.weekPlan[d].length;mi++){
+        var meal=c.weekPlan[d][mi];
+        if(meal.foods&&meal.foods.length>0){
+          var exclTargetK=0;
+          meal.foods.forEach(function(food){exclTargetK+=cm(food.n,food.g).k;});
+          meal.foods=meal.foods.filter(function(food){
+            return !foodIsExcludedByNameOrIngredient(food.n,exclNormalized);
+          });
+          meal.foods=meal.foods.filter(function(food){
+            return food.n && (food.n||'').trim().length>0;
+          });
+          reconcileMealCaloriesAfterRemoval(meal, exclTargetK);
+        }
+      }
+    }
+  }
+
+  // 4) Diet-type category safety net: strip any food from a category the client's diet type
+  // forbids, regardless of which code path (recipe, taste library, saved combo, clone...) put it there.
+  applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays, c.dietFoodExceptionDays);
+
+  // 5) Log to tracking system
+  logPlanGeneration(c, c.weekPlan);
+}
+
 function genPlan(){
   try{
   var c=getC();if(!c)return;var t=calcTDEE(c);c.weekPlan={};
@@ -1149,10 +1240,9 @@ function genPlan(){
     var clonedPlan=cloneAndScaleClientPlan(baseCId, c, t);
     if(clonedPlan){
       c.weekPlan=clonedPlan;
-      // Apply food exclusions to the cloned plan
-      var excl=c.foodExclude||[];
-      protocolAvoidFoods.forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
-      parsePreferenceAvoidFoods(c.preferences).forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
+      // Apply food exclusions to the cloned plan — full list (picker + allergies + protocols +
+      // free-text preferences), see buildClientExclusionList().
+      var excl=buildClientExclusionList(c, protocolAvoidFoods);
       if(excl.length>0){
         for(var d=0;d<7;d++){
           if(c.weekPlan[d]){
@@ -1176,56 +1266,12 @@ function genPlan(){
         }
       }
 
-      // ✅ ENFORCE RED MEAT FREQUENCY (MAX 2x/week for cholesterol) — same cap the template path
-      // applies below; the cloned source client's own plan could exceed it for this new client's
-      // dietType/exclusions, and this path used to skip the check entirely (2026-07-10 fix).
-      c.weekPlan = enforceRedMeatFrequency(c.weekPlan, excl, c.dietType);
-
-      // ✅ REMOVE OATS FROM NON-BREAKFAST MEALS — same rule the template path applies below,
-      // in case enforceRedMeatFrequency's substitutions reintroduced βρώμη outside breakfast.
-      for(var d=0;d<7;d++){
-        if(!c.weekPlan[d])continue;
-        for(var mi=0;mi<c.weekPlan[d].length;mi++){
-          var meal=c.weekPlan[d][mi];
-          if(classifyMealSlot(meal.name)==='breakfast')continue;
-          if(meal.foods&&meal.foods.length>0){
-            meal.foods=meal.foods.filter(function(food){
-              return !(food.n||'').toLowerCase().includes('βρώμη');
-            });
-          }
-        }
-      }
-
-      // ✅ THREE-LAYER EXCLUSION CLEANUP — same paranoia pass the template path applies below,
-      // catching anything enforceRedMeatFrequency's own substitutions might have reintroduced.
-      if(excl.length>0){
-        var exclNormalized=excl.map(function(x){return normalizeGreekText(x);});
-        for(var d=0;d<7;d++){
-          if(!c.weekPlan[d])continue;
-          for(var mi=0;mi<c.weekPlan[d].length;mi++){
-            var meal=c.weekPlan[d][mi];
-            if(meal.foods&&meal.foods.length>0){
-              meal.foods=meal.foods.filter(function(food){
-                return !foodIsExcludedByNameOrIngredient(food.n,exclNormalized);
-              });
-              meal.foods=meal.foods.filter(function(food){
-                return food.n && (food.n||'').trim().length>0;
-              });
-            }
-          }
-        }
-      }
-
-      // ✅ DIET-TYPE SAFETY NET: the "Βάση πλάνου" client picker lists EVERY client with a plan,
-      // regardless of diet type — cloning a normal/omnivore client's plan as the basis for a new
-      // vegan/vegetarian/orthodox_fasting client would otherwise carry their meat/fish/dairy over
-      // completely unfiltered (confirmed live: 41 category violations in one such test). This path
-      // returns early, before the same check that already runs on the template-generation path below.
-      applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays, c.dietFoodExceptionDays);
-
-      // ✅ LOG PLAN TO TRACKING SYSTEM — this path used to skip logging entirely, so plans made
-      // by cloning an existing client never appeared in Στατιστικά Γευμάτων (2026-07-10 fix).
-      logPlanGeneration(c, c.weekPlan);
+      // ✅ Shared cleanup pipeline (red-meat cap, oats removal, exclusion cleanup, diet-type
+      // safety net — the "Βάση πλάνου" client picker lists EVERY client regardless of diet
+      // type, so this also catches e.g. cloning an omnivore's plan into a new vegan client —
+      // plus the tracking log) — see applyPostGenerationCleanup(). Same steps the
+      // template-based path below applies, kept in one place so they can't drift apart again.
+      applyPostGenerationCleanup(c, excl);
 
       c.planGeneratedAt=Date.now();  // ✅ ώστε να ξέρουμε πότε "λήγει" (χρειάζεται ανανέωση) το πλάνο
       saveNow();  // Save immediately, not delayed
@@ -1283,26 +1329,7 @@ function genPlan(){
   // Build base day array
   var tmplDays=[];
   for(var d=0;d<7;d++)tmplDays.push(tmpl[d]||tmpl[0]);
-  var excl=c.foodExclude||[];
-  // ⚕️ Active medical protocols' avoidFoods (union across all active conditions, see top of genPlan())
-  protocolAvoidFoods.forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
-  // ✅ ADD FOOD EXCLUSIONS (NEW PICKER) TO EXCLUSION LIST
-  if(c.foodExclusions && Array.isArray(c.foodExclusions)){
-    c.foodExclusions.forEach(function(food){
-      if(excl.indexOf(food)===-1)excl.push(food);
-    });
-  }
-  // ✅ ALSO SUPPORT OLD ALLERGIES FORMAT (for backward compatibility)
-  if(c.allergies){
-    var allergyList=parseAllergies(c.allergies);
-    allergyList.forEach(function(allergy){
-      if(excl.indexOf(allergy)===-1)excl.push(allergy);
-    });
-  }
-  // ✅ Ρητές προτάσεις αποφυγής μέσα στο ελεύθερο κείμενο "Προτιμήσεις" (π.χ. "Όχι κόκκινο κρέας")
-  parsePreferenceAvoidFoods(c.preferences).forEach(function(food){
-    if(excl.indexOf(food)===-1)excl.push(food);
-  });
+  var excl=buildClientExclusionList(c, protocolAvoidFoods);
   // ✅ Reorder meals to standard sequence before other operations
   tmplDays=reorderMealsToStandardSequence(tmplDays);
   // Initial Mediterranean pipeline on templates ONLY
@@ -1502,69 +1529,10 @@ function genPlan(){
     c.weekPlan[d]=scalePlan(tmplDays[d],eff[d],eff[d].meals);
   }
 
-  // ✅ ENFORCE RED MEAT FREQUENCY (MAX 2x/week for cholesterol)
-  c.weekPlan = enforceRedMeatFrequency(c.weekPlan, excl, c.dietType);
-
-  // ✅ FINAL CLEANUP: REMOVE OATS FROM NON-BREAKFAST MEALS (AFTER all Mediterranean rules)
-  // CRITICAL: Oats should ONLY appear in breakfast, never in lunch/dinner
-  // This must happen AFTER Mediterranean rules since they might add oats back
-  for(var d=0;d<7;d++){
-    for(var mi=0;mi<c.weekPlan[d].length;mi++){
-      var meal = c.weekPlan[d][mi];
-
-      // Skip breakfast - oats are allowed there
-      if(classifyMealSlot(meal.name)==='breakfast') continue;
-
-      // For all non-breakfast meals, remove oats
-      if(meal.foods && meal.foods.length > 0) {
-        var oatsTargetK = 0;
-        meal.foods.forEach(function(food){oatsTargetK += cm(food.n, food.g).k;});
-        meal.foods = meal.foods.filter(function(food) {
-          var foodLower = (food.n || '').toLowerCase();
-          return !foodLower.includes('βρώμη');
-        });
-        reconcileMealCaloriesAfterRemoval(meal, oatsTargetK);
-      }
-    }
-  }
-
-  // ✅ FINAL CLEANUP: REMOVE EXCLUDED FOODS FROM ALL MEALS (AFTER all Mediterranean rules)
-  // CRITICAL: This must be the LAST step to ensure exclusions are respected
-  // regardless of which recipe/generation method was used
-  // ENHANCED: Now with THREE-LAYER protection + Greek accent normalization
-  if(excl.length > 0) {
-    // Normalize exclusions to handle Greek accents properly
-    var exclNormalized = excl.map(function(x){return normalizeGreekText(x);});
-
-    for(var d=0;d<7;d++){
-      for(var mi=0;mi<c.weekPlan[d].length;mi++){
-        var meal = c.weekPlan[d][mi];
-        if(meal.foods && meal.foods.length > 0) {
-          var exclTargetK = 0;
-          meal.foods.forEach(function(food){exclTargetK += cm(food.n, food.g).k;});
-          // LAYER 1: Remove foods that match exclusions by name OR by a recipe's own ingredients
-          // (exact, normalized-accent, or substring — see foodIsExcludedByNameOrIngredient)
-          meal.foods = meal.foods.filter(function(food){
-            return !foodIsExcludedByNameOrIngredient(food.n,exclNormalized);
-          });
-
-          // LAYER 2: Remove foods with empty/invalid names
-          meal.foods = meal.foods.filter(function(food){
-            return food.n && (food.n||'').trim().length > 0;
-          });
-
-          reconcileMealCaloriesAfterRemoval(meal, exclTargetK);
-        }
-      }
-    }
-  }
-
-  // ✅ DIET-TYPE SAFETY NET: strip any food from a category the client's diet type
-  // forbids, regardless of which code path (recipe, taste library, saved combo...) put it there.
-  applyDietTypeCategorySafetyNet(c.weekPlan, c.dietType, c.dietExceptionDays, c.dietFoodExceptionDays);
-
-  // ✅ LOG PLAN TO TRACKING SYSTEM
-  logPlanGeneration(c, c.weekPlan);
+  // ✅ Shared cleanup pipeline (red-meat cap, oats removal, exclusion cleanup, diet-type
+  // safety net, tracking log) — see applyPostGenerationCleanup(). Same steps the
+  // clone-from-client path above applies, kept in one place so they can't drift apart again.
+  applyPostGenerationCleanup(c, excl);
 
   c.planGeneratedAt=Date.now();  // ✅ ώστε να ξέρουμε πότε "λήγει" (χρειάζεται ανανέωση) το πλάνο
   save();swTab(2);renderWeekTable();
