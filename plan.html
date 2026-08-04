@@ -445,7 +445,7 @@ const LOG_TAGS=[
   {id:'sick',icon:'ti-thermometer',label:'Άρρωστος/η'}
 ];
 
-let SNAP=null, curDay=0, sb=null, curView='home', selectedLogTag=null, editingNote=false;
+let SNAP=null, curDay=0, sb=null, curView='home', selectedLogTag=null, editingNote=false, matchCardOpen=false;
 
 // ── «Πρόσθεσε στην αρχική οθόνη» — Android/Chrome στέλνει το native prompt event, το κρατάμε
 // για να το πυροδοτήσουμε εμείς όταν ο πελάτης πατήσει το δικό μας κουμπί (το browser prompt
@@ -482,6 +482,85 @@ function setMeals(o){setMealsFor(todayKey(),o)}
 // supplement adherence: { 'YYYY-MM-DD': { '<supp name>': true } }
 function getSuppLog(){try{return JSON.parse(localStorage.getItem(lk('supps'))||'{}')}catch(e){return {}}}
 function setSuppLog(o){try{localStorage.setItem(lk('supps'),JSON.stringify(o))}catch(e){}}
+
+// ── ΗΜΕΡΑ ΑΓΩΝΑ ───────────────────────────────────────────────────────────
+// Μόνιμος κανόνας: SNAP.days[i].isMatch/.matchTime (ίδιο μοτίβο με isTrain), τον ορίζει
+// ο διαιτολόγος μία φορά. Το override παρακάτω είναι μόνο εξαίρεση για ΤΗΝ τρέχουσα
+// εβδομάδα (π.χ. μετατέθηκε ο αγώνας) — δεν αγγίζει ποτέ τον μόνιμο κανόνα.
+const DAY_LABELS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+const MATCH_TIMES=['πρωί','μεσημέρι','απόγευμα','βράδυ'];
+const MATCH_TIME_H={'πρωί':9,'μεσημέρι':13,'απόγευμα':17,'βράδυ':20};
+function curWeekKey(){return dKey(weekDates()[0])}
+function getMatchOverride(){try{const o=JSON.parse(localStorage.getItem(lk('matchOverride'))||'{}');return o.week===curWeekKey()?o:null}catch(e){return null}}
+function setMatchOverride(dayIdx,time){try{localStorage.setItem(lk('matchOverride'),JSON.stringify({week:curWeekKey(),day:dayIdx,time:time}))}catch(e){}}
+function defaultMatchDay(){const days=(SNAP&&SNAP.days)||[];for(let i=0;i<days.length;i++){if(days[i]&&days[i].isMatch)return i;}return -1}
+function defaultMatchTime(){const i=defaultMatchDay();return (i>=0&&SNAP.days[i].matchTime)||'απόγευμα'}
+function isCurWeekDate(d){const mon=weekDates()[0],sun=weekDates()[6];const dd=new Date(d);dd.setHours(12,0,0,0);return dd>=mon&&dd<=sun}
+// effective match state για συγκεκριμένο day index, λαμβάνοντας υπόψη το override της εβδομάδας.
+// forDate προαιρετικό — όταν δίνεται (π.χ. σε ιστορικά στατιστικά για streak/σκορ), το override
+// εφαρμόζεται ΜΟΝΟ αν η ημερομηνία πέφτει μέσα στην τρέχουσα εβδομάδα, αλλιώς θα "διέρρεε" αναδρομικά
+// σε προηγούμενες εβδομάδες (π.χ. αν φέτος μετακινήθηκε ο αγώνας, δεν πρέπει να αλλάξει το ιστορικό).
+function matchInfoFor(dayIdx,forDate){
+  const ov=getMatchOverride();
+  if(ov && (forDate===undefined||isCurWeekDate(forDate)))return ov.day===dayIdx?{isMatch:true,time:ov.time}:{isMatch:false};
+  const d=(SNAP&&SNAP.days&&SNAP.days[dayIdx])||null;
+  return (d&&d.isMatch)?{isMatch:true,time:d.matchTime||'απόγευμα'}:{isMatch:false};
+}
+// "πριν"/"μετά" τον αγώνα, υπολογισμένο από την ήδη υπάρχουσα ώρα του γεύματος (m.time) σε σχέση
+// με το χοντρικό διάστημα του αγώνα — όχι νέο περιεχόμενο γεύματος, μόνο ετικέτα.
+function matchRelTag(mealTime,bucket){
+  if(!mealTime)return '';
+  const hh=parseInt(String(mealTime).split(':')[0],10); if(isNaN(hh))return '';
+  const bh=MATCH_TIME_H[bucket]||17;
+  return hh<bh?'πριν τον αγώνα':(hh>bh?'μετά τον αγώνα':'');
+}
+// Συμπτυγμένο by default — μία γραμμή επιβεβαίωσης, ώστε να μην καταλαμβάνει την Αρχική τις
+// υπόλοιπες 6 μέρες της εβδομάδας που δεν αφορά κανέναν. Ανοίγει μόνο αν ο πελάτης πατήσει "άλλαξε".
+function matchCard(){
+  if(!SNAP)return null;
+  const defDay=defaultMatchDay(); const ov=getMatchOverride();
+  if(defDay<0 && !ov)return null;
+  const curDayIdx=ov?ov.day:defDay;
+  const curTime=ov?ov.time:defaultMatchTime();
+  const summary=curDayIdx>=0?(DAY_LABELS[curDayIdx]+', '+curTime):'καμία';
+  const c=el('div','card'); const cp=el('div','card-pad');
+  const head=el('div',null); head.style.cssText='display:flex;align-items:center;gap:8px';
+  head.innerHTML='<i class="ti ti-ball-football" style="color:var(--teal);font-size:16px;flex-shrink:0"></i>'
+    +'<span style="font-size:13px;color:var(--muted);flex:1">Αγώνας: '+esc(summary)+(ov?' <span style="color:var(--faint);font-size:11px">(αυτή τη βδομάδα)</span>':'')+'</span>';
+  const toggleBtn=el('button','swap-btn',matchCardOpen?'κλείσε':'άλλαξε');
+  toggleBtn.type='button';
+  toggleBtn.style.cssText='width:auto;margin-top:0;padding:5px 10px;font-size:11px;flex-shrink:0';
+  toggleBtn.onclick=()=>{matchCardOpen=!matchCardOpen;go('home')};
+  head.appendChild(toggleBtn);
+  cp.appendChild(head);
+  if(matchCardOpen){
+    const body=el('div',null); body.style.cssText='margin-top:10px;padding-top:10px;border-top:.5px solid var(--bord-l)';
+    const dayRow=el('div',null); dayRow.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px';
+    DAY_LABELS.forEach((lbl,idx)=>{
+      const p=el('button','log-tag'+(curDayIdx===idx?' log-tag-on':''),shortDay(lbl)); p.type='button';
+      p.onclick=()=>{setMatchOverride(idx,curTime||'απόγευμα');go('home')};
+      dayRow.appendChild(p);
+    });
+    const offP=el('button','log-tag'+(curDayIdx<0?' log-tag-on':''),'Καμία'); offP.type='button';
+    offP.onclick=()=>{setMatchOverride(-1,null);go('home')};
+    dayRow.appendChild(offP);
+    body.appendChild(dayRow);
+    const timeRow=el('div',null); timeRow.style.cssText='display:flex;flex-wrap:wrap;gap:6px';
+    MATCH_TIMES.forEach(t=>{
+      const p=el('button','log-tag'+(curTime===t?' log-tag-on':''),t); p.type='button';
+      p.onclick=()=>{if(curDayIdx>=0){setMatchOverride(curDayIdx,t);go('home')}};
+      timeRow.appendChild(p);
+    });
+    body.appendChild(timeRow);
+    if(ov){
+      const note=defDay>=0?('Το '+DAY_LABELS[defDay]+' παραμένει η κανονική μέρα αγώνα τις άλλες βδομάδες.'):'Ισχύει μόνο αυτή τη βδομάδα.';
+      body.appendChild(el('div','swap-note',note));
+    }
+    cp.appendChild(body);
+  }
+  c.appendChild(cp);
+  return c;
+}
 // βάρος/σημείωση που στέλνει ο ίδιος ο πελάτης (client_logs, χωρίς login) — { 'YYYY-MM-DD': {w,n} }
 function getClientLog(){try{return JSON.parse(localStorage.getItem(lk('clientlog'))||'{}')}catch(e){return {}}}
 function getClientLogToday(){return getClientLog()[todayKey()]||null}
@@ -511,7 +590,8 @@ function pushCheckin(){
     const todK=dKey(new Date());
     const suppDay=(getSuppLog()[todK])||{};
     let sDone=0; (s.supps||[]).forEach(su=>{if(suppDay[su.name])sDone++;});
-    const goalMl=(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
+    const mi=matchInfoFor(defaultDay());
+    const goalMl=(mi.isMatch&&h.matchMl)?h.matchMl:(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
     const waterGoal=Math.max(6,Math.round(goalMl/per));
     sb.rpc('submit_checkin',{
       p_token:tok, p_date:todK,
@@ -964,15 +1044,18 @@ function go(tab){
   sc.innerHTML=''; sc.appendChild(fn());
   const sub=$('#hdr-sub');
   if(sub){
-    const labels={home:dayHeader(defaultDay()),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση',supps:'Τα συμπληρώματά μου',spices:'Μπαχαρικά & βότανα',fruits:'Λίστα ανταλλαγής φρούτων'};
+    const labels={home:dayHeader(defaultDay(),false),plan:'Το εβδομαδιαίο πλάνο μου',prog:'Η πρόοδός μου',shop:'Λίστα για ψώνια',water:'Ενυδάτωση',supps:'Τα συμπληρώματά μου',spices:'Μπαχαρικά & βότανα',fruits:'Λίστα ανταλλαγής φρούτων'};
     sub.textContent=labels[tab]||'';
   }
 }
 
-function dayHeader(i){
+// withMatch=false στο header της Αρχικής — το "ημέρα αγώνα" εμφανίζεται ήδη σαν badge στην κάρτα
+// γευμάτων (viewHome), οπότε εδώ θα ήταν απλή επανάληψη του ίδιου μηνύματος στην ίδια οθόνη.
+function dayHeader(i,withMatch){
   const d=SNAP.days&&SNAP.days[i];
   if(!d)return '';
-  return (d.label||'')+(d.isTrain?' — ημέρα προπόνησης':'');
+  const mi=matchInfoFor(i);
+  return (d.label||'')+(d.isTrain?' — ημέρα προπόνησης':'')+((withMatch!==false&&mi.isMatch)?' — ημέρα αγώνα ('+mi.time+')':'');
 }
 
 // ── HOME ──────────────────────────────────────────────────────────────────
@@ -1002,6 +1085,10 @@ function viewHome(){
   const glance=glanceCard();
   if(glance)v.appendChild(glance);
 
+  // ρύθμιση ημέρας αγώνα — εμφανίζεται μόνο αν υπάρχει μόνιμος κανόνας ή override αυτής της εβδομάδας
+  const mCard=matchCard(); if(mCard)v.appendChild(mCard);
+  const mi=matchInfoFor(defaultDay());
+
   const stats=el('div','stats stats-4');
   stats.innerHTML=
     statBox('Στόχος',nfmt(tg.kcal||0),'kcal')
@@ -1017,15 +1104,17 @@ function viewHome(){
   const nudge=activityNudge(meals,done); if(nudge)v.appendChild(nudge);
   const c=el('div','card'); const cp=el('div','card-pad');
   cp.innerHTML='<div class="card-hdr" style="margin-bottom:8px"><i class="ti ti-tools-kitchen-2"></i>Η διατροφή μου σήμερα'
+    +(mi.isMatch?' <span class="log-tag-badge"><i class="ti ti-ball-football"></i>Αγώνας · '+esc(mi.time)+'</span>':'')
     +(meals.length?'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+meals.length+'</span>':'')+'</div>'
     +(meals.length?'<div class="prog" style="margin:0 0 4px"><div style="width:'+Math.round(done/meals.length*100)+'%"></div></div>':'');
   if(meals.length){
     meals.forEach((m,idx)=>{
       const mm=el('div','meal'+(eaten[idx]?' eaten':''));
       mm.style.cursor='pointer';
+      const relTag=mi.isMatch?matchRelTag(m.time,mi.time):'';
       mm.innerHTML='<span class="mc">'+(eaten[idx]?'<i class="ti ti-check"></i>':'')+'</span>'
         +'<div class="t">'+esc(m.time||'')+'</div>'
-        +'<div style="flex:1"><div class="nm">'+esc(m.title||m.label||'Γεύμα')+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+'</div></div>';
+        +'<div style="flex:1"><div class="nm">'+esc(m.title||m.label||'Γεύμα')+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
       mm.onclick=()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);pushCheckin();go('home');};
       cp.appendChild(mm);
     });
@@ -1364,7 +1453,8 @@ function pillarStats(dates,opts){
     const mealsN=(pd.meals||[]).length;
     let e=0; if(mealsN){r.dietTot++; const lg=mealsAll[k]||{}; for(let j=0;j<mealsN;j++)if(lg[j])e++; if(e>=mealsN)r.dietDone++;}
     let c=0; if(supCount){r.supTot++; const lg=suppAll[k]||{}; (s.supps||[]).forEach(su=>{if(lg[su.name])c++}); if(c>=supCount)r.supDone++;}
-    const goalMl=(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
+    const mi=matchInfoFor([6,0,1,2,3,4,5][d.getDay()],d);
+    const goalMl=(mi.isMatch&&h.matchMl)?h.matchMl:(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
     const tg=Math.max(6,Math.round(goalMl/per)); const wn=waterAll[k]||0;
     r.watTot++; if(wn>=tg)r.watDone++;
     if(e>0||c>0||wn>0)r.anyData=true;
@@ -1397,7 +1487,8 @@ function streakInfo(){
     const mealsN=(pd.meals||[]).length;
     if(mealsN){let e=0; for(let j=0;j<mealsN;j++)if(mLog&&mLog[j])e++; if(e<mealsN)return 'missed';}
     if(supCount){let c=0;(s.supps||[]).forEach(su=>{if(sLog&&sLog[su.name])c++}); if(c<supCount)return 'missed';}
-    const goalMl=(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000); const tg=Math.max(6,Math.round(goalMl/per));
+    const mi=matchInfoFor([6,0,1,2,3,4,5][d.getDay()],d);
+    const goalMl=(mi.isMatch&&h.matchMl)?h.matchMl:(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000); const tg=Math.max(6,Math.round(goalMl/per));
     if((wLog||0)<tg)return 'missed'; return 'good';
   }
   const monthKey=dd=>dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0');
@@ -1908,7 +1999,8 @@ function viewFruits(){
 function waterCard(mini){
   const s=SNAP, h=s.hydration||{};
   const day=s.days&&s.days[defaultDay()];
-  const goalMl=(day&&day.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
+  const mi=matchInfoFor(defaultDay());
+  const goalMl=(mi.isMatch&&h.matchMl)?h.matchMl:(day&&day.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
   const per=h.glassMl||250;
   const totalGlasses=Math.max(6,Math.round(goalMl/per));
   const have=getWater();
@@ -1923,6 +2015,7 @@ function waterCard(mini){
     g.appendChild(gl);
   }
   c.appendChild(g);
+  if(mi.isMatch&&h.matchMl)c.appendChild(el('div','swap-note','Αυξημένος στόχος λόγω αγώνα σήμερα.'));
   if(!mini)c.appendChild(el('div','empty-glass-note','Πάτα ένα ποτήρι για να καταγράψεις πόσο νερό ήπιες σήμερα.'));
   return c;
 }

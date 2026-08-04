@@ -643,6 +643,9 @@ function saveClinicContact() {
     Cloud.CLINIC.wa = wa;
     Cloud.CLINIC.email = email;
   }
+  // Η αποθήκευση γίνεται σιωπηλά σε κάθε onblur — χωρίς αυτό δεν υπάρχει καμία ένδειξη
+  // ότι κάτι αποθηκεύτηκε, οπότε έμοιαζε "δεν σώζεται" παρόλο που η τιμή περνούσε κανονικά.
+  if (typeof showSuccessToast === 'function') showSuccessToast('✓ Τα στοιχεία επικοινωνίας αποθηκεύτηκαν');
 }
 
 // ✅ PHASE 2: BACKUP SYSTEM
@@ -2935,6 +2938,8 @@ function saveFoodExclusions(){
         days.push({
           label:DAYS[d],
           isTrain:!!(c.trainDays&&c.trainDays[d]),
+          isMatch:!!(c.matchDays&&c.matchDays[d]),
+          matchTime:c.matchTimeBucket||'απόγευμα',
           kcal:Math.round(dayK),
           macros:{p:Math.round(dP),c:Math.round(dC),f:Math.round(dF)},
           fiber:Math.round(dFi*10)/10,
@@ -3007,6 +3012,7 @@ function saveFoodExclusions(){
 
       var hb=t.hydBase||Math.round((c.weight||70)*35);
       var ht=t.hydTrain||(hb+500);
+      var hm=hb+800; // ημέρα αγώνα: μεγαλύτερη απώλεια υγρών από απλή προπόνηση
 
       // ── Λίστα ανταλλαγής φρούτων ── κρύβεται σε κετογονική δίαιτα, όπου τα φρούτα δεν προβλέπονται.
       var fruits=[];
@@ -3029,7 +3035,7 @@ function saveFoodExclusions(){
         coachNote:(c.portalNote||'').trim(),
         contact:hasContact?{wa:clinic.wa||'',tel:clinic.tel||'',email:clinic.email||'',web:clinic.web||''}:null,
         targets:{kcal:Math.round(t.target||0), p:Math.round(t.p||0), c:Math.round(t.carb||0), f:Math.round(t.f||0)},
-        hydration:{baseMl:hb, trainMl:ht, glassMl:250},
+        hydration:{baseMl:hb, trainMl:ht, matchMl:hm, glassMl:250},
         days:days,
         shopping:shopping,
         supps:supps,

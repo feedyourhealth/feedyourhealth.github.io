@@ -2391,7 +2391,7 @@ window.addEventListener('load', function(){
 function addClient(prefillName){
   try {
     var id='c'+Date.now();
-    var newClient={id:id,name:(prefillName||'').trim(),sex:'',age:null,weight:null,height:null,bf:0,leanmass:0,activity:'',goal:'',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
+    var newClient={id:id,name:(prefillName||'').trim(),sex:'',age:null,weight:null,height:null,bf:0,leanmass:0,activity:'',goal:'',formula:'mifflin',lbm:0,trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],trainTimesByDay:['','','','','','',''],matchDays:[false,false,false,false,false,false,false],matchTimeBucket:'απόγευμα',carbBoost:20,trainHoursPerDay:1,metActivities:[],weekPlan:{},dayTargets:null,supps:[],suppExclude:[],macroPreset:'balanced',macroP:25,macroF:25,macroC:50,weightLog:[],consultLog:[],selectedTemplate:null,foodExclude:[],dietType:'normal',lastAccess:Date.now()};
 
     if(window.undoRedoManager && typeof CreateClientCommand !== 'undefined'){
       var cmd = new CreateClientCommand(newClient);

@@ -1056,6 +1056,16 @@ function buildDayTgtHtml(c,t){
     trainRow+='<td><button class="train-tog '+(isT?'train-t':'train-r')+'" onclick="setTrainDay('+ti+','+(isT?'false':'true')+')">'+(isT?'T':'R')+'</button></td>';
   }
   trainRow+='</tr>';
+  // Ημέρα αγώνα — ανεξάρτητο μόνιμο σημαδάκι ανά ημέρα εβδομάδας, χωρίς καμία επίδραση στους
+  // θερμιδικούς/macro στόχους (αυτοί καθορίζονται ήδη από το T/R παραπάνω). Χρησιμοποιείται μόνο
+  // από το plan.html για το badge/ετικέτες πριν-μετά/αυξημένο νερό — βλ. SNAP.days[i].isMatch.
+  var matchDaysArr=c.matchDays||[false,false,false,false,false,false,false];
+  var matchRow='<tr class="train-row"><td>⚽ Αγώνας</td>';
+  for(var mdi=0;mdi<7;mdi++){
+    var isM=matchDaysArr[mdi];
+    matchRow+='<td><button class="match-tog '+(isM?'match-on':'match-off')+'" onclick="setMatchDay('+mdi+','+(isM?'false':'true')+')" title="Ημέρα αγώνα">'+(isM?'Μ':'—')+'</button></td>';
+  }
+  matchRow+='</tr>';
   // Per-day row: activity names (MET mode) or manual hours (non-MET)
   var dayRowHtml='';
   var useMET=c.metActivities&&c.metActivities.length>0;
@@ -1106,7 +1116,7 @@ function buildDayTgtHtml(c,t){
     timeRow+='</tr>';
     dayRowHtml=hrsRow+timeRow;
   }
-  var tbody=trainRow+dayRowHtml;
+  var tbody=trainRow+matchRow+dayRowHtml;
   macros.forEach(function(m){
     tbody+='<tr class="'+m.cls+'"><td>'+m.label+'</td>';
     for(var i=0;i<7;i++){
@@ -1141,7 +1151,17 @@ function buildDayTgtHtml(c,t){
     +'<input class="carb-boost-inp" type="date" value="'+(c.eventDate||'')+'" onchange="setEventDate(this.value)" style="width:auto">'
     +'</div>'
     +carbLoadNote
-    +'<div style="font-size:10px;color:#999;margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
+    +'<div style="font-size:10px;color:#999;margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; Μ=ημέρα αγώνα (δεν αλλάζει θερμίδες/macros, μόνο το πλάνο του πελάτη) &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
+    +(matchDaysArr.some(function(x){return x;})?(
+      '<div class="carb-boost-row">'
+      +'<label>&#9917; Ώρα αγώνα (χοντρικά, ίδια για κάθε εβδομάδα):</label>'
+      +'<div style="display:flex;gap:6px">'
+      +['πρωί','μεσημέρι','απόγευμα','βράδυ'].map(function(bk){
+        var on=(c.matchTimeBucket||'απόγευμα')===bk;
+        return '<button type="button" onclick="setMatchTimeBucket(\''+bk+'\')" style="padding:5px 10px;border-radius:14px;border:1px solid '+(on?'#025857':'#ccc')+';background:'+(on?'#025857':'#fff')+';color:'+(on?'#fff':'#333')+';font-size:11px;cursor:pointer">'+bk+'</button>';
+      }).join('')
+      +'</div></div>'
+    ):'')
     +'<div style="background:#f0f7ff;border:1px solid #80d4ff;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#0056b3">'
     +'<div style="font-weight:700;margin-bottom:4px">⚡ Προσαρμογή Macros ανάλογα Προπόνησης</div>'
     +'<div style="line-height:1.5">'
@@ -2825,6 +2845,23 @@ function setEventDate(v){
 function resetDayTargets(){
   var c=getC();if(!c)return;
   c.dayTargets=null;
+  renderMain();
+}
+// Ημέρα αγώνα: ανεξάρτητο σημαδάκι από το trainDays — δεν επηρεάζει θερμίδες/macros, γι' αυτό
+// εδώ γίνεται μόνο save()+renderMain() (χωρίς onClientChange, που θα ξανάτρεχε το TDEE cascade).
+function setMatchDay(d,isM){
+  var c=getC();if(!c)return;
+  if(!c.matchDays)c.matchDays=[false,false,false,false,false,false,false];
+  c.matchDays[d]=isM;
+  save();
+  upd('matchDays',c.matchDays);
+  renderMain();
+}
+function setMatchTimeBucket(bucket){
+  var c=getC();if(!c)return;
+  c.matchTimeBucket=bucket;
+  save();
+  upd('matchTimeBucket',bucket);
   renderMain();
 }
 

@@ -840,6 +840,11 @@ body.dark-mode .tooltip-text {
 .train-t{background:var(--teal);color:#fff}
 .train-r{background:#eee;color:#6b6b6b}
 .train-tog:hover{opacity:.82}
+/* ── Match day toggle — deliberately NOT teal, so it can't be mistaken for the Τ/Ρ row above at a glance ── */
+.match-tog{padding:2px 7px;border-radius:999px;border:none;cursor:pointer;font-size:10px;font-weight:700;transition:all .15s}
+.match-on{background:#1565C0;color:#fff}
+.match-off{background:#eee;color:#6b6b6b}
+.match-tog:hover{opacity:.82}
 .hrs-row td:first-child{color:#888;font-size:10px}
 .hrs-inp{width:100%;padding:2px 1px;border-radius:5px;border:1px solid #ddd;font-size:10px;font-weight:700;text-align:center;font-family:inherit;background:#f9f9f9}
 .hrs-t{border-color:var(--teal);color:var(--teal);background:#f0f8f7}

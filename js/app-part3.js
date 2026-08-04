@@ -3770,8 +3770,14 @@ function openPublishModal(){
       +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος πελάτη</div>'
       +'<div style="display:flex;gap:6px;margin-bottom:14px"><input id="publish-url" value="'+esc(url)+'" readonly style="flex:1;font-size:12px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;background:#f4f8f6;color:#014545" onclick="this.select()">'
       +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="copyPublishUrl(this)">Αντιγραφή</button></div>'
-      +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📧 Αποστολή με Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
-      +(c.email?'':'<div style="font-size:11px;color:#e08a00;margin:-4px 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα — θα ανοίξει κενό. Πρόσθεσέ το στα «Βασικά Στοιχεία».</div>')
+      +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📧 Αποστολή με Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
+      +(c.email?'':'<div style="font-size:11px;color:#e08a00;margin:0 0 6px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα — θα ανοίξει κενό. Πρόσθεσέ το στα «Βασικά Στοιχεία».</div>')
+      // Το "mailto:" ανοίγει το προεπιλεγμένο πρόγραμμα email του υπολογιστή — αν ο χρήστης
+      // χρησιμοποιεί Gmail/webmail στον browser χωρίς να έχει ορίσει προεπιλεγμένο πρόγραμμα,
+      // το κλικ δεν κάνει ΤΙΠΟΤΑ ορατό (audit finding: "δεν ανοίγει κάτι στο email"). Το κουμπί
+      // αντιγραφής είναι το μόνο σίγουρο fallback σε αυτή την περίπτωση.
+      +'<textarea id="publish-email-body" style="position:absolute;left:-9999px;top:-9999px;" readonly>'+esc(subj+'\n\n'+ebody)+'</textarea>'
+      +'<button id="publish-email-copy" type="button" class="btn" style="width:100%;background:#fff;color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:8px" onclick="copyPublishEmailBody(this)">📋 Δεν άνοιξε τίποτα; Αντιγραφή μηνύματος</button>'
       +'<a href="'+wa+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📱 WhatsApp'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
       +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5;margin-bottom:14px">⏳ Ο σύνδεσμος λήγει στις <b>'+expTxt+'</b> ('+window.Cloud.LINK_EXPIRE_DAYS+' μέρες). Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα και η λήξη ανανεώνεται.</div>'
       +'<button id="portal-reset-link" class="btn" style="width:100%;background:#fff;color:#c0392b;border:1px solid #f0c2c2;font-size:12px">🔄 Καθαρισμός & νέο σύνδεσμος</button>'
@@ -3827,5 +3833,17 @@ function copyPublishUrl(btn){
   try{ ok=document.execCommand('copy'); }catch(e){}
   if(navigator.clipboard){ navigator.clipboard.writeText(inp.value).then(function(){},function(){}); ok=true; }
   if(ok && btn){ var o=btn.textContent; btn.textContent='✓ Αντιγράφηκε'; setTimeout(function(){btn.textContent=o;},1500); }
+}
+
+// Fallback για όταν το "mailto:" δεν ανοίγει τίποτα (κανένα προεπιλεγμένο πρόγραμμα email) —
+// αντιγράφει το ίδιο μήνυμα ώστε ο διαιτολόγος να το επικολλήσει χειροκίνητα σε ένα νέο email.
+function copyPublishEmailBody(btn){
+  var ta=document.getElementById('publish-email-body');
+  if(!ta)return;
+  ta.select();
+  var ok=false;
+  try{ ok=document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard){ navigator.clipboard.writeText(ta.value).then(function(){},function(){}); ok=true; }
+  if(ok && btn){ var o=btn.textContent; btn.textContent='✓ Αντιγράφηκε — επικόλλησέ το σε ένα νέο email'; setTimeout(function(){btn.textContent=o;},2200); }
 }
 
