@@ -15,8 +15,10 @@ function homeClientsNeedingAttention(){
     if(c.attentionSnoozeUntil && now<c.attentionSnoozeUntil) return;
     var flaggedAppt=(c.appointments||[]).slice().reverse().find(function(a){return a.flagged;});
     if(flaggedAppt){
+      var flaggedIdx=c.appointments.indexOf(flaggedAppt);
       out.push({c:c,tier:-1,gap:0,label:'🚩 σημειωμένο για παρακολούθηση (ραντεβού '+flaggedAppt.date+')',
-        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες ραντεβού</button>'});
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες ραντεβού</button>'
+          +'<button type="button" class="hm-action-btn" style="background:#eaf3de;color:#27500a" onclick="event.stopPropagation();homeResolveAppointmentFlag(\''+c.id+'\','+flaggedIdx+')" title="Σήμανση ως διευθετημένο">✅</button>'});
       return;
     }
     if(typeof clientHasLowPlanFeedback==='function' && clientHasLowPlanFeedback(c)){
@@ -364,6 +366,16 @@ function homeResolvePlanAction(clientId,apptIdx){
   var c=clients.find(function(x){return x.id===clientId;});
   if(!c || !c.appointments || !c.appointments[apptIdx]) return;
   c.appointments[apptIdx].planActionDone=true;
+  save();
+  renderHome();
+}
+// Ίδιο μοτίβο με homeResolvePlanAction — resolveAppointmentFlag (app-part2.js) υποθέτει επιλεγμένο
+// πελάτη (getC()) και ανανεώνει το #s3b, που δεν υπάρχουν στην Αρχική· εδώ ψάχνουμε τον πελάτη με id
+// και ανανεώνουμε ολόκληρη την Αρχική.
+function homeResolveAppointmentFlag(clientId,apptIdx){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c || !c.appointments || !c.appointments[apptIdx]) return;
+  c.appointments[apptIdx].flagged=false;
   save();
   renderHome();
 }
