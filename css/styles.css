@@ -997,6 +997,7 @@ body.dark-mode .tooltip-text {
 .appt-scale-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}
 .appt-entry{background:#f8fffe;border:1px solid #c5ddd8;border-radius:14px;padding:10px 14px;position:relative;padding-right:88px}
 .appt-entry.appt-entry-flagged{background:#fff7f7;border-color:#f1b4b3}
+.appt-entry.appt-entry-absence{background:#fafafa;border-style:dashed}
 .appt-entry-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px}
 .appt-action-resolve{background:none;border:none;cursor:pointer;color:#6b6b6b;font-size:13px;padding:0 3px;line-height:1;flex-shrink:0}
 .appt-action-resolve:hover{color:#2e7d32}
@@ -1719,6 +1720,7 @@ body.dark-mode .meal-label{color:#e0e0e0}
 body.dark-mode .appt-chip{background:#1a1a1a;border-color:#444;color:#ccc}
 body.dark-mode .appt-plan-action-btn{background:#1a1a1a}
 body.dark-mode .appt-entry{background:#1a1a1a;border-color:#444;color:#e0e0e0}
+body.dark-mode .appt-entry.appt-entry-absence{background:#151515;border-color:#3a3a3a}
 body.dark-mode .appt-scale-btn{background:#1a1a1a;border-color:#444;color:#ccc}
 body.dark-mode .appt-sum-card{background:#1a1a1a;border-color:#444}
 body.dark-mode .bottom-nav{background:#1a1a1a;border-top-color:#444}
