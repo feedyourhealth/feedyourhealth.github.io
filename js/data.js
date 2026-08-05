@@ -298,6 +298,9 @@ var FOODS={
 'Βούτυρο':{k:717,p:0.9,c:0.1,f:81,fi:0,cat:'Λάδια',en:'Butter'},
 'Μαργαρίνη light':{k:292,p:0.3,c:1,f:32,fi:0,cat:'Λάδια',en:'Light Margarine'},
 'Dark Chocolate 70%':{k:598,p:7.8,c:45.9,f:42.6,fi:10.9,cat:'Άλλα',en:'Dark Chocolate 70%'},
+// Ingredients: reconstituted skimmed milk, 12% chocolate flavoured syrup [water, sweetener (sorbitol, polydextrose, maltodextrin, milk protein, cocoa powder 7%, vegetable fat (coconut fat), thickener (pectin), stabilizer (guar gum), sweetener (steviol glycosides), flavorings], 6% brownie pieces [sweetener (maltitol), water, wheat flour, vegetable fat (coconut), fat reduced alkalized cocoa powder, gluten, stabilizer (carrageenan), salt], sweetener (erythritol), polydextrose, milk protein, cocoa powder 3.3%, vegetable fat (coconut fat), maltodextrin, emulsifier (mono- and di-glycerides of fatty acids), stabilizers (carrageenan, locust bean gum, guar gum), sweetener (steviol glycosides), flavouring.
+// Allergens: contains milk, wheat, gluten. May contain traces of nuts, peanuts, soya, eggs, sulphites and mustard.
+'Kri Kri High Protein Super Spoon Παγωτό Σοκολάτα':{k:139,p:7.5,c:17,f:6,fi:6.8,cat:'Άλλα',en:'Kri Kri High Protein Super Spoon Ice Cream Chocolate Hype'},
 'Φιστίκια':{k:567,p:26,c:16,f:49,fi:8.5,cat:'Ξηροί καρποί',en:'Peanuts'},
 'Χυμό ντομάτας':{k:17,p:0.8,c:4.2,f:0.1,fi:0.4,cat:'Λαχανικά',en:'Tomato Juice'},
 'Κρεμμυδάκι (φρέσκο)':{k:32,p:1.8,c:7.3,f:0.2,fi:2.6,cat:'Λαχανικά',en:'Spring Onion (fresh)'},
@@ -744,6 +747,7 @@ var FOOD_UNITS={
   'Παρμεζάνα':{g:10,u:'κ.σ.'},
   'Quark (0%)':{g:240,u:'φλ.'},
   'Ricotta':{g:125,u:'τεμ.'},
+  'Kri Kri High Protein Super Spoon Παγωτό Σοκολάτα':{g:150,u:'μερίδ.'},
 'Moving Mountains Burger':{g:113,u:'patty'},
 'Grillman Chicken Burger':{g:150,u:'τεμ.'},
 'Μπιφτέκι Κοτόπουλο Πηδηχτούλης Κόκορας':{g:300,u:'τεμ.'},
