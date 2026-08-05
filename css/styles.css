@@ -226,6 +226,7 @@ body.dark-mode .hm-row-name{color:#e0e0e0}
 .rcp-search{width:100%;max-width:400px;padding:8px 10px;border:1px solid #e0e0e0;border-radius:10px;font-size:12px;margin-bottom:10px;box-sizing:border-box;font-family:inherit}
 .rcp-search:focus{outline:none;border-color:var(--teal)}
 .rcp-filter-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.rcp-trait-row{margin-bottom:10px}
 .rcp-filter-chip{padding:5px 12px;border-radius:999px;border:1px solid #b2d8d8;background:#fff;color:var(--teal);font-size:11px;font-weight:600;cursor:pointer}
 .rcp-filter-chip:hover{background:#f0f7f7}
 .rcp-filter-chip.active{background:var(--teal);color:#fff;border-color:var(--teal)}

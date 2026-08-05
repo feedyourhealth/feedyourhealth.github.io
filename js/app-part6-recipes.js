@@ -21,17 +21,45 @@ var RECIPE_DIET_TAG_DEFS=[
   {key:'bodybuilding_clean',label:'Bodybuilding',match:['bodybuilding_clean']},
   {key:'high_protein',label:'Υψηλή πρωτεΐνη',match:['high_protein']}
 ];
+function recipeMatchesTagDef(recipe,def){
+  var tags=(recipe.tags||[]).map(function(t){return t.toLowerCase().replace(/\s+/g,'');});
+  return def.match.some(function(m){return tags.indexOf(m)>-1;});
+}
 function recipeHasDietTag(recipe,defKey){
   var def=RECIPE_DIET_TAG_DEFS.find(function(d){return d.key===defKey;});
   if(!def) return false;
-  var tags=(recipe.tags||[]).map(function(t){return t.toLowerCase().replace(/\s+/g,'');});
-  return def.match.some(function(m){return tags.indexOf(m)>-1;});
+  return recipeMatchesTagDef(recipe,def);
 }
 // Only offer diet-type options that currently match at least one recipe (avoids dead-end filters).
 function availableRecipeDietTags(){
   var all=allRecipesForBrowsing();
   return RECIPE_DIET_TAG_DEFS.filter(function(def){
     return all.some(function(r){return recipeHasDietTag(r,def.key);});
+  });
+}
+
+// Δεύτερη, ανεξάρτητη ομάδα φίλτρων: περιγραφικά χαρακτηριστικά αντί για τύπο δίαιτας (η πρώτη
+// ομάδα, RECIPE_DIET_TAG_DEFS, παραμένει μονή επιλογή μέσω dropdown). Αυτά είναι πολλαπλής επιλογής
+// (AND μεταξύ τους) και render-άρονται ως δεύτερη σειρά chips κάτω από το dropdown τύπου δίαιτας.
+// Ίδιο curation-σκεπτικό με το RECIPE_DIET_TAG_DEFS πιο πάνω: επιλέχθηκαν όσα raw tags (js/data.js)
+// έχουν αρκετή συχνότητα ώστε να αξίζουν φίλτρο, αντί να εκτίθενται όλα τα ~140 distinct tags.
+var RECIPE_TRAIT_TAG_DEFS=[
+  {key:'seafood',label:'Θαλασσινά',match:['θαλασσινά']},
+  {key:'legumes',label:'Όσπρια',match:['όσπρια']},
+  {key:'light',label:'Ελαφρύ',match:['ελαφρύ','light']},
+  {key:'omega3',label:'Ω3',match:['ω3','omega3']},
+  {key:'salad',label:'Σαλάτα',match:['σαλάτα']},
+  {key:'quick',label:'Γρήγορη',match:['γρήγορη']}
+];
+function recipeHasTraitTag(recipe,defKey){
+  var def=RECIPE_TRAIT_TAG_DEFS.find(function(d){return d.key===defKey;});
+  if(!def) return false;
+  return recipeMatchesTagDef(recipe,def);
+}
+function availableRecipeTraitTags(){
+  var all=allRecipesForBrowsing();
+  return RECIPE_TRAIT_TAG_DEFS.filter(function(def){
+    return all.some(function(r){return recipeMatchesTagDef(r,def);});
   });
 }
 
@@ -107,6 +135,10 @@ function mealTypeToCategory(mealType){
 var _recipeSearchTerm='';
 var _recipeCategoryFilter='';
 var _recipeDietFilter='';
+// Ενεργά κλειδιά RECIPE_TRAIT_TAG_DEFS· πολλαπλής επιλογής (AND), σε αντίθεση με το μονό
+// _recipeDietFilter. Μηδενίζεται σε κάθε φρέσκο άνοιγμα της σελίδας (renderRecipes) ώστε τα ενεργά
+// chips να μη μείνουν ποτέ οπτικά ασυγχρόνιστα με την πραγματική κατάσταση φιλτραρίσματος.
+var _recipeTraitFilters=[];
 var _recipeSortMode='';
 // Ποιες κάρτες έχουν ανοιχτά τα 4 κουμπιά επεξεργασίας ώρας γεύματος (αντί για τη μία συνοπτική ετικέτα).
 var _categoryEditIds={};
@@ -121,6 +153,13 @@ function setRecipeCategoryFilter(val){
   renderRecipesList();
 }
 function setRecipeDietFilter(val){ _recipeDietFilter=val; renderRecipesList(); }
+function toggleRecipeTraitFilter(key){
+  var idx=_recipeTraitFilters.indexOf(key);
+  if(idx>-1) _recipeTraitFilters.splice(idx,1); else _recipeTraitFilters.push(key);
+  var chip=document.querySelector('.rcp-trait-chip[data-key="'+key+'"]');
+  if(chip) chip.classList.toggle('active');
+  renderRecipesList();
+}
 function setRecipeSortMode(val){ _recipeSortMode=val; renderRecipesList(); }
 function toggleCategoryEdit(recipeId){ _categoryEditIds[recipeId]=!_categoryEditIds[recipeId]; renderRecipesList(); }
 function toggleRecipeExpand(recipeId){ _expandedRecipeIds[recipeId]=!_expandedRecipeIds[recipeId]; renderRecipesList(); }
@@ -212,7 +251,7 @@ function onRecipeScaleInput(recipeId,targetKcalStr,scope){
     // ώστε να μη μείνει "μπερδεμένο" όνομα με γραμμάρια υπολογισμένα για άλλο τρόφιμο.
     var nameEl=document.getElementById('rcp-ing-n-'+scope+'-'+recipeId+'-'+idx);
     if(nameEl) nameEl.textContent=f.n;
-    var swapPanel=document.getElementById('rd-swap-panel-'+recipeId+'-'+idx);
+    var swapPanel=document.getElementById('rd-swap-panel-'+scope+'-'+recipeId+'-'+idx);
     if(swapPanel){ swapPanel.style.display='none'; swapPanel.innerHTML=''; }
     var origG=recipe.foods[idx]?recipe.foods[idx].g:0;
     var hitFloor=origG>0&&((scalingDown&&f.g>origG)||(scalingUp&&f.g<origG));
@@ -229,13 +268,28 @@ function onRecipeScaleInput(recipeId,targetKcalStr,scope){
   if(fOut) fOut.textContent='Λ'+Math.round(totals.f);
 }
 
+// Μία γραμμή υλικού (όνομα + γραμμάρια + ⚠️ floor-flag + κουμπί αντικατάστασης ⇄ + το δικό της
+// swap-panel από κάτω) — κοινή μεταξύ της inline προεπισκόπησης της λίστας (scope='row') και του
+// πλήρους detail modal (scope='modal', Phase 3), ώστε η αντικατάσταση υλικού να δουλεύει και στα
+// δύο σημεία αντί μόνο μέσα στο modal. `scope` κρατά τα DOM ids ξεχωριστά ώστε η ίδια συνταγή να
+// μπορεί να έχει ανοιχτή ταυτόχρονα inline προεπισκόπηση ΚΑΙ detail modal χωρίς συγκρούσεις.
+function ingredientRowHtml(recipe,f,idx,scope){
+  return '<div class="rd-ing-row">'
+    +'<span class="rd-ing-name" id="rcp-ing-n-'+scope+'-'+recipe.id+'-'+idx+'">'+esc(f.n)+'</span>'
+    +'<span class="rd-ing-g" id="rcp-ing-g-'+scope+'-'+recipe.id+'-'+idx+'">'+f.g+'g</span>'
+    +'<span class="rcp-ing-floor-flag" id="rcp-ing-flag-'+scope+'-'+recipe.id+'-'+idx+'" style="display:none" title="Έφτασε στην ελάχιστη λογική μερίδα αυτού του υλικού — δεν μπόρεσε να ακολουθήσει αναλογικά τον στόχο θερμίδων">⚠️</span>'
+    +'<button type="button" class="rd-swap-btn" title="Αντικατέστησε υλικό" aria-label="Αντικατέστησε υλικό" onclick="toggleSwapPanel(\''+recipe.id+'\','+idx+',\''+scope+'\')">⇄</button>'
+    +'</div>'
+    +'<div class="rd-swap-panel" id="rd-swap-panel-'+scope+'-'+recipe.id+'-'+idx+'" style="display:none"></div>';
+}
+
 function recipeRow(recipe){
   var mealTimes=getRecipeMealTimes(recipe);
   var popular=isRecipePopular(recipe);
   var m=recipe.macro||{};
   var expanded=!!_expandedRecipeIds[recipe.id];
   var ingredientsHtml=expanded
-    ?'<div class="rcp-ingredients">'+(recipe.foods||[]).map(function(f,idx){return '<span class="rcp-ing">'+esc(f.n)+' · <span id="rcp-ing-g-row-'+recipe.id+'-'+idx+'">'+f.g+'g</span><span class="rcp-ing-floor-flag" id="rcp-ing-flag-row-'+recipe.id+'-'+idx+'" style="display:none" title="Έφτασε στην ελάχιστη λογική μερίδα αυτού του υλικού — δεν μπόρεσε να ακολουθήσει αναλογικά τον στόχο θερμίδων">⚠️</span></span>';}).join('')+'</div>'+recipeScalerHtml(recipe,'row')
+    ?'<div class="rd-ingredients">'+(recipe.foods||[]).map(function(f,idx){return ingredientRowHtml(recipe,f,idx,'row');}).join('')+'</div>'+recipeScalerHtml(recipe,'row')
     :'';
   return '<div class="rcp-row">'
     +'<div class="rcp-row-top">'
@@ -267,6 +321,7 @@ function renderRecipesList(){
     if(_recipeCategoryFilter==='popular' && !isRecipePopular(r)) return false;
     if(_recipeCategoryFilter && _recipeCategoryFilter!=='popular' && getRecipeMealTimes(r).indexOf(_recipeCategoryFilter)===-1) return false;
     if(_recipeDietFilter && !recipeHasDietTag(r,_recipeDietFilter)) return false;
+    if(_recipeTraitFilters.length && !_recipeTraitFilters.every(function(k){return recipeHasTraitTag(r,k);})) return false;
     return true;
   });
   if(_recipeSortMode==='name'){
@@ -289,6 +344,7 @@ function renderRecipesList(){
 
 function renderRecipes(){
   curId=null;
+  _recipeTraitFilters=[];
   var main=document.getElementById('main');
   if(!main) return;
 
@@ -320,6 +376,12 @@ function renderRecipes(){
   });
   html+='<button type="button" class="rcp-filter-chip" data-val="popular" onclick="setRecipeCategoryFilter(\'popular\')">⭐ Δημοφιλή</button>';
   html+='</div>';
+  var traitDefs=availableRecipeTraitTags();
+  if(traitDefs.length){
+    html+='<div class="rcp-chips rcp-trait-row">'+traitDefs.map(function(d){
+      return '<button type="button" class="rcp-chip rcp-trait-chip" data-key="'+d.key+'" onclick="toggleRecipeTraitFilter(\''+d.key+'\')">'+d.label+'</button>';
+    }).join('')+'</div>';
+  }
   html+='<div id="rcp-count" class="rcp-count"></div>';
   html+='<div id="rcp-list" class="rcp-list"></div>';
   html+='</div>';
@@ -512,13 +574,7 @@ function recipeDetailModalHtml(recipe){
   var tagsHtml=tags.length?'<div class="rcp-chips">'+tags.map(function(t){return '<span class="rcp-chip active">'+esc(t)+'</span>';}).join('')+'</div>':'';
   var prepHtml=recipe.prepTimeMin?'<div class="rd-meta">⏱️ '+recipe.prepTimeMin+' λεπτά</div>':'';
   var ingredientsHtml='<div class="rd-ingredients">'+(recipe.foods||[]).map(function(f,idx){
-    return '<div class="rd-ing-row">'
-      +'<span class="rd-ing-name" id="rcp-ing-n-modal-'+recipe.id+'-'+idx+'">'+esc(f.n)+'</span>'
-      +'<span class="rd-ing-g" id="rcp-ing-g-modal-'+recipe.id+'-'+idx+'">'+f.g+'g</span>'
-      +'<span class="rcp-ing-floor-flag" id="rcp-ing-flag-modal-'+recipe.id+'-'+idx+'" style="display:none" title="Έφτασε στην ελάχιστη λογική μερίδα αυτού του υλικού — δεν μπόρεσε να ακολουθήσει αναλογικά τον στόχο θερμίδων">⚠️</span>'
-      +'<button type="button" class="rd-swap-btn" title="Αντικατέστησε υλικό" aria-label="Αντικατέστησε υλικό" onclick="toggleSwapPanel(\''+recipe.id+'\','+idx+')">⇄</button>'
-      +'</div>'
-      +'<div class="rd-swap-panel" id="rd-swap-panel-'+recipe.id+'-'+idx+'" style="display:none"></div>';
+    return ingredientRowHtml(recipe,f,idx,'modal');
   }).join('')+'</div>';
   // Οι στατικές MEAL_RECIPES/SNACK_RECIPES δεν έχουν πεδίο instructions σήμερα — μόνο οι νέες
   // custom συνταγές (Phase 2b) το έχουν. Γνωστό, σκόπιμο κενό, δεν καλύπτεται τώρα.
@@ -582,9 +638,10 @@ function toggleRecipeShoppingList(recipeId){
   if(label) label.textContent='Προστέθηκε στη λίστα';
 }
 
-// ── Αντικατάσταση υλικού με βάση macro-εγγύτητα (Phase 4). Δουλεύει ΜΟΝΟ πάνω στο DOM του detail
-// modal (ποτέ δεν αγγίζει recipe.foods, που είναι απευθείας αναφορά μέσα στη MEAL_RECIPES/
-// SNACK_RECIPES/customRecipes) — καθαρά "τι θα γινόταν αν", ίδιο πνεύμα με το scaler του Phase 1.
+// ── Αντικατάσταση υλικού με βάση macro-εγγύτητα (Phase 4, πλέον διαθέσιμη και inline στη λίστα —
+// Phase 6). Δουλεύει ΜΟΝΟ πάνω στο DOM (ποτέ δεν αγγίζει recipe.foods, που είναι απευθείας αναφορά
+// μέσα στη MEAL_RECIPES/SNACK_RECIPES/customRecipes) — καθαρά "τι θα γινόταν αν", ίδιο πνεύμα με το
+// scaler του Phase 1. `scope` ('row' ή 'modal') διαλέγει ΠΟΙΑ εμφάνιση της συνταγής ενημερώνεται.
 // Επαναχρησιμοποιεί το ήδη υπάρχον SUBST_ORDER (js/data.js) + τη λογική εγγύτητας πυκνότητας
 // θερμίδων που ήδη χρησιμοποιεί το applyFoodExclusions() (js/app-part2.js) για auto-εξαιρέσεις,
 // απλά επιστρέφει τις κορυφαίες 2-3 εναλλακτικές αντί να διαλέγει αυτόματα τη μία καλύτερη.
@@ -606,14 +663,15 @@ function findIngredientSwapCandidates(foodName){
 }
 function fmtSignedInt(n){ n=Math.round(n); return (n>=0?'+':'')+n; }
 
-function toggleSwapPanel(recipeId,idx){
-  var panel=document.getElementById('rd-swap-panel-'+recipeId+'-'+idx);
+function toggleSwapPanel(recipeId,idx,scope){
+  scope=scope||'modal';
+  var panel=document.getElementById('rd-swap-panel-'+scope+'-'+recipeId+'-'+idx);
   if(!panel) return;
   var willOpen=panel.style.display==='none';
   document.querySelectorAll('.rd-swap-panel').forEach(function(p){ p.style.display='none'; p.innerHTML=''; });
   if(!willOpen) return;
-  var nameEl=document.getElementById('rcp-ing-n-modal-'+recipeId+'-'+idx);
-  var gEl=document.getElementById('rcp-ing-g-modal-'+recipeId+'-'+idx);
+  var nameEl=document.getElementById('rcp-ing-n-'+scope+'-'+recipeId+'-'+idx);
+  var gEl=document.getElementById('rcp-ing-g-'+scope+'-'+recipeId+'-'+idx);
   var currentName=nameEl?nameEl.textContent:'';
   var currentG=gEl?parseInt(gEl.textContent,10):0;
   var candidates=findIngredientSwapCandidates(currentName);
@@ -629,7 +687,7 @@ function toggleSwapPanel(recipeId,idx){
     var subG=Math.max(10,Math.round(currentG*(origDens/subDens)));
     var subV=cm(subName,subG);
     var dk=fmtSignedInt(subV.k-origV.k),dp=fmtSignedInt(subV.p-origV.p);
-    return '<button type="button" class="rd-swap-option" onclick="applyIngredientSwap(\''+recipeId+'\','+idx+',\''+subName+'\','+subG+')">'
+    return '<button type="button" class="rd-swap-option" onclick="applyIngredientSwap(\''+recipeId+'\','+idx+',\''+subName+'\','+subG+',\''+scope+'\')">'
       +'<span>'+esc(subName)+'</span>'
       +'<span class="rd-swap-delta">'+dk+' kcal, '+dp+'g πρωτ.</span>'
       +'</button>';
@@ -637,38 +695,39 @@ function toggleSwapPanel(recipeId,idx){
   panel.style.display='block';
 }
 
-function applyIngredientSwap(recipeId,idx,subName,subGrams){
-  var nameEl=document.getElementById('rcp-ing-n-modal-'+recipeId+'-'+idx);
-  var gEl=document.getElementById('rcp-ing-g-modal-'+recipeId+'-'+idx);
+function applyIngredientSwap(recipeId,idx,subName,subGrams,scope){
+  scope=scope||'modal';
+  var nameEl=document.getElementById('rcp-ing-n-'+scope+'-'+recipeId+'-'+idx);
+  var gEl=document.getElementById('rcp-ing-g-'+scope+'-'+recipeId+'-'+idx);
   if(nameEl) nameEl.textContent=subName;
   if(gEl) gEl.textContent=subGrams+'g';
-  var panel=document.getElementById('rd-swap-panel-'+recipeId+'-'+idx);
+  var panel=document.getElementById('rd-swap-panel-'+scope+'-'+recipeId+'-'+idx);
   if(panel){ panel.style.display='none'; panel.innerHTML=''; }
-  recomputeModalTotals(recipeId);
+  recomputeScopedTotals(recipeId,scope);
 }
 
-// Ξαναϋπολογίζει τα macro-σύνολα του modal διαβάζοντας το ΤΡΕΧΟΝ όνομα/γραμμάρια κάθε γραμμής
+// Ξαναϋπολογίζει τα macro-σύνολα (row ή modal) διαβάζοντας το ΤΡΕΧΟΝ όνομα/γραμμάρια κάθε γραμμής
 // υλικού από το DOM (όχι από recipe.foods) — έτσι αντανακλά σωστά τυχόν swap. Γράφει στα ίδια
-// spans που ενημερώνει και το scaler (scope='modal'), οπότε υπάρχει μία ενιαία "τρέχουσα εικόνα".
-function recomputeModalTotals(recipeId){
+// spans που ενημερώνει και το scaler του ίδιου scope, οπότε υπάρχει μία ενιαία "τρέχουσα εικόνα".
+function recomputeScopedTotals(recipeId,scope){
   var recipe=findRecipeById(recipeId);
   if(!recipe) return;
   var totals={k:0,p:0,f:0,c:0};
   (recipe.foods||[]).forEach(function(f,idx){
-    var nameEl=document.getElementById('rcp-ing-n-modal-'+recipeId+'-'+idx);
-    var gEl=document.getElementById('rcp-ing-g-modal-'+recipeId+'-'+idx);
+    var nameEl=document.getElementById('rcp-ing-n-'+scope+'-'+recipeId+'-'+idx);
+    var gEl=document.getElementById('rcp-ing-g-'+scope+'-'+recipeId+'-'+idx);
     var n=nameEl?nameEl.textContent:f.n;
     var g=gEl?parseInt(gEl.textContent,10):f.g;
     var v=cm(n,g);
     totals.k+=v.k;totals.p+=v.p;totals.f+=v.f;totals.c+=v.c;
   });
-  var kcalOut=document.getElementById('rcp-scale-kcal-modal-'+recipeId);
+  var kcalOut=document.getElementById('rcp-scale-kcal-'+scope+'-'+recipeId);
   if(kcalOut) kcalOut.textContent=Math.round(totals.k)+' kcal';
-  var pOut=document.getElementById('rcp-scale-p-modal-'+recipeId);
+  var pOut=document.getElementById('rcp-scale-p-'+scope+'-'+recipeId);
   if(pOut) pOut.textContent='Π'+Math.round(totals.p);
-  var cOut=document.getElementById('rcp-scale-c-modal-'+recipeId);
+  var cOut=document.getElementById('rcp-scale-c-'+scope+'-'+recipeId);
   if(cOut) cOut.textContent='Υ'+Math.round(totals.c);
-  var fOut=document.getElementById('rcp-scale-f-modal-'+recipeId);
+  var fOut=document.getElementById('rcp-scale-f-'+scope+'-'+recipeId);
   if(fOut) fOut.textContent='Λ'+Math.round(totals.f);
 }
 
