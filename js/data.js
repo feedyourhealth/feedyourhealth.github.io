@@ -2884,7 +2884,32 @@ var MEAL_RECIPES=[
 
   {id:'bb_breakfast_pancakes_protein',name:'Protein Pancakes με Μέλι & Φράουλες',foods:[
     {n:'Αυγά (ολόκληρα)',g:120},{n:'Βρώμη (ωμή)',g:50},{n:'Πρωτεΐνη σκόνη (whey)',g:25},{n:'Μέλι άβραστο',g:15},{n:'Φράουλες',g:150}
-  ],kcal:401,macro:{p:38,f:15,c:34},tags:['bodybuilding_clean','breakfast','eggs','high_carb','treat']}
+  ],kcal:401,macro:{p:38,f:15,c:34},tags:['bodybuilding_clean','breakfast','eggs','high_carb','treat']},
+
+  // ═══ ΑΘΛΗΤΙΚΟΣ/ΚΛΙΝΙΚΟΣ ΠΡΟΣΘΗΚΕΣ (10 νέες συνταγές) ═══
+  {id:'sardines_salad_lemon',name:'Σαρδέλες με Σαλάτα & Λαδολέμονο',foods:[
+    {n:'Σαρδέλες',g:100},{n:'Τομάτες',g:100},{n:'Αγγούρι',g:100},{n:'Ελαιόλαδο',g:10},{n:'Λεμόνι (χυμός)',g:15}
+  ],kcal:386,macro:{p:32,f:24,c:9},tags:['Θαλασσινά','Ω3','Ελαφρύ','Σαλάτα','Γρήγορη','Mediterranean'],mealTimes:['Μεσημεριανά','Βραδινά']},
+
+  {id:'beet_quinoa_endurance_bowl',name:'Bowl Αντοχής: Παντζάρι & Κινόα',foods:[
+    {n:'Κινόα (βρ.)',g:150},{n:'Παντζάρι (βραστό)',g:100},{n:'Σπανάκι',g:50},{n:'Τυρί φέτα',g:30},{n:'Ελαιόλαδο',g:8},{n:'Λεμόνι (χυμός)',g:10}
+  ],kcal:388,macro:{p:14,f:18,c:45},tags:['Vegetarian','Mediterranean','Σαλάτα'],mealTimes:['Μεσημεριανά']},
+
+  {id:'lentil_tomato_lemon_salad',name:'Φακές Σαλάτα με Ντομάτα & Λεμόνι',foods:[
+    {n:'Φακές',g:200},{n:'Τομάτες',g:100},{n:'Λεμόνι (χυμός)',g:15},{n:'Ελαιόλαδο',g:10}
+  ],kcal:342,macro:{p:19,f:11,c:45},tags:['Όσπρια','Vegan','Vegetarian','Ελαφρύ','Σαλάτα'],mealTimes:['Μεσημεριανά']},
+
+  {id:'chicken_turmeric_ginger_soup',name:'Κοτόπουλο Σούπα Ανάρρωσης με Κουρκουμά & Τζίντζερ',foods:[
+    {n:'Κοτόπουλο βραστό',g:120},{n:'Ρύζι καστανό (βρ.)',g:60},{n:'Καρότα',g:80},{n:'Κουρκουμάς',g:2},{n:'Τζίντζερ',g:2},{n:'Λεμόνι (χυμός)',g:10}
+  ],kcal:310,macro:{p:41,f:5,c:24},tags:['Ελαφρύ','Γρήγορη'],mealTimes:['Μεσημεριανά','Βραδινά']},
+
+  {id:'lowfodmap_salmon_rice_carrot',name:'Low-FODMAP Σολομός με Ρύζι & Καρότο',foods:[
+    {n:'Σολομός (ψητός)',g:150},{n:'Ρύζι καστανό (βρ.)',g:100},{n:'Καρότα',g:80},{n:'Ελαιόλαδο',g:8},{n:'Λεμόνι (χυμός)',g:10}
+  ],kcal:538,macro:{p:36,f:29,c:34},tags:['Θαλασσινά','Ω3','Mediterranean'],mealTimes:['Μεσημεριανά','Βραδινά']},
+
+  {id:'cabbage_chickpea_soup',name:'Λάχανο-Ρεβίθια Σούπα',foods:[
+    {n:'Ρεβίθια',g:200},{n:'Λάχανο',g:150},{n:'Καρότα',g:80},{n:'Ελαιόλαδο',g:10},{n:'Λεμόνι (χυμός)',g:15}
+  ],kcal:490,macro:{p:21,f:16,c:73},tags:['Όσπρια','Vegan','Vegetarian','Mediterranean'],mealTimes:['Μεσημεριανά']}
 ];
 var SNACK_RECIPES=[
   // ═══ ΓΙΑΟΥΡΤΙ & ΓΑΛΑΚΤΟΚΟΜΙΚΑ ═══
@@ -2984,7 +3009,24 @@ var SNACK_RECIPES=[
 
   {id:'snk_bb_protein_shake_banana',name:'Protein Shake Vanilla με Μπανάνα & Γάλα',foods:[
     {n:'Πρωτεΐνη σκόνη (whey)',g:30},{n:'Γάλα αμυγδάλου',g:250},{n:'Μπανάνα',g:100}
-  ],kcal:252,macro:{p:27,f:6,c:27},tags:['bodybuilding_clean','snack','protein_shake','high_protein','energy']}
+  ],kcal:252,macro:{p:27,f:6,c:27},tags:['bodybuilding_clean','snack','protein_shake','high_protein','energy']},
+
+  // ═══ ΑΘΛΗΤΙΚΟΣ/ΚΛΙΝΙΚΟΣ ΠΡΟΣΘΗΚΕΣ (συνέχεια από MEAL_RECIPES) ═══
+  {id:'tahini_yogurt_berry_bowl',name:'Ταχίνι-Γιαούρτι Bowl με Μούρα',foods:[
+    {n:'Γιαούρτι 2%',g:200},{n:'Ταχίνι',g:15},{n:'Μούρα',g:100}
+  ],kcal:278,macro:{p:24,f:12,c:21},tags:['Vegetarian','Ελαφρύ','Γρήγορη'],mealTimes:['Πρωινά','Ενδιάμεσα']},
+
+  {id:'banana_oat_energy_bites_pre',name:'Μπάνανα-Βρώμη Μπάλες Ενέργειας',foods:[
+    {n:'Βρώμη (ωμή)',g:30},{n:'Μπανάνα',g:60},{n:'Ταχίνι',g:8},{n:'Κανέλα',g:1}
+  ],kcal:218,macro:{p:7,f:7,c:35},tags:['Vegan','Γρήγορη','Ενέργεια'],mealTimes:['Ενδιάμεσα']},
+
+  {id:'post_workout_recovery_smoothie',name:'Smoothie Ανάκαμψης (Μετά την Προπόνηση)',foods:[
+    {n:'Γιαούρτι 2%',g:200},{n:'Μούρα',g:100},{n:'Μπανάνα',g:100},{n:'Μέλι άβραστο',g:10}
+  ],kcal:308,macro:{p:23,f:5,c:49},tags:['Γρήγορη','Ενέργεια'],mealTimes:['Ενδιάμεσα']},
+
+  {id:'cottage_cheese_flax_berries',name:'Cottage Cheese με Λιναρόσπορο & Μούρα',foods:[
+    {n:'Cottage cheese',g:150},{n:'Λιναρόσπορος',g:10},{n:'Μούρα',g:80}
+  ],kcal:235,macro:{p:19,f:11,c:16},tags:['Vegetarian','Ελαφρύ','Ω3','Γρήγορη'],mealTimes:['Βραδινά','Ενδιάμεσα']}
 ];
 var MACRO_TYPE={
   'Κρέας':'p','Ψάρια':'p','Αυγά/Γαλακτ.':'p',
