@@ -226,6 +226,14 @@
   .excl-card .nh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--danger);margin-bottom:7px}
   .excl-chips{display:flex;flex-wrap:wrap;gap:6px}
   .excl-chip{background:var(--danger-tint);color:var(--on-danger-tint);font-size:12px;padding:4px 10px;border-radius:999px}
+  /* FAQ accordion (Αρχική, κάτω από τις εξαιρέσεις) — ίδιο μοτίβο toggle με το .swap-btn/.chev των εναλλακτικών γευμάτων */
+  .faq-item{border-bottom:.5px solid var(--bord-l)}
+  .faq-item:last-child{border-bottom:none}
+  .faq-q{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:none;padding:10px 0;font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left}
+  .faq-q i{color:var(--faint);font-size:15px;flex-shrink:0;transition:transform .15s}
+  .faq-q.open i{transform:rotate(180deg)}
+  .faq-a{display:none;font-size:12.5px;color:var(--muted);line-height:1.55;padding:0 0 11px}
+  .faq-a.open{display:block}
 
   /* supplement daily check-off */
   .supp{padding:12px 0;border-bottom:.5px solid var(--bord-l)}
@@ -473,6 +481,13 @@ const I18N={
     quickShop:'Λίστα ψώνια', quickSupps:'Συμπληρώματα', quickSpices:'Μπαχαρικά & βότανα', quickSpicesSub:'Οδηγός χρήσης',
     quickFruits:'Φρούτα', quickFruitsSub:'Λίστα ανταλλαγής', suppsNone:'—', suppsProgress:'{d} από {t} σήμερα', shopProgress:'{d} από {t} ✓',
     exclHdr:'Το πλάνο αποφεύγει',
+    faqHdr:'Συχνές ερωτήσεις',
+    faqQ1:'Πεινάω ανάμεσα στα γεύματα', faqA1:'Φυσιολογικό στην αρχή. Πιες πρώτα ένα ποτήρι νερό — συχνά η δίψα μοιάζει με πείνα. Αν επιμένει, έχεις ελεύθερο ένα ωμό λαχανικό (αγγούρι, καρότο, ντομάτα) όποια ώρα θες, χωρίς όριο.',
+    faqQ2:'Ξέφυγα από το πλάνο — τι κάνω;', faqA2:'Καμία τραγωδία. Δεν παραλείπεις το επόμενο γεύμα για να «αναπληρώσεις» — απλά συνεχίζεις κανονικά. Αν συμβαίνει συχνά, πες μου το από το Πρόοδος ή γράψε μου, θα προσαρμόσουμε το πλάνο μαζί.',
+    faqQ3:'Πώς ζυγίζω τις τροφές;', faqA3:'Όλα τα γραμμάρια στο πλάνο είναι ωμό βάρος — ζύγισε πριν το μαγείρεμα, εκτός αν δίπλα στην τροφή αναγράφεται διαφορετικά (π.χ. «μαγειρεμένο»).',
+    faqQ4:'Πόσο αυστηρές είναι οι ώρες γευμάτων;', faqA4:'Οδηγός είναι, όχι νόμος — ±60 λεπτά δεν αλλάζει τίποτα. Αυτό που μετράει είναι η σειρά και το περιεχόμενο κάθε γεύματος, όχι το ρολόι.',
+    faqQ5:'Καφές, τσάι, αλκοόλ — επιτρέπονται;', faqA5:'Καφές και τσάι χωρίς ζάχαρη: ελεύθερα, όποια ώρα θες. Αλκοόλ: 1-2 φορές/εβδομάδα με μέτρο, όχι σε ημέρα προπόνησης ή αγώνα.',
+    faqQ6:'Πάω έξω ή ταξίδι — τι επιλέγω;', faqA6:'Διάλεξε ψητό ή βραστό κρέας/ψάρι, σαλάτα, και μία μερίδα αμύλου (ρύζι, πατάτα, ψωμί) — σαν να έφτιαχνες μόνη σου το πιάτο του πλάνου. Απόφυγε τηγανητά και επιδόρπια όποτε γίνεται.',
     fabAsk:'Ρώτησέ με', contactHdr:'Επικοινωνία', contactSub:'Ρώτησέ με ό,τι χρειάζεσαι για το πλάνο σου.',
     contactWa:'WhatsApp', contactTel:'Τηλεφώνησε', contactMail:'Email', contactWeb:'Ιστοσελίδα', contactClose:'Κλείσιμο',
     contactGreeting:'Γεια σας! Είμαι ο/η {name} και έχω μια ερώτηση για το πλάνο μου.', contactFallbackName:'πελάτης/πελάτισσα',
@@ -569,6 +584,13 @@ const I18N={
     quickShop:'Shopping list', quickSupps:'Supplements', quickSpices:'Spices & herbs', quickSpicesSub:'Usage guide',
     quickFruits:'Fruits', quickFruitsSub:'Exchange list', suppsNone:'—', suppsProgress:'{d} of {t} today', shopProgress:'{d} of {t} ✓',
     exclHdr:'This plan avoids',
+    faqHdr:'Frequently asked questions',
+    faqQ1:'I feel hungry between meals', faqA1:'Normal at first. Drink a glass of water first — thirst often feels like hunger. If it persists, you have a raw vegetable (cucumber, carrot, tomato) freely, any time, no limit.',
+    faqQ2:'I strayed from the plan — what now?', faqA2:'No drama. Don\'t skip the next meal to "make up for it" — just carry on normally. If it keeps happening, tell me from Progress or send a message, and we\'ll adjust the plan together.',
+    faqQ3:'How do I weigh foods?', faqA3:'All grams in the plan are raw weight — weigh before cooking, unless the food says otherwise (e.g. "cooked").',
+    faqQ4:'How strict are the meal times?', faqA4:'They\'re a guide, not a rule — ±60 minutes changes nothing. What matters is the order and content of each meal, not the clock.',
+    faqQ5:'Coffee, tea, alcohol — allowed?', faqA5:'Coffee and tea without sugar: freely, any time. Alcohol: 1-2 times/week in moderation, not on training or match days.',
+    faqQ6:'Eating out or traveling — what do I pick?', faqA6:'Choose grilled or boiled meat/fish, a salad, and one portion of starch (rice, potato, bread) — as if building your own plate from the plan. Avoid fried food and desserts when you can.',
     fabAsk:'Ask me', contactHdr:'Contact', contactSub:'Ask me anything about your plan.',
     contactWa:'WhatsApp', contactTel:'Call', contactMail:'Email', contactWeb:'Website', contactClose:'Close',
     contactGreeting:'Hi! I\'m {name} and I have a question about my plan.', contactFallbackName:'your client',
@@ -1391,7 +1413,26 @@ function viewHome(){
       +s.exclusions.map(x=>'<span class="excl-chip">'+esc(x)+'</span>').join('')+'</div>';
     v.appendChild(ex);
   }
+
+  // Συχνές ερωτήσεις — τελευταία στην Αρχική, ώστε να μη σπρώχνει κάτω το σημερινό πλάνο/νερό.
+  v.appendChild(faqCard());
   return v;
+}
+// 6 σταθερές ερωτήσεις/απαντήσεις (faqQ1..6/faqA1..6 στο I18N) — accordion, ίδιο μοτίβο toggle
+// με τα "Εναλλακτικά" των γευμάτων (swap-btn/chev), για να μη μαθαίνει ο πελάτης νέο μοτίβο.
+function faqCard(){
+  const c=el('div','card'); const cp=el('div','card-pad');
+  cp.appendChild(el('div','card-hdr','<i class="ti ti-help-circle"></i>'+T('faqHdr')));
+  for(let i=1;i<=6;i++){
+    const item=el('div','faq-item');
+    const btn=el('button','faq-q','<span>'+esc(T('faqQ'+i))+'</span><i class="ti ti-chevron-down"></i>');
+    const a=el('div','faq-a',esc(T('faqA'+i)));
+    btn.onclick=()=>{btn.classList.toggle('open');a.classList.toggle('open')};
+    item.appendChild(btn); item.appendChild(a);
+    cp.appendChild(item);
+  }
+  c.appendChild(cp);
+  return c;
 }
 function statBox(l,v,u,ok){if(ok===undefined)ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
 function deltaU(p){if(p.start&&p.current){const d=Math.round((p.current-p.start)*10)/10;return (d<=0?'−':'+')+decSep(Math.abs(d).toString())+' kg'}return 'kg'}
