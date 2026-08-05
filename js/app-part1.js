@@ -2907,6 +2907,39 @@ function initials(name){
   if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
   return (parts[0][0]+parts[1][0]).toUpperCase();
 }
+// Χτίζει το HTML μιας κάρτας πελάτη. Μοναδική πηγή αλήθειας — τη χρησιμοποιούν τόσο το κανονικό
+// πλέγμα Πελάτες όσο και το block "Χρειάζονται προσοχή" από πάνω του (βλ. renderSB), ώστε μια
+// αλλαγή στην κάρτα (π.χ. νέο badge) να μην ξεχαστεί στο ένα από τα δύο σημεία.
+function clientCardHtml(c){
+  var hasActive = c.weekPlan && Object.keys(c.weekPlan).length > 0;
+  var sportInfo=(typeof SPORT_INFO!=='undefined')?SPORT_INFO[c.sport]:null;
+  var sport=sportInfo?(' • '+sportInfo.icon+' '+sportInfo.label):'';
+  var groupTag=c.group?(' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>'):'';
+  var isSel=!!_clientBulkSelected[c.id];
+  var cardClick=_clientBulkMode?('toggleClientBulkSelect(\''+c.id+'\')'):('selectClient(\''+c.id+'\')');
+  return '<div class="client-card'+(_clientBulkMode&&isSel?' cc-selected':'')+'" onclick="'+cardClick+'">'
+    +'<div class="cc-top">'
+    +(_clientBulkMode
+      ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')
+      :('<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'))
+    +'<div class="cc-headtext">'
+    +'<div class="cc-name" title="'+esc(c.name||'Νέος πελάτης')+'">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'')+'</div>'
+    +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
+    +'</div>'
+    +(_clientBulkMode?'':(
+      '<div class="cc-actions">'
+      +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
+      +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
+      +'</div>'
+    ))
+    +'</div>'
+    +'<div class="cc-bottom">'
+    +'<span class="cc-status '+(hasActive?'cc-status-active':'cc-status-none')+'">'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
+    +progressBadge(c)
+    +'<span class="cc-lastaccess">'+fmtLastAccess(c.lastAccess)+'</span>'
+    +'</div>'
+    +'</div>';
+}
 function renderSB(){
   var term=_clientSearchTerm;
   // ✅ FILTER: Exclude deleted + archived clients from the main list
@@ -2946,38 +2979,22 @@ function renderSB(){
   if((term||_clientFilterGoal||_clientFilterSport||_clientFilterGroup||_clientFilterStatus)&&list.length===0){
     html='<div style="font-size:12px;color:#bbb;padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
   } else {
-    html+='<div class="clients-grid">';
-    list.forEach(function(c){
-      var hasActive = c.weekPlan && Object.keys(c.weekPlan).length > 0;
-      var sportInfo=(typeof SPORT_INFO!=='undefined')?SPORT_INFO[c.sport]:null;
-      var sport=sportInfo?(' • '+sportInfo.icon+' '+sportInfo.label):'';
-      var groupTag=c.group?(' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>'):'';
-      var isSel=!!_clientBulkSelected[c.id];
-      var cardClick=_clientBulkMode?('toggleClientBulkSelect(\''+c.id+'\')'):('selectClient(\''+c.id+'\')');
-      html+='<div class="client-card'+(_clientBulkMode&&isSel?' cc-selected':'')+'" onclick="'+cardClick+'">'
-        +'<div class="cc-top">'
-        +(_clientBulkMode
-          ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')
-          :('<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'))
-        +'<div class="cc-headtext">'
-        +'<div class="cc-name" title="'+esc(c.name||'Νέος πελάτης')+'">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'')+'</div>'
-        +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
-        +'</div>'
-        +(_clientBulkMode?'':(
-          '<div class="cc-actions">'
-          +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
-          +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
-          +'</div>'
-        ))
-        +'</div>'
-        +'<div class="cc-bottom">'
-        +'<span class="cc-status '+(hasActive?'cc-status-active':'cc-status-none')+'">'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
-        +progressBadge(c)
-        +'<span class="cc-lastaccess">'+fmtLastAccess(c.lastAccess)+'</span>'
-        +'</div>'
-        +'</div>';
-    });
-    html+='</div>';
+    // ✅ 2026-08-05: block "Χρειάζονται προσοχή" καρφωμένο πάνω από το κανονικό πλέγμα, ώστε αυτοί οι
+    // πελάτες να μη χαθούν μέσα στη λίστα ανεξάρτητα από την επιλεγμένη ταξινόμηση/σελίδα scroll.
+    // Ίδιο κριτήριο (clientNeedsAttention) με το sort mode "attention" εδώ και με την Αρχική
+    // (homeClientsNeedingAttention, app-part5-home.js) — μία πηγή αλήθειας παντού. Κρύβεται σε bulk
+    // mode: οι κάρτες εκεί επιλέγουν αντί να ανοίγουν προφίλ, θα μπέρδευε να εμφανίζεται δύο φορές.
+    if(!_clientBulkMode){
+      var attnClients=list.filter(clientNeedsAttention);
+      if(attnClients.length){
+        attnClients.sort(function(a,b){return (b.lastAccess||0)-(a.lastAccess||0);});
+        html+='<div class="clients-attn-block">'
+          +'<div class="clients-attn-title">🔔 Χρειάζονται προσοχή <span class="clients-attn-count">('+attnClients.length+')</span></div>'
+          +'<div class="clients-grid">'+attnClients.map(clientCardHtml).join('')+'</div>'
+          +'</div>';
+      }
+    }
+    html+='<div class="clients-grid">'+list.map(clientCardHtml).join('')+'</div>';
   }
   if(_clientBulkMode){
     var _bulkSelCount=Object.keys(_clientBulkSelected).filter(function(id){return _clientBulkSelected[id];}).length;
