@@ -2922,10 +2922,13 @@ function saveFoodExclusions(){
             var v=macro(f.n,f.g);
             mk+=v.k; mp+=v.p; mc+=v.c; mf+=v.f; mfi+=(v.fi||0);
             var q=fmtQ(f);
-            foods.push({name:fName(f.n), qty:q.main, sub:q.sub||''});
+            foods.push({name:fName(f.n), qty:q.main, sub:q.sub||'', g:Math.round(f.g)});
           });
           dayK+=mk; dP+=mp; dC+=mc; dF+=mf; dFi+=mfi;
-          var title=foods.map(function(x){return shortName(x.name);}).slice(0,3).join(', ')+(foods.length>3?'…':'');
+          // Ε14: δίπλα σε κάθε τρόφιμο στην κάρτα "Η διατροφή μου σήμερα" της Αρχικής, ώστε ο πελάτης
+          // να βλέπει τη μερίδα χωρίς να ανοίγει το tab Πλάνο — πάντα σε γραμμάρια (όχι τη μονάδα
+          // εμφάνισης π.χ. "τεμ."), γι' αυτό x.g εδώ και όχι x.qty.
+          var title=foods.map(function(x){return shortName(x.name)+' ('+x.g+' '+gLbl+')';}).slice(0,3).join(', ')+(foods.length>3?'…':'');
           var alternates=[];
           if(typeof findMealAlternates==='function'){
             findMealAlternates(meal, c.dietType||'normal', c.id, mk, 3, altExcl).forEach(function(a){
