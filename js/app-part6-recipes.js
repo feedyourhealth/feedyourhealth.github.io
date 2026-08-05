@@ -316,7 +316,10 @@ function renderRecipesList(){
     if(q){
       var nameMatch=(r.name||'').toLowerCase().indexOf(q)>-1;
       var tagMatch=(r.tags||[]).some(function(t){return t.toLowerCase().indexOf(q)>-1;});
-      if(!nameMatch && !tagMatch) return false;
+      // Ψάχνει και στα ίδια τα υλικά (π.χ. "σολομός" βρίσκει και συνταγές όπου ο σολομός είναι
+      // ένα από τα υλικά, όχι μόνο όσες τον έχουν στο όνομα/tags).
+      var ingredientMatch=(r.foods||[]).some(function(f){return (f.n||'').toLowerCase().indexOf(q)>-1;});
+      if(!nameMatch && !tagMatch && !ingredientMatch) return false;
     }
     if(_recipeCategoryFilter==='popular' && !isRecipePopular(r)) return false;
     if(_recipeCategoryFilter && _recipeCategoryFilter!=='popular' && getRecipeMealTimes(r).indexOf(_recipeCategoryFilter)===-1) return false;
