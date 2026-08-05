@@ -2386,7 +2386,7 @@ var MEAL_RECIPES=[
 
   {id:'pasta_seafood',name:'Παστα Θαλασσινών με Δύο Σάλτσες',foods:[
     {n:'Σπαγγέτι ολικής (βρ.)',g:80},{n:'Γαρίδες (βραστές)',g:100},{n:'Μύδια (βρ.)',g:80},{n:'Τομάτες',g:100},{n:'Ελαιόλαδο',g:12}
-  ],kcal:391,macro:{p:39,f:15,c:27},tags:['Θαλασσινά','Ιταλική','Πολυθρεπτικό']},
+  ],kcal:460,macro:{p:48,f:17,c:30},tags:['Θαλασσινά','Ιταλική','Πολυθρεπτικό']},
 
   {id:'greek_salad_feta',name:'Ελληνική Σαλάτα με Φέτα & Ολίες',foods:[
     {n:'Τομάτες',g:150},{n:'Αγγούρι',g:120},{n:'Τυρί φέτα',g:60},{n:'Ελιές',g:30},{n:'Ελαιόλαδο',g:15}
@@ -2407,7 +2407,7 @@ var MEAL_RECIPES=[
 
   {id:'med_octopus_fava',name:'Χταπόδι με Φάβα & Λεμόνι',foods:[
     {n:'Χταπόδι (βρ.)',g:150},{n:'Φάβα',g:150},{n:'Λεμόνι',g:15},{n:'Μαϊντανός (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:10}
-  ],kcal:394,macro:{p:35,f:12,c:36},tags:['Mediterranean','Θαλασσινά','Ελληνικό']},
+  ],kcal:517,macro:{p:58,f:14,c:40},tags:['Mediterranean','Θαλασσινά','Ελληνικό']},
 
   {id:'med_orzo_shrimp',name:'Κριθαρότο με Γαρίδες & Ντομάτα',foods:[
     {n:'Κριθαράκι (βρ.)',g:180},{n:'Γαρίδες (βραστές)',g:120},{n:'Τομάτες',g:100},{n:'Σκόρδο',g:5},{n:'Βασιλικός (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:8}
@@ -2491,20 +2491,20 @@ var MEAL_RECIPES=[
   // ═══ FYH IKARIA — Ικαριακά όσπρια, batch cooked από ξηρά (όχι κονσέρβα) ═══
   {id:'fyh_gigantes_plaki',name:'Γίγαντες Ικαρίας στο Φούρνο',foods:[
     {n:'Γίγαντες (βρ.)',g:150},{n:'Γλυκοπατάτα',g:60},{n:'Τομάτες',g:20},{n:'Κρεμμύδι',g:15},{n:'Σκόρδο',g:3},{n:'Δυόσμος/Μέντα',g:2},{n:'Ελαιόλαδο',g:10}
-  ],kcal:290,macro:{p:10,f:14,c:32},tags:['Vegan','Όσπρια']},
+  ],kcal:334,macro:{p:14,f:11,c:48},tags:['Vegan','Όσπρια']},
 
   {id:'fyh_blackeyed_fennel',name:'Μαυρομάτικα με Μάραθο & Άνηθο',foods:[
     {n:'Μαυρομάτικα',g:150},{n:'Μάραθος',g:15},{n:'Κρεμμύδι',g:20},{n:'Τομάτες',g:35},{n:'Σκόρδο',g:5},{n:'Άνηθος (φρέσκος)',g:5},{n:'Ελαιόλαδο',g:10}
-  ],kcal:260,macro:{p:11,f:13,c:26},tags:['Vegan','Όσπρια']},
+  ],kcal:286,macro:{p:13,f:11,c:37},tags:['Vegan','Όσπρια']},
 
   {id:'fyh_revithia_soup',name:'Ρεβίθια Σούπα με Λεμόνι',foods:[
     {n:'Ρεβίθια',g:160},{n:'Κρεμμύδι',g:20},{n:'Σκόρδο',g:3},{n:'Ελαιόλαδο',g:10},{n:'Λεμόνι (χυμός)',g:15}
-  ],kcal:270,macro:{p:10,f:13,c:28},tags:['Vegan','Όσπρια']},
+  ],kcal:367,macro:{p:15,f:14,c:48},tags:['Vegan','Όσπρια']},
 
   // ═══ VEGAN DIET ═══
-  {id:'vegan_buddha_bowl',name:'Buddha Bowl - Κινόα, Νοτ, Λαχανικά',foods:[
-    {n:'Κινόα (βρ.)',g:80},{n:'Ρεβίθια',g:100},{n:'Μπρόκολο',g:120},{n:'Καλαμαράκια (ψητά)',g:80},{n:'Ελαιόλαδο',g:10}
-  ],kcal:463,macro:{p:28,f:16,c:55},tags:['Vegan','HighFiber','Energizing']},
+  {id:'vegan_buddha_bowl',name:'Buddha Bowl - Κινόα, Τόφου, Λαχανικά',foods:[
+    {n:'Κινόα (βρ.)',g:80},{n:'Ρεβίθια',g:100},{n:'Μπρόκολο',g:120},{n:'Tofu (φυσικό)',g:80},{n:'Ελαιόλαδο',g:10}
+  ],kcal:450,macro:{p:22,f:18,c:54},tags:['Vegan','HighFiber','Energizing']},
 
   {id:'vegan_lentil_curry',name:'Κάρι Λαχανικών με Ρύζι',foods:[
     {n:'Καρότα',g:100},{n:'Μπρόκολο',g:120},{n:'Κολοκυθάκια',g:80},{n:'Κοκος γάλα light',g:100},{n:'Ρύζι άσπρο (βρ.)',g:70}
@@ -2583,15 +2583,15 @@ var MEAL_RECIPES=[
   // --- ΨΑΡΙ (6 recipes) ---
   {id:'bb_fish_white_rice_greens',name:'Κοντά Λευκό Ρύζι & Χόρτα',foods:[
     {n:'Λαβράκι (ψητό)',g:200},{n:'Ρύζι άσπρο (βρ.)',g:180},{n:'Μαρούλι',g:150},{n:'Λεμόνι',g:10},{n:'Ελαιόλαδο',g:5}
-  ],kcal:566,macro:{p:59,f:12,c:56},tags:['bodybuilding_clean','fish','high_protein','lean_meat','white_rice','omega3']},
+  ],kcal:540,macro:{p:43,f:11,c:56},tags:['bodybuilding_clean','fish','high_protein','lean_meat','white_rice','omega3']},
 
   {id:'bb_fish_potato_asparagus',name:'Φιλέτο Ψάρι Πατάτες & Σπαράγγια',foods:[
     {n:'Λαβράκι (ψητό)',g:200},{n:'Πατάτες',g:220},{n:'Σπαράγγια',g:120},{n:'Ελαιόλαδο',g:5}
-  ],kcal:508,macro:{p:53,f:10,c:49},tags:['bodybuilding_clean','fish','high_protein','lean_meat','potato']},
+  ],kcal:496,macro:{p:43,f:10,c:49},tags:['bodybuilding_clean','fish','high_protein','lean_meat','potato']},
 
   {id:'bb_seabass_quinoa_zucchini',name:'Λαβράκι Κινόα & Κολοκυθάκι',foods:[
     {n:'Λαβράκι (ψητό)',g:200},{n:'Κινόα (βρ.)',g:160},{n:'Κολοκυθάκια',g:130},{n:'Ελαιόλαδο',g:5}
-  ],kcal:506,macro:{p:54,f:13,c:38},tags:['bodybuilding_clean','fish','high_protein','quinoa','omega3']},
+  ],kcal:494,macro:{p:44,f:13,c:38},tags:['bodybuilding_clean','fish','high_protein','quinoa','omega3']},
 
   {id:'bb_bream_brown_rice_tomato',name:'Τσιπούρα Brown Rice & Ντομάτα',foods:[
     {n:'Τσιπούρα (ψητή)',g:200},{n:'Ρύζι καστανό (βρ.)',g:160},{n:'Τομάτες',g:150},{n:'Ελαιόλαδο',g:5}
@@ -2602,7 +2602,7 @@ var MEAL_RECIPES=[
   ],kcal:639,macro:{p:45,f:30,c:46},tags:['bodybuilding_clean','fish','high_protein','black_rice','omega3','rare']},
 
   {id:'bb_haddock_sweet_potato_rare',name:'Μέρλουσας Γλυκοπατάτα (Σπάνια)',foods:[
-    {n:'Λαβράκι (ψητό)',g:210},{n:'Γλυκοπατάτα',g:200},{n:'Μικτά λαχανικά',g:100},{n:'Ελαιόλαδο',g:5}
+    {n:'Μέρλουσας (ψητή)',g:210},{n:'Γλυκοπατάτα',g:200},{n:'Μικτά λαχανικά',g:100},{n:'Ελαιόλαδο',g:5}
   ],kcal:472,macro:{p:53,f:7,c:46},tags:['bodybuilding_clean','fish','high_protein','sweet_potato','rare']},
 
   // --- ΑΥΓΑ (3 recipes) ---
@@ -2639,11 +2639,11 @@ var MEAL_RECIPES=[
 
   {id:'bb_beyond_beef_wholewheat_pasta',name:'Φυτικός Κιμάς Ολικής Ζυμαρικά & Ντομάτα',foods:[
     {n:'Beyond Beef (φυτικός κιμάς)',g:120},{n:'Σπαγγέτι ολικής (βρ.)',g:120},{n:'Τομάτες',g:150},{n:'Σκόρδο',g:8},{n:'Ελαιόλαδο',g:5}
-  ],kcal:467,macro:{p:27,f:21,c:45},tags:['bodybuilding_clean','vegan','Vegan','high_protein','plant_protein','pasta']},
+  ],kcal:497,macro:{p:30,f:25,c:46},tags:['bodybuilding_clean','vegan','Vegan','high_protein','plant_protein','pasta']},
 
   {id:'bb_beyond_beef_sweet_potato_greens',name:'Φυτικός Κιμάς Γλυκοπατάτα & Λαχανικά',foods:[
     {n:'Beyond Beef (φυτικός κιμάς)',g:110},{n:'Γλυκοπατάτα',g:200},{n:'Μικτά λαχανικά',g:120},{n:'Ελαιόλαδο',g:5}
-  ],kcal:474,macro:{p:23,f:19,c:53},tags:['bodybuilding_clean','vegan','Vegan','high_protein','plant_protein','sweet_potato']},
+  ],kcal:501,macro:{p:25,f:23,c:54},tags:['bodybuilding_clean','vegan','Vegan','high_protein','plant_protein','sweet_potato']},
 
   {id:'bb_vegan_oat_chia_breakfast',name:'Βρώμη με Chia & Φυστικοβούτυρο (Vegan)',foods:[
     {n:'Βρώμη (ωμή)',g:45},{n:'Γάλα σόγιας',g:200},{n:'Chia seeds',g:10},{n:'Φυστικοβούτυρο',g:15},{n:'Μπανάνα',g:80}
@@ -2673,7 +2673,7 @@ var MEAL_RECIPES=[
 
   {id:'keto_zucchini_beef',name:'Κολοκυθάκια με Κιμάς & Τυρί',foods:[
     {n:'Κολοκυθάκια',g:200},{n:'Βοδινός κιμάς (μαγ.)',g:120},{n:'Τυρί φέτα',g:40},{n:'Ελαιόλαδο',g:10}
-  ],kcal:492,macro:{p:41,f:32,c:7},tags:['Keto','Άνετο','LowCarb']},
+  ],kcal:528,macro:{p:39,f:38,c:8},tags:['Keto','Άνετο','LowCarb']},
 
   {id:'keto_cauliflower_rice',name:'Κουνουπίδι-Ρύζι με Γαρίδες',foods:[
     {n:'Κουνουπίδι',g:200},{n:'Γαρίδες (βραστές)',g:150},{n:'Σάλτσα σόγιας (μειωμένο αλάτι)',g:10},{n:'Ελαιόλαδο',g:12}
@@ -2687,11 +2687,11 @@ var MEAL_RECIPES=[
   // ═══ ΨΑΡΙΑ - ΠΕΤΡΕΤΖΙΚΗΣ STYLE (2-3 φορές/εβδ. = 4-5 σύνταγες) ═══
   {id:'fsh_lemon_grill',name:'Ψάρι Σχάρα με Λεμόνι & Ρύζι',foods:[
     {n:'Λαβράκι (ψητό)',g:180},{n:'Λεμόνι (χυμός)',g:20},{n:'Ρύζι καστανό (βρ.)',g:80},{n:'Σαλάτα εποχής',g:150},{n:'Ελαιόλαδο',g:8}
-  ],kcal:424,macro:{p:45,f:14,c:27},tags:['Ψάρι','Σχάρα','Γρήγορη','Κυπριακή']},
+  ],kcal:413,macro:{p:36,f:13,c:27},tags:['Ψάρι','Σχάρα','Γρήγορη','Κυπριακή']},
 
   {id:'fsh_tomato_rice',name:'Ψάρι Φούρνο με Ντομάτες & Ρύζι',foods:[
     {n:'Λαβράκι (ψητό)',g:180},{n:'Τομάτες',g:150},{n:'Ρύζι άσπρο (βρ.)',g:70},{n:'Κρεμμύδι',g:40},{n:'Ελαιόλαδο',g:10}
-  ],kcal:446,macro:{p:45,f:15,c:29},tags:['Ψάρι','Φούρνο','Ντομάτες','Εύκολη']},
+  ],kcal:435,macro:{p:36,f:15,c:29},tags:['Ψάρι','Φούρνο','Ντομάτες','Εύκολη']},
 
   {id:'salmon_lemon',name:'Σολομός Σχάρα με Λεμόνι & Πατάτες',foods:[
     {n:'Σολομός (ψητός)',g:160},{n:'Πατάτες',g:100},{n:'Λεμόνι (χυμός)',g:15},{n:'Μπρόκολο',g:100},{n:'Ελαιόλαδο',g:10}
@@ -2703,7 +2703,7 @@ var MEAL_RECIPES=[
 
   {id:'mussels_wine',name:'Μύδια με Κρασί & Κριθαράκι',foods:[
     {n:'Μύδια (βρ.)',g:200},{n:'Κριθαράκι (βρ.)',g:75},{n:'Λευκό κρασί',g:60},{n:'Σκόρδο',g:8},{n:'Τομάτες',g:80}
-  ],kcal:366,macro:{p:29,f:5,c:38},tags:['Θαλασσινά','Κρασάτη','Ειδική']},
+  ],kcal:538,macro:{p:53,f:10,c:45},tags:['Θαλασσινά','Κρασάτη','Ειδική']},
 
   // ═══ ΚΟΤΟΠΟΥΛΟ - ΠΕΤΡΕΤΖΙΚΗΣ STYLE ═══
   {id:'chk_lemon_rice',name:'Κοτόπουλο Λεμονάτο με Ρύζι',foods:[
@@ -2715,7 +2715,7 @@ var MEAL_RECIPES=[
   ],kcal:537,macro:{p:59,f:17,c:29},tags:['Κοτόπουλο','Κρεμώδης','Έξοχη']},
 
   {id:'chk_pesto',name:'Κοτόπουλο Pesto με Πατάτες Ψητές',foods:[
-    {n:'Κοτόπουλο στήθος (ψητό)',g:160},{n:'Πατάτες',g:120},{n:'Ελαιόλαδο',g:20},{n:'Τομάτες',g:100},{n:'Ελαιόλαδο',g:5}
+    {n:'Κοτόπουλο στήθος (ψητό)',g:160},{n:'Πατάτες',g:120},{n:'Πέστο βασιλικού',g:20},{n:'Τομάτες',g:100},{n:'Ελαιόλαδο',g:5}
   ],kcal:491,macro:{p:54,f:17,c:29},tags:['Κοτόπουλο','Pesto','Γρήγορη']},
 
   {id:'chk_curry_rice',name:'Κοτόπουλο Κάρι με Ρύζι',foods:[
@@ -2804,7 +2804,7 @@ var MEAL_RECIPES=[
   // ═══ ONE-POT / ΓΡΗΓΟΡΟ ═══
   {id:'ground_meat_rice',name:'Κιμάς & Ρύζι με Ντομάτες',foods:[
     {n:'Χοιρινός κιμάς (μαγ.)',g:140},{n:'Ρύζι άσπρο (βρ.)',g:80},{n:'Τομάτες',g:120},{n:'Κρεμμύδι',g:50},{n:'Ελαιόλαδο',g:10}
-  ],kcal:602,macro:{p:33,f:37,c:32},tags:['Κιμάς','One-Pot','Γρήγορη']},
+  ],kcal:633,macro:{p:39,f:39,c:32},tags:['Κιμάς','One-Pot','Γρήγορη']},
 
   {id:'halloumi_potatoes',name:'Χαλούμι Σαγανάκι με Πατάτες & Σαλάτα',foods:[
     {n:'Χαλλούμι (ωμό)',g:120},{n:'Πατάτες',g:130},{n:'Σαλάτα εποχής',g:150},{n:'Τομάτες',g:80},{n:'Ελαιόλαδο',g:15}
@@ -2816,11 +2816,11 @@ var MEAL_RECIPES=[
 
   {id:'rice_fish_vegetables',name:'Ρύζι με Ψάρι & Λαχανικά (Pilaf)',foods:[
     {n:'Λαβράκι (ψητό)',g:150},{n:'Ρύζι άσπρο (βρ.)',g:80},{n:'Καρότα',g:80},{n:'Αρακάς (βρ.)',g:70},{n:'Ελαιόλαδο',g:10}
-  ],kcal:470,macro:{p:41,f:14,c:41},tags:['Ψάρι','Pilaf','Ξιφιάσιμη']},
+  ],kcal:461,macro:{p:33,f:14,c:41},tags:['Ψάρι','Pilaf','Ξιφιάσιμη']},
 
   {id:'minced_vegetables',name:'Κιμάς & Λαχανικά (Κατσαρόλα)',foods:[
     {n:'Χοιρινός κιμάς (μαγ.)',g:140},{n:'Κολοκυθάκια',g:120},{n:'Μελιτζάνες',g:100},{n:'Σάλτσα ντομάτας (μαγειρεμένη)',g:80},{n:'Ελαιόλαδο',g:10}
-  ],kcal:528,macro:{p:33,f:37,c:15},tags:['Κιμάς','Λαχ.','Low Carb']},
+  ],kcal:558,macro:{p:39,f:39,c:15},tags:['Κιμάς','Λαχ.','Low Carb']},
 
   {id:'egg_fried_rice',name:'Ρύζι Τηγανιτό με Αυγό & Γαμέτες',foods:[
     {n:'Ρύζι άσπρο (βρ.)',g:90},{n:'Αυγά (ολόκληρα)',g:100},{n:'Κοτόπουλο στήθος (ψητό)',g:100},{n:'Πιπεριά κόκκινη',g:80},{n:'Σάλτσα σόγιας (μειωμένο αλάτι)',g:10}
@@ -2848,7 +2848,7 @@ var MEAL_RECIPES=[
 
   {id:'fish_vegetables_baked',name:'Ψάρι Φούρνο με Ψητά Λαχανικά',foods:[
     {n:'Λαβράκι (ψητό)',g:170},{n:'Κολοκυθάκια',g:120},{n:'Μελιτζάνες',g:100},{n:'Τομάτες',g:80},{n:'Ελαιόλαδο',g:10}
-  ],kcal:359,macro:{p:42,f:15,c:13},tags:['Ψάρι','Low Carb','Υγιεινή']},
+  ],kcal:349,macro:{p:34,f:15,c:13},tags:['Ψάρι','Low Carb','Υγιεινή']},
 
   {id:'chicken_cauliflower',name:'Κοτόπουλο & Κουνουπίδι Ρύζι',foods:[
     {n:'Κοτόπουλο στήθος (ψητό)',g:160},{n:'Κουνουπίδι',g:150},{n:'Ρύζι άσπρο (βρ.)',g:70},{n:'Σάλτσα σόγιας (μειωμένο αλάτι)',g:10},{n:'Ελαιόλαδο',g:8}
@@ -2885,7 +2885,7 @@ var MEAL_RECIPES=[
 
   {id:'bb_breakfast_oatmeal_protein',name:'Oatmeal με Protein Powder & Μπανάνα',foods:[
     {n:'Βρώμη (ωμή)',g:80},{n:'Γάλα αμυγδάλου',g:200},{n:'Πρωτεΐνη σκόνη (whey)',g:30},{n:'Μπανάνα',g:80}
-  ],kcal:282,macro:{p:28,f:6,c:32},tags:['bodybuilding_clean','breakfast','protein','high_carb']},
+  ],kcal:536,macro:{p:40,f:11,c:75},tags:['bodybuilding_clean','breakfast','protein','high_carb']},
 
   {id:'bb_breakfast_turkey_ricecakes',name:'Κρέας Γαλοπούλας με Ρυζογκοφρέτες',foods:[
     {n:'Γαλοπούλα στήθος',g:100},{n:'Ρυζογκοφρέτες',g:40},{n:'Μαρμελάδα φράουλας',g:12},{n:'Μήλο',g:120}
@@ -2893,7 +2893,7 @@ var MEAL_RECIPES=[
 
   {id:'bb_breakfast_pancakes_protein',name:'Protein Pancakes με Μέλι & Φράουλες',foods:[
     {n:'Αυγά (ολόκληρα)',g:120},{n:'Βρώμη (ωμή)',g:50},{n:'Πρωτεΐνη σκόνη (whey)',g:25},{n:'Μέλι άβραστο',g:15},{n:'Φράουλες',g:150}
-  ],kcal:401,macro:{p:38,f:15,c:34},tags:['bodybuilding_clean','breakfast','eggs','high_carb','treat']},
+  ],kcal:560,macro:{p:45,f:18,c:61},tags:['bodybuilding_clean','breakfast','eggs','high_carb','treat']},
 
   // ═══ ΑΘΛΗΤΙΚΟΣ/ΚΛΙΝΙΚΟΣ ΠΡΟΣΘΗΚΕΣ (10 νέες συνταγές) ═══
   {id:'sardines_salad_lemon',name:'Σαρδέλες με Σαλάτα & Λαδολέμονο',foods:[
