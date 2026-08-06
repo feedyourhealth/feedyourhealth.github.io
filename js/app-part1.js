@@ -2992,9 +2992,16 @@ function renderSB(){
   } else {
     list.sort(function(a,b){return(b.lastAccess||0)-(a.lastAccess||0);});
   }
-  var html='';
+  // ✅ 2026-08-06: μετρητής μετακινήθηκε πάνω από τη λίστα (πριν ζούσε θαμμένος στο τέλος σε 9px
+  // γκρι κείμενο μετά τους αρχειοθετημένους/διαγραμμένους — εύκολο να μη φανεί καν χωρίς scroll).
+  // Ένα σημείο τώρα, όχι δύο· ίδια λογική "Ν από Μ" μόνο όταν κάτι είναι φιλτραρισμένο.
+  var html='<div class="clients-count-line">'
+    +(list.length===base.length
+      ? (base.length+' πελ'+(base.length===1?'άτης':'άτες'))
+      : ('Εμφανίζονται '+list.length+' από '+base.length))
+    +'</div>';
   if((term||_clientFilterGoal||_clientFilterSport||_clientFilterGroup||_clientFilterStatus)&&list.length===0){
-    html='<div style="font-size:12px;color:#bbb;padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
+    html+='<div style="font-size:12px;color:#bbb;padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
   } else {
     // ✅ 2026-08-05: block "Χρειάζονται προσοχή" καρφωμένο πάνω από το κανονικό πλέγμα, ώστε αυτοί οι
     // πελάτες να μη χαθούν μέσα στη λίστα ανεξάρτητα από την επιλεγμένη ταξινόμηση/σελίδα scroll.
@@ -3070,9 +3077,6 @@ function renderSB(){
     html+='</div>';
   }
 
-  if(!term&&base.length>0){
-    html+='<div style="font-size:9px;color:#999;padding:6px 10px;text-align:center;margin-top:8px;font-weight:500;">'+list.length+(list.length!==base.length?' / '+base.length:'')+' πελάτες</div>';
-  }
   var clientListEl=document.getElementById('client-list');
   if(clientListEl) clientListEl.innerHTML=html;
 
