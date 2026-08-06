@@ -70,7 +70,38 @@ body.dark-mode .undo-redo-btn:disabled{color:#555}
 .client-quick-chip:hover{border-color:var(--teal)}
 .client-quick-chip.active{background:var(--teal);border-color:var(--teal);color:#fff}
 .client-quick-chip-count{opacity:.75}
+/* Εναλλαγή Πλέγμα/Λίστα (βλ. setClientViewMode, js/app-part1.js) — δύο κουμπιά σε ένα ενιαίο pill,
+   ίδιο σχήμα με το .view-toggle που ήδη υπάρχει αλλού στο εργαλείο για την ίδια ιδέα "δύο προβολές". */
+.client-view-toggle{display:flex;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;flex:0 0 auto}
+.cvt-btn{border:none;background:#f9f9f9;color:#888;font-size:14px;padding:7px 12px;cursor:pointer;line-height:1}
+.cvt-btn.active{background:var(--teal);color:#fff}
+body.dark-mode .client-view-toggle{border-color:#444}
+body.dark-mode .cvt-btn{background:#242424;color:#aaa}
+body.dark-mode .cvt-btn.active{background:var(--teal);color:#fff}
 .clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-bottom:22px}
+/* Προβολή "Λίστα" (πίνακας) — εναλλακτική στο .clients-grid πάνω από αυτό, ίδια δεδομένα/actions με
+   την κάρτα (clientRowHtml δίπλα στο clientCardHtml, js/app-part1.js). overflow-x:auto στο wrapper
+   γιατί ο πίνακας έχει σταθερό ελάχιστο πλάτος — δεν πρέπει ποτέ να σπρώξει πλευρικά όλη τη σελίδα. */
+.clients-table-wrap{overflow-x:auto;margin-bottom:22px;border:1px solid #e0e0e0;border-radius:12px}
+.clients-table{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.clients-table thead th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#6b6b6b;background:#f9f9f9;padding:9px 12px;border-bottom:1px solid #e0e0e0;white-space:nowrap}
+.clients-table tbody td{padding:8px 12px;border-bottom:1px solid #eee;vertical-align:middle}
+.clients-table tbody tr.cr{cursor:pointer;transition:background .15s}
+.clients-table tbody tr.cr:hover{background:#f7fbfa}
+.clients-table tbody tr.cr:last-child td{border-bottom:none}
+.clients-table tr.cc-selected{background:#f0f7f7}
+.cr-name-cell{display:flex;align-items:center;gap:8px;min-width:160px}
+.cr-name{font-weight:700;color:var(--teal);white-space:nowrap}
+.cr-actions{display:flex;gap:2px}
+.cr-actions button{border:none;background:none;cursor:pointer;font-size:12px;padding:4px 6px;border-radius:5px;color:#6b6b6b}
+.cr-actions button:hover{background:#f5f5f5}
+.cr-actions .cdel:hover{color:#c62828;background:#fcebeb}
+body.dark-mode .clients-table-wrap{border-color:#333}
+body.dark-mode .clients-table thead th{background:#1c1c1c;color:#999;border-color:#333}
+body.dark-mode .clients-table tbody td{border-color:#2a2a2a}
+body.dark-mode .clients-table tbody tr.cr:hover{background:#182525}
+body.dark-mode .clients-table tr.cc-selected{background:#182525}
+body.dark-mode .cr-actions button:hover{background:#2a2a2a}
 /* Block "Χρειάζονται προσοχή" καρφωμένο πάνω από το κανονικό πλέγμα Πελάτες (βλ. renderSB,
    js/app-part1.js) — ίδια χρωματική οικογένεια amber/warning με τα .hm-card-warning/.hm-tile-amber
    της Αρχικής, ώστε το "χρειάζεται προσοχή" να σημαίνει οπτικά το ίδιο πράγμα σε όλο το εργαλείο. */

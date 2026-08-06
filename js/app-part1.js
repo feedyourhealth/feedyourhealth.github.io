@@ -2815,6 +2815,21 @@ function setClientFilter(type,val){
 var _clientSortMode='recent'; // 'recent' | 'oldest' | 'name' | 'stale' | 'attention'
 function setClientSort(val){ _clientSortMode=val; renderSB(); }
 
+// Πλέγμα (κάρτες) vs Λίστα (πίνακας) για τη σελίδα Πελάτες. Τα δύο κουμπιά εναλλαγής ζουν στο
+// στατικό toolbar HTML (renderClients, js/app-part5-home.js) — γι' αυτό εδώ ενημερώνονται απευθείας
+// με classList αντί να περιμένουν ένα πλήρες re-render του toolbar (ίδιο ζήτημα συγχρονισμού με το
+// dropdown κατάστασης πλάνου, βλ. setClientQuickFilter πιο πάνω, εδώ λύνεται πιο απλά μια και είναι
+// μόνο δύο κουμπιά, όχι ένα <select> με πολλές τιμές).
+var _clientViewMode='grid'; // 'grid' | 'list'
+function setClientViewMode(m){
+  _clientViewMode=m;
+  var gridBtn=document.getElementById('client-view-grid-btn');
+  var listBtn=document.getElementById('client-view-list-btn');
+  if(gridBtn) gridBtn.classList.toggle('active',m==='grid');
+  if(listBtn) listBtn.classList.toggle('active',m==='list');
+  renderSB();
+}
+
 // Γρήγορα φίλτρα-chips πάνω από τη λίστα Πελάτες (ένα κλικ, χωρίς dropdown). '' | 'attention' | 'today'.
 // Το "Χωρίς πλάνο" ΔΕΝ έχει δικό του state εδώ — ξαναχρησιμοποιεί το ήδη υπάρχον _clientFilterStatus='noplan'
 // (ίδιο dropdown option) ώστε chip και dropdown να μη διαφωνήσουν ποτέ για το ίδιο πράγμα. Τα τρία chips
@@ -2996,6 +3011,51 @@ function clientCardHtml(c){
     +'</div>'
     +'</div>';
 }
+// Ίδια δεδομένα με το clientCardHtml, σε γραμμή πίνακα — για την προβολή "Λίστα" (βλ.
+// _clientViewMode/clientCardsOrTable). Κρατημένο δίπλα στο clientCardHtml σκόπιμα ώστε μια αλλαγή σε
+// ένα badge/κατάσταση να θυμίζει στον επόμενο που θα το αγγίξει να ενημερώσει και τα δύο.
+function clientRowHtml(c){
+  var hasActive=c.weekPlan && Object.keys(c.weekPlan).length>0;
+  var sportInfo=(typeof SPORT_INFO!=='undefined')?SPORT_INFO[c.sport]:null;
+  var sport=sportInfo?(sportInfo.icon+' '+sportInfo.label):'—';
+  var isSel=!!_clientBulkSelected[c.id];
+  var rowClick=_clientBulkMode?('toggleClientBulkSelect(\''+c.id+'\')'):('selectClient(\''+c.id+'\')');
+  var nameBadges=(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')
+    +(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')
+    +(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')
+    +(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'');
+  return '<tr class="cr'+(_clientBulkMode&&isSel?' cc-selected':'')+'" onclick="'+rowClick+'">'
+    +'<td class="cr-name-cell">'
+    +(_clientBulkMode
+      ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')
+      :('<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'))
+    +'<span class="cr-name" title="'+esc(c.name||'Νέος πελάτης')+'">'+esc(c.name||'Νέος πελάτης')+'</span>'+nameBadges
+    +'</td>'
+    +'<td class="num">'+(c.age||'?')+'</td>'
+    +'<td class="num">'+(c.weight||'?')+'kg</td>'
+    +'<td>'+sport+(c.group?' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>':'')+'</td>'
+    +'<td><span class="cc-status '+(hasActive?'cc-status-active':'cc-status-none')+'">'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span></td>'
+    +'<td>'+progressBadge(c)+'</td>'
+    +'<td>'+lastAccessChipHtml(c.lastAccess)+'</td>'
+    +'<td class="cr-actions">'+(_clientBulkMode?'':(
+      '<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
+      +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
+    ))+'</td>'
+    +'</tr>';
+}
+function clientTableHtml(list){
+  return '<div class="clients-table-wrap"><table class="clients-table">'
+    +'<thead><tr><th>Πελάτης</th><th class="num">Ηλικία</th><th class="num">Βάρος</th><th>Άθλημα</th><th>Κατάσταση πλάνου</th><th>Τήρηση</th><th>Τελ. επίσκεψη</th><th></th></tr></thead>'
+    +'<tbody>'+list.map(clientRowHtml).join('')+'</tbody>'
+    +'</table></div>';
+}
+// Ενιαίο σημείο κλήσης όπου πριν υπήρχε '<div class="clients-grid">'+list.map(clientCardHtml)...
+// ώστε το toggle Πλέγμα/Λίστα να επηρεάζει και το block "Χρειάζονται προσοχή" και το κύριο πλέγμα με
+// μία αλλαγή. Οι ενότητες Αρχειοθετημένοι/Διαγραμμένοι πιο κάτω ΔΕΝ περνάνε από εδώ — παραμένουν πάντα
+// σε κάρτες (σπάνια μεγάλες λίστες, διαφορετικό, πιο απλό markup από το clientCardHtml).
+function clientCardsOrTable(list){
+  return _clientViewMode==='list' ? clientTableHtml(list) : ('<div class="clients-grid">'+list.map(clientCardHtml).join('')+'</div>');
+}
 function renderSB(){
   var term=_clientSearchTerm;
   // ✅ FILTER: Exclude deleted + archived clients from the main list
@@ -3058,11 +3118,11 @@ function renderSB(){
         attnClients.sort(function(a,b){return (b.lastAccess||0)-(a.lastAccess||0);});
         html+='<div class="clients-attn-block">'
           +'<div class="clients-attn-title">🔔 Χρειάζονται προσοχή <span class="clients-attn-count">('+attnClients.length+')</span></div>'
-          +'<div class="clients-grid">'+attnClients.map(clientCardHtml).join('')+'</div>'
+          +clientCardsOrTable(attnClients)
           +'</div>';
       }
     }
-    html+='<div class="clients-grid">'+list.map(clientCardHtml).join('')+'</div>';
+    html+=clientCardsOrTable(list);
   }
   if(_clientBulkMode){
     var _bulkSelCount=Object.keys(_clientBulkSelected).filter(function(id){return _clientBulkSelected[id];}).length;

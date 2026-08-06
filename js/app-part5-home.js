@@ -833,6 +833,13 @@ function renderClients(){
     +'</select>';
   html+='<button class="add-btn add-btn-toolbar" onclick="toggleClientBulkMode()">'+(_clientBulkMode?'✕ Έξοδος επιλογής':'☑️ Επιλογή πολλαπλών')+'</button>';
   html+='<button class="add-btn add-btn-toolbar" onclick="addClient()">+ Νέος πελάτης</button>';
+  // Πλέγμα/Λίστα (βλ. setClientViewMode/clientCardsOrTable, js/app-part1.js) — τα κουμπιά ζουν εδώ
+  // στο στατικό toolbar, όχι μέσα στο #client-list, γι' αυτό το setClientViewMode τα ενημερώνει
+  // απευθείας με classList αντί να περιμένει ξαναχτίσιμο όλου του toolbar.
+  html+='<div class="client-view-toggle" role="group" aria-label="Προβολή πελατών">'
+    +'<button type="button" id="client-view-grid-btn" class="cvt-btn'+(_clientViewMode!=='list'?' active':'')+'" onclick="setClientViewMode(\'grid\')" title="Προβολή πλέγματος" aria-label="Προβολή πλέγματος">▦</button>'
+    +'<button type="button" id="client-view-list-btn" class="cvt-btn'+(_clientViewMode==='list'?' active':'')+'" onclick="setClientViewMode(\'list\')" title="Προβολή λίστας" aria-label="Προβολή λίστας">☰</button>'
+    +'</div>';
   html+='</div>';
 
   html+='<div id="client-list" class="clients-list-page"></div>';
