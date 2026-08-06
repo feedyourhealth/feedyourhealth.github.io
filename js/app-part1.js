@@ -2842,7 +2842,10 @@ function lastAccessChipHtml(ts){
 // αποκλειστικά τη δραστηριότητα check-in στο portal, όχι αν υπάρχει πλάνο, ώστε τα δύο badges να μη
 // διαβάζονται σαν αντιφατικά (π.χ. "Ενεργό σχέδιο" + "Δεν έχει ξεκινήσει" δίπλα-δίπλα ήταν μπερδεμένο).
 function progressBadge(c){
-  if(!c.shareToken) return '';
+  // Πριν επέστρεφε '' εδώ — η θέση του badge εξαφανιζόταν σιωπηλά, χωρίς εξήγηση γιατί λείπει η
+  // αξιολόγηση (2026-08-06: μόνο 2/15 κάρτες στο πραγματικό στιγμιότυπο είχαν ποσοστό, οι υπόλοιποι
+  // δεν εξηγούσαν τον λόγο). Τώρα η θέση εμφανίζεται ΠΑΝΤΑ με κάποιο νόημα.
+  if(!c.shareToken) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Χωρίς portal link</span>';
   var rows=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
   if(!rows.length) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Χωρίς check-in ακόμα</span>';
   var gap=ckDaysSinceLast(rows);
