@@ -2815,6 +2815,45 @@ function setClientFilter(type,val){
 var _clientSortMode='recent'; // 'recent' | 'oldest' | 'name' | 'stale' | 'attention'
 function setClientSort(val){ _clientSortMode=val; renderSB(); }
 
+// Γρήγορα φίλτρα-chips πάνω από τη λίστα Πελάτες (ένα κλικ, χωρίς dropdown). '' | 'attention' | 'today'.
+// Το "Χωρίς πλάνο" ΔΕΝ έχει δικό του state εδώ — ξαναχρησιμοποιεί το ήδη υπάρχον _clientFilterStatus='noplan'
+// (ίδιο dropdown option) ώστε chip και dropdown να μη διαφωνήσουν ποτέ για το ίδιο πράγμα. Τα τρία chips
+// είναι μεταξύ τους αμοιβαία αποκλειόμενα (ένα ξαναπάτημα το σβήνει) — απλούστερο και προβλέψιμο αντί για
+// συνδυασμούς που θα μπέρδευαν το "πόσα ταιριάζουν" της κάθε ετικέτας.
+var _clientFilterQuick='';
+function setClientQuickFilter(key){
+  if(key==='noplan'){
+    _clientFilterStatus=(_clientFilterStatus==='noplan')?'':'noplan';
+    _clientFilterQuick='';
+    // Το dropdown "Κάθε κατάσταση πλάνου" ζει στο στατικό toolbar HTML (renderClients, μία φορά ανά
+    // άνοιγμα tab) — renderSB() παρακάτω δεν το ξαναχτίζει, οπότε χωρίς αυτή τη γραμμή θα έμενε
+    // οπτικά στην παλιά επιλογή ενώ το chip/η λίστα θα έδειχναν ήδη το νέο φίλτρο.
+    var statusSel=document.getElementById('client-filter-status');
+    if(statusSel) statusSel.value=_clientFilterStatus;
+  } else {
+    _clientFilterQuick=(_clientFilterQuick===key)?'':key;
+    if(_clientFilterStatus==='noplan') _clientFilterStatus='';
+  }
+  renderSB();
+}
+// Μετρήματα στην ετικέτα κάθε chip υπολογισμένα πάνω στο "base" (χωρίς διαγραμμένους/αρχειοθετημένους,
+// αγνοώντας αναζήτηση/άλλα φίλτρα) ώστε ο αριθμός να δείχνει πάντα το σταθερό σύνολο, όχι να αναπηδά
+// ανάλογα με τι άλλο έχει ήδη επιλεγεί.
+function clientQuickChipsHtml(base){
+  var attnCount=base.filter(clientNeedsAttention).length;
+  var noplanCount=base.filter(function(c){return !(c.weekPlan && Object.keys(c.weekPlan).length>0);}).length;
+  var todayCount=base.filter(function(c){return c.lastAccess && Math.floor((Date.now()-c.lastAccess)/86400000)===0;}).length;
+  function chip(key,label,count,active){
+    return '<button type="button" class="client-quick-chip'+(active?' active':'')+'" onclick="setClientQuickFilter(\''+key+'\')">'
+      +label+' <span class="client-quick-chip-count">('+count+')</span></button>';
+  }
+  return '<div class="client-quick-chips">'
+    +chip('attention','🚩 Χρειάζονται προσοχή',attnCount,_clientFilterQuick==='attention')
+    +chip('noplan','⭕ Χωρίς πλάνο',noplanCount,_clientFilterStatus==='noplan')
+    +chip('today','🕐 Ενεργοί σήμερα',todayCount,_clientFilterQuick==='today')
+    +'</div>';
+}
+
 // Πόσο καιρό πριν άνοιξε τελευταία φορά ο φάκελος αυτού του πελάτη.
 function fmtLastAccess(ts){
   if(!ts) return 'ποτέ';
@@ -2969,6 +3008,8 @@ function renderSB(){
     var hasPlan=c.weekPlan && Object.keys(c.weekPlan).length>0;
     if(_clientFilterStatus==='active' && !hasPlan) return false;
     if(_clientFilterStatus==='noplan' && hasPlan) return false;
+    if(_clientFilterQuick==='attention' && !clientNeedsAttention(c)) return false;
+    if(_clientFilterQuick==='today' && !(c.lastAccess && Math.floor((Date.now()-c.lastAccess)/86400000)===0)) return false;
     return true;
   });
   // ✅ Sort according to the selected mode (default: most recent visit first)
@@ -3000,7 +3041,10 @@ function renderSB(){
       ? (base.length+' πελ'+(base.length===1?'άτης':'άτες'))
       : ('Εμφανίζονται '+list.length+' από '+base.length))
     +'</div>';
-  if((term||_clientFilterGoal||_clientFilterSport||_clientFilterGroup||_clientFilterStatus)&&list.length===0){
+  // ✅ Γρήγορα chips (βλ. setClientQuickFilter πιο πάνω) — κρύβονται σε bulk mode, μαζί με το block
+  // "Χρειάζονται προσοχή" που ήδη κρύβεται εκεί, ίδιος λόγος: οι κάρτες επιλέγουν αντί να ανοίγουν.
+  if(!_clientBulkMode) html+=clientQuickChipsHtml(base);
+  if((term||_clientFilterGoal||_clientFilterSport||_clientFilterGroup||_clientFilterStatus||_clientFilterQuick)&&list.length===0){
     html+='<div style="font-size:12px;color:#bbb;padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
   } else {
     // ✅ 2026-08-05: block "Χρειάζονται προσοχή" καρφωμένο πάνω από το κανονικό πλέγμα, ώστε αυτοί οι

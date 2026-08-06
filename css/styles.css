@@ -61,6 +61,15 @@ body.dark-mode .undo-redo-btn:disabled{color:#555}
 /* Μετρητής "Ν πελάτες" / "Εμφανίζονται Ν από Μ" πάνω από τη λίστα (βλ. renderSB, js/app-part1.js) —
    έτσι φαίνεται πάντα αν ένα φίλτρο "έπιασε" κάτι, χωρίς να μετράς κάρτες με το μάτι. */
 .clients-count-line{font-size:11.5px;color:#8a8a8a;font-weight:600;margin-bottom:10px}
+/* Γρήγορα φίλτρα-chips πάνω από τη λίστα (βλ. setClientQuickFilter/clientQuickChipsHtml,
+   js/app-part1.js) — ένα κλικ αντί για συνδυασμό dropdown. Ίδιο pill σχήμα με το .hm-group-chip
+   της Αρχικής, teal accent στο "active" state αντί για χρωματική οικογένεια, γιατί εδώ πρόκειται
+   για επιλογή/toggle, όχι για status label. */
+.client-quick-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.client-quick-chip{font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;border:1px solid #e0e0e0;background:#f9f9f9;color:#555;font-family:inherit}
+.client-quick-chip:hover{border-color:var(--teal)}
+.client-quick-chip.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.client-quick-chip-count{opacity:.75}
 .clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-bottom:22px}
 /* Block "Χρειάζονται προσοχή" καρφωμένο πάνω από το κανονικό πλέγμα Πελάτες (βλ. renderSB,
    js/app-part1.js) — ίδια χρωματική οικογένεια amber/warning με τα .hm-card-warning/.hm-tile-amber
@@ -691,6 +700,16 @@ body.dark-mode .clients-toolbar-select {
   background: #242424;
   border-color: #444;
   color: #e0e0e0;
+}
+body.dark-mode .client-quick-chip {
+  background: #242424;
+  border-color: #444;
+  color: #e0e0e0;
+}
+body.dark-mode .client-quick-chip.active {
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
 }
 body.dark-mode .fab {
   background: var(--teal);
