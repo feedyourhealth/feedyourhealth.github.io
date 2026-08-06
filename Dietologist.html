@@ -178,7 +178,7 @@ setTimeout(function(){
 
 <!-- ✅ FAB Menu Modal -->
 <div id="fab-menu" style="position:fixed;bottom:80px;right:20px;background:white;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:99;display:none;overflow:hidden;">
-  <button onclick="addClient();fabMenu()" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-bottom:1px solid #f0f0f0;transition:background .2s;">
+  <button id="fab-menu-newclient" onclick="addClient();fabMenu()" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-bottom:1px solid #f0f0f0;transition:background .2s;">
     + Νέος Πελάτης
   </button>
   <button onclick="if(getC()){genPlanWithUndo();fabMenu();}" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-bottom:1px solid #f0f0f0;transition:background .2s;">
@@ -1388,6 +1388,14 @@ function applyMedicalProtocol(condition, isChecked) {
 // ✅ IMPROVED UX: FAB Menu Toggle
 function fabMenu(){
   var menu = document.getElementById('fab-menu');
+  // ✅ 2026-08-06: η σελίδα Πελάτες έχει πλέον δικό της "+ Νέος πελάτης" κουμπί στο toolbar (βλ.
+  // renderClients, js/app-part5-home.js) — η ίδια γραμμή εδώ μέσα είναι διπλότυπη ΜΟΝΟ όσο είσαι ήδη
+  // εκεί. Σε κάθε άλλο tab (Αρχική/Διατροφές/Συνταγές/προφίλ πελάτη) παραμένει η μοναδική γρήγορη
+  // πρόσβαση, οπότε δεν αφαιρείται ολόκληρη — κρύβεται μόνο όταν είναι πράγματι περιττή. Το
+  // #client-list υπάρχει στο DOM μόνο όσο είναι ανοιχτή η λίστα Πελάτες (renderMain/renderHome/κ.λπ.
+  // αντικαθιστούν ολόκληρο το #main όταν φεύγεις από εκεί).
+  var newClientBtn = document.getElementById('fab-menu-newclient');
+  if(newClientBtn) newClientBtn.style.display = document.getElementById('client-list') ? 'none' : '';
   if(menu.style.display === 'none' || !menu.style.display){
     menu.style.display = 'block';
   } else {
