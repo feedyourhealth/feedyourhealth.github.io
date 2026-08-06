@@ -2837,18 +2837,23 @@ function setClientViewMode(m){
 // συνδυασμούς που θα μπέρδευαν το "πόσα ταιριάζουν" της κάθε ετικέτας.
 var _clientFilterQuick='';
 function setClientQuickFilter(key){
-  if(key==='noplan'){
+  if(key==='all'){
+    // 2026-08-06: πριν δεν υπήρχε ρητό "δείξε τους όλους" chip — ο μόνος τρόπος να γυρίσεις πίσω
+    // ήταν να ξαναπατήσεις το ήδη ενεργό chip, όχι προφανές (ο χρήστης το ζήτησε ρητά).
+    _clientFilterQuick='';
+    if(_clientFilterStatus==='noplan') _clientFilterStatus='';
+  } else if(key==='noplan'){
     _clientFilterStatus=(_clientFilterStatus==='noplan')?'':'noplan';
     _clientFilterQuick='';
-    // Το dropdown "Κάθε κατάσταση πλάνου" ζει στο στατικό toolbar HTML (renderClients, μία φορά ανά
-    // άνοιγμα tab) — renderSB() παρακάτω δεν το ξαναχτίζει, οπότε χωρίς αυτή τη γραμμή θα έμενε
-    // οπτικά στην παλιά επιλογή ενώ το chip/η λίστα θα έδειχναν ήδη το νέο φίλτρο.
-    var statusSel=document.getElementById('client-filter-status');
-    if(statusSel) statusSel.value=_clientFilterStatus;
   } else {
     _clientFilterQuick=(_clientFilterQuick===key)?'':key;
     if(_clientFilterStatus==='noplan') _clientFilterStatus='';
   }
+  // Το dropdown "Κάθε κατάσταση πλάνου" ζει στο στατικό toolbar HTML (renderClients, μία φορά ανά
+  // άνοιγμα tab) — renderSB() παρακάτω δεν το ξαναχτίζει, οπότε χωρίς αυτή τη γραμμή θα έμενε οπτικά
+  // στην παλιά επιλογή ενώ το chip/η λίστα θα έδειχναν ήδη το νέο φίλτρο (ισχύει και για 'all'/'noplan').
+  var statusSel=document.getElementById('client-filter-status');
+  if(statusSel) statusSel.value=_clientFilterStatus;
   renderSB();
 }
 // Μετρήματα στην ετικέτα κάθε chip υπολογισμένα πάνω στο "base" (χωρίς διαγραμμένους/αρχειοθετημένους,
@@ -2858,11 +2863,13 @@ function clientQuickChipsHtml(base){
   var attnCount=base.filter(clientNeedsAttention).length;
   var noplanCount=base.filter(function(c){return !(c.weekPlan && Object.keys(c.weekPlan).length>0);}).length;
   var todayCount=base.filter(function(c){return c.lastAccess && Math.floor((Date.now()-c.lastAccess)/86400000)===0;}).length;
+  var isAll=(_clientFilterQuick===''&&_clientFilterStatus!=='noplan');
   function chip(key,label,count,active){
     return '<button type="button" class="client-quick-chip'+(active?' active':'')+'" onclick="setClientQuickFilter(\''+key+'\')">'
       +label+' <span class="client-quick-chip-count">('+count+')</span></button>';
   }
   return '<div class="client-quick-chips">'
+    +chip('all','Όλοι',base.length,isAll)
     +chip('attention','🚩 Χρειάζονται προσοχή',attnCount,_clientFilterQuick==='attention')
     +chip('noplan','⭕ Χωρίς πλάνο',noplanCount,_clientFilterStatus==='noplan')
     +chip('today','🕐 Ενεργοί σήμερα',todayCount,_clientFilterQuick==='today')
