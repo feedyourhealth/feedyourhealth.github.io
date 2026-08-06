@@ -2823,6 +2823,20 @@ function fmtLastAccess(ts){
   if(days===1) return 'χθες';
   return 'πριν '+days+' ημέρες';
 }
+// Έγχρωμη εκδοχή του παραπάνω για την κάρτα πελάτη — πράσινο/πορτοκαλί/κόκκινο ώστε η καθυστέρηση
+// να φαίνεται με μια ματιά αντί να χρειάζεται ανάγνωση του κειμένου. Ίδια παλέτα/κατώφλια με το
+// progressBadge δίπλα του (0-3 πράσινο, 4-13 πορτοκαλί, 14+ κόκκινο) ώστε τα δύο badges να μη
+// διαφωνούν οπτικά. "ποτέ" μένει ουδέτερο (γκρι) — δεν σημαίνει απαραίτητα παραμέλημα, απλώς δεν έχει
+// καταγραφεί ποτέ άνοιγμα του φακέλου (π.χ. παλιά δεδομένα πριν υπάρξει το πεδίο).
+function lastAccessChipHtml(ts){
+  var label=fmtLastAccess(ts);
+  if(!ts) return '<span class="cc-lastaccess">'+label+'</span>';
+  var days=Math.floor((Date.now()-ts)/86400000);
+  var bg='#E8F5E9', fg='#1E5E24';
+  if(days>=14){ bg='#FCEBEB'; fg='#791F1F'; }
+  else if(days>=4){ bg='#FAEEDA'; fg='#633806'; }
+  return '<span class="cc-lastaccess" style="background:'+bg+';color:'+fg+';padding:2px 7px;border-radius:10px;font-weight:700">'+label+'</span>';
+}
 // Μικρό badge κατάστασης δίπλα σε κάθε πελάτη στη λίστα (βασισμένο στα cloud checkins από το portal).
 // Σκόπιμα διαφορετικό λεξιλόγιο από το "Ενεργό/Χωρίς σχέδιο" cc-status badge δίπλα του — αυτό εδώ αφορά
 // αποκλειστικά τη δραστηριότητα check-in στο portal, όχι αν υπάρχει πλάνο, ώστε τα δύο badges να μη
@@ -2936,7 +2950,7 @@ function clientCardHtml(c){
     +'<div class="cc-bottom">'
     +'<span class="cc-status '+(hasActive?'cc-status-active':'cc-status-none')+'">'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
     +progressBadge(c)
-    +'<span class="cc-lastaccess">'+fmtLastAccess(c.lastAccess)+'</span>'
+    +lastAccessChipHtml(c.lastAccess)
     +'</div>'
     +'</div>';
 }
