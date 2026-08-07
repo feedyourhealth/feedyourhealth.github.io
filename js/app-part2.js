@@ -2648,7 +2648,8 @@ function addWeightEntry(){
   var sfEntry=getSkinfoldEntry();
   var entry={date:date,weight:weight,bf:bf,waist:waist,hip:hip,arm:arm,sleep:sleep,energy:energy,compliance:compliance,notes:notes};
   if(sfEntry){entry.sfProtocol=sfEntry.protocol;entry.sfFields=sfEntry.fields;}
-  if(_weightEditIdx>=0 && c.weightLog[_weightEditIdx]){
+  var wasEdit=(_weightEditIdx>=0 && !!c.weightLog[_weightEditIdx]); // captured before the reset below, so the toast message can tell add apart from edit
+  if(wasEdit){
     // ✅ editing an existing entry (editWeightEntry) — replace it in place instead of pushing a
     // duplicate; previously there was no way to fix a typo without deleting + fully retyping
     c.weightLog[_weightEditIdx]=entry;
@@ -2664,6 +2665,10 @@ function addWeightEntry(){
   // Sync weight even if no BF%
   if(weight>0)c.weight=weight;
   save();
+  // ✅ the error path already told the practitioner when a save failed (showErrorToast above);
+  // a successful save was still silent — nothing but the table quietly changing underneath —
+  // so there was no way to tell "it worked" from "I clicked the wrong thing" at a glance
+  showSuccessToast(wasEdit?'✅ Η μέτρηση της '+date+' ενημερώθηκε.':'✅ Η μέτρηση προστέθηκε.');
   var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
 }
 
