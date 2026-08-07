@@ -407,7 +407,7 @@
 <div id="app">
   <div id="boot" class="center">
     <div class="spin"></div>
-    <div>Φόρτωση του πλάνου σου…</div>
+    <div>Φόρτωση του πλάνου σου… / Loading your plan…</div>
   </div>
 </div>
 <div id="printable"></div>
@@ -1136,25 +1136,27 @@ function retryPlanFeedbackSync(){
 
 async function boot(){
   const t=token();
-  if(!t){return fail('Λείπει ο σύνδεσμος του πλάνου.','Ζήτησε από τον διαιτολόγο σου το σωστό link.')}
+  if(!t){return fail('Λείπει ο σύνδεσμος του πλάνου.','Ζήτησε από τον διαιτολόγο σου το σωστό link.','Plan link is missing.','Ask your dietitian for the correct link.')}
   try{
     sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     const {data,error}=await sb.rpc('get_shared_plan',{p_token:t}).single();
-    if(error||!data){console.error('[FYH portal] get_shared_plan:',error); return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να έληξε ή να αποσύρθηκε. Ζήτησε νέο link από τον διαιτολόγο σου. Αν μόλις σου το έστειλε, δοκίμασε ξανά.',true)}
-    if(data.expires_at && new Date(data.expires_at)<new Date()){return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο σου να στείλει νέο link.')}
+    if(error||!data){console.error('[FYH portal] get_shared_plan:',error); return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να έληξε ή να αποσύρθηκε. Ζήτησε νέο link από τον διαιτολόγο σου. Αν μόλις σου το έστειλε, δοκίμασε ξανά.','Plan not found.','It may have expired or been withdrawn. Ask your dietitian for a new link. If they just sent it, try again.',true)}
+    if(data.expires_at && new Date(data.expires_at)<new Date()){return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο σου να στείλει νέο link.','This link has expired.','Ask your dietitian to send you a new link.')}
     SNAP=data.snapshot; SNAP._updated=data.updated_at;
     LANG=(SNAP.lang==='en')?'en':'el';
     render();
   }catch(e){
-    // Το ακριβές τεχνικό μήνυμα (π.χ. αγγλικό "Failed to fetch") πάει μόνο στο console για εμάς —
-    // ο πελάτης βλέπει πάντα το ίδιο κατανοητό ελληνικό μήνυμα, ό,τι κι αν πήγε στραβά.
+    // Δεν ξέρουμε ακόμη τη γλώσσα του πελάτη εδώ (το SNAP με το c.lang δεν πρόλαβε να φορτώσει,
+    // αφού ακριβώς αυτό απέτυχε) — δείχνουμε το μήνυμα ΚΑΙ στα δύο, αντί να υποθέσουμε ελληνικά
+    // και να αφήσουμε έναν αγγλόφωνο πελάτη μπλοκαρισμένο σε κείμενο που δεν διαβάζει.
     console.error('[FYH portal] boot failed:',e);
-    fail('Πρόβλημα σύνδεσης.','Έλεγξε τη σύνδεσή σου στο ίντερνετ και δοκίμασε ξανά.',true);
+    fail('Πρόβλημα σύνδεσης.','Έλεγξε τη σύνδεσή σου στο ίντερνετ και δοκίμασε ξανά.','Connection problem.','Check your internet connection and try again.',true);
   }
 }
-function fail(title,sub,retry){
+function fail(title,sub,titleEn,subEn,retry){
   $('#app').innerHTML='<div class="center"><i class="ti ti-leaf" style="font-size:40px;color:var(--teal)"></i><div style="font-size:17px;font-weight:600;color:var(--teal-d)">'+esc(title)+'</div><div>'+esc(sub)+'</div>'
-    +(retry?'<button class="swap-btn" style="justify-content:center;max-width:220px" onclick="boot()"><i class="ti ti-refresh"></i>Δοκίμασε ξανά</button>':'')+'</div>';
+    +'<div style="margin-top:12px;font-size:15px;font-weight:600;color:var(--teal-d)">'+esc(titleEn)+'</div><div>'+esc(subEn)+'</div>'
+    +(retry?'<button class="swap-btn" style="justify-content:center;max-width:220px" onclick="boot()"><i class="ti ti-refresh"></i>Δοκίμασε ξανά / Try again</button>':'')+'</div>';
 }
 
 // Χειροκίνητος έλεγχος για ενημερωμένο πλάνο (header button) — χωρίς αυτό, μια ήδη ανοιχτή καρτέλα
@@ -1242,7 +1244,8 @@ function updatedBadge(){
 function injectManifest(){
   try{
     const name=((SNAP&&SNAP.name||'').split(' ')[0])||'';
-    const m={name:'Feed Your Health — Το πλάνο μου',short_name:name?('Πλάνο '+name):'Το πλάνο μου',
+    const isEn=LANG==='en';
+    const m={name:'Feed Your Health — '+(isEn?'My Plan':'Το πλάνο μου'),short_name:name?((isEn?'Plan ':'Πλάνο ')+name):(isEn?'My Plan':'Το πλάνο μου'),
       start_url:location.href,display:'standalone',background_color:'#f4f8f6',theme_color:'#025857',
       icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E",sizes:'180x180',type:'image/svg+xml',purpose:'any maskable'}]};
     const blob=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});
