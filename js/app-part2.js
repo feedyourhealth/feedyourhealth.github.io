@@ -2555,7 +2555,20 @@ function addWeightEntry(){
   var energy=parseInt((document.getElementById('tr-energy')||{}).value)||0;
   var compliance=parseInt((document.getElementById('tr-compliance')||{}).value)||0;
   var notes=(document.getElementById('tr-notes').value||'').trim();
-  if(!date||!weight||weight<20||weight>300)return;
+  // ✅ was a silent no-op on invalid input — clicking "+ Προσθήκη" with no weight looked
+  // identical to a successful save, so nothing told the practitioner it didn't go through
+  if(!date){
+    showErrorToast('Χρειάζεται ημερομηνία για να καταχωρηθεί η μέτρηση.');
+    var dateInp=document.getElementById('tr-date');
+    if(dateInp){dateInp.style.borderColor='#e57373';setTimeout(function(){dateInp.style.borderColor='';},1500);}
+    return;
+  }
+  if(!weight||weight<20||weight>300){
+    showErrorToast('Χρειάζεται έγκυρο βάρος (20-300 kg) για να καταχωρηθεί η μέτρηση.');
+    var weightInp=document.getElementById('tr-weight');
+    if(weightInp){weightInp.style.background='#ffebee';weightInp.style.borderColor='#e57373';setTimeout(function(){weightInp.style.background='';weightInp.style.borderColor='';},1500);}
+    return;
+  }
   var sfEntry=getSkinfoldEntry();
   var entry={date:date,weight:weight,bf:bf,waist:waist,hip:hip,arm:arm,sleep:sleep,energy:energy,compliance:compliance,notes:notes};
   if(sfEntry){entry.sfProtocol=sfEntry.protocol;entry.sfFields=sfEntry.fields;}

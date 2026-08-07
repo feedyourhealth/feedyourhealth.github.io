@@ -385,15 +385,10 @@ setTimeout(function(){
         </select>
       </div>
 
-      <div style="margin-bottom:16px;">
-        <label style="font-size:14px;color:#333;display:block;margin-bottom:6px;font-weight:500;">
-          📏 Μονάδες μέτρησης
-        </label>
-        <select id="prefUnits" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
-          <option value="metric">Μετρικό (kg, cm)</option>
-          <option value="imperial">Αγγλοσαξονικό (lb, in)</option>
-        </select>
-      </div>
+      <!-- ✅ "📏 Μονάδες μέτρησης" (metric/imperial) select removed 2026-08-07 — it had no
+           onchange handler and nothing anywhere in js/*.js ever read #prefUnits, so choosing
+           "Αγγλοσαξονικό (lb, in)" silently did nothing; kept every input in kg/cm regardless.
+           Re-add only once real unit conversion is wired through the tracker/PDF/CSV code. -->
     </div>
 
     <!-- Στοιχεία επικοινωνίας (εμφανίζονται στον πελάτη μέσω του κουμπιού «Ρώτησέ με») -->
