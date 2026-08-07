@@ -1859,6 +1859,9 @@ function buildTrackerHtml(c){
     +(c.weightLog&&c.weightLog.length?(c.email?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + Email με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'mail\')">📧 Email</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:#999;border:none;cursor:not-allowed" title="Λείπει email από την καρτέλα του πελάτη">📧 Email</button>'):'')
     +'</div>'
     +'</div>'
+    // ✅ persistent (non-hover) caption for the CSV button — the old title-only tooltip explaining
+    // single-file-vs-batch import was invisible until someone hovered over it
+    +'<div style="font-size:10px;color:#999;margin:-4px 0 8px">📤 CSV: 1 αρχείο = άμεσος έλεγχος στοιχείων &nbsp;·&nbsp; πολλά αρχεία μαζί = μαζική εισαγωγή ιστορικού</div>'
     // ── Skinfold panel ────────────────────────────────────────────────────────
     +'<div class="sf-panel" id="sf-panel">'
     +'<div class="sf-header" onclick="toggleSkinfoldPanel()">'
@@ -1869,8 +1872,8 @@ function buildTrackerHtml(c){
     +(isMinorC?'<div style="font-size:10px;color:#e65100;background:#fff8e1;border-radius:5px;padding:4px 8px;margin-bottom:8px">👶 Ηλικία &lt;18 — προεπιλογή Slaughter (1988), ειδική εξίσωση για παιδιά/εφήβους</div>':'')
     +'<div class="tracker-add-row" style="gap:6px;margin-bottom:8px;align-items:center">'
     +'<label style="font-size:10px;color:#666">Πρωτόκολλο:</label>'
-    +'<select id="sf-proto" class="tracker-inp" style="width:210px;font-size:11px" onchange="updateSkinfoldFields()">'
-    +'<option value="jp4"'+(defaultProto==='jp4'?' selected':'')+'>JP 4-site ★ (Κοιλ./Υπλγ./Τρικ./Μηρός)</option>'
+    +'<select id="sf-proto" class="tracker-inp" style="width:270px;font-size:11px" onchange="updateSkinfoldFields()" title="Το πρωτόκολλο καθορίζει ποια σημεία μετριούνται παρακάτω">'
+    +'<option value="jp4"'+(defaultProto==='jp4'?' selected':'')+'>JP 4-site ★ (Κοιλιά/Υπερλαγόνιο/Τρικέφαλος/Μηρός)</option>'
     +'<option value="jp3"'+(defaultProto==='jp3'?' selected':'')+'>JP 3-site (κλασικό)</option>'
     +'<option value="jp7"'+(defaultProto==='jp7'?' selected':'')+'>JP 7-site (πλήρες)</option>'
     +'<option value="slaughter"'+(defaultProto==='slaughter'?' selected':'')+'>Slaughter (1988) — παιδιά/έφηβοι</option>'
@@ -1883,14 +1886,28 @@ function buildTrackerHtml(c){
     +'</div>'
     +dislikedRecipesPanelHtml(c)
     // ── Standard entry row ────────────────────────────────────────────────────
+    // ✅ split into labeled groups (was one dense unlabeled row of 6 mixed-width fields —
+    // placeholder-only text vanished while typing, and Βασικά/Περιφέρειες were impossible to
+    // tell apart at a glance)
+    +'<div style="font-size:10px;color:#999;width:100%;margin-bottom:2px">Βασικά</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
+    +'<label style="font-size:10px;color:#666;align-self:center">Ημερομηνία:</label>'
     +'<input type="date" id="tr-date" value="'+today+'" class="tracker-inp">'
-    +'<input type="number" id="tr-weight" placeholder="Βάρος kg" min="20" max="300" step="0.1" class="tracker-inp" style="width:86px">'
-    +'<input type="number" id="tr-bf" placeholder="Λίπος %" min="3" max="60" step="0.1" class="tracker-inp" style="width:72px">'
-    +'<input type="number" id="tr-waist" placeholder="Μέση cm" min="40" max="200" step="0.5" class="tracker-inp" style="width:80px">'
-    +'<input type="number" id="tr-hip" placeholder="Γοφοί cm" min="50" max="200" step="0.5" class="tracker-inp" style="width:80px">'
-    +'<input type="number" id="tr-arm" placeholder="Δικέφ. cm" min="15" max="60" step="0.5" class="tracker-inp" style="width:80px">'
+    +'<label style="font-size:10px;color:#666;align-self:center">Βάρος:</label>'
+    +'<input type="number" id="tr-weight" placeholder="kg" min="20" max="300" step="0.1" class="tracker-inp" style="width:64px">'
+    +'<label style="font-size:10px;color:#666;align-self:center" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">Λίπος %:</label>'
+    +'<input type="number" id="tr-bf" placeholder="%" min="3" max="60" step="0.1" class="tracker-inp" style="width:56px" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">'
     +'</div>'
+    +'<div style="font-size:10px;color:#999;width:100%;margin:8px 0 2px">Περιφέρειες (cm)</div>'
+    +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
+    +'<label style="font-size:10px;color:#666;align-self:center">Μέση:</label>'
+    +'<input type="number" id="tr-waist" placeholder="cm" min="40" max="200" step="0.5" class="tracker-inp" style="width:60px">'
+    +'<label style="font-size:10px;color:#666;align-self:center">Γοφοί:</label>'
+    +'<input type="number" id="tr-hip" placeholder="cm" min="50" max="200" step="0.5" class="tracker-inp" style="width:60px">'
+    +'<label style="font-size:10px;color:#666;align-self:center">Δικέφαλος:</label>'
+    +'<input type="number" id="tr-arm" placeholder="cm" min="15" max="60" step="0.5" class="tracker-inp" style="width:60px">'
+    +'</div>'
+    +'<div style="font-size:10px;color:#999;width:100%;margin:8px 0 2px">Καθημερινότητα &amp; σημειώσεις</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px;margin-top:5px">'
     +'<label style="font-size:10px;color:#666;align-self:center">Ύπνος:</label>'
     +'<select id="tr-sleep" class="tracker-inp" style="width:110px;font-size:11px">'
@@ -1949,6 +1966,9 @@ function buildTrackerHtml(c){
         +'<canvas id="trendBFChart"></canvas>'
         +'</div>'
         +'</div>';
+    } else if(c.weightLog.length===1){
+      // ✅ tells the practitioner why there's no chart yet instead of just silently omitting it
+      wHtml+='<div style="font-size:10.5px;color:#999;background:#fafafa;border:1px dashed #ddd;border-radius:8px;padding:8px 12px;margin-bottom:15px">📈 Το γράφημα τάσης θα εμφανιστεί μετά τη 2η μέτρηση.</div>';
     }
 
     // ── Progress summary ───────────────────────────────────────────────────────
@@ -2044,7 +2064,7 @@ function buildTrackerHtml(c){
     });
     wHtml+='</tbody></table></div>';
   } else {
-    wHtml+='<div class="tracker-empty">Δεν υπάρχουν καταχωρήσεις ακόμα. Πρόσθεσε το πρώτο μέτρημα!</div>';
+    wHtml+='<div class="tracker-empty">📈 Δεν υπάρχουν καταχωρήσεις ακόμα. Πρόσθεσε την πρώτη μέτρηση παραπάνω για να ξεκινήσει το ιστορικό προόδου — το γράφημα τάσης ενεργοποιείται από τη 2η μέτρηση.</div>';
   }
   wHtml+='</div>';
 
@@ -2068,7 +2088,7 @@ function buildTrackerHtml(c){
     });
     cHtml+='</div>';
   } else {
-    cHtml+='<div class="tracker-empty">Δεν υπάρχουν καταχωρήσεις. Πρόσθεσε την πρώτη σημείωση!</div>';
+    cHtml+='<div class="tracker-empty">📝 Δεν υπάρχουν καταχωρήσεις ακόμα. Πρόσθεσε μια σημείωση μετά από κάθε συνεδρία, ώστε να θυμάσαι τι ειπώθηκε πριν την επόμενη επίσκεψη.</div>';
   }
   cHtml+='</div>';
 
@@ -2230,7 +2250,12 @@ function updateSkinfoldFields(){
   if(refSpan)refSpan.textContent=ref;
   var html='';
   defs.forEach(function(f){
-    html+='<input type="number" id="sf-'+f.k+'" placeholder="'+f.lbl+'" min="1" max="80" step="0.5" class="tracker-inp" style="width:140px" oninput="updateSkinfoldCalc()">';
+    // ✅ persistent label above the field (was placeholder-only — label used to vanish while
+    // typing, which cost accuracy during fast in-clinic entry across many clients)
+    html+='<div style="display:flex;flex-direction:column;gap:2px">'
+      +'<label for="sf-'+f.k+'" style="font-size:9px;color:#999">'+f.lbl+'</label>'
+      +'<input type="number" id="sf-'+f.k+'" placeholder="mm" min="1" max="80" step="0.5" class="tracker-inp" style="width:120px" oninput="updateSkinfoldCalc()">'
+      +'</div>';
   });
   fieldsDiv.innerHTML=html;
   var resDiv=document.getElementById('sf-result');
