@@ -1880,6 +1880,10 @@ function buildTrackerHtml(c){
     +'</select>'
     +'<span id="sf-ref" style="font-size:9px;color:#aaa"></span>'
     +'</div>'
+    // ✅ always-visible site list (was only guessable from the truncated dropdown text) —
+    // no hover tooltip here on purpose: the app logs "📱 Tablet layout", so anything that
+    // only shows on :hover is unreachable on a touchscreen
+    +'<div id="sf-sites" style="font-size:10px;color:#666;background:#f7fbfa;border-radius:5px;padding:4px 8px;margin-bottom:8px"></div>'
     +'<div id="sf-fields" class="tracker-add-row" style="gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>'
     +'<div id="sf-result" style="display:none"></div>'
     +'</div>'
@@ -1895,7 +1899,7 @@ function buildTrackerHtml(c){
     +'<input type="date" id="tr-date" value="'+today+'" class="tracker-inp">'
     +'<label style="font-size:10px;color:#666;align-self:center">Βάρος:</label>'
     +'<input type="number" id="tr-weight" placeholder="kg" min="20" max="300" step="0.1" class="tracker-inp" style="width:64px">'
-    +'<label style="font-size:10px;color:#666;align-self:center" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">Λίπος %:</label>'
+    +'<label style="font-size:10px;color:#666;align-self:center" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">🧮 Λίπος %:</label>'
     +'<input type="number" id="tr-bf" placeholder="%" min="3" max="60" step="0.1" class="tracker-inp" style="width:56px" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">'
     +'</div>'
     +'<div style="font-size:10px;color:#999;width:100%;margin:8px 0 2px">Περιφέρειες (cm)</div>'
@@ -2064,7 +2068,13 @@ function buildTrackerHtml(c){
     });
     wHtml+='</tbody></table></div>';
   } else {
-    wHtml+='<div class="tracker-empty">📈 Δεν υπάρχουν καταχωρήσεις ακόμα. Πρόσθεσε την πρώτη μέτρηση παραπάνω για να ξεκινήσει το ιστορικό προόδου — το γράφημα τάσης ενεργοποιείται από τη 2η μέτρηση.</div>';
+    // ✅ icon-circle + dashed card instead of a bare italic line — matches the treatment used
+    // for the "1 μέτρηση, θα εμφανιστεί γράφημα" hint above so empty vs in-progress states read
+    // as the same visual family
+    wHtml+='<div class="tracker-empty" style="text-align:center;font-style:normal;padding:18px 12px;background:#fafafa;border:1px dashed #ddd;border-radius:10px">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:#fff;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px">📈</div>'
+      +'Δεν υπάρχουν καταχωρήσεις ακόμα. Πρόσθεσε την πρώτη μέτρηση παραπάνω για να ξεκινήσει το ιστορικό προόδου — το γράφημα τάσης ενεργοποιείται από τη 2η μέτρηση.'
+      +'</div>';
   }
   wHtml+='</div>';
 
@@ -2088,7 +2098,10 @@ function buildTrackerHtml(c){
     });
     cHtml+='</div>';
   } else {
-    cHtml+='<div class="tracker-empty">📝 Δεν υπάρχουν καταχωρήσεις ακόμα. Πρόσθεσε μια σημείωση μετά από κάθε συνεδρία, ώστε να θυμάσαι τι ειπώθηκε πριν την επόμενη επίσκεψη.</div>';
+    cHtml+='<div class="tracker-empty" style="text-align:center;font-style:normal;padding:18px 12px;background:#fafafa;border:1px dashed #ddd;border-radius:10px">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:#fff;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:14px">📝</div>'
+      +'Δεν υπάρχουν καταχωρήσεις ακόμα. Πρόσθεσε μια σημείωση μετά από κάθε συνεδρία, ώστε να θυμάσαι τι ειπώθηκε πριν την επόμενη επίσκεψη.'
+      +'</div>';
   }
   cHtml+='</div>';
 
@@ -2248,6 +2261,11 @@ function updateSkinfoldFields(){
     defs=[{k:'tricep',lbl:'Τρικέφαλος mm'},{k:'calf',lbl:'Γαστροκνήμιος mm'}];
   }
   if(refSpan)refSpan.textContent=ref;
+  var sitesDiv=document.getElementById('sf-sites');
+  if(sitesDiv){
+    var siteNames=defs.map(function(f){return f.lbl.replace(/^\d+\.\s*/,'').replace(/\s*mm$/,'');});
+    sitesDiv.textContent='📍 Σημεία: '+siteNames.join(' · ');
+  }
   var html='';
   defs.forEach(function(f){
     // ✅ persistent label above the field (was placeholder-only — label used to vanish while
