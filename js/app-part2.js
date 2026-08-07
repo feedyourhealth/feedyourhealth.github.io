@@ -1867,6 +1867,11 @@ function buildTrackerHtml(c){
   // Weight / body composition section
   var isMinorC=(c.age!=null && c.age>0 && c.age<18); // don't coerce a not-yet-entered age to 0 and misclassify as a minor
   var defaultProto=isMinorC?'slaughter':'jp4';
+  // ✅ when editing an entry that has stored skinfold data, the panel below needs to open on
+  // that entry's own protocol — not fall back to the age-based default — otherwise the mm
+  // fields it prefills (see the setTimeout near the end of this function) would be labelled
+  // for the wrong protocol.
+  var protoForSelect=(ee&&ee.sfProtocol)?ee.sfProtocol:defaultProto;
   // ✅ 2026-08-01: buildClientProgressHtml/clientLogsPanelHtml/planFeedbackPanelHtml moved to the
   // "📝 Ραντεβού" tab (buildAppointmentsHtml) — αυτά είναι το feedback του πελάτη (portal check-ins,
   // δικές του σημειώσεις, αξιολόγηση πλάνου), όχι σωματομετρικά, οπότε ανήκουν εκεί όπου γίνεται η
@@ -1890,17 +1895,22 @@ function buildTrackerHtml(c){
     +'<div class="sf-panel" id="sf-panel">'
     +'<div class="sf-header" onclick="toggleSkinfoldPanel()">'
     +'<span>📐 Δερματοπτυχόμετρο <span style="font-size:10px;font-weight:400;color:#888">&nbsp;— υπολογισμός %BF από δερματοπτυχές</span></span>'
-    +'<span id="sf-toggle-icon" class="sec-chevron">▸</span>'
+    +'<span id="sf-toggle-icon" class="sec-chevron'+(ee&&ee.sfFields?' open':'')+'">▸</span>'
     +'</div>'
-    +'<div id="sf-body" style="display:none;padding-top:10px">'
+    // ✅ opens automatically (instead of the usual collapsed-by-default) when editing an entry
+    // that has stored skinfold data — otherwise the mm fields below stay empty/collapsed and
+    // saving would silently drop that entry's sfProtocol/sfFields (getSkinfoldEntry() returns
+    // null whenever this panel is closed, so addWeightEntry() had nothing to carry forward)
+    +'<div id="sf-body" style="display:'+(ee&&ee.sfFields?'block':'none')+';padding-top:10px">'
+    +(ee&&ee.sfFields?'<div style="font-size:10px;color:#8d6e00;background:#fff8e1;border-radius:5px;padding:4px 8px;margin-bottom:8px">✏️ Αυτή η μέτρηση είχε δερματοπτυχές — άνοιξε αυτόματα ώστε η επεξεργασία σου να μην τις σβήσει.</div>':'')
     +(isMinorC?'<div style="font-size:10px;color:#e65100;background:#fff8e1;border-radius:5px;padding:4px 8px;margin-bottom:8px">👶 Ηλικία &lt;18 — προεπιλογή Slaughter (1988), ειδική εξίσωση για παιδιά/εφήβους</div>':'')
     +'<div class="tracker-add-row" style="gap:6px;margin-bottom:8px;align-items:center">'
     +'<label style="font-size:10px;color:#666">Πρωτόκολλο:</label>'
     +'<select id="sf-proto" class="tracker-inp" style="width:270px;font-size:11px" onchange="updateSkinfoldFields()" title="Το πρωτόκολλο καθορίζει ποια σημεία μετριούνται παρακάτω">'
-    +'<option value="jp4"'+(defaultProto==='jp4'?' selected':'')+'>JP 4-site ★ (Κοιλιά/Υπερλαγόνιο/Τρικέφαλος/Μηρός)</option>'
-    +'<option value="jp3"'+(defaultProto==='jp3'?' selected':'')+'>JP 3-site (κλασικό)</option>'
-    +'<option value="jp7"'+(defaultProto==='jp7'?' selected':'')+'>JP 7-site (πλήρες)</option>'
-    +'<option value="slaughter"'+(defaultProto==='slaughter'?' selected':'')+'>Slaughter (1988) — παιδιά/έφηβοι</option>'
+    +'<option value="jp4"'+(protoForSelect==='jp4'?' selected':'')+'>JP 4-site ★ (Κοιλιά/Υπερλαγόνιο/Τρικέφαλος/Μηρός)</option>'
+    +'<option value="jp3"'+(protoForSelect==='jp3'?' selected':'')+'>JP 3-site (κλασικό)</option>'
+    +'<option value="jp7"'+(protoForSelect==='jp7'?' selected':'')+'>JP 7-site (πλήρες)</option>'
+    +'<option value="slaughter"'+(protoForSelect==='slaughter'?' selected':'')+'>Slaughter (1988) — παιδιά/έφηβοι</option>'
     +'</select>'
     +'<span id="sf-ref" style="font-size:9px;color:#aaa"></span>'
     +'</div>'
@@ -2137,6 +2147,24 @@ function buildTrackerHtml(c){
   // ✅ Initialize trend charts after HTML is inserted
   if(c.weightLog && c.weightLog.length>=2){
     setTimeout(function(){ initTrendCharts(c); }, 100);
+  }
+
+  // ✅ the skinfold panel above already opened on ee.sfProtocol (via protoForSelect) and
+  // rendered its "✏️ ...άνοιξε αυτόματα" notice, but the actual mm inputs are built by
+  // updateSkinfoldFields() and don't exist in the DOM until it runs — reuse it here the same
+  // way toggleSkinfoldPanel() normally would, then drop in the stored mm values and recompute
+  // %BF so the edit form shows exactly what was originally measured.
+  if(ee&&ee.sfFields&&ee.sfProtocol){
+    setTimeout(function(){
+      var protoEl=document.getElementById('sf-proto');
+      if(protoEl)protoEl.value=ee.sfProtocol;
+      updateSkinfoldFields();
+      Object.keys(ee.sfFields).forEach(function(k){
+        var el=document.getElementById('sf-'+k);
+        if(el)el.value=ee.sfFields[k];
+      });
+      updateSkinfoldCalc();
+    },50);
   }
 
   return '<div style="padding:16px 20px">'+wHtml+cHtml+'</div>';
