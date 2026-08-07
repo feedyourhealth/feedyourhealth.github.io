@@ -2154,6 +2154,12 @@ function initTrendCharts(c){
   // Weight Trend Chart
   var wCtx=document.getElementById('trendWeightChart');
   if(wCtx){
+    // ✅ every add/edit/remove/CSV-import re-render schedules a fresh 100ms-delayed
+    // initTrendCharts() call (below); two of those firing close together used to throw
+    // "Canvas is already in use" because the previous Chart.js instance on this canvas was
+    // never destroyed. Chart.getChart() (Chart.js 3.7+) finds it regardless of how it got here.
+    var existingW=Chart.getChart(wCtx);
+    if(existingW)existingW.destroy();
     new Chart(wCtx, {
       type: 'line',
       data: {
@@ -2182,6 +2188,8 @@ function initTrendCharts(c){
   // Body Fat % Trend Chart
   var bfCtx=document.getElementById('trendBFChart');
   if(bfCtx){
+    var existingBF=Chart.getChart(bfCtx);
+    if(existingBF)existingBF.destroy();
     new Chart(bfCtx, {
       type: 'line',
       data: {
