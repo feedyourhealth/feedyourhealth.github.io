@@ -1819,8 +1819,16 @@ function dislikedRecipesPanelHtml(c){
       +'<button type="button" class="btn" style="padding:3px 9px;font-size:10.5px;background:#fff;color:#025857;border:1px solid #cfe8e0" onclick="restoreDislikedRecipe(\''+esc(id).replace(/'/g,"\\'")+'\')">↩️ Επαναφορά</button>'
       +'</div>';
   }).join('');
+  // 🗒️ Renders inside buildTrackerHtml (Ανθρωπομετρία tab) even though this is a meal-preference
+  // list, not a body-composition one — conceptually it belongs in "Πλάνο" instead. Left here
+  // rather than moved: #s1/#s2 (Στοιχεία/Πλάνο) are built together by one much larger combined
+  // template, so relocating this would mean re-rendering that whole meal-plan view (losing
+  // scroll position/open accordions) every time someone restores a disliked recipe, instead of
+  // just this small tab as today. Added a subtitle so it doesn't read as randomly dropped here
+  // in the meantime — a real move needs to look at that s1/s2 render path first.
   return '<div class="tracker-section" style="background:#fdf3f2;border:1px solid #f3d4d0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
-    +'<div style="font-size:11px;font-weight:700;color:#c0392b;margin-bottom:6px">👎 Συνταγές που δεν άρεσαν ('+ids.length+')</div>'
+    +'<div style="font-size:11px;font-weight:700;color:#c0392b;margin-bottom:2px">👎 Συνταγές που δεν άρεσαν ('+ids.length+')</div>'
+    +'<div style="font-size:9.5px;color:#c0392b;opacity:.75;margin-bottom:6px">Προτίμηση γεύματος, όχι σωματομετρία — εμφανίζεται εδώ για ευκολία όσο επεξεργάζεσαι αυτόν τον πελάτη</div>'
     +rowsHtml
     +'</div>';
 }
@@ -1834,11 +1842,27 @@ function restoreDislikedRecipe(id){
   if(s3)s3.innerHTML=buildTrackerHtml(c);
 }
 
+// ✅ index of the weightLog entry currently being edited via editWeightEntry(), or -1 when the
+// form below is in normal "add a new measurement" mode. Same pattern as _apptEditIdx.
+var _weightEditIdx=-1;
+// Builds <option> tags for the Ύπνος/Ενέργεια/Συμμόρφωση selects, marking whichever one matches
+// `selected` (a number when editing, '' when adding new) — lets the edit form reuse the exact
+// same select markup as the add form instead of duplicating it.
+function weightSelectOptions(selected,opts){
+  return opts.map(function(o){
+    return '<option value="'+o[0]+'"'+(String(selected)===String(o[0])?' selected':'')+'>'+o[1]+'</option>';
+  }).join('');
+}
+
 function buildTrackerHtml(c){
   if(!c.weightLog)c.weightLog=[];
   if(!c.consultLog)c.consultLog=[];
   if(migrateClientSkinfoldBF(c))save();
   var today=new Date().toISOString().slice(0,10);
+  // ✅ when editing an existing entry, `ee` holds it and every field below prefills from it
+  // instead of starting blank; addWeightEntry() checks _weightEditIdx to know whether to push a
+  // new entry or replace this one in place.
+  var ee=(_weightEditIdx>=0 && c.weightLog[_weightEditIdx])?c.weightLog[_weightEditIdx]:null;
 
   // Weight / body composition section
   var isMinorC=(c.age!=null && c.age>0 && c.age<18); // don't coerce a not-yet-entered age to 0 and misclassify as a minor
@@ -1893,40 +1917,42 @@ function buildTrackerHtml(c){
     // ✅ split into labeled groups (was one dense unlabeled row of 6 mixed-width fields —
     // placeholder-only text vanished while typing, and Βασικά/Περιφέρειες were impossible to
     // tell apart at a glance)
+    +(ee?'<div style="width:100%;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:11px;color:#8d6e00">✏️ Επεξεργασία μέτρησης της '+ee.date+' — άλλαξε ό,τι χρειάζεται και πάτα «Αποθήκευση αλλαγών» παρακάτω, ή «Άκυρο» για έξοδο χωρίς αλλαγές.</div>':'')
     +'<div style="font-size:10px;color:#999;width:100%;margin-bottom:2px">Βασικά</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
     +'<label style="font-size:10px;color:#666;align-self:center">Ημερομηνία:</label>'
-    +'<input type="date" id="tr-date" value="'+today+'" class="tracker-inp">'
+    +'<input type="date" id="tr-date" value="'+(ee?ee.date:today)+'" class="tracker-inp">'
     +'<label style="font-size:10px;color:#666;align-self:center">Βάρος:</label>'
-    +'<input type="number" id="tr-weight" placeholder="kg" min="20" max="300" step="0.1" class="tracker-inp" style="width:64px">'
+    +'<input type="number" id="tr-weight" placeholder="kg" min="20" max="300" step="0.1" class="tracker-inp" style="width:64px" value="'+(ee&&ee.weight?ee.weight:'')+'">'
     +'<label style="font-size:10px;color:#666;align-self:center" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">🧮 Λίπος %:</label>'
-    +'<input type="number" id="tr-bf" placeholder="%" min="3" max="60" step="0.1" class="tracker-inp" style="width:56px" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">'
+    +'<input type="number" id="tr-bf" placeholder="%" min="3" max="60" step="0.1" class="tracker-inp" style="width:56px" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση" value="'+(ee&&ee.bf?ee.bf:'')+'">'
     +'</div>'
     +'<div style="font-size:10px;color:#999;width:100%;margin:8px 0 2px">Περιφέρειες (cm)</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
     +'<label style="font-size:10px;color:#666;align-self:center">Μέση:</label>'
-    +'<input type="number" id="tr-waist" placeholder="cm" min="40" max="200" step="0.5" class="tracker-inp" style="width:60px">'
+    +'<input type="number" id="tr-waist" placeholder="cm" min="40" max="200" step="0.5" class="tracker-inp" style="width:60px" value="'+(ee&&ee.waist?ee.waist:'')+'">'
     +'<label style="font-size:10px;color:#666;align-self:center">Γοφοί:</label>'
-    +'<input type="number" id="tr-hip" placeholder="cm" min="50" max="200" step="0.5" class="tracker-inp" style="width:60px">'
+    +'<input type="number" id="tr-hip" placeholder="cm" min="50" max="200" step="0.5" class="tracker-inp" style="width:60px" value="'+(ee&&ee.hip?ee.hip:'')+'">'
     +'<label style="font-size:10px;color:#666;align-self:center">Δικέφαλος:</label>'
-    +'<input type="number" id="tr-arm" placeholder="cm" min="15" max="60" step="0.5" class="tracker-inp" style="width:60px">'
+    +'<input type="number" id="tr-arm" placeholder="cm" min="15" max="60" step="0.5" class="tracker-inp" style="width:60px" value="'+(ee&&ee.arm?ee.arm:'')+'">'
     +'</div>'
     +'<div style="font-size:10px;color:#999;width:100%;margin:8px 0 2px">Καθημερινότητα &amp; σημειώσεις</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px;margin-top:5px">'
     +'<label style="font-size:10px;color:#666;align-self:center">Ύπνος:</label>'
     +'<select id="tr-sleep" class="tracker-inp" style="width:110px;font-size:11px">'
-    +'<option value="">—</option><option value="5">5 ⭐ Εξαιρετικός</option><option value="4">4 ⭐ Καλός</option><option value="3">3 ⭐ Μέτριος</option><option value="2">2 ⭐ Κακός</option><option value="1">1 ⭐ Πολύ κακός</option>'
+    +weightSelectOptions(ee?ee.sleep:'',[['','—'],['5','5 ⭐ Εξαιρετικός'],['4','4 ⭐ Καλός'],['3','3 ⭐ Μέτριος'],['2','2 ⭐ Κακός'],['1','1 ⭐ Πολύ κακός']])
     +'</select>'
     +'<label style="font-size:10px;color:#666;align-self:center">Ενέργεια:</label>'
     +'<select id="tr-energy" class="tracker-inp" style="width:110px;font-size:11px">'
-    +'<option value="">—</option><option value="5">5 ⚡ Άριστη</option><option value="4">4 ⚡ Καλή</option><option value="3">3 ⚡ Μέτρια</option><option value="2">2 ⚡ Χαμηλή</option><option value="1">1 ⚡ Εξαντλητική</option>'
+    +weightSelectOptions(ee?ee.energy:'',[['','—'],['5','5 ⚡ Άριστη'],['4','4 ⚡ Καλή'],['3','3 ⚡ Μέτρια'],['2','2 ⚡ Χαμηλή'],['1','1 ⚡ Εξαντλητική']])
     +'</select>'
     +'<label style="font-size:10px;color:#666;align-self:center">Συμμόρφωση:</label>'
     +'<select id="tr-compliance" class="tracker-inp" style="width:120px;font-size:11px">'
-    +'<option value="">—</option><option value="10">10 — Πλήρης</option><option value="9">9 — Σχεδόν πλήρης</option><option value="8">8 — Πολύ καλή</option><option value="7">7 — Καλή</option><option value="6">6 — Μέτρια</option><option value="5">5 — Μισή</option><option value="4">4 — Κακή</option><option value="3">3 — Πολύ κακή</option>'
+    +weightSelectOptions(ee?ee.compliance:'',[['','—'],['10','10 — Πλήρης'],['9','9 — Σχεδόν πλήρης'],['8','8 — Πολύ καλή'],['7','7 — Καλή'],['6','6 — Μέτρια'],['5','5 — Μισή'],['4','4 — Κακή'],['3','3 — Πολύ κακή']])
     +'</select>'
-    +'<input type="text" id="tr-notes" placeholder="Σημειώσεις..." class="tracker-inp" style="flex:1;min-width:120px">'
-    +'<button class="btn" style="padding:5px 11px;font-size:11px" onclick="addWeightEntry()">+ Προσθήκη</button>'
+    +'<input type="text" id="tr-notes" placeholder="Σημειώσεις..." class="tracker-inp" style="flex:1;min-width:120px" value="'+(ee?esc(ee.notes||''):'')+'">'
+    +(ee?'<button class="btn" style="padding:5px 11px;font-size:11px;background:#888;color:#fff;border:none" onclick="cancelWeightEdit()">Άκυρο</button>':'')
+    +'<button class="btn" style="padding:5px 11px;font-size:11px" onclick="addWeightEntry()">'+(ee?'✓ Αποθήκευση αλλαγών':'+ Προσθήκη')+'</button>'
     +'</div>';
   if(c.weightLog.length>0){
     // ✅ Current Status Card (latest measurement)
@@ -1954,7 +1980,10 @@ function buildTrackerHtml(c){
       +(latest.bf?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #ff9999"><div style="color:#666">Λίπος</div><div style="font-size:14px;font-weight:700;color:#c62828">'+latest.bf+'%</div></div>':'')
       +(latestLBM?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #1565C0"><div style="color:#666">Lean Mass</div><div style="font-size:14px;font-weight:700;color:#1565C0">'+latestLBM+' kg</div></div>':'')
       +(latestBMI!=null?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid '+latestBMIColor+'">'
-      +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+(latestBMIStatus?' ('+latestBMIStatus+')':'')+'</div></div>':'')
+      +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+(latestBMIStatus?' ('+latestBMIStatus+')':'')+'</div></div>'
+      // ✅ BMI used to just silently disappear with no height set — nothing told the practitioner
+      // why the card was missing, or what to do about it
+      :'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #ccc"><div style="color:#666">BMI</div><div style="font-size:10px;color:#999;margin-top:2px">Χρειάζεται ύψος — συμπλήρωσέ το στα Στοιχεία πελάτη</div></div>')
       +(latest.waist?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #9c27b0"><div style="color:#666">Μέση</div><div style="font-size:14px;font-weight:700;color:#9c27b0">'+latest.waist+' cm</div></div>':'')
       +(latest.hip?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #f57c00"><div style="color:#666">Γοφοί</div><div style="font-size:14px;font-weight:700;color:#f57c00">'+latest.hip+' cm</div></div>':'')
       +'</div>'
@@ -2063,7 +2092,7 @@ function buildTrackerHtml(c){
         +'<td style="font-size:9px">'+energyBolts+'</td>'
         +'<td>'+(e.compliance?'<b>'+e.compliance+'/10</b>':'—')+'</td>'
         +'<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666">'+esc(e.notes||'')+'</td>'
-        +'<td><button class="met-del" onclick="removeWeightEntry('+i+')">&#10005;</button></td>'
+        +'<td style="white-space:nowrap"><button class="met-del" onclick="editWeightEntry('+i+')" title="Επεξεργασία">✏️</button> <button class="met-del" onclick="removeWeightEntry('+i+')" title="Διαγραφή">&#10005;</button></td>'
         +'</tr>';
     });
     wHtml+='</tbody></table></div>';
@@ -2239,6 +2268,16 @@ function updateSkinfoldFields(){
   var fieldsDiv=document.getElementById('sf-fields');
   var refSpan=document.getElementById('sf-ref');
   if(!fieldsDiv)return;
+  // ✅ carry over any mm values already typed before switching protocol — this used to wipe the
+  // whole panel silently (rebuilds fieldsDiv from scratch below), so picking the wrong protocol
+  // first and correcting it lost everything you'd entered so far. Sites shared between protocols
+  // (e.g. abdomen/thigh between JP4 and JP3) now keep their value; sites unique to the old
+  // protocol are simply dropped since the new one has nowhere to show them.
+  var carryOver={};
+  ['chest','abdomen','thigh','tricep','suprailiac','midaxillary','subscapular','calf'].forEach(function(k){
+    var el=document.getElementById('sf-'+k);
+    if(el&&el.value)carryOver[k]=el.value;
+  });
   var defs=[];
   var ref='';
   if(p==='jp4'){
@@ -2272,12 +2311,13 @@ function updateSkinfoldFields(){
     // typing, which cost accuracy during fast in-clinic entry across many clients)
     html+='<div style="display:flex;flex-direction:column;gap:2px">'
       +'<label for="sf-'+f.k+'" style="font-size:9px;color:#999">'+f.lbl+'</label>'
-      +'<input type="number" id="sf-'+f.k+'" placeholder="mm" min="1" max="80" step="0.5" class="tracker-inp" style="width:120px" oninput="updateSkinfoldCalc()">'
+      +'<input type="number" id="sf-'+f.k+'" placeholder="mm" min="1" max="80" step="0.5" class="tracker-inp" style="width:120px" oninput="updateSkinfoldCalc()"'+(carryOver[f.k]?' value="'+carryOver[f.k]+'"':'')+'>'
       +'</div>';
   });
   fieldsDiv.innerHTML=html;
   var resDiv=document.getElementById('sf-result');
-  if(resDiv)resDiv.style.display='none';
+  if(Object.keys(carryOver).length){updateSkinfoldCalc();} // re-show %BF immediately if carried-over values already form a complete set for the new protocol
+  else if(resDiv)resDiv.style.display='none';
 }
 
 function updateSkinfoldCalc(){
@@ -2524,7 +2564,7 @@ function finishBatchErgoImport(texts){
       var res=calcSkinfoldBF('jp4',c.sex||'M',age,fields);
       c.weightLog.push({date:r.testDate,weight:r.weight,bf:res.bf||0,waist:0,hip:0,arm:0,sleep:0,energy:0,compliance:0,notes:'',sfProtocol:'jp4',sfFields:fields});
     });
-    c.weightLog.sort(function(a,b){return a.date<b.date?-1:1;});
+    c.weightLog.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
 
     var latest=c.weightLog[c.weightLog.length-1];
     if(latest.bf>0){c.lbm=+(latest.weight*(1-latest.bf/100)).toFixed(1);c.bf=latest.bf;}
@@ -2572,8 +2612,17 @@ function addWeightEntry(){
   var sfEntry=getSkinfoldEntry();
   var entry={date:date,weight:weight,bf:bf,waist:waist,hip:hip,arm:arm,sleep:sleep,energy:energy,compliance:compliance,notes:notes};
   if(sfEntry){entry.sfProtocol=sfEntry.protocol;entry.sfFields=sfEntry.fields;}
-  c.weightLog.push(entry);
-  c.weightLog.sort(function(a,b){return a.date<b.date?-1:1;});
+  if(_weightEditIdx>=0 && c.weightLog[_weightEditIdx]){
+    // ✅ editing an existing entry (editWeightEntry) — replace it in place instead of pushing a
+    // duplicate; previously there was no way to fix a typo without deleting + fully retyping
+    c.weightLog[_weightEditIdx]=entry;
+    _weightEditIdx=-1;
+  } else {
+    c.weightLog.push(entry);
+  }
+  // ✅ was `a.date<b.date?-1:1`, which returns 1 (not 0) for equal dates — two entries logged on
+  // the same day could non-deterministically swap order on every re-render/re-sort
+  c.weightLog.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
   // Auto-update LBM + profile BF% if body fat was entered
   if(bf>0){c.lbm=+(weight*(1-bf/100)).toFixed(1);c.bf=bf;c.weight=weight;}
   // Sync weight even if no BF%
@@ -2582,11 +2631,30 @@ function addWeightEntry(){
   var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
 }
 
+// ✅ opens the entry form pre-filled with weightLog[idx] instead of the previous edit-free
+// delete-and-retype-everything workflow
+function editWeightEntry(idx){
+  var c=getC();if(!c||!c.weightLog||!c.weightLog[idx])return;
+  _weightEditIdx=idx;
+  var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
+  var dateInp=document.getElementById('tr-date');
+  if(dateInp)dateInp.scrollIntoView({block:'center'}); // form is above the table — without this the pre-filled fields aren't visible
+}
+function cancelWeightEdit(){
+  _weightEditIdx=-1;
+  var c=getC();if(!c)return;
+  var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
+}
+
 function removeWeightEntry(idx){
   var c=getC();if(!c||!c.weightLog||!c.weightLog[idx])return;
   var entry=c.weightLog[idx];
   showConfirmDialog('Διαγραφή της μέτρησης της '+entry.date+' ('+entry.weight+'kg);', function(){
     c.weightLog.splice(idx,1);
+    // ✅ keep _weightEditIdx pointing at the right entry (or clear it) if the row being deleted
+    // sits before/at the one currently open in the edit form
+    if(_weightEditIdx===idx)_weightEditIdx=-1;
+    else if(_weightEditIdx>idx)_weightEditIdx--;
     save();
     var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
   }, {icon:'🗑️', confirmLabel:'Διαγραφή'});
