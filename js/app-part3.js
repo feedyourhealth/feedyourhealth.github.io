@@ -1821,6 +1821,7 @@ function renderWeekTable(){
     var dayMenuDropdown='<div id="'+dayMenuId+'" class="day-menu-dropdown">'
       +'<button onclick="copyDayPrompt(this,'+di+');closeDayMenu(\''+dayMenuId+'\')">📋 Αντιγραφή σε άλλες ημέρες</button>'
       +'<button onclick="regenerateDay('+di+');closeDayMenu(\''+dayMenuId+'\')">🔄 Αναδημιουργία μόνο αυτής</button>'
+      +'<button onclick="swapDayPrompt(this,'+di+');closeDayMenu(\''+dayMenuId+'\')">🔁 Ανταλλαγή με άλλη ημέρα</button>'
       +'</div>';
     html+='<th style="position:relative">'+d+badge+timeStr+sportStr+dayMenuBtn+dayMenuDropdown+'</th>';
   });
@@ -2731,6 +2732,65 @@ function doCopyDay(fromDay){
   }
   if(!copied.length){showErrorToast('Δεν επιλέχθηκε καμία ημέρα.');return;}
   save();renderWeekTable();
+}
+
+// ✅ Ανταλλαγή φαγητού μεταξύ δύο ημερών — swap ΜΟΝΟ του c.weekPlan[i]/[j] (τα γεύματα/τροφές).
+// Προπόνηση (trainDays/trainHoursByDay/trainTimesByDay), στόχοι kcal/carb (dayTargets), match-day
+// flag (matchDays) και εξαιρέσεις νηστείας (dietExceptionDays/dietFoodExceptionDays) μένουν στη
+// ΘΕΣΗ της ημέρας — δεν ακολουθούν το φαγητό (επιβεβαιωμένο με τον χρήστη, βλ. συζήτηση mockup).
+// Άρα το μετακινημένο φαγητό μπορεί να μην ταιριάζει πλέον ακριβώς στον στόχο της νέας ημέρας —
+// αναμενόμενο, ο διατροφολόγος το προσαρμόζει χειροκίνητα όπως θα έκανε ούτως ή άλλως.
+function swapPlanDays(c,i,j){
+  if(!c||!c.weekPlan||i===j)return;
+  var tmp=c.weekPlan[i];
+  c.weekPlan[i]=c.weekPlan[j];
+  c.weekPlan[j]=tmp;
+}
+function swapDayPrompt(btn,fromDay){
+  var c=getC();if(!c||!c.weekPlan[fromDay]||!c.weekPlan[fromDay].length)return;
+  var dayNames=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
+  var panelId='swap-panel-'+fromDay;
+  var existing=document.getElementById(panelId);
+  if(existing){existing.remove();return;}
+  // Close any other open swap/copy panels
+  document.querySelectorAll('[id^="swap-panel-"],[id^="copy-panel-"]').forEach(function(p){p.remove();});
+  var rect=btn.getBoundingClientRect();
+  var panel=document.createElement('div');
+  panel.id=panelId;
+  panel.style.cssText='position:fixed;z-index:9999;background:#fff;border:1px solid #025857;border-radius:8px;padding:10px 12px;box-shadow:0 4px 18px rgba(0,0,0,.18);font-size:11px;min-width:165px;left:'+Math.round(rect.left)+'px;top:'+Math.round(rect.bottom+4)+'px';
+  var inner='<div style="font-weight:700;color:#025857;margin-bottom:7px">🔁 Ανταλλαγή '+dayNames[fromDay]+' με:</div>';
+  inner+='<div style="display:flex;flex-direction:column;gap:5px">';
+  for(var di=0;di<7;di++){
+    if(di===fromDay)continue;
+    inner+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer">'
+      +'<input type="radio" name="sw-target-'+fromDay+'" id="sw-'+di+'" style="accent-color:#025857"> '+dayNames[di]+'</label>';
+  }
+  inner+='</div><div style="display:flex;gap:6px;margin-top:8px">'
+    +'<button onclick="doSwapDay('+fromDay+')" style="flex:1;padding:4px;background:#025857;color:#fff;border:none;border-radius:5px;font-size:11px;cursor:pointer">✓ Αντιστροφή</button>'
+    +'<button onclick="document.getElementById(\''+panelId+'\').remove()" style="padding:4px 8px;border:1px solid #ddd;border-radius:5px;font-size:11px;cursor:pointer;background:#fff">✕</button>'
+    +'</div>';
+  panel.innerHTML=inner;
+  document.body.appendChild(panel);
+  // Close on outside click
+  setTimeout(function(){
+    function outsideClick(e){if(!panel.contains(e.target)&&e.target!==btn){panel.remove();document.removeEventListener('mousedown',outsideClick);}}
+    document.addEventListener('mousedown',outsideClick);
+  },0);
+}
+function doSwapDay(fromDay){
+  var c=getC();if(!c)return;
+  var dayNames=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+  var panel=document.getElementById('swap-panel-'+fromDay);
+  var toDay=-1;
+  for(var di=0;di<7;di++){
+    var rb=document.getElementById('sw-'+di);
+    if(rb&&rb.checked){toDay=di;break;}
+  }
+  if(toDay===-1){showErrorToast('Διάλεξε μια ημέρα για ανταλλαγή.');return;}
+  if(panel)panel.remove();
+  swapPlanDays(c,fromDay,toDay);
+  save();renderWeekTable();
+  showSuccessToast('✓ Αντιστράφηκε το φαγητό: '+dayNames[fromDay]+' ↔ '+dayNames[toDay]);
 }
 
 /* ---- Meal drag & drop ---- */
