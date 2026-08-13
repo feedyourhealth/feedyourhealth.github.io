@@ -2762,8 +2762,12 @@ function swapDayPrompt(btn,fromDay){
   inner+='<div style="display:flex;flex-direction:column;gap:5px">';
   for(var di=0;di<7;di++){
     if(di===fromDay)continue;
+    // ✅ id scoped to fromDay (sw-<from>-<to>, not just sw-<to>) so it can never collide with
+    // another swap panel's radios even if the "close other open panels" line above is ever
+    // changed/removed — the panel is already scoped by `panelId`/`name`, this just makes the
+    // per-input id agree with that instead of being the one un-scoped piece.
     inner+='<label style="display:flex;align-items:center;gap:6px;cursor:pointer">'
-      +'<input type="radio" name="sw-target-'+fromDay+'" id="sw-'+di+'" style="accent-color:#025857"> '+dayNames[di]+'</label>';
+      +'<input type="radio" name="sw-target-'+fromDay+'" id="sw-'+fromDay+'-'+di+'" style="accent-color:#025857"> '+dayNames[di]+'</label>';
   }
   inner+='</div><div style="display:flex;gap:6px;margin-top:8px">'
     +'<button onclick="doSwapDay('+fromDay+')" style="flex:1;padding:4px;background:#025857;color:#fff;border:none;border-radius:5px;font-size:11px;cursor:pointer">✓ Αντιστροφή</button>'
@@ -2779,18 +2783,40 @@ function swapDayPrompt(btn,fromDay){
 }
 function doSwapDay(fromDay){
   var c=getC();if(!c)return;
-  var dayNames=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
   var panel=document.getElementById('swap-panel-'+fromDay);
   var toDay=-1;
   for(var di=0;di<7;di++){
-    var rb=document.getElementById('sw-'+di);
+    var rb=document.getElementById('sw-'+fromDay+'-'+di);
     if(rb&&rb.checked){toDay=di;break;}
   }
   if(toDay===-1){showErrorToast('Διάλεξε μια ημέρα για ανταλλαγή.');return;}
   if(panel)panel.remove();
   swapPlanDays(c,fromDay,toDay);
   save();renderWeekTable();
-  showSuccessToast('✓ Αντιστράφηκε το φαγητό: '+dayNames[fromDay]+' ↔ '+dayNames[toDay]);
+  showSwapUndoToast(fromDay,toDay);
+}
+
+// ✅ Ειδικό toast με κουμπί «↩ Αναίρεση» — το γενικό ↶ Αναίρεση πάνω-αριστερά (UndoRedoManager)
+// δεν πιάνει swap/copy/regenerate ημέρας (ίδιο κενό είχε ήδη το «Αντιγραφή σε άλλες ημέρες»).
+// Μια ανταλλαγή όμως αναιρείται ΑΚΡΙΒΩΣ ξανακάνοντας το ίδιο swap, οπότε αξίζει ειδικό κουμπί
+// εδώ αντί να απαιτείται να ξανανοίξεις το μενού και να διαλέξεις ξανά τις δύο ημέρες.
+function showSwapUndoToast(dayA,dayB){
+  var dayNames=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+  var existing=document.getElementById('swap-undo-toast');if(existing)existing.remove();
+  var t=document.createElement('div');
+  t.id='swap-undo-toast';
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:#025857;color:#fff;padding:10px 10px 10px 16px;border-radius:8px;font-size:12px;z-index:10000;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;gap:12px;max-width:360px';
+  t.innerHTML='<span>✓ Αντιστράφηκε το φαγητό: '+dayNames[dayA]+' ↔ '+dayNames[dayB]+'</span>'
+    +'<button style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Αναίρεση</button>';
+  document.body.appendChild(t);
+  var timer=setTimeout(function(){t.remove();},6000);
+  t.querySelector('button').onclick=function(){
+    clearTimeout(timer);
+    var cc=getC();
+    if(cc){swapPlanDays(cc,dayA,dayB);save();renderWeekTable();}
+    t.remove();
+    dietoToast('↩ Η ανταλλαγή αναιρέθηκε');
+  };
 }
 
 /* ---- Meal drag & drop ---- */
