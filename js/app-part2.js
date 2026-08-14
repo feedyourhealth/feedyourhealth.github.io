@@ -15,6 +15,7 @@ function goToApp(){
     if(window.Cloud && typeof window.Cloud.refreshCheckinsCache==='function') window.Cloud.refreshCheckinsCache();
     if(window.Cloud && typeof window.Cloud.refreshClientLogsCache==='function') window.Cloud.refreshClientLogsCache();
     if(window.Cloud && typeof window.Cloud.refreshPlanFeedbackCache==='function') window.Cloud.refreshPlanFeedbackCache();
+    if(window.Cloud && typeof window.Cloud.refreshLinkHealthCache==='function') window.Cloud.refreshLinkHealthCache();
   } catch(e) {
     console.error('Error in goToApp():', e.message);
     showErrorToast('Σφάλμα: ' + e.message);
@@ -2973,8 +2974,31 @@ function refreshClientPortalFeedback(btn){
   Promise.all([
     typeof Cloud.refreshCheckinsCache==='function'?Cloud.refreshCheckinsCache():Promise.resolve(),
     typeof Cloud.refreshClientLogsCache==='function'?Cloud.refreshClientLogsCache():Promise.resolve(),
-    typeof Cloud.refreshPlanFeedbackCache==='function'?Cloud.refreshPlanFeedbackCache():Promise.resolve()
+    typeof Cloud.refreshPlanFeedbackCache==='function'?Cloud.refreshPlanFeedbackCache():Promise.resolve(),
+    typeof Cloud.refreshLinkHealthCache==='function'?Cloud.refreshLinkHealthCache():Promise.resolve()
   ]).then(restore).catch(restore);
+}
+// Ξαναδημοσιεύει το πλάνο απευθείας από το κουμπί του digest ("🔗⚠️ Το link δεν λειτουργεί") — ίδιο
+// μονοπάτι με dietsQuickRepublish (js/app-part5-home.js), αλλά ξανασχεδιάζει το #s3b (Ραντεβού) και
+// ξανατρέχει το linkHealth check ώστε το digest item να εξαφανιστεί αμέσως αν η δημοσίευση πέτυχε.
+function apptDigestRepublishLink(clientId,btn){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  if(!window.Cloud || !window.Cloud.publishPlan){ showErrorToast('Το cloud δεν είναι διαθέσιμο αυτή τη στιγμή.'); return; }
+  var orig=btn.textContent;
+  btn.disabled=true; btn.textContent='Δημοσίευση...';
+  window.Cloud.publishPlan(c).then(function(){
+    return window.Cloud.refreshLinkHealthCache?window.Cloud.refreshLinkHealthCache():null;
+  }).then(function(){
+    if(typeof showSuccessToast==='function') showSuccessToast('✅ Το link δημοσιεύτηκε ξανά.');
+    var s3b=document.getElementById('s3b');
+    if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
+      var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+    }
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent=orig;
+    showErrorToast('Σφάλμα δημοσίευσης: '+(e.message||''));
+  });
 }
 // ✨ Idea 3 (2026-08-14): "Χρειάζεται προσοχή" — συγκεντρώνει σε μια λίστα, με ενέργεια δίπλα σε
 // κάθε στοιχείο, ΟΛΑ τα σήματα που ήδη υπολογίζει το clientNeedsAttention() (js/app-part1.js, ίδιο
@@ -3028,6 +3052,24 @@ function buildApptAttentionDigestHtml(c){
     }
   });
 
+  // 2026-08-14: το link σπάει σιωπηλά (πρώτα το ανακαλύπτει ο πελάτης, χτυπώντας "Το πλάνο δεν
+  // βρέθηκε") — αυτό ΔΕΝ είναι μέρος του isStale() πιο κάτω (εκείνο βλέπει μόνο τοπικές αλλαγές μετά
+  // τη δημοσίευση, όχι αν η γραμμή shared_plans χάθηκε). ΠΟΤΕ δεν κρύβεται στην περίοδο χάριτος —
+  // ένα link που δεν λειτουργεί είναι πρόβλημα ανεξάρτητα από την ηλικία του πελάτη.
+  var linkBroken=false;
+  if(c.shareToken && window.Cloud && typeof window.Cloud.linkHealthFor==='function'){
+    var lh=window.Cloud.linkHealthFor(c);
+    if(lh.checked && lh.exists===false){
+      linkBroken=true;
+      items.push('<div class="appt-digest-item">🔗⚠️ Το link του πελάτη δεν βρέθηκε στο σύστημα — πιθανώς δεν λειτουργεί'
+        +'<button type="button" class="go" onclick="apptDigestRepublishLink(\''+c.id+'\',this)">🔄 Δημοσίευσε ξανά</button></div>');
+    } else if(lh.checked && lh.expired){
+      linkBroken=true;
+      items.push('<div class="appt-digest-item">🔗⏰ Το link του πελάτη έχει λήξει'
+        +'<button type="button" class="go" onclick="apptDigestRepublishLink(\''+c.id+'\',this)">🔄 Δημοσίευσε ξανά</button></div>');
+    }
+  }
+
   if(window.Cloud && typeof window.Cloud.allClientLogsFor==='function'){
     var unanswered=window.Cloud.allClientLogsFor(c).filter(function(e){
       var t=(e.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
@@ -3073,7 +3115,7 @@ function buildApptAttentionDigestHtml(c){
     } else { suppressedForNewClient=true; }
   }
 
-  if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)){
+  if(!linkBroken && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)){
     if(!isNewClient){
       items.push('<div class="appt-digest-item">🔗 Ο σύνδεσμος portal δείχνει παλιότερη έκδοση του πλάνου<button type="button" class="go" onclick="swTab(2)">Άνοιξε Πλάνο</button></div>');
     } else { suppressedForNewClient=true; }

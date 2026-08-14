@@ -3544,6 +3544,51 @@ function saveFoodExclusions(){
       var entries=(this._planFeedbackCache[c.shareToken]||[]).slice();
       entries.sort(function(a,b){return a.week_start<b.week_start?1:-1;});
       return entries;
+    },
+
+    // ── 🔗 ΥΓΕΙΑ ΣΥΝΔΕΣΜΟΥ PORTAL (2026-08-14) ──────────────────────────────
+    // Το isStale() πιο πάνω ελέγχει ΜΟΝΟ αν άλλαξε το πλάνο ΤΟΠΙΚΑ μετά τη δημοσίευση — δεν βλέπει αν
+    // η ίδια η γραμμή shared_plans χάθηκε από τη βάση (διαγραφή, χειροκίνητο cleanup, ό,τι άλλο) ΜΕΤΑ
+    // από μια επιτυχημένη δημοσίευση. Αυτό βρέθηκε live σε πραγματικό test client — το τοπικό
+    // _publishedPlanHash έλεγε "όλα καλά" ενώ ο πελάτης έβλεπε "Το πλάνο δεν βρέθηκε". Εδώ κάνουμε μια
+    // ελαφριά ερώτηση ύπαρξης (token+expires_at, όχι ολόκληρο το snapshot) για όλους τους δημοσιευμένους
+    // πελάτες μαζί, ίδιο μοτίβο με τα άλλα 3 caches παραπάνω.
+    _linkHealthCache:{}, _linkHealthChecked:false,
+    fetchLinkHealth:function(tokens){
+      var self=this;
+      if(!this.enabled || !this.user || !tokens || !tokens.length) return Promise.resolve(null);
+      return this.sb.from('shared_plans').select('token,expires_at').in('token',tokens).then(function(res){
+        if(res.error){ console.error('[CLOUD] fetchLinkHealth', res.error); return null; }
+        var byToken={};
+        (res.data||[]).forEach(function(r){ byToken[r.token]=r.expires_at||null; });
+        return byToken;
+      }).catch(function(e){ console.error('[CLOUD] fetchLinkHealth network error', e && e.message); return null; });
+    },
+    refreshLinkHealthCache:function(){
+      var self=this;
+      var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
+      if(!tokens.length) return Promise.resolve();
+      return this.fetchLinkHealth(tokens).then(function(byToken){
+        // null = σφάλμα δικτύου/άδειας — κράτα το προηγούμενο (γνωστό) αποτέλεσμα αντί να το σβήσεις
+        // με "άγνωστο", αλλιώς μια στιγμιαία αποτυχία δικτύου θα έκρυβε σιωπηλά ένα ήδη-γνωστό σπασμένο link.
+        if(byToken===null) return;
+        self._linkHealthCache=byToken;
+        self._linkHealthChecked=true;
+        var s3b=document.getElementById('s3b');
+        if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
+          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+        }
+      });
+    },
+    // {checked:false} αν δεν έχει τρέξει ποτέ ο έλεγχος αυτή τη συνεδρία — το digest ΔΕΝ πρέπει να
+    // υποθέσει σπασμένο link σε αυτή την περίπτωση, μόνο όταν πραγματικά το επιβεβαίωσε.
+    linkHealthFor:function(c){
+      if(!c || !c.shareToken) return {checked:true, exists:null};
+      if(!this._linkHealthChecked) return {checked:false};
+      var has=this._linkHealthCache.hasOwnProperty(c.shareToken);
+      var expiresAt=has?this._linkHealthCache[c.shareToken]:null;
+      var expired=has && expiresAt && new Date(expiresAt)<new Date();
+      return {checked:true, exists:has, expired:!!expired, expiresAt:expiresAt};
     }
   };
   window.Cloud = Cloud;
