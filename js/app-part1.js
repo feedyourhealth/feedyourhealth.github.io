@@ -2935,20 +2935,25 @@ function clientHasLowPlanFeedback(c){
     return latest[k]!=null && latest[k]<=PF_ATTENTION_STAR_MAX;
   });
 }
-// Πελάτης με πρόσφατη ΓΡΑΠΤΗ σημείωση από το portal (client_logs.note, χωρίς login — βλ.
-// clientLogsPanelHtml στο js/app-part2.js) τις τελευταίες 2 μέρες. Ίδιο κατώφλι "πρόσφατο" με το
-// ckDaysSinceLast/progressBadge, ίδιο αυτο-καθαριζόμενο μοτίβο με το clientHasLowPlanFeedback
-// (κοιτάει πάντα την πιο πρόσφατη καταχώρηση, όχι μόνιμη σημαία σαν το 🚩) — δεν χρειάζεται νέο
-// "διαβάστηκε/δεν διαβάστηκε" state. Μόνο καταχωρήσεις με πραγματικό κείμενο μετράνε — μια
-// καταχώρηση μόνο βάρους ήδη φαίνεται αλλού (buildClientProgressHtml) και δεν είναι "μήνυμα".
+// Πελάτης με τουλάχιστον μία ΓΡΑΠΤΗ σημείωση από το portal (client_logs.note, χωρίς login — βλ.
+// clientLogsPanelHtml στο js/app-part2.js) που δεν έχει απαντηθεί ακόμα. "Απαντήθηκε" = πατήθηκε το
+// κουμπί ↩️ Απάντησε (noteReplyKey/replyToClientNote, js/app-part2.js) — ΟΧΙ απλά ότι πέρασε ο χρόνος.
+// 2026-08-14: πριν κοιτούσε μόνο "τελευταία σημείωση + <2 μέρες", οπότε μια σημείωση που δεν
+// απαντήθηκε ποτέ εξαφανιζόταν σιωπηλά από το badge μετά από 2 μέρες σαν να είχε απαντηθεί —
+// τώρα σαρώνει τις τελευταίες (μέχρι 15, ήδη το όριο του allClientLogsFor) για οποιαδήποτε
+// αναπάντητη. Μόνο καταχωρήσεις με πραγματικό κείμενο μετράνε — μια καταχώρηση μόνο βάρους ήδη
+// φαίνεται αλλού (buildClientProgressHtml) και δεν είναι "μήνυμα".
 function clientHasNewClientNote(c){
   if(!window.Cloud || typeof window.Cloud.allClientLogsFor!=='function') return false;
-  var latest=window.Cloud.allClientLogsFor(c)[0];
-  if(!latest) return false;
-  var noteText=(latest.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
-  if(!noteText) return false;
-  var d0=new Date(latest.date+'T00:00:00'), d1=new Date(); d1.setHours(0,0,0,0);
-  return Math.round((d1-d0)/86400000)<2;
+  var entries=window.Cloud.allClientLogsFor(c);
+  return entries.some(function(e){
+    var noteText=(e.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
+    if(!noteText) return false;
+    if(typeof noteReplyKey!=='function' || !c.shareToken) return true; // δεν μπορούμε να ξέρουμε αν απαντήθηκε → μετράει ως νέα
+    var replied=false;
+    try{ replied=localStorage.getItem(noteReplyKey(c.shareToken,e.date))==='1'; }catch(err){}
+    return !replied;
+  });
 }
 // EA (Energy Availability) στην κρίσιμη ζώνη RED-S (<30 kcal/kgLBM, ίδιο κατώφλι με το confirm-gate
 // στο calorieConsistencyCheck) — πριν αυτό υπήρχε μόνο μέσα στο breakdown ενός συγκεκριμένου πελάτη,

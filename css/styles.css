@@ -1070,6 +1070,41 @@ body.dark-mode .tooltip-text {
 .appt-action-resolve{background:none;border:none;cursor:pointer;color:#6b6b6b;font-size:13px;padding:0 3px;line-height:1;flex-shrink:0}
 .appt-action-resolve:hover{color:#2e7d32}
 .appt-entry-editing{background:#fff!important;border-color:var(--teal)!important}
+/* ✨ Idea 8 (2026-08-14): φίλτρο ιστορικού ραντεβού — καθαρά front-end, βλ. apptFilterHistory() στο js/app-part2.js */
+.appt-filterbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.appt-fchip{padding:5px 11px;font-size:11px;border-radius:20px;border:1px solid #c5ddd8;background:#fff;color:#555;cursor:pointer;font-weight:600}
+.appt-fchip.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.appt-entry.appt-entry-hidden{display:none}
+/* ✨ Idea 6 (2026-08-14): πρότυπα σημειώσεων ραντεβού — βλ. insertApptTemplate() στο js/app-part2.js */
+.appt-tmpl-row{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.appt-tmpl-chip{padding:5px 10px;font-size:11px;border-radius:20px;border:1px solid var(--teal);background:#fff;color:var(--teal);cursor:pointer;font-weight:600}
+.appt-tmpl-chip:hover{background:var(--teal-tint)}
+/* ✨ Idea 1 (2026-08-14): ιστορικό feedback πλάνου ανά ερώτηση — βλ. planFeedbackPanelHtml() στο js/app-part2.js */
+.pf-row{cursor:pointer}
+.pf-row .pf-exp-hint{margin-left:auto;font-size:10px;color:var(--teal);font-weight:700}
+.pf-history{display:none;gap:10px;align-items:flex-end;height:46px;padding:10px 6px 4px;margin:0 0 6px;border-radius:10px;background:var(--teal-tint)}
+.pf-history.open{display:flex}
+.pf-history .bar{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.pf-history .bar i{width:100%;max-width:20px;border-radius:4px 4px 0 0;background:#cfe8e0;display:block}
+.pf-history .bar b{font-size:9px;color:#888;font-weight:600}
+.pf-history .bar.now i{background:var(--teal)}
+.pf-history .reason{font-size:9px;color:#c62828;text-align:center;max-width:60px}
+/* ✨ Idea 2 (2026-08-14): "τι άλλαξε από το προηγούμενο ραντεβού" — βλ. buildApptDiffHtml() στο js/app-part2.js */
+.appt-diffbox{display:flex;gap:14px;flex-wrap:wrap;font-size:12px}
+.appt-diffitem{display:flex;flex-direction:column;gap:2px}
+.appt-diffitem .lbl{font-size:10px;color:#888;font-weight:600}
+.appt-diffitem .val{font-weight:700}
+.appt-diffitem .val.good{color:#2e7d32}
+.appt-diffitem .val.bad{color:#c62828}
+/* ✨ Idea 3 (2026-08-14): "χρειάζεται προσοχή" digest — βλ. buildApptAttentionDigestHtml() στο js/app-part2.js */
+.appt-digest-list{display:flex;flex-direction:column;gap:6px}
+.appt-digest-item{display:flex;align-items:center;gap:8px;font-size:12px;padding:7px 10px;border-radius:10px;background:#fff7f7;border:1px solid #f1b4b3;color:#333}
+.appt-digest-item .go{margin-left:auto;font-size:10px;font-weight:700;color:#c62828;white-space:nowrap;background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0}
+.appt-digest-item .go:hover{text-decoration:underline}
+/* ✨ Idea 7 (2026-08-14): συνδυασμένο γράφημα τήρησης/συμπτωμάτων/βάρους — βλ. apptCorrelationChart() στο js/app-part2.js */
+.appt-corr-legend{display:flex;gap:14px;margin-bottom:6px;font-size:10px;color:#888;flex-wrap:wrap}
+.appt-corr-legend span{display:inline-flex;align-items:center;gap:4px}
+.appt-corr-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
 /* ── Save-as-Template panel ── */
 .save-tmpl-panel{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:10px 14px;background:#fff8f0;border:1px solid #f9a825;border-radius:14px;margin:0 0 8px}
 .save-tmpl-lbl{font-size:11px;color:#e65100;font-weight:700;white-space:nowrap}
@@ -1791,6 +1826,15 @@ body.dark-mode .appt-entry{background:#1a1a1a;border-color:#444;color:#e0e0e0}
 body.dark-mode .appt-entry.appt-entry-absence{background:#151515;border-color:#3a3a3a}
 body.dark-mode .appt-scale-btn{background:#1a1a1a;border-color:#444;color:#ccc}
 body.dark-mode .appt-sum-card{background:#1a1a1a;border-color:#444}
+body.dark-mode .appt-fchip{background:#1a1a1a;border-color:#444;color:#ccc}
+body.dark-mode .appt-tmpl-chip{background:#1a1a1a;color:#5dcaa5}
+body.dark-mode .appt-tmpl-chip:hover{background:#123330}
+body.dark-mode .pf-history{background:#123330}
+body.dark-mode .pf-history .bar i{background:#2a4a43}
+body.dark-mode .pf-history .bar b{color:#9aa5a1}
+body.dark-mode .appt-diffitem .lbl{color:#9aa5a1}
+body.dark-mode .appt-digest-item{background:#3a1a1a;border-color:#6b2020;color:#e0e0e0}
+body.dark-mode .appt-corr-legend{color:#9aa5a1}
 body.dark-mode .bottom-nav{background:#1a1a1a;border-top-color:#444}
 body.dark-mode .chip-dd{background:#1a1a1a;border-color:#444}
 body.dark-mode .chip-macro-tip{background:#1a1a1a;border-color:#444;color:#e0e0e0}
