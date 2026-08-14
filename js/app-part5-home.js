@@ -198,12 +198,26 @@ function sendFeedbackReminder(clientId){
   var fname=(c.name||'').split(' ')[0];
   var msg='Γεια σου '+fname+'! Πριν φτιάξω το πλάνο της επόμενης εβδομάδας, πες μου γρήγορα πώς πήγε αυτή — 30 δευτερόλεπτα, στην καρτέλα Πρόοδος: '+url;
   var phone=normalizePhoneIntl(c.phone);
+  var sent=false;
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+    sent=true;
   } else if(c.email){
     location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Πες μου πώς πήγε η εβδομάδα — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    sent=true;
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
+  }
+  // 2026-08-14: καταγράφουμε ΠΟΤΕ στάλθηκε η τελευταία υπενθύμιση (c.lastReminderSent, cloud-synced
+  // σαν κάθε άλλο πεδίο πελάτη) ώστε το digest να δείχνει "υπενθ. πριν Χ" αντί να ξαναφωνάζει το
+  // ίδιο μήνυμα σε κάθε άνοιγμα της καρτέλας, ό,τι κι αν έχει ήδη γίνει.
+  if(sent){
+    c.lastReminderSent=new Date().toISOString();
+    save();
+    var s3b=document.getElementById('s3b');
+    if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
+      var cur=getC(); if(cur && cur.id===c.id) s3b.innerHTML=buildAppointmentsHtml(cur);
+    }
   }
 }
 

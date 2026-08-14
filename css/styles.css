@@ -1101,6 +1101,8 @@ body.dark-mode .tooltip-text {
 .appt-digest-item{display:flex;align-items:center;gap:8px;font-size:12px;padding:7px 10px;border-radius:10px;background:#fff7f7;border:1px solid #f1b4b3;color:#333}
 .appt-digest-item .go{margin-left:auto;font-size:10px;font-weight:700;color:#c62828;white-space:nowrap;background:none;border:none;cursor:pointer;font-family:inherit;padding:2px 0}
 .appt-digest-item .go:hover{text-decoration:underline}
+.appt-digest-item .meta{font-size:10px;color:#888;white-space:nowrap;margin-left:auto;padding-right:8px}
+.appt-digest-item.soft{background:var(--teal-tint);border-color:#c5ddd8;color:#555}
 /* ✨ Idea 7 (2026-08-14): συνδυασμένο γράφημα τήρησης/συμπτωμάτων/βάρους — βλ. apptCorrelationChart() στο js/app-part2.js */
 .appt-corr-legend{display:flex;gap:14px;margin-bottom:6px;font-size:10px;color:#888;flex-wrap:wrap}
 .appt-corr-legend span{display:inline-flex;align-items:center;gap:4px}
@@ -1834,6 +1836,8 @@ body.dark-mode .pf-history .bar i{background:#2a4a43}
 body.dark-mode .pf-history .bar b{color:#9aa5a1}
 body.dark-mode .appt-diffitem .lbl{color:#9aa5a1}
 body.dark-mode .appt-digest-item{background:#3a1a1a;border-color:#6b2020;color:#e0e0e0}
+body.dark-mode .appt-digest-item .meta{color:#9aa5a1}
+body.dark-mode .appt-digest-item.soft{background:#123330;border-color:#444;color:#ccc}
 body.dark-mode .appt-corr-legend{color:#9aa5a1}
 body.dark-mode .bottom-nav{background:#1a1a1a;border-top-color:#444}
 body.dark-mode .chip-dd{background:#1a1a1a;border-color:#444}

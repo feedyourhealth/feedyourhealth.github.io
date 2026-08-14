@@ -2949,10 +2949,8 @@ function clientHasNewClientNote(c){
   return entries.some(function(e){
     var noteText=(e.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
     if(!noteText) return false;
-    if(typeof noteReplyKey!=='function' || !c.shareToken) return true; // δεν μπορούμε να ξέρουμε αν απαντήθηκε → μετράει ως νέα
-    var replied=false;
-    try{ replied=localStorage.getItem(noteReplyKey(c.shareToken,e.date))==='1'; }catch(err){}
-    return !replied;
+    if(typeof isNoteReplied!=='function') return true; // δεν μπορούμε να ξέρουμε αν απαντήθηκε → μετράει ως νέα
+    return !isNoteReplied(c,e.date);
   });
 }
 // EA (Energy Availability) στην κρίσιμη ζώνη RED-S (<30 kcal/kgLBM, ίδιο κατώφλι με το confirm-gate

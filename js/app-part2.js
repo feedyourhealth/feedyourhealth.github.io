@@ -1631,9 +1631,23 @@ function buildClientProgressHtml(c){
 // Ο πελάτης μπορεί προαιρετικά να επισημάνει ένα πλαίσιο ημέρας (ταξίδι/γιορτή/αρρώστια) από το portal —
 // αποθηκεύεται ως πρόθεμα "[tag:id] " μέσα στο ίδιο πεδίο note (καμία νέα στήλη στο client_logs), το ξεχωρίζουμε εδώ.
 var CLIENT_LOG_TAG_DEFS={travel:{icon:'✈️',label:'Ταξίδι'},party:{icon:'🎉',label:'Γιορτή'},sick:{icon:'🤒',label:'Άρρωστος/η'}};
-// "Έχω απαντήσει σε αυτή τη σημείωση" — καθαρά τοπική ένδειξη (δεν υπάρχει reply-state στο
-// client_logs), για να μην ξαναπατάει ο διαιτολόγος κατά λάθος το ίδιο WhatsApp δύο φορές.
+// "Έχω απαντήσει σε αυτή τη σημείωση" — αποθηκεύεται ΚΑΙ στο ίδιο το client (c.noteReplies,
+// συγχρονισμένο cloud μέσω του κανονικού save()) ΚΑΙ στο localStorage (παλιό μονοπάτι, κρατιέται
+// ως fallback ώστε ήδη-απαντημένες σημειώσεις να μη "ξαναφανούν" σε browsers που δεν έχουν
+// ακόμα το νέο πεδίο). 2026-08-14: πριν ζούσε ΜΟΝΟ στο localStorage — αν ο διαιτολόγος άνοιγε
+// την εφαρμογή από άλλη συσκευή, όλα ξαναφαίνονταν "αναπάντητα".
 function noteReplyKey(token,date){ return 'fyh-note-replied-'+token+'-'+date; }
+function isNoteReplied(c,date){
+  if(c && c.noteReplies && c.noteReplies[date]) return true;
+  if(!c || !c.shareToken) return false;
+  try{ return localStorage.getItem(noteReplyKey(c.shareToken,date))==='1'; }catch(err){ return false; }
+}
+function markNoteReplied(c,date){
+  if(!c) return;
+  if(!c.noteReplies) c.noteReplies={};
+  c.noteReplies[date]=true;
+  if(c.shareToken){ try{ localStorage.setItem(noteReplyKey(c.shareToken,date),'1'); }catch(err){} }
+}
 // ↩️ Απάντησε πάνω σε μια σημείωση πελάτη — ίδιο μοτίβο με sendFeedbackReminder (js/app-part5-home.js):
 // ανοίγει WhatsApp στο ΔΙΚΟ ΤΟΥ τηλέφωνο (c.phone, όχι τα clinic στοιχεία) με έτοιμο μήνυμα που
 // παραθέτει τι είπε, mailto ως fallback αν δεν έχει τηλέφωνο, toast αν δεν έχει ούτε τα δύο.
@@ -1651,13 +1665,27 @@ function replyToClientNote(clientId,date,noteRaw){
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
     return;
   }
-  if(c.shareToken){ try{ localStorage.setItem(noteReplyKey(c.shareToken,date),'1'); }catch(err){} }
+  markNoteReplied(c,date);
+  save();
   var s3b=document.getElementById('s3b');
   if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
     var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
   }
 }
 function pfReplyKey(token,weekStart,key){ return 'fyh-pf-replied-'+token+'-'+weekStart+'-'+(key||'_general'); }
+function isPfReplied(c,weekStart,key){
+  var k=weekStart+'|'+(key||'_general');
+  if(c && c.pfReplies && c.pfReplies[k]) return true;
+  if(!c || !c.shareToken) return false;
+  try{ return localStorage.getItem(pfReplyKey(c.shareToken,weekStart,key))==='1'; }catch(err){ return false; }
+}
+function markPfReplied(c,weekStart,key){
+  if(!c) return;
+  var k=weekStart+'|'+(key||'_general');
+  if(!c.pfReplies) c.pfReplies={};
+  c.pfReplies[k]=true;
+  if(c.shareToken){ try{ localStorage.setItem(pfReplyKey(c.shareToken,weekStart,key),'1'); }catch(err){} }
+}
 // ↩️ Απάντησε σε feedback πλάνου — ίδιο μοτίβο με replyToClientNote. key=null (κουμπί δίπλα στο NPS)
 // → γενικό μήνυμα, key='breakfast' κλπ (κουμπί πάνω σε συγκεκριμένη χαμηλή βαθμολογία) → μήνυμα με
 // το όνομα της κατηγορίας και τους λόγους (low_rating_reasons) που επέλεξε ο πελάτης στο portal.
@@ -1685,7 +1713,8 @@ function replyToPlanFeedback(clientId,weekStart,key){
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
     return;
   }
-  if(c.shareToken){ try{ localStorage.setItem(pfReplyKey(c.shareToken,weekStart,key),'1'); }catch(err){} }
+  markPfReplied(c,weekStart,key);
+  save();
   var s3b=document.getElementById('s3b');
   if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
     var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
@@ -1720,8 +1749,7 @@ function clientLogsPanelHtml(c){
     var n=noteRaw?('<span style="color:#666">'+esc(noteRaw)+'</span>'):'';
     var replyBtn='';
     if(noteRaw){
-      var replied=false;
-      if(c.shareToken){ try{ replied=localStorage.getItem(noteReplyKey(c.shareToken,e.date))==='1'; }catch(err){} }
+      var replied=isNoteReplied(c,e.date);
       var noteJs=noteRaw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       replyBtn='<button type="button" class="note-reply-btn'+(replied?' replied':'')+'" onclick="event.stopPropagation();replyToClientNote(\''+c.id+'\',\''+e.date+'\',\''+noteJs+'\')">↩️ Απάντησε'+(replied?' ✓':'')+'</button>';
     }
@@ -1763,8 +1791,7 @@ function planFeedbackPanelHtml(c){
     var tags=(reasons[key]||[]).map(function(r){return '<span style="background:#fbe9e7;color:#c0392b;border-radius:999px;padding:2px 8px;font-size:10px;margin-left:4px;white-space:nowrap">'+esc(r)+'</span>';}).join('');
     var replyBtn='';
     if(val>0&&val<=2){
-      var rowReplied=false;
-      if(c.shareToken){ try{ rowReplied=localStorage.getItem(pfReplyKey(c.shareToken,latest.week_start,key))==='1'; }catch(err){} }
+      var rowReplied=isPfReplied(c,latest.week_start,key);
       replyBtn='<button type="button" class="note-reply-btn'+(rowReplied?' replied':'')+'" style="margin-left:auto" onclick="event.stopPropagation();replyToPlanFeedback(\''+c.id+'\',\''+latest.week_start+'\',\''+key+'\')">↩️ Απάντησε'+(rowReplied?' ✓':'')+'</button>';
     }
     // ✨ Idea 1 (2026-08-14): ιστορικό ανά ερώτηση — πριν φαινόταν μόνο η τελευταία εβδομάδα + το
@@ -1799,8 +1826,7 @@ function planFeedbackPanelHtml(c){
   var npsBadge=nps==null?'':('<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:'+npsColor+'22;color:'+npsColor+'">'+nps+'/10 πιθανότητα συνέχισης</span>');
   var npsReplyBtn='';
   if(nps!=null && typeof PF_ATTENTION_NPS_MAX!=='undefined' && nps<=PF_ATTENTION_NPS_MAX){
-    var npsReplied=false;
-    if(c.shareToken){ try{ npsReplied=localStorage.getItem(pfReplyKey(c.shareToken,latest.week_start,null))==='1'; }catch(err){} }
+    var npsReplied=isPfReplied(c,latest.week_start,null);
     npsReplyBtn='<button type="button" class="note-reply-btn'+(npsReplied?' replied':'')+'" onclick="event.stopPropagation();replyToPlanFeedback(\''+c.id+'\',\''+latest.week_start+'\',null)">↩️ Απάντησε'+(npsReplied?' ✓':'')+'</button>';
   }
   var histBars='';
@@ -2957,8 +2983,43 @@ function refreshClientPortalFeedback(btn){
 // clientNeedsAttention, αλλά είναι το ίδιο το παράδειγμα με το οποίο ζητήθηκε αυτό το digest).
 // Σκόπιμα ΙΔΙΑ κατώφλια (PF_ATTENTION_NPS_MAX/STAR_MAX) με το 😕 badge ώστε να μη δείχνουν
 // αντιφατικά πράγματα το digest εδώ μέσα και η sidebar.
+// Ηλικία πελάτη σε ημέρες, με βάση το ίδιο το id (μορφή 'c'+Date.now(), βλ. addClient στο
+// js/app-part1.js) — δεν υπάρχει ξεχωριστό πεδίο createdAt στο client object. null αν το id δεν
+// ταιριάζει με αυτή τη μορφή (π.χ. εισαγμένος/παλιός πελάτης) — έτσι η περίοδος χάριτος παρακάτω
+// ΠΟΤΕ δεν ενεργοποιείται αναξιόπιστα, μόνο σε πελάτες που σίγουρα δημιουργήθηκαν πρόσφατα.
+function clientAgeDays(c){
+  if(!c || typeof c.id!=='string' || c.id.charAt(0)!=='c') return null;
+  var ts=parseInt(c.id.slice(1),10);
+  if(!ts || isNaN(ts)) return null;
+  if(ts<1577836800000 || ts>2208988800000) return null; // εκτός εύρους 2020-2040 → δεν το εμπιστευόμαστε
+  return Math.max(0,Math.floor((Date.now()-ts)/86400000));
+}
+// Πόσο "παλιά" ήταν μια τελευταία υπενθύμιση, για το μικρό "υπενθ. πριν Χ" δίπλα στα κουμπιά
+// υπενθύμισης — βλ. c.lastReminderSent (js/app-part5-home.js, sendFeedbackReminder).
+function fmtRelativeSince(iso){
+  if(!iso) return null;
+  var ms=Date.now()-new Date(iso).getTime();
+  if(isNaN(ms) || ms<0) return null;
+  var mins=Math.floor(ms/60000);
+  if(mins<60) return mins<=1?'μόλις τώρα':('πριν '+mins+' λεπτά');
+  var hrs=Math.floor(mins/60);
+  if(hrs<24) return 'πριν '+hrs+(hrs===1?' ώρα':' ώρες');
+  var days=Math.floor(hrs/24);
+  return 'πριν '+days+(days===1?' μέρα':' μέρες');
+}
+function reminderMetaHtml(c){
+  var rel=fmtRelativeSince(c.lastReminderSent);
+  return rel?('<span class="meta">υπενθ. '+rel+'</span>'):'';
+}
 function buildApptAttentionDigestHtml(c){
   var items=[];
+  // 2026-08-14: πελάτης με λιγότερες από 14 ημέρες ζωής — τα σήματα "χωρίς πλάνο / χωρίς feedback
+  // / χωρίς check-in" είναι αναμενόμενη κατάσταση εκκίνησης, όχι πρόβλημα. Τα ΠΡΑΓΜΑΤΙΚΑ γεγονότα
+  // (🚩 σημειωμένο ραντεβού, 💬 μήνυμα πελάτη, ⭐ χαμηλή βαθμολογία) ΔΕΝ κρύβονται ποτέ — αυτά
+  // σημαίνουν ότι κάτι όντως συνέβη, ανεξάρτητα από την ηλικία του πελάτη.
+  var ageDays=clientAgeDays(c);
+  var isNewClient=(ageDays!=null && ageDays<14);
+  var suppressedForNewClient=false;
 
   c.appointments.forEach(function(e,idx){
     if(e.flagged){
@@ -2971,10 +3032,7 @@ function buildApptAttentionDigestHtml(c){
     var unanswered=window.Cloud.allClientLogsFor(c).filter(function(e){
       var t=(e.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
       if(!t)return false;
-      if(!c.shareToken)return true;
-      var replied=false;
-      try{ replied=localStorage.getItem(noteReplyKey(c.shareToken,e.date))==='1'; }catch(err){}
-      return !replied;
+      return !isNoteReplied(c,e.date);
     }).slice(0,3);
     unanswered.forEach(function(e){
       var t=(e.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
@@ -2985,7 +3043,8 @@ function buildApptAttentionDigestHtml(c){
   }
 
   if(window.Cloud && typeof window.Cloud.planFeedbackFor==='function'){
-    var pfLatest=window.Cloud.planFeedbackFor(c)[0];
+    var pfAll=window.Cloud.planFeedbackFor(c);
+    var pfLatest=pfAll[0];
     if(pfLatest){
       Object.keys(PF_ROW_LABELS).forEach(function(key){
         var v=pfLatest[key];
@@ -2998,19 +3057,32 @@ function buildApptAttentionDigestHtml(c){
         items.push('<div class="appt-digest-item">📉 Χαμηλή πιθανότητα συνέχισης ('+pfLatest.continue_likelihood+'/10) αυτή την εβδομάδα'
           +'<button type="button" class="go" onclick="replyToPlanFeedback(\''+c.id+'\',\''+pfLatest.week_start+'\',null)">↩️ Απάντησε</button></div>');
       }
+    } else if(c.shareToken){
+      // Idea 4 (2026-08-14): ξεχωριστό από "χαμηλή βαθμολογία" — αυτός ο πελάτης έχει portal link
+      // αλλά δεν έχει υποβάλει ΠΟΤΕ feedback πλάνου, άρα δεν υπάρχει καν pfLatest να ελεγχθεί.
+      if(!isNewClient){
+        items.push('<div class="appt-digest-item">🆕 Δεν έχει βαθμολογήσει ποτέ το πλάνο'+reminderMetaHtml(c)
+          +'<button type="button" class="go" onclick="sendFeedbackReminder(\''+c.id+'\')">📲 Στείλε το link</button></div>');
+      } else { suppressedForNewClient=true; }
     }
   }
 
   if(typeof dietsHasPlan==='function' && !dietsHasPlan(c)){
-    items.push('<div class="appt-digest-item">📋 Χωρίς ενεργό πλάνο<button type="button" class="go" onclick="swTab(2)">Άνοιξε Πλάνο</button></div>');
+    if(!isNewClient){
+      items.push('<div class="appt-digest-item">📋 Χωρίς ενεργό πλάνο<button type="button" class="go" onclick="swTab(2)">Άνοιξε Πλάνο</button></div>');
+    } else { suppressedForNewClient=true; }
   }
 
   if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)){
-    items.push('<div class="appt-digest-item">🔗 Ο σύνδεσμος portal δείχνει παλιότερη έκδοση του πλάνου<button type="button" class="go" onclick="swTab(2)">Άνοιξε Πλάνο</button></div>');
+    if(!isNewClient){
+      items.push('<div class="appt-digest-item">🔗 Ο σύνδεσμος portal δείχνει παλιότερη έκδοση του πλάνου<button type="button" class="go" onclick="swTab(2)">Άνοιξε Πλάνο</button></div>');
+    } else { suppressedForNewClient=true; }
   }
 
   if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)){
-    items.push('<div class="appt-digest-item">🔄 Το πλάνο χρειάζεται ανανέωση<button type="button" class="go" onclick="swTab(2)">Άνοιξε Πλάνο</button></div>');
+    if(!isNewClient){
+      items.push('<div class="appt-digest-item">🔄 Το πλάνο χρειάζεται ανανέωση<button type="button" class="go" onclick="swTab(2)">Άνοιξε Πλάνο</button></div>');
+    } else { suppressedForNewClient=true; }
   }
 
   if(c.shareToken && window.Cloud && window.Cloud.checkinsFor){
@@ -3018,13 +3090,27 @@ function buildApptAttentionDigestHtml(c){
     if(ckRows.length){
       var ckGap=ckDaysSinceLast(ckRows);
       if(ckGap>=2){
-        items.push('<div class="appt-digest-item">📵 '+ckGap+' μέρες χωρίς check-in στο portal'
+        items.push('<div class="appt-digest-item">📵 '+ckGap+' μέρες χωρίς check-in στο portal'+reminderMetaHtml(c)
           +'<button type="button" class="go" onclick="sendFeedbackReminder(\''+c.id+'\')">📲 Υπενθύμιση</button></div>');
       }
+    } else {
+      // Idea 4: "ποτέ δεν έκανε check-in" είναι διαφορετικό μήνυμα από "είχε συνήθεια και σταμάτησε" —
+      // το πρώτο σημαίνει ότι ο πελάτης δεν έχει καν δοκιμάσει το portal.
+      if(!isNewClient){
+        items.push('<div class="appt-digest-item">🆕 Δεν έχει κάνει ποτέ check-in στο portal'+reminderMetaHtml(c)
+          +'<button type="button" class="go" onclick="sendFeedbackReminder(\''+c.id+'\')">📲 Στείλε το link</button></div>');
+      } else { suppressedForNewClient=true; }
     }
   }
 
-  if(!items.length)return '';
+  if(!items.length){
+    if(isNewClient && suppressedForNewClient){
+      return '<div class="tracker-section"><div class="tracker-head">⚠️ Χρειάζεται προσοχή</div><div class="appt-digest-list">'
+        +'<div class="appt-digest-item soft">🌱 Νέος πελάτης ('+ageDays+' '+(ageDays===1?'ημέρα':'ημέρες')+') — τα σήματα προσοχής ενεργοποιούνται μετά τις πρώτες 14 ημέρες</div>'
+        +'</div></div>';
+    }
+    return '';
+  }
   return '<div class="tracker-section"><div class="tracker-head">⚠️ Χρειάζεται προσοχή <span style="font-weight:400;font-size:11px;color:#888">'+items.length+' στοιχεί'+(items.length===1?'ο':'α')+'</span></div><div class="appt-digest-list">'+items.join('')+'</div></div>';
 }
 function buildAppointmentsHtml(c){
