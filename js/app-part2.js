@@ -1782,9 +1782,13 @@ function planFeedbackPanelHtml(c){
         return '<div class="bar'+(isNow?' now':'')+'"><i style="height:'+Math.max(4,hv*7)+'px" title="'+hv+'/5"></i><b>'+esc((e.week_start||'').slice(5))+'</b>'+(hv<=2&&hReasons?'<span class="reason">'+esc(hReasons)+'</span>':'')+'</div>';
       }).join('')+'</div>';
     }
+    // ⚠️ Το class="pf-row" (άρα και το cursor:pointer από CSS) μπαίνει ΜΟΝΟ όταν υπάρχει πραγματικό
+    // ιστορικό να ανοίξει — αλλιώς η γραμμή έδειχνε "clickable" (χέρι στο hover) χωρίς να κάνει τίποτα.
     var expHint=histRecent.length>1?'<span class="pf-exp-hint">▾ ιστορικό</span>':'';
+    var rowClass=histRecent.length>1?'pf-row':'';
+    var rowClick=histRecent.length>1?(' onclick="var h=document.getElementById(\''+histId+'\');if(h)h.classList.toggle(\'open\')"'):'';
     return '<div>'
-      +'<div class="pf-row"'+(histRecent.length>1?(' onclick="var h=document.getElementById(\''+histId+'\');if(h)h.classList.toggle(\'open\')"'):'')+' style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:11px;flex-wrap:wrap">'
+      +'<div class="'+rowClass+'"'+rowClick+' style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:11px;flex-wrap:wrap">'
       +'<span style="width:150px;flex-shrink:0;color:#444">'+PF_ROW_LABELS[key]+'</span>'
       +'<span style="letter-spacing:1px;font-size:13px">'+pfStarsReadonly(val)+'</span>'+trendHtml+tags+replyBtn+expHint+'</div>'
       +histHtml
@@ -2906,20 +2910,32 @@ function apptCorrelationChart(appts,wl){
     return '<circle cx="'+sx(p.i)+'" cy="'+y2(p.e.weight)+'" r="'+(meta?4:2.5)+'" fill="'+color+'"><title>'+p.e.date+': '+p.e.weight+'kg'+(meta?' — '+meta.label:'')+'</title></circle>';
   }).join('');
 
+  // ⚠️ Οι ετικέτες κάθε άξονα εμφανίζονται ΜΟΝΟ όταν υπάρχει πραγματικά σχεδιασμένη σειρά σε αυτόν —
+  // αλλιώς έδειχνε π.χ. "1kg-0kg" δεξιά όταν δεν υπάρχει καθόλου βάρος, σαν να υπήρχε άδειος άξονας.
+  var hasGiOrComp=!!(giLine||compLine), hasWeight=wPtsIdx.length>0;
   var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%">'
-    +'<line x1="'+padL+'" y1="'+y1(5)+'" x2="'+(W-padR)+'" y2="'+y1(5)+'" stroke="#eee" stroke-width="1"/>'
-    +'<line x1="'+padL+'" y1="'+y1(3)+'" x2="'+(W-padR)+'" y2="'+y1(3)+'" stroke="#eee" stroke-width="1"/>'
-    +'<line x1="'+padL+'" y1="'+y1(1)+'" x2="'+(W-padR)+'" y2="'+y1(1)+'" stroke="#eee" stroke-width="1"/>'
-    +'<text x="1" y="'+(y1(5)+3)+'" font-size="8" fill="#999">5</text>'
-    +'<text x="1" y="'+(y1(1)+3)+'" font-size="8" fill="#999">1</text>'
-    +'<text x="'+(W-1)+'" y="'+(y2(wmx)+3)+'" font-size="8" fill="#999" text-anchor="end">'+Math.round(wmx)+'</text>'
-    +'<text x="'+(W-1)+'" y="'+(y2(wmn)+3)+'" font-size="8" fill="#999" text-anchor="end">'+Math.round(wmn)+'</text>'
+    +(hasGiOrComp?(
+      '<line x1="'+padL+'" y1="'+y1(5)+'" x2="'+(W-padR)+'" y2="'+y1(5)+'" stroke="#eee" stroke-width="1"/>'
+      +'<line x1="'+padL+'" y1="'+y1(3)+'" x2="'+(W-padR)+'" y2="'+y1(3)+'" stroke="#eee" stroke-width="1"/>'
+      +'<line x1="'+padL+'" y1="'+y1(1)+'" x2="'+(W-padR)+'" y2="'+y1(1)+'" stroke="#eee" stroke-width="1"/>'
+      +'<text x="1" y="'+(y1(5)+3)+'" font-size="8" fill="#999">5</text>'
+      +'<text x="1" y="'+(y1(1)+3)+'" font-size="8" fill="#999">1</text>'
+    ):'')
+    +(hasWeight?(
+      '<text x="'+(W-1)+'" y="'+(y2(wmx)+3)+'" font-size="8" fill="#999" text-anchor="end">'+Math.round(wmx)+'</text>'
+      +'<text x="'+(W-1)+'" y="'+(y2(wmn)+3)+'" font-size="8" fill="#999" text-anchor="end">'+Math.round(wmn)+'</text>'
+    ):'')
     +giLine+compLine+wLine+wDots
     +'<text x="'+padL+'" y="'+(H-3)+'" font-size="9" fill="#999">'+fmtDateShortAppt(dates[0])+'</text>'
     +'<text x="'+(W-padR)+'" y="'+(H-3)+'" font-size="9" fill="#999" text-anchor="end">'+fmtDateShortAppt(dates[dates.length-1])+'</text>'
     +'</svg>';
 
-  return '<div class="appt-corr-legend"><span><i style="background:#025857"></i>Τήρηση προπόνησης</span><span><i style="background:#c62828"></i>Πεπτικά συμπτώματα</span><span><i style="background:#1565C0"></i>Βάρος (kg, δεξιός άξονας)</span></div>'+svg;
+  var legendHtml='<div class="appt-corr-legend">'
+    +(compLine?'<span><i style="background:#025857"></i>Τήρηση προπόνησης</span>':'')
+    +(giLine?'<span><i style="background:#c62828"></i>Πεπτικά συμπτώματα</span>':'')
+    +(hasWeight?'<span><i style="background:#1565C0"></i>Βάρος (kg, δεξιός άξονας)</span>':'')
+    +'</div>';
+  return legendHtml+svg;
 }
 // ✅ Χειροκίνητο "🔄 Ανανέωση" — τα portal caches (check-ins/σημειώσεις/plan feedback) ανανεώνονται
 // αλλιώς μόνο μία φορά, στο login. Το κουμπί ξαναφέρνει τα 3 caches on-demand χωρίς να χρειάζεται
