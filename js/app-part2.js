@@ -288,6 +288,23 @@ function selectTmplForClient(id){
   save();
 }
 
+// ✅ Χειροκίνητο tri-state indicator: έχει στείλει ο πελάτης αιματολογικές εξετάσεις; Η δ/γείος το
+// ορίζει η ίδια (πάτημα στο κουμπί κάνει κύκλο στις 3 καταστάσεις) — δεν υπάρχει αυτόματο upload/λήψη
+// από τον πελάτη, είναι απλή υπενθύμιση/ένδειξη στην κάρτα του.
+var BLOOD_TEST_STATUS_DEFS={
+  none:{icon:'❌',label:'Δεν έχει σταλεί',bg:'#ffebee',color:'#c62828'},
+  pending:{icon:'⏳',label:'Σε αναμονή',bg:'#fff8e1',color:'#8a6100'},
+  sent:{icon:'✅',label:'Εστάλησαν',bg:'#e8f5e9',color:'#2e7d32'}
+};
+function cycleBloodTestStatus(){
+  var c=getC();if(!c)return;
+  var order=['none','pending','sent'];
+  var cur=order.indexOf(c.bloodTestStatus)>=0?c.bloodTestStatus:'none';
+  c.bloodTestStatus=order[(order.indexOf(cur)+1)%order.length];
+  save();
+  renderMain();
+}
+
 // Συνδυασμοί activity/dietType/macro-split που επαναλαμβάνονται συχνά ανά τύπο πελάτη —
 // βλ. applyClientPreset(). Οι τιμές macro% ταιριάζουν με τα όρια των πεδίων στο tab «Στοιχεία».
 var QUICK_PRESETS=[
@@ -344,6 +361,7 @@ function renderMain(){
   if(!c.trainHoursByDay) c.trainHoursByDay = [1, 1, 1, 1, 1, 1, 1];
   if(!c.savedPlans) c.savedPlans = [];  // Initialize saved plans for plan history
   if(c.pregnant===undefined) c.pregnant = false; // ✅ Εγκυμοσύνη: trimester υπολογίζεται από gestationalWeek, βλ. getPregTrimester()
+  if(!c.bloodTestStatus) c.bloodTestStatus = 'none'; // ✅ Αιματολογικές εξετάσεις: 'none'|'pending'|'sent', βλ. cycleBloodTestStatus()
 
   var t=calcTDEE(c);
   // Calculate weekly average target from daily targets (for MET-based accuracy)
@@ -436,6 +454,12 @@ function renderMain(){
       +'<span style="font-size:11px;color:#666;font-weight:600">🚫 Αποφυγές</span>'
       +'<span id="header-exclude" style="font-size:13px;font-weight:600;color:#025857">' + esc((c.foodExclude&&c.foodExclude.length)?c.foodExclude.join(', '):'—') + '</span>'
     +'</div>'
+    // ✅ Αιματολογικές εξετάσεις: χειροκίνητο tri-state κουμπί (δεν πρόκειται περί ανεβάσματος/λήψης
+    // αρχείου από τον πελάτη — η δ/γείος απλά σημειώνει τι της έχει σταλεί). Κλικ = επόμενη κατάσταση.
+    +'<button type="button" onclick="cycleBloodTestStatus()" title="Πάτα για αλλαγή κατάστασης" style="text-align:left;cursor:pointer;border:none;display:flex;flex-direction:column;gap:2px;padding:8px;background:'+BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].bg+';border-radius:8px;font-family:inherit">'
+      +'<span style="font-size:11px;color:#666;font-weight:600">🩸 Αιματολογικές</span>'
+      +'<span id="header-bloodtest" style="font-size:13px;font-weight:700;color:'+BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].color+'">' + BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].icon + ' ' + BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].label + '</span>'
+    +'</button>'
     +'</div>'
 
     // ✅ SECTION 1: ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ (Όνομα, Φύλο, Ηλικία) — collapsible, collapsed by default once filled in
