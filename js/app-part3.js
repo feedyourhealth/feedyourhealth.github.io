@@ -1740,7 +1740,7 @@ function regenerateDay(dayIndex){
 
 function renderWeekTable(){
   var c=getC();var con=document.getElementById('week-con');if(!con)return;
-  if(!c||!Object.keys(c.weekPlan).length){con.innerHTML='<div style="padding:20px;color:#bbb;font-size:12px">Δεν υπάρχει πλάνο — πάτα «Δημιουργία πλάνου»</div>';return;}
+  if(!c||!Object.keys(c.weekPlan).length){con.innerHTML='<div style="padding:20px;color:var(--text-muted);font-size:12px">Δεν υπάρχει πλάνο — πάτα «Δημιουργία πλάνου»</div>';return;}
   // Mediterranean compliance score badge
   var scoreHtml=renderMedScore(c.weekPlan);
   var mealNames=(c.weekPlan[0]||[]).map(function(m){return m.name;});
@@ -1803,7 +1803,7 @@ function renderWeekTable(){
   DAYS.forEach(function(d,di){
     // ✅ Native title tooltip explains T/R on hover instead of a permanent banner repeating
     // the same explanation once above a table where the badge already appears 7 times.
-    var badge=trainD[di]?'<span title="Ημέρα με άσκηση: περισσότερες θερμίδες για ενέργεια + ανάκαμψη" style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">T</span>':'<span title="Ημέρα ανάπαυσης: λιγότερες θερμίδες λόγω μειωμένης δαπάνης ενέργειας" style="background:#eee;color:#aaa;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">R</span>';
+    var badge=trainD[di]?'<span title="Ημέρα με άσκηση: περισσότερες θερμίδες για ενέργεια + ανάκαμψη" style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">T</span>':'<span title="Ημέρα ανάπαυσης: λιγότερες θερμίδες λόγω μειωμένης δαπάνης ενέργειας" style="background:#eee;color:var(--text-muted);border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">R</span>';
     var timeStr='';
     if(trainD[di]&&trainTimes[di]&&trainTimes[di].length>0){
       timeStr='<div style="font-size:10px;color:#666;margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';
@@ -1923,7 +1923,7 @@ function renderWeekTable(){
             var size=ing.size?' '+ing.size:'';
             html+='<div style="font-size:8px;color:#666;padding:1px 0;margin-left:18px">• '+ing.item+': '+ing.qty+unit+size+prep+'</div>';
           });
-          if(FOODS[food.n].time){html+='<div style="font-size:8px;color:#999;padding:2px 0;margin-left:18px">⏱️ '+FOODS[food.n].time+'</div>';}
+          if(FOODS[food.n].time){html+='<div style="font-size:8px;color:var(--text-muted);padding:2px 0;margin-left:18px">⏱️ '+FOODS[food.n].time+'</div>';}
           html+='</div>';
         } else if(typeof FYH_RECIPE_EXPAND!=='undefined'&&FYH_RECIPE_EXPAND[food.n]){
           // FYH/expandable recipe → show its ingredients (scaled to portion) in print/PDF
@@ -2254,7 +2254,7 @@ function updateFoodSelector(query){
   });
 
   if(!Object.keys(cats).length){
-    list.innerHTML='<div style="color:#bbb;font-size:11px;padding:10px">Δεν βρέθηκε</div>';
+    list.innerHTML='<div style="color:var(--text-muted);font-size:11px;padding:10px">Δεν βρέθηκε</div>';
     return;
   }
 
@@ -2266,7 +2266,7 @@ function updateFoodSelector(query){
       html+='<div style="border-bottom:1px solid #f0f0f0">'
         +'<div id="'+foodId+'" style="padding:8px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background=\'#f9f9f9\'" onmouseout="this.style.background=\'#fff\'" onclick="showFoodQuantityInput(\''+foodId+'\',\''+n.replace(/'/g,"\\'")+'\')">'
           +'<span>'+n+'</span>'
-          +'<span style="color:#999;font-size:11px">'+FOODS[n].k+' kcal</span>'
+          +'<span style="color:var(--text-muted);font-size:11px">'+FOODS[n].k+' kcal</span>'
         +'</div>'
         +'<div id="'+foodId+'-qty" style="display:none;padding:10px;background:#f9f9f9;border-top:1px solid #e0e0e0">'
           +'<div style="display:flex;gap:8px;align-items:center">'
@@ -2458,7 +2458,7 @@ function updateRecipeSelectorForPlan(query){
   }).map(function(x){return x.r;});
 
   if(!filtered.length){
-    list.innerHTML='<div style="color:#bbb;font-size:11px;padding:10px">Δεν βρέθηκε συνταγή</div>';
+    list.innerHTML='<div style="color:var(--text-muted);font-size:11px;padding:10px">Δεν βρέθηκε συνταγή</div>';
     return;
   }
   var html=targetCategory?('<div style="padding:6px 10px;font-size:10.5px;color:#025857;background:#F3F9F4;border-bottom:1px solid #E2EEE5">↑ Πρώτα συνταγές για: '+esc(targetCategory)+'</div>'):'';
@@ -2473,7 +2473,7 @@ function updateRecipeSelectorForPlan(query){
       :(feedback.liked>0?'<div style="font-size:10.5px;color:#2e7d32;margin-top:2px">👍 Άρεσε στον πελάτη '+feedback.liked+' '+(feedback.liked===1?'φορά':'φορές')+'</div>':'');
     var expanded=!!_expandedFoodSelectorRecipeIds[r.id];
     var favorite=typeof isRecipePopular==='function'&&isRecipePopular(r);
-    var expandBtn='<button type="button" title="Υλικά" aria-label="Προβολή υλικών" onclick="toggleFoodSelectorRecipeExpand(\''+r.id+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;padding:2px 4px 2px 0;flex-shrink:0;color:#999">'+(expanded?'🔼':'🔽')+'</button>';
+    var expandBtn='<button type="button" title="Υλικά" aria-label="Προβολή υλικών" onclick="toggleFoodSelectorRecipeExpand(\''+r.id+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;padding:2px 4px 2px 0;flex-shrink:0;color:var(--text-muted)">'+(expanded?'🔼':'🔽')+'</button>';
     var ingredientsHtml=expanded?('<div style="padding:2px 10px 8px 26px;display:flex;flex-wrap:wrap;gap:5px">'+(r.foods||[]).map(function(f){return '<span style="background:#f5f5f5;font-size:10.5px;padding:3px 8px;border-radius:4px;color:#666">'+esc(f.n)+' · '+f.g+'g</span>';}).join('')+'</div>'):'';
     html+='<div style="border-bottom:1px solid #f0f0f0">'
       +'<div style="padding:8px 10px 8px 6px;display:flex;justify-content:space-between;align-items:center;gap:8px">'
@@ -2481,7 +2481,7 @@ function updateRecipeSelectorForPlan(query){
           +expandBtn
           +'<div style="min-width:0">'
             +'<div style="font-weight:600;font-size:12.5px;color:#222">'+(favorite?'⭐ ':'')+esc(r.name)+'</div>'
-            +'<div style="font-size:10.5px;color:#999">'+(r.kcal||0)+' kcal · '+ingCount+' υλικά '+tagsHtml+'</div>'
+            +'<div style="font-size:10.5px;color:var(--text-muted)">'+(r.kcal||0)+' kcal · '+ingCount+' υλικά '+tagsHtml+'</div>'
             +warnHtml
             +feedbackHtml
           +'</div>'
@@ -2598,7 +2598,7 @@ function openAddMealSlotModal(){
     +'<div style="background:#fff;border-radius:12px;padding:20px;max-width:440px;width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:17px">➕ Προσθήκη γεύματος</h2>'
-    +'<button onclick="closeAddMealSlotModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'<button onclick="closeAddMealSlotModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
     +'</div>'
     +'<div style="background:#E8F5E9;padding:10px 12px;border-radius:6px;margin-bottom:14px;font-size:11px;color:#2E7D32;line-height:1.5">'
     +'💡 Το γεύμα μπαίνει σε <b>όλες τις ημέρες</b>. Άφησέ το κενό στις ημέρες που δεν χρειάζεται — εμφανίζεται μόνο το «+».</div>'
@@ -3699,7 +3699,7 @@ function renderFoodLib(q){
     comboHtml='<div class="combo-section">'
       +'<div class="combo-sec-title">📋 Αποθηκευμένοι Συνδυασμοί</div>';
     if(!combos.length){
-      comboHtml+='<div style="font-size:10px;color:#bbb;padding:2px 4px 4px">Κανένας ακόμα — πάτα 💾 σε γεύμα</div>';
+      comboHtml+='<div style="font-size:10px;color:var(--text-muted);padding:2px 4px 4px">Κανένας ακόμα — πάτα 💾 σε γεύμα</div>';
     } else {
       combos.forEach(function(combo){
         var cid=combo.id.replace(/'/g,"\\'");
@@ -3720,7 +3720,7 @@ function renderFoodLib(q){
     if(q&&n.toLowerCase().indexOf(q)<0)return;
     var cat=FOODS[n].cat;if(!cats[cat])cats[cat]=[];cats[cat].push(n);
   });
-  if(!Object.keys(cats).length){el.innerHTML=comboHtml+'<div style="color:#bbb;font-size:11px;padding:6px">Δεν βρέθηκε</div>';return;}
+  if(!Object.keys(cats).length){el.innerHTML=comboHtml+'<div style="color:var(--text-muted);font-size:11px;padding:6px">Δεν βρέθηκε</div>';return;}
   var html=comboHtml;
   Object.keys(cats).sort().forEach(function(cat){
     html+='<div class="lib-cat">'+cat+'</div>';

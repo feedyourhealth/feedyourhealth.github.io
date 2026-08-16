@@ -758,11 +758,15 @@ function _showTabLockBanner(){
       +'padding:4px 10px;font-weight:700;cursor:pointer">Ανάλαβε εδώ</button>';
     document.body.appendChild(b);
     document.getElementById('tab-lock-takeover-btn').addEventListener('click', function(){
-      if(confirm('Αν αναλάβεις εδώ, η άλλη καρτέλα θα γίνει read-only. Τυχόν μη αποθηκευμένες αλλαγές εκεί θα χαθούν. Συνέχεια;')){
+      // ✅ audit fix (2026-08-16): was native confirm() — the only spot in the app not using the
+      // styled dialog everyone else uses (showConfirmDialog, app-part2.js), so it ignored dark mode
+      // and looked out of place. showConfirmDialog is defined in app-part2.js, loaded before this
+      // banner can ever be clicked (user interaction, not parse time), so it's always available here.
+      showConfirmDialog('Αν αναλάβεις εδώ, η άλλη καρτέλα θα γίνει read-only. Τυχόν μη αποθηκευμένες αλλαγές εκεί θα χαθούν. Συνέχεια;', function(){
         _writeTabLock();
         _isLockOwner=true;
         _hideTabLockBanner();
-      }
+      }, {title:'Ανάληψη καρτέλας', confirmLabel:'Ανάλαβε εδώ', icon:'⚠️'});
     });
   }
   b.style.display='flex';
@@ -3128,7 +3132,7 @@ function renderSB(){
   // "Χρειάζονται προσοχή" που ήδη κρύβεται εκεί, ίδιος λόγος: οι κάρτες επιλέγουν αντί να ανοίγουν.
   if(!_clientBulkMode) html+=clientQuickChipsHtml(base);
   if((term||_clientFilterGoal||_clientFilterSport||_clientFilterGroup||_clientFilterStatus||_clientFilterQuick)&&list.length===0){
-    html+='<div style="font-size:12px;color:#bbb;padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
+    html+='<div style="font-size:12px;color:var(--text-muted);padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
   } else {
     // ✅ 2026-08-05: block "Χρειάζονται προσοχή" καρφωμένο πάνω από το κανονικό πλέγμα, ώστε αυτοί οι
     // πελάτες να μη χαθούν μέσα στη λίστα ανεξάρτητα από την επιλεγμένη ταξινόμηση/σελίδα scroll.
@@ -3639,7 +3643,7 @@ function buildPlanHistoryHtml(c){
     +'<button class="btn tertiary" style="padding:5px 10px;font-size:11px" onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" title="Ελέγχει αν υπάρχουν πλάνα σε τοπικό backup που λείπουν από το ιστορικό αυτού του πελάτη">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
     +'</div>';
   if(!c.savedPlans||c.savedPlans.length===0){
-    return dbg+'<div style="padding:20px;text-align:center;color:#999"><div style="font-size:16px;font-weight:600;margin-bottom:10px">📊 Ιστορικό Πλάνων</div><p>Δεν υπάρχουν αποθηκευμένα πλάνα.<br>Πάτησε "Αποθήκευση Διατροφής" για να αποθηκεύσεις το πλάνο</p></div>';
+    return dbg+'<div style="padding:20px;text-align:center;color:var(--text-muted)"><div style="font-size:16px;font-weight:600;margin-bottom:10px">📊 Ιστορικό Πλάνων</div><p>Δεν υπάρχουν αποθηκευμένα πλάνα.<br>Πάτησε "Αποθήκευση Διατροφής" για να αποθηκεύσεις το πλάνο</p></div>';
   }
   try{
   return dbg+buildPlanHistoryHtmlInner(c);
@@ -3732,7 +3736,7 @@ function buildPlanHistoryHtmlInner(c){
       +'</div>'
       +'<div style="flex:1;min-width:0;padding-bottom:16px">'
       +'<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;cursor:pointer" onclick="var d=document.getElementById(\'tl-'+i+'\');d.style.display=d.style.display===\'none\'?\'block\':\'none\'">'
-      +'<span style="font-size:11px;color:#999;min-width:64px">'+plan.date+'</span>'
+      +'<span style="font-size:11px;color:var(--text-muted);min-width:64px">'+plan.date+'</span>'
       +'<span style="font-weight:600;color:#025857;font-size:13px">📋 Πλάνο #'+plan.number+' — '+plan.macros.k+' kcal</span>'
       +'<span style="font-size:11px;color:#666">'+deltaTxt+'</span>'
       +'</div>'

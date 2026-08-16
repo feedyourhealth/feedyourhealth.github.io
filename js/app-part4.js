@@ -456,7 +456,7 @@ function exportPDF(lang){
     +'.fxpor{color:#555;white-space:nowrap}'
     +'.fxg{color:#025857;font-weight:700;text-align:center}'
     +'.fxk{color:#888;text-align:center}'
-    +'.fxnote{font-size:5pt;color:#aaa;margin-bottom:4px}'
+    +'.fxnote{font-size:5pt;color:var(--text-muted);margin-bottom:4px}'
     // Spices & herbs guide table
     +'table.spt td{white-space:normal;vertical-align:top}'
     +'table.spt .fxname{white-space:nowrap}'
@@ -475,7 +475,7 @@ function exportPDF(lang){
     +'.slrow.sla{background:#f5fbf9}'
     +'.sl-chk{color:#c5ddd8;flex-shrink:0;margin-right:2px;font-size:7.5pt;line-height:1}'
     +'.sl-nm{flex:1;font-weight:600;color:#1a1a1a}'
-    +'.sl-pg{font-size:5pt;color:#ccc;flex-shrink:0}'
+    +'.sl-pg{font-size:5pt;color:var(--text-muted);flex-shrink:0}'
     +'.sl-amt{font-weight:700;color:#025857;white-space:nowrap;font-size:7pt;flex-shrink:0;margin-left:4px}'
     +'.sl-lbl{font-size:5pt;color:#77a;font-weight:400;margin-left:2px}'
     // Footer
@@ -555,7 +555,7 @@ function exportPDF(lang){
     +'<div class="shop-page">'+fxHtml+spicesHtml+(shopHtml?'</div><div class="shop-page">'+shopHtml:'')
     +'<div class="footer">'
     +(isMinorPdf
-      ?'<span class="footer-msg">'+(isEn?'🌟 Keep it up — every meal brings you closer to your goal!':'🌟 Συνέχισε έτσι — κάθε γεύμα σε φέρνει πιο κοντά στον στόχο σου!')+'</span><span style="color:#aaa">Feed Your Health © 2025</span>'
+      ?'<span class="footer-msg">'+(isEn?'🌟 Keep it up — every meal brings you closer to your goal!':'🌟 Συνέχισε έτσι — κάθε γεύμα σε φέρνει πιο κοντά στον στόχο σου!')+'</span><span style="color:var(--text-muted)">Feed Your Health © 2025</span>'
       :(isEn?'Abbreviations: g = grams &nbsp; cup = 240-250 ml &nbsp; tbsp = tablespoon (10-14g) &nbsp; tsp = teaspoon (5-7g)':'Συντομογραφίες: γρ. = γραμμάρια &nbsp; φλ. = φλυτζάνι (240-250 ml) &nbsp; Κ = κουτάλι της σούπας (10-14 gr) &nbsp; κ/κι = κουταλάκι (5-7 gr)'))
     +'</div></div>'
     // Kids: bottom rainbow band
@@ -627,7 +627,7 @@ function exportLipometriaPDF(){
   }
   function sparkline(vals,color){
     var v=vals.filter(function(x){return x!=null;});
-    if(v.length<2)return '<div style="font-size:7.5pt;color:#ccc;padding:16px 0;text-align:center">Ανεπαρκή δεδομένα</div>';
+    if(v.length<2)return '<div style="font-size:7.5pt;color:var(--text-muted);padding:16px 0;text-align:center">Ανεπαρκή δεδομένα</div>';
     var min=Math.min.apply(null,v),max=Math.max.apply(null,v),range=(max-min)||1,n=v.length;
     var pts=v.map(function(x,i){return (5+i/(n-1)*90).toFixed(1)+','+(5+(1-(x-min)/range)*40).toFixed(1);}).join(' ');
     return '<svg viewBox="0 0 100 50" width="100%" height="42"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2"/></svg>';
@@ -782,7 +782,7 @@ function exportLipometriaPDF(){
       +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1565C0;margin-right:3px"></span>Άλιπη '+lbm+'kg</span>'
       +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e65100;margin-right:3px"></span>Λίπος '+fm+'kg</span>'
       +'</div>'
-    ):'<div style="padding:40px 0;color:#ccc;font-size:8pt">Συμπλήρωσε βάρος και δερματοπτυχές</div>')
+    ):'<div style="padding:40px 0;color:var(--text-muted);font-size:8pt">Συμπλήρωσε βάρος και δερματοπτυχές</div>')
     +'</div>'
 
     +'<div class="card">'
@@ -826,7 +826,7 @@ function exportLipometriaPDF(){
         +'<div style="text-align:center">'+sparkline(hb,'#c62828')+'<div style="font-size:7pt;color:#8a9490">% Λίπους</div><div style="font-size:9pt;font-weight:700;color:#c62828">'+(bf?bf+'%':'—')+deltaSpan(bfDelta,1,'','down')+'</div></div>'
         +'<div style="text-align:center">'+sparkline(hl,'#2e7d32')+'<div style="font-size:7pt;color:#8a9490">Άλιπη μάζα</div><div style="font-size:9pt;font-weight:700;color:#2e7d32">'+(lbm||'—')+' kg'+deltaSpan(lbmDelta,1,'','up')+'</div></div>'
         +'</div>';
-    })():'<div style="font-size:8pt;color:#ccc;text-align:center;padding:10px 0">Χρειάζονται τουλάχιστον 2 καταχωρήσεις tracker</div>')
+    })():'<div style="font-size:8pt;color:var(--text-muted);text-align:center;padding:10px 0">Χρειάζονται τουλάχιστον 2 καταχωρήσεις tracker</div>')
     +'</div>'
 
     // Other indicators + comments
@@ -1038,7 +1038,7 @@ function exportBodyCompPDF(){
     +'<div class="sec-title">Ιστορικό Μετρήσεων</div>'
     +'<table><thead><tr><th>Ημερομηνία</th><th>Βάρος</th><th>%BF</th><th>LBM</th><th>FM</th><th>Μέση</th><th>Γοφοί</th></tr></thead>'
     +'<tbody>'+tblRows+'</tbody></table>'
-    +'<div style="font-size:6.5pt;color:#aaa;margin-top:4px">📐 = μέτρηση με δερματοπτυχόμετρο · JP 4-site: Jackson &amp; Pollock (1985) · JP 3-site / JP 7-site: Jackson &amp; Pollock (1978/1980) · Slaughter: Slaughter et al. (1988)</div>'
+    +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:4px">📐 = μέτρηση με δερματοπτυχόμετρο · JP 4-site: Jackson &amp; Pollock (1985) · JP 3-site / JP 7-site: Jackson &amp; Pollock (1978/1980) · Slaughter: Slaughter et al. (1988)</div>'
     // Footer
     +'<div class="footer"><span>Feed Your Health — Εργαλείο Διαιτολόγου</span><span>'+esc(c.name||'')+'  ·  Εκτυπώθηκε: '+today+'</span></div>'
     +'</body></html>';
@@ -3502,7 +3502,7 @@ function buildGapAnalysisHTML(gaps, recommendations, weekAnalysis, c){
   }
 
   if(recommendations.length === 0 && gaps.length === 0){
-    html += '<div style="text-align:center;padding:40px;color:#999;">';
+    html += '<div style="text-align:center;padding:40px;color:var(--text-muted);">';
     html += '<p style="font-size:14px;font-weight:bold;">✅ Εξαιρετική κάλυψη!</p>';
     html += '<p>Το πλάνο διατροφής σας καλύπτει τις περισσότερες μικροθρεπτικές σας ανάγκες.</p>';
     html += '</div>';

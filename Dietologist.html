@@ -44,7 +44,7 @@ setTimeout(function(){
       <div style="width:74px;height:74px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,#025857,#0a8f86);display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 6px 16px rgba(2,88,87,.35);">🥗</div>
       <h1 style="color:#025857;font-size:23px;font-weight:800;letter-spacing:.3px;margin-bottom:4px;">Feed Your Health</h1>
       <p style="color:#5a9b97;font-size:13px;font-weight:600;margin-bottom:6px;">Εργαλείο Διαιτολόγου</p>
-      <p style="color:#aaa;font-size:12.5px;">Διαχείριση πελατών &amp; σχεδιασμός διατροφής</p>
+      <p style="color:var(--text-muted);font-size:12.5px;">Διαχείριση πελατών &amp; σχεδιασμός διατροφής</p>
     </div>
 
     <!-- Κανονική σύνδεση -->
@@ -164,7 +164,7 @@ setTimeout(function(){
   <div class="empty" id="empty-state">
     <div style="font-size:64px;margin-bottom:12px">👥</div>
     <div style="font-size:16px;font-weight:600;margin-bottom:8px;color:#025857">Καλώς ήρθες στον Διαιτολόγο!</div>
-    <div style="font-size:13px;color:#999;margin-bottom:20px;max-width:400px">Δημιουργήστε τον πρώτο σας πελάτη για να ξεκινήσετε τη διαχείριση διατροφικών σχεδίων</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;max-width:400px">Δημιουργήστε τον πρώτο σας πελάτη για να ξεκινήσετε τη διαχείριση διατροφικών σχεδίων</div>
     <button class="btn primary" onclick="addClient()" style="font-size:14px;padding:12px 24px;">
       + Δημιουργήστε Πρώτο Πελάτη
     </button>
@@ -336,7 +336,7 @@ setTimeout(function(){
   <div style="background:white;border-radius:12px;padding:32px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:2px solid #E2EEE5;padding-bottom:16px;">
       <h2 style="color:#025857;margin:0;font-size:20px;font-weight:700;">⚙️ Ρυθμίσεις Εφαρμογής</h2>
-      <button onclick="closeSettingsPanel()" style="background:none;border:none;cursor:pointer;font-size:24px;color:#999;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">✕</button>
+      <button onclick="closeSettingsPanel()" style="background:none;border:none;cursor:pointer;font-size:24px;color:var(--text-muted);padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
 
     <!-- App Statistics -->
@@ -440,7 +440,7 @@ setTimeout(function(){
     <div style="background:#f5f5f5;padding:12px;border-radius:8px;text-align:center;color:#666;font-size:12px;">
       <div style="margin-bottom:4px;"><strong>Εργαλείο Διαιτολόγου v3.0</strong></div>
       <div>Τελευταία ενημέρωση: Ιούνιος 2026</div>
-      <div style="margin-top:8px;font-size:11px;color:#999;">Όλα τα δεδομένα αποθηκεύονται τοπικά στον υπολογιστή σας</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-muted);">Όλα τα δεδομένα αποθηκεύονται τοπικά στον υπολογιστή σας</div>
     </div>
 
     <!-- Λογαριασμός -->
@@ -1304,7 +1304,7 @@ function showMedicalProtocol(condition) {
       html += '<a href="' + source.url + '" target="_blank" style="color:#1976d2;text-decoration:none;font-weight:500;">';
       html += source.name + ' ↗';
       html += '</a>';
-      html += ' <span style="color:#999;font-size:11px;">[Επίσημη πηγή]</span>';
+      html += ' <span style="color:var(--text-muted);font-size:11px;">[Επίσημη πηγή]</span>';
       html += '</li>';
     });
     html += '</ul>';
@@ -1496,7 +1496,7 @@ function toggleSupplementSelector() {
     suppListHtml += '<div style="flex:1;">';
     suppListHtml += '<div style="font-weight:600;color:#333;">'+supp.name+'</div>';
     suppListHtml += '<div style="font-size:11px;color:#666;">📋 '+supp.dosage+'</div>';
-    suppListHtml += '<div style="font-size:11px;color:#999;">⏰ '+supp.timing+'</div>';
+    suppListHtml += '<div style="font-size:11px;color:var(--text-muted);">⏰ '+supp.timing+'</div>';
     suppListHtml += '</div>';
     suppListHtml += '</label>';
   });
@@ -1855,7 +1855,7 @@ function getDayStatus(dayTotals, targetTotals){
         <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;">
           <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">🖥️ Debug Panel</h3>
           <div id="valDebugPanel" style="font-family:monospace;font-size:11px;line-height:1.6;color:#555;">
-            <div style="padding:10px;background:#fff;border-radius:4px;color:#999;">Waiting for data...</div>
+            <div style="padding:10px;background:#fff;border-radius:4px;color:var(--text-muted);">Waiting for data...</div>
           </div>
         </div>
 
@@ -1863,7 +1863,7 @@ function getDayStatus(dayTotals, targetTotals){
         <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;">
           <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">✓ Validation Checklist</h3>
           <div id="valCheckList" style="font-size:11px;line-height:1.8;">
-            <div style="padding:10px;color:#999;">Waiting for data...</div>
+            <div style="padding:10px;color:var(--text-muted);">Waiting for data...</div>
           </div>
         </div>
 
@@ -1873,7 +1873,7 @@ function getDayStatus(dayTotals, targetTotals){
       <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:20px;">
         <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">🧪 Test Cases (Known Values)</h3>
         <div id="valTestCases" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;font-size:11px;">
-          <div style="padding:10px;background:#fff;border-radius:4px;border-left:4px solid #025857;color:#999;">Loading...</div>
+          <div style="padding:10px;background:#fff;border-radius:4px;border-left:4px solid #025857;color:var(--text-muted);">Loading...</div>
         </div>
       </div>
 
@@ -1881,7 +1881,7 @@ function getDayStatus(dayTotals, targetTotals){
       <div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1px solid #c8e6c9;border-radius:8px;padding:15px;">
         <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;">🔗 Calculation Flow</h3>
         <div id="valCorrelation" style="font-size:11px;line-height:1.8;color:#333;">
-          <div style="color:#999;">Waiting for data...</div>
+          <div style="color:var(--text-muted);">Waiting for data...</div>
         </div>
       </div>
 
@@ -2010,7 +2010,7 @@ function openMealTimesModal(){
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">⏱️ Χρόνοι Γευμάτων</h2>'
-    +'<button onclick="closeMealTimesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'<button onclick="closeMealTimesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
     +'</div>'
     +'<div style="background:#E2EEE5;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#025857">'
     +'💡 Ορίστε τους χρόνους των γευμάτων. Θα χρησιμοποιηθούν για meal planning.'
@@ -2060,7 +2060,7 @@ function openMetActivitiesModal(){
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">🏃 MET Activities (Δραστηριότητες)</h2>'
-    +'<button onclick="closeMetActivitiesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'<button onclick="closeMetActivitiesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
     +'</div>'
     +'<div style="background:#E2EEE5;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#025857">'
     +'💡 Προσθέστε συγκεκριμένες δραστηριότητες για ακριβή υπολογισμό θερμίδων.'
@@ -2094,7 +2094,7 @@ function openMedicalConditionsModal(){
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">🩺 Ιατρικές Συνθήκες</h2>'
-    +'<button onclick="closeMedicalConditionsModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'<button onclick="closeMedicalConditionsModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
     +'</div>'
     +'<div style="background:#FFEBEE;padding:12px;border-radius:6px;margin-bottom:15px;font-size:12px;color:#c62828">'
     +'⚠️ Επιλέξτε τυχόν ενεργές ιατρικές συνθήκες για προσαρμογή του πλάνου.'
@@ -2311,7 +2311,7 @@ function openDietModal(){
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">🥗 Διατροφή & Αποκλεισμοί</h2>'
-    +'<button onclick="closeDietModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'<button onclick="closeDietModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
     +'</div>'
     +'<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">📋 Τύπος Διατροφής:</label>'
@@ -2341,7 +2341,7 @@ function openDietModal(){
     +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">💡 Προτιμήσεις (comma-separated):</label>'
     +'<textarea id="preferences-modal" oninput="updatePreferencesDetectedHint()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px;height:80px;font-family:monospace" placeholder="π.χ. Όχι κόκκινο κρέας, Περισσότερο ψάρι">'+(c.preferences||'')+'</textarea>'
     +'<div id="preferences-detected-hint" style="font-size:11px;color:#025857;margin-top:6px"></div>'
-    +'<div style="font-size:10px;color:#999;margin-top:2px">Μόνο ρητές φράσεις αποφυγής (π.χ. «Όχι…», «Αποφυγή…») μετατρέπονται αυτόματα σε αποκλεισμό τροφίμων — όλα τα άλλα παραμένουν απλή σημείωση.</div>'
+    +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Μόνο ρητές φράσεις αποφυγής (π.χ. «Όχι…», «Αποφυγή…») μετατρέπονται αυτόματα σε αποκλεισμό τροφίμων — όλα τα άλλα παραμένουν απλή σημείωση.</div>'
     +'</div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeDietModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
@@ -2424,7 +2424,7 @@ function saveDietSettings(){
 function buildFoodDayExceptionsHtml(c){
   var cats=DIET_TYPE_FORBIDDEN_CATS[c.dietType];
   if(!cats||!cats.length){
-    return '<div style="padding:20px;color:#999;font-style:italic;text-align:center">Δεν ισχύουν εξαιρέσεις για τον τύπο διατροφής «'+esc(c.dietType||'normal')+'».</div>';
+    return '<div style="padding:20px;color:var(--text-muted);font-style:italic;text-align:center">Δεν ισχύουν εξαιρέσεις για τον τύπο διατροφής «'+esc(c.dietType||'normal')+'».</div>';
   }
   var dayAbbr=DAYS.map(function(d){return d.substring(0,3);});
   var exc=c.dietFoodExceptionDays||{};
@@ -2471,7 +2471,7 @@ function openFoodPickerModal(){
     +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">🚫 Αποκλεισμοί Τροφών</h2>'
-    +'<button onclick="closeFoodPickerModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999">&times;</button>'
+    +'<button onclick="closeFoodPickerModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
     +'</div>'
 
     +(hasExceptionTab
@@ -2579,7 +2579,7 @@ function updateFoodChips(){
       +'</div>';
   });
 
-  document.getElementById('selectedFoodsChips').innerHTML=chipsHtml||'<div style="color:#999;font-style:italic">Δεν έχεις επιλέξει κανένα τρόφιμο</div>';
+  document.getElementById('selectedFoodsChips').innerHTML=chipsHtml||'<div style="color:var(--text-muted);font-style:italic">Δεν έχεις επιλέξει κανένα τρόφιμο</div>';
 }
 
 function removeFoodExclusion(foodName){
@@ -3084,17 +3084,27 @@ function saveFoodExclusions(){
       };
     },
 
+    // ✅ audit fix (2026-08-16): the submit button used to stay clickable for the whole network
+    // round-trip — only the status text changed to "Σύνδεση..." — so a fast double-click/double-Enter
+    // could fire two concurrent signIn/signUp requests. Mirrors the disabled-during-request pattern
+    // already used elsewhere in the app (e.g. the portal "💾 Αποθήκευση ρυθμίσεων" button).
+    _setAuthBusy:function(busy){
+      var btn=document.getElementById('cloud-primary-btn');
+      if(btn) btn.disabled=busy;
+    },
+
     signUp:function(email,pw){
       var self=this;
       if(!this.enabled){ this._showLoadError(); return; }
       if(!email||!pw){ this._msg('Συμπλήρωσε email και κωδικό.',true); return; }
       if(pw.length<6){ this._msg('Ο κωδικός θέλει τουλάχιστον 6 χαρακτήρες.',true); return; }
       this._msg('Δημιουργία λογαριασμού...');
+      this._setAuthBusy(true);
       this.sb.auth.signUp({email:email,password:pw}).then(function(res){
-        if(res.error){ self._msg(self._translateError(res.error.message),true); return; }
+        if(res.error){ self._setAuthBusy(false); self._msg(self._translateError(res.error.message),true); return; }
         if(res.data && res.data.session){ self.user=res.data.user; self._msg(''); self.load().then(function(){ self._enterApp(); }); }
-        else { self._msg('✅ Έλεγξε το email σου για επιβεβαίωση και μετά πάτα «Σύνδεση».'); }
-      }).catch(function(e){ self._msg(self._translateError(e&&e.message), true); });
+        else { self._setAuthBusy(false); self._msg('✅ Έλεγξε το email σου για επιβεβαίωση και μετά πάτα «Σύνδεση».'); }
+      }).catch(function(e){ self._setAuthBusy(false); self._msg(self._translateError(e&&e.message), true); });
     },
 
     signIn:function(email,pw){
@@ -3102,8 +3112,10 @@ function saveFoodExclusions(){
       if(!this.enabled){ this._showLoadError(); return; }
       if(!email||!pw){ this._msg('Συμπλήρωσε email και κωδικό.',true); return; }
       this._msg('Σύνδεση...');
+      this._setAuthBusy(true);
       this.sb.auth.signInWithPassword({email:email,password:pw}).then(function(res){
         if(res.error){
+          self._setAuthBusy(false);
           var m=(res.error.message||'').toLowerCase();
           if(m.indexOf('invalid login credentials')>=0){ self._msg('Λάθος email ή κωδικός. Πρώτη φορά εδώ; Πάτα «Νέος λογαριασμός» πάνω. ☝️',true); }
           else { self._msg(self._translateError(res.error.message),true); }
@@ -3111,7 +3123,7 @@ function saveFoodExclusions(){
         }
         self.user=res.data.user; self._msg('');
         self.load().then(function(){ self._enterApp(); });
-      }).catch(function(e){ self._msg(self._translateError(e&&e.message), true); });
+      }).catch(function(e){ self._setAuthBusy(false); self._msg(self._translateError(e&&e.message), true); });
     },
 
     signOut:function(){

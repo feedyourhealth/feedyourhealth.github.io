@@ -559,7 +559,7 @@ function renderHome(){
     main.innerHTML='<div class="empty" id="empty-state">'
       +'<div style="font-size:64px;margin-bottom:12px">👥</div>'
       +'<div style="font-size:16px;font-weight:600;margin-bottom:8px;color:#025857">Καλώς ήρθες στον Διαιτολόγο!</div>'
-      +'<div style="font-size:13px;color:#999;margin-bottom:20px;max-width:400px">Δημιουργήστε τον πρώτο σας πελάτη για να ξεκινήσετε τη διαχείριση διατροφικών σχεδίων</div>'
+      +'<div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;max-width:400px">Δημιουργήστε τον πρώτο σας πελάτη για να ξεκινήσετε τη διαχείριση διατροφικών σχεδίων</div>'
       +'<button class="btn primary" onclick="addClient()" style="font-size:14px;padding:12px 24px;">+ Δημιουργήστε Πρώτο Πελάτη</button>'
       +'</div>';
     renderSB();
@@ -581,7 +581,7 @@ function renderHome(){
   // πλακίδιο από πάνω μετράει μόνο tier<=1 (βλ. homeAttentionBuckets). Επίτηδες διαφορετικό label
   // από το πλακίδιο ("παρακολούθηση" αντί "προσοχή") ώστε το "0" του πλακιδίου να μη διαβάζεται σαν
   // αντίφαση με το σύνολο της λίστας από κάτω.
-  var attentionCardTitle='⚠️ Χρειάζονται παρακολούθηση'+(attentionList.length?(' <span style="font-weight:400;font-size:10px;color:#999">('+attentionList.length+')</span>'):'');
+  var attentionCardTitle='⚠️ Χρειάζονται παρακολούθηση'+(attentionList.length?(' <span style="font-weight:400;font-size:10px;color:var(--text-muted)">('+attentionList.length+')</span>'):'');
   var staleClients=homeStaleLinks();
   var staleRows=staleClients.map(function(c){
     return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
@@ -761,7 +761,7 @@ function renderDiets(){
       return dietsRow(c, 'ο σύνδεσμος δείχνει παλιό πλάνο', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>'+snoozeBtn, 'red');
     }
     var daysOld=Math.floor((Date.now()-c.planGeneratedAt)/86400000);
-    var thresholdInp='<span style="font-size:10px;color:#999;margin-left:6px;white-space:nowrap" title="Όριο ανανέωσης για αυτόν τον πελάτη" onclick="event.stopPropagation()">⚙ <input type="number" value="'+(c.renewalDays||PLAN_RENEWAL_DAYS)+'" min="7" max="120" style="width:34px;font-size:10px;padding:1px 3px;border:1px solid #ddd;border-radius:4px" onchange="setClientRenewalDays(\''+c.id+'\',this.value)"> ημ.</span>';
+    var thresholdInp='<span style="font-size:10px;color:var(--text-muted);margin-left:6px;white-space:nowrap" title="Όριο ανανέωσης για αυτόν τον πελάτη" onclick="event.stopPropagation()">⚙ <input type="number" value="'+(c.renewalDays||PLAN_RENEWAL_DAYS)+'" min="7" max="120" style="width:34px;font-size:10px;padding:1px 3px;border:1px solid #ddd;border-radius:4px" onchange="setClientRenewalDays(\''+c.id+'\',this.value)"> ημ.</span>';
     return dietsRow(c, 'το πλάνο έγινε πριν '+daysOld+' ημέρες'+thresholdInp, '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>'+snoozeBtn, 'red');
   }, 'Όλοι είναι εντάξει 👍', 'danger');
 

@@ -539,25 +539,25 @@ function renderMain(){
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">'
     +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='loss'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='loss'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
     +'<input type="radio" name="goal-main" value="loss" '+(c.goalMain==='loss'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:#333;font-size:11px;">📉 Απώλεια</div><div style="font-size:9px;color:#999;">-500 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:#333;font-size:11px;">📉 Απώλεια</div><div style="font-size:9px;color:var(--text-muted);">-500 kcal</div></div>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='maintain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='maintain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
     +'<input type="radio" name="goal-main" value="maintain" '+(c.goalMain==='maintain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:#333;font-size:11px;">➡️ Διατήρηση</div><div style="font-size:9px;color:#999;">0 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:#333;font-size:11px;">➡️ Διατήρηση</div><div style="font-size:9px;color:var(--text-muted);">0 kcal</div></div>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='gain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='gain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
     +'<input type="radio" name="goal-main" value="gain" '+(c.goalMain==='gain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:#333;font-size:11px;">📈 Αύξηση</div><div style="font-size:9px;color:#999;">+300 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:#333;font-size:11px;">📈 Αύξηση</div><div style="font-size:9px;color:var(--text-muted);">+300 kcal</div></div>'
     +'</label>'
     +'</div></div></div>'
     +'<div class="fg"><div class="fgrp"><label style="font-weight:700;color:#025857;font-size:13px;">🎯 ΠΡΟΣΑΡΜΟΓΗ ΘΕΡΜΙΔΩΝ (-500 έως +500)</label>'
     +'<div style="text-align:center;background:#E2EEE5;border:2px solid #025857;padding:6px 8px;border-radius:6px;margin:8px 0 6px;">'
     +'<div style="font-size:9px;color:#666;">Προσαρμογή Θερμίδων</div>'
     +'<div style="font-size:18px;font-weight:bold;color:#025857;margin:2px 0;line-height:1.2;" id="goal-display">'+(goalCalAdj>=0?'+':'')+(goalCalAdj)+'</div>'
-    +'<div style="font-size:8px;color:#999;">kcal/ημέρα</div>'
+    +'<div style="font-size:8px;color:var(--text-muted);">kcal/ημέρα</div>'
     +'</div>'
     +'<input type="range" id="goal-slider" min="-500" max="500" step="10" value="'+goalCalAdj+'" style="width:100%;accent-color:#025857;cursor:pointer;display:block;" oninput="document.getElementById(\'goal-display\').textContent=(this.value>=0?\'+\':\'\')+this.value" onchange="setGoalCalories(this.value)">'
-    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:#999;padding:2px 2px 8px;"><span>-500</span><span>0</span><span>+500</span></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);padding:2px 2px 8px;"><span>-500</span><span>0</span><span>+500</span></div>'
     +'<div style="display:flex;gap:6px;">'
     +'<button type="button" onclick="setGoalCalories(-500)" style="flex:1;background:#fff;color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:11px;">📉 Απώλεια −500</button>'
     +'<button type="button" onclick="setGoalCalories(0)" style="flex:1;background:#fff;color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:11px;">➡️ Διατήρηση 0</button>'
@@ -1155,7 +1155,7 @@ function buildDayTgtHtml(c,t){
     +'<input class="carb-boost-inp" type="date" value="'+(c.eventDate||'')+'" onchange="setEventDate(this.value)" style="width:auto">'
     +'</div>'
     +carbLoadNote
-    +'<div style="font-size:10px;color:#999;margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; Μ=ημέρα αγώνα (δεν αλλάζει θερμίδες/macros, μόνο το πλάνο του πελάτη) &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
+    +'<div style="font-size:10px;color:var(--text-muted);margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; Μ=ημέρα αγώνα (δεν αλλάζει θερμίδες/macros, μόνο το πλάνο του πελάτη) &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
     +(matchDaysArr.some(function(x){return x;})?(
       '<div class="carb-boost-row">'
       +'<label>&#9917; Ώρα αγώνα (χοντρικά, ίδια για κάθε εβδομάδα):</label>'
@@ -1767,7 +1767,7 @@ function clientLogsPanelHtml(c){
 // Οι λεγόμενες "reasons" εμφανίζονται μόνο όπου ο πελάτης βαθμολόγησε ≤2 αστέρια σε κάποια σειρά.
 var PF_ROW_LABELS={breakfast:'Πρωινό',snacks:'Σνακ',lunch:'Μεσημεριανό',dinner:'Βραδινό',recipes_ease:'Ευκολία συνταγών',ingredients_ease:'Εύρεση υλικών',training_energy:'Ενέργεια προπόνησης'};
 function pfStarsReadonly(val){
-  if(!val)return '<span style="color:#ccc">—</span>';
+  if(!val)return '<span style="color:var(--text-muted)">—</span>';
   var s='';
   for(var i=1;i<=5;i++)s+='<span style="color:'+(i<=val?'#025857':'#d5e6e2')+'">★</span>';
   return s;
@@ -1934,13 +1934,13 @@ function buildTrackerHtml(c){
     +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">'
     +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης</button>'
     +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':'')
-    +(c.weightLog&&c.weightLog.length?(c.phone?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#25D366;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + WhatsApp με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'wa\')">📱 WhatsApp</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:#999;border:none;cursor:not-allowed" title="Λείπει τηλέφωνο από την καρτέλα του πελάτη">📱 WhatsApp</button>'):'')
-    +(c.weightLog&&c.weightLog.length?(c.email?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + Email με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'mail\')">📧 Email</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:#999;border:none;cursor:not-allowed" title="Λείπει email από την καρτέλα του πελάτη">📧 Email</button>'):'')
+    +(c.weightLog&&c.weightLog.length?(c.phone?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#25D366;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + WhatsApp με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'wa\')">📱 WhatsApp</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:var(--text-muted);border:none;cursor:not-allowed" title="Λείπει τηλέφωνο από την καρτέλα του πελάτη">📱 WhatsApp</button>'):'')
+    +(c.weightLog&&c.weightLog.length?(c.email?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Άνοιγμα PDF για αποθήκευση + Email με έτοιμο μήνυμα προς τον πελάτη" onclick="sendBodyCompReport(\'mail\')">📧 Email</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:var(--text-muted);border:none;cursor:not-allowed" title="Λείπει email από την καρτέλα του πελάτη">📧 Email</button>'):'')
     +'</div>'
     +'</div>'
     // ✅ persistent (non-hover) caption for the CSV button — the old title-only tooltip explaining
     // single-file-vs-batch import was invisible until someone hovered over it
-    +'<div style="font-size:10px;color:#999;margin:-4px 0 8px">📤 CSV: 1 αρχείο = άμεσος έλεγχος στοιχείων &nbsp;·&nbsp; πολλά αρχεία μαζί = μαζική εισαγωγή ιστορικού</div>'
+    +'<div style="font-size:10px;color:var(--text-muted);margin:-4px 0 8px">📤 CSV: 1 αρχείο = άμεσος έλεγχος στοιχείων &nbsp;·&nbsp; πολλά αρχεία μαζί = μαζική εισαγωγή ιστορικού</div>'
     // ── Skinfold panel ────────────────────────────────────────────────────────
     +'<div class="sf-panel" id="sf-panel">'
     +'<div class="sf-header" onclick="toggleSkinfoldPanel()">'
@@ -1962,7 +1962,7 @@ function buildTrackerHtml(c){
     +'<option value="jp7"'+(protoForSelect==='jp7'?' selected':'')+'>JP 7-site (πλήρες)</option>'
     +'<option value="slaughter"'+(protoForSelect==='slaughter'?' selected':'')+'>Slaughter (1988) — παιδιά/έφηβοι</option>'
     +'</select>'
-    +'<span id="sf-ref" style="font-size:9px;color:#aaa"></span>'
+    +'<span id="sf-ref" style="font-size:9px;color:var(--text-muted)"></span>'
     +'</div>'
     // ✅ always-visible site list (was only guessable from the truncated dropdown text) —
     // no hover tooltip here on purpose: the app logs "📱 Tablet layout", so anything that
@@ -1978,7 +1978,7 @@ function buildTrackerHtml(c){
     // placeholder-only text vanished while typing, and Βασικά/Περιφέρειες were impossible to
     // tell apart at a glance)
     +(ee?'<div style="width:100%;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:11px;color:#8d6e00">✏️ Επεξεργασία μέτρησης της '+ee.date+' — άλλαξε ό,τι χρειάζεται και πάτα «Αποθήκευση αλλαγών» παρακάτω, ή «Άκυρο» για έξοδο χωρίς αλλαγές.</div>':'')
-    +'<div style="font-size:10px;color:#999;width:100%;margin-bottom:2px">Βασικά</div>'
+    +'<div style="font-size:10px;color:var(--text-muted);width:100%;margin-bottom:2px">Βασικά</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
     +'<label style="font-size:10px;color:#666;align-self:center">Ημερομηνία:</label>'
     +'<input type="date" id="tr-date" value="'+(ee?ee.date:today)+'" class="tracker-inp">'
@@ -1987,7 +1987,7 @@ function buildTrackerHtml(c){
     +'<label style="font-size:10px;color:#666;align-self:center" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">🧮 Λίπος %:</label>'
     +'<input type="number" id="tr-bf" placeholder="%" min="3" max="60" step="0.1" class="tracker-inp" style="width:56px" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση" value="'+(ee&&ee.bf?ee.bf:'')+'">'
     +'</div>'
-    +'<div style="font-size:10px;color:#999;width:100%;margin:8px 0 2px">Περιφέρειες (cm)</div>'
+    +'<div style="font-size:10px;color:var(--text-muted);width:100%;margin:8px 0 2px">Περιφέρειες (cm)</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
     +'<label style="font-size:10px;color:#666;align-self:center">Μέση:</label>'
     +'<input type="number" id="tr-waist" placeholder="cm" min="40" max="200" step="0.5" class="tracker-inp" style="width:60px" value="'+(ee&&ee.waist?ee.waist:'')+'">'
@@ -1996,7 +1996,7 @@ function buildTrackerHtml(c){
     +'<label style="font-size:10px;color:#666;align-self:center">Δικέφαλος:</label>'
     +'<input type="number" id="tr-arm" placeholder="cm" min="15" max="60" step="0.5" class="tracker-inp" style="width:60px" value="'+(ee&&ee.arm?ee.arm:'')+'">'
     +'</div>'
-    +'<div style="font-size:10px;color:#999;width:100%;margin:8px 0 2px">Καθημερινότητα &amp; σημειώσεις</div>'
+    +'<div style="font-size:10px;color:var(--text-muted);width:100%;margin:8px 0 2px">Καθημερινότητα &amp; σημειώσεις</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px;margin-top:5px">'
     +'<label style="font-size:10px;color:#666;align-self:center">Ύπνος:</label>'
     +'<select id="tr-sleep" class="tracker-inp" style="width:110px;font-size:11px">'
@@ -2043,7 +2043,7 @@ function buildTrackerHtml(c){
       +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+(latestBMIStatus?' ('+latestBMIStatus+')':'')+'</div></div>'
       // ✅ BMI used to just silently disappear with no height set — nothing told the practitioner
       // why the card was missing, or what to do about it
-      :'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #ccc"><div style="color:#666">BMI</div><div style="font-size:10px;color:#999;margin-top:2px">Χρειάζεται ύψος — συμπλήρωσέ το στα Στοιχεία πελάτη</div></div>')
+      :'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #ccc"><div style="color:#666">BMI</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Χρειάζεται ύψος — συμπλήρωσέ το στα Στοιχεία πελάτη</div></div>')
       +(latest.waist?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #9c27b0"><div style="color:#666">Μέση</div><div style="font-size:14px;font-weight:700;color:#9c27b0">'+latest.waist+' cm</div></div>':'')
       +(latest.hip?'<div style="background:#fff;padding:8px;border-radius:5px;border-left:3px solid #f57c00"><div style="color:#666">Γοφοί</div><div style="font-size:14px;font-weight:700;color:#f57c00">'+latest.hip+' cm</div></div>':'')
       +'</div>'
@@ -2061,7 +2061,7 @@ function buildTrackerHtml(c){
         +'</div>';
     } else if(c.weightLog.length===1){
       // ✅ tells the practitioner why there's no chart yet instead of just silently omitting it
-      wHtml+='<div style="font-size:10.5px;color:#999;background:#fafafa;border:1px dashed #ddd;border-radius:8px;padding:8px 12px;margin-bottom:15px">📈 Το γράφημα τάσης θα εμφανιστεί μετά τη 2η μέτρηση.</div>';
+      wHtml+='<div style="font-size:10.5px;color:var(--text-muted);background:#fafafa;border:1px dashed #ddd;border-radius:8px;padding:8px 12px;margin-bottom:15px">📈 Το γράφημα τάσης θα εμφανιστεί μετά τη 2η μέτρηση.</div>';
     }
 
     // ── Progress summary ───────────────────────────────────────────────────────
@@ -2100,7 +2100,7 @@ function buildTrackerHtml(c){
         +(bfDiff!==null?'<span style="font-size:11px">Λίπος: <b style="color:'+(bfDiff<0?'#2e7d32':'#c62828')+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>':'')
         +(lbmDiff!==null?'<span style="font-size:11px">Lean Mass: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>':'')
         +(lastBMI!=null?'<span style="font-size:11px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+(bmiStatus?' ('+bmiStatus+')':'')+'</b></span>':'')
-        +'<span style="font-size:10px;color:#aaa;margin-left:auto">'+sorted2.length+' μετρήσεις</span>'
+        +'<span style="font-size:10px;color:var(--text-muted);margin-left:auto">'+sorted2.length+' μετρήσεις</span>'
         +'</div>'
         // Visual body composition bar
         +(lastLBM&&lastFM?'<div style="margin-top:8px">'
@@ -2396,7 +2396,7 @@ function updateSkinfoldFields(){
     // ✅ persistent label above the field (was placeholder-only — label used to vanish while
     // typing, which cost accuracy during fast in-clinic entry across many clients)
     html+='<div style="display:flex;flex-direction:column;gap:2px">'
-      +'<label for="sf-'+f.k+'" style="font-size:9px;color:#999">'+f.lbl+'</label>'
+      +'<label for="sf-'+f.k+'" style="font-size:9px;color:var(--text-muted)">'+f.lbl+'</label>'
       +'<input type="number" id="sf-'+f.k+'" placeholder="mm" min="1" max="80" step="0.5" class="tracker-inp" style="width:120px" oninput="updateSkinfoldCalc()"'+(carryOver[f.k]?' value="'+carryOver[f.k]+'"':'')+'>'
       +'</div>';
   });
@@ -2427,12 +2427,12 @@ function updateSkinfoldCalc(){
   var lbm=weight>0?+(weight*(1-res.bf/100)).toFixed(1):null;
   var fm=weight>0?+(weight*res.bf/100).toFixed(1):null;
   var bfClass=res.bf<10?'#1565C0':res.bf<20?'#2e7d32':res.bf<30?'#e65100':'#c62828';
-  var bdTxt=res.bd?'<span style="font-size:10px;color:#aaa;margin-left:4px">BD: '+res.bd+'</span>':'';
+  var bdTxt=res.bd?'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">BD: '+res.bd+'</span>':'';
   resDiv.className='sf-result-row';
   resDiv.innerHTML='<span><b>%BF:</b> <span style="color:'+bfClass+';font-size:14px;font-weight:700">'+res.bf+'%</span>'+bdTxt+'</span>'
     +(lbm?'<span><b>LBM:</b> '+lbm+' kg</span>':'')
     +(fm?'<span><b>FM:</b> '+fm+' kg</span>':'')
-    +'<span style="font-size:10px;color:#aaa">Άθροισμα: '+res.sum+' mm</span>'
+    +'<span style="font-size:10px;color:var(--text-muted)">Άθροισμα: '+res.sum+' mm</span>'
     +'<button class="btn primary" style="padding:4px 10px;font-size:11px;margin-left:auto" onclick="applySkinfoldBF()">✓ Χρήση ως %BF</button>';
   resDiv.style.display='flex';
 }
@@ -3444,9 +3444,9 @@ function buildAppointmentsHtml(c){
         return '<span title="'+e.date+' — '+esc(am.label)+'" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:'+am.color+'22;color:'+am.color+';font-size:12px">'+am.icon+'</span>';
       }
       var meta=apptPlanActionMeta(e.planAction);
-      if(!meta)return '<span title="'+e.date+'" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#eee;color:#999;font-size:10px">•</span>';
+      if(!meta)return '<span title="'+e.date+'" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#eee;color:var(--text-muted);font-size:10px">•</span>';
       return '<span title="'+e.date+' — '+esc(meta.label)+'" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:'+meta.color+'22;color:'+meta.color+';font-size:12px">'+meta.icon+'</span>';
-    }).join('<span style="color:#ccc;font-size:10px">→</span>');
+    }).join('<span style="color:var(--text-muted);font-size:10px">→</span>');
     timelineHtml='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:10px;font-size:10px;color:#888">'
       +'<span style="margin-right:4px">Ροή αποφάσεων:</span>'+timelineChips+'</div>';
   }
@@ -4073,7 +4073,7 @@ function buildExcludeHtml(c){
     +'<input class="excl-inp" id="excl-inp" placeholder="Αναζήτηση τροφίμου για αποκλεισμό..." oninput="showExclSug(this)" onblur="setTimeout(function(){var s=document.getElementById(\'excl-sug\');if(s)s.classList.remove(\'open\');},200)" autocomplete="off">'
     +'<div class="excl-sug" id="excl-sug"></div>'
     +'</div>'
-    +(hasExcl?'<div class="excl-tags">'+tags+'</div>':'<div style="font-size:10px;color:#bbb;margin-top:2px">Κανένα τρόφιμο αποκλεισμένο — χρησιμοποιούνται όλα</div>')
+    +(hasExcl?'<div class="excl-tags">'+tags+'</div>':'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Κανένα τρόφιμο αποκλεισμένο — χρησιμοποιούνται όλα</div>')
     +'</div>';
 }
 

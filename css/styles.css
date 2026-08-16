@@ -7,6 +7,12 @@
   --teal-tint:#e2eee5;
   --danger:#b71c1c;
   --success-tint:#e8f5e9;
+  /* Secondary/hint text — replaces the #999/#aaa/#bbb/#ccc literals that used to be sprinkled
+     across Dietologist.html/js/app-part*.js for empty-state copy, field hints, timing labels
+     etc. Those were ~2-3:1 contrast on white, below WCAG AA's 4.5:1 for normal text. #6b6b6b
+     is ~5.7:1 on white. Dark-mode override below keeps the same "one step dimmer than primary
+     text" role, contrast-checked against the app's #1a1a1a dark surface (audit finding, 2026-08-16). */
+  --text-muted:#6b6b6b;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a;-webkit-user-select:none;user-select:none}
@@ -1817,6 +1823,7 @@ body.dark-mode {
   --teal-tint:#0f2a24;
   --success-tint:#14301a;
   --danger:#d32f2f;
+  --text-muted:#8a8a8a;
 }
 body.dark-mode .cc-status-active{color:#8bc98f}
 body.dark-mode .meal-label{color:#e0e0e0}
