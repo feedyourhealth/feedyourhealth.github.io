@@ -380,8 +380,8 @@ function exportPDF(lang){
     +'<title>'+(isEn?'Plan - ':'Πλάνο - ')+esc(c.name||(isEn?'Client':'Πελάτης'))+'</title><style>'
     +'@page{size:A4 landscape;margin:0}'
     +'*{box-sizing:border-box;margin:0;padding:0}'
-    +'body{font-family:'+FF+';font-size:6pt;color:#1a1a1a;padding:7mm}'
-    +'.no-print{padding:6px;background:#f5f5f5;border-bottom:1px solid #ddd;display:flex;gap:10px;align-items:center;margin-bottom:8px;margin:-7mm -7mm 8px}'
+    +'body{font-family:'+FF+';font-size:6pt;color:var(--text-strong);padding:7mm}'
+    +'.no-print{padding:6px;background:var(--panel-bg);border-bottom:1px solid #ddd;display:flex;gap:10px;align-items:center;margin-bottom:8px;margin:-7mm -7mm 8px}'
     // Header
     +'.hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:5px;padding-bottom:4px;border-bottom:2px solid #025857}'
     +'.hl{display:flex;flex-direction:column;align-items:flex-start;gap:2px}'
@@ -417,14 +417,14 @@ function exportPDF(lang){
     +(isMinorPdf?'tr.meal-b td.mlbl{background:linear-gradient(135deg,#FF6B35,#FF9A5C);color:#fff;border-left:none;border-radius:8px;}'
       +'tr.meal-l td.mlbl{background:linear-gradient(135deg,#06D6A0,#0BEBA9);color:#fff;border-left:none;border-radius:8px;}'
       +'tr.meal-d td.mlbl{background:linear-gradient(135deg,#118AB2,#23A8D9);color:#fff;border-left:none;border-radius:8px;}'
-      +'tr.meal-s td.mlbl{background:linear-gradient(135deg,#FFD166,#FFDF85);color:#333;border-left:none;border-radius:8px;}'
+      +'tr.meal-s td.mlbl{background:linear-gradient(135deg,#FFD166,#FFDF85);color:var(--text-strong);border-left:none;border-radius:8px;}'
       +'tr.meal-b td.dcell{background:#FFF5F0;border:1px solid #FFD5C0;border-radius:8px;}'
       +'tr.meal-l td.dcell{background:#F0FEEE;border:1px solid #C0F0D8;border-radius:8px;}'
       +'tr.meal-d td.dcell{background:#F0F8FF;border:1px solid #BFD9F0;border-radius:8px;}'
       +'tr.meal-s td.dcell{background:#FFFBF0;border:1px solid #FFE8A0;border-radius:8px;}'
       +'table.mt{border-spacing:2px;}':'')
     +'.fr{line-height:1.22}'
-    +'.fn{color:#1a1a1a;font-weight:700}'
+    +'.fn{color:var(--text-strong);font-weight:700}'
     +'.fg{color:#025857;font-weight:700}'
     +'.fghint{color:#000;font-size:5pt;font-weight:400;margin-left:1px}'
     +'.mt2{font-size:5pt;color:#555;border-top:1px dotted #aac7bf;margin-top:2px;padding-top:1px}'
@@ -452,7 +452,7 @@ function exportPDF(lang){
     +'table.fxt td{padding:2px 7px;border:1px solid #c5ddd8;font-size:6.5pt;vertical-align:middle}'
     +'table.fxt tr.alt td{background:#f7fcf9}'
     +'tr.fxcat td{background:#E2EEE5;font-weight:700;color:#025857;font-size:5.5pt;padding:2px 7px;letter-spacing:.3px;text-transform:uppercase}'
-    +'.fxname{font-weight:700;color:#1a1a1a;white-space:nowrap}'
+    +'.fxname{font-weight:700;color:var(--text-strong);white-space:nowrap}'
     +'.fxpor{color:#555;white-space:nowrap}'
     +'.fxg{color:#025857;font-weight:700;text-align:center}'
     +'.fxk{color:#888;text-align:center}'
@@ -474,7 +474,7 @@ function exportPDF(lang){
     +'.slrow:last-child{border-bottom:none}'
     +'.slrow.sla{background:#f5fbf9}'
     +'.sl-chk{color:#c5ddd8;flex-shrink:0;margin-right:2px;font-size:7.5pt;line-height:1}'
-    +'.sl-nm{flex:1;font-weight:600;color:#1a1a1a}'
+    +'.sl-nm{flex:1;font-weight:600;color:var(--text-strong)}'
     +'.sl-pg{font-size:5pt;color:var(--text-muted);flex-shrink:0}'
     +'.sl-amt{font-weight:700;color:#025857;white-space:nowrap;font-size:7pt;flex-shrink:0;margin-left:4px}'
     +'.sl-lbl{font-size:5pt;color:#77a;font-weight:400;margin-left:2px}'
@@ -739,7 +739,7 @@ function exportLipometriaPDF(){
   }
 
   var html='<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8"><title>Έντυπο Λιπομέτρησης</title><style>'
-    +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#111;background:#fff;padding:8mm 10mm}'
+    +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#111;background:var(--card-bg);padding:8mm 10mm}'
     +'.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #025857;padding-bottom:6px;margin-bottom:12px}'
     +'.brand{display:flex;align-items:center;gap:8px}.brand img{width:38px;height:38px;border-radius:6px}'
     +'.brand-name{font-size:11pt;font-weight:700;color:#025857;letter-spacing:.5px}'
@@ -933,7 +933,7 @@ function exportBodyCompPDF(){
     });
   }
   svgContent+=xLabels;
-  var chartHtml='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;height:130px;border:1px solid #e0e0e0;border-radius:6px;background:#fafffe">'+svgContent+'</svg>';
+  var chartHtml='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;height:130px;border:1px solid var(--border-light);border-radius:6px;background:#fafffe">'+svgContent+'</svg>';
 
   // ── History table ────────────────────────────────────────────────────────
   var protoLabel={jp4:'JP 4-site',jp3:'JP 3-site',jp7:'JP 7-site',slaughter:'Slaughter'};
@@ -982,7 +982,7 @@ function exportBodyCompPDF(){
   var html='<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8">'
     +'<title>Σωματική Σύνθεση — '+esc(c.name||'Πελάτης')+'</title>'
     +'<style>'
-    +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:8pt;color:#1a1a1a;padding:10mm 12mm;background:#fff}'
+    +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:8pt;color:var(--text-strong);padding:10mm 12mm;background:var(--card-bg)}'
     +'.hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:2.5px solid #025857;padding-bottom:7px;margin-bottom:12px}'
     +'.hdr-logo{height:36px;width:36px;margin-right:10px;border-radius:6px}'
     +'.hdr-name{font-size:14pt;font-weight:700;color:#025857}'
@@ -1083,10 +1083,10 @@ function showDebugPanel(){
   modal.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999';
 
   var content=document.createElement('div');
-  content.style.cssText='background:#fff;border-radius:8px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
+  content.style.cssText='background:var(--card-bg);border-radius:8px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3)';
 
   var html='<h2 style="color:#d32f2f;margin-top:0">🔧 Σφάλματα &amp; Αναφορά</h2>';
-  html+='<div style="margin-bottom:15px;padding:10px;background:#f5f5f5;border-radius:4px;font-size:12px">';
+  html+='<div style="margin-bottom:15px;padding:10px;background:var(--panel-bg);border-radius:4px;font-size:12px">';
   html+='<strong>Σύνοψη:</strong> Σφάλματα: '+audit.total.errors+' | Προειδοποιήσεις: '+audit.total.warnings+' | Πληροφορίες: '+audit.total.infos+'</div>';
 
   // Errors
@@ -1171,7 +1171,7 @@ function showReferences(){
   overlay.setAttribute('aria-modal','true');
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto';
   var box=document.createElement('div');
-  box.style.cssText='background:#fff;border-radius:14px;max-width:760px;width:100%;padding:22px 24px;box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative;font-family:inherit';
+  box.style.cssText='background:var(--card-bg);border-radius:14px;max-width:760px;width:100%;padding:22px 24px;box-shadow:0 8px 40px rgba(0,0,0,.25);position:relative;font-family:inherit';
   var h='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
     +'<div style="font-size:16px;font-weight:800;color:#025857">📚 Βιβλιογραφία &amp; Επιστημονικές Πηγές</div>'
     +'<button onclick="document.getElementById(\'ref-modal\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#888;padding:4px">✕</button>'
@@ -2326,7 +2326,7 @@ function buildDynamicSupplementHtml(c, gapBasedRecs, gaps){
       var borderColor=alreadyTaking?'#4caf50':'#ff6b35';
 
       // Build the container
-      html += '<div data-supp-id="'+suppId+'" style="padding:10px;background:white;margin-bottom:10px;border-radius:4px;border-left:3px solid '+borderColor+';display:flex;align-items:center;gap:12px;'+(alreadyTaking?'opacity:0.8;':'')+'transition:border-color 0.2s;cursor:pointer;" onclick="toggleSuppCheckbox(this)">';
+      html += '<div data-supp-id="'+suppId+'" style="padding:10px;background:var(--card-bg);margin-bottom:10px;border-radius:4px;border-left:3px solid '+borderColor+';display:flex;align-items:center;gap:12px;'+(alreadyTaking?'opacity:0.8;':'')+'transition:border-color 0.2s;cursor:pointer;" onclick="toggleSuppCheckbox(this)">';
 
       // Hidden native checkbox for form submission
       html += '<input type="checkbox" id="'+suppId+'" '+( isChecked ? 'checked' : '')+' style="display:none;" class="supp-checkbox">';
@@ -2366,7 +2366,7 @@ function buildDynamicSupplementHtml(c, gapBasedRecs, gaps){
   html += '</div>';
 
   // SECTION 2: GENERAL GUIDELINES (based on diet type)
-  html += '<div style="background:#f5f5f5;padding:15px;border-radius:4px;margin-bottom:20px;">';
+  html += '<div style="background:var(--panel-bg);padding:15px;border-radius:4px;margin-bottom:20px;">';
   html += '<h3 style="color:#666;margin-top:0;">📖 Γενικές Κατευθυντήριες (Τύπος Διατροφής)</h3>';
 
   // Add static recommendations from getSupplementRecommendations
@@ -3058,7 +3058,7 @@ function showMealAlternatives(dayIndex, mealIndex){
       + 'P: ' + Math.round(data.protein) + 'g (±' + data.proteinDeviation.toFixed(1) + '%)'
       +'</div>'
       +'</div>'
-      +'<div style="font-size:12px;color:#333;margin-bottom:10px">' + data.scaled.foods.map(f => f.n + ' ' + Math.round(f.g) + 'g').join(' + ') + '</div>'
+      +'<div style="font-size:12px;color:var(--text-strong);margin-bottom:10px">' + data.scaled.foods.map(f => f.n + ' ' + Math.round(f.g) + 'g').join(' + ') + '</div>'
       +'<button onclick="replaceMeal(' + dayIndex + ',' + mealIndex + ',' + data.index + ')" style="background:#4caf50;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:11px">✓ Επιλέξ αυτή</button>'
       +'</div>';
 
@@ -3086,7 +3086,7 @@ function showMealAlternatives(dayIndex, mealIndex){
 
   var content = modal.querySelector('[role="dialog"]') || document.createElement('div');
   content.role = 'dialog';
-  content.style.cssText = 'background:white;border-radius:8px;padding:20px;max-height:80vh;overflow-y:auto;max-width:500px';
+  content.style.cssText = 'background:var(--card-bg);border-radius:8px;padding:20px;max-height:80vh;overflow-y:auto;max-width:500px';
   content.innerHTML = modalHtml;
 
   if(!modal.querySelector('[role="dialog"]')){
@@ -3213,7 +3213,7 @@ function showTrackingDashboard(){
   var stats = calculateRecipeStats();
 
   var html = '<div id="tracking-dashboard-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;overflow:auto;padding:20px;">';
-  html += '<div style="background:white;max-width:1000px;margin:0 auto;border-radius:10px;padding:30px;">';
+  html += '<div style="background:var(--card-bg);max-width:1000px;margin:0 auto;border-radius:10px;padding:30px;">';
   html += '<div style="position:absolute;top:10px;right:10px;cursor:pointer;font-size:30px;" onclick="closeTrackingDashboard();">&times;</div>';
 
   html += '<h1 style="color:#025857;">📊 Tracking Analytics - Αξιολογήσεις Γευμάτων</h1>';
@@ -3298,7 +3298,7 @@ function showTrackingDashboard(){
 
   // Statistics
   html += '<h2 style="color:#025857;margin-top:30px;">📈 Στατιστικά</h2>';
-  html += '<div style="background:#f5f5f5;padding:15px;border-radius:5px;margin:10px 0;">';
+  html += '<div style="background:var(--panel-bg);padding:15px;border-radius:5px;margin:10px 0;">';
   html += '<p><strong>Συνολικά Πλάνα:</strong> ' + TRACKING_DATA.plans.length + '</p>';
   html += '<p><strong>Αξιολογημένα Γεύματα:</strong> ' + (patterns.recentRatings ? patterns.recentRatings.length : 0) + '</p>';
   html += '<p><strong>Αγαπημένα Γεύματα (>70%):</strong> ' + patterns.topMeals.length + '</p>';

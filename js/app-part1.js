@@ -754,7 +754,7 @@ function _showTabLockBanner(){
       +'padding:10px 16px;text-align:center;font-size:13px;font-weight:600;display:flex;'
       +'align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.25)';
     b.innerHTML='⚠️ Το Dietologist είναι ήδη ανοιχτό σε άλλη καρτέλα — εδώ είναι ΜΟΝΟ ΓΙΑ ΑΝΑΓΝΩΣΗ, οι αλλαγές ΔΕΝ αποθηκεύονται.'
-      +' <button id="tab-lock-takeover-btn" style="background:#fff;color:#c62828;border:none;border-radius:6px;'
+      +' <button id="tab-lock-takeover-btn" style="background:var(--card-bg);color:#c62828;border:none;border-radius:6px;'
       +'padding:4px 10px;font-weight:700;cursor:pointer">Ανάλαβε εδώ</button>';
     document.body.appendChild(b);
     document.getElementById('tab-lock-takeover-btn').addEventListener('click', function(){
@@ -3663,7 +3663,7 @@ function buildPlanHistoryHtmlInner(c){
   // boxes stacked on top of each other — sections are divided by hairlines, not competing
   // background colors, and deltas use one neutral tone (a higher kcal between two plans
   // isn't inherently "bad" the way red implied) instead of red/green.
-  html+='<div style="background:#fff;border:1px solid #e0e0e0;border-left:3px solid #025857;border-radius:8px;padding:14px 16px;margin-bottom:16px">'
+  html+='<div style="background:var(--card-bg);border:1px solid var(--border-light);border-left:3px solid #025857;border-radius:8px;padding:14px 16px;margin-bottom:16px">'
     +'<div style="font-weight:700;color:#025857;margin-bottom:8px;font-size:13px">📈 Στατιστικά Πλάνων</div>'
     +'<div style="font-size:12px;line-height:1.8;display:grid;grid-template-columns:1fr 1fr;gap:10px">'
     +'<div>📊 Σύνολο: <strong>'+stats.count+' πλάνα</strong></div>'
@@ -3740,8 +3740,8 @@ function buildPlanHistoryHtmlInner(c){
       +'<span style="font-weight:600;color:#025857;font-size:13px">📋 Πλάνο #'+plan.number+' — '+plan.macros.k+' kcal</span>'
       +'<span style="font-size:11px;color:#666">'+deltaTxt+'</span>'
       +'</div>'
-      +'<div id="tl-'+i+'" style="display:'+(isNewest?'block':'none')+';margin-top:8px;background:#fafafa;border:1px solid #e0e0e0;border-radius:6px;padding:12px">'
-      +'<div style="background:#fff;padding:10px;border-radius:4px;font-size:12px;margin-bottom:8px">'
+      +'<div id="tl-'+i+'" style="display:'+(isNewest?'block':'none')+';margin-top:8px;background:var(--panel-bg);border:1px solid var(--border-light);border-radius:6px;padding:12px">'
+      +'<div style="background:var(--card-bg);padding:10px;border-radius:4px;font-size:12px;margin-bottom:8px">'
       +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">'
       +'<div><strong>Kcal:</strong> <span style="color:#025857;font-weight:600">'+plan.macros.k+'</span></div>'
       +'<div><strong>Πρωτ:</strong> <span style="color:#025857;font-weight:600">'+plan.macros.p+'g</span></div>'
@@ -3769,7 +3769,7 @@ function buildPlanHistoryHtmlInner(c){
             +'<strong style="color:#025857">'+daysOfWeek[d]+'</strong><br>';
           for(var mi=0;mi<plan.weekPlan[d].length;mi++){
             var meal=plan.weekPlan[d][mi];
-            html+='<div style="margin-top:4px;padding:4px;background:#fff;border-radius:3px">'
+            html+='<div style="margin-top:4px;padding:4px;background:var(--card-bg);border-radius:3px">'
               +'<strong>'+esc(meal.name)+':</strong> ';
             if(meal.foods){
               var foodNames=[];

@@ -177,7 +177,7 @@ setTimeout(function(){
 </button>
 
 <!-- ✅ FAB Menu Modal -->
-<div id="fab-menu" style="position:fixed;bottom:80px;right:20px;background:white;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:99;display:none;overflow:hidden;">
+<div id="fab-menu" style="position:fixed;bottom:80px;right:20px;background:var(--card-bg);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:99;display:none;overflow:hidden;">
   <button id="fab-menu-newclient" onclick="addClient();fabMenu()" style="width:100%;padding:12px 20px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-bottom:1px solid #f0f0f0;transition:background .2s;">
     + Νέος Πελάτης
   </button>
@@ -193,7 +193,7 @@ setTimeout(function(){
 </div>
 
 <!-- ✅ CONTEXT MENU (Right-click) -->
-<div id="context-menu" style="position:fixed;background:white;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:1000;display:none;min-width:180px;overflow:hidden;">
+<div id="context-menu" style="position:fixed;background:var(--card-bg);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:1000;display:none;min-width:180px;overflow:hidden;">
   <button onclick="editClient()" style="width:100%;padding:10px 16px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;transition:background .2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">
     ✏️ Επεξεργασία
   </button>
@@ -245,24 +245,24 @@ setTimeout(function(){
 <!-- ✅ PHASE 3: MICRONUTRIENTS MODAL POPUP -->
 <!-- Plan Save Modal -->
 <div id="savePlanModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1002;align-items:center;justify-content:center;flex-direction:column">
-  <div style="background:white;padding:24px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);width:90%;max-width:420px">
+  <div style="background:var(--card-bg);padding:24px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);width:90%;max-width:420px">
     <h2 style="color:#025857;margin-top:0;margin-bottom:16px;font-size:18px">💾 Αποθήκευση Διατροφής</h2>
-    <div style="margin-bottom:12px"><label style="font-weight:600;display:block;margin-bottom:4px">Ημερομηνία:</label><div style="padding:8px;background:#f5f5f5;border-radius:4px;color:#666;font-size:13px" id="plan-save-date">-</div></div>
-    <div style="margin-bottom:16px"><label style="font-weight:600;display:block;margin-bottom:4px">Σχόλιο (προαιρετικό):</label><textarea id="plan-save-note" placeholder="π.χ. Αυξημένα μακροθρεπτικά..." style="width:100%;height:60px;padding:8px;border:1px solid #ddd;border-radius:4px;font-family:inherit;font-size:13px;box-sizing:border-box"></textarea></div>
+    <div style="margin-bottom:12px"><label style="font-weight:600;display:block;margin-bottom:4px">Ημερομηνία:</label><div style="padding:8px;background:var(--panel-bg);border-radius:4px;color:#666;font-size:13px" id="plan-save-date">-</div></div>
+    <div style="margin-bottom:16px"><label style="font-weight:600;display:block;margin-bottom:4px">Σχόλιο (προαιρετικό):</label><textarea id="plan-save-note" placeholder="π.χ. Αυξημένα μακροθρεπτικά..." style="width:100%;height:60px;padding:8px;border:1px solid var(--border-light);border-radius:4px;font-family:inherit;font-size:13px;box-sizing:border-box"></textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end"><button style="background:#999;color:#fff;padding:10px 16px;border:none;border-radius:4px;cursor:pointer;font-weight:600" onclick="closeSavePlanPanel()">Ακύρωση</button><button style="background:#2196F3;color:#fff;padding:10px 16px;border:none;border-radius:4px;cursor:pointer;font-weight:600" onclick="doSavePlan()">✓ Αποθήκευση</button></div>
   </div>
 </div>
 
 <!-- ✅ CONFIRMATION DIALOG - TIER 2 -->
 <div id="confirmDialog" role="dialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100000;align-items:center;justify-content:center;">
-  <div style="background:white;border-radius:12px;padding:32px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+  <div style="background:var(--card-bg);border-radius:12px;padding:32px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="text-align:center;margin-bottom:24px;">
       <div id="confirmIcon" style="font-size:48px;margin-bottom:12px;">⚠️</div>
       <h3 id="confirmTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Επιβεβαίωση</h3>
       <div id="confirmMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;text-align:left;"></div>
     </div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <button onclick="closeConfirmDialog()" aria-label="Ακύρωση διαλόγου" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
+      <button onclick="closeConfirmDialog()" aria-label="Ακύρωση διαλόγου" style="background:#f0f0f0;color:var(--text-strong);border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
       <button id="confirmSecondaryBtn" onclick="executeConfirmSecondary()" aria-label="Δευτερεύουσα ενέργεια" style="display:none;background:#fff3e0;color:#e65100;border:1px solid #ffb74d;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;"></button>
       <button id="confirmBtn" onclick="executeConfirm()" aria-label="Επιβεβαίωση ενέργειας" style="background:#c62828;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Διαγραφή</button>
     </div>
@@ -271,14 +271,14 @@ setTimeout(function(){
 
 <!-- ✅ TEXT INPUT DIALOG — στυλιζαρισμένη εναλλακτική του native prompt() -->
 <div id="promptDialog" role="dialog" aria-labelledby="promptTitle" aria-describedby="promptMessage" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100000;align-items:center;justify-content:center;">
-  <div style="background:white;border-radius:12px;padding:32px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+  <div style="background:var(--card-bg);border-radius:12px;padding:32px;max-width:400px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="text-align:center;margin-bottom:16px;">
       <h3 id="promptTitle" style="color:#025857;font-size:18px;margin:0 0 8px 0;font-weight:700;">Στοιχείο</h3>
       <p id="promptMessage" style="color:#666;font-size:14px;margin:0;line-height:1.5;white-space:pre-line;"></p>
     </div>
     <input id="promptInput" type="text" style="width:100%;padding:10px 12px;border-radius:7px;border:1.5px solid #e0e0e0;font-size:13px;margin:16px 0 20px;box-sizing:border-box;font-family:inherit" />
     <div style="display:flex;gap:12px;justify-content:center;">
-      <button onclick="closePromptDialog()" aria-label="Ακύρωση" style="background:#f0f0f0;color:#333;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
+      <button onclick="closePromptDialog()" aria-label="Ακύρωση" style="background:#f0f0f0;color:var(--text-strong);border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
       <button id="promptOkBtn" onclick="executePrompt()" aria-label="Επιβεβαίωση" style="background:#025857;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">OK</button>
     </div>
   </div>
@@ -333,7 +333,7 @@ setTimeout(function(){
 
 <!-- ✅ PHASE 2: SETTINGS PANEL -->
 <div id="settingsPanel" role="dialog" aria-modal="true" style="display:none;position:fixed;right:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:997;align-items:center;justify-content:center;">
-  <div style="background:white;border-radius:12px;padding:32px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+  <div style="background:var(--card-bg);border-radius:12px;padding:32px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:2px solid #E2EEE5;padding-bottom:16px;">
       <h2 style="color:#025857;margin:0;font-size:20px;font-weight:700;">⚙️ Ρυθμίσεις Εφαρμογής</h2>
       <button onclick="closeSettingsPanel()" style="background:none;border:none;cursor:pointer;font-size:24px;color:var(--text-muted);padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;">✕</button>
@@ -341,7 +341,7 @@ setTimeout(function(){
 
     <!-- App Statistics -->
     <div style="margin-bottom:24px;">
-      <h3 style="color:#333;font-size:16px;margin:0 0 12px 0;font-weight:600;">📊 Στατιστικά Εφαρμογής</h3>
+      <h3 style="color:var(--text-strong);font-size:16px;margin:0 0 12px 0;font-weight:600;">📊 Στατιστικά Εφαρμογής</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div style="background:#E2EEE5;padding:12px;border-radius:8px;text-align:center;">
           <div style="font-size:24px;font-weight:700;color:#025857;" id="statClients">0</div>
@@ -364,20 +364,20 @@ setTimeout(function(){
 
     <!-- User Preferences -->
     <div style="margin-bottom:24px;">
-      <h3 style="color:#333;font-size:16px;margin:0 0 12px 0;font-weight:600;">⚡ Προτιμήσεις Χρήστη</h3>
+      <h3 style="color:var(--text-strong);font-size:16px;margin:0 0 12px 0;font-weight:600;">⚡ Προτιμήσεις Χρήστη</h3>
 
       <div style="margin-bottom:16px;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="prefDarkMode" onchange="toggleDarkModeFromSettings()" style="width:18px;height:18px;cursor:pointer;">
-          <span style="font-size:14px;color:#333;">Σκούρο θέμα (Dark Mode)</span>
+          <span style="font-size:14px;color:var(--text-strong);">Σκούρο θέμα (Dark Mode)</span>
         </label>
       </div>
 
       <div style="margin-bottom:16px;">
-        <label style="font-size:14px;color:#333;display:block;margin-bottom:6px;font-weight:500;">
+        <label style="font-size:14px;color:var(--text-strong);display:block;margin-bottom:6px;font-weight:500;">
           📱 Χρονικό διάστημα αυτόματης αποθήκευσης
         </label>
-        <select id="prefAutoSave" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+        <select id="prefAutoSave" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:13px;">
           <option value="30">Κάθε 30 δευτερόλεπτα (γρήγορο)</option>
           <option value="60">Κάθε 1 λεπτό</option>
           <option value="120">Κάθε 2 λεπτά</option>
@@ -393,25 +393,25 @@ setTimeout(function(){
 
     <!-- Στοιχεία επικοινωνίας (εμφανίζονται στον πελάτη μέσω του κουμπιού «Ρώτησέ με») -->
     <div style="margin-bottom:24px;">
-      <h3 style="color:#333;font-size:16px;margin:0 0 4px 0;font-weight:600;">📞 Στοιχεία επικοινωνίας</h3>
+      <h3 style="color:var(--text-strong);font-size:16px;margin:0 0 4px 0;font-weight:600;">📞 Στοιχεία επικοινωνίας</h3>
       <div style="font-size:12px;color:#666;margin-bottom:12px;">Εμφανίζονται στον πελάτη μέσω του κουμπιού «Ρώτησέ με» στο δικό του link πλάνου.</div>
       <div style="margin-bottom:10px;">
-        <label style="font-size:13px;color:#333;display:block;margin-bottom:4px;">Τηλέφωνο</label>
-        <input type="tel" id="clinicTel" placeholder="69XXXXXXXX" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+        <label style="font-size:13px;color:var(--text-strong);display:block;margin-bottom:4px;">Τηλέφωνο</label>
+        <input type="tel" id="clinicTel" placeholder="69XXXXXXXX" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:13px;">
       </div>
       <div style="margin-bottom:10px;">
-        <label style="font-size:13px;color:#333;display:block;margin-bottom:4px;">WhatsApp (διεθνής μορφή, π.χ. 30690…)</label>
-        <input type="tel" id="clinicWa" placeholder="306900000000" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+        <label style="font-size:13px;color:var(--text-strong);display:block;margin-bottom:4px;">WhatsApp (διεθνής μορφή, π.χ. 30690…)</label>
+        <input type="tel" id="clinicWa" placeholder="306900000000" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:13px;">
       </div>
       <div>
-        <label style="font-size:13px;color:#333;display:block;margin-bottom:4px;">Email</label>
-        <input type="email" id="clinicEmail" placeholder="you@feedyourhealth.org" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+        <label style="font-size:13px;color:var(--text-strong);display:block;margin-bottom:4px;">Email</label>
+        <input type="email" id="clinicEmail" placeholder="you@feedyourhealth.org" onblur="saveClinicContact()" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:13px;">
       </div>
     </div>
 
     <!-- Quick Actions -->
     <div style="margin-bottom:24px;">
-      <h3 style="color:#333;font-size:16px;margin:0 0 12px 0;font-weight:600;">⚡ Γρήγορες Ενέργειες</h3>
+      <h3 style="color:var(--text-strong);font-size:16px;margin:0 0 12px 0;font-weight:600;">⚡ Γρήγορες Ενέργειες</h3>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <button onclick="createManualBackup()" style="width:100%;padding:10px 16px;background:#2196F3;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">💾 Δημιουργία Εφεδρικού Αντιγράφου Τώρα</button>
         <button onclick="exportAllDataAsJSON()" style="width:100%;padding:10px 16px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">📥 Εξαγωγή Όλων των Δεδομένων</button>
@@ -421,7 +421,7 @@ setTimeout(function(){
 
     <!-- Λοιπές λειτουργίες (μετακινήθηκαν εδώ από την πλαϊνή μπάρα για να μείνει καθαρή) -->
     <div style="margin-bottom:24px;">
-      <h3 style="color:#333;font-size:16px;margin:0 0 12px 0;font-weight:600;">🔧 Λοιπές λειτουργίες</h3>
+      <h3 style="color:var(--text-strong);font-size:16px;margin:0 0 12px 0;font-weight:600;">🔧 Λοιπές λειτουργίες</h3>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <button onclick="closeSettingsPanel();selectTmpl()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">✎ Πρότυπα πλάνων</button>
         <button onclick="closeSettingsPanel();exportClientsJSON()" style="width:100%;padding:10px 16px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;text-align:left;">☁️ Κατεβάσμε πελάτες (Google Drive)</button>
@@ -437,7 +437,7 @@ setTimeout(function(){
     </div>
 
     <!-- App Info -->
-    <div style="background:#f5f5f5;padding:12px;border-radius:8px;text-align:center;color:#666;font-size:12px;">
+    <div style="background:var(--panel-bg);padding:12px;border-radius:8px;text-align:center;color:#666;font-size:12px;">
       <div style="margin-bottom:4px;"><strong>Εργαλείο Διαιτολόγου v3.0</strong></div>
       <div>Τελευταία ενημέρωση: Ιούνιος 2026</div>
       <div style="margin-top:8px;font-size:11px;color:var(--text-muted);">Όλα τα δεδομένα αποθηκεύονται τοπικά στον υπολογιστή σας</div>
@@ -445,7 +445,7 @@ setTimeout(function(){
 
     <!-- Λογαριασμός -->
     <div style="margin-top:16px;">
-      <button onclick="closeSettingsPanel();logout()" style="width:100%;padding:10px 16px;background:#fff;color:#c0392b;border:1px solid #c0392b;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">🚪 Αποσύνδεση</button>
+      <button onclick="closeSettingsPanel();logout()" style="width:100%;padding:10px 16px;background:var(--card-bg);color:#c0392b;border:1px solid #c0392b;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;">🚪 Αποσύνδεση</button>
     </div>
   </div>
 </div>
@@ -1227,21 +1227,21 @@ function showMedicalProtocol(condition) {
       var pt=calcTDEE(pc);
       html += '<div style="background:#E2EEE5;padding:12px;border-radius:6px;margin-bottom:15px;">';
       html += '<strong style="color:#025857;">'+esc(getPregTrimesterLabel(pc.gestationalWeek)||'Τρίμηνο άγνωστο')+'</strong>';
-      html += '<div style="display:flex;gap:16px;margin-top:6px;font-size:13px;color:#333;">';
+      html += '<div style="display:flex;gap:16px;margin-top:6px;font-size:13px;color:var(--text-strong);">';
       html += '<span>Επιπλέον θερμίδες: <strong>+'+(pt.pregAdd||0)+' kcal</strong></span>';
       html += '<span>Στόχος: <strong>'+pt.target+' kcal</strong> · Π:'+pt.p+'g</span>';
       html += '</div>';
-      html += '<div style="margin-top:8px;font-size:12px;color:#333;line-height:1.5;">'+esc(getPregnancyTrimesterNote(pc.gestationalWeek))+'</div>';
+      html += '<div style="margin-top:8px;font-size:12px;color:var(--text-strong);line-height:1.5;">'+esc(getPregnancyTrimesterNote(pc.gestationalWeek))+'</div>';
       html += '</div>';
 
       var pFlags=(typeof getPregnancySafetyFlags==='function')?getPregnancySafetyFlags(pc):[];
       if(pFlags.length>0){
-        html += '<div style="margin-bottom:15px;"><strong style="color:#333;font-size:13px;">🔗 Αλληλεπιδράσεις με άλλα ενεργά πρωτόκολλα/ρυθμίσεις:</strong>';
+        html += '<div style="margin-bottom:15px;"><strong style="color:var(--text-strong);font-size:13px;">🔗 Αλληλεπιδράσεις με άλλα ενεργά πρωτόκολλα/ρυθμίσεις:</strong>';
         pFlags.forEach(function(f){
           var bg=f.level==='block'?'#fdecea':(f.level==='warn'?'#fff3e0':'#f5f5f5');
           var bd=f.level==='block'?'#d32f2f':(f.level==='warn'?'#ff9800':'#999');
           var ic=f.level==='block'?'🚫':(f.level==='warn'?'⚠️':'ℹ️');
-          html += '<div style="background:'+bg+';border-left:4px solid '+bd+';padding:8px 10px;border-radius:4px;margin-top:6px;font-size:12px;color:#333;line-height:1.5;">'+ic+' '+esc(f.msg)+'</div>';
+          html += '<div style="background:'+bg+';border-left:4px solid '+bd+';padding:8px 10px;border-radius:4px;margin-top:6px;font-size:12px;color:var(--text-strong);line-height:1.5;">'+ic+' '+esc(f.msg)+'</div>';
         });
         html += '</div>';
       }
@@ -1251,7 +1251,7 @@ function showMedicalProtocol(condition) {
         var wgBg=wg.status==='above'?'#fdecea':(wg.status==='below'?'#fff3e0':'#e8f5e9');
         var wgBd=wg.status==='above'?'#d32f2f':(wg.status==='below'?'#ff9800':'#4caf50');
         var wgTxt=wg.status==='above'?'Πάνω από το συνολικό εύρος IOM':(wg.status==='below'?'Κάτω από το αναμενόμενο κοντά στον τοκετό':'Εντός εύρους IOM');
-        html += '<div style="background:'+wgBg+';border-left:4px solid '+wgBd+';padding:10px 12px;border-radius:4px;margin-bottom:15px;font-size:12px;color:#333;">';
+        html += '<div style="background:'+wgBg+';border-left:4px solid '+wgBd+';padding:10px 12px;border-radius:4px;margin-bottom:15px;font-size:12px;color:var(--text-strong);">';
         html += '<strong>⚖️ Αύξηση βάρους κύησης:</strong> '+wg.gained+' kg μέχρι τώρα (ΔΜΣ προ εγκυμοσύνης '+wg.bmi+' — '+wg.range.label+', εύρος IOM '+wg.range.min+'-'+wg.range.max+' kg) — <strong>'+wgTxt+'</strong>';
         html += '</div>';
       }
@@ -1261,7 +1261,7 @@ function showMedicalProtocol(condition) {
   // RESTRICTIONS (some protocols, e.g. sports supplement/education-only ones, have nothing to avoid)
   if(protocol.restrictions.avoidFoods && protocol.restrictions.avoidFoods.length > 0) {
     html += '<div style="margin-bottom:15px;"><strong style="color:#d32f2f;">🚫 Αποφύγετε:</strong>';
-    html += '<ul style="margin:8px 0;color:#333;">';
+    html += '<ul style="margin:8px 0;color:var(--text-strong);">';
     protocol.restrictions.avoidFoods.forEach(function(food) {
       html += '<li style="margin:4px 0;">' + food + '</li>';
     });
@@ -1270,8 +1270,8 @@ function showMedicalProtocol(condition) {
 
   // FOOD REPLACEMENTS
   if(protocol.foodReplacements && Object.keys(protocol.foodReplacements).length > 0) {
-    html += '<div style="margin-bottom:15px;background:#f5f5f5;padding:10px;border-radius:6px;"><strong style="color:#0277bd;">🔄 Αντικαταστάσεις τροφίμων:</strong>';
-    html += '<ul style="margin:8px 0;color:#333;">';
+    html += '<div style="margin-bottom:15px;background:var(--panel-bg);padding:10px;border-radius:6px;"><strong style="color:#0277bd;">🔄 Αντικαταστάσεις τροφίμων:</strong>';
+    html += '<ul style="margin:8px 0;color:var(--text-strong);">';
     Object.keys(protocol.foodReplacements).forEach(function(original) {
       html += '<li style="margin:4px 0;"><em>"' + original + '"</em> → <strong>"' + protocol.foodReplacements[original] + '"</strong></li>';
     });
@@ -1281,7 +1281,7 @@ function showMedicalProtocol(condition) {
   // SUPPLEMENTS
   if(protocol.supplements && protocol.supplements.length > 0) {
     html += '<div style="margin-bottom:15px;"><strong style="color:#388e3c;">💊 Συνιστώμενα συμπληρώματα:</strong>';
-    html += '<ul style="margin:8px 0;color:#333;">';
+    html += '<ul style="margin:8px 0;color:var(--text-strong);">';
     protocol.supplements.forEach(function(supp) {
       html += '<li style="margin:4px 0;">' + supp + '</li>';
     });
@@ -1330,7 +1330,7 @@ function showMedicalProtocol(condition) {
   var modalDiv = document.createElement('div');
   modalDiv.setAttribute('data-medical-modal', 'true');
   modalDiv.innerHTML = html;
-  modalDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:0;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:9999;max-height:90vh;overflow-y:auto;width:90%;max-width:650px;';
+  modalDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card-bg);padding:0;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:9999;max-height:90vh;overflow-y:auto;width:90%;max-width:650px;';
 
   // Close button
   var closeBtn = document.createElement('button');
@@ -1480,7 +1480,7 @@ function toggleSupplementSelector() {
   }
 
   // Build HTML with supplement checkboxes
-  var suppListHtml = '<div style="background:white;border-radius:10px;padding:25px;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">';
+  var suppListHtml = '<div style="background:var(--card-bg);border-radius:10px;padding:25px;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.3);">';
   suppListHtml += '<h2 style="color:#025857;margin:0 0 15px 0;">💊 Συμπληρώματα που Παίρνει Ήδη ο Πελάτης</h2>';
   suppListHtml += '<p style="color:#666;font-size:12px;margin:0 0 15px 0;">Τικάρετε ό,τι χρησιμοποιεί ήδη τακτικά. Για προτάσεις νέων συμπληρωμάτων βάσει του πλάνου, δες «💊» στο «Πλάνο» — και τα δύο εμφανίζονται μαζί στο PDF.</p>';
 
@@ -1491,10 +1491,10 @@ function toggleSupplementSelector() {
 
   commonSupps.forEach(function(supp, idx) {
     var isSelected = c.selectedSupplements && c.selectedSupplements.some(function(s) { return s.supplement === supp.name; });
-    suppListHtml += '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer;border:2px solid '+(isSelected?'#025857':'#ddd')+';transition:all 0.2s;">';
+    suppListHtml += '<label style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer;border:2px solid '+(isSelected?'#025857':'#ddd')+';transition:all 0.2s;">';
     suppListHtml += '<input type="checkbox" id="supp-cb-'+idx+'" '+(isSelected?'checked':'')+' style="width:18px;height:18px;cursor:pointer;margin-top:2px;">';
     suppListHtml += '<div style="flex:1;">';
-    suppListHtml += '<div style="font-weight:600;color:#333;">'+supp.name+'</div>';
+    suppListHtml += '<div style="font-weight:600;color:var(--text-strong);">'+supp.name+'</div>';
     suppListHtml += '<div style="font-size:11px;color:#666;">📋 '+supp.dosage+'</div>';
     suppListHtml += '<div style="font-size:11px;color:var(--text-muted);">⏰ '+supp.timing+'</div>';
     suppListHtml += '</div>';
@@ -1835,7 +1835,7 @@ function getDayStatus(dayTotals, targetTotals){
 
 <!-- VALIDATION MODAL -->
 <div id="validationModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1100;align-items:center;justify-content:center;overflow-y:auto;padding:20px 0;">
-  <div style="background:white;border-radius:12px;width:95%;max-width:1200px;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);overflow:hidden;">
+  <div style="background:var(--card-bg);border-radius:12px;width:95%;max-width:1200px;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);overflow:hidden;">
 
     <!-- Header -->
     <div style="background:linear-gradient(135deg, #025857 0%, #014545 100%);color:white;padding:20px;display:flex;justify-content:space-between;align-items:center;">
@@ -1852,15 +1852,15 @@ function getDayStatus(dayTotals, targetTotals){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
 
         <!-- DEBUG PANEL -->
-        <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;">
+        <div style="background:var(--panel-bg);border:1px solid var(--border-light);border-radius:8px;padding:15px;">
           <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">🖥️ Debug Panel</h3>
           <div id="valDebugPanel" style="font-family:monospace;font-size:11px;line-height:1.6;color:#555;">
-            <div style="padding:10px;background:#fff;border-radius:4px;color:var(--text-muted);">Waiting for data...</div>
+            <div style="padding:10px;background:var(--card-bg);border-radius:4px;color:var(--text-muted);">Waiting for data...</div>
           </div>
         </div>
 
         <!-- VALIDATION CHECKLIST -->
-        <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;">
+        <div style="background:var(--panel-bg);border:1px solid var(--border-light);border-radius:8px;padding:15px;">
           <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">✓ Validation Checklist</h3>
           <div id="valCheckList" style="font-size:11px;line-height:1.8;">
             <div style="padding:10px;color:var(--text-muted);">Waiting for data...</div>
@@ -1870,17 +1870,17 @@ function getDayStatus(dayTotals, targetTotals){
       </div>
 
       <!-- TEST CASES -->
-      <div style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:20px;">
+      <div style="background:var(--panel-bg);border:1px solid var(--border-light);border-radius:8px;padding:15px;margin-bottom:20px;">
         <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;padding-bottom:8px;border-bottom:2px solid #e0e0e0;">🧪 Test Cases (Known Values)</h3>
         <div id="valTestCases" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;font-size:11px;">
-          <div style="padding:10px;background:#fff;border-radius:4px;border-left:4px solid #025857;color:var(--text-muted);">Loading...</div>
+          <div style="padding:10px;background:var(--card-bg);border-radius:4px;border-left:4px solid #025857;color:var(--text-muted);">Loading...</div>
         </div>
       </div>
 
       <!-- CORRELATION ANALYSIS -->
       <div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1px solid #c8e6c9;border-radius:8px;padding:15px;">
         <h3 style="color:#025857;font-size:13px;margin:0 0 12px 0;">🔗 Calculation Flow</h3>
-        <div id="valCorrelation" style="font-size:11px;line-height:1.8;color:#333;">
+        <div id="valCorrelation" style="font-size:11px;line-height:1.8;color:var(--text-strong);">
           <div style="color:var(--text-muted);">Waiting for data...</div>
         </div>
       </div>
@@ -1919,7 +1919,7 @@ function openValidationModal() {
   var actFactors = {sed:1.2, light:1.375, mod:1.55, active:1.725};
 
   // DEBUG PANEL
-  var debugHTML = '<div style="padding:10px;background:#fff;border-radius:4px;">';
+  var debugHTML = '<div style="padding:10px;background:var(--card-bg);border-radius:4px;">';
   debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Name:</span><strong>'+esc(c.name)+'</strong></div>';
   debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>BMR:</span><strong>'+bmr.toFixed(0)+' kcal</strong></div>';
   debugHTML += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span>Activity:</span><strong>'+actFactor.toFixed(2)+'x</strong></div>';
@@ -1939,7 +1939,7 @@ function openValidationModal() {
     {name: 'Macro Total (~TDEE)', pass: Math.abs((protein*4 + fat*9 + carbs*4) - adjTDEE) < adjTDEE*0.05, val: (protein*4+fat*9+carbs*4).toFixed(0)}
   ];
 
-  var checkHTML = '<div style="padding:10px;background:#fff;border-radius:4px;">';
+  var checkHTML = '<div style="padding:10px;background:var(--card-bg);border-radius:4px;">';
   checks.forEach(function(ch){
     checkHTML += '<div style="display:flex;align-items:center;gap:8px;padding:6px;margin:4px 0;">';
     checkHTML += '<span style="font-size:16px;'+(ch.pass?'color:#4caf50':'color:#f44336')+'">'+(ch.pass?'✓':'✗')+'</span>';
@@ -1962,7 +1962,7 @@ function openValidationModal() {
     var b = calcBMR(t.w, t.h, t.a, t.s);
     var d = b * actFactors[t.act];
     var p = t.w * 1.8;
-    testHTML += '<div style="padding:10px;background:#fff;border-radius:4px;border-left:4px solid #025857;">';
+    testHTML += '<div style="padding:10px;background:var(--card-bg);border-radius:4px;border-left:4px solid #025857;">';
     testHTML += '<strong>'+t.name+'</strong><br/>';
     testHTML += 'TDEE: <strong>'+d.toFixed(0)+'</strong> kcal<br/>';
     testHTML += 'P: <strong>'+p.toFixed(0)+'g</strong><br/>';
@@ -2007,7 +2007,7 @@ document.getElementById('validationModal').addEventListener('click', function(e)
 function openMealTimesModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="mealTimesOverlay" onclick="if(event.target===this)closeMealTimesModal()">'
-    +'<div style="background:white;border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="background:var(--card-bg);border-radius:12px;padding:20px;max-width:500px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">⏱️ Χρόνοι Γευμάτων</h2>'
     +'<button onclick="closeMealTimesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
@@ -2016,11 +2016,11 @@ function openMealTimesModal(){
     +'💡 Ορίστε τους χρόνους των γευμάτων. Θα χρησιμοποιηθούν για meal planning.'
     +'</div>'
     +'<div style="display:grid;gap:12px">'
-    +'<div><label style="font-weight:600;color:#333">🌅 Πρωινό</label><input type="time" id="meal-breakfast" value="'+(c.mealTimes?.breakfast||'07:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
-    +'<div><label style="font-weight:600;color:#333">🥤 Πρωινό Ενδιάμεσο</label><input type="time" id="meal-snack" value="'+(c.mealTimes?.snack||'10:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
-    +'<div><label style="font-weight:600;color:#333">🍽️ Μεσημέρι</label><input type="time" id="meal-lunch" value="'+(c.mealTimes?.lunch||'13:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
-    +'<div><label style="font-weight:600;color:#333">🍎 Απογευματινό Ενδιάμεσο</label><input type="time" id="meal-snack2" value="'+(c.mealTimes?.snack2||'16:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
-    +'<div><label style="font-weight:600;color:#333">🌙 Βράδυ</label><input type="time" id="meal-dinner" value="'+(c.mealTimes?.dinner||'19:00')+'" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:var(--text-strong)">🌅 Πρωινό</label><input type="time" id="meal-breakfast" value="'+(c.mealTimes?.breakfast||'07:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:var(--text-strong)">🥤 Πρωινό Ενδιάμεσο</label><input type="time" id="meal-snack" value="'+(c.mealTimes?.snack||'10:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:var(--text-strong)">🍽️ Μεσημέρι</label><input type="time" id="meal-lunch" value="'+(c.mealTimes?.lunch||'13:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:var(--text-strong)">🍎 Απογευματινό Ενδιάμεσο</label><input type="time" id="meal-snack2" value="'+(c.mealTimes?.snack2||'16:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
+    +'<div><label style="font-weight:600;color:var(--text-strong)">🌙 Βράδυ</label><input type="time" id="meal-dinner" value="'+(c.mealTimes?.dinner||'19:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
     +'</div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeMealTimesModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
@@ -2057,7 +2057,7 @@ function saveMealTimes(){
 function openMetActivitiesModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="metActivOverlay" onclick="if(event.target===this)closeMetActivitiesModal()">'
-    +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="background:var(--card-bg);border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">🏃 MET Activities (Δραστηριότητες)</h2>'
     +'<button onclick="closeMetActivitiesModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
@@ -2091,7 +2091,7 @@ function closeMetActivitiesModal(){
 function openMedicalConditionsModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="medicalOverlay" onclick="if(event.target===this)closeMedicalConditionsModal()">'
-    +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="background:var(--card-bg);border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">🩺 Ιατρικές Συνθήκες</h2>'
     +'<button onclick="closeMedicalConditionsModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
@@ -2103,51 +2103,51 @@ function openMedicalConditionsModal(){
     // had no legend and no consistent meaning (unlike the 3-tier menstrual-cycle colors below,
     // which do mean something). Reserving color for the genuine risk callouts above/below.
     +'<div style="display:grid;gap:10px;margin-bottom:20px">'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-diabetes-modal" '+(c.medConditions?.diabetes?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🍬 Διαβήτης</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'diabetes\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'diabetes\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-hypertension-modal" '+(c.medConditions?.hypertension?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🩸 Υψηλή Πίεση</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hypertension\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hypertension\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-cholesterol-modal" '+(c.medConditions?.cholesterol?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🩸 Υψηλή Χοληστερόλη</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'cholesterol\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'cholesterol\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-celiac-modal" '+(c.medConditions?.celiac?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🌾 Κοιλιοκάκη</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'celiac\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'celiac\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-ibs-modal" '+(c.medConditions?.ibs?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🔄 IBS</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ibs\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ibs\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-lactose-modal" '+(c.medConditions?.lactose?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🥛 Δυσανεξία Λακτόζης</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-ironDeficiency-modal" '+(c.medConditions?.ironDeficiency?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🔋 Σιδηροπενία / Αναιμία (Αθλητές)</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ironDeficiency\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ironDeficiency\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:#f5f5f5;border-radius:6px;cursor:pointer">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-hydration-modal" '+(c.medConditions?.hydration?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">💧 Ενυδάτωση & Ηλεκτρολύτες (Αθλητές)</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hydration\')" style="margin-left:auto;background:#fff;border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hydration\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'</div>'
     +'<div style="border-top:2px solid #ddd;padding-top:15px">'
-    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:10px">👩 Μητρικός Κύκλος (Γυναίκες):</label>'
+    +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:10px">👩 Μητρικός Κύκλος (Γυναίκες):</label>'
     +'<div style="display:grid;gap:8px">'
-    +'<label style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:4px">'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--panel-bg);border-radius:4px">'
     +'<input type="radio" name="menstrual" value="regular" '+(c.menstrualCycle!=='irregular'&&c.menstrualCycle!=='absent'?'checked':'')+' style="width:16px;height:16px">'
     +'<span>✅ Κανονικός</span>'
     +'</label>'
@@ -2240,14 +2240,14 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
     var dayOptions=DAYS.map(function(d,i){return '<option value="'+i+'">'+esc(d)+'</option>';}).join('');
     feastPresetHtml='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:#f7faf9;border-radius:6px;font-size:11px">'
       +'<span style="font-weight:600;color:#025857">🐟 Γνωστή γιορτή:</span>'
-      +'<select id="exc-feast-select" style="padding:3px 5px;border:1px solid #ddd;border-radius:4px;font-size:11px">'+feastOptions+'</select>'
+      +'<select id="exc-feast-select" style="padding:3px 5px;border:1px solid var(--border-light);border-radius:4px;font-size:11px">'+feastOptions+'</select>'
       +'<span style="color:#666">σε ημέρα</span>'
-      +'<select id="exc-feast-day" style="padding:3px 5px;border:1px solid #ddd;border-radius:4px;font-size:11px">'+dayOptions+'</select>'
+      +'<select id="exc-feast-day" style="padding:3px 5px;border:1px solid var(--border-light);border-radius:4px;font-size:11px">'+dayOptions+'</select>'
       +'<button type="button" onclick="applyFastingFeastPreset()" style="padding:3px 10px;background:#025857;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer">Εφαρμογή</button>'
       +'</div>';
   }
-  var head='<th style="text-align:left;padding:4px 6px;font-weight:600;color:#333;font-size:11px">Ημέρα</th>'
-    +cats.map(function(cat){return '<th style="padding:4px 6px;font-weight:600;color:#333;font-size:11px">'+esc(cat)+'</th>';}).join('');
+  var head='<th style="text-align:left;padding:4px 6px;font-weight:600;color:var(--text-strong);font-size:11px">Ημέρα</th>'
+    +cats.map(function(cat){return '<th style="padding:4px 6px;font-weight:600;color:var(--text-strong);font-size:11px">'+esc(cat)+'</th>';}).join('');
   // "Select all days" row — one checkbox per category column, checks/unchecks that category for
   // all 7 days at once (e.g. the client isn't strict about dairy at all → one click instead of 7).
   var allDaysRow='<tr>'
@@ -2269,7 +2269,7 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
       +'</tr>';
   });
   return '<div style="margin-bottom:20px">'
-    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">📅 Εξαιρέσεις ανά ημέρα:</label>'
+    +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">📅 Εξαιρέσεις ανά ημέρα:</label>'
     +'<div style="font-size:11px;color:#666;margin-bottom:6px">Τσέκαρε την κατηγορία που επιτρέπεται εκείνη τη μέρα (π.χ. ψάρι σε γιορτή νηστείας) — το πλάνο θα προσπαθήσει να βάλει αντίστοιχο γεύμα αυτόματα εκείνη την ημέρα. Με «Όλες οι μέρες» επιλέγεις μια κατηγορία για όλη την εβδομάδα με ένα κλικ.</div>'
     +feastPresetHtml
     +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
@@ -2308,14 +2308,14 @@ function refreshDietExceptionsSection(){
 function openDietModal(){
   var c=getC();if(!c)return;
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="dietOverlay" onclick="if(event.target===this)closeDietModal()">'
-    +'<div style="background:white;border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="background:var(--card-bg);border-radius:12px;padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">🥗 Διατροφή & Αποκλεισμοί</h2>'
     +'<button onclick="closeDietModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
     +'</div>'
     +'<div style="margin-bottom:20px">'
-    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">📋 Τύπος Διατροφής:</label>'
-    +'<select id="dietType-modal" onchange="refreshDietExceptionsSection()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px">'
+    +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">📋 Τύπος Διατροφής:</label>'
+    +'<select id="dietType-modal" onchange="refreshDietExceptionsSection()" style="width:100%;padding:10px;border:1px solid var(--border-light);border-radius:4px;font-size:14px">'
     +'<option value="normal" '+(c.dietType==='normal'?'selected':'')+'>🍗 Κανονική</option>'
     +'<option value="vegetarian" '+(c.dietType==='vegetarian'?'selected':'')+'>🥬 Χορτοφαγική</option>'
     +'<option value="vegan" '+(c.dietType==='vegan'?'selected':'')+'>🌱 Vegan</option>'
@@ -2329,7 +2329,7 @@ function openDietModal(){
     +'</div>'
     +'<div id="diet-exceptions-section">'+buildDietExceptionsHtml(c.dietType, c.dietExceptionDays)+'</div>'
     +'<div style="margin-bottom:20px">'
-    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">🚫 Αποκλεισμοί Τροφών:</label>'
+    +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">🚫 Αποκλεισμοί Τροφών:</label>'
     +'<button onclick="openFoodPickerModal()" style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;margin-bottom:8px">'
     +'📋 Επιλέξτε τρόφιμα που δεν του αρέσουν ('+(c.foodExclude?.length||0)+')'
     +'</button>'
@@ -2338,8 +2338,8 @@ function openDietModal(){
     +'</div>'
     +'</div>'
     +'<div style="margin-bottom:20px">'
-    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:8px">💡 Προτιμήσεις (comma-separated):</label>'
-    +'<textarea id="preferences-modal" oninput="updatePreferencesDetectedHint()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:14px;height:80px;font-family:monospace" placeholder="π.χ. Όχι κόκκινο κρέας, Περισσότερο ψάρι">'+(c.preferences||'')+'</textarea>'
+    +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">💡 Προτιμήσεις (comma-separated):</label>'
+    +'<textarea id="preferences-modal" oninput="updatePreferencesDetectedHint()" style="width:100%;padding:10px;border:1px solid var(--border-light);border-radius:4px;font-size:14px;height:80px;font-family:monospace" placeholder="π.χ. Όχι κόκκινο κρέας, Περισσότερο ψάρι">'+(c.preferences||'')+'</textarea>'
     +'<div id="preferences-detected-hint" style="font-size:11px;color:#025857;margin-top:6px"></div>'
     +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Μόνο ρητές φράσεις αποφυγής (π.χ. «Όχι…», «Αποφυγή…») μετατρέπονται αυτόματα σε αποκλεισμό τροφίμων — όλα τα άλλα παραμένουν απλή σημείωση.</div>'
     +'</div>'
@@ -2468,7 +2468,7 @@ function openFoodPickerModal(){
   var hasExceptionTab=!!(DIET_TYPE_FORBIDDEN_CATS[c.dietType]&&DIET_TYPE_FORBIDDEN_CATS[c.dietType].length);
 
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="foodPickerOverlay" onclick="if(event.target===this)closeFoodPickerModal()">'
-    +'<div style="background:white;border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
+    +'<div style="background:var(--card-bg);border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #025857;padding-bottom:10px">'
     +'<h2 style="margin:0;color:#025857;font-size:18px">🚫 Αποκλεισμοί Τροφών</h2>'
     +'<button onclick="closeFoodPickerModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
@@ -2483,14 +2483,14 @@ function openFoodPickerModal(){
 
     +'<div id="fp-tab-excl">'
     +'<div style="margin-bottom:15px">'
-    +'<input type="text" id="foodSearch" placeholder="🔍 Αναζήτησε τρόφιμο..." style="width:100%;padding:12px;border:1px solid #ddd;border-radius:6px;font-size:14px" oninput="filterFoodPicker(this.value)">'
+    +'<input type="text" id="foodSearch" placeholder="🔍 Αναζήτησε τρόφιμο..." style="width:100%;padding:12px;border:1px solid var(--border-light);border-radius:6px;font-size:14px" oninput="filterFoodPicker(this.value)">'
     +'</div>'
 
     +'<div style="margin-bottom:15px;max-height:300px;overflow-y:auto" id="foodPickerContent">'
     +'</div>'
 
     +'<div style="border-top:2px solid #ddd;padding-top:15px;margin-top:15px">'
-    +'<label style="font-weight:600;color:#333;display:block;margin-bottom:10px">✅ ΕΠΙΛΕΓΜΕΝΑ:</label>'
+    +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:10px">✅ ΕΠΙΛΕΓΜΕΝΑ:</label>'
     +'<div id="selectedFoodsChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px"></div>'
     +'</div>'
     +'</div>'
@@ -2521,7 +2521,7 @@ function openFoodPickerModal(){
 
     foodsByCategory[cat].forEach(function(foodName){
       var isSelected=(c.foodExclude||[]).includes(foodName);
-      contentHtml+='<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px;border-radius:4px;transition:all 0.2s" onmouseover="this.style.background=\'#f5f5f5\'" onmouseout="this.style.background=\'\'">'
+      contentHtml+='<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px;border-radius:4px;transition:all 0.2s" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'\'">'
         +'<input type="checkbox" data-food-excl value="'+foodName+'" '+(isSelected?'checked':'')+' style="width:16px;height:16px;cursor:pointer" onchange="updateFoodChips()">'
         +'<span style="font-size:13px">'+foodName+'</span>'
         +'</label>';
@@ -2735,7 +2735,7 @@ function saveFoodExclusions(){
       this._authMode = mode;
       this._msg('');
       var base='flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;';
-      var active='background:#fff;color:#025857;box-shadow:0 1px 3px rgba(0,0,0,.12);';
+      var active='background:var(--card-bg);color:#025857;box-shadow:0 1px 3px rgba(0,0,0,.12);';
       var inactive='background:transparent;color:#7aa6a2;box-shadow:none;';
       var ti=document.getElementById('tab-signin'), tu=document.getElementById('tab-signup');
       var btn=document.getElementById('cloud-primary-btn');

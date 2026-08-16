@@ -13,6 +13,21 @@
      is ~5.7:1 on white. Dark-mode override below keeps the same "one step dimmer than primary
      text" role, contrast-checked against the app's #1a1a1a dark surface (audit finding, 2026-08-16). */
   --text-muted:#6b6b6b;
+  /* Surface/text/border tokens for the ~250 inline style="…" declarations across
+     Dietologist.html + js/app-part*.js that hardcoded light-mode colors (background:#fff,
+     color:#1a1a1a/#333, border:1px solid #ddd/#e0e0e0) — inline style beats any body.dark-mode
+     class rule by specificity, so those panels/buttons stayed stuck in light mode regardless of
+     the toggle. Dark values below reuse the app's ALREADY-established dark-card convention (see
+     the body.dark-mode block further down: "#1a1a1a/#444/#e0e0e0 dark-card convention") instead
+     of inventing new colors, so this doesn't introduce a second dark palette (audit finding, fixed
+     2026-08-16 by pointing the inline literals at these vars instead of converting them to classes
+     — smaller diff, same visual result). --panel-bg is one step recessed from --card-bg, for
+     nested/secondary panels (was #f5f5f5/#f9f9f9/#fafafa, several near-duplicate light grays
+     consolidated into one token). */
+  --card-bg:#fff;
+  --panel-bg:#f5f5f5;
+  --border-light:#e0e0e0;
+  --text-strong:#1a1a1a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a;-webkit-user-select:none;user-select:none}
@@ -1824,6 +1839,13 @@ body.dark-mode {
   --success-tint:#14301a;
   --danger:#d32f2f;
   --text-muted:#8a8a8a;
+  /* Same values as the established "#1a1a1a/#444/#e0e0e0 dark-card convention" already used by
+     the appt/pf-history rules right below — reused here, not reinvented, for --card-bg,
+     --border-light, --text-strong (see the :root comment above for what these replace). */
+  --card-bg:#1a1a1a;
+  --panel-bg:#242424;
+  --border-light:#444;
+  --text-strong:#e0e0e0;
 }
 body.dark-mode .cc-status-active{color:#8bc98f}
 body.dark-mode .meal-label{color:#e0e0e0}
