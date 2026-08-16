@@ -1,6 +1,19 @@
 // Global HTML-escape helper — sanitizes user input (client names, notes, etc.)
 // before it is injected into innerHTML. Prevents broken markup / XSS.
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// Ασφαλές string για μέσα σε onclick="fn('...')": πρώτα escape για το JS string
+// literal (\ και '), μετά escape για το ίδιο το HTML attribute (" < > &) —
+// χωρίς το δεύτερο βήμα, ένα " στο κείμενο του πελάτη σπάει έξω από το onclick="..."
+// (βλ. audit finding: app-part2.js noteJs, στο client-portal note field).
+function escJsAttr(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;')
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
 var DAYS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
 // Κοινή κανονικοποίηση τηλεφώνου για wa.me links — πελάτες σε Ελλάδα (10ψήφιο, χωρίς/με 30) ΚΑΙ
 // Κύπρο (8ψήφιο, χωρίς/με 357) μοιράζονται τον ίδιο λογαριασμό, οπότε ΔΕΝ μπορούμε να υποθέσουμε

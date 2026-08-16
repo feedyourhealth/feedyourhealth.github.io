@@ -1751,7 +1751,7 @@ function clientLogsPanelHtml(c){
     var replyBtn='';
     if(noteRaw){
       var replied=isNoteReplied(c,e.date);
-      var noteJs=noteRaw.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      var noteJs=escJsAttr(noteRaw);
       replyBtn='<button type="button" class="note-reply-btn'+(replied?' replied':'')+'" onclick="event.stopPropagation();replyToClientNote(\''+c.id+'\',\''+e.date+'\',\''+noteJs+'\')">↩️ Απάντησε'+(replied?' ✓':'')+'</button>';
     }
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:11px">'
@@ -3078,7 +3078,7 @@ function buildApptAttentionDigestHtml(c){
     }).slice(0,3);
     unanswered.forEach(function(e){
       var t=(e.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
-      var noteJs=t.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      var noteJs=escJsAttr(t);
       items.push('<div class="appt-digest-item">💬 Μήνυμα πελάτη ('+fmtDateShortAppt(e.date)+') χωρίς απάντηση'
         +'<button type="button" class="go" onclick="replyToClientNote(\''+c.id+'\',\''+e.date+'\',\''+noteJs+'\')">↩️ Απάντησε</button></div>');
     });
