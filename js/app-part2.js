@@ -1745,6 +1745,34 @@ function replyToPlanFeedback(clientId,weekStart,key){
     var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
   }
 }
+// "Το είδα" — ελαφρύτερο από το ↩️ Απάντησε (isNoteReplied/isPfReplied): δεν ανοίγει WhatsApp/email,
+// απλά βγάζει το μήνυμα από τα "Αναπάντητα" στο "💬 Μηνύματα" (js/app-part5-home.js) όταν δεν χρειάζεται
+// πραγματική απάντηση (π.χ. "όλα καλά, ευχαριστώ"). Ίδιο μοτίβο αποθήκευσης (client field + localStorage
+// fallback) με markNoteReplied/markPfReplied, ξεχωριστό πεδίο ώστε να μη μπερδεύεται με "απαντήθηκε".
+function noteSeenKey(token,date){ return 'fyh-note-seen-'+token+'-'+date; }
+function isNoteSeen(c,date){
+  if(c && c.noteSeen && c.noteSeen[date]) return true;
+  if(!c || !c.shareToken) return false;
+  try{ return localStorage.getItem(noteSeenKey(c.shareToken,date))==='1'; }catch(err){ return false; }
+}
+function markNoteSeen(c,date){
+  if(!c) return;
+  if(!c.noteSeen) c.noteSeen={};
+  c.noteSeen[date]=true;
+  if(c.shareToken){ try{ localStorage.setItem(noteSeenKey(c.shareToken,date),'1'); }catch(err){} }
+}
+function pfSeenKey(token,weekStart){ return 'fyh-pf-seen-'+token+'-'+weekStart; }
+function isPfSeen(c,weekStart){
+  if(c && c.pfSeen && c.pfSeen[weekStart]) return true;
+  if(!c || !c.shareToken) return false;
+  try{ return localStorage.getItem(pfSeenKey(c.shareToken,weekStart))==='1'; }catch(err){ return false; }
+}
+function markPfSeen(c,weekStart){
+  if(!c) return;
+  if(!c.pfSeen) c.pfSeen={};
+  c.pfSeen[weekStart]=true;
+  if(c.shareToken){ try{ localStorage.setItem(pfSeenKey(c.shareToken,weekStart),'1'); }catch(err){} }
+}
 // Μόνο για annotation στο ιστορικό — δεν ξέρει τίποτα για το εβδομαδιαίο override του πελάτη
 // (αυτό ζει μόνο στο localStorage του πελάτη, ποτέ δεν φτάνει στο cloud), δείχνει μόνο τον
 // ΜΟΝΙΜΟ κανόνα (c.matchDays) ώστε ο διαιτολόγος να ξέρει "αυτή η μέρα ήταν συνήθως αγώνας"
