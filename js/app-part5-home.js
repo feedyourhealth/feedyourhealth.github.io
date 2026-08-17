@@ -1007,7 +1007,20 @@ function msgRowHtml(m,compact){
     }
     var weightHtml=m.weight?(' · <b>'+m.weight+' kg</b>'):'';
     subline=(urgent?'⏳ ':'💬 ')+m.date+' · '+ageTxt;
-    bodyHtml=tagHtml+esc(m.noteRaw)+weightHtml;
+    // ✂️ Μεγάλες σημειώσεις (>140 χαρακτήρες) περικόπτονται με "περισσότερα ▾" — καθαρό DOM toggle
+    // μέσα στο ίδιο onclick, όχι re-render όλης της λίστας (θα έχανε το scroll position).
+    var noteTextHtml;
+    if(m.noteRaw.length>140){
+      var shortTxt=esc(m.noteRaw.slice(0,140))+'…';
+      noteTextHtml='<span class="msg-note-body" data-expanded="0">'
+        +'<span class="msg-note-short">'+shortTxt+'</span>'
+        +'<span class="msg-note-full" style="display:none">'+esc(m.noteRaw)+'</span>'
+        +' <button type="button" style="background:none;border:none;color:var(--teal);font-size:10.5px;font-weight:600;cursor:pointer;padding:0" onclick="event.stopPropagation();var w=this.parentElement;var exp=w.getAttribute(\'data-expanded\')===\'1\';w.setAttribute(\'data-expanded\',exp?\'0\':\'1\');w.querySelector(\'.msg-note-short\').style.display=exp?\'inline\':\'none\';w.querySelector(\'.msg-note-full\').style.display=exp?\'none\':\'inline\';this.textContent=exp?\'περισσότερα ▾\':\'λιγότερα ▴\';">περισσότερα ▾</button>'
+        +'</span>';
+    } else {
+      noteTextHtml=esc(m.noteRaw);
+    }
+    bodyHtml=tagHtml+noteTextHtml+weightHtml;
     replyOnclick="replyToClientNote('"+c.id+"','"+m.date+"','"+escJsAttr(m.noteRaw)+"');setTimeout(function(){if(typeof renderSB==='function')renderSB();renderMessages();},50);";
   } else {
     var e=m.entry;
@@ -1085,11 +1098,24 @@ function msgMarkAllSeen(){
 }
 // Χειροκίνητο "🔄 Ανανέωση" των δύο portal caches (client_logs/plan_feedback) on-demand, χωρίς reload
 // — ίδιο σκεπτικό με το refreshClientPortalFeedback (js/app-part2.js), αλλά ξανασχεδιάζει το #main
-// (renderMessages) αντί για το #s3b, αφού εδώ δεν υπάρχει επιλεγμένος πελάτης.
+// (renderMessages) αντί για το #s3b, αφού εδώ δεν υπάρχει επιλεγμένος πελάτης. Συγκρίνει το πλήθος
+// αναπάντητων πριν/μετά και δείχνει toast αν βρέθηκε κάτι νέο — αλλιώς η ανανέωση γίνεται αθόρυβα
+// και δεν ξέρεις αν άξιζε τον κόπο να την πατήσεις.
 function msgRefresh(btn){
   if(!window.Cloud) return;
+  var beforeCount=0;
+  try{ beforeCount=collectAllClientMessages().filter(function(m){return !m.handled;}).length; }catch(e){}
   if(btn){ btn.disabled=true; btn.textContent='⏳ Ανανέωση...'; }
-  var restore=function(){ if(btn){ btn.disabled=false; btn.textContent='🔄 Ανανέωση'; } renderMessages(); };
+  var restore=function(){
+    if(btn){ btn.disabled=false; btn.textContent='🔄 Ανανέωση'; }
+    var afterCount=0;
+    try{ afterCount=collectAllClientMessages().filter(function(m){return !m.handled;}).length; }catch(e){}
+    renderMessages();
+    var diff=afterCount-beforeCount;
+    if(diff>0 && typeof showSuccessToast==='function'){
+      showSuccessToast('📬 '+(diff===1?'1 νέο μήνυμα.':diff+' νέα μηνύματα.'));
+    }
+  };
   Promise.all([
     typeof window.Cloud.refreshClientLogsCache==='function'?window.Cloud.refreshClientLogsCache():Promise.resolve(),
     typeof window.Cloud.refreshPlanFeedbackCache==='function'?window.Cloud.refreshPlanFeedbackCache():Promise.resolve()
@@ -1097,6 +1123,27 @@ function msgRefresh(btn){
 }
 var _msgFilter='unread';
 var _msgGroupBy=false;
+var _msgSearch='';
+// Ενημερώνει ΜΟΝΟ το #msg-results (όχι όλο το #main) — έτσι το ίδιο το search input δεν
+// ξαναφτιάχνεται σε κάθε πληκτροπάτημα και δεν χάνει το focus/cursor στη μέση της πληκτρολόγησης
+// (σε αντίθεση με το πλήρες renderMessages() που καλούν τα κουμπιά φίλτρου/ομαδοποίησης).
+function msgSetSearch(val){
+  _msgSearch=(val||'').toLowerCase();
+  var el=document.getElementById('msg-results');
+  if(el) el.innerHTML=msgResultsHtml(collectAllClientMessages());
+}
+function msgResultsHtml(all){
+  var shown=_msgFilter==='unread'?all.filter(function(m){return !m.handled;}):all;
+  var term=_msgSearch.trim();
+  if(term) shown=shown.filter(function(m){return (m.c.name||'').toLowerCase().indexOf(term)>=0;});
+  if(!shown.length){
+    var emptyMsg=term?('Κανένα μήνυμα για "'+esc(_msgSearch.trim())+'".')
+      :(_msgFilter==='unread'?'Κανένα αναπάντητο μήνυμα 👍':'Κανένα μήνυμα ακόμα.');
+    return '<div class="hm-card"><div class="hm-empty">'+emptyMsg+'</div></div>';
+  }
+  if(_msgGroupBy) return groupMessagesByClient(shown).map(msgGroupCardHtml).join('');
+  return '<div class="hm-card">'+shown.map(function(m){return msgRowHtml(m,false);}).join('')+'</div>';
+}
 // filter: 'unread'|'all' — προαιρετικό, αλλιώς ξαναχρησιμοποιεί το τελευταίο επιλεγμένο φίλτρο
 // (π.χ. όταν ξαναζωγραφίζεται μετά από ↩️ Απάντησε, για να μη χάνεται η επιλογή του χρήστη).
 function renderMessages(filter){
@@ -1106,27 +1153,20 @@ function renderMessages(filter){
   if(filter) _msgFilter=filter;
   var all=collectAllClientMessages();
   var unreadCount=all.filter(function(m){return !m.handled;}).length;
-  var shown=_msgFilter==='unread'?all.filter(function(m){return !m.handled;}):all;
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">💬 Μηνύματα</div>';
+  html+='<input type="text" id="msg-search" class="client-search-inp" style="max-width:260px" placeholder="🔍 Αναζήτηση πελάτη..." value="'+esc(_msgSearch)+'" oninput="msgSetSearch(this.value)">';
   html+='<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">'
     +'<button type="button" class="hm-action-btn" style="'+(_msgFilter==='unread'?'':'background:#f0f7f7;color:var(--teal)')+'" onclick="renderMessages(\'unread\')">Αναπάντητα ('+unreadCount+')</button>'
     +'<button type="button" class="hm-action-btn" style="'+(_msgFilter==='all'?'':'background:#f0f7f7;color:var(--teal)')+'" onclick="renderMessages(\'all\')">Όλα ('+all.length+')</button>'
     +'<span style="width:1px;height:18px;background:#e0e0e0;margin:0 2px"></span>'
     +'<button type="button" class="hm-action-btn" style="'+(_msgGroupBy?'':'background:#f0f7f7;color:var(--teal)')+'" onclick="_msgGroupBy=!_msgGroupBy;renderMessages();">👤 Ανά πελάτη</button>'
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" onclick="msgRefresh(this)">🔄 Ανανέωση</button>'
-    +(shown.some(function(m){return !m.handled;})?'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" onclick="msgMarkAllSeen()">👁️ Όλα ως αναγνωσμένα</button>':'')
+    +(unreadCount>0?'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" onclick="msgMarkAllSeen()">👁️ Όλα ως αναγνωσμένα</button>':'')
     +'</div>';
-  var bodyHtml;
-  if(!shown.length){
-    bodyHtml='<div class="hm-card"><div class="hm-empty">'+(_msgFilter==='unread'?'Κανένα αναπάντητο μήνυμα 👍':'Κανένα μήνυμα ακόμα.')+'</div></div>';
-  } else if(_msgGroupBy){
-    bodyHtml=groupMessagesByClient(shown).map(msgGroupCardHtml).join('');
-  } else {
-    bodyHtml='<div class="hm-card">'+shown.map(function(m){return msgRowHtml(m,false);}).join('')+'</div>';
-  }
-  html+=bodyHtml+'</div>';
+  html+='<div id="msg-results">'+msgResultsHtml(all)+'</div>';
+  html+='</div>';
   main.innerHTML=html;
 }
 // Κόκκινο badge πάνω στο κουμπί "💬 Μηνύματα" (sidebar) — ίδιο μοτίβο με updateHomeNavBadge, δικό
