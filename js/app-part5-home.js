@@ -919,3 +919,113 @@ function applyBulkGroupNew(){
   var existing=(typeof getAllGroupNames==='function'?getAllGroupNames():[]).find(function(g){return normalizeGroupName(g)===normalizeGroupName(name);});
   _applyGroupToSelected(existing||name);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// "💬 Μηνύματα" — ενιαία, χρονολογική λίστα με ΟΛΑ όσα στέλνουν οι πελάτες από το δικό τους
+// portal link (χωρίς login): γραπτές σημειώσεις (client_logs) + εβδομαδιαίο ⭐ feedback πλάνου
+// (plan_feedback) όταν είναι χαμηλό. Πριν, αυτά ζούσαν σκόρπια σε 3 σημεία (ανά-πελάτη tab
+// "📝 Ραντεβού", ένα-item-ανά-πελάτη στην Αρχική, badge 💬/😕 χωρίς περιεχόμενο στη λίστα Πελάτες) —
+// δεν υπήρχε πουθενά ένα σημείο με όλα τα μηνύματα όλων των πελατών μαζί. Επαναχρησιμοποιεί τις ΙΔΙΕΣ
+// συναρτήσεις reply/resolve (replyToClientNote/replyToPlanFeedback, js/app-part2.js) ώστε το
+// "απαντήθηκε" να είναι μία πηγή αλήθειας είτε ανοίξεις το μήνυμα από εδώ είτε από τον πελάτη.
+// Flagged ραντεβού (🚩) ΔΕΝ μπαίνουν εδώ — είναι σημείωση του ίδιου του διαιτολόγου σε ραντεβού από
+// κοντά, όχι κάτι που "έστειλε ο πελάτης από το link του" (βλ. homeClientsNeedingAttention για εκείνα).
+function collectAllClientMessages(){
+  var out=[];
+  if(!window.Cloud) return out;
+  clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;}).forEach(function(c){
+    if(typeof window.Cloud.allClientLogsFor==='function'){
+      window.Cloud.allClientLogsFor(c).forEach(function(e){
+        var noteRaw=e.note||'';
+        var tagMatch=/^\[tag:(travel|party|sick)\]\s*/.exec(noteRaw);
+        var tag=null;
+        if(tagMatch){ tag=tagMatch[1]; noteRaw=noteRaw.slice(tagMatch[0].length); }
+        noteRaw=noteRaw.trim();
+        if(!noteRaw) return; // μόνο μέτρηση βάρους, χωρίς κείμενο — δεν είναι "μήνυμα", ήδη φαίνεται αλλού
+        out.push({c:c,type:'note',sortKey:e.date,date:e.date,noteRaw:noteRaw,tag:tag,weight:e.weight_kg,
+          replied:(typeof isNoteReplied==='function')&&isNoteReplied(c,e.date)});
+      });
+    }
+    if(typeof window.Cloud.planFeedbackFor==='function' && typeof PF_ROW_LABELS!=='undefined'){
+      var pf=window.Cloud.planFeedbackFor(c);
+      var latest=pf[0];
+      if(latest){
+        var lowKeys=Object.keys(PF_ROW_LABELS).filter(function(k){return latest[k]!=null && latest[k]<=PF_ATTENTION_STAR_MAX;});
+        var lowNps=latest.continue_likelihood!=null && latest.continue_likelihood<=PF_ATTENTION_NPS_MAX;
+        if(lowKeys.length || lowNps){
+          var replied=(typeof isPfReplied==='function')&&(isPfReplied(c,latest.week_start,null)
+            || (lowKeys.length>0 && lowKeys.every(function(k){return isPfReplied(c,latest.week_start,k);})));
+          out.push({c:c,type:'feedback',sortKey:latest.week_start,date:latest.week_start,entry:latest,
+            lowKeys:lowKeys,lowNps:lowNps,replied:!!replied});
+        }
+      }
+    }
+  });
+  // sortKey είναι πάντα ISO-ταξινομήσιμο string (ημερομηνία ή week_start) — πιο πρόσφατο πρώτα.
+  out.sort(function(a,b){ return a.sortKey<b.sortKey?1:(a.sortKey>b.sortKey?-1:0); });
+  return out;
+}
+function msgRowHtml(m){
+  var c=m.c, accent=m.replied?'teal':'red';
+  var subline, bodyHtml, replyOnclick;
+  if(m.type==='note'){
+    var tagHtml='';
+    if(m.tag && typeof CLIENT_LOG_TAG_DEFS!=='undefined' && CLIENT_LOG_TAG_DEFS[m.tag]){
+      var td=CLIENT_LOG_TAG_DEFS[m.tag];
+      tagHtml='<span style="background:#e8f5e9;color:#014545;border-radius:999px;padding:2px 8px;font-size:10px;margin-right:6px;white-space:nowrap">'+td.icon+' '+td.label+'</span>';
+    }
+    var weightHtml=m.weight?(' · <b>'+m.weight+' kg</b>'):'';
+    subline='💬 '+m.date;
+    bodyHtml=tagHtml+esc(m.noteRaw)+weightHtml;
+    replyOnclick="replyToClientNote('"+c.id+"','"+m.date+"','"+escJsAttr(m.noteRaw)+"');setTimeout(function(){renderMessages();},50);";
+  } else {
+    var e=m.entry;
+    var parts=m.lowKeys.map(function(k){ return (PF_ROW_LABELS[k]||k)+' '+e[k]+'★'; });
+    if(m.lowNps) parts.push('πιθανότητα συνέχισης '+e.continue_likelihood+'/10');
+    subline='😕 εβδ. '+m.date;
+    bodyHtml=esc(parts.join(', '));
+    replyOnclick="replyToPlanFeedback('"+c.id+"','"+e.week_start+"',null);setTimeout(function(){renderMessages();},50);";
+  }
+  var replyBtn='<button type="button" class="note-reply-btn'+(m.replied?' replied':'')+'" onclick="event.stopPropagation();'+replyOnclick+'">↩️ Απάντησε'+(m.replied?' ✓':'')+'</button>';
+  return '<div class="hm-row" style="align-items:flex-start;cursor:pointer" onclick="selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">'
+    +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
+    +'<div style="flex:1;min-width:0">'
+      +'<div><span class="hm-row-name" style="display:inline">'+esc(c.name||'Νέος πελάτης')+'</span> <span class="hm-row-sub">'+subline+'</span></div>'
+      +'<div style="font-size:11.5px;color:#666;margin-top:2px;white-space:normal">'+bodyHtml+'</div>'
+    +'</div>'
+    +replyBtn+'</div>';
+}
+var _msgFilter='unread';
+// filter: 'unread'|'all' — προαιρετικό, αλλιώς ξαναχρησιμοποιεί το τελευταίο επιλεγμένο φίλτρο
+// (π.χ. όταν ξαναζωγραφίζεται μετά από ↩️ Απάντησε, για να μη χάνεται η επιλογή του χρήστη).
+function renderMessages(filter){
+  curId=null;
+  var main=document.getElementById('main');
+  if(!main) return;
+  if(filter) _msgFilter=filter;
+  var all=collectAllClientMessages();
+  var unreadCount=all.filter(function(m){return !m.replied;}).length;
+  var shown=_msgFilter==='unread'?all.filter(function(m){return !m.replied;}):all;
+
+  var html='<div class="hm-wrap">';
+  html+='<div class="hm-title">💬 Μηνύματα</div>';
+  html+='<div style="display:flex;gap:8px;margin-bottom:16px">'
+    +'<button type="button" class="hm-action-btn" style="'+(_msgFilter==='unread'?'':'background:#f0f7f7;color:var(--teal)')+'" onclick="renderMessages(\'unread\')">Αναπάντητα ('+unreadCount+')</button>'
+    +'<button type="button" class="hm-action-btn" style="'+(_msgFilter==='all'?'':'background:#f0f7f7;color:var(--teal)')+'" onclick="renderMessages(\'all\')">Όλα ('+all.length+')</button>'
+    +'</div>';
+  html+='<div class="hm-card">'
+    +(shown.length?shown.map(msgRowHtml).join(''):'<div class="hm-empty">'+(_msgFilter==='unread'?'Κανένα αναπάντητο μήνυμα 👍':'Κανένα μήνυμα ακόμα.')+'</div>')
+    +'</div>';
+  html+='</div>';
+  main.innerHTML=html;
+}
+// Κόκκινο badge πάνω στο κουμπί "💬 Μηνύματα" (sidebar) — ίδιο μοτίβο με updateHomeNavBadge, δικό
+// του σύνολο (αναπάντητα μηνύματα, όχι πελάτες που "χρειάζονται προσοχή" γενικά).
+function updateMessagesNavBadge(){
+  var n=0;
+  try{ n=collectAllClientMessages().filter(function(m){return !m.replied;}).length; }catch(e){ n=0; }
+  var el=document.getElementById('messages-nav-badge');
+  if(!el) return;
+  el.textContent=n>99?'99+':String(n);
+  el.style.display=n>0?'inline-block':'none';
+}

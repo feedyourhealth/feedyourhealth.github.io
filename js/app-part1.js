@@ -3216,6 +3216,8 @@ function renderSB(){
   // ✅ Keep the "Αρχική" nav badge in sync — renderSB() runs after nearly every action app-wide,
   // so this is the one place that guarantees the badge is fresh no matter which tab is open.
   if(typeof updateHomeNavBadge === 'function') updateHomeNavBadge();
+  // Ίδιο σκεπτικό για το badge του "💬 Μηνύματα" (js/app-part5-home.js).
+  if(typeof updateMessagesNavBadge === 'function') updateMessagesNavBadge();
 }
 
 /* ======== TEMPLATE EDITOR ======== */

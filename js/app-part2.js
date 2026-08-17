@@ -4314,6 +4314,7 @@ function swTab(n){
   if(n===5){ if(typeof renderDiets==='function') renderDiets(); return; }
   if(n===6){ if(typeof renderRecipes==='function') renderRecipes(); return; }
   if(n===7){ if(typeof renderClients==='function') renderClients(); return; }
+  if(n===9){ if(typeof renderMessages==='function') renderMessages(); return; }
   // ✅ Remembers the last client-detail tab shown, so the delayed fade-in renderMain()
   // wrapper (Dietologist.html) can re-apply it after its own rebuild — see that wrapper
   // for why this is needed (it defaults back to tab 1 otherwise).
