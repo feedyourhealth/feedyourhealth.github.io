@@ -369,6 +369,26 @@ body.dark-mode .hm-row-name{color:#e0e0e0}
 .rd-swap-empty{font-size:11px;color:#888}
 .rd-delete-btn{width:100%;margin-top:10px;padding:8px;border-radius:10px;border:1px solid #f0d0d0;background:none;color:#c62828;font-size:11.5px;font-weight:600;cursor:pointer}
 .rd-delete-btn:hover{background:#fdecea}
+/* ── Tab «📚 Tips» (js/app-part7-tips.js) — reuses .rcp-*/.recipe-modal*/.nr-* from the tab
+   Συνταγές right above (same toolbar/card/modal shapes), these are only the pieces with no
+   existing equivalent: a small delete icon on each card, the emoji-icon picker and the
+   EN/RU/TR translation-tabs section inside the add/edit modal. */
+.row-del{border:none;background:none;cursor:pointer;font-size:12px;padding:4px 6px;border-radius:5px;color:#6b6b6b;flex-shrink:0}
+.row-del:hover{color:#c62828;background:#fcebeb}
+.tip-lang-row{display:flex;gap:4px;margin-top:8px}
+.icon-row{display:flex;flex-wrap:wrap;gap:6px}
+.icon-opt{width:32px;height:32px;border-radius:8px;border:1.5px solid #e0e0e0;background:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.icon-opt.sel{border-color:var(--teal);background:var(--teal-tint)}
+.nr-divider{border-top:1px solid #e0e0e0;margin:14px 0 12px;padding-top:12px}
+.nr-divider-lbl{font-size:11px;font-weight:700;color:#333;margin-bottom:3px}
+.nr-divider-sub{font-size:10px;color:#6b6b6b;margin-bottom:10px;line-height:1.4}
+body.dark-mode .row-del{color:#aaa}
+body.dark-mode .row-del:hover{color:#ef5350;background:#3a1f1f}
+body.dark-mode .icon-opt{background:#242424;border-color:#444}
+body.dark-mode .icon-opt.sel{background:#16302a}
+body.dark-mode .nr-divider{border-color:#444}
+body.dark-mode .nr-divider-lbl{color:#e0e0e0}
+body.dark-mode .nr-divider-sub{color:#aaa}
 body.dark-mode .rcp-search{background:#242424;border-color:#444;color:#e0e0e0}
 body.dark-mode .rcp-filter-chip{background:#1a1a1a;border-color:#444;color:#4fc3f7}
 body.dark-mode .rcp-filter-chip.active{background:var(--teal);color:#fff}

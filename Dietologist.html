@@ -122,6 +122,7 @@ setTimeout(function(){
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(7)" aria-label="Πελάτες">👥 Πελάτες</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(6)" aria-label="Συνταγές">🍽️ Συνταγές</button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(8)" aria-label="Tips">📚 Tips</button>
   <div class="sb-sep"></div>
 
   <!-- Γρήγορες ενέργειες: πάντα διαθέσιμες, ανεξάρτητα από τον επιλεγμένο πελάτη -->
@@ -237,6 +238,7 @@ setTimeout(function(){
 <script src="js/app-part4.js"></script>
 <script src="js/app-part5-home.js"></script>
 <script src="js/app-part6-recipes.js"></script>
+<script src="js/app-part7-tips.js"></script>
 <!-- ✅ CHARTS LIBRARY -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -3104,7 +3106,13 @@ function saveFoodExclusions(){
         supps:supps,
         fruits:fruits,
         progress:progress,
-        exclusions:altExcl.map(function(x){return shortName(fName(x));})
+        exclusions:altExcl.map(function(x){return shortName(fName(x));}),
+        // Βιβλιοθήκη tips (tab "📚 Tips") — μία κοινή λίστα, ίδια για όλους τους πελάτες, οπότε
+        // περνάει αυτούσια (όχι φιλτραρισμένη ανά c.*). Το plan.html διαλέγει titleEn/bodyEn/...
+        // ανάλογα με c.lang (tipField(), ίδιο μοτίβο suffix με τα supps παραπάνω). Παλιά
+        // shared_plans links (πριν το feature) δεν είχαν αυτό το πεδίο — το plan.html πέφτει
+        // τότε στο παλιό στατικό FAQ μέχρι ο πελάτης να ξαναπάρει link.
+        tips:(typeof getTipsLibrary==='function'?getTipsLibrary():[])
       };
     },
 
@@ -3258,6 +3266,10 @@ function saveFoodExclusions(){
                   // to storage here would otherwise leave stale data behind that cache.
                   window._savedCombosCache = d.savedCombos;
                 }
+                if(Array.isArray(d.tipsLibrary)){
+                  safeStorageSet('tipsLibrary', d.tipsLibrary);
+                  window._tipsLibraryCache = d.tipsLibrary;
+                }
               }
             }catch(e){ console.error('[CLOUD] apply data', e); }
             self._loaded=true; self._loadCustomRecipes().then(resolve);
@@ -3281,6 +3293,7 @@ function saveFoodExclusions(){
           trackingData: (typeof window.TRACKING_DATA!=='undefined'?window.TRACKING_DATA:null),
           recipeMeta: (typeof getRecipeMeta==='function'?getRecipeMeta():null),
           savedCombos: (typeof safeStorageGet==='function'?safeStorageGet('savedCombos',[]):[]),
+          tipsLibrary: (typeof safeStorageGet==='function'?safeStorageGet('tipsLibrary',[]):[]),
           updatedAt: new Date().toISOString()
         };
         var expected=self._version||0;
@@ -3449,6 +3462,10 @@ function saveFoodExclusions(){
             if(Array.isArray(d.savedCombos)){
               safeStorageSet('savedCombos', d.savedCombos);
               window._savedCombosCache = d.savedCombos;
+            }
+            if(Array.isArray(d.tipsLibrary)){
+              safeStorageSet('tipsLibrary', d.tipsLibrary);
+              window._tipsLibraryCache = d.tipsLibrary;
             }
           }
           try{ localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); }catch(e){}

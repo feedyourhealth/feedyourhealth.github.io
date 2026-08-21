@@ -3325,6 +3325,87 @@ function setSavedCombos(arr){
   if(window.Cloud) try{ window.Cloud.save(); }catch(e){}
 }
 
+/* ---- Tips Library (tab «📚 Tips», js/app-part7-tips.js) ----
+   Ίδιο μοτίβο με τα Saved Combos ακριβώς από πάνω: μία κοινή λίστα για όλους τους πελάτες,
+   δικό της localStorage key ('tipsLibrary'), cache + get/set helpers, sync μέσω Cloud.save()
+   (Dietologist.html _pushNow/load/forceReloadFromCloud). Μπαίνει στο SNAP μέσω _buildSnapshot
+   (tips:) και εμφανίζεται στο client portal (plan.html tipsCard()) αντί για το παλιό στατικό FAQ. */
+var _tipsLibraryCache = null;
+
+// Seed: οι 6 ερωτήσεις/απαντήσεις που ήταν hardcoded στο plan.html (faqQ1..6/faqA1..6) πριν
+// γίνει επεξεργάσιμη βιβλιοθήκη — ίδιο ελληνικό/EN/RU/TR κείμενο, καμία απώλεια περιεχομένου.
+// Χρησιμοποιείται ΜΟΝΟ σαν default του safeStorageGet, άρα μόνο την πρώτη φορά (πριν ο
+// διαιτολόγος αποθηκεύσει έστω και μία φορά το δικό του 'tipsLibrary', έστω άδειο).
+function defaultTipsSeed(){
+  return [
+    {id:'seed1', icon:'🍽️', category:'Πλάνο & Καθημερινότητα',
+      title:'Πεινάω ανάμεσα στα γεύματα',
+      body:'Φυσιολογικό στην αρχή. Πιες πρώτα ένα ποτήρι νερό — συχνά η δίψα μοιάζει με πείνα. Αν επιμένει, έχεις ελεύθερο ένα ωμό λαχανικό (αγγούρι, καρότο, ντομάτα) όποια ώρα θες, χωρίς όριο.',
+      titleEn:'I feel hungry between meals',
+      bodyEn:'Normal at first. Drink a glass of water first — thirst often feels like hunger. If it persists, you have a raw vegetable (cucumber, carrot, tomato) freely, any time, no limit.',
+      titleRu:'Я хочу есть между приёмами пищи',
+      bodyRu:'Это нормально вначале. Сначала выпейте стакан воды — часто жажда похожа на голод. Если чувство не проходит, у вас есть свободный доступ к сырым овощам (огурец, морковь, помидор) в любое время, без ограничений.',
+      titleTr:'Öğünler arasında acıkıyorum',
+      bodyTr:'Başlangıçta normal. Önce bir bardak su iç — susuzluk çoğu zaman açlık gibi hissettirir. Devam ederse, istediğin zaman sınırsız çiğ sebze (salatalık, havuç, domates) tüketebilirsin.'},
+    {id:'seed2', icon:'⚖️', category:'Πλάνο & Καθημερινότητα',
+      title:'Ξέφυγα από το πλάνο — τι κάνω;',
+      body:'Καμία τραγωδία. Δεν παραλείπεις το επόμενο γεύμα για να «αναπληρώσεις» — απλά συνεχίζεις κανονικά. Αν συμβαίνει συχνά, πες μου το από το Πρόοδος ή γράψε μου, θα προσαρμόσουμε το πλάνο μαζί.',
+      titleEn:'I strayed from the plan — what now?',
+      bodyEn:'No drama. Don\'t skip the next meal to "make up for it" — just carry on normally. If it keeps happening, tell me from Progress or send a message, and we\'ll adjust the plan together.',
+      titleRu:'Я отступил(а) от плана — что делать?',
+      bodyRu:'Ничего страшного. Не пропускайте следующий приём пищи, чтобы «компенсировать» — просто продолжайте как обычно. Если это повторяется часто, сообщите мне в разделе «Прогресс» или напишите — вместе скорректируем план.',
+      titleTr:'Plandan saptım — ne yapmalıyım?',
+      bodyTr:'Sorun değil. "Telafi etmek" için bir sonraki öğünü atlama — sadece normal şekilde devam et. Sık oluyorsa İlerleme sekmesinden söyle veya bana yaz, planı birlikte ayarlayalım.'},
+    {id:'seed3', icon:'🥄', category:'Πλάνο & Καθημερινότητα',
+      title:'Πώς ζυγίζω τις τροφές;',
+      body:'Όλα τα γραμμάρια στο πλάνο είναι ωμό βάρος — ζύγισε πριν το μαγείρεμα, εκτός αν δίπλα στην τροφή αναγράφεται διαφορετικά (π.χ. «μαγειρεμένο»).',
+      titleEn:'How do I weigh foods?',
+      bodyEn:'All grams in the plan are raw weight — weigh before cooking, unless the food says otherwise (e.g. "cooked").',
+      titleRu:'Как взвешивать продукты?',
+      bodyRu:'Все граммы в плане указаны в сыром весе — взвешивайте перед готовкой, если рядом с продуктом не указано иное (например, «варёное»).',
+      titleTr:'Yiyecekleri nasıl tartmalıyım?',
+      bodyTr:'Plandaki tüm gramajlar çiğ ağırlıktır — yanında farklı belirtilmedikçe (örn. "pişmiş") pişirmeden önce tart.'},
+    {id:'seed4', icon:'⏰', category:'Πλάνο & Καθημερινότητα',
+      title:'Πόσο αυστηρές είναι οι ώρες γευμάτων;',
+      body:'Οδηγός είναι, όχι νόμος — ±60 λεπτά δεν αλλάζει τίποτα. Αυτό που μετράει είναι η σειρά και το περιεχόμενο κάθε γεύματος, όχι το ρολόι.',
+      titleEn:'How strict are the meal times?',
+      bodyEn:'They\'re a guide, not a rule — ±60 minutes changes nothing. What matters is the order and content of each meal, not the clock.',
+      titleRu:'Насколько строго нужно соблюдать время приёмов пищи?',
+      bodyRu:'Это ориентир, а не правило — ±60 минут ничего не меняют. Важен порядок и содержание каждого приёма пищи, а не часы.',
+      titleTr:'Öğün saatleri ne kadar katı?',
+      bodyTr:'Bir rehberdir, kural değil — ±60 dakika hiçbir şeyi değiştirmez. Önemli olan saatler değil, her öğünün sırası ve içeriğidir.'},
+    {id:'seed5', icon:'☕', category:'Πλάνο & Καθημερινότητα',
+      title:'Καφές, τσάι, αλκοόλ — επιτρέπονται;',
+      body:'Καφές και τσάι χωρίς ζάχαρη: ελεύθερα, όποια ώρα θες. Αλκοόλ: 1-2 φορές/εβδομάδα με μέτρο, όχι σε ημέρα προπόνησης ή αγώνα.',
+      titleEn:'Coffee, tea, alcohol — allowed?',
+      bodyEn:'Coffee and tea without sugar: freely, any time. Alcohol: 1-2 times/week in moderation, not on training or match days.',
+      titleRu:'Кофе, чай, алкоголь — можно?',
+      bodyRu:'Кофе и чай без сахара — свободно, в любое время. Алкоголь: 1-2 раза в неделю в меру, не в день тренировки или матча.',
+      titleTr:'Kahve, çay, alkol — izinli mi?',
+      bodyTr:'Şekersiz kahve ve çay: istediğin zaman serbest. Alkol: haftada 1-2 kez ölçülü, antrenman veya maç günü hariç.'},
+    {id:'seed6', icon:'✈️', category:'Πλάνο & Καθημερινότητα',
+      title:'Πάω έξω ή ταξίδι — τι επιλέγω;',
+      body:'Διάλεξε ψητό ή βραστό κρέας/ψάρι, σαλάτα, και μία μερίδα αμύλου (ρύζι, πατάτα, ψωμί) — σαν να έφτιαχνες μόνη σου το πιάτο του πλάνου. Απόφυγε τηγανητά και επιδόρπια όποτε γίνεται.',
+      titleEn:'Eating out or traveling — what do I pick?',
+      bodyEn:'Choose grilled or boiled meat/fish, a salad, and one portion of starch (rice, potato, bread) — as if building your own plate from the plan. Avoid fried food and desserts when you can.',
+      titleRu:'Иду в гости или путешествую — что выбрать?',
+      bodyRu:'Выбирайте запечённое или отварное мясо/рыбу, салат и одну порцию углеводов (рис, картофель, хлеб) — как если бы вы сами составляли тарелку по плану. По возможности избегайте жареного и десертов.',
+      titleTr:'Dışarıda yiyorum veya seyahatteyim — ne seçmeliyim?',
+      bodyTr:'Izgara veya haşlanmış et/balık, salata ve bir porsiyon nişasta (pilav, patates, ekmek) seç — sanki plandaki tabağı kendin hazırlıyormuş gibi. Mümkün olduğunca kızartma ve tatlıdan kaçın.'}
+  ];
+}
+
+function getTipsLibrary(){
+  if(_tipsLibraryCache===null) _tipsLibraryCache=safeStorageGet('tipsLibrary', defaultTipsSeed());
+  return _tipsLibraryCache;
+}
+
+function setTipsLibrary(arr){
+  _tipsLibraryCache=arr;
+  safeStorageSet('tipsLibrary', arr);
+  if(window.Cloud) try{ window.Cloud.save(); }catch(e){}
+}
+
 // ── Lightweight toast notification ─────────────────────────────────────────
 function dietoToast(msg, color){
   try{

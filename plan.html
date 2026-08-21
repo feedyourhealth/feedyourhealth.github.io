@@ -503,6 +503,7 @@ const I18N={
     quickFruits:'Φρούτα', quickFruitsSub:'Λίστα ανταλλαγής', suppsNone:'—', suppsProgress:'{d} από {t} σήμερα', shopProgress:'{d} από {t} ✓',
     exclHdr:'Το πλάνο αποφεύγει',
     faqHdr:'Συχνές ερωτήσεις',
+    tipsHdr:'Tips & Οδηγίες',
     faqQ1:'Πεινάω ανάμεσα στα γεύματα', faqA1:'Φυσιολογικό στην αρχή. Πιες πρώτα ένα ποτήρι νερό — συχνά η δίψα μοιάζει με πείνα. Αν επιμένει, έχεις ελεύθερο ένα ωμό λαχανικό (αγγούρι, καρότο, ντομάτα) όποια ώρα θες, χωρίς όριο.',
     faqQ2:'Ξέφυγα από το πλάνο — τι κάνω;', faqA2:'Καμία τραγωδία. Δεν παραλείπεις το επόμενο γεύμα για να «αναπληρώσεις» — απλά συνεχίζεις κανονικά. Αν συμβαίνει συχνά, πες μου το από το Πρόοδος ή γράψε μου, θα προσαρμόσουμε το πλάνο μαζί.',
     faqQ3:'Πώς ζυγίζω τις τροφές;', faqA3:'Όλα τα γραμμάρια στο πλάνο είναι ωμό βάρος — ζύγισε πριν το μαγείρεμα, εκτός αν δίπλα στην τροφή αναγράφεται διαφορετικά (π.χ. «μαγειρεμένο»).',
@@ -606,6 +607,7 @@ const I18N={
     quickFruits:'Fruits', quickFruitsSub:'Exchange list', suppsNone:'—', suppsProgress:'{d} of {t} today', shopProgress:'{d} of {t} ✓',
     exclHdr:'This plan avoids',
     faqHdr:'Frequently asked questions',
+    tipsHdr:'Tips & Guidance',
     faqQ1:'I feel hungry between meals', faqA1:'Normal at first. Drink a glass of water first — thirst often feels like hunger. If it persists, you have a raw vegetable (cucumber, carrot, tomato) freely, any time, no limit.',
     faqQ2:'I strayed from the plan — what now?', faqA2:'No drama. Don\'t skip the next meal to "make up for it" — just carry on normally. If it keeps happening, tell me from Progress or send a message, and we\'ll adjust the plan together.',
     faqQ3:'How do I weigh foods?', faqA3:'All grams in the plan are raw weight — weigh before cooking, unless the food says otherwise (e.g. "cooked").',
@@ -709,6 +711,7 @@ const I18N={
     quickFruits:'Фрукты', quickFruitsSub:'Список замены', suppsNone:'—', suppsProgress:'{d} из {t} сегодня', shopProgress:'{d} из {t} ✓',
     exclHdr:'План избегает',
     faqHdr:'Часто задаваемые вопросы',
+    tipsHdr:'Советы и рекомендации',
     faqQ1:'Я хочу есть между приёмами пищи', faqA1:'Это нормально вначале. Сначала выпейте стакан воды — часто жажда похожа на голод. Если чувство не проходит, у вас есть свободный доступ к сырым овощам (огурец, морковь, помидор) в любое время, без ограничений.',
     faqQ2:'Я отступил(а) от плана — что делать?', faqA2:'Ничего страшного. Не пропускайте следующий приём пищи, чтобы «компенсировать» — просто продолжайте как обычно. Если это повторяется часто, сообщите мне в разделе «Прогресс» или напишите — вместе скорректируем план.',
     faqQ3:'Как взвешивать продукты?', faqA3:'Все граммы в плане указаны в сыром весе — взвешивайте перед готовкой, если рядом с продуктом не указано иное (например, «варёное»).',
@@ -812,6 +815,7 @@ const I18N={
     quickFruits:'Meyveler', quickFruitsSub:'Değişim listesi', suppsNone:'—', suppsProgress:'bugün {t} içinden {d}', shopProgress:'{t} içinden {d} ✓',
     exclHdr:'Bu plan şunlardan kaçınır',
     faqHdr:'Sık sorulan sorular',
+    tipsHdr:'İpuçları ve Rehberlik',
     faqQ1:'Öğünler arasında acıkıyorum', faqA1:'Başlangıçta normal. Önce bir bardak su iç — susuzluk çoğu zaman açlık gibi hissettirir. Devam ederse, istediğin zaman sınırsız çiğ sebze (salatalık, havuç, domates) tüketebilirsin.',
     faqQ2:'Plandan saptım — ne yapmalıyım?', faqA2:'Sorun değil. "Telafi etmek" için bir sonraki öğünü atlama — sadece normal şekilde devam et. Sık oluyorsa İlerleme sekmesinden söyle veya bana yaz, planı birlikte ayarlayalım.',
     faqQ3:'Yiyecekleri nasıl tartmalıyım?', faqA3:'Plandaki tüm gramajlar çiğ ağırlıktır — yanında farklı belirtilmedikçe (örn. "pişmiş") pişirmeden önce tart.',
@@ -1670,9 +1674,12 @@ function viewHome(){
   v.appendChild(faqCard());
   return v;
 }
-// 6 σταθερές ερωτήσεις/απαντήσεις (faqQ1..6/faqA1..6 στο I18N) — accordion, ίδιο μοτίβο toggle
-// με τα "Εναλλακτικά" των γευμάτων (swap-btn/chev), για να μη μαθαίνει ο πελάτης νέο μοτίβο.
+// Βιβλιοθήκη tips του διαιτολόγου (SNAP.tips, χτισμένο στο _buildSnapshot/Dietologist.html) —
+// αντικαθιστά το παλιό στατικό FAQ παρακάτω. Παλιά shared_plans links (πριν αυτό το feature,
+// 2026-08-21) δεν έχουν SNAP.tips καθόλου, οπότε πέφτουμε στο στατικό FAQ μέχρι ο πελάτης να
+// ξαναπάρει link — καμία παλιά σελίδα δεν σπάει.
 function faqCard(){
+  if(SNAP.tips && SNAP.tips.length) return tipsCard(SNAP.tips);
   const c=el('div','card'); const cp=el('div','card-pad');
   cp.appendChild(el('div','card-hdr','<i class="ti ti-help-circle"></i>'+T('faqHdr')));
   for(let i=1;i<=6;i++){
@@ -1683,6 +1690,30 @@ function faqCard(){
     item.appendChild(btn); item.appendChild(a);
     cp.appendChild(item);
   }
+  c.appendChild(cp);
+  return c;
+}
+// tipField: ίδιο μοτίβο suffix-ανά-γλώσσα με τα supps στο _buildSnapshot (nameEn/doseEn/...) —
+// fallback στα ελληνικά (base) αν λείπει η μετάφραση για το LANG του πελάτη.
+const TIP_LANG_SUFFIX={en:'En',ru:'Ru',tr:'Tr'};
+function tipField(tip,base){
+  const sfx=TIP_LANG_SUFFIX[LANG];
+  return (sfx && tip[base+sfx]) || tip[base] || '';
+}
+// Ίδιο accordion μοτίβο/CSS με το faqCard() παραπάνω (.faq-item/.faq-q/.faq-a) — ο πελάτης δεν
+// βλέπει κανένα νέο interaction pattern, απλά το περιεχόμενο είναι πια δυναμικό.
+function tipsCard(tips){
+  const c=el('div','card'); const cp=el('div','card-pad');
+  cp.appendChild(el('div','card-hdr','<i class="ti ti-bulb"></i>'+T('tipsHdr')));
+  tips.forEach(tip=>{
+    const item=el('div','faq-item');
+    const qLabel=(tip.icon?tip.icon+' ':'')+tipField(tip,'title');
+    const btn=el('button','faq-q','<span>'+esc(qLabel)+'</span><i class="ti ti-chevron-down"></i>');
+    const a=el('div','faq-a',esc(tipField(tip,'body')));
+    btn.onclick=()=>{btn.classList.toggle('open');a.classList.toggle('open')};
+    item.appendChild(btn); item.appendChild(a);
+    cp.appendChild(item);
+  });
   c.appendChild(cp);
   return c;
 }
