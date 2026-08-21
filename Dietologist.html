@@ -3108,11 +3108,13 @@ function saveFoodExclusions(){
         progress:progress,
         exclusions:altExcl.map(function(x){return shortName(fName(x));}),
         // Βιβλιοθήκη tips (tab "📚 Tips") — μία κοινή λίστα, ίδια για όλους τους πελάτες, οπότε
-        // περνάει αυτούσια (όχι φιλτραρισμένη ανά c.*). Το plan.html διαλέγει titleEn/bodyEn/...
-        // ανάλογα με c.lang (tipField(), ίδιο μοτίβο suffix με τα supps παραπάνω). Παλιά
-        // shared_plans links (πριν το feature) δεν είχαν αυτό το πεδίο — το plan.html πέφτει
-        // τότε στο παλιό στατικό FAQ μέχρι ο πελάτης να ξαναπάρει link.
-        tips:(typeof getTipsLibrary==='function'?getTipsLibrary():[])
+        // περνάει αυτούσια (όχι φιλτραρισμένη ανά c.*), εκτός από τα tips με visible:false
+        // ("Ορατό στους πελάτες" off — π.χ. πρόχειρο υπό συγγραφή), που δεν πρέπει να φτάσουν σε
+        // κανέναν πελάτη. Το plan.html διαλέγει titleEn/bodyEn/... ανάλογα με c.lang (tipField(),
+        // ίδιο μοτίβο suffix με τα supps παραπάνω). Παλιά shared_plans links (πριν το feature)
+        // δεν είχαν αυτό το πεδίο — το plan.html πέφτει τότε στο παλιό στατικό FAQ μέχρι ο
+        // πελάτης να ξαναπάρει link.
+        tips:(typeof getTipsLibrary==='function'?getTipsLibrary().filter(function(t){return t.visible!==false;}):[])
       };
     },
 

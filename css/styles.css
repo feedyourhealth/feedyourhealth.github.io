@@ -382,6 +382,14 @@ body.dark-mode .hm-row-name{color:#e0e0e0}
 .nr-divider{border-top:1px solid #e0e0e0;margin:14px 0 12px;padding-top:12px}
 .nr-divider-lbl{font-size:11px;font-weight:700;color:#333;margin-bottom:3px}
 .nr-divider-sub{font-size:10px;color:#6b6b6b;margin-bottom:10px;line-height:1.4}
+/* Αναδιάταξη tips (▲▼) + "Ορατό στους πελάτες" toggle + dimmed state για κρυφά tips */
+.tip-reorder{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+.tip-reorder-btn{width:20px;height:16px;border:1px solid #e0e0e0;background:#fafafa;color:#888;font-size:9px;line-height:1;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.tip-reorder-btn:hover:not(:disabled){border-color:var(--teal);color:var(--teal)}
+.tip-reorder-btn:disabled{opacity:.3;cursor:default}
+.tip-visible-label{display:flex;align-items:center;gap:7px;font-size:12px;color:#333;font-weight:400;text-transform:none;cursor:pointer}
+.tip-visible-label input{margin:0}
+.rcp-row.tip-hidden{opacity:.65}
 body.dark-mode .row-del{color:#aaa}
 body.dark-mode .row-del:hover{color:#ef5350;background:#3a1f1f}
 body.dark-mode .icon-opt{background:#242424;border-color:#444}
@@ -389,6 +397,8 @@ body.dark-mode .icon-opt.sel{background:#16302a}
 body.dark-mode .nr-divider{border-color:#444}
 body.dark-mode .nr-divider-lbl{color:#e0e0e0}
 body.dark-mode .nr-divider-sub{color:#aaa}
+body.dark-mode .tip-reorder-btn{background:#1a1a1a;border-color:#444;color:#aaa}
+body.dark-mode .tip-visible-label{color:#e0e0e0}
 body.dark-mode .rcp-search{background:#242424;border-color:#444;color:#e0e0e0}
 body.dark-mode .rcp-filter-chip{background:#1a1a1a;border-color:#444;color:#4fc3f7}
 body.dark-mode .rcp-filter-chip.active{background:var(--teal);color:#fff}

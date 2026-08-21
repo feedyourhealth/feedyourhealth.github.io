@@ -22,6 +22,18 @@ function tipCategories(){
   return cats;
 }
 
+// Χαλαρή σύγκριση κατηγοριών για το saveTip() παρακάτω: πεζά/κεφαλαία ΚΑΙ τόνοι δεν μετράνε
+// (π.χ. "ενυδατωση" χωρίς τόνο πρέπει να ταιριάζει με "Ενυδάτωση") — αλλιώς μια γρήγορα
+// πληκτρολογημένη κατηγορία χωρίς τόνο θα δημιουργούσε ξεχωριστό, σχεδόν-διπλότυπο φίλτρο.
+function foldGreekForCompare(s){
+  // Χτίζει το εύρος Unicode "Combining Diacritical Marks" (0x0300–0x036f — τόνοι/διαλυτικά
+  // μετά από NFD decomposition) από κωδικούς χαρακτήρων αντί για literal γλύφους μέσα στο
+  // regex, ώστε να μην υπάρχει καμία αμφιβολία τι ακριβώς περιέχει.
+  var cls='['+String.fromCharCode(0x0300)+'-'+String.fromCharCode(0x036f)+']';
+  var combiningMarks=new RegExp(cls,'g');
+  return String(s||'').toLowerCase().normalize('NFD').replace(combiningMarks,'');
+}
+
 function renderTips(){
   curId=null;
   _tipsCategoryFilter='';
@@ -45,22 +57,50 @@ function renderTips(){
 function filterTips(v){ _tipsSearchTerm=(v||'').toLowerCase(); renderTipsList(); }
 function setTipsCategoryFilter(cat){ _tipsCategoryFilter=cat; renderTipsList(); }
 
-function tipRow(tip){
+// opts.canReorder/isFirst/isLast: τα βέλη ▲▼ εμφανίζονται ΜΟΝΟ στην πλήρη, αφιλτράριστη λίστα
+// (βλ. renderTipsList) — σε φιλτραρισμένη προβολή η θέση στην οθόνη δεν είναι η ίδια με τη θέση
+// στην πραγματική λίστα, οπότε "πάνω/κάτω" θα μπέρδευε παρά θα βοηθούσε.
+function tipRow(tip, opts){
+  opts=opts||{};
+  var hiddenBadge = tip.visible===false ? '<span class="cc-ea-badge" title="Δεν φαίνεται στους πελάτες">🙈 Κρυφό</span>' : '';
+  var reorderHtml='';
+  if(opts.canReorder){
+    reorderHtml='<div class="tip-reorder">'
+      +'<button type="button" class="tip-reorder-btn" title="Μετακίνηση πάνω" aria-label="Μετακίνηση πάνω"'+(opts.isFirst?' disabled':'')+' onclick="moveTipUp(\''+tip.id+'\')">▲</button>'
+      +'<button type="button" class="tip-reorder-btn" title="Μετακίνηση κάτω" aria-label="Μετακίνηση κάτω"'+(opts.isLast?' disabled':'')+' onclick="moveTipDown(\''+tip.id+'\')">▼</button>'
+      +'</div>';
+  }
   var langBadges='<div class="tip-lang-row">'
     +'<span class="cc-status cc-status-active">EL</span>'
     +'<span class="cc-status '+(tip.titleEn?'cc-status-active':'cc-status-none')+'">EN</span>'
     +'<span class="cc-status '+(tip.titleRu?'cc-status-active':'cc-status-none')+'">RU</span>'
     +'<span class="cc-status '+(tip.titleTr?'cc-status-active':'cc-status-none')+'">TR</span>'
     +'</div>';
-  return '<div class="rcp-row">'
+  return '<div class="rcp-row'+(tip.visible===false?' tip-hidden':'')+'">'
     +'<div class="rcp-row-top">'
-    +'<div class="rcp-row-left"><button type="button" class="rcp-name rcp-name-link" onclick="openNewTipModal(\''+tip.id+'\')">'+esc((tip.icon||'💡')+' '+tip.title)+'</button></div>'
+    +reorderHtml
+    +'<div class="rcp-row-left"><button type="button" class="rcp-name rcp-name-link" onclick="openNewTipModal(\''+tip.id+'\')">'+esc((tip.icon||'💡')+' '+tip.title)+'</button>'+hiddenBadge+'</div>'
     +'<button type="button" class="row-del" title="Διαγραφή" aria-label="Διαγραφή tip" onclick="deleteTip(\''+tip.id+'\')">🗑</button>'
     +'</div>'
     +'<div class="rcp-sub"><span class="rcp-cat-pill">'+esc(tip.category||'Γενικά')+'</span></div>'
     +langBadges
     +'</div>';
 }
+
+// Αναδιάταξη — χειρίζεται πάντα την ΠΛΗΡΗ λίστα (getTipsLibrary), ποτέ τη φιλτραρισμένη προβολή.
+function moveTip(id, dir){
+  var list=getTipsLibrary().slice();
+  var idx=-1;
+  for(var i=0;i<list.length;i++){ if(list[i].id===id){ idx=i; break; } }
+  if(idx===-1) return;
+  var swapWith=idx+dir;
+  if(swapWith<0 || swapWith>=list.length) return;
+  var tmp=list[idx]; list[idx]=list[swapWith]; list[swapWith]=tmp;
+  setTipsLibrary(list);
+  renderTipsList();
+}
+function moveTipUp(id){ moveTip(id,-1); }
+function moveTipDown(id){ moveTip(id,1); }
 
 function renderTipsList(){
   var container=document.getElementById('tip-list');
@@ -89,7 +129,11 @@ function renderTipsList(){
     return true;
   });
 
-  container.innerHTML = filtered.length ? filtered.map(tipRow).join('') : '<div class="hm-empty">Κανένα tip δεν βρέθηκε</div>';
+  var canReorder = !_tipsCategoryFilter && !_tipsSearchTerm;
+  container.innerHTML = filtered.length ? filtered.map(function(t){
+    var fullIdx=all.indexOf(t);
+    return tipRow(t, {canReorder:canReorder, isFirst:fullIdx===0, isLast:fullIdx===all.length-1});
+  }).join('') : '<div class="hm-empty">Κανένα tip δεν βρέθηκε</div>';
   if(countEl) countEl.textContent = 'Εμφανίζονται '+filtered.length+' από '+all.length+' tips';
 }
 
@@ -130,6 +174,7 @@ function newTipModalHtml(tip){
     +'<div class="nr-field"><label>Κατηγορία</label><input type="text" id="tip-cat" list="tip-cat-list" placeholder="π.χ. Ενυδάτωση" value="'+esc(tip.category||'')+'"><datalist id="tip-cat-list">'+catOptions+'</datalist></div>'
     +'<div class="nr-field"><label>Τίτλος (Ελληνικά)</label><input type="text" id="tip-title-el" value="'+esc(tip.title||'')+'"></div>'
     +'<div class="nr-field"><label>Κείμενο (Ελληνικά)</label><textarea id="tip-body-el">'+esc(tip.body||'')+'</textarea></div>'
+    +'<div class="nr-field"><label class="tip-visible-label"><input type="checkbox" id="tip-visible"'+(tip.visible===false?'':' checked')+'> Ορατό στους πελάτες</label></div>'
     +'<div class="nr-divider">'
       +'<div class="nr-divider-lbl">Μεταφράσεις (προαιρετικό)</div>'
       +'<div class="nr-divider-sub">Αν αφήσεις μια γλώσσα κενή, ο πελάτης θα βλέπει τα Ελληνικά.</div>'
@@ -191,14 +236,26 @@ function saveTip(){
   var category=(document.getElementById('tip-cat').value||'').trim();
   var titleEl=(document.getElementById('tip-title-el').value||'').trim();
   var bodyEl=(document.getElementById('tip-body-el').value||'').trim();
+  var visibleEl=document.getElementById('tip-visible');
+  var visible=visibleEl?visibleEl.checked:true;
   if(!category){ if(errEl) errEl.textContent='Συμπλήρωσε κατηγορία.'; return; }
   if(!titleEl){ if(errEl) errEl.textContent='Συμπλήρωσε τίτλο (Ελληνικά).'; return; }
   if(!bodyEl){ if(errEl) errEl.textContent='Συμπλήρωσε κείμενο (Ελληνικά).'; return; }
+
+  // Κανονικοποίηση κατηγορίας: αν υπάρχει ήδη μία που ταιριάζει case-insensitive (π.χ. έγραψες
+  // "ενυδατωση" και ήδη υπάρχει "Ενυδάτωση"), κρατάμε την υπάρχουσα γραφή — αλλιώς η λίστα
+  // φίλτρων γεμίζει σχεδόν-διπλότυπες κατηγορίες με τον καιρό.
+  var existingCats=tipCategories();
+  var categoryFold=foldGreekForCompare(category);
+  for(var ci=0;ci<existingCats.length;ci++){
+    if(foldGreekForCompare(existingCats[ci])===categoryFold){ category=existingCats[ci]; break; }
+  }
 
   var tip={
     id: id || ('tip_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)),
     icon: icon,
     category: category,
+    visible: visible,
     title: titleEl,
     body: bodyEl,
     titleEn:(document.getElementById('tip-title-en').value||'').trim(),
