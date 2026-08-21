@@ -422,26 +422,26 @@ const CAT_ICON={'Κρέας':'ti-meat','Ψάρια':'ti-fish','Αυγά/Γαλα
 // κρατήστε τα δύο σε sync αν προστεθεί/αλλάξει μπαχαρικό (δεν μοιράζονται module, plan.html
 // είναι standalone αρχείο χωρίς πρόσβαση στα js/app-part*.js).
 const SPICES=[
-  {n:'Κουρκουμάς',en:'Turmeric',ben:'Αντιφλεγμονώδες, αντιοξειδωτικό',benEn:'Anti-inflammatory, antioxidant',use:'1-3 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Με μαύρο πιπέρι για απορρόφηση',noteEn:'With black pepper for absorption'},
-  {n:'Μαύρο πιπέρι',en:'Black Pepper',ben:'Βελτίωση απορρόφησης θρεπτικών, αντιμικροβιακό',benEn:'Nutrient absorption, antimicrobial',use:'1-2 γρ./ημέρα',useEn:'½ tsp/day',note:'Συνδυάζεται με κουρκουμά',noteEn:'Pairs with turmeric'},
-  {n:'Κανέλα',en:'Cinnamon',ben:'Ρύθμιση σακχάρου, αντιοξειδωτικό',benEn:'Blood sugar control, antioxidant',use:'1-4 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Προτιμήστε Κεϋλάνης για ασφάλεια',noteEn:'Prefer Ceylon for safety'},
-  {n:'Τζίντζερ',en:'Ginger',ben:'Αντιφλεγμονώδες, πέψη, ναυτία',benEn:'Anti-inflammatory, digestion, nausea relief',use:'2-5 γρ./ημέρα (1-2 κ.γλ.)',useEn:'1-2 tsp/day',note:'Φρέσκο ή σκόνη',noteEn:'Fresh or powder'},
-  {n:'Σκόρδο',en:'Garlic',ben:'Καρδιοπροστασία, αντιμικροβιακό',benEn:'Cardiovascular, antimicrobial',use:'1-2 σκελίδες/ημέρα',useEn:'1-2 cloves/day',note:'Καλύτερο ωμό',noteEn:'Best raw'},
-  {n:'Ρίγανη',en:'Oregano',ben:'Αντιμικροβιακό, αντιοξειδωτικό',benEn:'Antimicrobial, antioxidant',use:'1-2 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Ρίγανη ελληνική ισχυρή',noteEn:'Greek oregano is potent'},
-  {n:'Δεντρολίβανο',en:'Rosemary',ben:'Γνωστική λειτουργία, αντιοξειδωτικό',benEn:'Cognitive support, antioxidant',use:'1-2 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Φρέσκο ή αποξηραμένο',noteEn:'Fresh or dried'},
-  {n:'Θυμάρι',en:'Thyme',ben:'Αντιμικροβιακό, αναπνευστική υγεία',benEn:'Antimicrobial, respiratory health',use:'1-2 γρ./ημέρα',useEn:'1 tsp/day',note:'Χρήση σε ροφήματα',noteEn:'Use in teas/infusions'},
-  {n:'Βασιλικός',en:'Basil',ben:'Αντιφλεγμονώδες, καρδιαγγειακή υγεία',benEn:'Anti-inflammatory, cardiovascular health',use:'2-5 γρ./ημέρα (φρέσκα φύλλα)',useEn:'Few leaves/day',note:'Προτιμήστε φρέσκο',noteEn:'Prefer fresh'},
-  {n:'Δυόσμος',en:'Mint',ben:'Πέψη, αναπνευστικό',benEn:'Digestion, respiratory',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Ανακουφίζει από φούσκωμα',noteEn:'Relieves bloating'},
-  {n:'Φασκόμηλο',en:'Sage',ben:'Μνήμη, αντιφλεγμονώδες',benEn:'Memory support, anti-inflammatory',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Σε γυναίκες βοηθά και στην εμμηνόπαυση',noteEn:'May help women in menopause'},
-  {n:'Κουμίν',en:'Cumin',ben:'Πέψη, αντιοξειδωτικό',benEn:'Digestion, antioxidant',use:'1-3 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',note:'Συνήθως με φακές/όσπρια',noteEn:'Usually with lentils/legumes'},
-  {n:'Γλυκάνισος',en:'Anise',ben:'Αναπνευστικό, πέψη',benEn:'Respiratory, digestion',use:'1-2 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Χρήση σε ροφήματα',noteEn:'Use in teas/infusions'},
-  {n:'Κορίανδρος',en:'Coriander',ben:'Ρύθμιση σακχάρου, πέψη',benEn:'Blood sugar control, digestion',use:'1-3 γρ./ημέρα',useEn:'1 tsp/day',note:'Φρέσκο ή σπόροι',noteEn:'Fresh or seeds'},
-  {n:'Τσίλι/Καυτερή πιπ.',en:'Chili Pepper',ben:'Μεταβολισμός, αντιφλεγμονώδες',benEn:'Metabolism boost, anti-inflammatory',use:'0.5-1 γρ./ημέρα (1/4 κ.γλ.)',useEn:'1/4 tsp/day',note:'Προσοχή σε στομάχι',noteEn:'Caution with sensitive stomach'},
-  {n:'Κάρδαμο',en:'Cardamom',ben:'Πέψη, αντιοξειδωτικό',benEn:'Digestion, antioxidant',use:'1-2 γρ./ημέρα',useEn:'1 tsp/day',note:'Χρήση σε τσάι',noteEn:'Use in tea'},
-  {n:'Μοσχοκάρυδο',en:'Nutmeg',ben:'Χαλάρωση, πέψη',benEn:'Relaxation, digestion',use:'Μικρή ποσότητα (0.5-1 γρ.)',useEn:'1/4 tsp/day',note:'Υπερβολή → τοξικό',noteEn:'Excess is toxic'},
-  {n:'Γαρύφαλλο',en:'Clove',ben:'Αντιμικροβιακό, αντιοξειδωτικό',benEn:'Antimicrobial, antioxidant',use:'0.5-1 γρ./ημέρα (1/4-1/2 κ.γλ.)',useEn:'1/4 tsp/day',note:'Ισχυρή δράση',noteEn:'Potent action'},
-  {n:'Σαφράνι',en:'Saffron',ben:'Διάθεση, αντιοξειδωτικό',benEn:'Mood, antioxidant',use:'30-50 mg/ημέρα',useEn:'30-50 mg/day',note:'Ακριβό, μικρή δόση',noteEn:'Expensive, small dose'},
-  {n:'Μάραθος',en:'Fennel',ben:'Πέψη, αντιφλεγμονώδες',benEn:'Digestion, anti-inflammatory',use:'1-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',note:'Χρήση σε βραστά',noteEn:'Use in cooked dishes'}
+  {n:'Κουρκουμάς',en:'Turmeric',ru:'Куркума',tr:'Zerdeçal',ben:'Αντιφλεγμονώδες, αντιοξειδωτικό',benEn:'Anti-inflammatory, antioxidant',benRu:'Противовоспалительное, антиоксидантное',benTr:'Anti-enflamatuar, antioksidan',use:'1-3 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',useRu:'1-3 г/день (1 ч.л.)',useTr:'Günde 1-3 g (1 çk)',note:'Με μαύρο πιπέρι για απορρόφηση',noteEn:'With black pepper for absorption',noteRu:'С чёрным перцем для усвоения',noteTr:'Emilim için karabiberle birlikte'},
+  {n:'Μαύρο πιπέρι',en:'Black Pepper',ru:'Чёрный перец',tr:'Karabiber',ben:'Βελτίωση απορρόφησης θρεπτικών, αντιμικροβιακό',benEn:'Nutrient absorption, antimicrobial',benRu:'Улучшает усвоение питательных веществ, антимикробное',benTr:'Besin emilimini artırır, antimikrobiyal',use:'1-2 γρ./ημέρα',useEn:'½ tsp/day',useRu:'1-2 г/день',useTr:'Günde ½ çk',note:'Συνδυάζεται με κουρκουμά',noteEn:'Pairs with turmeric',noteRu:'Сочетается с куркумой',noteTr:'Zerdeçal ile birlikte alın'},
+  {n:'Κανέλα',en:'Cinnamon',ru:'Корица',tr:'Tarçın',ben:'Ρύθμιση σακχάρου, αντιοξειδωτικό',benEn:'Blood sugar control, antioxidant',benRu:'Регулирует уровень сахара, антиоксидант',benTr:'Kan şekeri dengesi, antioksidan',use:'1-4 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',useRu:'1-4 г/день (1 ч.л.)',useTr:'Günde 1-4 g (1 çk)',note:'Προτιμήστε Κεϋλάνης για ασφάλεια',noteEn:'Prefer Ceylon for safety',noteRu:'Предпочтительно цейлонская, для безопасности',noteTr:'Güvenlik için Seylan tarçını tercih edin'},
+  {n:'Τζίντζερ',en:'Ginger',ru:'Имбирь',tr:'Zencefil',ben:'Αντιφλεγμονώδες, πέψη, ναυτία',benEn:'Anti-inflammatory, digestion, nausea relief',benRu:'Противовоспалительное, пищеварение, от тошноты',benTr:'Anti-enflamatuar, sindirim, mide bulantısı',use:'2-5 γρ./ημέρα (1-2 κ.γλ.)',useEn:'1-2 tsp/day',useRu:'2-5 г/день (1-2 ч.л.)',useTr:'Günde 2-5 g (1-2 çk)',note:'Φρέσκο ή σκόνη',noteEn:'Fresh or powder',noteRu:'Свежий или молотый',noteTr:'Taze veya toz'},
+  {n:'Σκόρδο',en:'Garlic',ru:'Чеснок',tr:'Sarımsak',ben:'Καρδιοπροστασία, αντιμικροβιακό',benEn:'Cardiovascular, antimicrobial',benRu:'Защита сердца, антимикробное',benTr:'Kalp koruyucu, antimikrobiyal',use:'1-2 σκελίδες/ημέρα',useEn:'1-2 cloves/day',useRu:'1-2 зубчика/день',useTr:'Günde 1-2 diş',note:'Καλύτερο ωμό',noteEn:'Best raw',noteRu:'Лучше в сыром виде',noteTr:'En iyisi çiğ'},
+  {n:'Ρίγανη',en:'Oregano',ru:'Орегано (душица)',tr:'Oregano',ben:'Αντιμικροβιακό, αντιοξειδωτικό',benEn:'Antimicrobial, antioxidant',benRu:'Антимикробное, антиоксидантное',benTr:'Antimikrobiyal, antioksidan',use:'1-2 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',useRu:'1-2 г/день (1 ч.л.)',useTr:'Günde 1-2 g (1 çk)',note:'Ρίγανη ελληνική ισχυρή',noteEn:'Greek oregano is potent',noteRu:'Греческий орегано особенно насыщенный',noteTr:'Yunan kekiği güçlüdür'},
+  {n:'Δεντρολίβανο',en:'Rosemary',ru:'Розмарин',tr:'Biberiye',ben:'Γνωστική λειτουργία, αντιοξειδωτικό',benEn:'Cognitive support, antioxidant',benRu:'Поддержка когнитивных функций, антиоксидант',benTr:'Bilişsel destek, antioksidan',use:'1-2 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',useRu:'1-2 г/день (1 ч.л.)',useTr:'Günde 1-2 g (1 çk)',note:'Φρέσκο ή αποξηραμένο',noteEn:'Fresh or dried',noteRu:'Свежий или сушёный',noteTr:'Taze veya kuru'},
+  {n:'Θυμάρι',en:'Thyme',ru:'Тимьян',tr:'Kekik',ben:'Αντιμικροβιακό, αναπνευστική υγεία',benEn:'Antimicrobial, respiratory health',benRu:'Антимикробное, поддержка дыхания',benTr:'Antimikrobiyal, solunum sağlığı',use:'1-2 γρ./ημέρα',useEn:'1 tsp/day',useRu:'1-2 г/день',useTr:'Günde 1 çk',note:'Χρήση σε ροφήματα',noteEn:'Use in teas/infusions',noteRu:'Используйте в чае/настоях',noteTr:'Çay/demlemede kullanın'},
+  {n:'Βασιλικός',en:'Basil',ru:'Базилик',tr:'Fesleğen',ben:'Αντιφλεγμονώδες, καρδιαγγειακή υγεία',benEn:'Anti-inflammatory, cardiovascular health',benRu:'Противовоспалительное, польза для сердца',benTr:'Anti-enflamatuar, kalp-damar sağlığı',use:'2-5 γρ./ημέρα (φρέσκα φύλλα)',useEn:'Few leaves/day',useRu:'2-5 г/день (свежие листья)',useTr:'Günde birkaç yaprak',note:'Προτιμήστε φρέσκο',noteEn:'Prefer fresh',noteRu:'Предпочтительно свежий',noteTr:'Tazesini tercih edin'},
+  {n:'Δυόσμος',en:'Mint',ru:'Мята',tr:'Nane',ben:'Πέψη, αναπνευστικό',benEn:'Digestion, respiratory',benRu:'Пищеварение, дыхание',benTr:'Sindirim, solunum',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',useRu:'2-3 г/день или 1 чашка чая',useTr:'Günde 1 fincan çay',note:'Ανακουφίζει από φούσκωμα',noteEn:'Relieves bloating',noteRu:'Облегчает вздутие',noteTr:'Şişkinliği rahatlatır'},
+  {n:'Φασκόμηλο',en:'Sage',ru:'Шалфей',tr:'Adaçayı',ben:'Μνήμη, αντιφλεγμονώδες',benEn:'Memory support, anti-inflammatory',benRu:'Поддержка памяти, противовоспалительное',benTr:'Hafıza desteği, anti-enflamatuar',use:'2-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',useRu:'2-3 г/день или 1 чашка чая',useTr:'Günde 1 fincan çay',note:'Σε γυναίκες βοηθά και στην εμμηνόπαυση',noteEn:'May help women in menopause',noteRu:'Может помочь женщинам в менопаузе',noteTr:'Menopozdaki kadınlara yardımcı olabilir'},
+  {n:'Κουμίν',en:'Cumin',ru:'Зира (кумин)',tr:'Kimyon',ben:'Πέψη, αντιοξειδωτικό',benEn:'Digestion, antioxidant',benRu:'Пищеварение, антиоксидант',benTr:'Sindirim, antioksidan',use:'1-3 γρ./ημέρα (1 κ.γλ.)',useEn:'1 tsp/day',useRu:'1-3 г/день (1 ч.л.)',useTr:'Günde 1-3 g (1 çk)',note:'Συνήθως με φακές/όσπρια',noteEn:'Usually with lentils/legumes',noteRu:'Обычно с чечевицей/бобовыми',noteTr:'Genellikle mercimek/baklagillerle'},
+  {n:'Γλυκάνισος',en:'Anise',ru:'Анис',tr:'Anason',ben:'Αναπνευστικό, πέψη',benEn:'Respiratory, digestion',benRu:'Дыхание, пищеварение',benTr:'Solunum, sindirim',use:'1-2 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',useRu:'1-2 г/день или 1 чашка чая',useTr:'Günde 1 fincan çay',note:'Χρήση σε ροφήματα',noteEn:'Use in teas/infusions',noteRu:'Используйте в чае/настоях',noteTr:'Çay/demlemede kullanın'},
+  {n:'Κορίανδρος',en:'Coriander',ru:'Кориандр',tr:'Kişniş',ben:'Ρύθμιση σακχάρου, πέψη',benEn:'Blood sugar control, digestion',benRu:'Регулирует сахар, пищеварение',benTr:'Kan şekeri dengesi, sindirim',use:'1-3 γρ./ημέρα',useEn:'1 tsp/day',useRu:'1-3 г/день',useTr:'Günde 1 çk',note:'Φρέσκο ή σπόροι',noteEn:'Fresh or seeds',noteRu:'Свежий или семена',noteTr:'Taze veya tohum'},
+  {n:'Τσίλι/Καυτερή πιπ.',en:'Chili Pepper',ru:'Чили/острый перец',tr:'Acı Biber',ben:'Μεταβολισμός, αντιφλεγμονώδες',benEn:'Metabolism boost, anti-inflammatory',benRu:'Ускоряет метаболизм, противовоспалительное',benTr:'Metabolizmayı hızlandırır, anti-enflamatuar',use:'0.5-1 γρ./ημέρα (1/4 κ.γλ.)',useEn:'1/4 tsp/day',useRu:'0,5-1 г/день (1/4 ч.л.)',useTr:'Günde 1/4 çk',note:'Προσοχή σε στομάχι',noteEn:'Caution with sensitive stomach',noteRu:'Осторожно при чувствительном желудке',noteTr:'Hassas midelerde dikkatli olun'},
+  {n:'Κάρδαμο',en:'Cardamom',ru:'Кардамон',tr:'Kakule',ben:'Πέψη, αντιοξειδωτικό',benEn:'Digestion, antioxidant',benRu:'Пищеварение, антиоксидант',benTr:'Sindirim, antioksidan',use:'1-2 γρ./ημέρα',useEn:'1 tsp/day',useRu:'1-2 г/день',useTr:'Günde 1 çk',note:'Χρήση σε τσάι',noteEn:'Use in tea',noteRu:'Используйте в чае',noteTr:'Çayda kullanın'},
+  {n:'Μοσχοκάρυδο',en:'Nutmeg',ru:'Мускатный орех',tr:'Muskat',ben:'Χαλάρωση, πέψη',benEn:'Relaxation, digestion',benRu:'Расслабление, пищеварение',benTr:'Rahatlama, sindirim',use:'Μικρή ποσότητα (0.5-1 γρ.)',useEn:'1/4 tsp/day',useRu:'Небольшое количество (0,5-1 г)',useTr:'Günde 1/4 çk',note:'Υπερβολή → τοξικό',noteEn:'Excess is toxic',noteRu:'В избытке токсично',noteTr:'Fazlası zehirlidir'},
+  {n:'Γαρύφαλλο',en:'Clove',ru:'Гвоздика',tr:'Karanfil',ben:'Αντιμικροβιακό, αντιοξειδωτικό',benEn:'Antimicrobial, antioxidant',benRu:'Антимикробное, антиоксидант',benTr:'Antimikrobiyal, antioksidan',use:'0.5-1 γρ./ημέρα (1/4-1/2 κ.γλ.)',useEn:'1/4 tsp/day',useRu:'0,5-1 г/день (1/4-1/2 ч.л.)',useTr:'Günde 1/4 çk',note:'Ισχυρή δράση',noteEn:'Potent action',noteRu:'Сильное действие',noteTr:'Etkisi güçlüdür'},
+  {n:'Σαφράνι',en:'Saffron',ru:'Шафран',tr:'Safran',ben:'Διάθεση, αντιοξειδωτικό',benEn:'Mood, antioxidant',benRu:'Настроение, антиоксидант',benTr:'Ruh hali, antioksidan',use:'30-50 mg/ημέρα',useEn:'30-50 mg/day',useRu:'30-50 мг/день',useTr:'Günde 30-50 mg',note:'Ακριβό, μικρή δόση',noteEn:'Expensive, small dose',noteRu:'Дорогой, применяется в малых дозах',noteTr:'Pahalıdır, az miktarda kullanılır'},
+  {n:'Μάραθος',en:'Fennel',ru:'Фенхель',tr:'Rezene',ben:'Πέψη, αντιφλεγμονώδες',benEn:'Digestion, anti-inflammatory',benRu:'Пищеварение, противовоспалительное',benTr:'Sindirim, anti-enflamatuar',use:'1-3 γρ./ημέρα ή 1 φλιτζάνι τσάι',useEn:'1 cup tea/day',useRu:'1-3 г/день или 1 чашка чая',useTr:'Günde 1 fincan çay',note:'Χρήση σε βραστά',noteEn:'Use in cooked dishes',noteRu:'Используйте в варёных блюдах',noteTr:'Pişmiş yemeklerde kullanın'}
 ];
 
 // Επικοινωνία με το διαιτολογικό γραφείο (fallback αν δεν έρθει από το πλάνο).
@@ -460,7 +460,19 @@ const LOG_TAGS_EN=[
   {id:'party',icon:'ti-gift',label:'Celebration'},
   {id:'sick',icon:'ti-thermometer',label:'Sick'}
 ];
-function logTags(){return LANG==='en'?LOG_TAGS_EN:LOG_TAGS_EL}
+const LOG_TAGS_RU=[
+  {id:'travel',icon:'ti-plane',label:'Поездка'},
+  {id:'party',icon:'ti-gift',label:'Праздник'},
+  {id:'sick',icon:'ti-thermometer',label:'Болезнь'}
+];
+const LOG_TAGS_TR=[
+  {id:'travel',icon:'ti-plane',label:'Seyahat'},
+  {id:'party',icon:'ti-gift',label:'Kutlama'},
+  {id:'sick',icon:'ti-thermometer',label:'Hasta'}
+];
+// Πλήρες lang→tags map (πριν ήταν binary en/el ternary — δεν κάλυπτε ru/tr, βλ. [[dietologist-ru-tr-portal-prep]])
+var LOG_TAGS_BY_LANG={el:LOG_TAGS_EL,en:LOG_TAGS_EN,ru:LOG_TAGS_RU,tr:LOG_TAGS_TR};
+function logTags(){return LOG_TAGS_BY_LANG[LANG]||LOG_TAGS_EL}
 
 // ── i18n (πλήρης κάλυψη πλέον: Header/Nav + όλα τα tabs — Αρχική/Πλάνο/Ψώνια/Νερό/Συμπληρώματα/
 // Πρόοδο — plus FAQ, Επικοινωνία, onboarding και PDF labels. Ξεκίνησε ως "Φάση 1" μόνο για
@@ -471,6 +483,11 @@ function logTags(){return LANG==='en'?LOG_TAGS_EN:LOG_TAGS_EL}
 // στο SNAP (χτισμένες server-side από το _buildSnapshot στο Dietologist.html, που έχει πρόσβαση
 // στη βάση FOODS/SUPPS· το plan.html είναι standalone αρχείο χωρίς αυτή την πρόσβαση).
 let LANG='el';
+// Οι 4 γλώσσες που υποστηρίζει το link πελάτη (βλ. [[dietologist-ru-tr-portal-prep]]) — μία λίστα εδώ
+// ώστε το boot()/refreshPlan() παρακάτω να μην ξαναγράφουν binary en/el fallback που θα άφηνε έναν
+// ρωσόφωνο/τουρκόφωνο πελάτη σιωπηλά σε ελληνικό UI παρόλο που το SNAP έχει ήδη τα σωστά δεδομένα.
+var SUPPORTED_LANGS=['el','en','ru','tr'];
+function pickLang(v){return SUPPORTED_LANGS.indexOf(v)>-1?v:'el'}
 const I18N={
   el:{
     greeting:'Γεια σου',
@@ -677,6 +694,212 @@ const I18N={
     pdfHydHdr:'Hydration Protocol', pdfHydTime:'Time', pdfHydAmount:'Amount', pdfHydBase:'Daily base', pdfHydTrain:'Training day',
     pdfShopHdr:'Weekly Shopping List', pdfFooter:'Feed Your Health — Dietitian Tool',
     pdfTargetLbl:'Target', pdfHydRest:'Rest', pdfHydTrainLbl:'Training'
+  },
+  ru:{
+    greeting:'Привет',
+    refreshTip:'Проверить обновление плана', pdfBtn:'PDF', pdfTip:'Печать или сохранение в PDF',
+    updatedPrefix:'Обновлено',
+    nav_home:'Главная', nav_plan:'План', nav_shop:'Покупки', nav_water:'Вода', nav_supps:'Добавки', nav_prog:'Прогресс',
+    trainDaySuffix:'день тренировки', matchDaySuffix:'день матча',
+    statGoal:'Цель', statProtein:'Белки', statCarbs:'Углеводы', statFat:'Жиры',
+    coachNoteHdr:'Сообщение от вашего диетолога',
+    todayMealsHdr:'Мой рацион сегодня', matchBadge:'Матч', tapMealHint:'Нажмите на приём пищи, когда закончите его.',
+    noMealsToday:'На сегодня плана нет.', mealFallback:'Приём пищи', beforeMatch:'перед матчем', afterMatch:'после матча',
+    quickShop:'Список покупок', quickSupps:'Добавки', quickSpices:'Специи и травы', quickSpicesSub:'Руководство по применению',
+    quickFruits:'Фрукты', quickFruitsSub:'Список замены', suppsNone:'—', suppsProgress:'{d} из {t} сегодня', shopProgress:'{d} из {t} ✓',
+    exclHdr:'План избегает',
+    faqHdr:'Часто задаваемые вопросы',
+    faqQ1:'Я хочу есть между приёмами пищи', faqA1:'Это нормально вначале. Сначала выпейте стакан воды — часто жажда похожа на голод. Если чувство не проходит, у вас есть свободный доступ к сырым овощам (огурец, морковь, помидор) в любое время, без ограничений.',
+    faqQ2:'Я отступил(а) от плана — что делать?', faqA2:'Ничего страшного. Не пропускайте следующий приём пищи, чтобы «компенсировать» — просто продолжайте как обычно. Если это повторяется часто, сообщите мне в разделе «Прогресс» или напишите — вместе скорректируем план.',
+    faqQ3:'Как взвешивать продукты?', faqA3:'Все граммы в плане указаны в сыром весе — взвешивайте перед готовкой, если рядом с продуктом не указано иное (например, «варёное»).',
+    faqQ4:'Насколько строго нужно соблюдать время приёмов пищи?', faqA4:'Это ориентир, а не правило — ±60 минут ничего не меняют. Важен порядок и содержание каждого приёма пищи, а не часы.',
+    faqQ5:'Кофе, чай, алкоголь — можно?', faqA5:'Кофе и чай без сахара — свободно, в любое время. Алкоголь: 1-2 раза в неделю в меру, не в день тренировки или матча.',
+    faqQ6:'Иду в гости или путешествую — что выбрать?', faqA6:'Выбирайте запечённое или отварное мясо/рыбу, салат и одну порцию углеводов (рис, картофель, хлеб) — как если бы вы сами составляли тарелку по плану. По возможности избегайте жареного и десертов.',
+    fabAsk:'Спросить', contactHdr:'Связь', contactSub:'Спросите меня о чём угодно по поводу вашего плана.',
+    contactWa:'WhatsApp', contactTel:'Позвонить', contactMail:'Email', contactWeb:'Сайт', contactClose:'Закрыть',
+    contactGreeting:'Здравствуйте! Меня зовут {name}, у меня вопрос по поводу моего плана.', contactFallbackName:'ваш клиент',
+    contactQSubject:'Вопрос по моему плану',
+    obTitle1:'Ваш план', obSub1:'Здесь вы видите свои приёмы пищи на каждый день, с количеством и калориями.',
+    obTitle2:'Отмечайте, что съели', obSub2:'Нажмите на приём пищи, когда закончите его — так вы наращиваете серию.',
+    obTitle3:'Смотрите свой прогресс', obSub3:'Счёт, серия и вес — одним взглядом, обновляйте когда угодно.',
+    obNext:'Далее', obStart:'Начать', obSkip:'Пропустить',
+    installTitle:'Добавьте свой план на главный экран',
+    installSubAuto:'Открывается как приложение — не нужно каждый раз искать ссылку в WhatsApp.',
+    installSubIOS:'Нажмите <i class="ti ti-share-2"></i> «Поделиться», затем «На экран Домой».',
+    installBtn:'Установить', installClose:'Закрыть',
+    nudgeTitle:'Вы ещё ничего не отметили сегодня', nudgeSub:'Нажмите на приём пищи ниже, когда закончите его — так вы наращиваете серию.',
+    composerPrompt:'Отправьте сообщение своему диетологу', composerEditing:'Редактирование сообщения',
+    composerPlaceholder:'например: Сегодня я был(а) очень голоден/голодна, обед показался маловат', composerSend:'Отправить',
+    composerNotSent:'Ещё не отправлено', composerSentToday:'Отправлено сегодня', composerSentPrefix:'Отправлено',
+    composerRetry:'Попробовать снова', composerEdit:'изменить',
+    matchLabel:'Матч', matchNone:'нет', matchThisWeek:'(на этой неделе)', matchChange:'изменить', matchCloseBtn:'закрыть', matchOff:'Нет',
+    matchDefaultNote:'{day} остаётся обычным днём матча в другие недели.', matchOverrideNote:'Действует только на этой неделе.',
+    mtMorning:'утро', mtNoon:'полдень', mtAfternoon:'день', mtEvening:'вечер',
+    glanceScore:'счёт нед.', glanceStreak:'серия', glanceWeight:'вес кг', scoreWord:'счёт',
+    goalHeroLbl:'Ваша цель', goalHeroArrow:'От {start} кг — осталось {diff} кг!',
+    waterLabel:'Гидратация', waterMatchNote:'Повышенная цель из-за сегодняшнего матча.',
+    dayMon:'Пн',dayTue:'Вт',dayWed:'Ср',dayThu:'Чт',dayFri:'Пт',daySat:'Сб',daySun:'Вс',
+    subPlan:'Мой недельный план', subProg:'Мой прогресс', subShop:'Список покупок', subWater:'Гидратация',
+    subSupps:'Мои добавки', subSpices:'Специи и травы', subFruits:'Список замены фруктов',
+    noMealsForDay:'На этот день плана нет.', alternates:'Альтернативы', alternatesNote:'Равноценные варианты на основе ваших предпочтений',
+    macroP:'Б', macroC:'У', macroF:'Ж',
+    shopHdr:'Список покупок', shopEmpty:'Список пока пуст.', shopRawLegend:'Указано количество для покупки · в скобках — сырой/необработанный вес, если он отличается.',
+    waterProtocolHdr:'Протокол гидратации', waterProtocolBody:'Цель на основе веса · +500 мл в дни тренировок · 1 стакан перед каждым приёмом пищи.', waterHint:'Нажмите на стакан, чтобы отметить, сколько воды вы выпили сегодня.',
+    suppsHdr:'Мои добавки', suppsToday:'сегодня', suppsEmpty:'В вашем плане не назначены добавки.',
+    suppsTipHdr:'Совет', suppsTipBody:'Нажимайте на день, когда принимаете добавку. Принимайте её в указанное время, вместе с едой — если диетолог не сказал иначе.',
+    dowD:'П',dowT1:'В',dowT2:'С',dowP1:'Ч',dowP2:'П',dowS1:'С',dowK:'В',
+    spicesHdr:'Руководство по специям и травам', spicesBody:'Полезные специи и травы — рекомендуемая суточная норма. Не заменяет консультацию врача.',
+    spicesBenefits:'Польза', spicesUse:'Применение', spicesNote:'Примечание',
+    fruitsHdr:'Список замены фруктов', fruitsBody:'Каждый вариант соответствует 1 порции фруктов — свободно меняйте между ними.',
+    pfBreakfast:'Завтрак', pfSnacks:'Перекусы', pfLunch:'Обед', pfDinner:'Ужин',
+    pfRecipesEase:'Насколько простыми были рецепты', pfIngredientsEase:'Поиск ингредиентов', pfTrainingEnergy:'Энергии для тренировок',
+    pfReasonNoTime:'Не было времени', pfReasonNoTaste:'Не понравился вкус', pfReasonNotFull:'Не наедало', pfReasonHeavy:'Было слишком тяжело',
+    pfReasonSteps:'Слишком много шагов', pfReasonLong:'Заняло много времени', pfReasonEquip:'Нужно было оборудование', pfReasonTechnique:'Сложная техника',
+    pfReasonNotFound:'Не нашёл(ла)', pfReasonExpensive:'Было слишком дорого', pfReasonManyShops:'Слишком много разных магазинов', pfReasonUnknown:'Незнакомый ингредиент',
+    pfReasonHungry:'Был(а) голоден/голодна во время тренировки', pfReasonNoEnergy:'Не было энергии', pfReasonTiming:'Неправильное время приёма пищи', pfReasonAfter:'Нужно было что-то после',
+    pfStarAria:'{n} из 5 звёзд',
+    pfFormHdr:'Расскажите, как прошла неделя', pfFormSub:'30 секунд — поможет скорректировать ваш следующий план.',
+    pfNpsQ:'Насколько вероятно, что вы продолжите этот план и на следующей неделе?', pfNpsLow:'совсем маловероятно', pfNpsHigh:'точно да',
+    pfSubmit:'Отправить оценку', pfSentHdr:'Оценка недели',
+    pfNotSent:'Ещё не отправлено вашему диетологу', pfThanks:'Спасибо! Вы отправили оценку за эту неделю.',
+    milestoneDay:'день', milestoneDays:'дней', milestoneStreak:'серия!', milestoneNext:'Продолжайте в том же духе — следующая веха на {n}',
+    milestoneAmazing:'Невероятная серия — продолжайте!', milestoneDaysUnit:'дней',
+    freezeAvail:'1 заморозка доступна в этом месяце — пропущенный день не разрушит вашу серию', freezeUsed:'Заморозка на этот месяц уже использована',
+    shareText:'Я достиг(ла) {score}% соблюдения плана на этой неделе!', shareStreak:'серия {n} {dn}', shareFooter:'с моим планом от Feed Your Health 💪',
+    shareBtn:'Поделиться прогрессом', shareCopied:'Скопировано!',
+    tipStartHint:'Как только вы начнёте отмечать приёмы пищи, добавки и воду, здесь появятся персональные советы.',
+    tipDietLow:'На этой неделе с питанием было сложно. Готовьте еду с вечера.',
+    tipDietMid:'Вы пропустили {n} {dn} по питанию. Небольшая подготовка имеет значение.', tipDietOk:'Стабильное питание всю неделю — молодец!',
+    tipSuppLow:'Добавки часто забывались. Поставьте напоминание или держите их рядом с завтраком.',
+    tipSuppMid:'Вы пропустили добавки {n} {dn}. Попробуйте держать их рядом с завтраком.', tipSuppOk:'Стабильность с добавками — отлично!',
+    tipWaterLow:'Гидратации нужно уделить внимание. Держите бутылку воды с собой весь день.',
+    tipWaterMid:'Немного отстаёте по воде ({n} {dn}). Стакан перед каждым приёмом пищи закроет разрыв.', tipWaterOk:'Отличная гидратация — так держать!',
+    tipUp:'Вы поднялись на +{diff}% по сравнению с прошлой неделей. Молодец!', tipDown:'Немного ниже, чем на прошлой неделе. Без давления — новый старт!',
+    tipGoodWeek:'Хорошая работа на этой неделе! Продолжайте в том же духе.',
+    greetStart:'Начните отслеживать!', greetExcellent:'Отличная неделя!', greetGood:'Хорошая неделя!', greetOk:'Хорошая попытка!', greetNew:'Новая неделя, новый старт!',
+    heroGoals:'{d} из {t} целей ✓', heroPrompt:'Отмечайте приёмы пищи, добавки и воду.', heroStreak:'серия',
+    weightTodayHdr:'Вес сегодня', weightPlaceholder:'например, 82,4 кг', weightBtn:'Записать', weightNotSent:'Ещё не отправлено', weightRecorded:'Записано',
+    weightErr:'Вес должен быть числом от 20 до 300 кг.',
+    thisWeekHdr:'На этой неделе', pillarDiet:'Питание', pillarSupps:'Добавки', pillarWater:'Вода',
+    tipsHdr:'Советы на следующую неделю', historyHdr:'История', historyNow:'Сейчас',
+    progStart:'Старт', progNow:'Сейчас', progGoal:'Цель', weightChartLbl:'Вес (кг)',
+    bfChartLbl:'Процент жира (%)', bfNeed2:'Для графика динамики нужно как минимум 2 измерения.',
+    lbmChartLbl:'Безжировая масса (кг)', bodyCompHdr:'Состав тела', bodyCompTotal:'кг ВСЕГО', bodyCompLean:'Безжировая', bodyCompFat:'Жир',
+    analysisHdr:'Анализ', analysisGoalLegend:'◆ цель', bmiLbl:'ИМТ', bfPctLbl:'% жира', whtrLbl:'WHtR',
+    bmiUnderweight:'Недостаточный вес', bmiNormal:'Норма', bmiOverweight:'Избыточный вес', bmiObese1:'Ожирение I', bmiObese2:'Ожирение II', bmiObese3:'Ожирение III',
+    whtrNormal:'Норма', whtrElevated:'Повышенный риск', whtrHigh:'Высокий риск',
+    bfEssential:'Незаменимый', bfAthletic:'Спортивный', bfFit:'Хорошая форма', bfAcceptable:'Приемлемый', bfObese:'Ожирение',
+    acsmRef:'Референсные значения ACSM', lastMeasureHdr:'Последнее измерение', waistLbl:'Окружность талии', bodyfatLbl:'Процент жира', lbmLbl:'Безжировая масса',
+    sinceStart:'с начала', chartAriaLabel:'График', chartGoalLbl:'цель',
+    pdfLegend:'Б = Белки · Ж = Жиры · У = Углеводы', pdfTrainBadge:'день тренировки',
+    pdfMealCol:'Приём пищи', pdfTotals:'Итого', pdfFiber:'Клетчатка',
+    pdfSuppsHdr:'Протокол добавок', pdfSuppsTime:'Время приёма', pdfSuppsDose:'Добавки и дозировка',
+    pdfHydHdr:'Протокол гидратации', pdfHydTime:'Время', pdfHydAmount:'Количество', pdfHydBase:'Суточная база', pdfHydTrain:'День тренировки',
+    pdfShopHdr:'Список покупок на неделю', pdfFooter:'Feed Your Health — Инструмент диетолога',
+    pdfTargetLbl:'Цель', pdfHydRest:'Отдых', pdfHydTrainLbl:'Тренировка'
+  },
+  tr:{
+    greeting:'Merhaba',
+    refreshTip:'Güncel plan kontrolü', pdfBtn:'PDF', pdfTip:'Yazdır veya PDF olarak kaydet',
+    updatedPrefix:'Güncellendi',
+    nav_home:'Ana Sayfa', nav_plan:'Plan', nav_shop:'Alışveriş', nav_water:'Su', nav_supps:'Takviye', nav_prog:'İlerleme',
+    trainDaySuffix:'antrenman günü', matchDaySuffix:'maç günü',
+    statGoal:'Hedef', statProtein:'Protein', statCarbs:'Karbonhidrat', statFat:'Yağ',
+    coachNoteHdr:'Diyetisyeninizden bir not',
+    todayMealsHdr:'Bugünkü beslenmem', matchBadge:'Maç', tapMealHint:'Bir öğünü bitirdiğinde üzerine dokun.',
+    noMealsToday:'Bugün için plan yok.', mealFallback:'Öğün', beforeMatch:'maçtan önce', afterMatch:'maçtan sonra',
+    quickShop:'Alışveriş listesi', quickSupps:'Takviyeler', quickSpices:'Baharat ve otlar', quickSpicesSub:'Kullanım rehberi',
+    quickFruits:'Meyveler', quickFruitsSub:'Değişim listesi', suppsNone:'—', suppsProgress:'bugün {t} içinden {d}', shopProgress:'{t} içinden {d} ✓',
+    exclHdr:'Bu plan şunlardan kaçınır',
+    faqHdr:'Sık sorulan sorular',
+    faqQ1:'Öğünler arasında acıkıyorum', faqA1:'Başlangıçta normal. Önce bir bardak su iç — susuzluk çoğu zaman açlık gibi hissettirir. Devam ederse, istediğin zaman sınırsız çiğ sebze (salatalık, havuç, domates) tüketebilirsin.',
+    faqQ2:'Plandan saptım — ne yapmalıyım?', faqA2:'Sorun değil. "Telafi etmek" için bir sonraki öğünü atlama — sadece normal şekilde devam et. Sık oluyorsa İlerleme sekmesinden söyle veya bana yaz, planı birlikte ayarlayalım.',
+    faqQ3:'Yiyecekleri nasıl tartmalıyım?', faqA3:'Plandaki tüm gramajlar çiğ ağırlıktır — yanında farklı belirtilmedikçe (örn. "pişmiş") pişirmeden önce tart.',
+    faqQ4:'Öğün saatleri ne kadar katı?', faqA4:'Bir rehberdir, kural değil — ±60 dakika hiçbir şeyi değiştirmez. Önemli olan saatler değil, her öğünün sırası ve içeriğidir.',
+    faqQ5:'Kahve, çay, alkol — izinli mi?', faqA5:'Şekersiz kahve ve çay: istediğin zaman serbest. Alkol: haftada 1-2 kez ölçülü, antrenman veya maç günü hariç.',
+    faqQ6:'Dışarıda yiyorum veya seyahatteyim — ne seçmeliyim?', faqA6:'Izgara veya haşlanmış et/balık, salata ve bir porsiyon nişasta (pilav, patates, ekmek) seç — sanki plandaki tabağı kendin hazırlıyormuş gibi. Mümkün olduğunca kızartma ve tatlıdan kaçın.',
+    fabAsk:'Bana sor', contactHdr:'İletişim', contactSub:'Planınla ilgili merak ettiğin her şeyi sor.',
+    contactWa:'WhatsApp', contactTel:'Ara', contactMail:'E-posta', contactWeb:'Web sitesi', contactClose:'Kapat',
+    contactGreeting:'Merhaba! Ben {name}, planımla ilgili bir sorum var.', contactFallbackName:'danışanınız',
+    contactQSubject:'Planımla ilgili soru',
+    obTitle1:'Planın', obSub1:'Burada her gün için öğünlerini, miktarlarını ve kalorilerini görürsün.',
+    obTitle2:'Yediklerini işaretle', obSub2:'Bir öğünü bitirdiğinde üzerine dokun — böylece serini oluşturursun.',
+    obTitle3:'İlerlemeni gör', obSub3:'Puan, seri ve kilo tek bakışta — istediğin zaman güncelle.',
+    obNext:'İleri', obStart:'Başla', obSkip:'Atla',
+    installTitle:'Planını ana ekranına ekle',
+    installSubAuto:'Uygulama gibi açılır, her seferinde WhatsApp\'ta linki aramana gerek kalmaz.',
+    installSubIOS:'<i class="ti ti-share-2"></i> Paylaş, sonra "Ana Ekrana Ekle" seçeneğine dokun.',
+    installBtn:'Yükle', installClose:'Kapat',
+    nudgeTitle:'Bugün henüz hiçbir şey işaretlemedin', nudgeSub:'Aşağıdaki bir öğünü bitirdiğinde üzerine dokun — böylece serini oluşturursun.',
+    composerPrompt:'Diyetisyenine bir mesaj gönder', composerEditing:'Mesaj düzenleniyor',
+    composerPlaceholder:'örn. Bugün çok acıktım, öğle yemeği biraz azdı', composerSend:'Gönder',
+    composerNotSent:'Henüz gönderilmedi', composerSentToday:'Bugün gönderildi', composerSentPrefix:'Gönderildi',
+    composerRetry:'Tekrar dene', composerEdit:'düzenle',
+    matchLabel:'Maç', matchNone:'yok', matchThisWeek:'(bu hafta)', matchChange:'değiştir', matchCloseBtn:'kapat', matchOff:'Yok',
+    matchDefaultNote:'{day} diğer haftalarda normal maç günü olarak kalır.', matchOverrideNote:'Sadece bu hafta geçerlidir.',
+    mtMorning:'Sabah', mtNoon:'Öğle', mtAfternoon:'İkindi', mtEvening:'Akşam',
+    glanceScore:'haftalık puan', glanceStreak:'seri', glanceWeight:'kilo kg', scoreWord:'puan',
+    goalHeroLbl:'Hedefin', goalHeroArrow:'{start} kg\'dan — {diff} kg kaldı!',
+    waterLabel:'Sıvı alımı', waterMatchNote:'Bugünkü maç nedeniyle hedef artırıldı.',
+    dayMon:'Pzt',dayTue:'Sal',dayWed:'Çar',dayThu:'Per',dayFri:'Cum',daySat:'Cmt',daySun:'Paz',
+    subPlan:'Haftalık planım', subProg:'İlerlemem', subShop:'Alışveriş listesi', subWater:'Sıvı alımı',
+    subSupps:'Takviyelerim', subSpices:'Baharat ve otlar', subFruits:'Meyve değişim listesi',
+    noMealsForDay:'Bu gün için plan yok.', alternates:'Alternatifler', alternatesNote:'Tercihlerine göre eşdeğer seçenekler',
+    macroP:'P', macroC:'K', macroF:'Y',
+    shopHdr:'Alışveriş listesi', shopEmpty:'Henüz liste yok.', shopRawLegend:'Gösterilen miktar satın alacağın miktardır · farklıysa parantez içinde çiğ/pişmemiş ağırlık verilmiştir.',
+    waterProtocolHdr:'Sıvı alım protokolü', waterProtocolBody:'Kiloya göre hedef · antrenman günlerinde +500 ml · her öğünden önce 1 bardak.', waterHint:'Bugün ne kadar su içtiğini kaydetmek için bir bardağa dokun.',
+    suppsHdr:'Takviyelerim', suppsToday:'bugün', suppsEmpty:'Planında herhangi bir takviye belirlenmemiş.',
+    suppsTipHdr:'İpucu', suppsTipBody:'Takviyeyi aldığında güne dokun. Diyetisyenin başka türlü söylemediyse, belirtilen saatte, öğünle birlikte al.',
+    dowD:'P',dowT1:'S',dowT2:'Ç',dowP1:'P',dowP2:'C',dowS1:'C',dowK:'P',
+    spicesHdr:'Baharat ve Otlar Rehberi', spicesBody:'Terapötik baharat ve otlar — önerilen günlük kullanım. Tıbbi tavsiyenin yerini tutmaz.',
+    spicesBenefits:'Faydaları', spicesUse:'Kullanım', spicesNote:'Not',
+    fruitsHdr:'Meyve Değişim Listesi', fruitsBody:'Her seçenek 1 porsiyon meyveye eşdeğerdir — aralarında serbestçe değiştir.',
+    pfBreakfast:'Kahvaltı', pfSnacks:'Ara Öğünler', pfLunch:'Öğle Yemeği', pfDinner:'Akşam Yemeği',
+    pfRecipesEase:'Tariflerin kolaylığı', pfIngredientsEase:'Malzemeleri bulma', pfTrainingEnergy:'Antrenman için enerji',
+    pfReasonNoTime:'Zaman yoktu', pfReasonNoTaste:'Tadını sevmedim', pfReasonNotFull:'Doyurucu değildi', pfReasonHeavy:'Çok ağırdı',
+    pfReasonSteps:'Çok fazla adım vardı', pfReasonLong:'Çok uzun sürdü', pfReasonEquip:'Ekipman gerekiyordu', pfReasonTechnique:'Zor teknik',
+    pfReasonNotFound:'Bulamadım', pfReasonExpensive:'Çok pahalıydı', pfReasonManyShops:'Çok farklı mağaza gerekti', pfReasonUnknown:'Tanıdık olmayan malzeme',
+    pfReasonHungry:'Antrenman sırasında acıktım', pfReasonNoEnergy:'Enerjim yoktu', pfReasonTiming:'Yanlış öğün zamanlaması', pfReasonAfter:'Sonrasında bir şeye ihtiyacım oldu',
+    pfStarAria:'5 yıldızdan {n}',
+    pfFormHdr:'Hafta nasıl geçti anlat', pfFormSub:'30 saniye — bir sonraki planını ayarlamamıza yardımcı olur.',
+    pfNpsQ:'Gelecek hafta da bu plana devam etme olasılığın nedir?', pfNpsLow:'hiç olası değil', pfNpsHigh:'kesinlikle',
+    pfSubmit:'Değerlendirmeyi gönder', pfSentHdr:'Haftalık değerlendirme',
+    pfNotSent:'Henüz diyetisyenine gönderilmedi', pfThanks:'Teşekkürler! Bu haftaki değerlendirmeni gönderdin.',
+    milestoneDay:'gün', milestoneDays:'gün', milestoneStreak:'seri!', milestoneNext:'Böyle devam et — bir sonraki dönüm noktası {n}',
+    milestoneAmazing:'Muhteşem bir seri — devam et!', milestoneDaysUnit:'gün',
+    freezeAvail:'Bu ay 1 dondurma hakkın var — kaçırdığın bir gün serini bozmaz', freezeUsed:'Bu ayki dondurma hakkı zaten kullanıldı',
+    shareText:'Bu hafta %{score} uyum sağladım!', shareStreak:'{n} {dn} seri', shareFooter:'Feed Your Health planımla 💪',
+    shareBtn:'İlerlemeni paylaş', shareCopied:'Kopyalandı!',
+    tipStartHint:'Öğünleri, takviyeleri ve suyu işaretlemeye başladığında burada kişisel ipuçları göreceksin.',
+    tipDietLow:'Bu hafta beslenme zor geçti. Öğünlerini bir önceki akşamdan hazırla.',
+    tipDietMid:'Beslenmede {n} {dn} kaçırdın. Biraz hazırlık fark yaratır.', tipDietOk:'Hafta boyunca tutarlı beslenme — tebrikler!',
+    tipSuppLow:'Takviyeler sıkça unutuldu. Bir hatırlatıcı kur veya kahvaltının yanına koy.',
+    tipSuppMid:'Takviyeleri {n} {dn} unuttun. Kahvaltının yanına koymayı dene.', tipSuppOk:'Takviyelerde tutarlılık — harika!',
+    tipWaterLow:'Sıvı alımı dikkat gerektiriyor. Gün boyu yanında bir şişe su bulundur.',
+    tipWaterMid:'Suda biraz gerideyiz ({n} {dn}). Her öğünden önce bir bardak açığı kapatır.', tipWaterOk:'Harika sıvı alımı — böyle devam!',
+    tipUp:'Geçen haftaya göre +%{diff} yükseldin. Tebrikler!', tipDown:'Geçen haftaya göre biraz düşük. Sorun değil — yeni bir başlangıç!',
+    tipGoodWeek:'Bu hafta güzel iş çıkardın! Böyle devam et.',
+    greetStart:'Kayıt tutmaya başla!', greetExcellent:'Mükemmel bir hafta!', greetGood:'İyi bir hafta!', greetOk:'İyi bir çaba!', greetNew:'Yeni hafta, yeni başlangıç!',
+    heroGoals:'{t} hedeften {d} ✓', heroPrompt:'Öğünlerini, takviyelerini ve suyunu işaretle.', heroStreak:'seri',
+    weightTodayHdr:'Bugünkü kilo', weightPlaceholder:'örn. 82,4 kg', weightBtn:'Kaydet', weightNotSent:'Henüz gönderilmedi', weightRecorded:'Kaydedildi',
+    weightErr:'Kilo 20 ile 300 kg arasında bir sayı olmalı.',
+    thisWeekHdr:'Bu hafta', pillarDiet:'Beslenme', pillarSupps:'Takviyeler', pillarWater:'Su',
+    tipsHdr:'Gelecek hafta için ipuçları', historyHdr:'Geçmiş', historyNow:'Şimdi',
+    progStart:'Başlangıç', progNow:'Şimdi', progGoal:'Hedef', weightChartLbl:'Kilo (kg)',
+    bfChartLbl:'Vücut yağı (%)', bfNeed2:'Bir gelişim grafiği için en az 2 ölçüm gerekir.',
+    lbmChartLbl:'Yağsız kütle (kg)', bodyCompHdr:'Vücut kompozisyonu', bodyCompTotal:'kg TOPLAM', bodyCompLean:'Yağsız', bodyCompFat:'Yağ',
+    analysisHdr:'Analiz', analysisGoalLegend:'◆ hedef', bmiLbl:'VKİ', bfPctLbl:'Vücut Yağı %', whtrLbl:'WHtR',
+    bmiUnderweight:'Zayıf', bmiNormal:'Normal', bmiOverweight:'Fazla Kilolu', bmiObese1:'Obez I', bmiObese2:'Obez II', bmiObese3:'Obez III',
+    whtrNormal:'Normal', whtrElevated:'Yüksek risk', whtrHigh:'Çok yüksek risk',
+    bfEssential:'Temel', bfAthletic:'Atletik', bfFit:'Fit', bfAcceptable:'Kabul edilebilir', bfObese:'Obez',
+    acsmRef:'ACSM referans değerleri', lastMeasureHdr:'Son ölçüm', waistLbl:'Bel çevresi', bodyfatLbl:'Vücut yağı', lbmLbl:'Yağsız kütle',
+    sinceStart:'başlangıçtan bu yana', chartAriaLabel:'Grafik', chartGoalLbl:'hedef',
+    pdfLegend:'P = Protein · Y = Yağ · K = Karbonhidrat', pdfTrainBadge:'antrenman günü',
+    pdfMealCol:'Öğün', pdfTotals:'Toplam', pdfFiber:'Lif',
+    pdfSuppsHdr:'Takviye Protokolü', pdfSuppsTime:'Alım Zamanı', pdfSuppsDose:'Takviyeler &amp; Dozaj',
+    pdfHydHdr:'Sıvı Alım Protokolü', pdfHydTime:'Zaman', pdfHydAmount:'Miktar', pdfHydBase:'Günlük temel', pdfHydTrain:'Antrenman günü',
+    pdfShopHdr:'Haftalık Alışveriş Listesi', pdfFooter:'Feed Your Health — Diyetisyen Aracı',
+    pdfTargetLbl:'Hedef', pdfHydRest:'Dinlenme', pdfHydTrainLbl:'Antrenman'
   }
 };
 function T(key,vars){
@@ -685,16 +908,24 @@ function T(key,vars){
   return s;
 }
 
+// Ονόματα εφαρμογής/tab ανά γλώσσα — μία πηγή αλήθειας για applyLangMeta() + injectManifest()
+// παρακάτω, ώστε η προσθήκη ρωσικών/τουρκικών (βλ. [[dietologist-ru-tr-portal-prep]]) να μη χρειάζεται
+// να επαναλαμβάνεται σε πολλά σημεία.
+var PLAN_APP_NAME={el:'Το πλάνο μου',en:'My Plan',ru:'Мой план',tr:'Planım'};
+function planAppName(){return PLAN_APP_NAME[LANG]||PLAN_APP_NAME.el}
+var PLAN_LOCALE={el:'el-GR',en:'en-GB',ru:'ru-RU',tr:'tr-TR'};
+function planLocale(){return PLAN_LOCALE[LANG]||PLAN_LOCALE.el}
+
 // ✅ audit fix (2026-08-16): document.title/<meta apple-mobile-web-app-title>/<html lang> were
 // hardcoded Greek and never updated once LANG was known — an English-speaking client's browser
 // tab AND the icon name iOS gives the page when they "Add to Home Screen" both stayed Greek,
 // even though injectManifest() below already builds the correctly-localized name for Android's
 // separate web-manifest install path. Call this right after LANG is (re)assigned.
 function applyLangMeta(){
-  document.title='Feed Your Health — '+(LANG==='en'?'My Plan':'Το πλάνο μου');
+  document.title='Feed Your Health — '+planAppName();
   document.documentElement.lang=LANG;
   var appleTitle=document.querySelector('meta[name="apple-mobile-web-app-title"]');
-  if(appleTitle)appleTitle.setAttribute('content',LANG==='en'?'My Plan':'Το πλάνο μου');
+  if(appleTitle)appleTitle.setAttribute('content',planAppName());
 }
 
 let SNAP=null, curDay=0, sb=null, curView='home', selectedLogTag=null, editingNote=false, matchCardOpen=false;
@@ -716,7 +947,7 @@ function $(s){return document.querySelector(s)}
 function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
 function decSep(s){return LANG==='en'?s:String(s).replace('.',',')}
 function L(ml){return decSep((ml/1000).toFixed(1))+' L'}
-function nfmt(n){return (Math.round(n)).toLocaleString(LANG==='en'?'en-US':'el-GR')}
+function nfmt(n){return (Math.round(n)).toLocaleString(planLocale())}
 function token(){const p=new URLSearchParams(location.search);return p.get('t')||p.get('plan')}
 
 // ── local persistence (per token, per day) ────────────────────────────────
@@ -1159,7 +1390,7 @@ async function boot(){
     if(error||!data){console.error('[FYH portal] get_shared_plan:',error); return fail('Το πλάνο δεν βρέθηκε.','Μπορεί να έληξε ή να αποσύρθηκε. Ζήτησε νέο link από τον διαιτολόγο σου. Αν μόλις σου το έστειλε, δοκίμασε ξανά.','Plan not found.','It may have expired or been withdrawn. Ask your dietitian for a new link. If they just sent it, try again.',true)}
     if(data.expires_at && new Date(data.expires_at)<new Date()){return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο σου να στείλει νέο link.','This link has expired.','Ask your dietitian to send you a new link.')}
     SNAP=data.snapshot; SNAP._updated=data.updated_at;
-    LANG=(SNAP.lang==='en')?'en':'el';
+    LANG=pickLang(SNAP.lang);
     applyLangMeta();
     render();
   }catch(e){
@@ -1188,7 +1419,7 @@ async function refreshPlan(){
     const {data,error}=await sb.rpc('get_shared_plan',{p_token:t}).single();
     if(!error&&data){
       SNAP=data.snapshot; SNAP._updated=data.updated_at;
-      LANG=(SNAP.lang==='en')?'en':'el';
+      LANG=pickLang(SNAP.lang);
       applyLangMeta();
       const badge=$('#upd-badge'); if(badge)badge.innerHTML=updatedBadge();
       go(curTab());
@@ -1254,7 +1485,7 @@ function updatedBadge(){
   if(!iso)return '';
   let d; try{d=new Date(iso)}catch(e){return ''}
   if(isNaN(d))return '';
-  const txt=d.toLocaleDateString(LANG==='en'?'en-GB':'el-GR',{day:'numeric',month:'long',year:'numeric'});
+  const txt=d.toLocaleDateString(planLocale(),{day:'numeric',month:'long',year:'numeric'});
   return '<div class="upd"><i class="ti ti-refresh"></i>'+T('updatedPrefix')+' '+esc(txt)+'</div>';
 }
 
@@ -1262,8 +1493,8 @@ function updatedBadge(){
 function injectManifest(){
   try{
     const name=((SNAP&&SNAP.name||'').split(' ')[0])||'';
-    const isEn=LANG==='en';
-    const m={name:'Feed Your Health — '+(isEn?'My Plan':'Το πλάνο μου'),short_name:name?((isEn?'Plan ':'Πλάνο ')+name):(isEn?'My Plan':'Το πλάνο μου'),
+    var shortPrefix=({el:'Πλάνο ',en:'Plan ',ru:'План ',tr:'Plan '})[LANG]||'Πλάνο ';
+    const m={name:'Feed Your Health — '+planAppName(),short_name:name?(shortPrefix+name):planAppName(),
       start_url:location.href,display:'standalone',background_color:'#f4f8f6',theme_color:'#025857',
       icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E",sizes:'180x180',type:'image/svg+xml',purpose:'any maskable'}]};
     const blob=new Blob([JSON.stringify(m)],{type:'application/manifest+json'});
@@ -1382,7 +1613,7 @@ function viewHome(){
   const mCard=matchCard(); if(mCard)v.appendChild(mCard);
   const mi=matchInfoFor(defaultDay());
 
-  const unitG=LANG==='en'?'g':'γρ';
+  const unitG=({el:'γρ',en:'g',ru:'г',tr:'g'})[LANG]||'γρ';
   const stats=el('div','stats stats-4');
   stats.innerHTML=
     statBox(T('statGoal'),nfmt(tg.kcal||0),'kcal')
@@ -1638,11 +1869,15 @@ function viewPlan(){
 function shortDay(l){return (l||'').slice(0,3)}
 
 // ── PRINT / PDF (ίδια μορφή με το PDF της εφαρμογής: εβδομαδιαίος πίνακας) ─────
+// ✅ audit fix (2026-08-21): μόνο ελληνικά/αγγλικά substrings αναγνωρίζονταν εδώ — ένα ρωσικό/τουρκικό
+// πλάνο (label ήδη μεταφρασμένο, βλ. [[dietologist-ru-tr-portal-prep]]) έπεφτε πάντα στο 's' (σνακ),
+// άρα ΟΛΑ τα γεύματα του τυπωμένου πίνακα έβγαιναν με το ίδιο styling σνακ αντί για πρωινό/μεσημεριανό/
+// βραδινό. 'akşam yemeği' (όχι μόνο 'akşam') ώστε να μην ταιριάζει σιωπηλά και το 'Akşam ara öğünü'.
 function pMealType(label){
   const n=(label||'').toLowerCase();
-  if(n.indexOf('πρω')>-1||n.indexOf('breakfast')>-1)return'b';
-  if(n.indexOf('μεσημ')>-1||n.indexOf('lunch')>-1)return'l';
-  if(n.indexOf('βραδ')>-1||n.indexOf('dinner')>-1)return'd';
+  if(n.indexOf('πρω')>-1||n.indexOf('breakfast')>-1||n.indexOf('завтрак')>-1||n.indexOf('kahvalt')>-1)return'b';
+  if(n.indexOf('μεσημ')>-1||n.indexOf('lunch')>-1||n.indexOf('обед')>-1||n.indexOf('öğle')>-1)return'l';
+  if(n.indexOf('βραδ')>-1||n.indexOf('dinner')>-1||n.indexOf('ужин')>-1||n.indexOf('akşam yemeği')>-1)return'd';
   return's';
 }
 function buildPrintHTML(){
@@ -1726,9 +1961,9 @@ function buildPrintHTML(){
     h+='</div></td><td class="pslcol"><div class="pslcards">';
     col2.forEach(c=>h+=card(c));
     h+='</div></td></tr></table>';
-    h+='<div class="pfoot">'+T('pdfFooter')+' · '+new Date().toLocaleDateString(LANG==='en'?'en-GB':'el-GR')+'</div></div>';
+    h+='<div class="pfoot">'+T('pdfFooter')+' · '+new Date().toLocaleDateString(planLocale())+'</div></div>';
   } else {
-    h+='<div class="pfoot">'+T('pdfFooter')+' · '+new Date().toLocaleDateString(LANG==='en'?'en-GB':'el-GR')+'</div>';
+    h+='<div class="pfoot">'+T('pdfFooter')+' · '+new Date().toLocaleDateString(planLocale())+'</div>';
   }
   return h;
 }
@@ -2278,14 +2513,19 @@ function viewSpices(){
   intro.style.cssText='background:var(--tint);border-radius:14px;padding:12px 14px';
   intro.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><i class="ti ti-leaf" style="color:var(--teal)"></i><span style="font-size:12px;font-weight:600;color:var(--teal-d)">'+T('spicesHdr')+'</span></div><div style="font-size:12px;color:var(--teal-d);line-height:1.6">'+T('spicesBody')+'</div>';
   v.appendChild(intro);
-  const isEn=LANG==='en';
+  // SPICES_FIELDS: το όνομα χρησιμοποιεί bare κλειδί ανά γλώσσα (n/en/ru/tr) ενώ ben/use/note
+  // χρησιμοποιούν base+κατάληξη (benEn/benRu/benTr...) — ασύμμετρη ονοματολογία κληρονομημένη από το
+  // αρχικό el/en literal, γενικεύτηκε εδώ από binary isEn ώστε να καλύπτει ru/tr (βλ. [[dietologist-ru-tr-portal-prep]]).
+  var SPICES_FIELDS={el:{n:'n',ben:'ben',use:'use',note:'note'},en:{n:'en',ben:'benEn',use:'useEn',note:'noteEn'},ru:{n:'ru',ben:'benRu',use:'useRu',note:'noteRu'},tr:{n:'tr',ben:'benTr',use:'useTr',note:'noteTr'}};
+  var spLk=SPICES_FIELDS[LANG]||SPICES_FIELDS.el;
+  function spF(sp,base){return sp[spLk[base]]||sp[base];}
   SPICES.forEach(sp=>{
     const c=el('div','card');const cp=el('div','card-pad');
-    cp.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--teal-d);margin-bottom:6px">🌿 '+esc(isEn?sp.en:sp.n)+'</div>'
+    cp.innerHTML='<div style="font-size:14px;font-weight:700;color:var(--teal-d);margin-bottom:6px">🌿 '+esc(spF(sp,'n'))+'</div>'
       +'<table class="stbl">'
-      +'<tr><td class="lab" style="width:38%">'+T('spicesBenefits')+'</td><td style="font-size:13px">'+esc(isEn?sp.benEn:sp.ben)+'</td></tr>'
-      +'<tr><td class="lab">'+T('spicesUse')+'</td><td style="font-size:13px;color:var(--teal);font-weight:600">'+esc(isEn?sp.useEn:sp.use)+'</td></tr>'
-      +'<tr><td class="lab">'+T('spicesNote')+'</td><td style="font-size:13px">'+esc(isEn?sp.noteEn:sp.note)+'</td></tr>'
+      +'<tr><td class="lab" style="width:38%">'+T('spicesBenefits')+'</td><td style="font-size:13px">'+esc(spF(sp,'ben'))+'</td></tr>'
+      +'<tr><td class="lab">'+T('spicesUse')+'</td><td style="font-size:13px;color:var(--teal);font-weight:600">'+esc(spF(sp,'use'))+'</td></tr>'
+      +'<tr><td class="lab">'+T('spicesNote')+'</td><td style="font-size:13px">'+esc(spF(sp,'note'))+'</td></tr>'
       +'</table>';
     c.appendChild(cp);v.appendChild(c);
   });

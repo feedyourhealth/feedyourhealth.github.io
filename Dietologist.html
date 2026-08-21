@@ -2882,11 +2882,18 @@ function saveFoodExclusions(){
       // Σκόπιμα ΔΕΝ μεταφράζεται το matchTimeBucket (πρωί/μεσημέρι/απόγευμα/βράδυ) — το plan.html's
       // MATCH_TIME_H lookup είναι keyed σε αυτές τις ελληνικές λέξεις για τον υπολογισμό πριν/μετά
       // τον αγώνα· μια μεταφρασμένη τιμή θα έσπαγε σιωπηλά αυτόν τον υπολογισμό.
-      var isEn=(c.lang||'el')==='en';
+      // lang: γενικεύτηκε από binary isEn ώστε να καλύπτει ru/tr (βλ. [[dietologist-ru-tr-portal-prep]]) —
+      // κάθε άγνωστη/λείπουσα τιμή c.lang πέφτει σε 'el', ποτέ σε μισομεταφρασμένη κατάσταση.
+      var lang=(['en','ru','tr'].indexOf(c.lang)>-1)?c.lang:'el';
       var EN_DOW=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-      var DAYS=isEn?EN_DOW:['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
-      function fName(n){return (isEn&&typeof FOODS!=='undefined'&&FOODS[n]&&FOODS[n].en)||n;}
-      function mLabel(n){return (n&&isEn&&typeof EN_MEAL_NAMES!=='undefined'&&EN_MEAL_NAMES[n])||n||(isEn?'Meal':'Γεύμα');}
+      var RU_DOW=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+      var TR_DOW=['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+      var EL_DOW=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+      var DAYS=({el:EL_DOW,en:EN_DOW,ru:RU_DOW,tr:TR_DOW})[lang];
+      function fName(n){return (lang!=='el'&&typeof FOODS!=='undefined'&&FOODS[n]&&FOODS[n][lang])||n;}
+      var MEAL_NAME_DICTS={en:(typeof EN_MEAL_NAMES!=='undefined'?EN_MEAL_NAMES:null),ru:(typeof RU_MEAL_NAMES!=='undefined'?RU_MEAL_NAMES:null),tr:(typeof TR_MEAL_NAMES!=='undefined'?TR_MEAL_NAMES:null)};
+      var MEAL_FALLBACK={el:'Γεύμα',en:'Meal',ru:'Приём пищи',tr:'Öğün'};
+      function mLabel(n){var dict=MEAL_NAME_DICTS[lang]; return (n&&dict&&dict[n])||n||MEAL_FALLBACK[lang];}
       var TIMES={
         'Πρωινό':(c.mealTimes&&c.mealTimes.breakfast)||'08:00',
         'Ενδιάμεσο':(c.mealTimes&&c.mealTimes.snack)||'11:00',
@@ -2913,8 +2920,9 @@ function saveFoodExclusions(){
       // gLbl/tUnit: μεταφράζουν το "γρ." και τις μονάδες μέτρησης (φλ./τεμ./κ.σ./κ.γ./χούφτα κτλ, μέσω
       // του υπάρχοντος EN_UNITS) στην αγγλική έκδοση του πλάνου — πριν ο τρίτος tuFn ήταν πάντα identity,
       // οπότε οι ποσότητες έμεναν ελληνικές ακόμα και σε isEn=true (πραγματικό bug, βρέθηκε σε QA).
-      var gLbl=isEn?'g':'γρ.';
-      function tUnit(u){return (isEn&&typeof EN_UNITS!=='undefined'&&EN_UNITS[u])||u;}
+      var gLbl=({el:'γρ.',en:'g',ru:'г',tr:'g'})[lang];
+      var UNIT_DICTS={en:(typeof EN_UNITS!=='undefined'?EN_UNITS:null),ru:(typeof RU_UNITS!=='undefined'?RU_UNITS:null),tr:(typeof TR_UNITS!=='undefined'?TR_UNITS:null)};
+      function tUnit(u){var dict=UNIT_DICTS[lang]; return (dict&&dict[u])||u;}
       var fmtQ=(typeof fmtFoodQty==='function')?function(f){return fmtFoodQty(f,gLbl,tUnit);}:function(f){return {main:Math.round(f.g)+' '+gLbl,sub:''};};
       var days=[];
       for(var d=0; d<7; d++){
@@ -2974,15 +2982,21 @@ function saveFoodExclusions(){
       // ('ωμό'/'ωμά'/'ωμές'/'ωμή'/'ωμός'/'ξερά'/'ξερές'/'ξερή'/'τεμ.'/'κονσέρβα (στρ.)') σε μία
       // ενιαία αγγλική λέξη — δεν χρειάζεται γραμματικό γένος στα αγγλικά.
       var EN_RAW_LABEL={'ωμό':'raw','ωμά':'raw','ωμές':'raw','ωμή':'raw','ωμός':'raw','ξερά':'dried','ξερές':'dried','ξερή':'dried','τεμ.':'pc.','κονσέρβα (στρ.)':'canned (drained)'};
-      function rawLabel(lbl){return (isEn&&EN_RAW_LABEL[lbl])||lbl;}
+      var RU_RAW_LABEL={'ωμό':'сырое','ωμά':'сырые','ωμές':'сырые','ωμή':'сырая','ωμός':'сырой','ξερά':'сушёные','ξερές':'сушёные','ξερή':'сушёная','τεμ.':'шт.','κονσέρβα (στρ.)':'консерв. (без жидк.)'};
+      var TR_RAW_LABEL={'ωμό':'çiğ','ωμά':'çiğ','ωμές':'çiğ','ωμή':'çiğ','ωμός':'çiğ','ξερά':'kurutulmuş','ξερές':'kurutulmuş','ξερή':'kurutulmuş','τεμ.':'adet','κονσέρβα (στρ.)':'konserve (süzülmüş)'};
+      var RAW_LABEL_DICTS={en:EN_RAW_LABEL,ru:RU_RAW_LABEL,tr:TR_RAW_LABEL};
+      function rawLabel(lbl){var dict=RAW_LABEL_DICTS[lang]; return (dict&&dict[lbl])||lbl;}
       function shopRound(g){if(g<100)return Math.ceil(g/10)*10;if(g<500)return Math.ceil(g/25)*25;if(g<1000)return Math.ceil(g/50)*50;return Math.ceil(g/100)*100;}
       function shopDisp(g){if(g>=1000)return decSep((Math.round(g/100)/10).toFixed(1))+' kg';return g+' g';}
-      function decSep(s){return isEn?s:String(s).replace('.',',');}
+      // decSep: μόνο τα αγγλικά χρησιμοποιούν τελεία ως δεκαδικό διαχωριστικό — ελληνικά, ρωσικά και
+      // τουρκικά χρησιμοποιούν κόμμα, άρα η λογική ήδη ήταν σωστή για ru/tr (isEn=false → κόμμα) χωρίς αλλαγή εδώ.
+      function decSep(s){return lang==='en'?s:String(s).replace('.',',');}
       var totals={};
       for(var sd=0; sd<7; sd++){ (wp[sd]||[]).forEach(function(m){(m.foods||[]).forEach(function(f){totals[f.n]=(totals[f.n]||0)+f.g;});}); }
       var slCats=['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Δημητριακά','Όσπρια','Λαχανικά','Φρούτα','Ξηροί καρποί','Λάδια','Συνταγές FYH'];
-      var EN_CAT_FALLBACK={'Άλλα':'Other'};
-      function catLabel(cat){return (isEn&&((typeof EN_CAT_NAMES!=='undefined'&&EN_CAT_NAMES[cat])||EN_CAT_FALLBACK[cat]))||cat;}
+      var CAT_NAME_DICTS={en:(typeof EN_CAT_NAMES!=='undefined'?EN_CAT_NAMES:null),ru:(typeof RU_CAT_NAMES!=='undefined'?RU_CAT_NAMES:null),tr:(typeof TR_CAT_NAMES!=='undefined'?TR_CAT_NAMES:null)};
+      var CAT_FALLBACK={en:{'Άλλα':'Other'},ru:{'Άλλα':'Другое'},tr:{'Άλλα':'Diğer'}};
+      function catLabel(cat){var dict=CAT_NAME_DICTS[lang],fb=CAT_FALLBACK[lang]; return (dict&&dict[cat])||(fb&&fb[cat])||cat;}
       var byCat={};
       Object.keys(totals).forEach(function(name){
         var cat=(typeof FOODS!=='undefined'&&FOODS[name]&&FOODS[name].cat)||'Άλλα';
@@ -3001,25 +3015,33 @@ function saveFoodExclusions(){
       // EN_SUPP_TIMING: οι λίγες σταθερές ώρες λήψης (ti.t) που εμφανίζονται σε ΟΛΑ τα SUPPS — δεν
       // υπάρχει ανά-item αγγλική εκδοχή τους στη βάση (μόνο τα ονόματα έχουν nameEn), οπότε μεταφράζονται εδώ.
       var EN_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Right after training','Βραδινό':'Dinner','Με το πρωινό':'With breakfast','Μεσημεριανό':'Lunch',"Πριν προπόνηση (30')":"Before training (30')",'Πριν το πρωινό':'Before breakfast','Πριν τον ύπνο':'Before bed'};
-      function suppTime(t){return (isEn&&EN_SUPP_TIMING[t])||t;}
+      var RU_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Сразу после тренировки','Βραδινό':'Ужин','Με το πρωινό':'С завтраком','Μεσημεριανό':'Обед',"Πριν προπόνηση (30')":'За 30 мин до тренировки','Πριν το πρωινό':'Перед завтраком','Πριν τον ύπνο':'Перед сном'};
+      var TR_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Antrenmandan hemen sonra','Βραδινό':'Akşam yemeği','Με το πρωινό':'Kahvaltıyla birlikte','Μεσημεριανό':'Öğle yemeği',"Πριν προπόνηση (30')":'Antrenmandan 30dk önce','Πριν το πρωινό':'Kahvaltıdan önce','Πριν τον ύπνο':'Yatmadan önce'};
+      var SUPP_TIMING_DICTS={en:EN_SUPP_TIMING,ru:RU_SUPP_TIMING,tr:TR_SUPP_TIMING};
+      function suppTime(t){var dict=SUPP_TIMING_DICTS[lang]; return (dict&&dict[t])||t;}
+      // nameField/doseField/dField: το SUPPS literal ονομάζει τα μεταφρασμένα πεδία nameEn/nameRu/nameTr
+      // (dose: doseEn/doseRu/doseTr, timing[].d: dEn/dRu/dTr) — bare suffix, ίδιο μοτίβο με το FOODS[n][lang]
+      // παραπάνω αλλά με "name"/"dose"/"d" ως πρόθεμα αντί για ξεχωριστό κλειδί ανά γλώσσα.
+      var LANG_SUFFIX={en:'En',ru:'Ru',tr:'Tr'};
+      var suppSfx=LANG_SUFFIX[lang]||'';
       function suppNameByText(n){
-        if(!isEn||typeof SUPPS==='undefined')return n;
+        if(!suppSfx||typeof SUPPS==='undefined')return n;
         var f=null; SUPPS.forEach(function(x){if(x.name===n)f=x;});
-        return (f&&f.nameEn)||n;
+        return (f&&f['name'+suppSfx])||n;
       }
       var supps=[], suppSeen={};
       // Step 1: όσα λαμβάνει ήδη (από τα checkboxes, με ώρες λήψης)
       (c.supps||[]).forEach(function(id){
         var sx=null; if(typeof SUPPS!=='undefined') SUPPS.forEach(function(x){if(x.id===id)sx=x;});
         if(!sx)return;
-        var times=[], dose='', doseEn='';
+        var times=[], dose='', doseTr='';
         (sx.timing||[]).forEach(function(ti){
           if(c.suppExclude && c.suppExclude.indexOf(id+'|'+ti.t)>-1) return;
-          times.push(suppTime(ti.t)); if(!dose&&ti.d){dose=ti.d;doseEn=ti.dEn||ti.d;}
+          times.push(suppTime(ti.t)); if(!dose&&ti.d){dose=ti.d;doseTr=(suppSfx&&ti['d'+suppSfx])||ti.d;}
         });
         if(!times.length)return;
         suppSeen[sx.name]=1;
-        supps.push({name:(isEn&&sx.nameEn)||sx.name, dose:(isEn?(doseEn||sx.doseEn):dose)||sx.dose||'', timing:times.join(', ')});
+        supps.push({name:(suppSfx&&sx['name'+suppSfx])||sx.name, dose:(suppSfx?(doseTr||sx['dose'+suppSfx]):dose)||sx.dose||'', timing:times.join(', ')});
       });
       // Step 2: προτεινόμενα από την ανάλυση κενών (δεν υπάρχουν ώρες λήψης εδώ)
       (c.selectedSupplements||[]).forEach(function(su){
@@ -3058,7 +3080,8 @@ function saveFoodExclusions(){
       if(c.dietType!=='keto' && typeof FX!=='undefined'){
         FX.forEach(function(fx){
           var kcal=(typeof FOODS!=='undefined'&&FOODS[fx.n])?Math.round(FOODS[fx.n].k*fx.g/100):null;
-          fruits.push({name:fName(fx.n), portion:(isEn&&fx.porEn)||fx.por, g:fx.g, kcal:kcal});
+          var porField=(suppSfx&&fx['por'+suppSfx])||fx.por;
+          fruits.push({name:fName(fx.n), portion:porField, g:fx.g, kcal:kcal});
         });
       }
 

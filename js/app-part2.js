@@ -479,7 +479,7 @@ function renderMain(){
     +'<div class="fgrp" style="justify-content:flex-end"><button type="button" class="btn" onclick="showMedicalProtocol(\'pregnancy\')" style="background:#025857;color:#fff;border:none;border-radius:6px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;">🤰 Πρωτόκολλο Εγκυμοσύνης</button></div></div>'
     +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+esc(c.email||'')+'"></div>'
     +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+esc(c.phone||'')+'"></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>🌐 Γλώσσα πλάνου <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για το link του πελάτη)</span></label><select id="inp-lang"><option value="el">Ελληνικά</option><option value="en">English</option></select></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>🌐 Γλώσσα πλάνου <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για το link του πελάτη)</span></label><select id="inp-lang"><option value="el">Ελληνικά</option><option value="en">English</option><option value="ru">Русский</option><option value="tr">Türkçe</option></select></div></div>'
     +'<div class="fg"><div class="fgrp"><label>🏷️ Ομάδα <span style="color:#9fb5b0;font-weight:400;font-size:11px">(π.χ. ομάδα/σύλλογος)</span></label>'
     +'<select id="inp-group"></select>'
     +'<div id="inp-group-new-row" style="display:none;gap:8px;margin-top:8px">'

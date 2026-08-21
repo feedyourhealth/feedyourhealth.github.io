@@ -3771,6 +3771,19 @@ var EN_MEAL_NAMES={
   'Σνακ':'Snack','Ενδιάμεσο':'Snack','Pre-workout':'Pre-workout','Post-workout':'Post-workout',
   'Πρωινό Σνακ':'Morning Snack','Μεσνύχτιο':'Late Night Snack'
 };
+// ── ru/tr counterparts, ίδια δομή/κλειδιά με το EN_MEAL_NAMES παραπάνω (βλ. [[dietologist-ru-tr-portal-prep]]) ──
+var RU_MEAL_NAMES={
+  'Πρωινό':'Завтрак','Δεκατιανό':'Утренний перекус','Μεσημεριανό':'Обед',
+  'Απογευματινό':'Полдник','Βραδινό':'Ужин','Βραδινό Σνακ':'Вечерний перекус',
+  'Σνακ':'Перекус','Ενδιάμεσο':'Перекус','Pre-workout':'Перед тренировкой','Post-workout':'После тренировки',
+  'Πρωινό Σνακ':'Утренний перекус','Μεσνύχτιο':'Поздний перекус'
+};
+var TR_MEAL_NAMES={
+  'Πρωινό':'Kahvaltı','Δεκατιανό':'Sabah ara öğünü','Μεσημεριανό':'Öğle yemeği',
+  'Απογευματινό':'İkindi ara öğünü','Βραδινό':'Akşam yemeği','Βραδινό Σνακ':'Akşam ara öğünü',
+  'Σνακ':'Ara öğün','Ενδιάμεσο':'Ara öğün','Pre-workout':'Antrenman öncesi','Post-workout':'Antrenman sonrası',
+  'Πρωινό Σνακ':'Sabah ara öğünü','Μεσνύχτιο':'Gece ara öğünü'
+};
 // Note: fmtFoodQty() always calls this on the bare base unit (fu.u) before the count/fraction
 // is prepended and before pluralUnit() runs — so only single, un-prefixed unit keys are ever
 // looked up here. A compound key like '17 ρόγες' can never match and was removed as dead weight.
@@ -3779,6 +3792,16 @@ var EN_UNITS={
   'φλ.':'cup','κ.σ.':'tbsp','κ.γ.':'tsp','κ.γλ.':'tsp','πρέζα':'pinch',
   'κύπελλο':'cup','μπουκάλι':'bottle','ρόγα':'grape','συσκευασία':'package'
 };
+var RU_UNITS={
+  'τεμ.':'шт.','φέτα':'ломтик','μερίδ.':'порция','χούφτα':'горсть','stick':'брусок','scoop':'мерная ложка',
+  'φλ.':'чашка','κ.σ.':'ст. л.','κ.γ.':'ч. л.','κ.γλ.':'ч. л.','πρέζα':'щепотка',
+  'κύπελλο':'чашка','μπουκάλι':'бутылка','ρόγα':'виноградина','συσκευασία':'упаковка'
+};
+var TR_UNITS={
+  'τεμ.':'adet','φέτα':'dilim','μερίδ.':'porsiyon','χούφτα':'avuç','stick':'çubuk','scoop':'ölçek',
+  'φλ.':'su bardağı','κ.σ.':'yemek kaşığı','κ.γ.':'çay kaşığı','κ.γλ.':'çay kaşığı','πρέζα':'tutam',
+  'κύπελλο':'bardak','μπουκάλι':'şişe','ρόγα':'tane','συσκευασία':'paket'
+};
 var EN_CAT_NAMES={
   'Κρέας':'Meat','Ψάρια':'Fish & Seafood','Αυγά/Γαλακτ.':'Eggs & Dairy',
   'Δημητριακά':'Grains','Όσπρια':'Legumes','Λαχανικά':'Vegetables',
@@ -3786,6 +3809,22 @@ var EN_CAT_NAMES={
   'Συνταγές FYH':'FYH Recipes','Άλλα':'Other',
   'Γαλακτοκομικά':'Dairy','Καρυκεύματα':'Seasonings','Μπαχαρικά':'Spices',
   'Ροφήματα':'Beverages','Σάλτσες':'Sauces','Συνταγές':'Recipes'
+};
+var RU_CAT_NAMES={
+  'Κρέας':'Мясо','Ψάρια':'Рыба и морепродукты','Αυγά/Γαλακτ.':'Яйца и молочные продукты',
+  'Δημητριακά':'Злаки','Όσπρια':'Бобовые','Λαχανικά':'Овощи',
+  'Φρούτα':'Фрукты','Ξηροί καρποί':'Орехи и семена','Λάδια':'Масла и жиры',
+  'Συνταγές FYH':'Рецепты FYH','Άλλα':'Другое',
+  'Γαλακτοκομικά':'Молочные продукты','Καρυκεύματα':'Приправы','Μπαχαρικά':'Специи',
+  'Ροφήματα':'Напитки','Σάλτσες':'Соусы','Συνταγές':'Рецепты'
+};
+var TR_CAT_NAMES={
+  'Κρέας':'Et','Ψάρια':'Balık ve Deniz Ürünleri','Αυγά/Γαλακτ.':'Yumurta ve Süt Ürünleri',
+  'Δημητριακά':'Tahıllar','Όσπρια':'Baklagiller','Λαχανικά':'Sebzeler',
+  'Φρούτα':'Meyveler','Ξηροί καρποί':'Kuruyemişler ve Tohumlar','Λάδια':'Yağlar',
+  'Συνταγές FYH':'FYH Tarifleri','Άλλα':'Diğer',
+  'Γαλακτοκομικά':'Süt Ürünleri','Καρυκεύματα':'Çeşniler','Μπαχαρικά':'Baharatlar',
+  'Ροφήματα':'İçecekler','Σάλτσες':'Soslar','Συνταγές':'Tarifler'
 };
 
 // ── 📲 ΔΗΜΟΣΙΕΥΣΗ ΠΛΑΝΟΥ ΣΤΟΝ ΠΕΛΑΤΗ ────────────────────────────────────────
