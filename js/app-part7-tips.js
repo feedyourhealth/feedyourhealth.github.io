@@ -54,7 +54,7 @@ function renderTips(){
   renderSB();
 }
 
-function filterTips(v){ _tipsSearchTerm=(v||'').toLowerCase(); renderTipsList(); }
+function filterTips(v){ _tipsSearchTerm=foldGreekForCompare(v); renderTipsList(); }
 function setTipsCategoryFilter(cat){ _tipsCategoryFilter=cat; renderTipsList(); }
 
 // opts.canReorder/isFirst/isLast: τα βέλη ▲▼ εμφανίζονται ΜΟΝΟ στην πλήρη, αφιλτράριστη λίστα
@@ -123,7 +123,7 @@ function renderTipsList(){
   var filtered=all.filter(function(t){
     if(_tipsCategoryFilter && t.category!==_tipsCategoryFilter) return false;
     if(q){
-      var hay=((t.title||'')+' '+(t.body||'')+' '+(t.category||'')).toLowerCase();
+      var hay=foldGreekForCompare((t.title||'')+' '+(t.body||'')+' '+(t.category||''));
       if(hay.indexOf(q)===-1) return false;
     }
     return true;
