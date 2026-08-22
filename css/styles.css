@@ -1356,6 +1356,14 @@ html{font-size:16px}
   .food-lib{width:100%;position:static;max-height:340px}
   .lib-item{padding:8px 6px}
   .rcp-filter-chip,.rcp-chip,.rcp-star,.rcp-cat-pill,.rcp-cat-done,.rcp-expand-btn{width:auto}
+  /* .hm-grid (κάρτες "Εκκρεμότητες πλάνου"/"Πλησιάζει ανανέωση"/"Τάση βάρους" κλπ στην Αρχική —
+     βλ. homeCard(), js/app-part5-home.js) — audit finding 2026-08-22: minmax(400px,1fr) χωρίς
+     mobile εξαίρεση ζωντανά μετρήθηκε να αναγκάζει κάρτες 400px πλατιές μέσα σε container 355px
+     στα 375px. Το .main{overflow-y:auto} (χωρίς ρητό overflow-x) κάνει implicit overflow-x:auto
+     σε αυτό ΜΟΝΟ το section (CSS spec quirk), άρα δεν έσπαγε ολόκληρη η σελίδα — αλλά τα κουμπιά
+     μέσα στις κάρτες (π.χ. "Δημιούργησε πλάνο τώρα") κατέληγαν εκτός οθόνης, σιωπηλά scrollable
+     πλάγια χωρίς καμία οπτική ένδειξη. Μονόστηλο σε κινητό, ίδιο μοτίβο με .fg3/.fg4 πιο κάτω. */
+  .hm-grid{grid-template-columns:1fr}
 
   /* Stack action-row buttons vertically */
   .brow{flex-direction:column;gap:8px}
