@@ -225,10 +225,64 @@ setTimeout(function(){
     <span>📊</span>
     <span>Πλάνο</span>
   </button>
+  <button onclick="toggleMoreSheet()" class="bottom-nav-btn" data-tab="more" id="more-nav-btn" aria-haspopup="true" aria-expanded="false" aria-controls="more-sheet">
+    <span>⋯</span>
+    <span>Περισσότερα</span>
+    <span id="more-nav-badge-mobile" class="home-nav-badge home-nav-badge-mobile" style="display:none">0</span>
+  </button>
   <button onclick="toggleSettingsPanel()" class="bottom-nav-btn" data-tab="settings">
     <span>⚙️</span>
     <span>Ρυθμίσεις</span>
   </button>
+</div>
+
+<!-- ✅ MOBILE "ΠΕΡΙΣΣΟΤΕΡΑ" SHEET — 2026-08-22: το πλαϊνό μενού (.sb) είναι πάντα κρυφό σε κινητό
+     (display:none στο @media(max-width:767px), βλ. css/styles.css) και μαζί του κρύβονταν εντελώς
+     τα tabs Μηνύματα/Πελάτες/Συνταγές/Διατροφές/Tips + οι 3 γρήγορες ενέργειες — καμία άλλη διαδρομή
+     δεν υπήρχε στον κώδικα προς αυτά από κινητό. Αυτό το sheet ανοίγει από το 4ο κουμπί του bottom-nav
+     και δίνει πρόσβαση σε όλα, χωρίς να πειράζει καθόλου το desktop πλαϊνό μενού. -->
+<div class="more-scrim" id="more-scrim" onclick="closeMoreSheet()" style="display:none"></div>
+<div class="more-sheet" id="more-sheet" style="display:none" role="dialog" aria-modal="true" aria-label="Περισσότερα">
+  <div class="more-sheet-hd">
+    <div class="more-sheet-title">Περισσότερα</div>
+    <button type="button" class="more-sheet-x" onclick="closeMoreSheet()" aria-label="Κλείσιμο">✕</button>
+  </div>
+  <button type="button" class="more-item" onclick="closeMoreSheet();swTab(9)">
+    <span class="ic">💬</span><span class="n">Μηνύματα</span>
+    <span id="messages-nav-badge-mobile" class="more-item-badge" style="display:none">0</span>
+  </button>
+  <button type="button" class="more-item" onclick="closeMoreSheet();swTab(7)"><span class="ic">👥</span><span class="n">Πελάτες</span></button>
+  <button type="button" class="more-item" onclick="closeMoreSheet();swTab(6)"><span class="ic">🍽️</span><span class="n">Συνταγές</span></button>
+  <button type="button" class="more-item" onclick="closeMoreSheet();swTab(5)"><span class="ic">📊</span><span class="n">Διατροφές</span></button>
+  <button type="button" class="more-item" onclick="closeMoreSheet();swTab(8)"><span class="ic">📚</span><span class="n">Tips</span></button>
+  <div class="more-sep"></div>
+  <div class="msheet-qa">
+    <button type="button" class="qa-btn" id="msheet-qa-toggle-newplan" onclick="toggleMSheetQA('newplan')" aria-expanded="false" aria-controls="msheet-qa-newplan">
+      <span>+ Νέο πλάνο</span><span aria-hidden="true">▾</span>
+    </button>
+    <div class="qa-panel" id="msheet-qa-newplan" style="display:none">
+      <button type="button" class="qa-instant-btn" onclick="qaCreateAndPlan('');closeMoreSheet()">⚡ Ξεκίνα πλάνο τώρα</button>
+      <div class="qa-panel-or">ή επίλεξε πελάτη</div>
+      <input type="text" class="qa-input" id="msheet-qa-newplan-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για νέο πλάνο" oninput="renderMSheetQA('newplan',this.value)">
+      <div class="qa-results" id="msheet-qa-newplan-results"></div>
+    </div>
+
+    <button type="button" class="qa-btn" id="msheet-qa-toggle-quickmeasure" onclick="toggleMSheetQA('quickmeasure')" aria-expanded="false" aria-controls="msheet-qa-quickmeasure">
+      <span>📏 Γρήγορη μέτρηση</span><span aria-hidden="true">▾</span>
+    </button>
+    <div class="qa-panel" id="msheet-qa-quickmeasure" style="display:none">
+      <input type="text" class="qa-input" id="msheet-qa-quickmeasure-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για γρήγορη μέτρηση" oninput="renderMSheetQA('quickmeasure',this.value)">
+      <div class="qa-results" id="msheet-qa-quickmeasure-results"></div>
+    </div>
+
+    <button type="button" class="qa-btn" id="msheet-qa-toggle-quickappt" onclick="toggleMSheetQA('quickappt')" aria-expanded="false" aria-controls="msheet-qa-quickappt">
+      <span>📝 Γρήγορη σημείωση ραντεβού</span><span aria-hidden="true">▾</span>
+    </button>
+    <div class="qa-panel" id="msheet-qa-quickappt" style="display:none">
+      <input type="text" class="qa-input" id="msheet-qa-quickappt-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για σημείωση ραντεβού" oninput="renderMSheetQA('quickappt',this.value)">
+      <div class="qa-results" id="msheet-qa-quickappt-results"></div>
+    </div>
+  </div>
 </div>
 </div>
 <script src="js/data.js"></script>

@@ -1195,11 +1195,18 @@ function renderMessages(filter){
 }
 // Κόκκινο badge πάνω στο κουμπί "💬 Μηνύματα" (sidebar) — ίδιο μοτίβο με updateHomeNavBadge, δικό
 // του σύνολο (αναπάντητα μηνύματα — ούτε απαντημένα ούτε μαρκαρισμένα ως "το είδα").
+// 2026-08-22: ίδιο σύνολο τώρα ενημερώνει ΚΑΙ το "Μηνύματα" row μέσα στο mobile "Περισσότερα" sheet
+// ΚΑΙ το εξωτερικό κουμπί "⋯ Περισσότερα" του bottom-nav (ώστε να φαίνεται από έξω, χωρίς να χρειάζεται
+// να ανοίξει κανείς το sheet για να δει αν υπάρχουν αναπάντητα) — το πλαϊνό μενού με το πρωτότυπο badge
+// είναι πάντα κρυφό σε κινητό, άρα το 'messages-nav-badge' μόνο του δεν έφτανε ποτέ εκεί.
 function updateMessagesNavBadge(){
   var n=0;
   try{ n=collectAllClientMessages().filter(function(m){return !m.handled;}).length; }catch(e){ n=0; }
-  var el=document.getElementById('messages-nav-badge');
-  if(!el) return;
-  el.textContent=n>99?'99+':String(n);
-  el.style.display=n>0?'inline-block':'none';
+  var txt=n>99?'99+':String(n);
+  ['messages-nav-badge','messages-nav-badge-mobile','more-nav-badge-mobile'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    el.textContent=txt;
+    el.style.display=n>0?'inline-block':'none';
+  });
 }

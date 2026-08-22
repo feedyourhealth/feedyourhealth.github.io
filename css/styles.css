@@ -483,9 +483,29 @@ body.dark-mode .rd-delete-btn:hover{background:#3a1f1f}
    width-based media queries here; this was one of 4 overlapping breakpoint systems that
    caused a real collision exactly at 767/768px (fixed 2026-07-12, see [[dietologist-pending-work]]). */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e0e0e0;z-index:99;flex-direction:row;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
-.bottom-nav button{position:relative;flex:1;background:none;border:none;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#6b6b6b;transition:all .2s}
+.bottom-nav button{position:relative;flex:1;background:none;border:none;padding:8px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;color:#6b6b6b;transition:all .2s}
 .bottom-nav button.active{color:var(--teal);font-weight:600}
-.bottom-nav button span{font-size:20px}
+/* Το πρώτο span (εικονίδιο) μένει 20px· το δεύτερο (ετικέτα) κληρονομεί το 10px του .bottom-nav button
+   αντί να γίνεται κι αυτό 20px — προϋπήρχε ως "span{font-size:20px}" χωρίς διάκριση, πιάστηκε
+   προσθέτοντας το 5ο κουμπί (2026-08-22) γιατί το "Περισσότερα" είναι το μακρύτερο label της μπάρας
+   και θα ξεχείλιζε αισθητά σε 20px· διορθώνεται εδώ για όλα τα κουμπιά, όχι μόνο το νέο. */
+.bottom-nav button span:first-child{font-size:20px}
+.bottom-nav button span:not(:first-child):not(.home-nav-badge){font-size:inherit}
+
+/* ✅ "Περισσότερα" sheet (mobile) — 2026-08-22, βλ. σχόλιο πάνω από το markup στο Dietologist.html.
+   Δεν χρειάζεται δικό της media query: ανοίγει μόνο από το 5-κουμπι bottom-nav, που είναι ήδη
+   display:none πάνω από 767px, άρα ποτέ δεν ενεργοποιείται σε desktop. */
+.more-scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:120}
+.more-sheet{position:fixed;left:0;right:0;bottom:56px;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.18);z-index:121;padding:8px 8px 10px;max-height:75vh;overflow-y:auto}
+.more-sheet-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px}
+.more-sheet-title{font-size:13px;font-weight:700;color:#1a1a1a}
+.more-sheet-x{background:#f0f0f0;border:none;border-radius:50%;width:28px;height:28px;font-size:14px;color:#666;cursor:pointer}
+.more-item{display:flex;align-items:center;gap:10px;width:100%;box-sizing:border-box;padding:13px 12px;min-height:44px;border-radius:10px;font-size:13px;font-weight:600;color:#1a1a1a;background:none;border:none;text-align:left;cursor:pointer;font-family:inherit}
+.more-item:active{background:var(--teal-tint)}
+.more-item .ic{font-size:18px;width:22px;text-align:center;flex-shrink:0}
+.more-item .n{flex:1}
+.more-item-badge{background:#b71c1c;color:#fff;font-size:10px;font-weight:700;border-radius:999px;padding:1px 7px}
+.more-sep{height:1px;background:#f0f0f0;margin:6px 10px}
 
 /* Main */
 .main{flex:1;padding:14px 16px;overflow:auto;min-width:0}
@@ -1341,13 +1361,30 @@ html{font-size:16px}
   .brow{flex-direction:column;gap:8px}
   .brow .btn{width:100%}
 
-  /* Tabs */
-  .stabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+  /* Tabs — οριζόντιο scroll strip αντί για flex-wrap (audit finding, 2026-08-22): 5 κουμπιά ×
+     min-width δεν χωρούσαν σε 320-375px και τυλίγονταν σε 2-3 ανομοιόμορφες σειρές σε ΚΑΘΕ οθόνη
+     πελάτη πριν φανεί καθόλου περιεχόμενο. Τώρα μένουν σε 1 σειρά· .stabs-wrap (js/app-part2.js)
+     δίνει το ::after fade-δεξιά ένδειξη ότι υπάρχουν κι άλλα tabs. */
+  .stabs-wrap{position:relative}
+  .stabs-wrap::after{
+    content:'';position:absolute;top:0;right:0;bottom:6px;width:24px;pointer-events:none;
+    background:linear-gradient(to right, rgba(245,245,245,0), #f5f5f5);
+  }
+  body.dark-mode .stabs-wrap::after{background:linear-gradient(to right, rgba(26,26,26,0), #1a1a1a)}
+  .stabs{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px;scrollbar-width:none}
+  .stabs::-webkit-scrollbar{display:none}
   .stabs button{
     font-size:12px;
-    padding:6px 10px;
-    flex:1;
-    min-width:70px;
+    padding:9px 14px;
+    flex:0 0 auto;
+    /* width:auto εδώ ΕΠΙΤΗΔΕΣ, όχι διακοσμητικό: το γενικό button{width:100%} του ίδιου media
+       tier (πιο πάνω σε αυτό το αρχείο) κερδίζει σε source order και γίνεται το flex-basis ενός
+       flex:0 0 auto στοιχείου όταν δεν οριστεί άλλο width — ζωντανά μετρημένο 1799px συνολικό
+       scrollWidth για 5 κουμπιά (θα έπρεπε να είναι ~650px) πριν προστεθεί αυτή η γραμμή. Ίδιο
+       fix με τα .rcp-filter-chip/.rcp-chip/κλπ λίγο πιο πάνω σε αυτό το ίδιο block. */
+    width:auto;
+    min-height:40px;
+    white-space:nowrap;
   }
 
   /* Table responsiveness */
@@ -1950,6 +1987,12 @@ body.dark-mode .appt-digest-item .meta{color:#9aa5a1}
 body.dark-mode .appt-digest-item.soft{background:#123330;border-color:#444;color:#ccc}
 body.dark-mode .appt-corr-legend{color:#9aa5a1}
 body.dark-mode .bottom-nav{background:#1a1a1a;border-top-color:#444}
+body.dark-mode .more-sheet{background:#1a1a1a;box-shadow:0 -8px 24px rgba(0,0,0,.4)}
+body.dark-mode .more-sheet-title{color:#e0e0e0}
+body.dark-mode .more-sheet-x{background:#2a2a2a;color:#aaa}
+body.dark-mode .more-item{color:#e0e0e0}
+body.dark-mode .more-item:active{background:#242424}
+body.dark-mode .more-sep{background:#333}
 body.dark-mode .chip-dd{background:#1a1a1a;border-color:#444}
 body.dark-mode .chip-macro-tip{background:#1a1a1a;border-color:#444;color:#e0e0e0}
 body.dark-mode .client-search-inp{background:#1a1a1a;border-color:#444;color:#e0e0e0}

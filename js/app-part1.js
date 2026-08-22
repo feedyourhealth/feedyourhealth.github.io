@@ -2841,6 +2841,69 @@ function qaCreateAndAppt(name){
   closeAllQA();
 }
 
+// ✅ 2026-08-22: mobile "Περισσότερα" sheet — βλ. σχόλιο πάνω από το markup στο Dietologist.html.
+// Ίδιο accordion μοτίβο με toggleQA/closeAllQA (πάνω), αλλά σε δικά του msheet-qa-* ids ώστε να μη
+// συγκρούεται με τα ήδη υπάρχοντα ids του πλαϊνού μενού — και τα δύο σετ στοιχείων συνυπάρχουν στο
+// DOM ταυτόχρονα (το πλαϊνό είναι απλά display:none σε κινητό, όχι αφαιρεμένο).
+function toggleMoreSheet(){
+  var sheet=document.getElementById('more-sheet');
+  if(sheet && sheet.style.display==='block') closeMoreSheet(); else openMoreSheet();
+}
+function openMoreSheet(){
+  var sheet=document.getElementById('more-sheet'), scrim=document.getElementById('more-scrim'), btn=document.getElementById('more-nav-btn');
+  if(!sheet||!scrim) return;
+  sheet.style.display='block';
+  scrim.style.display='block';
+  if(btn) btn.setAttribute('aria-expanded','true');
+}
+function closeMoreSheet(){
+  var sheet=document.getElementById('more-sheet'), scrim=document.getElementById('more-scrim'), btn=document.getElementById('more-nav-btn');
+  if(sheet) sheet.style.display='none';
+  if(scrim) scrim.style.display='none';
+  if(btn) btn.setAttribute('aria-expanded','false');
+  closeAllMSheetQA();
+}
+function closeAllMSheetQA(){
+  ['newplan','quickmeasure','quickappt'].forEach(function(k){
+    var panel=document.getElementById('msheet-qa-'+k);
+    var btn=document.getElementById('msheet-qa-toggle-'+k);
+    if(panel) panel.style.display='none';
+    if(btn) btn.setAttribute('aria-expanded','false');
+  });
+}
+function toggleMSheetQA(kind){
+  var panel=document.getElementById('msheet-qa-'+kind);
+  var wasOpen = panel && panel.style.display==='block';
+  closeAllMSheetQA();
+  if(!wasOpen && panel){
+    panel.style.display='block';
+    var btn=document.getElementById('msheet-qa-toggle-'+kind);
+    if(btn) btn.setAttribute('aria-expanded','true');
+    var inp=document.getElementById('msheet-qa-'+kind+'-input');
+    if(inp){ inp.value=''; inp.focus(); }
+    renderMSheetQA(kind,'');
+  }
+}
+// Ίδια λογική με renderQANewPlan/renderQAQuickMeasure/renderQAQuickAppt (πάνω), ενοποιημένη σε μία
+// συνάρτηση με τα 3 msheet-qa-* result containers αντί να τριπλασιάζεται ο κώδικας — οι ίδιες
+// qaStartPlan/qaCreateAndPlan/qaStartMeasure/qaCreateAndMeasure/qaStartAppt/qaCreateAndAppt (πάνω,
+// αναλλοίωτες) κάνουν την πραγματική ενέργεια, εδώ μόνο αλλάζει πού ζωγραφίζονται τα αποτελέσματα.
+function renderMSheetQA(kind,q){
+  var results=document.getElementById('msheet-qa-'+kind+'-results'); if(!results) return;
+  var list=qaMatchingClients(q), html='';
+  var startFn = kind==='newplan'?'qaStartPlan':(kind==='quickmeasure'?'qaStartMeasure':'qaStartAppt');
+  var createFn = kind==='newplan'?'qaCreateAndPlan':(kind==='quickmeasure'?'qaCreateAndMeasure':'qaCreateAndAppt');
+  list.forEach(function(c){
+    var sub;
+    if(kind==='newplan'){ sub=qaPlanStatusText(c); }
+    else if(kind==='quickmeasure'){ sub=(c.weightLog&&c.weightLog.length)?('τελ. μέτρηση '+c.weightLog[c.weightLog.length-1].date):'καμία μέτρηση ακόμα'; }
+    else { var lastAppt=c.appointments&&c.appointments.length?c.appointments[c.appointments.length-1]:null; sub=lastAppt?((clientHasFlaggedAppointment(c)?'🚩 ':'')+'τελ. ραντεβού '+lastAppt.date):'καμία καταχώρηση ακόμα'; }
+    html+='<div class="qa-row" onclick="'+startFn+'(\''+c.id+'\');closeMoreSheet();"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
+  });
+  html+='<div class="qa-row qa-row-new" onclick="'+createFn+'(document.getElementById(\'msheet-qa-'+kind+'-input\').value);closeMoreSheet();">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
+  results.innerHTML=html;
+}
+
 var _clientSearchTerm='';
 function filterClients(val){_clientSearchTerm=(val||'').toLowerCase().trim();renderSB();}
 var _clientFilterGoal='';
