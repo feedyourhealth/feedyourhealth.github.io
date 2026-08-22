@@ -190,13 +190,25 @@
 
   .slcat{margin-bottom:12px}
   .slcat-h{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:6px}
-  .slrow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--bord-l);cursor:pointer}
+  /* flex-wrap:wrap + .nm flex-basis:auto + .amt margin-left:auto — audit finding 2026-08-22: σε
+     ru/tr πελάτες, ένα κονσέρβα/ξηρό είδος (μακρύ .raw label, π.χ. "консерв. (без жидк.)")
+     δίπλα σε μακρύ όνομα συνταγής στρίμωχνε το .nm σε 4 στενές γραμμές (141px, ζωντανά
+     μετρημένο) — τίποτα δεν έκοβε/ξεχείλιζε, απλά δυσανάγνωστο. Πρώτη προσπάθεια με
+     flex-wrap:wrap + min-width δεν αρκούσε: το .nm{flex:1} = flex-basis:0%, και με
+     flex-basis:0% ο browser υπολογίζει «χωράει σε 1 γραμμή» με το .nm σαν να συνεισφέρει 0px
+     στον υπολογισμό, οπότε ΠΟΤΕ δεν πυροδοτούνταν πραγματικό line-break — το .amt απλά
+     κεντραρόταν κάθετα δίπλα σε ένα ήδη 4-γραμμο .nm, ζωντανά επιβεβαιωμένο identical πριν/μετά.
+     Το flex-basis:auto (αντί για flex:1 shorthand) δίνει στο .nm πραγματικό content-based μέγεθος
+     για τον υπολογισμό, οπότε το .amt πλέον όντως πέφτει σε δική του γραμμή όταν δεν χωράει —
+     ζωντανά επιβεβαιωμένο: .nm 1 γραμμή αντί για 4, .amt δεξιά ευθυγραμμισμένο στη γραμμή του.
+     Δεν αλλάζει τίποτα στην κοινή περίπτωση (όλα χωράνε σε 1 γραμμή, όπως πάντα). */
+  .slrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--bord-l);cursor:pointer}
   .slrow:last-child{border-bottom:none}
   .slrow .chk{width:20px;height:20px;border:1.5px solid var(--bord);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
   .slrow.done .chk{background:var(--teal);border-color:var(--teal)}
   .slrow.done .nm{color:var(--faint);text-decoration:line-through}
-  .slrow .nm{flex:1;font-size:13px}
-  .slrow .amt{font-size:12px;color:var(--teal);font-weight:600}
+  .slrow .nm{flex:1 1 auto;min-width:140px;font-size:13px}
+  .slrow .amt{margin-left:auto;font-size:12px;color:var(--teal);font-weight:600;text-align:right}
   .slrow .amt .raw{color:var(--muted);font-weight:400;font-size:11px}
   .fxrow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:.5px solid var(--bord-l)}
   .fxrow:last-child{border-bottom:none}
