@@ -1356,6 +1356,17 @@ html{font-size:16px}
   .food-lib{width:100%;position:static;max-height:340px}
   .lib-item{padding:8px 6px}
   .rcp-filter-chip,.rcp-chip,.rcp-star,.rcp-cat-pill,.rcp-cat-done,.rcp-expand-btn{width:auto}
+
+  /* Client header row (όνομα + Αναίρεση/Επανάληψη/Έξοδος, js/app-part2.js) — audit finding
+     2026-08-22: χωρίς flex-wrap, ζωντανά μετρήθηκε 399px περιεχόμενο σε 355px χώρο με ρεαλιστικό
+     ελληνικό όνομα (399 scrollWidth vs 355 clientWidth), το όνομα συμπιεζόταν στα 144px. Τώρα το
+     όνομα παίρνει ολόκληρη τη δική του σειρά (flex-basis:100%) και τα 3 κουμπιά σπάνε από κάτω,
+     αντί να στριμώχνονται μαζί σε μία σειρά. */
+  .client-header-row{flex-wrap:wrap}
+  .client-header-row>div:first-child{flex-basis:100%}
+  .client-header-actions{width:auto;flex-wrap:wrap}
+  .client-header-actions .btn{width:auto;flex:0 0 auto}
+
   /* .hm-grid (κάρτες "Εκκρεμότητες πλάνου"/"Πλησιάζει ανανέωση"/"Τάση βάρους" κλπ στην Αρχική —
      βλ. homeCard(), js/app-part5-home.js) — audit finding 2026-08-22: minmax(400px,1fr) χωρίς
      mobile εξαίρεση ζωντανά μετρήθηκε να αναγκάζει κάρτες 400px πλατιές μέσα σε container 355px
@@ -1776,6 +1787,16 @@ body.dark-mode #shortcutsHintBtn {
 
 @media (max-width: 768px) {
   #shortcutsHintBtn { display: none; }
+  /* ✅ 2026-08-22: #darkModeToggle/#settingsToggle — το σχόλιο πιο πάνω ("Πάντα ορατό σε αντίθεση
+     με #darkModeToggle/#settingsToggle") ήδη τα ανέφερε ως ίδιας λογικής, αλλά δεν είχαν πάρει ποτέ
+     το ίδιο mobile-hide fix με το #shortcutsHintBtn. Ζωντανά επιβεβαιωμένο overlap: ίδιο
+     position:fixed;bottom:20px;left:20px και τα δύο, button{width:100%} του mobile tier τα κάνει
+     όλη-την-οθόνη πλατιά, z-index 996/999 (πάνω από το bottom-nav's 99) — κάθονταν ΠΑΝΩ στο
+     bottom-nav, καλύπτοντας το "🏠 Αρχική" κουμπί, όποτε είναι ενεργό το dark mode. Και τα δύο
+     περιττά σε κινητό ούτως ή άλλως: dark mode toggle υπάρχει ήδη μέσα στο Ρυθμίσεις (#prefDarkMode
+     checkbox) και Ρυθμίσεις είναι ήδη στο bottom-nav + στο FAB menu. */
+  #darkModeToggle,
+  #settingsToggle { display: none !important; }
 }
 
 /* Keyboard Shortcuts Help Panel */
