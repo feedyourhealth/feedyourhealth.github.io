@@ -1824,7 +1824,7 @@ function getDayStatus(dayTotals, targetTotals){
   var tolerance = targetTotals.k * 0.05; // ±5% tolerance
 
   if(Math.abs(kcalDiff) <= tolerance){
-    return {status: 'ok', label: '✅ Σωστό', color: '#2e7d32'};
+    return {status: 'ok', label: '✅ Σωστό', color: 'var(--good)'};
   } else if(kcalDiff > 0 && kcalDiff <= tolerance * 2){
     return {status: 'close', label: '🟡 Κοντά', color: '#e65100'};
   } else if(kcalDiff > tolerance * 2){

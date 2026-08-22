@@ -1708,7 +1708,7 @@ function mealSourceBadge(meal){
     'own-history': {icon:'🕓', label:'Δικό του ιστορικό', bg:'#e0f2f1', color:'#00695c'},
     library:   {icon:'⭐', label:'Πρότυπο γεύσης', bg:'#fff8e1', color:'#f9a825'},
     recipe:    {icon:'👨‍🍳', label:'Συνταγή', bg:'#e3f2fd', color:'#1565C0'},
-    saved:     {icon:'💾', label:'Αποθηκευμένο', bg:'#e8f5e9', color:'#2e7d32'},
+    saved:     {icon:'💾', label:'Αποθηκευμένο', bg:'#e8f5e9', color:'var(--good)'},
     generated: {icon:'✨', label:'Δημιουργήθηκε', bg:'#f3e5f5', color:'#8e24aa'},
     template:  {icon:'📋', label:'Πρότυπο', bg:'#f5f5f5', color:'#757575'}
   };
@@ -1758,8 +1758,10 @@ function renderWeekTable(){
   var actL = {sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'};
   var goalL = {mild:'Ήπια απώλεια',loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'};
 
-  var activityLabel = actL[c.activity] || c.activity;
-  var goalLabel = goalL[c.goalMain] || c.goalMain;
+  // ✅ Fallback '—' αντί για το ίδιο το JS "undefined" όταν λείπει εντελώς το πεδίο (π.χ. ελλιπώς
+  // συμπληρωμένος πελάτης) — πριν εμφανιζόταν κυριολεκτικά η λέξη "undefined" στο summary card.
+  var activityLabel = actL[c.activity] || c.activity || '—';
+  var goalLabel = goalL[c.goalMain] || c.goalMain || '—';
   var bmiVal = (c.weight && c.height) ? (c.weight / ((c.height/100) * (c.height/100))).toFixed(1) : '—';
 
   // ✅ Ring "θερμίδες εβδομάδας" — μ.ο. πραγματικού αθροίσματος γευμάτων (calculateDailyTotals,
@@ -2492,7 +2494,7 @@ function updateRecipeSelectorForPlan(query){
     var warnHtml=conflicts.length?('<div style="font-size:10.5px;color:#c62828;margin-top:2px">⚠️ Περιέχει αποκλεισμένο: '+esc(conflicts.map(function(f){return f.n;}).join(', '))+'</div>'):'';
     var feedbackHtml=feedback.disliked
       ?'<div style="font-size:10.5px;color:#c62828;margin-top:2px">🚫 Ο πελάτης το απέρριψε πριν (👎)</div>'
-      :(feedback.liked>0?'<div style="font-size:10.5px;color:#2e7d32;margin-top:2px">👍 Άρεσε στον πελάτη '+feedback.liked+' '+(feedback.liked===1?'φορά':'φορές')+'</div>':'');
+      :(feedback.liked>0?'<div style="font-size:10.5px;color:var(--good);margin-top:2px">👍 Άρεσε στον πελάτη '+feedback.liked+' '+(feedback.liked===1?'φορά':'φορές')+'</div>':'');
     var expanded=!!_expandedFoodSelectorRecipeIds[r.id];
     var favorite=typeof isRecipePopular==='function'&&isRecipePopular(r);
     var expandBtn='<button type="button" title="Υλικά" aria-label="Προβολή υλικών" onclick="toggleFoodSelectorRecipeExpand(\''+r.id+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;padding:2px 4px 2px 0;flex-shrink:0;color:var(--text-muted)">'+(expanded?'🔼':'🔽')+'</button>';
@@ -3150,7 +3152,7 @@ function getMicronutrientHtml(c){
       +'<b>⚠️ '+criticalCount+' κρίσιμα</b>, <b>'+lowCount+' χαμηλά</b> — Χρειάζεται προσοχή'
       +'</div>';
   } else {
-    html+='<div style="background:#e8f5e9;border-left:3px solid #4caf50;padding:8px;border-radius:3px;color:#2e7d32;font-size:10px;">'
+    html+='<div style="background:#e8f5e9;border-left:3px solid #4caf50;padding:8px;border-radius:3px;color:var(--good);font-size:10px;">'
       +'<b>✅ Επαρκής</b> — Όλα τα μικροθρεπτικά στο στόχο'
       +'</div>';
   }
@@ -3213,7 +3215,7 @@ function getMicronutrientHtml(c){
     html+='<td style="padding:8px 10px;"><strong>'+row.label+'</strong></td>';
     html+='<td style="padding:8px 10px;text-align:center;">'+row.actual+' <span style="font-size:9px;color:#666;">'+row.unit+'</span></td>';
     html+='<td style="padding:8px 10px;text-align:center;"><span style="font-size:10px;color:#666;">'+row.target+' '+row.unit+'</span></td>';
-    html+='<td style="padding:8px 10px;text-align:center;"><strong style="font-size:12px;'+(row.pct>=90?'color:#2e7d32;':row.pct>=65?'color:#e65100;':'color:#d32f2f;')+'">'+row.pct+'%</strong></td>';
+    html+='<td style="padding:8px 10px;text-align:center;"><strong style="font-size:12px;'+(row.pct>=90?'color:var(--good);':row.pct>=65?'color:#e65100;':'color:#d32f2f;')+'">'+row.pct+'%</strong></td>';
     var statusLabel=row.status==='critical'?'Κρίσιμο':row.status==='low'?'Χαμηλό':'Επαρκές';
     html+='<td style="padding:8px 10px;text-align:center;"><span style="font-size:13px;">'+row.icon+'</span> <span style="font-size:9px;color:#666;">'+statusLabel+'</span></td>';
     html+='</tr>';

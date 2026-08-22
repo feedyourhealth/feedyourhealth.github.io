@@ -294,7 +294,7 @@ function selectTmplForClient(id){
 var BLOOD_TEST_STATUS_DEFS={
   none:{icon:'❌',label:'Δεν έχει σταλεί',bg:'#ffebee',color:'#c62828'},
   pending:{icon:'⏳',label:'Σε αναμονή',bg:'#fff8e1',color:'#8a6100'},
-  sent:{icon:'✅',label:'Εστάλησαν',bg:'#e8f5e9',color:'#2e7d32'}
+  sent:{icon:'✅',label:'Εστάλησαν',bg:'#e8f5e9',color:'var(--good)'}
 };
 function cycleBloodTestStatus(){
   var c=getC();if(!c)return;
@@ -1839,7 +1839,7 @@ function planFeedbackPanelHtml(c){
     var trendHtml='';
     if(val>0&&prevVal>0&&val!==prevVal){
       var up=val>prevVal;
-      trendHtml='<span title="'+(up?'Καλύτερα':'Χειρότερα')+' από προηγούμενη εβδομάδα ('+prevVal+'→'+val+')" style="font-size:11px;font-weight:700;color:'+(up?'#2e7d32':'#c62828')+'">'+(up?'▲':'▼')+'</span>';
+      trendHtml='<span title="'+(up?'Καλύτερα':'Χειρότερα')+' από προηγούμενη εβδομάδα ('+prevVal+'→'+val+')" style="font-size:11px;font-weight:700;color:'+(up?'var(--good)':'#c62828')+'">'+(up?'▲':'▼')+'</span>';
     }
     var tags=(reasons[key]||[]).map(function(r){return '<span style="background:#fbe9e7;color:#c0392b;border-radius:999px;padding:2px 8px;font-size:10px;margin-left:4px;white-space:nowrap">'+esc(r)+'</span>';}).join('');
     var replyBtn='';
@@ -1875,7 +1875,7 @@ function planFeedbackPanelHtml(c){
       +'</div>';
   }).join('');
   var nps=latest.continue_likelihood;
-  var npsColor=nps==null?'#999':(nps>=8?'#2e7d32':(nps>=5?'#c77d11':'#c0392b'));
+  var npsColor=nps==null?'#999':(nps>=8?'var(--good)':(nps>=5?'#c77d11':'#c0392b'));
   var npsBadge=nps==null?'':('<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:'+npsColor+'22;color:'+npsColor+'">'+nps+'/10 πιθανότητα συνέχισης</span>');
   var npsReplyBtn='';
   if(nps!=null && typeof PF_ATTENTION_NPS_MAX!=='undefined' && nps<=PF_ATTENTION_NPS_MAX){
@@ -2082,7 +2082,7 @@ function buildTrackerHtml(c){
       else if(latestBMI<30)latestBMIStatus='Υπέρβαρος ⚠️';
       else latestBMIStatus='Παχυσαρκία 🔴';
     }
-    var latestBMIColor=(latestBMI==null||isMinorC)?'#999':latestBMI<18.5?'#ff6b35':latestBMI<25?'#2e7d32':latestBMI<30?'#ff9800':'#c62828';
+    var latestBMIColor=(latestBMI==null||isMinorC)?'#999':latestBMI<18.5?'#ff6b35':latestBMI<25?'var(--good)':latestBMI<30?'#ff9800':'#c62828';
 
     wHtml+='<div style="background:#fff8e1;border:1px solid #ffb74d;border-radius:8px;padding:12px;margin-bottom:10px">'
       +'<div style="font-size:10px;color:#e65100;font-weight:700;margin-bottom:8px">📊 Τρέχουσα Κατάσταση ('+latest.date+')</div>'
@@ -2099,6 +2099,7 @@ function buildTrackerHtml(c){
       +(latest.waist?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #9c27b0"><div style="color:#666">Μέση</div><div style="font-size:14px;font-weight:700;color:#9c27b0">'+latest.waist+' cm</div></div>':'')
       +(latest.hip?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #f57c00"><div style="color:#666">Γοφοί</div><div style="font-size:14px;font-weight:700;color:#f57c00">'+latest.hip+' cm</div></div>':'')
       +'</div>'
+      +bfGaugeHtml(latest.bf,c.sex||'M',isMinorC)
       +'</div>';
 
     // ✅ TREND LINES: Weight & Body Fat % Charts
@@ -2121,7 +2122,7 @@ function buildTrackerHtml(c){
       var sorted2=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
       var first=sorted2[0],last=sorted2[sorted2.length-1];
       var wDiff=+(last.weight-first.weight).toFixed(1);
-      var wCol=wDiff<0?'#2e7d32':wDiff>0?'#c62828':'#888';
+      var wCol=wDiff<0?'var(--good)':wDiff>0?'#c62828':'#888';
       var bfDiff=(first.bf>0&&last.bf>0)?+(last.bf-first.bf).toFixed(1):null;
       var lbmFirst=first.bf>0?+(first.weight*(1-first.bf/100)).toFixed(1):null;
       var lbmLast=last.bf>0?+(last.weight*(1-last.bf/100)).toFixed(1):null;
@@ -2143,13 +2144,13 @@ function buildTrackerHtml(c){
       else if(lastBMI<30)bmiStatus='Υπέρβαρος';
       else bmiStatus='Παχυσαρκία';
     }
-    var bmiColor=(lastBMI==null||isMinorC)?'#999':lastBMI<18.5?'#ff6b35':lastBMI<25?'#2e7d32':lastBMI<30?'#ff9800':'#c62828';
+    var bmiColor=(lastBMI==null||isMinorC)?'#999':lastBMI<18.5?'#ff6b35':lastBMI<25?'var(--good)':lastBMI<30?'#ff9800':'#c62828';
 
     wHtml+='<div style="background:#f0f9f8;border:1px solid #c5ddd8;border-radius:9px;padding:12px 14px;margin-bottom:10px">'
         +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:10px">'
         +'<span style="font-size:11px;font-weight:700;color:#025857">📈 Σύνοψη προόδου</span>'
         +'<span style="font-size:11px">Βάρος: <b style="color:'+wCol+'">'+(wDiff>0?'+':'')+wDiff+' kg</b> ('+first.weight+'→'+last.weight+'kg)</span>'
-        +(bfDiff!==null?'<span style="font-size:11px">Λίπος: <b style="color:'+(bfDiff<0?'#2e7d32':'#c62828')+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>':'')
+        +(bfDiff!==null?'<span style="font-size:11px">Λίπος: <b style="color:'+(bfDiff<0?'var(--good)':'#c62828')+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>':'')
         +(lbmDiff!==null?'<span style="font-size:11px">Lean Mass: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>':'')
         +(lastBMI!=null?'<span style="font-size:11px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+(bmiStatus?' ('+bmiStatus+')':'')+'</b></span>':'')
         +'<span style="font-size:10px;color:var(--text-muted);margin-left:auto">'+sorted2.length+' μετρήσεις</span>'
@@ -2478,7 +2479,7 @@ function updateSkinfoldCalc(){
   if(res.bf===null){resDiv.style.display='none';return;}
   var lbm=weight>0?+(weight*(1-res.bf/100)).toFixed(1):null;
   var fm=weight>0?+(weight*res.bf/100).toFixed(1):null;
-  var bfClass=res.bf<10?'#1565C0':res.bf<20?'#2e7d32':res.bf<30?'#e65100':'#c62828';
+  var bfClass=res.bf<10?'#1565C0':res.bf<20?'var(--good)':res.bf<30?'#e65100':'#c62828';
   var bdTxt=res.bd?'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">BD: '+res.bd+'</span>':'';
   resDiv.className='sf-result-row';
   resDiv.innerHTML='<span><b>%BF:</b> <span style="color:'+bfClass+';font-size:14px;font-weight:700">'+res.bf+'%</span>'+bdTxt+'</span>'
@@ -3242,7 +3243,7 @@ function buildAppointmentsHtml(c){
   var wDeltaHtml='—';
   if(lastW&&prevW){
     var wd=+(lastW.weight-prevW.weight).toFixed(1);
-    wDeltaHtml='<span style="color:'+(wd<0?'#2e7d32':wd>0?'#c62828':'#888')+'">'+(wd>0?'↑':wd<0?'↓':'→')+' '+Math.abs(wd)+' kg από '+fmtDateShortAppt(prevW.date)+'</span>';
+    wDeltaHtml='<span style="color:'+(wd<0?'var(--good)':wd>0?'#c62828':'#888')+'">'+(wd>0?'↑':wd<0?'↓':'→')+' '+Math.abs(wd)+' kg από '+fmtDateShortAppt(prevW.date)+'</span>';
   }
   var hasActive=c.weekPlan&&Object.keys(c.weekPlan).length>0;
   var planDaysOld=c.planGeneratedAt?Math.floor((Date.now()-c.planGeneratedAt)/86400000):null;
@@ -3303,7 +3304,7 @@ function buildAppointmentsHtml(c){
     var goalBarHtml='';
     if(firstW&&Math.abs(firstW.weight-c.goalWeight)>0.05){
       var goalPct=Math.max(0,Math.min(100,Math.round((firstW.weight-lastW.weight)/(firstW.weight-c.goalWeight)*100)));
-      goalBarHtml='<div style="height:5px;border-radius:3px;background:#E2EEE5;overflow:hidden;margin-top:5px"><div style="height:100%;width:'+goalPct+'%;background:'+(goalDone?'#2e7d32':'#025857')+'"></div></div>';
+      goalBarHtml='<div style="height:5px;border-radius:3px;background:#E2EEE5;overflow:hidden;margin-top:5px"><div style="height:100%;width:'+goalPct+'%;background:'+(goalDone?'var(--good)':'var(--teal)')+'"></div></div>';
     }
     goalCardHtml='<div class="appt-sum-card"><div class="appt-sum-lbl">🎯 Στόχος βάρους</div><div class="appt-sum-val">'+c.goalWeight+' kg</div><div class="appt-sum-sub">'+goalTxt+'</div>'+goalBarHtml+'</div>';
   }

@@ -600,7 +600,7 @@ function renderHome(){
   var reminderRows=homeClientsNeedingFeedbackReminder().map(function(c){
     return homeRow(c,'δεν έχει στείλει feedback ακόμα','teal',
       '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendFeedbackReminder(\''+c.id+'\')">🔔 Υπενθύμιση</button>'
-      +'<button type="button" class="hm-action-btn" style="background:#e8f5e9;color:#2e7d32" onclick="event.stopPropagation();sendWeeklyRecap(\''+c.id+'\')" title="Στείλε έτοιμη ανακεφαλαίωση με σκορ/βάρος/σερί">📊 Ανακεφαλαίωση</button>');
+      +'<button type="button" class="hm-action-btn" style="background:#e8f5e9;color:var(--good)" onclick="event.stopPropagation();sendWeeklyRecap(\''+c.id+'\')" title="Στείλε έτοιμη ανακεφαλαίωση με σκορ/βάρος/σερί">📊 Ανακεφαλαίωση</button>');
   });
   var pendingPlanRows=homePendingPlanActions(attentionIds).map(homePendingPlanActionRow);
   var approachingRenewalRows=homeApproachingRenewal().map(homeApproachingRenewalRow);
@@ -1050,7 +1050,7 @@ function msgRowHtml(m,compact){
   }
   var actionsHtml;
   if(m.replied){
-    actionsHtml='<span class="hm-row-sub" style="color:#2e7d32;font-weight:600">✓ Απαντήθηκε</span>';
+    actionsHtml='<span class="hm-row-sub" style="color:var(--good);font-weight:600">✓ Απαντήθηκε</span>';
   } else if(m.seen){
     actionsHtml='<span class="hm-row-sub" title="Μαρκαρίστηκε ως αναγνωσμένο, χωρίς απάντηση">👁️ Αναγνωσμένο</span>';
   } else {

@@ -67,6 +67,16 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
   color:var(--text-strong);
   line-height:1;
 }
+/* Ημικυκλικό gauge — θέση του %BF μέσα στις ζώνες αναφοράς ACSM (βλ. bfGaugeHtml(),
+   js/app-part2.js, μέσα στο "📊 Τρέχουσα Κατάσταση" της Ανθρωπομετρίας). Ίδια οικογένεια/τεχνική
+   με το .pct-ring (conic-gradient), αλλά εδώ το gradient είναι μόνιμο (οι 5 ζώνες αναφοράς — δεν
+   αλλάζει ανά πελάτη) και η θέση του πελάτη μέσα σε αυτό δείχνεται με μια βελόνα, όχι με fill %. Ο
+   client portal (plan.html) δείχνει το ίδιο εύρος σαν οριζόντια μπάρα (rangeBar) — εδώ επιλέχθηκε
+   ημικύκλιο για να ξεχωρίζει οπτικά από το FM/LBM donut του Έντυπου Λιπομέτρησης.*/
+.bf-gauge-wrap{width:168px;height:88px;position:relative;margin:2px auto 0;overflow:hidden}
+.bf-gauge-arc{position:absolute;top:0;left:0;width:168px;height:168px;border-radius:50%}
+.bf-gauge-needle{position:absolute;left:50%;bottom:0;width:2px;height:66px;background:var(--text-strong);transform-origin:bottom center;border-radius:2px;margin-left:-1px}
+.bf-gauge-needle::after{content:"";position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--text-strong)}
 .app{display:flex;min-height:100vh;position:relative}
 /* ✅ IMPROVED: Card-based client design */
 /* Sidebar clients */
@@ -162,7 +172,7 @@ body.dark-mode .cr-actions button:hover{background:#2a2a2a}
 /* Block "Χρειάζονται προσοχή" καρφωμένο πάνω από το κανονικό πλέγμα Πελάτες (βλ. renderSB,
    js/app-part1.js) — ίδια χρωματική οικογένεια amber/warning με τα .hm-card-warning/.hm-tile-amber
    της Αρχικής, ώστε το "χρειάζεται προσοχή" να σημαίνει οπτικά το ίδιο πράγμα σε όλο το εργαλείο. */
-.clients-attn-block{border:1px solid #f3dcae;border-left:4px solid #EF9F27;border-radius:14px;padding:14px 16px 2px;margin-bottom:22px;background:#FFFBF2}
+.clients-attn-block{border:1px solid #f3dcae;border-left:4px solid var(--warn);border-radius:14px;padding:14px 16px 2px;margin-bottom:22px;background:#FFFBF2}
 .clients-attn-block .clients-grid{margin-bottom:12px}
 .clients-attn-title{font-size:11px;font-weight:700;color:#633806;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 .clients-attn-count{font-weight:700}
@@ -259,7 +269,7 @@ body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px}
 .hm-card{background:#fff;border:1px solid #e0e0e0;border-left:4px solid #e0e0e0;border-radius:14px;padding:14px 16px;container-type:inline-size}
 .hm-card-danger{border-left-color:#E24B4A}
-.hm-card-warning{border-left-color:#EF9F27}
+.hm-card-warning{border-left-color:var(--warn)}
 .hm-card-info{border-left-color:var(--teal)}
 .hm-card-success{border-left-color:#4CAF50}
 .hm-card-title{font-size:13px;font-weight:700;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
@@ -703,13 +713,13 @@ body.dark-mode .rd-delete-btn:hover{background:#3a1f1f}
 .day-header-totals{display:flex;gap:16px;font-size:11px;flex-wrap:wrap}
 .day-total-item{display:flex;align-items:center;gap:4px;font-weight:600}
 .day-total-item.kcal{font-size:12px;color:var(--teal)}
-.day-total-item.ok{color:#2e7d32}
+.day-total-item.ok{color:var(--good)}
 .day-total-item.close{color:#f57c00}
 .day-total-item.over{color:#c62828}
 
 /* ✅ STATUS INDICATOR BADGE */
 .day-status-badge{padding:4px 10px;border-radius:999px;font-size:10px;font-weight:700;text-align:center;min-width:60px}
-.day-status-badge.ok{background:var(--success-tint);color:#2e7d32}
+.day-status-badge.ok{background:var(--success-tint);color:var(--good)}
 .day-status-badge.close{background:#fff3e0;color:#e65100}
 .day-status-badge.over{background:#ffebee;color:#c62828}
 
@@ -1031,7 +1041,7 @@ body.dark-mode .tooltip-text {
 .minor-banner{background:#fff8e1;border:1px solid #ffd54f;border-radius:14px;padding:7px 12px;font-size:11px;font-weight:600;color:#e65100;margin-bottom:10px}
 /* ── Energy Availability row ── */
 .ea-row{border-radius:14px;padding:7px 12px;font-size:11px;margin-top:6px;margin-bottom:10px}
-.ea-ok{background:var(--success-tint);border:1px solid #a5d6a7;color:#2e7d32}
+.ea-ok{background:var(--success-tint);border:1px solid #a5d6a7;color:var(--good)}
 .ea-warn{background:#fff8e1;border:1px solid #ffd54f;color:#e65100}
 .ea-danger{background:#ffebee;border:1px solid #ef9a9a;color:#c62828}
 /* ── Day header actions menu (copy day / regenerate day) ── */
@@ -1069,14 +1079,14 @@ body.dark-mode .tooltip-text {
 .met-item-day{background:var(--teal);color:#fff;border-radius:999px;padding:1px 5px;font-size:9px;font-weight:700}
 .met-item-detail{font-size:11px;color:#555;white-space:nowrap}
 .met-item-kcal{font-size:11px;font-weight:700;color:var(--teal);white-space:nowrap}
-.act-row td:first-child{color:#2e7d32;font-size:10px}
+.act-row td:first-child{color:var(--good);font-size:10px}
 .act-cell{font-size:9px;color:var(--teal);vertical-align:top;line-height:1.4}
 .met-del{background:none;border:none;cursor:pointer;color:#6b6b6b;font-size:14px;padding:0 3px;line-height:1;flex-shrink:0}
 .met-del:hover{color:#c62828}
 .met-total{font-size:11px;color:var(--teal);padding:6px 10px;background:var(--teal-tint);border-radius:10px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .met-total b{color:var(--teal-dark)}
 .met-note{font-size:10px;color:#888;font-style:italic}
-.v-ex-chip{background:var(--success-tint);border-radius:999px;padding:1px 7px;font-size:11px;color:#2e7d32;font-weight:700;margin-left:4px}
+.v-ex-chip{background:var(--success-tint);border-radius:999px;padding:1px 7px;font-size:11px;color:var(--good);font-weight:700;margin-left:4px}
 
 /* ✅ IMPROVED MET LAYOUT */
 .met-added-section{background:var(--teal-tint);border:1px solid #b5dcd6;border-radius:14px;padding:12px;margin-bottom:12px}
@@ -1155,7 +1165,7 @@ body.dark-mode .tooltip-text {
 .appt-entry.appt-entry-absence{background:#fafafa;border-style:dashed}
 .appt-entry-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px}
 .appt-action-resolve{background:none;border:none;cursor:pointer;color:#6b6b6b;font-size:13px;padding:0 3px;line-height:1;flex-shrink:0}
-.appt-action-resolve:hover{color:#2e7d32}
+.appt-action-resolve:hover{color:var(--good)}
 .appt-entry-editing{background:#fff!important;border-color:var(--teal)!important}
 /* ✨ Idea 8 (2026-08-14): φίλτρο ιστορικού ραντεβού — καθαρά front-end, βλ. apptFilterHistory() στο js/app-part2.js */
 .appt-filterbar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
@@ -1181,7 +1191,7 @@ body.dark-mode .tooltip-text {
 .appt-diffitem{display:flex;flex-direction:column;gap:2px}
 .appt-diffitem .lbl{font-size:10px;color:#888;font-weight:600}
 .appt-diffitem .val{font-weight:700}
-.appt-diffitem .val.good{color:#2e7d32}
+.appt-diffitem .val.good{color:var(--good)}
 .appt-diffitem .val.bad{color:#c62828}
 /* ✨ Idea 3 (2026-08-14): "χρειάζεται προσοχή" digest — βλ. buildApptAttentionDigestHtml() στο js/app-part2.js */
 .appt-digest-list{display:flex;flex-direction:column;gap:6px}
