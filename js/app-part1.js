@@ -2849,19 +2849,31 @@ function toggleMoreSheet(){
   var sheet=document.getElementById('more-sheet');
   if(sheet && sheet.style.display==='block') closeMoreSheet(); else openMoreSheet();
 }
+// ✅ 2026-08-22: a11y polish — Escape κλείνει το sheet, το focus μπαίνει σε αυτό όταν ανοίγει και
+// επιστρέφει στο κουμπί "Περισσότερα" όταν κλείνει (πληκτρολόγιο/screen reader, ήταν εντελώς
+// mouse/touch-only πριν). _moreSheetEscHandler κρατιέται σε module scope ώστε το removeEventListener
+// στο closeMoreSheet να αφαιρεί ΑΚΡΙΒΩΣ τον listener που πρόσθεσε το openMoreSheet — ένα ανώνυμο
+// function σε κάθε toggle θα άφηνε πολλαπλά "σκουπίδια" listeners στο document.
+var _moreSheetEscHandler=null;
 function openMoreSheet(){
   var sheet=document.getElementById('more-sheet'), scrim=document.getElementById('more-scrim'), btn=document.getElementById('more-nav-btn');
   if(!sheet||!scrim) return;
   sheet.style.display='block';
   scrim.style.display='block';
   if(btn) btn.setAttribute('aria-expanded','true');
+  sheet.focus();
+  _moreSheetEscHandler=function(e){ if(e.key==='Escape') closeMoreSheet(); };
+  document.addEventListener('keydown',_moreSheetEscHandler);
 }
 function closeMoreSheet(){
   var sheet=document.getElementById('more-sheet'), scrim=document.getElementById('more-scrim'), btn=document.getElementById('more-nav-btn');
+  var wasOpen = sheet && sheet.style.display==='block';
   if(sheet) sheet.style.display='none';
   if(scrim) scrim.style.display='none';
   if(btn) btn.setAttribute('aria-expanded','false');
   closeAllMSheetQA();
+  if(_moreSheetEscHandler){ document.removeEventListener('keydown',_moreSheetEscHandler); _moreSheetEscHandler=null; }
+  if(wasOpen && btn) btn.focus();
 }
 function closeAllMSheetQA(){
   ['newplan','quickmeasure','quickappt'].forEach(function(k){

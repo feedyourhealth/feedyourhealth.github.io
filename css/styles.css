@@ -1470,8 +1470,18 @@ html{font-size:16px}
     background:rgba(0,0,0,0.1);
   }
 
-  /* Larger touch targets */
-  .cdel{min-width:32px;min-height:32px}
+  /* Larger touch targets — audit finding 2026-08-22: 32px ήταν κάτω από το σύνηθες όριο 44px
+     για touch targets. */
+  .cdel{min-width:44px;min-height:44px}
+
+  /* Το inline "⚙ [input] ημ." όριο ανανέωσης μέσα στις κάρτες Διατροφών (js/app-part5-home.js,
+     dietsSection) ήταν 34px πλατύ — δύσκολο σημάδι με δάχτυλο. Το inline style="width:34px" στο
+     markup μένει ως desktop/mouse baseline (compact, ταιριάζει στη γραμμή)· εδώ μεγαλώνει μόνο σε
+     touch συσκευές, χωρίς να πειράζει την πυκνή desktop εμφάνιση. Το ύψος δεν χρειάζεται δικό του
+     κανόνα — το ήδη υπάρχον input[type=number]{min-height:44px} του ≤767px tier (πιο πάνω σε αυτό
+     το αρχείο) το καλύπτει ήδη, ζωντανά επιβεβαιωμένο 44px· !important εδώ μόνο όπου η attribute-
+     selector specificity εκείνου του γενικού κανόνα (width:100%) θα κέρδιζε αλλιώς. */
+  .renewal-days-inp{width:40px!important;padding:4px 6px!important;font-size:13px!important}
 }
 
 /* LANDSCAPE ORIENTATION */
