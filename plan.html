@@ -77,6 +77,19 @@
   .stat .l{font-size:12px;color:var(--teal-l)}
   .stat .v{font-size:18px;font-weight:600;color:var(--teal-d)}
   .stat .u{font-size:11px;color:var(--muted)}
+  /* Δαχτυλίδι προόδου προς τον στόχο βάρους — ίδιο component/τεχνική (conic-gradient + mask) με το
+     αντίστοιχο .pct-ring του Dietologist.html (css/styles.css), αλλά ξαναφτιαγμένο εδώ με τα δικά
+     του tokens γιατί το plan.html είναι εντελώς ξεχωριστό αρχείο/deployment (client portal), χωρίς
+     πρόσβαση σε εκείνο το stylesheet. Βλ. goalRingHtml() πιο κάτω. */
+  .pct-ring{display:inline-grid;place-items:center;width:var(--pr-size,84px);height:var(--pr-size,84px);flex-shrink:0}
+  .pct-ring::before{content:"";grid-area:1/1;width:100%;height:100%;border-radius:50%;
+    background:conic-gradient(var(--teal) var(--pr-p,0%), var(--tint2) 0);
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - var(--pr-thick,9px)), #000 calc(100% - var(--pr-thick,9px)));
+    mask:radial-gradient(farthest-side, transparent calc(100% - var(--pr-thick,9px)), #000 calc(100% - var(--pr-thick,9px)));}
+  .pct-ring-label{grid-area:1/1;font-weight:700;color:var(--teal-d);line-height:1.15;text-align:center}
+  .goalring-card{display:flex;align-items:center;gap:14px;padding:14px}
+  .goalring-card .txt .t{font-size:13px;font-weight:600;color:var(--ink)}
+  .goalring-card .txt .s{font-size:12px;color:var(--muted);margin-top:2px}
   .stat .u.ok{color:var(--ok)}
 
   .meal{display:flex;gap:10px;padding:9px 0;border-bottom:.5px solid var(--bord-l)}
@@ -577,7 +590,7 @@ const I18N={
     weightErr:'Το βάρος πρέπει να είναι ένας αριθμός μεταξύ 20 και 300 kg.',
     thisWeekHdr:'Αυτή την εβδομάδα', pillarDiet:'Διατροφή', pillarSupps:'Συμπληρώματα', pillarWater:'Νερό',
     tipsHdr:'Συμβουλές για την επόμενη εβδομάδα', historyHdr:'Ιστορικό', historyNow:'Τώρα',
-    progStart:'Έναρξη', progNow:'Τώρα', progGoal:'Στόχος', weightChartLbl:'Βάρος (kg)',
+    progStart:'Έναρξη', progNow:'Τώρα', progGoal:'Στόχος', progRingLbl:'προς τον στόχο', weightChartLbl:'Βάρος (kg)',
     bfChartLbl:'Σωματικό λίπος (%)', bfNeed2:'Χρειάζονται τουλάχιστον 2 μετρήσεις για γράφημα εξέλιξης.',
     lbmChartLbl:'Άλιπη μάζα (kg)', bodyCompHdr:'Σύσταση σώματος', bodyCompTotal:'kg ΣΥΝΟΛΟ', bodyCompLean:'Άλιπη', bodyCompFat:'Λίπος',
     analysisHdr:'Ανάλυση', analysisGoalLegend:'◆ στόχος', bmiLbl:'ΔΜΣ', bfPctLbl:'% Λίπους', whtrLbl:'WHtR',
@@ -681,7 +694,7 @@ const I18N={
     weightErr:'Weight must be a number between 20 and 300 kg.',
     thisWeekHdr:'This week', pillarDiet:'Nutrition', pillarSupps:'Supplements', pillarWater:'Water',
     tipsHdr:'Tips for next week', historyHdr:'History', historyNow:'Now',
-    progStart:'Start', progNow:'Now', progGoal:'Goal', weightChartLbl:'Weight (kg)',
+    progStart:'Start', progNow:'Now', progGoal:'Goal', progRingLbl:'to goal', weightChartLbl:'Weight (kg)',
     bfChartLbl:'Body fat (%)', bfNeed2:'At least 2 measurements are needed for a trend chart.',
     lbmChartLbl:'Lean mass (kg)', bodyCompHdr:'Body composition', bodyCompTotal:'kg TOTAL', bodyCompLean:'Lean', bodyCompFat:'Fat',
     analysisHdr:'Analysis', analysisGoalLegend:'◆ goal', bmiLbl:'BMI', bfPctLbl:'Body fat %', whtrLbl:'WHtR',
@@ -785,7 +798,7 @@ const I18N={
     weightErr:'Вес должен быть числом от 20 до 300 кг.',
     thisWeekHdr:'На этой неделе', pillarDiet:'Питание', pillarSupps:'Добавки', pillarWater:'Вода',
     tipsHdr:'Советы на следующую неделю', historyHdr:'История', historyNow:'Сейчас',
-    progStart:'Старт', progNow:'Сейчас', progGoal:'Цель', weightChartLbl:'Вес (кг)',
+    progStart:'Старт', progNow:'Сейчас', progGoal:'Цель', progRingLbl:'до цели', weightChartLbl:'Вес (кг)',
     bfChartLbl:'Процент жира (%)', bfNeed2:'Для графика динамики нужно как минимум 2 измерения.',
     lbmChartLbl:'Безжировая масса (кг)', bodyCompHdr:'Состав тела', bodyCompTotal:'кг ВСЕГО', bodyCompLean:'Безжировая', bodyCompFat:'Жир',
     analysisHdr:'Анализ', analysisGoalLegend:'◆ цель', bmiLbl:'ИМТ', bfPctLbl:'% жира', whtrLbl:'WHtR',
@@ -889,7 +902,7 @@ const I18N={
     weightErr:'Kilo 20 ile 300 kg arasında bir sayı olmalı.',
     thisWeekHdr:'Bu hafta', pillarDiet:'Beslenme', pillarSupps:'Takviyeler', pillarWater:'Su',
     tipsHdr:'Gelecek hafta için ipuçları', historyHdr:'Geçmiş', historyNow:'Şimdi',
-    progStart:'Başlangıç', progNow:'Şimdi', progGoal:'Hedef', weightChartLbl:'Kilo (kg)',
+    progStart:'Başlangıç', progNow:'Şimdi', progGoal:'Hedef', progRingLbl:'hedefe', weightChartLbl:'Kilo (kg)',
     bfChartLbl:'Vücut yağı (%)', bfNeed2:'Bir gelişim grafiği için en az 2 ölçüm gerekir.',
     lbmChartLbl:'Yağsız kütle (kg)', bodyCompHdr:'Vücut kompozisyonu', bodyCompTotal:'kg TOPLAM', bodyCompLean:'Yağsız', bodyCompFat:'Yağ',
     analysisHdr:'Analiz', analysisGoalLegend:'◆ hedef', bmiLbl:'VKİ', bfPctLbl:'Vücut Yağı %', whtrLbl:'WHtR',
@@ -1736,6 +1749,29 @@ function tipsCard(tips){
 }
 function statBox(l,v,u,ok){if(ok===undefined)ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
 function deltaU(p){if(p.start&&p.current){const d=Math.round((p.current-p.start)*10)/10;return (d<=0?'−':'+')+decSep(Math.abs(d).toString())+' kg'}return 'kg'}
+// Ποσοστό προόδου προς τον στόχο βάρους — ΙΔΙΟΣ τύπος με το goalPct της dietologist-side εφαρμογής
+// (js/app-part2.js, "Νέα κάρτα Στόχος βάρους"), ώστε το νούμερο που βλέπει ο πελάτης εδώ να ταιριάζει
+// πάντα με αυτό που βλέπει ο διαιτολόγος στο δικό του appt-summary. Δουλεύει και για αύξηση βάρους
+// (π.χ. μυϊκή μάζα) — όχι μόνο απώλεια — γιατί δεν υποθέτει κατεύθυνση, μόνο απόσταση από start/goal.
+function goalRingPct(p){
+  if(!(p.start&&p.current&&p.goal))return null;
+  if(Math.abs(p.start-p.goal)<=0.05)return null;
+  return Math.max(0,Math.min(100,Math.round((p.start-p.current)/(p.start-p.goal)*100)));
+}
+// Το ίδιο "κάρτα με ring" component/μαρκάπ σε όλο το app (βλ. pctRing() στο js/app-part1.js,
+// Dietologist.html) — εδώ ξαναγραμμένο τοπικά επειδή το plan.html δεν έχει πρόσβαση σε εκείνο το
+// αρχείο (ξεχωριστό deployment, βλ. σχόλιο πάνω από .pct-ring στο <style>).
+function goalRingHtml(p){
+  const pct=goalRingPct(p);
+  if(pct==null)return '';
+  const c=el('div','card');const cp=el('div','card-pad goalring-card');
+  cp.innerHTML='<div class="pct-ring" style="--pr-size:64px;--pr-thick:8px;--pr-p:'+pct+'%">'
+    +'<span class="pct-ring-label" style="font-size:15px">'+pct+'%</span></div>'
+    +'<div class="txt"><div class="t">'+pct+'% '+T('progRingLbl')+'</div>'
+    +'<div class="s">'+decSep(String(p.current))+' → '+decSep(String(p.goal))+' kg</div></div>';
+  c.appendChild(cp);
+  return c;
+}
 // Η κατεύθυνση αλλαγής βάρους είναι "καλή" ανάλογα με τον στόχο (goalWeight) του πελάτη —
 // π.χ. σε πρόγραμμα μυϊκής αύξησης η αύξηση βάρους είναι επιθυμητή, όχι πάντα η μείωση.
 function deltaGood(p){
@@ -2285,6 +2321,8 @@ function viewProg(){
       +statBox(T('progNow'),p.current?decSep(String(p.current)):'—',deltaU(p),deltaGood(p))
       +statBox(T('progGoal'),p.goal?decSep(String(p.goal)):'—','kg');
     v.appendChild(stats);
+    const ringCard=goalRingHtml(p);
+    if(ringCard)v.appendChild(ringCard);
     if(log.length>=2){
       const c=el('div','card');const cp=el('div','card-pad');
       cp.appendChild(el('div',null,'<div style="font-size:12px;color:var(--muted);margin-bottom:8px">'+T('weightChartLbl')+'</div>'));

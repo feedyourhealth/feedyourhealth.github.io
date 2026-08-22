@@ -28,9 +28,45 @@
   --panel-bg:#f5f5f5;
   --border-light:#e0e0e0;
   --text-strong:#1a1a1a;
+  /* Semantic status colors for .pct-ring (below) — reused from colors ALREADY established
+     elsewhere for the same meaning, not invented: --good is the #2e7d32 used throughout for
+     "done/positive" (msgRowHtml's "✓ Απαντήθηκε", goalBarHtml when a weight goal is hit), --warn
+     is the #EF9F27 already meaning "needs attention" (.clients-attn-block). --danger (above)
+     doubles as "critical" — no third color needed. */
+  --good:#2e7d32;
+  --warn:#EF9F27;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a;-webkit-user-select:none;user-select:none}
+/* Κυκλικό δαχτυλίδι προόδου 0-100% — ένα component, ξαναχρησιμοποιείται σε 7 σημεία του app
+   (κάρτα πελάτη, Αρχική, Ραντεβού, Μηνύματα, πλάνο builder, client portal, Ομάδες). Built με
+   conic-gradient + mask αντί για SVG, ώστε το χρώμα/πάχος/μέγεθος να είναι απλά CSS custom
+   properties per instance — βλ. pctRing() στο js/app-part1.js που παράγει το markup. Η mask (αντί
+   για ένα δεύτερο, γεμάτο circle "τρύπα" στο κέντρο) αφήνει το κέντρο πραγματικά διάφανο, ώστε να
+   μπορούν να στοιβαχτούν πολλαπλά rings πάνω στο ίδιο background χωρίς να καλύπτει το ένα το άλλο. */
+.pct-ring{
+  display:inline-grid;
+  place-items:center;
+  width:var(--pr-size,56px);
+  height:var(--pr-size,56px);
+  flex-shrink:0;
+}
+.pct-ring::before{
+  content:"";
+  grid-area:1/1;
+  width:100%;height:100%;
+  border-radius:50%;
+  background:conic-gradient(var(--pr-color,var(--teal)) var(--pr-p,0%), var(--pr-track,var(--teal-tint)) 0);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - var(--pr-thick,7px)), #000 calc(100% - var(--pr-thick,7px)));
+  mask:radial-gradient(farthest-side, transparent calc(100% - var(--pr-thick,7px)), #000 calc(100% - var(--pr-thick,7px)));
+}
+.pct-ring-label{
+  grid-area:1/1;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  color:var(--text-strong);
+  line-height:1;
+}
 .app{display:flex;min-height:100vh;position:relative}
 /* ✅ IMPROVED: Card-based client design */
 /* Sidebar clients */
@@ -1876,6 +1912,11 @@ body.dark-mode {
   --panel-bg:#242424;
   --border-light:#444;
   --text-strong:#e0e0e0;
+  /* Same reuse logic as the :root definitions above: #8bc98f is the app's already-established
+     dark-mode green (.cc-status-active, .hm-tile-green), #fac775 the already-established
+     dark-mode amber (.clients-attn-title). */
+  --good:#8bc98f;
+  --warn:#fac775;
 }
 body.dark-mode .cc-status-active{color:#8bc98f}
 body.dark-mode .meal-label{color:#e0e0e0}

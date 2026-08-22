@@ -1762,6 +1762,27 @@ function renderWeekTable(){
   var goalLabel = goalL[c.goalMain] || c.goalMain;
   var bmiVal = (c.weight && c.height) ? (c.weight / ((c.height/100) * (c.height/100))).toFixed(1) : '—';
 
+  // ✅ Ring "θερμίδες εβδομάδας" — μ.ο. πραγματικού αθροίσματος γευμάτων (calculateDailyTotals,
+  // Dietologist.html, ΙΔΙΑ συνάρτηση με το report modal του app-part3.js) έναντι του ημερήσιου
+  // στόχου (per-day c.dayTargets[d].k αν υπάρχει, αλλιώς το γενικό tdeeInfo.target). Ζωντανή ένδειξη
+  // "πόσο κοντά είναι το πλάνο στον στόχο" — ξαναϋπολογίζεται σε κάθε renderWeekTable(), δηλ. σε κάθε
+  // προσθήκη/αφαίρεση τροφίμου. Μετράει μόνο μέρες που έχουν έστω 1 γεύμα — μια εντελώς άδεια μέρα δεν
+  // πρέπει να τραβάει το ποσοστό προς τα κάτω σαν "αποτυχία".
+  var weekActualK=0, weekTargetK=0, weekDaysCounted=0;
+  for(var _wdi=0;_wdi<7;_wdi++){
+    var _wdTotals=calculateDailyTotals(c.weekPlan[_wdi]||[]);
+    if(_wdTotals.k>0){
+      weekActualK+=_wdTotals.k;
+      weekTargetK+=(c.dayTargets&&c.dayTargets[_wdi]&&c.dayTargets[_wdi].k)?c.dayTargets[_wdi].k:tdeeInfo.target;
+      weekDaysCounted++;
+    }
+  }
+  var weekKcalPct=weekTargetK>0?Math.max(0,Math.min(150,Math.round(weekActualK/weekTargetK*100))):null;
+  var weekKcalRingHtml=weekKcalPct==null?'':(
+    pctRing(Math.min(100,weekKcalPct),{size:40,thickness:5,color:weekKcalPct>=100?'var(--good)':'#025857',track:'#e2eee5',label:false})
+    +'<span style="font-size:12px;color:#555">'+weekKcalPct+'% μ.ο. στόχου θερμίδων <span style="color:#999">('+weekDaysCounted+' μέρες με γεύματα)</span></span>'
+  );
+
   var divider='<span style="width:1px;height:16px;background:#e0e0e0"></span>';
   var summaryCard = '<div style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:8px 14px;margin-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
     +'<span style="font-size:13px;font-weight:700;color:#025857">👤 ' + esc(c.name) + '</span>'
@@ -1773,6 +1794,7 @@ function renderWeekTable(){
     +'<span style="font-size:12px;font-weight:700;color:#e65100">🔥 ' + Math.round(tdeeInfo.target) + ' kcal</span>'
     +divider
     +'<span style="font-size:12px;color:#555">Π:' + Math.round(tdeeInfo.p) + 'g · Λ:' + Math.round(tdeeInfo.f) + 'g · Υ:' + Math.round(tdeeInfo.carb) + 'g</span>'
+    +(weekKcalRingHtml?(divider+'<span style="display:flex;align-items:center;gap:8px">'+weekKcalRingHtml+'</span>'):'')
     +'</div>';
 
   // ✅ Legend για τις χρωματιστές κουκκίδες τροφίμων — ίδια hex codes με getFoodColorHex()

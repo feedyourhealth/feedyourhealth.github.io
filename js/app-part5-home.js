@@ -621,12 +621,25 @@ function renderHome(){
     +'</div>';
 
   var measuredToday=homeMeasuredToday();
+  // ✅ Ring "ενεργοί με πρόσφατο check-in" — πάνω στο ΗΔΗ υπάρχον homePortalActivity()/checkinsFor(),
+  // την ίδια πηγή αλήθειας που τροφοδοτεί το tile "💬 Νέα από πελάτες" πιο πάνω. Παρονομαστής: πελάτες
+  // που έχουν καν σύνδεσμο portal (c.shareToken) — όσοι δεν έχουν στείλει ποτέ πλάνο δεν έχουν πώς να
+  // κάνουν check-in, δεν πρέπει να τραβάνε το ποσοστό προς τα κάτω σαν να αδιαφορούν.
+  var _withLink=clients.filter(function(c){return !c.deleted&&!c.archived&&c.shareToken;});
+  var _recentActiveN=homePortalActivity().filter(function(x){return x.gap<=7;}).length;
+  var _activePct=_withLink.length?Math.round(_recentActiveN/_withLink.length*100):null;
   html+='<div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Δες όλους τους πελάτες"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'active\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'active\')" role="button" tabindex="0" title="Δες πελάτες με ενεργό πλάνο"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="toggleQA(\'qa-quickmeasure\')" onkeydown="if(event.key===\'Enter\')toggleQA(\'qa-quickmeasure\')" role="button" tabindex="0" title="Άνοιγμα γρήγορης μέτρησης"><div class="hm-stat-num">'+measuredToday.length+'</div><div class="hm-stat-lbl">Μετρήσεις σήμερα</div>'
     +(measuredToday.length?'<div class="hm-stat-names">'+measuredToday.map(function(c){return esc(c.name||'');}).join(', ')+'</div>':'')
     +'</div>'
+    +(_activePct==null?'':(
+      '<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Πελάτες με check-in στις τελευταίες 7 μέρες, από όσους έχουν σύνδεσμο portal" style="display:flex;align-items:center;gap:10px;justify-content:center">'
+      +pctRing(_activePct,{size:48,thickness:6,color:pctStatusColor(_activePct),track:'var(--panel-bg)'})
+      +'<span style="text-align:left"><span class="hm-stat-lbl" style="display:block">Ενεργοί με<br>check-in (7 ημ.)</span></span>'
+      +'</div>'
+    ))
     +'</div>';
 
   var groupBreakdown=homeGroupBreakdown(buckets);
@@ -1156,6 +1169,17 @@ function renderMessages(filter){
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">💬 Μηνύματα</div>';
+  // ✅ Ring απαντημένων — ίδιος ορισμός με το "handled" που ήδη μετράει το unreadCount/nav badge
+  // (replied ΚΑΙ seen μετράνε ως χειρισμένα, βλ. msgRowHtml). Μόνο όταν υπάρχει έστω 1 μήνυμα.
+  if(all.length){
+    var handledN=all.length-unreadCount;
+    var handledPct=Math.round(handledN/all.length*100);
+    html+='<div style="display:flex;align-items:center;gap:12px;background:var(--teal-tint);border:1px solid #c5ddd8;border-radius:12px;padding:10px 16px;margin-bottom:14px;max-width:340px">'
+      +pctRing(handledPct,{size:52,thickness:7,color:'var(--teal)',track:'#fff'})
+      +'<div><div style="font-weight:700;font-size:12.5px">Χειρισμένα μηνύματα</div>'
+      +'<div style="font-size:10.5px;color:var(--text-muted)">'+handledN+' από '+all.length+' — απαντημένα ή αναγνωσμένα</div></div>'
+      +'</div>';
+  }
   html+='<input type="text" id="msg-search" class="client-search-inp" style="max-width:260px" placeholder="🔍 Αναζήτηση πελάτη..." value="'+esc(_msgSearch)+'" oninput="msgSetSearch(this.value)">';
   html+='<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">'
     +'<button type="button" class="hm-action-btn" style="'+(_msgFilter==='unread'?'':'background:#f0f7f7;color:var(--teal)')+'" onclick="renderMessages(\'unread\')">Αναπάντητα ('+unreadCount+')</button>'

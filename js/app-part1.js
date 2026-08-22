@@ -1,6 +1,42 @@
 // Global HTML-escape helper — sanitizes user input (client names, notes, etc.)
 // before it is injected into innerHTML. Prevents broken markup / XSS.
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// Κυκλικό δαχτυλίδι προόδου 0-100% (.pct-ring, css/styles.css) — μοιράζεται το ίδιο markup σε
+// κάθε σημείο του app που δείχνει ποσοστό. opts: size/thickness σε px, color/track = CSS color
+// string (π.χ. 'var(--teal)' ή αποτέλεσμα του pctStatusColor()), label:false για μικρά badge-size
+// rings χωρίς κείμενο στο κέντρο (δεν χωράει κάτω από ~32px), fontSize προαιρετικό override.
+function pctRing(pct,opts){
+  opts=opts||{};
+  var p=Math.max(0,Math.min(100,Math.round(pct||0)));
+  var size=opts.size||56;
+  var thick=opts.thickness||7;
+  var color=opts.color||'var(--teal)';
+  var track=opts.track||'var(--teal-tint)';
+  var fontSize=opts.fontSize||Math.max(9,Math.round(size*0.24));
+  var labelHtml=opts.label===false?'':'<span class="pct-ring-label" style="font-size:'+fontSize+'px">'+p+'%</span>';
+  return '<div class="pct-ring" style="--pr-size:'+size+'px;--pr-thick:'+thick+'px;--pr-p:'+p+'%;--pr-color:'+color+';--pr-track:'+track+'">'+labelHtml+'</div>';
+}
+// Χρώμα κατάστασης (καλά/προσοχή/κρίσιμο) για rings όπου το νόημα είναι "πόσο πρόσφατο/υγιές" αντί
+// για "πρόοδος προς στόχο" — π.χ. ημέρες από τελ. check-in. Για progress-προς-στόχο rings (goalPct
+// κ.λπ.) χρησιμοποίησε var(--teal) απευθείας, όχι αυτό — εκεί το χρώμα δεν είναι καλό/κακό.
+function pctStatusColor(pct){
+  if(pct>=66) return 'var(--good)';
+  if(pct>=33) return 'var(--warn)';
+  return 'var(--danger)';
+}
+// Ποσοστό προόδου προς τον στόχο βάρους — ίδιος ακριβώς υπολογισμός με το goalBarHtml στην
+// περίληψη ραντεβού (js/app-part2.js, γύρω από "Νέα κάρτα Στόχος βάρους"). Κοινό helper ώστε το
+// ring στην κάρτα πελάτη (Πελάτες) και στο client portal να μη διπλασιάζουν/αποκλίνουν τη λογική.
+// null όταν δεν υπάρχουν αρκετά δεδομένα (χωρίς goalWeight, χωρίς μέτρηση, ή η πρώτη μέτρηση ήταν
+// ήδη πρακτικά πάνω στον στόχο — οπότε "% προόδου" δεν έχει νόημα) — τότε απλά δεν εμφανίζεται ring.
+function clientGoalWeightPct(c){
+  if(!(c.goalWeight>0))return null;
+  var wl=c.weightLog||[];
+  if(!wl.length)return null;
+  var lastW=wl[wl.length-1],firstW=wl[0];
+  if(!lastW||!firstW||Math.abs(firstW.weight-c.goalWeight)<=0.05)return null;
+  return Math.max(0,Math.min(100,Math.round((firstW.weight-lastW.weight)/(firstW.weight-c.goalWeight)*100)));
+}
 // Ασφαλές string για μέσα σε onclick="fn('...')": πρώτα escape για το JS string
 // literal (\ και '), μετά escape για το ίδιο το HTML attribute (" < > &) —
 // χωρίς το δεύτερο βήμα, ένα " στο κείμενο του πελάτη σπάει έξω από το onclick="..."
@@ -3015,6 +3051,11 @@ function clientCardHtml(c){
   var groupTag=c.group?(' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>'):'';
   var isSel=!!_clientBulkSelected[c.id];
   var cardClick=_clientBulkMode?('toggleClientBulkSelect(\''+c.id+'\')'):('selectClient(\''+c.id+'\')');
+  // ✅ Ring στόχου βάρους — μόνο όταν υπάρχουν αρκετά δεδομένα (clientGoalWeightPct, app-part1.js).
+  // Κρύβεται εντελώς σε bulk mode: εκεί το checkbox χρειάζεται τον ίδιο χώρο στη γωνία της κάρτας.
+  var goalPct=_clientBulkMode?null:clientGoalWeightPct(c);
+  var goalRingHtml=goalPct==null?'':('<div style="flex-shrink:0;align-self:center" title="'+goalPct+'% προς τον στόχο βάρους ('+c.goalWeight+' kg)">'
+    +pctRing(goalPct,{size:38,thickness:5,color:'var(--teal)',track:'var(--teal-tint)',fontSize:10})+'</div>');
   return '<div class="client-card'+(_clientBulkMode&&isSel?' cc-selected':'')+'" onclick="'+cardClick+'">'
     +'<div class="cc-top">'
     +(_clientBulkMode
@@ -3024,6 +3065,7 @@ function clientCardHtml(c){
     +'<div class="cc-name" title="'+esc(c.name||'Νέος πελάτης')+'">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'')+'</div>'
     +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
     +'</div>'
+    +goalRingHtml
     +(_clientBulkMode?'':(
       '<div class="cc-actions">'
       +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
@@ -3128,6 +3170,22 @@ function renderSB(){
       ? (base.length+' πελ'+(base.length===1?'άτης':'άτες'))
       : ('Εμφανίζονται '+list.length+' από '+base.length))
     +'</div>';
+  // ✅ 🔗 Υγεία συνδέσμων της επιλεγμένης ομάδας — πάνω στο ήδη υπάρχον isStale() (βλ. Dietologist.html
+  // "🔗 ΥΓΕΙΑ ΣΥΝΔΕΣΜΟΥ PORTAL"). Μετράει μόνο πελάτες που ΕΧΟΥΝ ήδη σύνδεσμο (c.shareToken) — όσοι δεν
+  // έχουν στείλει ποτέ πλάνο δεν είναι ούτε "ενημερωμένοι" ούτε "ξεπερασμένοι", απλά άσχετοι με το μέτρο.
+  // Χρησιμοποιεί base (πριν το φιλτράρισμα αναζήτησης), ώστε το % να αντιπροσωπεύει ΟΛΗ την ομάδα.
+  if(_clientFilterGroup){
+    var _grpMembers=base.filter(function(c){return c.group===_clientFilterGroup;});
+    var _grpWithLink=_grpMembers.filter(function(c){return !!c.shareToken;});
+    if(_grpWithLink.length){
+      var _grpHealthyN=_grpWithLink.filter(function(c){return !(window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c));}).length;
+      var _grpPct=Math.round(_grpHealthyN/_grpWithLink.length*100);
+      html+='<div style="display:flex;align-items:center;gap:10px;background:var(--panel-bg);border:1px solid var(--border-light);border-radius:12px;padding:8px 14px;margin-bottom:12px">'
+        +pctRing(_grpPct,{size:34,thickness:5,color:pctStatusColor(_grpPct),track:'var(--border-light)',label:false})
+        +'<span style="font-size:11.5px;color:var(--text-muted)"><b style="color:var(--text-strong)">'+_grpPct+'%</b> ενημερωμένοι σύνδεσμοι στην ομάδα «'+esc(_clientFilterGroup)+'» ('+_grpHealthyN+'/'+_grpWithLink.length+')</span>'
+        +'</div>';
+    }
+  }
   // ✅ Γρήγορα chips (βλ. setClientQuickFilter πιο πάνω) — κρύβονται σε bulk mode, μαζί με το block
   // "Χρειάζονται προσοχή" που ήδη κρύβεται εκεί, ίδιος λόγος: οι κάρτες επιλέγουν αντί να ανοίγουν.
   if(!_clientBulkMode) html+=clientQuickChipsHtml(base);

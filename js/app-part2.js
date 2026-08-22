@@ -3191,14 +3191,18 @@ function buildApptAttentionDigestHtml(c){
     if(ckRows.length){
       var ckGap=ckDaysSinceLast(ckRows);
       if(ckGap>=2){
-        items.push('<div class="appt-digest-item">📵 '+ckGap+' μέρες χωρίς check-in στο portal'+reminderMetaHtml(c)
+        // ✅ Ring αντί για στατικό emoji — κανονικοποιημένη "φρεσκάδα" check-in (0 μέρες=100%,
+        // 21+ μέρες=0%), ίδιο χρωματικό κώδικα με τα υπόλοιπα status rings του app (pctStatusColor).
+        // Δεν είναι "% συμμόρφωσης" (δεν υπάρχει schedule data για κάτι τέτοιο) — καθαρά recency.
+        var ckPct=Math.max(0,100-Math.round(ckGap/21*100));
+        items.push('<div class="appt-digest-item">'+pctRing(ckPct,{size:22,thickness:3,color:pctStatusColor(ckPct),track:'var(--border-light)',label:false})+' '+ckGap+' μέρες χωρίς check-in στο portal'+reminderMetaHtml(c)
           +'<button type="button" class="go" onclick="sendFeedbackReminder(\''+c.id+'\')">📲 Υπενθύμιση</button></div>');
       }
     } else {
       // Idea 4: "ποτέ δεν έκανε check-in" είναι διαφορετικό μήνυμα από "είχε συνήθεια και σταμάτησε" —
       // το πρώτο σημαίνει ότι ο πελάτης δεν έχει καν δοκιμάσει το portal.
       if(!isNewClient){
-        items.push('<div class="appt-digest-item">🆕 Δεν έχει κάνει ποτέ check-in στο portal'+reminderMetaHtml(c)
+        items.push('<div class="appt-digest-item">'+pctRing(0,{size:22,thickness:3,color:pctStatusColor(0),track:'var(--border-light)',label:false})+' Δεν έχει κάνει ποτέ check-in στο portal'+reminderMetaHtml(c)
           +'<button type="button" class="go" onclick="sendFeedbackReminder(\''+c.id+'\')">📲 Στείλε το link</button></div>');
       } else { suppressedForNewClient=true; }
     }
