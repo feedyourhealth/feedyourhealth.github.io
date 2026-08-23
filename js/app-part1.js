@@ -1108,6 +1108,36 @@ function stopAutoSaveInterval(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════
+// PORTAL-MESSAGE POLL INTERVAL (every 2 minutes, while logged in)
+// ═══════════════════════════════════════════════════════════════════════════════════
+// 2026-08-23: πριν, τα portal caches (client_logs/plan_feedback/checkins/link-health — ό,τι
+// γράφει ο πελάτης από το δικό του link) ανανεώνονταν ΜΟΝΟ μία φορά στο login και όποτε ο
+// διαιτολόγος πατούσε χειροκίνητα "🔄 Ανανέωση" — ούτε καν το άνοιγμα του "💬 Μηνύματα" tab ή
+// του "📝 Ραντεβού" tab έκανε νέο fetch, απλά ξαναζωγράφιζε ό,τι ήδη υπήρχε στη μνήμη. Αν ο
+// πελάτης έγραφε κάτι ενώ ο διαιτολόγος είχε ήδη ανοιχτή την εφαρμογή, δεν εμφανιζόταν πουθενά
+// (badge/tab) μέχρι νέο login ή χειροκίνητη ανανέωση — αυτό ανέφερε ο χρήστης ως "μηνύματα που
+// δεν φαίνονται". Κάθε refresh*Cache() ήδη ξανασχεδιάζει μόνο του ό,τι χρειάζεται όταν τελειώσει
+// (renderSB/renderHome/#s3b, βλ. js/app-part2.js), οπότε αυτό το interval απλά τα ξανατρέχει
+// περιοδικά στο παρασκήνιο — καμία αλλαγή στο ίδιο το UI αν δεν βρεθεί κάτι νέο.
+var _portalPollInterval=null;
+function startPortalPollInterval(){
+  if(_portalPollInterval) clearInterval(_portalPollInterval);
+  _portalPollInterval=setInterval(function(){
+    if(!window.Cloud || !window.Cloud.enabled) return;
+    if(typeof window.Cloud.refreshClientLogsCache==='function') window.Cloud.refreshClientLogsCache();
+    if(typeof window.Cloud.refreshPlanFeedbackCache==='function') window.Cloud.refreshPlanFeedbackCache();
+    if(typeof window.Cloud.refreshCheckinsCache==='function') window.Cloud.refreshCheckinsCache();
+    if(typeof window.Cloud.refreshLinkHealthCache==='function') window.Cloud.refreshLinkHealthCache();
+  }, 120000);  // 2 λεπτά
+}
+function stopPortalPollInterval(){
+  if(_portalPollInterval){
+    clearInterval(_portalPollInterval);
+    _portalPollInterval=null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
 // EXPORT/IMPORT FUNCTIONALITY
 // ═══════════════════════════════════════════════════════════════════════════════════
 

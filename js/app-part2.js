@@ -16,6 +16,9 @@ function goToApp(){
     if(window.Cloud && typeof window.Cloud.refreshClientLogsCache==='function') window.Cloud.refreshClientLogsCache();
     if(window.Cloud && typeof window.Cloud.refreshPlanFeedbackCache==='function') window.Cloud.refreshPlanFeedbackCache();
     if(window.Cloud && typeof window.Cloud.refreshLinkHealthCache==='function') window.Cloud.refreshLinkHealthCache();
+    // 2026-08-23: κρατά τα παραπάνω 4 caches ζωντανά όσο ο διαιτολόγος έχει ανοιχτή την εφαρμογή —
+    // πριν ανανεώνονταν μόνο εδώ, στο login, βλ. js/app-part1.js.
+    if(typeof startPortalPollInterval==='function') startPortalPollInterval();
   } catch(e) {
     console.error('Error in goToApp():', e.message);
     showErrorToast('Σφάλμα: ' + e.message);
@@ -192,6 +195,7 @@ function updateUndoRedoUI(){
 
 function logout(){
   if(typeof stopAutoSaveInterval==='function') stopAutoSaveInterval(); // otherwise the 30s autosave keeps firing (and calling Cloud.save()) after logout
+  if(typeof stopPortalPollInterval==='function') stopPortalPollInterval(); // same reason, for the 2-min portal-message poll
   // ☁️ CLOUD: πραγματική αποσύνδεση (σβήνει το session, ξαναφορτώνει στο login)
   if(window.Cloud && window.Cloud.enabled){ window.Cloud.signOut(); return; }
   // Clear current selection
@@ -4356,7 +4360,12 @@ function swTab(n){
   if(n===6){ if(typeof renderRecipes==='function') renderRecipes(); return; }
   if(n===7){ if(typeof renderClients==='function') renderClients(); return; }
   if(n===8){ if(typeof renderTips==='function') renderTips(); return; }
-  if(n===9){ if(typeof renderMessages==='function') renderMessages(); return; }
+  // 2026-08-23: renderMessages() μόνη της ζωγραφίζει μόνο ό,τι ήδη υπάρχει στη μνήμη (cache από το
+  // login ή το τελευταίο χειροκίνητο "🔄 Ανανέωση") — το άνοιγμα του tab δεν έφερνε ποτέ νέα δεδομένα
+  // από μόνο του. Τώρα ζωγραφίζει αμέσως (instant, από cache) και μετά τρέχει msgRefresh στο
+  // παρασκήνιο, ώστε ένα μήνυμα που έστειλε ο πελάτης ενώ ο διαιτολόγος είχε ήδη ανοιχτή την
+  // εφαρμογή να εμφανιστεί χωρίς να χρειάζεται να το θυμηθεί να πατήσει το κουμπί.
+  if(n===9){ if(typeof renderMessages==='function') renderMessages(); if(typeof msgRefresh==='function') msgRefresh(null); return; }
   // ✅ Remembers the last client-detail tab shown, so the delayed fade-in renderMain()
   // wrapper (Dietologist.html) can re-apply it after its own rebuild — see that wrapper
   // for why this is needed (it defaults back to tab 1 otherwise).
@@ -4383,7 +4392,10 @@ function swTab(n){
   if(n===3 && s3){var _c=getC();if(_c)s3.innerHTML=buildTrackerHtml(_c);s3.style.display='block';}
   // TAB_APPOINTMENTS = "📝 Ραντεβού" tab (kept outside the 1-4 numbering since 5/6/7 are already
   // used by swTab for global nav — Διατροφές/Συνταγές/Πελάτες). Rebuilt fresh each open, same reason as s3.
-  if(n===TAB_APPOINTMENTS && s3b){var _c100=getC();if(_c100)s3b.innerHTML=buildAppointmentsHtml(_c100);s3b.style.display='block';}
+  // 2026-08-23: ίδιος λόγος με το n===9 tab παραπάνω — το άνοιγμα του Ραντεβού tab ζωγράφιζε μόνο
+  // ό,τι ήδη υπήρχε στη μνήμη· τώρα τρέχει και refreshClientPortalFeedback στο παρασκήνιο ώστε ένα
+  // πρόσφατο μήνυμα/feedback/check-in αυτού του πελάτη να μη μείνει κρυμμένο μέχρι χειροκίνητη ανανέωση.
+  if(n===TAB_APPOINTMENTS && s3b){var _c100=getC();if(_c100)s3b.innerHTML=buildAppointmentsHtml(_c100);s3b.style.display='block';if(typeof refreshClientPortalFeedback==='function')refreshClientPortalFeedback(null);}
   if(n===4 && s4)s4.style.display='block';
 
   // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1 (Page 1 only - Στοιχεία Πελάτη)
