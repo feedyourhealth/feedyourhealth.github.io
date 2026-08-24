@@ -205,7 +205,7 @@ setTimeout(function(){
   <button onclick="exportClientData()" style="width:100%;padding:10px 16px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#025857;font-weight:500;border-top:1px solid #f0f0f0;transition:background .2s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">
     💾 Εξαγωγή
   </button>
-  <button onclick="deleteClient(curId);hideContextMenu()" style="width:100%;padding:10px 16px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#c62828;font-weight:500;border-top:1px solid #f0f0f0;transition:background .2s;" onmouseover="this.style.background='#ffebee'" onmouseout="this.style.background='none'">
+  <button onclick="deleteClient(contextMenuClientId);hideContextMenu()" style="width:100%;padding:10px 16px;border:none;background:none;text-align:left;cursor:pointer;font-size:13px;color:#c62828;font-weight:500;border-top:1px solid #f0f0f0;transition:background .2s;" onmouseover="this.style.background='#ffebee'" onmouseout="this.style.background='none'">
     🗑️ Διαγραφή
   </button>
 </div>
@@ -1726,11 +1726,18 @@ window.renderMain = function() {
 };
 
 // ✅ CONTEXT MENU: Right-click actions
+// ✅ audit fix (2026-08-24, finding #1): ο selector έψαχνε '.ci', μια κλάση που δεν υπάρχει πουθενά
+// στο σημερινό markup της λίστας πελατών (renderSB()/clientCardHtml()/clientRowHtml() βγάζουν πλέον
+// '.client-card'/'.cr') — το μενού δεν άνοιγε ΠΟΤΕ. Επιπλέον, contextMenuClientId δηλωνόταν αλλά δεν
+// γραφόταν/διαβαζόταν πουθενά· τα κουμπιά του μενού (editClient/duplicateClient/exportClientData/
+// deleteClient) δούλευαν πάνω στο global curId, δηλαδή στον ΤΡΕΧΟΝΤΑ επιλεγμένο πελάτη — όχι σε αυτόν
+// που δεξί-κλικάρεις. Τώρα πιάνουμε το πραγματικό data-client-id της κάρτας/γραμμής.
 var contextMenuClientId = null;
 document.addEventListener('contextmenu', function(e){
-  var clientEl = e.target.closest('.ci');
+  var clientEl = e.target.closest('.client-card, .cr');
   if(clientEl){
     e.preventDefault();
+    contextMenuClientId = clientEl.getAttribute('data-client-id') || null;
     showContextMenu(e.clientX, e.clientY);
   }
 });
@@ -1751,17 +1758,35 @@ document.addEventListener('click', function(){
   hideContextMenu();
 });
 
+// ✅ audit fix (2026-08-24, finding #1): κοινή βοηθητική για εύρεση πελάτη by id — το context menu
+// πλέον δουλεύει πάνω σε ΣΥΓΚΕΚΡΙΜΕΝΟ πελάτη (contextMenuClientId), όχι στον τρέχοντα επιλεγμένο (curId).
+function getClientById(id){ return clients.filter(function(c){return c.id===id;})[0]; }
+
 function editClient(){
-  showSuccessToast('✏️ Σε ενημέρωση του πελάτη...');
   hideContextMenu();
+  var c = getClientById(contextMenuClientId);
+  if(!c) return;
+  // Πριν, αυτό το κουμπί δεν έκανε τίποτα ουσιαστικό (μόνο toast). Τώρα πραγματικά ανοίγει τον
+  // πελάτη στην καρτέλα "Στοιχεία πελάτη" (Βασικά Στοιχεία κ.λπ.) — selectClient() ήδη κάνει
+  // swTab(1) μόνη της, όπως θα περίμενε κανείς από "Επεξεργασία".
+  selectClient(c.id);
 }
 
 function duplicateClient(){
-  var c = getC();
+  var c = getClientById(contextMenuClientId);
   if(!c) return;
 
   var newClient = deepClone(c);
+  // ✅ audit fix (2026-08-24, finding #1): πριν, το αντίγραφο κρατούσε το ΙΔΙΟ id με τον αρχικό
+  // (το deepClone δεν αλλάζει id) — δύο εγγραφές με ίδιο id μπερδεύουν κάθε getC()/επιλογή by id.
+  // Χρειάζεται νέο, μοναδικό id, ίδιο format με το addClient().
+  newClient.id = 'c'+Date.now();
   newClient.name = c.name + ' (Αντιγραφή)';
+  // ✅ το αντίγραφο δεν πρέπει να μοιράζεται δημόσιο link (shareToken) με τον αρχικό πελάτη — αλλιώς
+  // ένα "Δημιουργία Πλάνου" πάνω στο αντίγραφο θα αντικαθιστούσε αθόρυβα το πλάνο που βλέπει ήδη ο
+  // πραγματικός πελάτης στο link του. window.Cloud.publishPlan() φτιάχνει καινούριο token μόνο του
+  // την επόμενη φορά που θα δημοσιευτεί (βλ. js/app-part2.js: "if(!c.shareToken) c.shareToken=...").
+  newClient.shareToken = null;
   clients.push(newClient);
   upd();
   showSuccessToast('📋 Πελάτης αντιγράφηκε!');
@@ -1770,7 +1795,7 @@ function duplicateClient(){
 }
 
 function exportClientData(){
-  var c = getC();
+  var c = getClientById(contextMenuClientId);
   if(!c) return;
 
   var data = JSON.stringify(c, null, 2);

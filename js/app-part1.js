@@ -3197,7 +3197,10 @@ function clientCardHtml(c){
   var goalPct=_clientBulkMode?null:clientGoalWeightPct(c);
   var goalRingHtml=goalPct==null?'':('<div style="flex-shrink:0;align-self:center" title="'+goalPct+'% προς τον στόχο βάρους ('+c.goalWeight+' kg)">'
     +pctRing(goalPct,{size:38,thickness:5,color:'var(--teal)',track:'var(--teal-tint)',fontSize:10})+'</div>');
-  return '<div class="client-card'+(_clientBulkMode&&isSel?' cc-selected':'')+'" onclick="'+cardClick+'">'
+  // ✅ audit fix (2026-08-24, finding #1): data-client-id ώστε το δεξί-κλικ context menu να ξέρει
+  // ΠΟΙΟΝ πελάτη πάτησες (βλ. contextmenu listener στο Dietologist.html), αντί να υποθέτει ότι
+  // εννοείς τον ήδη επιλεγμένο (curId) — τα δύο μπορεί να διαφέρουν.
+  return '<div class="client-card'+(_clientBulkMode&&isSel?' cc-selected':'')+'" data-client-id="'+esc(c.id)+'" onclick="'+cardClick+'">'
     +'<div class="cc-top">'
     +(_clientBulkMode
       ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')
@@ -3234,7 +3237,9 @@ function clientRowHtml(c){
     +(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')
     +(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')
     +(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'');
-  return '<tr class="cr'+(_clientBulkMode&&isSel?' cc-selected':'')+'" onclick="'+rowClick+'">'
+  // ✅ audit fix (2026-08-24, finding #1): ίδιο data-client-id με το clientCardHtml — για το
+  // δεξί-κλικ context menu στην προβολή "Λίστα".
+  return '<tr class="cr'+(_clientBulkMode&&isSel?' cc-selected':'')+'" data-client-id="'+esc(c.id)+'" onclick="'+rowClick+'">'
     +'<td class="cr-name-cell">'
     +(_clientBulkMode
       ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')

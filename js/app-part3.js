@@ -3933,6 +3933,29 @@ var TR_CAT_NAMES={
 };
 
 // ── 📲 ΔΗΜΟΣΙΕΥΣΗ ΠΛΑΝΟΥ ΣΤΟΝ ΠΕΛΑΤΗ ────────────────────────────────────────
+// ✅ audit fix (2026-08-24, finding #2): το μήνυμα WhatsApp/Email που στέλνει το link ήταν πάντα
+// στα ελληνικά, ανεξαρτήτως του "🌐 Γλώσσα πλάνου" (c.lang) που έχει οριστεί για τον πελάτη — ένας
+// en/ru/tr πελάτης έπαιρνε ελληνικό μήνυμα με σύνδεσμο προς πλάνο στη δική του γλώσσα. Ίδιο ύφος/
+// χαιρετισμός με το I18N object του plan.html (greeting: Γεια σου/Hi/Привет/Merhaba).
+var PUBLISH_MSG_DICTS={
+  el:{ msg:function(fname,url){return 'Γεια σου '+fname+'! Εδώ είναι το διατροφικό σου πλάνο: '+url;},
+       subj:'Το διατροφικό σου πλάνο — Feed Your Health',
+       body:function(fname,url){return 'Γεια σου '+fname+'!\n\nΕδώ είναι το προσωπικό σου διατροφικό πλάνο. Άνοιξέ το από το κινητό σου:\n\n'+url+'\n\nΘα βρεις το πλάνο διατροφής, τη λίστα για ψώνια, τα συμπληρώματα, την ενυδάτωση και την πρόοδό σου.\n\nΜε εκτίμηση,\nFeed Your Health';} },
+  en:{ msg:function(fname,url){return 'Hi '+fname+'! Here is your nutrition plan: '+url;},
+       subj:'Your nutrition plan — Feed Your Health',
+       body:function(fname,url){return 'Hi '+fname+'!\n\nHere is your personal nutrition plan. Open it from your phone:\n\n'+url+'\n\nYou will find your meal plan, shopping list, supplements, hydration and progress there.\n\nBest,\nFeed Your Health';} },
+  ru:{ msg:function(fname,url){return 'Привет, '+fname+'! Вот твой план питания: '+url;},
+       subj:'Твой план питания — Feed Your Health',
+       body:function(fname,url){return 'Привет, '+fname+'!\n\nВот твой персональный план питания. Открой его с телефона:\n\n'+url+'\n\nТам ты найдёшь план питания, список покупок, добавки, водный режим и прогресс.\n\nС уважением,\nFeed Your Health';} },
+  tr:{ msg:function(fname,url){return 'Merhaba '+fname+'! İşte beslenme planın: '+url;},
+       subj:'Beslenme planın — Feed Your Health',
+       body:function(fname,url){return 'Merhaba '+fname+'!\n\nİşte kişisel beslenme planın. Telefonundan aç:\n\n'+url+'\n\nBurada beslenme planını, alışveriş listeni, takviyelerini, su tüketimini ve ilerlemeni bulacaksın.\n\nSaygılarımla,\nFeed Your Health';} }
+};
+function publishHandoffMsg(c,url){
+  var d=PUBLISH_MSG_DICTS[c.lang]||PUBLISH_MSG_DICTS.el;
+  var fname=(c.name||'').split(' ')[0];
+  return {msg:d.msg(fname,url), subj:d.subj, ebody:d.body(fname,url)};
+}
 function openPublishModal(){
   var c=getC();
   if(!c){ showErrorToast('Διάλεξε πρώτα πελάτη.'); return; }
@@ -3964,14 +3987,16 @@ function openPublishModal(){
     var body=document.getElementById('publish-body');
     if(!body)return;
     var expTxt=new Date(res.expiresAt).toLocaleDateString('el-GR',{day:'numeric',month:'long',year:'numeric'});
-    var fname=(c.name||'').split(' ')[0];
-    var msg='Γεια σου '+fname+'! Εδώ είναι το διατροφικό σου πλάνο: '+url;
+    // ✅ audit fix (2026-08-24, finding #2): μήνυμα πλέον στη γλώσσα του πελάτη (c.lang) — βλ.
+    // PUBLISH_MSG_DICTS/publishHandoffMsg παραπάνω.
+    var hm=publishHandoffMsg(c,url);
+    var msg=hm.msg;
     // WhatsApp: αν υπάρχει τηλέφωνο, στείλε κατευθείαν σε αυτό
     var phone=normalizePhoneIntl(c.phone);
     var wa='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(msg);
     // Email: άνοιγμα του email προγράμματος με συμπληρωμένα στοιχεία
-    var subj='Το διατροφικό σου πλάνο — Feed Your Health';
-    var ebody='Γεια σου '+fname+'!\n\nΕδώ είναι το προσωπικό σου διατροφικό πλάνο. Άνοιξέ το από το κινητό σου:\n\n'+url+'\n\nΘα βρεις το πλάνο διατροφής, τη λίστα για ψώνια, τα συμπληρώματα, την ενυδάτωση και την πρόοδό σου.\n\nΜε εκτίμηση,\nFeed Your Health';
+    var subj=hm.subj;
+    var ebody=hm.ebody;
     var mailto='mailto:'+encodeURIComponent(c.email||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(ebody);
     body.style.textAlign='left';
     body.innerHTML='<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">✍️ Προσωπικό μήνυμα στον πελάτη <span style="color:#9fb5b0">(προαιρετικό — φαίνεται στην Αρχική του)</span></div>'
