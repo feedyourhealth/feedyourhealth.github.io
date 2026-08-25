@@ -587,6 +587,8 @@ function escRtf(s){
 /* ── Έντυπο Λιπομέτρησης PDF ─────────────────────────────────────────────── */
 function exportLipometriaPDF(){
   var c=getC();if(!c)return;
+  var isEn=(c.lang==='en'); // client-facing report — auto-translate when client's plan language is English, so they can read their own body-comp report
+  function T(el,en){return isEn?en:el;}
   function blank(label,w){return '<div class="field" style="width:'+(w||'auto')+'"><div class="flbl">'+label+'</div><div class="fval"></div></div>';}
   function filled(label,val,w,col){return '<div class="field" style="width:'+(w||'auto')+'"><div class="flbl">'+label+'</div><div class="fval" style="'+(col?'color:'+col+';font-weight:700':'')+'">'+esc(val)+'</div></div>';}
   function pct(v,min,max){return Math.max(0,Math.min(100,(v-min)/(max-min)*100));}
@@ -627,7 +629,7 @@ function exportLipometriaPDF(){
   }
   function sparkline(vals,color){
     var v=vals.filter(function(x){return x!=null;});
-    if(v.length<2)return '<div style="font-size:7.5pt;color:var(--text-muted);padding:16px 0;text-align:center">Ανεπαρκή δεδομένα</div>';
+    if(v.length<2)return '<div style="font-size:7.5pt;color:var(--text-muted);padding:16px 0;text-align:center">'+T('Ανεπαρκή δεδομένα','Insufficient data')+'</div>';
     var min=Math.min.apply(null,v),max=Math.max.apply(null,v),range=(max-min)||1,n=v.length;
     var pts=v.map(function(x,i){return (5+i/(n-1)*90).toFixed(1)+','+(5+(1-(x-min)/range)*40).toFixed(1);}).join(' ');
     return '<svg viewBox="0 0 100 50" width="100%" height="42"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2"/></svg>';
@@ -649,14 +651,14 @@ function exportLipometriaPDF(){
   var h=c.height||0;
   var bmi=(h>0&&weight)?+(weight/((h/100)*(h/100))).toFixed(1):null;
   var isMinor=(c.age!=null && c.age>0 && c.age<18); // adult WHO BMI cutoffs (18.5/25/30) don't clinically apply to minors — number only, no category
-  var bmiCat=(bmi&&!isMinor)?bmi<18.5?'Ελλιποβαρές':bmi<25?'Φυσιολογικό':bmi<30?'Υπέρβαρο':bmi<35?'Παχυσαρκία Ι':bmi<40?'Παχυσαρκία ΙΙ':'Παχυσαρκία ΙΙΙ':'—';
+  var bmiCat=(bmi&&!isMinor)?bmi<18.5?T('Ελλιποβαρές','Underweight'):bmi<25?T('Φυσιολογικό','Normal'):bmi<30?T('Υπέρβαρο','Overweight'):bmi<35?T('Παχυσαρκία Ι','Obesity I'):bmi<40?T('Παχυσαρκία ΙΙ','Obesity II'):T('Παχυσαρκία ΙΙΙ','Obesity III'):'—';
   var bmiCol=(bmi&&!isMinor)?bmi<18.5?'#1565C0':bmi<25?'#2e7d32':bmi<30?'#f57c00':'#c62828':'#555';
   var isFem=(c.sex||'M')==='F';
   var waist=entry&&entry.waist?entry.waist:null;
   var hip=entry&&entry.hip?entry.hip:null;
   var whr=waist&&hip?+(waist/hip).toFixed(2):null;
   var whtr=(waist&&h>0)?+(waist/h).toFixed(2):null;
-  var whtrCatLabel=whtr!=null?(whtr<0.5?'Φυσιολογικό':whtr<0.6?'Αυξημένος κίνδυνος':'Υψηλός κίνδυνος'):'—';
+  var whtrCatLabel=whtr!=null?(whtr<0.5?T('Φυσιολογικό','Normal'):whtr<0.6?T('Αυξημένος κίνδυνος','Increased risk'):T('Υψηλός κίνδυνος','High risk')):'—';
   var whtrCatCol=whtr!=null?(whtr<0.5?'#2e7d32':whtr<0.6?'#f57c00':'#c62828'):'#555';
   var bmr=(h>0&&weight&&c.age)?Math.round(10*weight+6.25*h-5*c.age+(isFem?-161:5)):null;
 
@@ -666,7 +668,7 @@ function exportLipometriaPDF(){
   var sfKeys=Object.keys(sfFields);
   var sfSum=sfKeys.length?Object.values(sfFields).reduce(function(s,v){return s+v;},0):null;
   var sfProtoLabel={jp4:'Jackson & Pollock 4-site (1985)',jp3:'Jackson & Pollock 3-site',jp7:'Jackson & Pollock 7-site',slaughter:'Slaughter (1988)'};
-  var sfNames={tricep:'Τρικέφαλος',subscapular:'Υποπλάτιο',abdomen:'Κοιλιά',suprailiac:'Υπερλαγόνιο',thigh:'Μηρός',chest:'Στήθος',midaxillary:'Μεσομάσχαλο',calf:'Γαστροκνήμιος'};
+  var sfNames=isEn?{tricep:'Triceps',subscapular:'Subscapular',abdomen:'Abdomen',suprailiac:'Suprailiac',thigh:'Thigh',chest:'Chest',midaxillary:'Midaxillary',calf:'Calf'}:{tricep:'Τρικέφαλος',subscapular:'Υποπλάτιο',abdomen:'Κοιλιά',suprailiac:'Υπερλαγόνιο',thigh:'Μηρός',chest:'Στήθος',midaxillary:'Μεσομάσχαλο',calf:'Γαστροκνήμιος'};
   var isJp4Layout=!sfProto||sfProto==='jp4';
   var prevSfSum=null;
   if(prevEntry&&prevEntry.sfFields){var pv=Object.values(prevEntry.sfFields);if(pv.length)prevSfSum=pv.reduce(function(s,v){return s+v;},0);}
@@ -674,11 +676,11 @@ function exportLipometriaPDF(){
 
   // ACSM %BF reference categories (used for both category lookup and the range bar)
   var bfRefs=isFem
-    ?[{lo:10,hi:13,lbl:'Απαραίτητο',col:'#1565C0'},{lo:14,hi:20,lbl:'Αθλητικό',col:'#2e7d32'},{lo:21,hi:24,lbl:'Φυσιολογικό',col:'#558b2f'},{lo:25,hi:31,lbl:'Αποδεκτό',col:'#f57c00'},{lo:32,hi:60,lbl:'Παχυσαρκία',col:'#c62828'}]
-    :[{lo:2,hi:5,lbl:'Απαραίτητο',col:'#1565C0'},{lo:6,hi:13,lbl:'Αθλητικό',col:'#2e7d32'},{lo:14,hi:17,lbl:'Φυσιολογικό',col:'#558b2f'},{lo:18,hi:24,lbl:'Αποδεκτό',col:'#f57c00'},{lo:25,hi:60,lbl:'Παχυσαρκία',col:'#c62828'}];
+    ?[{lo:10,hi:13,lbl:T('Απαραίτητο','Essential'),col:'#1565C0'},{lo:14,hi:20,lbl:T('Αθλητικό','Athletic'),col:'#2e7d32'},{lo:21,hi:24,lbl:T('Φυσιολογικό','Fitness'),col:'#558b2f'},{lo:25,hi:31,lbl:T('Αποδεκτό','Acceptable'),col:'#f57c00'},{lo:32,hi:60,lbl:T('Παχυσαρκία','Obesity'),col:'#c62828'}]
+    :[{lo:2,hi:5,lbl:T('Απαραίτητο','Essential'),col:'#1565C0'},{lo:6,hi:13,lbl:T('Αθλητικό','Athletic'),col:'#2e7d32'},{lo:14,hi:17,lbl:T('Φυσιολογικό','Fitness'),col:'#558b2f'},{lo:18,hi:24,lbl:T('Αποδεκτό','Acceptable'),col:'#f57c00'},{lo:25,hi:60,lbl:T('Παχυσαρκία','Obesity'),col:'#c62828'}];
   var bfCatLabel='—',bfCatCol='#555';
   if(bf){bfRefs.forEach(function(r){if(bf>=r.lo){bfCatLabel=r.lbl;bfCatCol=r.col;}});}
-  var bfGoal=bfRefs[2].hi; // upper bound of "Φυσιολογικό"
+  var bfGoal=bfRefs[2].hi; // upper bound of "Φυσιολογικό"/"Fitness"
 
   // Deltas vs previous tracker entry
   var wDelta=(prevEntry&&prevEntry.weight!=null&&weight!=null)?+(weight-prevEntry.weight).toFixed(1):null;
@@ -694,20 +696,20 @@ function exportLipometriaPDF(){
 
   // Auto-generated suggestion (no arbitrary score — grounded in ACSM category + trend)
   function buildSuggestion(){
-    if(!bf)return 'Συμπλήρωσε δερματοπτυχές σε τουλάχιστον μία μέτρηση για αυτόματη πρόταση.';
+    if(!bf)return T('Συμπλήρωσε δερματοπτυχές σε τουλάχιστον μία μέτρηση για αυτόματη πρόταση.','Add skinfold measurements to at least one entry for an automatic suggestion.');
     var parts=[];
     if(bfDelta!=null){
-      if(bfDelta<0)parts.push('Καλή πορεία — το % λίπους μειώθηκε κατά '+Math.abs(bfDelta).toFixed(1)+'% από την προηγούμενη μέτρηση.');
-      else if(bfDelta>0)parts.push('Το % λίπους αυξήθηκε κατά '+bfDelta.toFixed(1)+'% από την προηγούμενη μέτρηση — αξίζει επανεξέταση προσλαμβανόμενων θερμίδων.');
-      else parts.push('Το % λίπους παρέμεινε σταθερό από την προηγούμενη μέτρηση.');
+      if(bfDelta<0)parts.push(T('Καλή πορεία — το % λίπους μειώθηκε κατά '+Math.abs(bfDelta).toFixed(1)+'% από την προηγούμενη μέτρηση.','Good progress — body fat % decreased by '+Math.abs(bfDelta).toFixed(1)+'% since the previous measurement.'));
+      else if(bfDelta>0)parts.push(T('Το % λίπους αυξήθηκε κατά '+bfDelta.toFixed(1)+'% από την προηγούμενη μέτρηση — αξίζει επανεξέταση προσλαμβανόμενων θερμίδων.','Body fat % increased by '+bfDelta.toFixed(1)+'% since the previous measurement — worth reviewing calorie intake.'));
+      else parts.push(T('Το % λίπους παρέμεινε σταθερό από την προηγούμενη μέτρηση.','Body fat % stayed stable since the previous measurement.'));
     }
     if(bf>bfGoal){
       var fmGoalKg=+(weight*(bf-bfGoal)/100).toFixed(1);
-      parts.push('Στόχος: %BF εντός φυσιολογικού εύρους (~'+fmGoalKg+'kg λιπώδης μάζα ακόμα).');
+      parts.push(T('Στόχος: %BF εντός φυσιολογικού εύρους (~'+fmGoalKg+'kg λιπώδης μάζα ακόμα).','Goal: %BF within the normal range (~'+fmGoalKg+'kg fat mass to go).'));
     } else {
-      parts.push('Το %BF είναι ήδη εντός φυσιολογικού εύρους — στόχος διατήρηση.');
+      parts.push(T('Το %BF είναι ήδη εντός φυσιολογικού εύρους — στόχος διατήρηση.','%BF is already within the normal range — the goal is maintenance.'));
     }
-    parts.push('Διατήρησε πρωτεϊνική πρόσληψη ~1.6g/kg σωματικού βάρους για προστασία της άλιπης μάζας.');
+    parts.push(T('Διατήρησε πρωτεϊνική πρόσληψη ~1.6g/kg σωματικού βάρους για προστασία της άλιπης μάζας.','Maintain protein intake at ~1.6g/kg body weight to protect lean mass.'));
     return parts.join(' ');
   }
 
@@ -718,10 +720,10 @@ function exportLipometriaPDF(){
   // Body outline (shared path for the skinfold-site diagram)
   var BODY_PATH='M 129.9,45.4 Q 135,43 140.1,45.4 L 153.9,51.6 Q 159,54 160.1,61.6 L 163.8,79.4 Q 165,86 164.1,92.8 L 161.8,109.2 Q 161,116 160.1,117.6 L 157.8,121.4 Q 157,123 155.4,121.8 L 151.6,118.2 Q 150,117 149.8,110.8 L 149.2,93.2 Q 149,86 148.3,80.6 L 146.3,65.4 Q 145.6,60 144.4,71.7 L 141.2,98.3 Q 140,109 141.8,112.6 L 146.5,121.4 Q 148.5,125 148,134 L 146.8,157 Q 146.3,166 145.3,172.4 L 142.9,189 Q 142,195.5 141.5,202.2 L 140.3,219.6 Q 140,226 141.4,227.4 L 145,231 Q 146.5,232.4 144.3,231.3 L 138.9,228.5 Q 136.7,227.4 136,220.1 L 134.2,202 Q 133.7,195 133.4,180.6 L 132.8,144.4 Q 132.6,130 133,129.1 L 134.2,126.7 Q 134.7,125.8 135.2,126.7 L 136.4,129.1 Q 136.8,130 136.6,144.4 L 136,180.6 Q 135.7,195 135,202 L 133.2,220.1 Q 132.5,227.4 130.2,228.5 L 124.8,231.3 Q 122.6,232.4 124.1,231 L 127.7,227.4 Q 129.1,226 128.8,219.6 L 127.6,202.2 Q 127.1,195.5 126.2,189 L 123.8,172.4 Q 122.8,166 122.3,157 L 121.1,134 Q 120.6,125 122.6,121.4 L 127.3,112.6 Q 129.1,109 127.9,98.3 L 124.7,71.7 Q 123.5,60 122.8,65.4 L 120.8,80.6 Q 120.1,86 119.9,93.2 L 119.3,110.8 Q 119.1,117 117.5,118.2 L 113.7,121.8 Q 112.1,123 111.3,121.4 L 109,117.6 Q 108.1,116 107.3,109.2 L 105,92.8 Q 104.1,86 105.3,79.4 L 109,61.6 Q 110.1,54 115.2,51.6 L 129.9,45.4 Z';
   var siteMeta={
-    tricep:{x:150,y:90,lx:215,ly:70,anchor:'start',label:'Τρικέφαλος'},
-    suprailiac:{x:120,y:87,lx:30,ly:65,anchor:'start',label:'Υπερλαγόνιο'},
-    abdomen:{x:137,y:135,lx:215,ly:150,anchor:'start',label:'Κοιλιά'},
-    thigh:{x:127,y:165,lx:30,ly:180,anchor:'start',label:'Μηρός'}
+    tricep:{x:150,y:90,lx:215,ly:70,anchor:'start',label:T('Τρικέφαλος','Triceps')},
+    suprailiac:{x:120,y:87,lx:30,ly:65,anchor:'start',label:T('Υπερλαγόνιο','Suprailiac')},
+    abdomen:{x:137,y:135,lx:215,ly:150,anchor:'start',label:T('Κοιλιά','Abdomen')},
+    thigh:{x:127,y:165,lx:30,ly:180,anchor:'start',label:T('Μηρός','Thigh')}
   };
   function skinfoldDiagram(){
     var svg='<svg viewBox="0 0 260 300" width="230" height="265">'
@@ -738,7 +740,7 @@ function exportLipometriaPDF(){
     return svg;
   }
 
-  var html='<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8"><title>Έντυπο Λιπομέτρησης</title><style>'
+  var html='<!DOCTYPE html><html lang="'+(isEn?'en':'el')+'"><head><meta charset="UTF-8"><title>'+T('Έντυπο Λιπομέτρησης','Body Composition Report')+'</title><style>'
     +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:8.5pt;color:#111;background:var(--card-bg);padding:8mm 10mm}'
     +'.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #025857;padding-bottom:6px;margin-bottom:12px}'
     +'.brand{display:flex;align-items:center;gap:8px}.brand img{width:38px;height:38px;border-radius:6px}'
@@ -757,104 +759,104 @@ function exportLipometriaPDF(){
     +'@media print{.no-print{display:none}body{color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}*{color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
     +'</style></head><body>'
     +'<div class="no-print" style="margin-bottom:8px;display:flex;gap:8px;align-items:center">'
-    +'<button onclick="window.print()" style="padding:6px 18px;background:#025857;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨️ Εκτύπωση / PDF</button>'
-    +'<span style="font-size:11px;color:#666">Portrait · Χωρίς κεφαλίδες/υποσέλιδα</span></div>'
+    +'<button onclick="window.print()" style="padding:6px 18px;background:#025857;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨️ '+T('Εκτύπωση / PDF','Print / PDF')+'</button>'
+    +'<span style="font-size:11px;color:#666">'+T('Portrait · Χωρίς κεφαλίδες/υποσέλιδα','Portrait · No headers/footers')+'</span></div>'
     // Header
     +'<div class="hdr">'
-    +'<div class="brand">'+(logoSrc?'<img src="'+logoSrc+'" alt="FYH">':'')+'<div><div class="brand-name">ΑΝΑΛΥΣΗ ΣΩΜΑΤΙΚΗΣ ΣΥΝΘΕΣΗΣ</div><div class="brand-sub">'+esc(c.name||'')+' · '+(isFem?'Γυναίκα':'Άνδρας')+(c.age?' · '+c.age+' ετών':'')+(h?' · '+h+' cm':'')+'</div></div></div>'
-    +'<div class="doc-date">Ημερομηνία μέτρησης'+(prevEntry?' · προηγούμενη':'')+'<br><b style="color:#3d4d49;font-size:9pt">'+esc(entryDate)+'</b>'+(prevEntry?' <span style="color:#b3bab8">(vs '+esc(prevEntry.date)+')</span>':'')+'</div>'
+    +'<div class="brand">'+(logoSrc?'<img src="'+logoSrc+'" alt="FYH">':'')+'<div><div class="brand-name">'+T('ΑΝΑΛΥΣΗ ΣΩΜΑΤΙΚΗΣ ΣΥΝΘΕΣΗΣ','BODY COMPOSITION ANALYSIS')+'</div><div class="brand-sub">'+esc(c.name||'')+' · '+T(isFem?'Γυναίκα':'Άνδρας',isFem?'Female':'Male')+(c.age?' · '+c.age+T(' ετών',' years old'):'')+(h?' · '+h+' cm':'')+'</div></div></div>'
+    +'<div class="doc-date">'+T('Ημερομηνία μέτρησης','Measurement date')+(prevEntry?T(' · προηγούμενη',' · previous'):'')+'<br><b style="color:#3d4d49;font-size:9pt">'+esc(entryDate)+'</b>'+(prevEntry?' <span style="color:#b3bab8">(vs '+esc(prevEntry.date)+')</span>':'')+'</div>'
     +'</div>'
 
     // Donut + Overall analysis
     +'<div class="grid2">'
     +'<div class="card" style="text-align:center">'
-    +'<div class="card-lbl">Σύσταση βάρους (kg)</div>'
+    +'<div class="card-lbl">'+T('Σύσταση βάρους (kg)','Body composition (kg)')+'</div>'
     +(weight&&lbm&&fm?(
       '<svg viewBox="0 0 140 140" width="120" height="120" style="margin:0 auto;display:block">'
       +'<circle cx="70" cy="70" r="52" fill="none" stroke="#eef4f3" stroke-width="16"/>'
       +'<circle cx="70" cy="70" r="52" fill="none" stroke="#1565C0" stroke-width="16" stroke-dasharray="'+(326.7*lbm/weight).toFixed(1)+' 326.7" transform="rotate(-90 70 70)"/>'
       +'<circle cx="70" cy="70" r="52" fill="none" stroke="#e65100" stroke-width="16" stroke-dasharray="'+(326.7*fm/weight).toFixed(1)+' 326.7" stroke-dashoffset="-'+(326.7*lbm/weight).toFixed(1)+'" transform="rotate(-90 70 70)"/>'
       +'<text x="70" y="63" text-anchor="middle" font-size="18" font-weight="700" fill="#3d4d49">'+weight+'</text>'
-      +'<text x="70" y="77" text-anchor="middle" font-size="7" fill="#8a9490">kg ΣΥΝΟΛΟ</text>'
+      +'<text x="70" y="77" text-anchor="middle" font-size="7" fill="#8a9490">'+T('kg ΣΥΝΟΛΟ','kg TOTAL')+'</text>'
       +(wDelta!=null?'<text x="70" y="90" text-anchor="middle" font-size="7.5" font-weight="700" fill="'+(wDelta<0?'#2e7d32':wDelta>0?'#c62828':'#8a9490')+'">'+(wDelta<0?'▼':wDelta>0?'▲':'—')+Math.abs(wDelta).toFixed(1)+'kg</text>':'')
       +'</svg>'
       +'<div style="display:flex;justify-content:center;gap:12px;margin-top:4px;font-size:8pt">'
-      +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1565C0;margin-right:3px"></span>Άλιπη '+lbm+'kg</span>'
-      +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e65100;margin-right:3px"></span>Λίπος '+fm+'kg</span>'
+      +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1565C0;margin-right:3px"></span>'+T('Άλιπη ','Lean ')+lbm+'kg</span>'
+      +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#e65100;margin-right:3px"></span>'+T('Λίπος ','Fat ')+fm+'kg</span>'
       +'</div>'
-    ):'<div style="padding:40px 0;color:var(--text-muted);font-size:8pt">Συμπλήρωσε βάρος και δερματοπτυχές</div>')
+    ):'<div style="padding:40px 0;color:var(--text-muted);font-size:8pt">'+T('Συμπλήρωσε βάρος και δερματοπτυχές','Enter weight and skinfolds')+'</div>')
     +'</div>'
 
     +'<div class="card">'
-    +'<div class="card-lbl">Συνολική ανάλυση <span style="font-weight:400;color:#b3bab8;text-transform:none">· ◆ στόχος</span></div>'
-    +rangeBar('ΔΜΣ',bmi?String(bmi):'—',bmiCol,(bmi&&!isMinor)?bmiCat:null,deltaSpan(bmiDelta,1,'','down'),isMinor?null:[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmi,24.9)
-    +rangeBar('% Λίπους',bf?bf+'%':'—',bfCatCol,bf?bfCatLabel:null,deltaSpan(bfDelta,1,'','down'),[{v:isFem?5:0,col:bfRefs[0].col},{v:bfRefs[1].lo,col:bfRefs[1].col},{v:bfRefs[2].lo,col:bfRefs[2].col},{v:bfRefs[3].lo,col:bfRefs[3].col},{v:bfRefs[4].lo,col:bfRefs[4].col}],isFem?45:35,bf,bfGoal)
+    +'<div class="card-lbl">'+T('Συνολική ανάλυση','Overall analysis')+' <span style="font-weight:400;color:#b3bab8;text-transform:none">· ◆ '+T('στόχος','goal')+'</span></div>'
+    +rangeBar(T('ΔΜΣ','BMI'),bmi?String(bmi):'—',bmiCol,(bmi&&!isMinor)?bmiCat:null,deltaSpan(bmiDelta,1,'','down'),isMinor?null:[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmi,24.9)
+    +rangeBar(T('% Λίπους','% Body fat'),bf?bf+'%':'—',bfCatCol,bf?bfCatLabel:null,deltaSpan(bfDelta,1,'','down'),[{v:isFem?5:0,col:bfRefs[0].col},{v:bfRefs[1].lo,col:bfRefs[1].col},{v:bfRefs[2].lo,col:bfRefs[2].col},{v:bfRefs[3].lo,col:bfRefs[3].col},{v:bfRefs[4].lo,col:bfRefs[4].col}],isFem?45:35,bf,bfGoal)
     +(whtr!=null?rangeBar('WHtR',String(whtr),whtrCatCol,whtrCatLabel,deltaSpan(whtrDelta,2,'','down'),[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtr,0.5):'')
     +'</div>'
     +'</div>'
 
     // Suggestion
     +'<div class="card" style="border-color:#f0dcb8;background:#fffaf0">'
-    +'<div class="card-lbl" style="color:#8a5a00">Πρόταση</div>'
+    +'<div class="card-lbl" style="color:#8a5a00">'+T('Πρόταση','Suggestion')+'</div>'
     +'<div style="font-size:8.5pt;color:#3d4d49;line-height:1.5">'+esc(buildSuggestion())+'</div>'
     +'</div>'
 
     // Skinfold sites
     +'<div class="card">'
-    +'<div class="card-lbl">Σημεία δερματοπτυχών — '+esc(isJp4Layout?sfProtoLabel.jp4:(sfProtoLabel[sfProto]||sfProto))+'</div>'
+    +'<div class="card-lbl">'+T('Σημεία δερματοπτυχών','Skinfold sites')+' — '+esc(isJp4Layout?sfProtoLabel.jp4:(sfProtoLabel[sfProto]||sfProto))+'</div>'
     +(isJp4Layout?
       '<div style="display:flex;justify-content:center">'+skinfoldDiagram()+'</div>'
-      +'<div style="text-align:center;font-size:7.5pt;color:#8a9490;margin-top:2px">Σύνολο δερματοπτυχών: '+(sfSum!=null?Math.round(sfSum)+' mm':'—')+(sfSumDelta!=null?deltaSpan(sfSumDelta,0,'mm','down'):'')+'</div>'
+      +'<div style="text-align:center;font-size:7.5pt;color:#8a9490;margin-top:2px">'+T('Σύνολο δερματοπτυχών','Skinfold sum')+': '+(sfSum!=null?Math.round(sfSum)+' mm':'—')+(sfSumDelta!=null?deltaSpan(sfSumDelta,0,'mm','down'):'')+'</div>'
     :
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 16px">'
       +sfKeys.map(function(k,i){return '<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:2px 0"><span style="font-size:7.5pt;color:#444">'+(i+1)+'. '+(sfNames[k]||k)+'</span><span style="font-size:8.5pt;font-weight:700;color:#025857">'+sfFields[k]+' mm</span></div>';}).join('')
-      +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:2px 0"><span style="font-size:7.5pt;font-weight:700">Σύνολο</span><span style="font-size:8.5pt;font-weight:700">'+(sfSum!=null?Math.round(sfSum)+' mm':'—')+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:2px 0"><span style="font-size:7.5pt;font-weight:700">'+T('Σύνολο','Total')+'</span><span style="font-size:8.5pt;font-weight:700">'+(sfSum!=null?Math.round(sfSum)+' mm':'—')+'</span></div>'
       +'</div>'
     )
     +'</div>'
 
     // History
     +'<div class="card">'
-    +'<div class="card-lbl">Ιστορικό</div>'
+    +'<div class="card-lbl">'+T('Ιστορικό','History')+'</div>'
     +(sorted&&sorted.length>1?(function(){
       var hist=sorted.slice(-8);
       var hw=hist.map(function(e){return e.weight;});
       var hb=hist.map(function(e){return e.bf>0?e.bf:null;});
       var hl=hist.map(function(e){return e.bf>0?+(e.weight*(1-e.bf/100)).toFixed(1):null;});
       return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
-        +'<div style="text-align:center">'+sparkline(hw,'#1565C0')+'<div style="font-size:7pt;color:#8a9490">Βάρος</div><div style="font-size:9pt;font-weight:700;color:#1565C0">'+(weight||'—')+' kg'+deltaSpan(wDelta,1,'','down')+'</div></div>'
-        +'<div style="text-align:center">'+sparkline(hb,'#c62828')+'<div style="font-size:7pt;color:#8a9490">% Λίπους</div><div style="font-size:9pt;font-weight:700;color:#c62828">'+(bf?bf+'%':'—')+deltaSpan(bfDelta,1,'','down')+'</div></div>'
-        +'<div style="text-align:center">'+sparkline(hl,'#2e7d32')+'<div style="font-size:7pt;color:#8a9490">Άλιπη μάζα</div><div style="font-size:9pt;font-weight:700;color:#2e7d32">'+(lbm||'—')+' kg'+deltaSpan(lbmDelta,1,'','up')+'</div></div>'
+        +'<div style="text-align:center">'+sparkline(hw,'#1565C0')+'<div style="font-size:7pt;color:#8a9490">'+T('Βάρος','Weight')+'</div><div style="font-size:9pt;font-weight:700;color:#1565C0">'+(weight||'—')+' kg'+deltaSpan(wDelta,1,'','down')+'</div></div>'
+        +'<div style="text-align:center">'+sparkline(hb,'#c62828')+'<div style="font-size:7pt;color:#8a9490">'+T('% Λίπους','% Body fat')+'</div><div style="font-size:9pt;font-weight:700;color:#c62828">'+(bf?bf+'%':'—')+deltaSpan(bfDelta,1,'','down')+'</div></div>'
+        +'<div style="text-align:center">'+sparkline(hl,'#2e7d32')+'<div style="font-size:7pt;color:#8a9490">'+T('Άλιπη μάζα','Lean mass')+'</div><div style="font-size:9pt;font-weight:700;color:#2e7d32">'+(lbm||'—')+' kg'+deltaSpan(lbmDelta,1,'','up')+'</div></div>'
         +'</div>';
-    })():'<div style="font-size:8pt;color:var(--text-muted);text-align:center;padding:10px 0">Χρειάζονται τουλάχιστον 2 καταχωρήσεις tracker</div>')
+    })():'<div style="font-size:8pt;color:var(--text-muted);text-align:center;padding:10px 0">'+T('Χρειάζονται τουλάχιστον 2 καταχωρήσεις tracker','At least 2 tracker entries needed')+'</div>')
     +'</div>'
 
     // Other indicators + comments
     +'<div class="grid2">'
     +'<div class="card">'
-    +'<div class="card-lbl">Λοιποί δείκτες</div>'
+    +'<div class="card-lbl">'+T('Λοιποί δείκτες','Other indicators')+'</div>'
     +'<table style="width:100%;font-size:8pt;border-collapse:collapse">'
-    +(waist?'<tr><td style="padding:3px 0;color:#5b6b67">Μέση</td><td style="text-align:right;font-weight:700">'+waist+' cm'+deltaSpan(waistDelta,1,'','down')+'</td></tr>':'')
-    +(hip?'<tr><td style="padding:3px 0;color:#5b6b67">Γοφοί</td><td style="text-align:right;font-weight:700">'+hip+' cm</td></tr>':'')
+    +(waist?'<tr><td style="padding:3px 0;color:#5b6b67">'+T('Μέση','Waist')+'</td><td style="text-align:right;font-weight:700">'+waist+' cm'+deltaSpan(waistDelta,1,'','down')+'</td></tr>':'')
+    +(hip?'<tr><td style="padding:3px 0;color:#5b6b67">'+T('Γοφοί','Hips')+'</td><td style="text-align:right;font-weight:700">'+hip+' cm</td></tr>':'')
     +(whr!=null?'<tr><td style="padding:3px 0;color:#5b6b67">WHR</td><td style="text-align:right;font-weight:700">'+whr+'</td></tr>':'')
-    +'<tr><td style="padding:3px 0;color:#5b6b67">Βασικός μεταβολισμός (BMR)*</td><td style="text-align:right;font-weight:700">'+(bmr?bmr+' kcal':'—')+'</td></tr>'
+    +'<tr><td style="padding:3px 0;color:#5b6b67">'+T('Βασικός μεταβολισμός (BMR)*','Basal metabolic rate (BMR)*')+'</td><td style="text-align:right;font-weight:700">'+(bmr?bmr+' kcal':'—')+'</td></tr>'
     +'</table>'
-    +'<div style="font-size:6.5pt;color:#b3bab8;margin-top:5px">*εκτίμηση Mifflin-St Jeor, όχι μέτρηση BIA</div>'
+    +'<div style="font-size:6.5pt;color:#b3bab8;margin-top:5px">'+T('*εκτίμηση Mifflin-St Jeor, όχι μέτρηση BIA','*Mifflin-St Jeor estimate, not a BIA measurement')+'</div>'
     +'</div>'
     +'<div class="card">'
-    +'<div class="card-lbl">Σχόλια</div>'
+    +'<div class="card-lbl">'+T('Σχόλια','Comments')+'</div>'
     +'<div class="notes-line"></div><div class="notes-line"></div><div class="notes-line"></div>'
     +'</div>'
     +'</div>'
 
     // Footer
     +'<div class="footer">'
-    +'<div class="footer-row"><span>Feed Your Health &mdash; Ανάλυση Σωματικής Σύνθεσης &nbsp;|&nbsp; ACSM Reference Ranges</span><span>Επόμενο ραντεβού: ________________</span></div>'
-    +'<div style="margin-top:2px;color:#b3bab8">Οι τάσεις (▲▼) συγκρίνουν με την προηγούμενη καταχώρηση tracker. Χωρίς ζυγαριά βιοηλεκτρικής εμπέδησης (BIA) — δεν εμφανίζονται νερό/πρωτεΐνη/οστά/σπλαχνικό λίπος.</div>'
+    +'<div class="footer-row"><span>Feed Your Health &mdash; '+T('Ανάλυση Σωματικής Σύνθεσης','Body Composition Analysis')+' &nbsp;|&nbsp; ACSM Reference Ranges</span><span>'+T('Επόμενο ραντεβού','Next appointment')+': ________________</span></div>'
+    +'<div style="margin-top:2px;color:#b3bab8">'+T('Οι τάσεις (▲▼) συγκρίνουν με την προηγούμενη καταχώρηση tracker. Χωρίς ζυγαριά βιοηλεκτρικής εμπέδησης (BIA) — δεν εμφανίζονται νερό/πρωτεΐνη/οστά/σπλαχνικό λίπος.','Trends (▲▼) compare against the previous tracker entry. No bioelectrical impedance (BIA) scale — water/protein/bone/visceral fat are not shown.')+'</div>'
     +'</div></body></html>';
 
   var w=window.open('','_blank');
-  if(!w){showErrorToast('Επέτρεψε τα pop-ups για να ανοίξει το PDF.');return;}
+  if(!w){showErrorToast(T('Επέτρεψε τα pop-ups για να ανοίξει το PDF.','Allow pop-ups to open the PDF.'));return;}
   w.document.write(html);w.document.close();
   setTimeout(function(){w.print();},600);
 }
@@ -862,7 +864,9 @@ function exportLipometriaPDF(){
 /* ── Body Composition PDF ─────────────────────────────────────────────────── */
 function exportBodyCompPDF(){
   var c=getC();if(!c)return;
-  if(!c.weightLog||!c.weightLog.length){showErrorToast('Δεν υπάρχουν εγγραφές tracker.');return;}
+  var isEn=(c.lang==='en'); // client-facing report — auto-translate when client's plan language is English, so they can read their own history PDF
+  function T(el,en){return isEn?en:el;}
+  if(!c.weightLog||!c.weightLog.length){showErrorToast(T('Δεν υπάρχουν εγγραφές tracker.','No tracker entries yet.'));return;}
   var sorted=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
   var latest=sorted[sorted.length-1];
   var latestBF=latest.bf>0?latest.bf:null;
@@ -874,8 +878,8 @@ function exportBodyCompPDF(){
 
   // ACSM Body Fat Reference Ranges by sex
   var bfRefs=isFem
-    ?[{lbl:'Απαραίτητο',lo:10,hi:13,col:'#1565C0'},{lbl:'Αθλητικό',lo:14,hi:20,col:'#2e7d32'},{lbl:'Φυσιολογικό',lo:21,hi:24,col:'#558b2f'},{lbl:'Αποδεκτό',lo:25,hi:31,col:'#f57c00'},{lbl:'Παχυσαρκία',lo:32,hi:60,col:'#c62828'}]
-    :[{lbl:'Απαραίτητο',lo:2,hi:5,col:'#1565C0'},{lbl:'Αθλητικό',lo:6,hi:13,col:'#2e7d32'},{lbl:'Φυσιολογικό',lo:14,hi:17,col:'#558b2f'},{lbl:'Αποδεκτό',lo:18,hi:24,col:'#f57c00'},{lbl:'Παχυσαρκία',lo:25,hi:60,col:'#c62828'}];
+    ?[{lbl:T('Απαραίτητο','Essential'),lo:10,hi:13,col:'#1565C0'},{lbl:T('Αθλητικό','Athletic'),lo:14,hi:20,col:'#2e7d32'},{lbl:T('Φυσιολογικό','Fitness'),lo:21,hi:24,col:'#558b2f'},{lbl:T('Αποδεκτό','Acceptable'),lo:25,hi:31,col:'#f57c00'},{lbl:T('Παχυσαρκία','Obesity'),lo:32,hi:60,col:'#c62828'}]
+    :[{lbl:T('Απαραίτητο','Essential'),lo:2,hi:5,col:'#1565C0'},{lbl:T('Αθλητικό','Athletic'),lo:6,hi:13,col:'#2e7d32'},{lbl:T('Φυσιολογικό','Fitness'),lo:14,hi:17,col:'#558b2f'},{lbl:T('Αποδεκτό','Acceptable'),lo:18,hi:24,col:'#f57c00'},{lbl:T('Παχυσαρκία','Obesity'),lo:25,hi:60,col:'#c62828'}];
   // Find current category
   var bfCatLabel='—',bfCatCol='#555';
   if(latestBF){
@@ -937,7 +941,7 @@ function exportBodyCompPDF(){
 
   // ── History table ────────────────────────────────────────────────────────
   var protoLabel={jp4:'JP 4-site',jp3:'JP 3-site',jp7:'JP 7-site',slaughter:'Slaughter'};
-  var sfFieldLabels={chest:'Στήθος',abdomen:'Κοιλιά',thigh:'Μηρός',tricep:'Τρικέφαλος',suprailiac:'Υπερλαγόνιο',midaxillary:'Μεσομάσχαλο',subscapular:'Υποπλάτιο',calf:'Γαστροκν.'};
+  var sfFieldLabels=isEn?{chest:'Chest',abdomen:'Abdomen',thigh:'Thigh',tricep:'Triceps',suprailiac:'Suprailiac',midaxillary:'Midaxillary',subscapular:'Subscapular',calf:'Calf'}:{chest:'Στήθος',abdomen:'Κοιλιά',thigh:'Μηρός',tricep:'Τρικέφαλος',suprailiac:'Υπερλαγόνιο',midaxillary:'Μεσομάσχαλο',subscapular:'Υποπλάτιο',calf:'Γαστροκν.'};
   var tblRows='';
   sorted.slice().reverse().forEach(function(e,ri){
     var lbm=e.bf>0?+(e.weight*(1-e.bf/100)).toFixed(1):'—';
@@ -979,8 +983,8 @@ function exportBodyCompPDF(){
   try{var lc=document.createElement('canvas');lc.width=90;lc.height=90;var lx=lc.getContext('2d');lx.fillStyle='#e5e5e5';lx.fillRect(0,0,90,90);lx.fillStyle='#025857';lx.font='bold 40px Georgia,serif';lx.textAlign='center';lx.textBaseline='middle';lx.fillText('fyh',45,45);logoSrc=lc.toDataURL('image/png');}catch(e){}
 
   // ── Assemble HTML ──────────────────────────────────────────────────────────
-  var html='<!DOCTYPE html><html lang="el"><head><meta charset="UTF-8">'
-    +'<title>Σωματική Σύνθεση — '+esc(c.name||'Πελάτης')+'</title>'
+  var html='<!DOCTYPE html><html lang="'+(isEn?'en':'el')+'"><head><meta charset="UTF-8">'
+    +'<title>'+T('Σωματική Σύνθεση','Body Composition')+' — '+esc(c.name||T('Πελάτης','Client'))+'</title>'
     +'<style>'
     +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:8pt;color:var(--text-strong);padding:10mm 12mm;background:var(--card-bg)}'
     +'.hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:2.5px solid #025857;padding-bottom:7px;margin-bottom:12px}'
@@ -1005,46 +1009,46 @@ function exportBodyCompPDF(){
     +'@media print{.no-print{display:none}body{color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}*{color-adjust:exact;-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
     +'</style></head><body>'
     +'<div class="no-print" style="margin-bottom:10px">'
-    +'<button onclick="window.print()" style="padding:6px 18px;background:#025857;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨️ Εκτύπωση / PDF</button>'
-    +'<span style="font-size:11px;color:#666;margin-left:10px">Επίλεξε <b>Portrait</b> και <b>απενεργοποίησε</b> κεφαλίδες/υποσέλιδα</span>'
+    +'<button onclick="window.print()" style="padding:6px 18px;background:#025857;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700">🖨️ '+T('Εκτύπωση / PDF','Print / PDF')+'</button>'
+    +'<span style="font-size:11px;color:#666;margin-left:10px">'+T('Επίλεξε <b>Portrait</b> και <b>απενεργοποίησε</b> κεφαλίδες/υποσέλιδα','Choose <b>Portrait</b> and <b>turn off</b> headers/footers')+'</span>'
     +'</div>'
     // Header
     +'<div class="hdr">'
     +'<div style="display:flex;align-items:center">'
     +(logoSrc?'<img src="'+logoSrc+'" class="hdr-logo" alt="fyh">':'')
-    +'<div><div class="hdr-name">'+esc(c.name||'Πελάτης')+'</div>'
-    +'<div class="hdr-info">'+esc((isFem?'Γυναίκα':'Άνδρας')+' · '+c.age+' ετών · '+c.weight+'kg · '+c.height+'cm')+'</div>'
+    +'<div><div class="hdr-name">'+esc(c.name||T('Πελάτης','Client'))+'</div>'
+    +'<div class="hdr-info">'+esc(T(isFem?'Γυναίκα':'Άνδρας',isFem?'Female':'Male')+' · '+c.age+T(' ετών',' years old')+' · '+c.weight+'kg · '+c.height+'cm')+'</div>'
     +'</div></div>'
-    +'<div class="hdr-date"><b>Feed Your Health</b><br>WWW.FEEDYOURHEALTH.ORG<br>Τελευταία ανανέωση: '+today+'</div>'
+    +'<div class="hdr-date"><b>Feed Your Health</b><br>WWW.FEEDYOURHEALTH.ORG<br>'+T('Τελευταία ανανέωση','Last updated')+': '+today+'</div>'
     +'</div>'
     // KPIs
-    +'<div class="sec-title">Τελευταία Μέτρηση &nbsp;<span style="font-size:7.5pt;font-weight:400;color:#888">'+esc(latest.date)+'</span></div>'
+    +'<div class="sec-title">'+T('Τελευταία Μέτρηση','Latest Measurement')+' &nbsp;<span style="font-size:7.5pt;font-weight:400;color:#888">'+esc(latest.date)+'</span></div>'
     +'<div class="kpi-row">'
-    +'<div class="kpi"><div class="kpi-lbl">Βάρος</div><div class="kpi-val">'+latest.weight+' kg</div><div class="kpi-sub">&nbsp;</div></div>'
-    +(latestBF?'<div class="kpi cat"><div class="kpi-lbl">Λίπος σώματος</div><div class="kpi-val">'+latestBF+'%</div><div class="kpi-sub">'+bfCatLabel+'</div></div>':'')
-    +(latestLBM?'<div class="kpi"><div class="kpi-lbl">Άλιπη μάζα (LBM)</div><div class="kpi-val" style="color:#1565C0">'+latestLBM+' kg</div><div class="kpi-sub">&nbsp;</div></div>':'')
-    +(latestFM?'<div class="kpi"><div class="kpi-lbl">Λιπώδης μάζα (FM)</div><div class="kpi-val" style="color:#e65100">'+latestFM+' kg</div><div class="kpi-sub">&nbsp;</div></div>':'')
-    +(latest.waist?'<div class="kpi"><div class="kpi-lbl">Μέση</div><div class="kpi-val">'+latest.waist+' cm</div><div class="kpi-sub">&nbsp;</div></div>':'')
+    +'<div class="kpi"><div class="kpi-lbl">'+T('Βάρος','Weight')+'</div><div class="kpi-val">'+latest.weight+' kg</div><div class="kpi-sub">&nbsp;</div></div>'
+    +(latestBF?'<div class="kpi cat"><div class="kpi-lbl">'+T('Λίπος σώματος','Body fat')+'</div><div class="kpi-val">'+latestBF+'%</div><div class="kpi-sub">'+bfCatLabel+'</div></div>':'')
+    +(latestLBM?'<div class="kpi"><div class="kpi-lbl">'+T('Άλιπη μάζα (LBM)','Lean mass (LBM)')+'</div><div class="kpi-val" style="color:#1565C0">'+latestLBM+' kg</div><div class="kpi-sub">&nbsp;</div></div>':'')
+    +(latestFM?'<div class="kpi"><div class="kpi-lbl">'+T('Λιπώδης μάζα (FM)','Fat mass (FM)')+'</div><div class="kpi-val" style="color:#e65100">'+latestFM+' kg</div><div class="kpi-sub">&nbsp;</div></div>':'')
+    +(latest.waist?'<div class="kpi"><div class="kpi-lbl">'+T('Μέση','Waist')+'</div><div class="kpi-val">'+latest.waist+' cm</div><div class="kpi-sub">&nbsp;</div></div>':'')
     +'</div>'
     // Chart
-    +(sorted.length>=2?'<div class="sec-title">Πορεία Βάρους & %BF</div>'+chartHtml+'<div class="legend">'
-      +'<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#025857" stroke-width="2.5"/></svg><span>Βάρος (kg) — αριστερός άξονας</span>'
-      +(hasBF?'<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#1565C0" stroke-width="2" stroke-dasharray="5,3"/></svg><span>Λίπος σώματος (%) — δεξί άξονας</span>':'')
+    +(sorted.length>=2?'<div class="sec-title">'+T('Πορεία Βάρους & %BF','Weight & %BF Trend')+'</div>'+chartHtml+'<div class="legend">'
+      +'<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#025857" stroke-width="2.5"/></svg><span>'+T('Βάρος (kg) — αριστερός άξονας','Weight (kg) — left axis')+'</span>'
+      +(hasBF?'<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#1565C0" stroke-width="2" stroke-dasharray="5,3"/></svg><span>'+T('Λίπος σώματος (%) — δεξί άξονας','Body fat (%) — right axis')+'</span>':'')
       +'</div>':'')
     // Ref ranges
-    +'<div class="sec-title">Τιμές Αναφοράς %BF &nbsp;<span style="font-size:7pt;font-weight:400;color:#888">ACSM (American College of Sports Medicine)</span></div>'
+    +'<div class="sec-title">'+T('Τιμές Αναφοράς %BF','%BF Reference Values')+' &nbsp;<span style="font-size:7pt;font-weight:400;color:#888">ACSM (American College of Sports Medicine)</span></div>'
     +refBarHtml
     // History table
-    +'<div class="sec-title">Ιστορικό Μετρήσεων</div>'
-    +'<table><thead><tr><th>Ημερομηνία</th><th>Βάρος</th><th>%BF</th><th>LBM</th><th>FM</th><th>Μέση</th><th>Γοφοί</th></tr></thead>'
+    +'<div class="sec-title">'+T('Ιστορικό Μετρήσεων','Measurement History')+'</div>'
+    +'<table><thead><tr><th>'+T('Ημερομηνία','Date')+'</th><th>'+T('Βάρος','Weight')+'</th><th>%BF</th><th>LBM</th><th>FM</th><th>'+T('Μέση','Waist')+'</th><th>'+T('Γοφοί','Hips')+'</th></tr></thead>'
     +'<tbody>'+tblRows+'</tbody></table>'
-    +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:4px">📐 = μέτρηση με δερματοπτυχόμετρο · JP 4-site: Jackson &amp; Pollock (1985) · JP 3-site / JP 7-site: Jackson &amp; Pollock (1978/1980) · Slaughter: Slaughter et al. (1988)</div>'
+    +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:4px">'+T('📐 = μέτρηση με δερματοπτυχόμετρο','📐 = skinfold caliper measurement')+' · JP 4-site: Jackson &amp; Pollock (1985) · JP 3-site / JP 7-site: Jackson &amp; Pollock (1978/1980) · Slaughter: Slaughter et al. (1988)</div>'
     // Footer
-    +'<div class="footer"><span>Feed Your Health — Εργαλείο Διαιτολόγου</span><span>'+esc(c.name||'')+'  ·  Εκτυπώθηκε: '+today+'</span></div>'
+    +'<div class="footer"><span>Feed Your Health — '+T('Εργαλείο Διαιτολόγου','Dietitian Tool')+'</span><span>'+esc(c.name||'')+'  ·  '+T('Εκτυπώθηκε','Printed')+': '+today+'</span></div>'
     +'</body></html>';
 
   var w=window.open('','_blank');
-  if(!w){showErrorToast('Επέτρεψε τα pop-ups για να ανοίξει το PDF.');return;}
+  if(!w){showErrorToast(T('Επέτρεψε τα pop-ups για να ανοίξει το PDF.','Allow pop-ups to open the PDF.'));return;}
   w.document.write(html);w.document.close();
   setTimeout(function(){w.print();},600);
 }
