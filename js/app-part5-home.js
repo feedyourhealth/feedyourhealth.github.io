@@ -492,6 +492,31 @@ function updateHomeNavBadge(){
   });
 }
 
+// Γενέθλια πελατών μέσα στις επόμενες BIRTHDAY_WINDOW_DAYS μέρες — καθαρά ενημερωτικό
+// (όχι tier προσοχής/εκκρεμότητας σαν τα υπόλοιπα cards), γι' αυτό ζει στο κάτω μέρος του grid.
+// Χρησιμοποιεί το ήδη υπάρχον c.birthDate (ISO "YYYY-MM-DD", ίδιο πεδίο με τη φόρμα πελάτη/ageAtDate).
+var BIRTHDAY_WINDOW_DAYS=7;
+function homeUpcomingBirthdays(){
+  var out=[];
+  var today=new Date(); today.setHours(0,0,0,0);
+  clients.filter(function(c){return !c.deleted && !c.archived && c.birthDate;}).forEach(function(c){
+    var b=new Date(c.birthDate);
+    if(isNaN(b.getTime())) return;
+    // Τα γενέθλια φέτος, ή του επόμενου χρόνου αν έχουν ήδη περάσει — ώστε το μέτρημα ημερών να
+    // δουλεύει σωστά και όταν το παράθυρο τυλίγει γύρω από αλλαγή έτους (π.χ. σήμερα 28 Δεκ, γενέθλια 2 Ιαν).
+    var next=new Date(today.getFullYear(), b.getMonth(), b.getDate());
+    if(next<today) next=new Date(today.getFullYear()+1, b.getMonth(), b.getDate());
+    var daysLeft=Math.round((next-today)/86400000);
+    if(daysLeft<=BIRTHDAY_WINDOW_DAYS) out.push({c:c,daysLeft:daysLeft});
+  });
+  out.sort(function(a,b){ return a.daysLeft-b.daysLeft; });
+  return out;
+}
+function homeBirthdayRow(x){
+  var sub=x.daysLeft===0?'🎉 σήμερα!':(x.daysLeft===1?'αύριο':'σε '+x.daysLeft+' ημέρες');
+  return homeRow(x.c, sub, 'teal');
+}
+
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
@@ -604,6 +629,7 @@ function renderHome(){
   });
   var pendingPlanRows=homePendingPlanActions(attentionIds).map(homePendingPlanActionRow);
   var approachingRenewalRows=homeApproachingRenewal().map(homeApproachingRenewalRow);
+  var birthdayRows=homeUpcomingBirthdays().map(homeBirthdayRow);
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -654,7 +680,8 @@ function renderHome(){
     isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info'):'',
     groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
     tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):'',
-    homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info')
+    homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info'),
+    homeCard('🎂 Γενέθλια', birthdayRows, 'ακόμα', 'info')
   ].filter(function(c){return c;});
 
   if(gridCards.length){
