@@ -764,7 +764,10 @@ function exportLipometriaPDF(){
     // Header
     +'<div class="hdr">'
     +'<div class="brand">'+(logoSrc?'<img src="'+logoSrc+'" alt="FYH">':'')+'<div><div class="brand-name">'+T('ΑΝΑΛΥΣΗ ΣΩΜΑΤΙΚΗΣ ΣΥΝΘΕΣΗΣ','BODY COMPOSITION ANALYSIS')+'</div><div class="brand-sub">'+esc(c.name||'')+' · '+T(isFem?'Γυναίκα':'Άνδρας',isFem?'Female':'Male')+(c.age?' · '+c.age+T(' ετών',' years old'):'')+(h?' · '+h+' cm':'')+'</div></div></div>'
-    +'<div class="doc-date">'+T('Ημερομηνία μέτρησης','Measurement date')+(prevEntry?T(' · προηγούμενη',' · previous'):'')+'<br><b style="color:#3d4d49;font-size:9pt">'+esc(entryDate)+'</b>'+(prevEntry?' <span style="color:#b3bab8">(vs '+esc(prevEntry.date)+')</span>':'')+'</div>'
+    +'<div class="doc-date">'+(entry
+      ?(T('Ημερομηνία μέτρησης','Measurement date')+(prevEntry?T(' · προηγούμενη',' · previous'):'')+'<br><b style="color:#3d4d49;font-size:9pt">'+esc(entryDate)+'</b>'+(prevEntry?' <span style="color:#b3bab8">(vs '+esc(prevEntry.date)+')</span>':''))
+      :('<b style="color:#b26a00;font-size:8.5pt">⚠ '+T('Στοιχεία προφίλ — καμία μέτρηση tracker','Profile data — no tracker measurement')+'</b>'))
+    +'</div>'
     +'</div>'
 
     // Donut + Overall analysis
@@ -853,6 +856,7 @@ function exportLipometriaPDF(){
     +'<div class="footer">'
     +'<div class="footer-row"><span>Feed Your Health &mdash; '+T('Ανάλυση Σωματικής Σύνθεσης','Body Composition Analysis')+' &nbsp;|&nbsp; ACSM Reference Ranges</span><span>'+T('Επόμενο ραντεβού','Next appointment')+': ________________</span></div>'
     +'<div style="margin-top:2px;color:#b3bab8">'+T('Οι τάσεις (▲▼) συγκρίνουν με την προηγούμενη καταχώρηση tracker. Χωρίς ζυγαριά βιοηλεκτρικής εμπέδησης (BIA) — δεν εμφανίζονται νερό/πρωτεΐνη/οστά/σπλαχνικό λίπος.','Trends (▲▼) compare against the previous tracker entry. No bioelectrical impedance (BIA) scale — water/protein/bone/visceral fat are not shown.')+'</div>'
+    +'<div style="margin-top:2px;color:#b3bab8">'+T('ΔΜΣ = Δείκτης Μάζας Σώματος (kg/m²) · WHtR = Λόγος Περιμέτρου Μέσης προς Ύψος. Οι κατηγορίες ACSM είναι στατιστικά όρια αναφοράς, όχι ιατρική διάγνωση.','BMI = Body Mass Index (kg/m²) · WHtR = Waist-to-Height Ratio. ACSM categories are statistical reference ranges, not a medical diagnosis.')+'</div>'
     +'</div></body></html>';
 
   var w=window.open('','_blank');
@@ -1043,8 +1047,10 @@ function exportBodyCompPDF(){
     +'<table><thead><tr><th>'+T('Ημερομηνία','Date')+'</th><th>'+T('Βάρος','Weight')+'</th><th>%BF</th><th>LBM</th><th>FM</th><th>'+T('Μέση','Waist')+'</th><th>'+T('Γοφοί','Hips')+'</th></tr></thead>'
     +'<tbody>'+tblRows+'</tbody></table>'
     +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:4px">'+T('📐 = μέτρηση με δερματοπτυχόμετρο','📐 = skinfold caliper measurement')+' · JP 4-site: Jackson &amp; Pollock (1985) · JP 3-site / JP 7-site: Jackson &amp; Pollock (1978/1980) · Slaughter: Slaughter et al. (1988)</div>'
+    +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:2px">'+T('%BF = Ποσοστό Λίπους Σώματος · LBM = Άλιπη Μάζα Σώματος · FM = Λιπώδης Μάζα','%BF = Body Fat Percentage · LBM = Lean Body Mass · FM = Fat Mass')+'</div>'
+    +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:2px">'+T('Οι κατηγορίες ACSM είναι στατιστικά όρια αναφοράς, όχι ιατρική διάγνωση.','ACSM categories are statistical reference ranges, not a medical diagnosis.')+'</div>'
     // Footer
-    +'<div class="footer"><span>Feed Your Health — '+T('Εργαλείο Διαιτολόγου','Dietitian Tool')+'</span><span>'+esc(c.name||'')+'  ·  '+T('Εκτυπώθηκε','Printed')+': '+today+'</span></div>'
+    +'<div class="footer"><span>Feed Your Health — '+T('Ιστορικό Σωματικής Σύνθεσης','Body Composition History')+'</span><span>'+esc(c.name||'')+'  ·  '+T('Εκτυπώθηκε','Printed')+': '+today+'</span></div>'
     +'</body></html>';
 
   var w=window.open('','_blank');
