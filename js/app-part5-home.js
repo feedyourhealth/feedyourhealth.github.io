@@ -517,6 +517,99 @@ function homeBirthdayRow(x){
   return homeRow(x.c, sub, 'teal');
 }
 
+// Ονομαστικές εορτές — δουλεύει αυτόματα, χωρίς καμία νέα καταχώρηση: βγάζει το μικρό όνομα από το
+// ήδη υπάρχον c.name (πρώτη λέξη, ίδια σύμβαση "Όνομα Επώνυμο" με τη φόρμα πελάτη/initials()) και το
+// κοιτάζει στο NAME_DAYS. Curated λίστα με τα πιο συνηθισμένα ελληνικά ονόματα — σκόπιμα ΔΕΝ είναι
+// εξαντλητική· περιλαμβάνει μόνο ονόματα με σταθερή (όχι κινητή/πασχαλινή) γιορτή που ξέρουμε με
+// σιγουριά, ώστε να μη δείξουμε ποτέ λάθος ημερομηνία. Εύκολα επεκτάσιμη με περισσότερα ονόματα.
+// Τιμές: [μήνας 1-12, μέρα]. Κλειδιά: πεζά, χωρίς τόνους (βλ. normalizeGreekName).
+var NAME_DAYS={
+  // — Άνδρες —
+  'γιωργος':[4,23],'γεωργιος':[4,23],
+  'γιαννης':[1,7],'ιωαννης':[1,7],
+  'κωνσταντινος':[5,21],'κωστας':[5,21],'ντινος':[5,21],
+  'δημητρης':[10,26],'δημητριος':[10,26],'μητσος':[10,26],
+  'νικος':[12,6],'νικολαος':[12,6],
+  'χαραλαμπος':[2,10],'μπαμπης':[2,10],
+  'παναγιωτης':[8,15],'τακης':[8,15],'πανος':[8,15],
+  'αθανασιος':[1,18],'θανασης':[1,18],'νασος':[1,18],
+  'ευαγγελος':[3,25],'βαγγελης':[3,25],
+  'σπυριδων':[12,12],'σπυρος':[12,12],
+  'στυλιανος':[11,26],'στελιος':[11,26],
+  'στεφανος':[12,27],
+  'βασιλειος':[1,1],'βασιλης':[1,1],'βασος':[1,1],
+  'ανδρεας':[11,30],
+  'θεοδωρος':[2,17],'θοδωρης':[2,17],
+  'παυλος':[6,29],
+  'πετρος':[6,29],
+  'μιχαηλ':[11,8],'μιχαλης':[11,8],
+  'εμμανουηλ':[12,25],'μανωλης':[12,25],
+  'αλεξανδρος':[8,30],'αλεκος':[8,30],
+  'αντωνιος':[1,17],'αντωνης':[1,17],
+  'φωτιος':[2,6],'φωτης':[2,6],
+  'γρηγοριος':[1,25],'γρηγορης':[1,25],
+  'ηλιας':[7,20],
+  'κυριακος':[7,7],
+  'σαββας':[12,5],
+  'φιλιππος':[11,14],
+  'τιμοθεος':[1,22],
+  'νεκταριος':[11,9],
+  'παντελης':[7,27],'παντελεημων':[7,27],
+  // — Γυναίκες —
+  'μαρια':[8,15],'μαριαννα':[8,15],'μαρω':[8,15],
+  'ελενη':[5,21],'λενα':[5,21],
+  'αικατερινη':[11,25],'κατερινα':[11,25],'καιτη':[11,25],
+  'ευαγγελια':[3,25],'βαγγελιω':[3,25],
+  'δημητρα':[10,26],'μιμη':[10,26],
+  'αννα':[12,9],
+  'σοφια':[9,17],
+  'ειρηνη':[5,5],
+  'παρασκευη':[7,26],'βουλα':[7,26],
+  'χριστινα':[7,24],
+  'βασιλικη':[1,1],'βασω':[1,1],
+  'γεωργια':[4,23],
+  'κωνσταντινα':[5,21],'ντινα':[5,21],
+  'αναστασια':[12,22],'τασια':[12,22],
+  'ευφροσυνη':[9,25],'εφη':[9,25],
+  'θεοδωρα':[9,11],
+  'στυλιανη':[11,26],
+  'δεσποινα':[11,21],
+  'παναγιωτα':[8,15],'γιωτα':[8,15],
+  'αγγελικη':[11,8],
+  'θεοφανια':[1,6],'φανη':[1,6],
+  'μαρινα':[7,17],
+  'νεκταρια':[11,9],
+  'ραφαελα':[6,9],
+  'σταυρουλα':[9,14],
+  'φωτεινη':[2,26],
+  'ιωαννα':[1,7],'γιαννα':[1,7]
+};
+var NAMEDAY_WINDOW_DAYS=7;
+function normalizeGreekName(s){
+  if(!s) return '';
+  var accentMap={'ά':'α','έ':'ε','ή':'η','ί':'ι','ό':'ο','ύ':'υ','ώ':'ω','ϊ':'ι','ΐ':'ι','ϋ':'υ','ΰ':'υ'};
+  return s.toLowerCase().trim().split('').map(function(ch){ return accentMap[ch]||ch; }).join('');
+}
+function homeUpcomingNameDays(){
+  var out=[];
+  var today=new Date(); today.setHours(0,0,0,0);
+  clients.filter(function(c){return !c.deleted && !c.archived && c.name;}).forEach(function(c){
+    var firstName=normalizeGreekName(c.name.trim().split(/\s+/)[0]);
+    var nd=NAME_DAYS[firstName];
+    if(!nd) return;
+    var next=new Date(today.getFullYear(), nd[0]-1, nd[1]);
+    if(next<today) next=new Date(today.getFullYear()+1, nd[0]-1, nd[1]);
+    var daysLeft=Math.round((next-today)/86400000);
+    if(daysLeft<=NAMEDAY_WINDOW_DAYS) out.push({c:c,daysLeft:daysLeft});
+  });
+  out.sort(function(a,b){ return a.daysLeft-b.daysLeft; });
+  return out;
+}
+function homeNameDayRow(x){
+  var sub=x.daysLeft===0?'🎉 σήμερα!':(x.daysLeft===1?'αύριο':'σε '+x.daysLeft+' ημέρες');
+  return homeRow(x.c, sub, 'teal');
+}
+
 function homeRow(c,sub,accent,actionHtml){
   return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
@@ -630,6 +723,7 @@ function renderHome(){
   var pendingPlanRows=homePendingPlanActions(attentionIds).map(homePendingPlanActionRow);
   var approachingRenewalRows=homeApproachingRenewal().map(homeApproachingRenewalRow);
   var birthdayRows=homeUpcomingBirthdays().map(homeBirthdayRow);
+  var nameDayRows=homeUpcomingNameDays().map(homeNameDayRow);
 
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">🏠 Αρχική</div>';
@@ -681,7 +775,8 @@ function renderHome(){
     groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
     tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):'',
     homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info'),
-    homeCard('🎂 Γενέθλια', birthdayRows, 'ακόμα', 'info')
+    homeCard('🎂 Γενέθλια', birthdayRows, 'ακόμα', 'info'),
+    homeCard('🥳 Ονομαστικές εορτές', nameDayRows, 'ακόμα', 'info')
   ].filter(function(c){return c;});
 
   if(gridCards.length){
