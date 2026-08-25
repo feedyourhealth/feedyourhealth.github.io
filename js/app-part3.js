@@ -1160,6 +1160,12 @@ function buildClientExclusionList(c, protocolAvoidFoods){
   parsePreferenceAvoidFoods(c.preferences).forEach(function(food){
     if(excl.indexOf(food)===-1)excl.push(food);
   });
+  // 🍽 Ιδέα 2 (2026-08-25): δομημένα chips τροφικών προτιμήσεων από την καρτέλα "📝 Ραντεβού"
+  // (c.foodPrefs, βλ. apptFoodPrefsPanelHtml στο js/app-part2.js) — μόνο οι αντιπάθειες (👎) μπαίνουν
+  // στο exclusion list· τα "αρέσει" (👍) είναι καθαρά πληροφοριακά, δεν αποκλείουν/προτιμούν τίποτα.
+  (c.foodPrefs||[]).forEach(function(fp){
+    if(fp.pref==='dislike'&&excl.indexOf(fp.food)===-1)excl.push(fp.food);
+  });
   return excl;
 }
 

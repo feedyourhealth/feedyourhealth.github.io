@@ -2864,6 +2864,126 @@ function insertApptTemplate(text,textareaId){
   ta.value=ta.value?(ta.value.replace(/\s+$/,'')+' '+text):text;
   ta.focus();
 }
+// ✅ Ιδέα 1 (2026-08-25): "γέφυρα" από τη σκέτη σημείωση ραντεβού προς τις Προτιμήσεις του πελάτη
+// (c.preferences) — το πεδίο εκείνο ήδη περνάει από parsePreferenceAvoidFoods() και επηρεάζει
+// πραγματικά το επόμενο πλάνο, ενώ το appt-notes είναι απλώς αρχειοθετημένο κείμενο που ΚΑΝΕΝΑΣ
+// αλγόριθμος δε διαβάζει. Αν ο διαιτολόγος έχει επιλέξει (selection) κομμάτι της σημείωσης στέλνει
+// μόνο αυτό, αλλιώς όλη τη σημείωση. Δουλεύει είτε στη φόρμα νέας καταχώρησης (#appt-notes) είτε
+// στην επεξεργασία παλιάς (#appt-edit-notes-<i>), αφού δέχεται το target id ως παράμετρο — ίδιο
+// μοτίβο με insertApptTemplate() πιο πάνω.
+function apptSendNoteToPreferences(textareaId,btn){
+  var ta=document.getElementById(textareaId);
+  if(!ta)return;
+  var selStart=ta.selectionStart,selEnd=ta.selectionEnd;
+  var text=(selEnd>selStart?ta.value.slice(selStart,selEnd):ta.value).trim();
+  if(!text)return;
+  var c=getC();if(!c)return;
+  var newVal=c.preferences?(c.preferences.replace(/\s+$/,'')+'\n'+text):text;
+  upd('preferences',newVal);
+  if(btn){
+    var orig=btn.textContent;
+    btn.textContent='✅ Προστέθηκε';
+    btn.disabled=true;
+    setTimeout(function(){btn.textContent=orig;btn.disabled=false;},1400);
+  }
+}
+// 🍽 Ιδέα 2 (2026-08-25): δομημένη καταγραφή τροφικών προτιμήσεων ανά πελάτη (c.foodPrefs) — αντί
+// να θάβεται μια πρόταση σε ελεύθερο κείμενο, γίνεται chip με τρόφιμο + κατεύθυνση (αρέσει/δεν
+// αρέσει) + προαιρετική ώρα. Μένει ΜΟΝΙΜΑ στον πελάτη (όχι ανά ραντεβού) — δεν χάνεται μέσα στο
+// ιστορικό. Οι αντιπάθειες τροφοδοτούν αυτόματα το exclusion list του genPlan() μέσω
+// buildClientExclusionList() (js/app-part3.js). Η ώρα είναι προς το παρόν μόνο πληροφοριακή/
+// για να τη βλέπει ο διαιτολόγος — το genPlan() δεν είναι (ακόμα) meal-slot-aware ώστε να την
+// τηρεί αυτόματα· ηθελημένα συντηρητικό, για να μην αποκλείει λάθος γεύμα.
+var _apptFoodDatalistCache=null;
+function apptFoodDatalistHtml(){
+  if(_apptFoodDatalistCache)return _apptFoodDatalistCache;
+  var names=Object.keys(FOODS).filter(function(n){return FOODS[n]&&FOODS[n].cat!=='Συνταγές';}).sort();
+  _apptFoodDatalistCache='<datalist id="appt-fp-datalist">'+names.map(function(n){return '<option value="'+esc(n)+'">';}).join('')+'</datalist>';
+  return _apptFoodDatalistCache;
+}
+var _apptFoodNameLookup=null;
+// Αναγνωρίζει το πληκτρολογημένο κείμενο ως γνωστό τρόφιμο (ανεκτικό σε τόνους/πεζά-κεφαλαία μέσω
+// normalizeGreekText — ίδιος μηχανισμός με το parsePreferenceAvoidFoods) ώστε το chip να αποθηκεύει
+// πάντα το ΚΑΝΟΝΙΚΟ όνομα από το FOODS και να ταιριάζει 1-1 με ό,τι ελέγχει το exclusion list.
+function apptResolveFoodName(typed){
+  if(!typed)return null;
+  if(!_apptFoodNameLookup){
+    _apptFoodNameLookup={};
+    Object.keys(FOODS).forEach(function(n){
+      if(FOODS[n]&&FOODS[n].cat!=='Συνταγές')_apptFoodNameLookup[normalizeGreekText(n)]=n;
+    });
+  }
+  return _apptFoodNameLookup[normalizeGreekText(typed.trim())]||null;
+}
+function apptFoodPrefTagsHtml(c){
+  var prefs=c.foodPrefs||[];
+  if(!prefs.length)return '<div style="font-size:11px;color:#999">Καμία καταχώρηση ακόμα.</div>';
+  return prefs.map(function(fp,i){
+    var icon=fp.pref==='like'?'👍':'👎';
+    var timeTxt=fp.time?(' · '+esc(fp.time)):'';
+    return '<span class="foodpref-tag foodpref-'+fp.pref+'">'+icon+' '+esc(fp.food)+timeTxt
+      +' <span class="foodpref-x" onclick="removeFoodPref('+i+')" title="Αφαίρεση">✕</span></span>';
+  }).join('');
+}
+function apptFoodPrefsPanelHtml(c){
+  return '<div class="tracker-section">'
+    +'<div class="tracker-head">🍽 Τροφικές προτιμήσεις</div>'
+    +'<div style="font-size:11px;color:#888;margin-bottom:8px">Μόνιμη λίστα για τον πελάτη — οι αντιπάθειες αποκλείονται αυτόματα από τα επόμενα πλάνα.</div>'
+    +apptFoodDatalistHtml()
+    +'<div id="appt-foodprefs-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+apptFoodPrefTagsHtml(c)+'</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+    +'<input type="text" id="appt-fp-food" list="appt-fp-datalist" placeholder="Τρόφιμο..." class="tracker-inp" style="flex:1;min-width:140px">'
+    +'<div class="foodpref-dir-group" id="appt-fp-dir" data-selected="dislike">'
+    +'<button type="button" class="foodpref-dir-btn active" data-val="dislike" onclick="toggleFoodPrefDir(this)">👎 Δεν αρέσει</button>'
+    +'<button type="button" class="foodpref-dir-btn" data-val="like" onclick="toggleFoodPrefDir(this)">👍 Αρέσει</button>'
+    +'</div>'
+    +'<select id="appt-fp-time" class="tracker-inp">'
+    +'<option value="">Οποιαδήποτε ώρα</option><option value="πρωί">Πρωί</option><option value="μεσημέρι">Μεσημέρι</option><option value="βράδυ">Βράδυ</option>'
+    +'</select>'
+    +'<button type="button" class="btn" style="padding:5px 12px;font-size:11px;background:#025857;color:#fff;border:none" onclick="addFoodPref()">+ Προσθήκη</button>'
+    +'</div>'
+    +'</div>';
+}
+function toggleFoodPrefDir(btn){
+  var wrap=btn.parentElement;
+  Array.prototype.forEach.call(wrap.querySelectorAll('.foodpref-dir-btn'),function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  wrap.setAttribute('data-selected',btn.getAttribute('data-val'));
+}
+// Ενημερώνει ΜΟΝΟ το #appt-foodprefs-list in-place (όχι ολόκληρη την καρτέλα) — γιατί μια πλήρης
+// επανεμφάνιση θα έσβηνε ό,τι έχει ήδη γράψει ο διαιτολόγος στο appt-notes/chips/scales από κάτω,
+// ίδιος προβληματισμός με τα LIVE_TYPING_FIELDS στο upd().
+function addFoodPref(){
+  var c=getC();if(!c)return;
+  var inp=document.getElementById('appt-fp-food');
+  var resolved=apptResolveFoodName(inp?inp.value:'');
+  if(!resolved){
+    if(inp){inp.style.borderColor='#c62828';setTimeout(function(){inp.style.borderColor='';},1200);}
+    return;
+  }
+  var dirWrap=document.getElementById('appt-fp-dir');
+  var dir=dirWrap?dirWrap.getAttribute('data-selected'):'dislike';
+  var timeSel=document.getElementById('appt-fp-time');
+  var time=timeSel?timeSel.value:'';
+  if(!c.foodPrefs)c.foodPrefs=[];
+  // Ίδιο τρόφιμο+ώρα ήδη καταχωρημένο → ενημέρωση αντί για διπλότυπο (π.χ. άλλαξε γνώμη από 👎 σε 👍).
+  var dup=c.foodPrefs.filter(function(fp){return fp.food===resolved&&fp.time===time;})[0];
+  if(dup){dup.pref=dir;dup.date=today_appt_iso();}
+  else c.foodPrefs.push({food:resolved,pref:dir,time:time,date:today_appt_iso()});
+  save();
+  if(inp)inp.value='';
+  if(timeSel)timeSel.value='';
+  var list=document.getElementById('appt-foodprefs-list');
+  if(list)list.innerHTML=apptFoodPrefTagsHtml(c);
+}
+function removeFoodPref(idx){
+  var c=getC();if(!c||!c.foodPrefs)return;
+  c.foodPrefs.splice(idx,1);
+  save();
+  var list=document.getElementById('appt-foodprefs-list');
+  if(list)list.innerHTML=apptFoodPrefTagsHtml(c);
+}
+function today_appt_iso(){return new Date().toISOString().slice(0,10);}
 var APPT_SPORT_CHIPS={
   boxing:['Κοντά σε ζύγιση','Cut βάρους','Camp προπόνησης'],
   bjj:['Camp προπόνησης','Πόνος αρθρώσεων'],
@@ -3233,6 +3353,7 @@ function buildApptAttentionDigestHtml(c){
 }
 function buildAppointmentsHtml(c){
   if(!c.appointments)c.appointments=[];
+  if(!c.foodPrefs)c.foodPrefs=[];
   var today=new Date().toISOString().slice(0,10);
 
   // ✅ 2026-08-01: Το feedback του πελάτη (portal check-ins, δικές του σημειώσεις, ⭐ αξιολόγηση
@@ -3426,7 +3547,10 @@ function buildAppointmentsHtml(c){
     +apptTemplateRowHtml('appt-notes')
     +'<textarea id="appt-notes" placeholder="Σημειώσεις ραντεβού..." class="tracker-textarea"></textarea>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">'
+    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
     +'<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#c62828;cursor:pointer"><input type="checkbox" id="appt-flag" style="width:14px;height:14px">🚩 Σημείωσε για παρακολούθηση</label>'
+    +'<button type="button" class="btn" style="padding:3px 10px;font-size:10px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="apptSendNoteToPreferences(\'appt-notes\',this)" title="Στέλνει το επιλεγμένο κείμενο (ή όλη τη σημείωση, αν δεν έχεις επιλέξει κάτι) στις Προτιμήσεις του πελάτη, ώστε να ληφθεί υπόψη στο επόμενο πλάνο">➕ Στις Προτιμήσεις</button>'
+    +'</div>'
     +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#025857;color:#fff;border:none" onclick="addAppointmentEntry()">+ Καταχώρηση</button>'
     +'</div>'
     +'</div>';
@@ -3468,7 +3592,10 @@ function buildAppointmentsHtml(c){
           +apptTemplateRowHtml('appt-edit-notes-'+i)
           +'<textarea id="appt-edit-notes-'+i+'" class="tracker-textarea">'+esc(e.notes||'')+'</textarea>'
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">'
+          +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
           +'<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#c62828;cursor:pointer"><input type="checkbox" id="appt-edit-flag-'+i+'" style="width:14px;height:14px"'+(e.flagged?' checked':'')+'>🚩 Σημείωσε για παρακολούθηση</label>'
+          +'<button type="button" class="btn" style="padding:3px 10px;font-size:10px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="apptSendNoteToPreferences(\'appt-edit-notes-'+i+'\',this)" title="Στέλνει το επιλεγμένο κείμενο (ή όλη τη σημείωση) στις Προτιμήσεις του πελάτη">➕ Στις Προτιμήσεις</button>'
+          +'</div>'
           +'<div style="display:flex;gap:6px">'
           +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#888;color:#fff;border:none" onclick="cancelAppointmentEdit()">Άκυρο</button>'
           +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#025857;color:#fff;border:none" onclick="saveAppointmentEdit('+i+')">Αποθήκευση</button>'
@@ -3527,7 +3654,7 @@ function buildAppointmentsHtml(c){
       +'<span style="margin-right:4px">Ροή αποφάσεων:</span>'+timelineChips+'</div>';
   }
 
-  return '<div style="padding:16px 20px">'+buildApptAttentionDigestHtml(c)+portalFeedbackHtml+apptDiffHtml+strip+trendsHtml+formHtml+'<div class="tracker-section"><div class="tracker-head">📋 Ιστορικό ραντεβού</div>'+timelineHtml+filterbarHtml+listHtml+'</div></div>';
+  return '<div style="padding:16px 20px">'+buildApptAttentionDigestHtml(c)+portalFeedbackHtml+apptDiffHtml+strip+trendsHtml+apptFoodPrefsPanelHtml(c)+formHtml+'<div class="tracker-section"><div class="tracker-head">📋 Ιστορικό ραντεβού</div>'+timelineHtml+filterbarHtml+listHtml+'</div></div>';
 }
 // ✨ Idea 8 (2026-08-14): φιλτράρισμα ιστορικού ραντεβού — καθαρά front-end, καμία επανάκτηση
 // δεδομένων. Οι κάρτες είναι ήδη στο DOM (buildAppointmentsHtml) με data-appt-tags· εδώ απλά

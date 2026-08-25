@@ -1196,6 +1196,16 @@ body.dark-mode .tooltip-text {
 .appt-tmpl-row{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
 .appt-tmpl-chip{padding:5px 10px;font-size:11px;border-radius:20px;border:1px solid var(--teal);background:#fff;color:var(--teal);cursor:pointer;font-weight:600}
 .appt-tmpl-chip:hover{background:var(--teal-tint)}
+/* 🍽 Ιδέα 2 (2026-08-25): δομημένες τροφικές προτιμήσεις ανά πελάτη — βλ. apptFoodPrefsPanelHtml() στο js/app-part2.js */
+.foodpref-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 6px 4px 11px;font-size:11px;border-radius:20px;border:1px solid #c5ddd8;background:#fff;color:#555}
+.foodpref-tag.foodpref-dislike{border-color:#f1b4b3;color:#c62828}
+.foodpref-tag.foodpref-like{border-color:#bfe3c9;color:#2e7d32}
+.foodpref-tag .foodpref-x{cursor:pointer;color:#999;font-weight:700;padding:0 2px}
+.foodpref-tag .foodpref-x:hover{color:#c62828}
+.foodpref-dir-group{display:flex;gap:6px}
+.foodpref-dir-btn{padding:5px 10px;font-size:11px;border-radius:20px;border:1px solid #c5ddd8;background:#fff;color:#555;cursor:pointer}
+.foodpref-dir-btn.active[data-val="dislike"]{background:#c62828;border-color:#c62828;color:#fff;font-weight:600}
+.foodpref-dir-btn.active[data-val="like"]{background:#2e7d32;border-color:#2e7d32;color:#fff;font-weight:600}
 /* ✨ Idea 1 (2026-08-14): ιστορικό feedback πλάνου ανά ερώτηση — βλ. planFeedbackPanelHtml() στο js/app-part2.js */
 .pf-row{cursor:pointer}
 .pf-row .pf-exp-hint{margin-left:auto;font-size:10px;color:var(--teal);font-weight:700}
@@ -2017,6 +2027,10 @@ body.dark-mode .appt-sum-card{background:#1a1a1a;border-color:#444}
 body.dark-mode .appt-fchip{background:#1a1a1a;border-color:#444;color:#ccc}
 body.dark-mode .appt-tmpl-chip{background:#1a1a1a;color:#5dcaa5}
 body.dark-mode .appt-tmpl-chip:hover{background:#123330}
+body.dark-mode .foodpref-tag{background:#1a1a1a;border-color:#444;color:#ccc}
+body.dark-mode .foodpref-tag.foodpref-dislike{border-color:#6b2020;color:#e08a8a}
+body.dark-mode .foodpref-tag.foodpref-like{border-color:#2a4a3a;color:#8bc98f}
+body.dark-mode .foodpref-dir-btn{background:#1a1a1a;border-color:#444;color:#ccc}
 body.dark-mode .pf-history{background:#123330}
 body.dark-mode .pf-history .bar i{background:#2a4a43}
 body.dark-mode .pf-history .bar b{color:#9aa5a1}
