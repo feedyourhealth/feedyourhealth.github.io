@@ -4000,6 +4000,12 @@ function openPublishModal(){
     // WhatsApp: αν υπάρχει τηλέφωνο, στείλε κατευθείαν σε αυτό
     var phone=normalizePhoneIntl(c.phone);
     var wa='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(msg);
+    // Viber: σε αντίθεση με το wa.me, το επίσημο viber://chat?number= δεν υποστηρίζει pre-filled
+    // κείμενο μαζί με συγκεκριμένο αριθμό (μόνο το viber://forward?text= το κάνει, αλλά χωρίς
+    // προεπιλεγμένο παραλήπτη — ανοίγει λίστα επαφών). Οπότε: με τηλέφωνο → ανοίγει κατευθείαν
+    // το chat (ο διαιτολόγος επικολλά το μήνυμα από το κουμπί αντιγραφής από κάτω)· χωρίς
+    // τηλέφωνο → forward με το μήνυμα έτοιμο, ο διαιτολόγος διαλέγει επαφή.
+    var vb=phone?('viber://chat?number='+encodeURIComponent('+'+phone)):('viber://forward?text='+encodeURIComponent(msg));
     // Email: άνοιγμα του email προγράμματος με συμπληρωμένα στοιχεία
     var subj=hm.subj;
     var ebody=hm.ebody;
@@ -4027,6 +4033,10 @@ function openPublishModal(){
       +'<textarea id="publish-email-body" style="position:absolute;left:-9999px;top:-9999px;" readonly>'+esc(subj+'\n\n'+ebody)+'</textarea>'
       +'<button id="publish-email-copy" type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:8px" onclick="copyPublishEmailBody(this)">📋 Δεν άνοιξε τίποτα; Αντιγραφή μηνύματος</button>'
       +'<a href="'+wa+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">📱 WhatsApp'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
+      +'<a href="'+esc(vb)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#7360F2;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">💬 Viber'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
+      +(phone?'<textarea id="publish-viber-msg" style="position:absolute;left:-9999px;top:-9999px;" readonly>'+esc(msg)+'</textarea>'
+        +'<button id="publish-viber-copy" type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:8px" onclick="copyPublishViberMsg(this)">📋 Το Viber δεν γεμίζει μόνο του το μήνυμα — αντιγραφή</button>'
+        :'<div style="font-size:11px;color:#9fb5b0;line-height:1.4;margin-bottom:8px">Θα ανοίξει η λίστα επαφών του Viber με το μήνυμα έτοιμο — διάλεξε τον/την '+esc(c.name||'πελάτη')+'.</div>')
       +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5;margin-bottom:14px">⏳ Ο σύνδεσμος λήγει στις <b>'+expTxt+'</b> ('+window.Cloud.LINK_EXPIRE_DAYS+' μέρες). Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα και η λήξη ανανεώνεται.</div>'
       +'<button id="portal-reset-link" class="btn" style="width:100%;background:var(--card-bg);color:#c0392b;border:1px solid #f0c2c2;font-size:12px">🔄 Καθαρισμός & νέο σύνδεσμος</button>'
       +'<div style="font-size:11px;color:#9fb5b0;line-height:1.4;margin-top:4px">Σβήνει τον τρέχοντα σύνδεσμο και φτιάχνει καινούριο — χρήσιμο αν ο πελάτης έχει συμπληρώσει νερό/συμπληρώματα/σημειώσεις που θες να «καθαρίσουν». Ο παλιός σύνδεσμος σταματάει να δουλεύει αμέσως.</div>';
@@ -4099,5 +4109,18 @@ function copyPublishEmailBody(btn){
   try{ ok=document.execCommand('copy'); }catch(e){}
   if(navigator.clipboard){ navigator.clipboard.writeText(ta.value).then(function(){},function(){}); ok=true; }
   if(ok && btn){ var o=btn.textContent; btn.textContent='✓ Αντιγράφηκε — επικόλλησέ το σε ένα νέο email'; setTimeout(function(){btn.textContent=o;},2200); }
+}
+
+// Fallback για το Viber: το viber://chat?number= ανοίγει κατευθείαν το chat του πελάτη αλλά
+// (σε αντίθεση με το wa.me) δεν υποστηρίζει προσυμπληρωμένο κείμενο — ο διαιτολόγος αντιγράφει
+// εδώ το ίδιο μήνυμα που στέλνεται και μέσω WhatsApp/Email και το επικολλάει στο Viber.
+function copyPublishViberMsg(btn){
+  var ta=document.getElementById('publish-viber-msg');
+  if(!ta)return;
+  ta.select();
+  var ok=false;
+  try{ ok=document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard){ navigator.clipboard.writeText(ta.value).then(function(){},function(){}); ok=true; }
+  if(ok && btn){ var o=btn.textContent; btn.textContent='✓ Αντιγράφηκε — επικόλλησέ το στο Viber'; setTimeout(function(){btn.textContent=o;},2200); }
 }
 
