@@ -4011,8 +4011,19 @@ function openPublishModal(){
     var ebody=hm.ebody;
     var mailto='mailto:'+encodeURIComponent(c.email||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(ebody);
     body.style.textAlign='left';
-    body.innerHTML='<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">✍️ Προσωπικό μήνυμα στον πελάτη <span style="color:#9fb5b0">(προαιρετικό — φαίνεται στην Αρχική του)</span></div>'
-      +'<textarea id="portal-note" rows="2" placeholder="π.χ. Μπράβο για την πρόοδο! Εστίασε στο πρωινό αυτή την εβδομάδα." style="width:100%;box-sizing:border-box;font-size:13px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;resize:vertical;font-family:inherit;color:#1a3330;margin-bottom:8px">'+esc(c.portalNote||'')+'</textarea>'
+    // ✅ UX fix: αυτή η ενότητα (μήνυμα/στόχοι/ACSM) δεν έχει σχέση με το "στείλε το link" — είναι
+    // ρυθμίσεις του portal του πελάτη που τυχαίνει να ζουν εδώ. Μαζί με τα 3 κανάλια αποστολής το
+    // modal ξεπερνούσε το ύψος της οθόνης (το "Κλείσιμο" έμενε κομμένο). Διπλωμένη από προεπιλογή
+    // όποτε υπάρχει ήδη στόχος βάρους (δηλ. ο πελάτης έχει ξαναρυθμιστεί) — έτσι το συνηθισμένο
+    // "ξαναστείλε το ίδιο πλάνο" ανοίγει κατευθείαν στο link+κανάλια. Χωρίς στόχο βάρους μένει
+    // ανοιχτή ώστε η προειδοποίηση από κάτω να μη χαθεί.
+    var settingsOpen=!c.goalWeight;
+    body.innerHTML='<div class="sf-panel" style="padding:8px 10px;margin-bottom:12px">'
+      +'<div class="sf-header" onclick="togglePublishSettings()"><span>⚙️ Ρυθμίσεις πελάτη <span style="font-size:10px;font-weight:400;color:#9fb5b0">— μήνυμα Αρχικής, στόχοι Προόδου</span></span><span id="publish-settings-chevron" class="sec-chevron'+(settingsOpen?' open':'')+'">▸</span></div>'
+      +'<div id="publish-settings-body" style="display:'+(settingsOpen?'block':'none')+';margin-top:10px">'
+      +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">✍️ Προσωπικό μήνυμα στον πελάτη <span style="color:#9fb5b0">(προαιρετικό)</span></div>'
+      +'<textarea id="portal-note" rows="2" placeholder="π.χ. Μπράβο για την πρόοδο! Εστίασε στο πρωινό αυτή την εβδομάδα." style="width:100%;box-sizing:border-box;font-size:13px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;resize:vertical;font-family:inherit;color:#1a3330;margin-bottom:4px">'+esc(c.portalNote||'')+'</textarea>'
+      +'<div style="font-size:10px;color:#9fb5b0;margin:0 0 8px;line-height:1.3">Φαίνεται μόνο στην Αρχική του πελάτη στο portal — δεν μπαίνει στο μήνυμα WhatsApp/Viber/Email.</div>'
       +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">🎯 Στόχοι για την καρτέλα Πρόοδος <span style="color:#9fb5b0">(προαιρετικό)</span></div>'
       +(c.goalWeight?'':'<div style="font-size:11px;color:#e08a00;margin:-2px 0 8px;line-height:1.4">⚠️ Χωρίς στόχο βάρους ο πελάτης δεν θα δει την κάρτα στόχου στην Αρχική του.</div>')
       +'<div style="display:flex;gap:8px;margin-bottom:8px">'
@@ -4020,7 +4031,8 @@ function openPublishModal(){
       +'<div style="flex:1"><label style="font-size:11px;color:#5a8a82">Στόχος % λίπους</label><input type="number" id="portal-goalbf" value="'+(c.goalBF||'')+'" placeholder="π.χ. 15" step="0.1" min="3" max="60" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #c5ddd8;border-radius:8px;font-family:inherit"></div>'
       +'</div>'
       +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#1a3330;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="portal-showbfbands"'+(c.portalShowBFBands?' checked':'')+'> Εμφάνιση ζωνών αναφοράς λίπους (ACSM) στον πελάτη</label>'
-      +'<button id="portal-note-save" class="btn" style="width:100%;background:#E2EEE5;color:#014545;border:1px solid #c5ddd8;margin-bottom:16px">💾 Αποθήκευση ρυθμίσεων</button>'
+      +'<button id="portal-note-save" class="btn" style="width:100%;background:#E2EEE5;color:#014545;border:1px solid #c5ddd8">💾 Αποθήκευση ρυθμίσεων</button>'
+      +'</div></div>'
       +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος πελάτη</div>'
       +'<div style="display:flex;gap:6px;margin-bottom:14px"><input id="publish-url" value="'+esc(url)+'" readonly style="flex:1;font-size:12px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;background:#f4f8f6;color:#014545" onclick="this.select()">'
       +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="copyPublishUrl(this)">Αντιγραφή</button></div>'
@@ -4089,6 +4101,16 @@ function openPublishModal(){
     var body=document.getElementById('publish-body');
     if(body) body.innerHTML='<div style="color:#c0392b;font-size:13px">❌ '+esc(e.message||'Σφάλμα δημοσίευσης')+'</div>';
   });
+}
+// Διπλώνει/ξεδιπλώνει την ενότητα "⚙️ Ρυθμίσεις πελάτη" μέσα στο modal αποστολής πλάνου —
+// ίδιο πατέντο με toggleSkinfoldPanel (js/app-part2.js): toggle display + κλάση 'open' στο chevron.
+function togglePublishSettings(){
+  var body=document.getElementById('publish-settings-body');
+  var icon=document.getElementById('publish-settings-chevron');
+  if(!body)return;
+  var isOpen=body.style.display!=='none';
+  body.style.display=isOpen?'none':'block';
+  if(icon)icon.classList.toggle('open',!isOpen);
 }
 function copyPublishUrl(btn){
   var inp=document.getElementById('publish-url');
