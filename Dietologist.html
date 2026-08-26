@@ -2106,6 +2106,11 @@ function openMealTimesModal(){
     +'<div><label style="font-weight:600;color:var(--text-strong)">🍽️ Μεσημέρι</label><input type="time" id="meal-lunch" value="'+(c.mealTimes?.lunch||'13:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
     +'<div><label style="font-weight:600;color:var(--text-strong)">🍎 Απογευματινό Ενδιάμεσο</label><input type="time" id="meal-snack2" value="'+(c.mealTimes?.snack2||'16:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
     +'<div><label style="font-weight:600;color:var(--text-strong)">🌙 Βράδυ</label><input type="time" id="meal-dinner" value="'+(c.mealTimes?.dinner||'19:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
+    // 3ο πεδίο ώρας ενδιάμεσου — για μέρες με 3+ γεύματα ονομασμένα 'Ενδιάμεσο' (π.χ. διπλή προπόνηση
+    // στην ίδια μέρα). Το snapshot (_buildSnapshot, Dietologist.html) κάνει cycle [snack,snack2,snack3]
+    // ανά εμφάνιση 'Ενδιάμεσο'/'Δεκατιανό' μέσα στην ίδια μέρα — προαιρετικό πεδίο, δεν επηρεάζει πελάτες
+    // με το κλασικό σχήμα 2 ενδιαμέσων/μέρα.
+    +'<div><label style="font-weight:600;color:var(--text-strong)">🥪 Έξτρα Ενδιάμεσο (3ο)</label><input type="time" id="meal-snack3" value="'+(c.mealTimes?.snack3||'21:00')+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px"></div>'
     +'</div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeMealTimesModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
@@ -2132,6 +2137,7 @@ function saveMealTimes(){
   c.mealTimes.snack=document.getElementById('meal-snack').value;
   c.mealTimes.lunch=document.getElementById('meal-lunch').value;
   c.mealTimes.snack2=document.getElementById('meal-snack2').value;
+  c.mealTimes.snack3=document.getElementById('meal-snack3').value;
   c.mealTimes.dinner=document.getElementById('meal-dinner').value;
   save();
   closeMealTimesModal();
@@ -3012,6 +3018,13 @@ function saveFoodExclusions(){
       for(var d=0; d<7; d++){
         var dm=wp[d]||[];
         var meals=[], dayK=0, dP=0,dC=0,dF=0,dFi=0;
+        // Bug: κάθε μέρα έχει (συνήθως) ΔΥΟ γεύματα με το ίδιο literal name 'Ενδιάμεσο' (πρωινό +
+        // απογευματινό ενδιάμεσο — genPlan() τα δημιουργεί έτσι, βλ. [[dietologist-reordermeals-bug]]),
+        // και σπανιότερα τρίτο (π.χ. διπλή προπόνηση στην ίδια μέρα), αλλά το TIMES lookup παρακάτω γίνεται
+        // by-name, οπότε όλα έπαιρναν την ίδια ώρα (c.mealTimes.snack) στο client link, ενώ το modal
+        // «Ώρες Γευμάτων» έχει ξεχωριστά πεδία snack/snack2/snack3. snackSeen μετράει πόσα 'Ενδιάμεσο'/
+        // 'Δεκατιανό' έχουμε ήδη περάσει μέσα στην ίδια μέρα ώστε το καθένα να πάρει τη σωστή ώρα.
+        var snackSeen=0;
         dm.forEach(function(meal){
           var foods=[], mk=0,mp=0,mc=0,mf=0,mfi=0;
           (meal.foods||[]).forEach(function(f){
@@ -3039,9 +3052,20 @@ function saveFoodExclusions(){
               alternates.push({name:altTitle, kcal:Math.round(ak), foods:af});
             });
           }
+          var mealTime;
+          if(meal.name==='Ενδιάμεσο'||meal.name==='Δεκατιανό'){
+            snackSeen++;
+            // 1η εμφάνιση→snack, 2η→snack2, 3η+→snack3 (π.χ. διπλή προπόνηση στην ίδια μέρα). Πάνω
+            // από 3 'Ενδιάμεσα' στην ίδια μέρα είναι εξαιρετικά σπάνιο· η 4η+ επαναχρησιμοποιεί το snack3.
+            if(snackSeen>=3) mealTime=(c.mealTimes&&c.mealTimes.snack3)||'21:00';
+            else if(snackSeen===2) mealTime=(c.mealTimes&&c.mealTimes.snack2)||'17:00';
+            else mealTime=TIMES[meal.name]||'';
+          } else {
+            mealTime=TIMES[meal.name]||'';
+          }
           meals.push({
             label:mLabel(meal.name),
-            time:TIMES[meal.name]||'',
+            time:mealTime,
             title:title,
             kcal:Math.round(mk),
             macros:{p:Math.round(mp),c:Math.round(mc),f:Math.round(mf)},
