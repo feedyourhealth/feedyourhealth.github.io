@@ -4010,6 +4010,11 @@ function openPublishModal(){
     var subj=hm.subj;
     var ebody=hm.ebody;
     var mailto='mailto:'+encodeURIComponent(c.email||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(ebody);
+    // ✅ audit fix follow-up: το mailto: δεν κάνει ΤΙΠΟΤΑ ορατό όταν δεν υπάρχει προεπιλεγμένο
+    // πρόγραμμα email (π.χ. ο χρήστης χρησιμοποιεί μόνο Gmail στον browser) — βλ. σχόλιο παρακάτω.
+    // Gmail compose URL (view=cm) δουλεύει σε κάθε browser χωρίς προεπιλεγμένο mail client,
+    // αρκεί ο χρήστης να είναι ήδη συνδεδεμένος στο Gmail (αλλιώς ζητάει πρώτα login).
+    var gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(c.email||'')+'&su='+encodeURIComponent(subj)+'&body='+encodeURIComponent(ebody);
     body.style.textAlign='left';
     // ✅ UX fix: αυτή η ενότητα (μήνυμα/στόχοι/ACSM) δεν έχει σχέση με το "στείλε το link" — είναι
     // ρυθμίσεις του portal του πελάτη που τυχαίνει να ζουν εδώ. Μαζί με τα 3 κανάλια αποστολής το
@@ -4042,14 +4047,15 @@ function openPublishModal(){
       +(phone?'<textarea id="publish-viber-msg" style="position:absolute;left:-9999px;top:-9999px;" readonly>'+esc(msg)+'</textarea>'
         +'<button id="publish-viber-copy" type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:8px" onclick="copyPublishViberMsg(this)">📋 Το Viber δεν γεμίζει μόνο του το μήνυμα — αντιγραφή</button>'
         :'<div style="font-size:11px;color:#9fb5b0;line-height:1.4;margin-bottom:8px">Θα ανοίξει η λίστα επαφών του Viber με το μήνυμα έτοιμο — διάλεξε τον/την '+esc(c.name||'πελάτη')+'.</div>')
-      +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📧 Αποστολή με Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
-      +(c.email?'':'<div style="font-size:11px;color:#e08a00;margin:0 0 6px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα — θα ανοίξει κενό. Πρόσθεσέ το στα «Βασικά Στοιχεία».</div>')
-      // Το "mailto:" ανοίγει το προεπιλεγμένο πρόγραμμα email του υπολογιστή — αν ο χρήστης
-      // χρησιμοποιεί Gmail/webmail στον browser χωρίς να έχει ορίσει προεπιλεγμένο πρόγραμμα,
-      // το κλικ δεν κάνει ΤΙΠΟΤΑ ορατό (audit finding: "δεν ανοίγει κάτι στο email"). Το κουμπί
-      // αντιγραφής είναι το μόνο σίγουρο fallback σε αυτή την περίπτωση.
+      +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📧 Πρόγραμμα Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
+      // Δεύτερο, ισότιμο κουμπί (audit finding: "δεν ανοίγει κάτι στο email" — το mailto: δεν κάνει
+      // ΤΙΠΟΤΑ ορατό όταν δεν υπάρχει προεπιλεγμένο πρόγραμμα email, π.χ. Gmail μόνο στον browser).
+      // Το Gmail compose ανοίγει πάντα κάτι ορατό (νέα καρτέλα), άρα καλύπτει ακριβώς αυτό το κενό.
+      // Χρώμα Gmail-ish (#c2483a) για να ξεχωρίζει οπτικά από το γενικό "πρόγραμμα email" κουμπί.
+      +'<a href="'+esc(gmailUrl)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#c2483a;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">✉️ Gmail στον browser</a>'
+      +(c.email?'':'<div style="font-size:11px;color:#e08a00;margin:0 0 6px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα — θα ανοίξει κενό παραλήπτη. Πρόσθεσέ το στα «Βασικά Στοιχεία».</div>')
       +'<textarea id="publish-email-body" style="position:absolute;left:-9999px;top:-9999px;" readonly>'+esc(subj+'\n\n'+ebody)+'</textarea>'
-      +'<button id="publish-email-copy" type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:8px" onclick="copyPublishEmailBody(this)">📋 Δεν άνοιξε τίποτα; Αντιγραφή μηνύματος</button>'
+      +'<button id="publish-email-copy" type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:8px" onclick="copyPublishEmailBody(this)">📋 Δεν άνοιξε κανένα; Αντιγραφή μηνύματος</button>'
       +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5;margin-bottom:14px">⏳ Ο σύνδεσμος λήγει στις <b>'+expTxt+'</b> ('+window.Cloud.LINK_EXPIRE_DAYS+' μέρες). Όποτε αλλάξεις το πλάνο, πάτα ξανά «Στείλε στον πελάτη» — ο ίδιος σύνδεσμος ενημερώνεται αυτόματα και η λήξη ανανεώνεται.</div>'
       +'<button id="portal-reset-link" class="btn" style="width:100%;background:var(--card-bg);color:#c0392b;border:1px solid #f0c2c2;font-size:12px">🔄 Καθαρισμός & νέο σύνδεσμος</button>'
       +'<div style="font-size:11px;color:#9fb5b0;line-height:1.4;margin-top:4px">Σβήνει τον τρέχοντα σύνδεσμο και φτιάχνει καινούριο — χρήσιμο αν ο πελάτης έχει συμπληρώσει νερό/συμπληρώματα/σημειώσεις που θες να «καθαρίσουν». Ο παλιός σύνδεσμος σταματάει να δουλεύει αμέσως.</div>';
