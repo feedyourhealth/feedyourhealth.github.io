@@ -2139,6 +2139,49 @@ function trimTemplateAddedFat(tmpls){
 }
 trimTemplateAddedFat(DEFAULT_TMPLS);
 
+// Βήμα D2a: τα vegan_*/orthodox_fasting templates ξεκινούν με ~4.5-5g πρωτεΐνης ανά 100 kcal, ενώ
+// ένα 35%-protein preset αντιστοιχεί σε ~8.75g/100kcal — ο scalePlan δεν μπορεί να καλύψει τη
+// διαφορά (τα φρουτο-snacks έχουν ~0 πρωτεΐνη, δεν υπάρχει τι να κλιμακωθεί). Μετρήθηκε: vegan-cut
+// 54% / orthodox 62% του στόχου πρωτεΐνης ακόμα και μετά τα 2a-2c. Δύο ήπιες κινήσεις, ΜΟΝΟ στα
+// plant-diet templates, με υπάρχον (πλήρως wired: en/ru/tr + PORTIONS) τρόφιμο:
+//   (α) σε κάθε savory snack με <10g πρωτεΐνη (όχι mini-smoothie με «γάλα», όχι πρωινό) πρόσθεσε
+//       Λούπινα (βρ.) 90g — 15.6g πρωτ. / 2.9g λίπος ανά 100g, παραδοσιακά νηστίσιμο ελληνικό.
+//   (β) στα κύρια γεύματα, +40% στις υπάρχουσες μερίδες οσπρίων/tofu (<300g), με πλαφόν 340g.
+// Δεν υποκαθιστά hand-authored plant templates — baseline ώστε τα ενεργά vegan/νηστίσιμα πλάνα να
+// βγουν από την κλινικά ανεπαρκή ζώνη πρωτεΐνης.
+function boostPlantTemplateProtein(tmpls){
+  var LUPINI='Λούπινα (βρ.)';
+  // Τρέχει LOAD-TIME (πριν φορτωθεί το app-part3.js) → δεν μπορούμε να βασιστούμε στο
+  // classifyMealSlot· ανίχνευση snack inline από το όνομα του γεύματος.
+  var isSnack=function(name){ return /ενδιάμεσ|ενδιαμεσ|δεκατιαν|απογευμ|snack/i.test(name||''); };
+  var isMilky=function(n){ return /γάλα/i.test(n); }; // «γάλα ...» σε snack = mini-smoothie, δεν ταιριάζει λούπινο
+  Object.keys(tmpls).forEach(function(goal){
+    if(!/^(vegan_|orthodox_fasting)/.test(goal))return;
+    (tmpls[goal]||[]).forEach(function(day){
+      (day||[]).forEach(function(meal){
+        var foods=meal.foods||[];
+        var mp=0; foods.forEach(function(f){ mp+=cm(f.n,f.g).p; });
+        var hasLupini=foods.some(function(f){return f.n===LUPINI;});
+        // (β) όλα τα γεύματα: +40% στις υπάρχουσες μερίδες οσπρίων/tofu, με απόλυτο πλαφόν 340g.
+        foods.forEach(function(f){
+          var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+          if(cat==='Όσπρια' && f.n!==LUPINI && f.g<300) f.g=Math.min(340, Math.round(f.g*1.4));
+        });
+        if(hasLupini) return;
+        // (α) Λούπινα ΜΟΝΟ σε savory snack φτωχό σε πρωτεΐνη (<10g) — όχι σε mini-smoothie («γάλα ...»),
+        //     όχι σε πρωινό (απέφευγε άβολους συνδυασμούς τύπου ψωμί+ταχίνι+μέλι+λούπινα). 90g = μία
+        //     ρεαλιστική «χούφτα» παστά λούπινα (~107 kcal), παραδοσιακό νηστίσιμο.
+        if(isSnack(meal.name) && mp<10){
+          var milky=foods.some(function(f){return isMilky(f.n);});
+          if(!milky) foods.push({n:LUPINI,g:90});
+        }
+      });
+    });
+  });
+  return tmpls;
+}
+boostPlantTemplateProtein(DEFAULT_TMPLS);
+
 // Mutable copy — editable by the user
 var TMPLS=deepClone(DEFAULT_TMPLS);
 // User-saved custom plan templates
