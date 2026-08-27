@@ -22,7 +22,8 @@ var RECIPE_DIET_TAG_DEFS=[
   {key:'high_protein',label:'Υψηλή πρωτεΐνη',match:['high_protein']}
 ];
 function recipeMatchesTagDef(recipe,def){
-  var tags=(recipe.tags||[]).map(function(t){return t.toLowerCase().replace(/\s+/g,'');});
+  // Λαμβάνει υπόψη και τις κατηγορίες που πρόσθεσε ο διαιτολόγος σε υπάρχουσα συνταγή (getEffectiveRecipeTags).
+  var tags=getEffectiveRecipeTags(recipe).map(function(t){return t.toLowerCase().replace(/\s+/g,'');});
   return def.match.some(function(m){return tags.indexOf(m)>-1;});
 }
 function recipeHasDietTag(recipe,defKey){
@@ -97,6 +98,36 @@ function toggleRecipePopular(recipe){
   if(typeof save==='function') save();
 }
 
+// ── Επιπλέον κατηγορίες/ετικέτες που όρισε ο διαιτολόγος σε ΥΠΑΡΧΟΥΣΑ συνταγή (στατική ή δική του).
+// Overlay στο recipeMeta[id].extraTags — ίδιο μοτίβο με τα mealTimes· δεν αγγίζει ποτέ τη
+// MEAL_RECIPES/SNACK_RECIPES ούτε το custom_recipes blob, ταξιδεύει στο cloud μέσα στο user_data.
+function getRecipeExtraTags(recipe){
+  var ov=getRecipeMeta()[recipe.id];
+  return (ov && ov.extraTags) ? ov.extraTags.slice() : [];
+}
+// Ενεργές ετικέτες συνταγής = ενσωματωμένες (recipe.tags) + όσες πρόσθεσε ο διαιτολόγος (χωρίς διπλά).
+function getEffectiveRecipeTags(recipe){
+  var out=(recipe.tags||[]).slice();
+  getRecipeExtraTags(recipe).forEach(function(t){ if(out.indexOf(t)===-1) out.push(t); });
+  return out;
+}
+// Ταιριάζει η συνταγή σε ένα def ΜΟΝΟ μέσω των ενσωματωμένων της tags — τις κατηγορίες αυτές τις
+// δείχνουμε "κλειδωμένες" στον επεξεργαστή (δεν αφαιρούνται από τον διαιτολόγο).
+function recipeBuiltinMatchesTagDef(recipe,def){
+  var tags=(recipe.tags||[]).map(function(t){return t.toLowerCase().replace(/\s+/g,'');});
+  return def.match.some(function(m){return tags.indexOf(m)>-1;});
+}
+function toggleRecipeExtraTag(recipeId,tag){
+  var meta=getRecipeMeta();
+  meta[recipeId]=meta[recipeId]||{};
+  var list=(meta[recipeId].extraTags||[]).slice();
+  var i=list.indexOf(tag);
+  if(i>-1) list.splice(i,1); else list.push(tag);
+  meta[recipeId].extraTags=list;
+  saveRecipeMetaAll(meta);
+  if(typeof save==='function') save();
+}
+
 function allRecipesForBrowsing(){
   return (typeof MEAL_RECIPES!=='undefined'?MEAL_RECIPES:[]).concat(typeof SNACK_RECIPES!=='undefined'?SNACK_RECIPES:[]).concat(window.customRecipes||[]);
 }
@@ -143,6 +174,8 @@ var _recipeTraitFilters=[];
 var _recipeSortMode='';
 // Ποιες κάρτες έχουν ανοιχτά τα 4 κουμπιά επεξεργασίας ώρας γεύματος (αντί για τη μία συνοπτική ετικέτα).
 var _categoryEditIds={};
+// Ποιες κάρτες έχουν ανοιχτό τον επεξεργαστή κατηγοριών (Όσπρια/Smoothies/κ.λπ.).
+var _tagEditIds={};
 // Ποιες κάρτες έχουν ανοιχτή τη λίστα υλικών.
 var _expandedRecipeIds={};
 
@@ -163,6 +196,17 @@ function toggleRecipeTraitFilter(key){
 }
 function setRecipeSortMode(val){ _recipeSortMode=val; renderRecipesList(); }
 function toggleCategoryEdit(recipeId){ _categoryEditIds[recipeId]=!_categoryEditIds[recipeId]; renderRecipesList(); }
+function toggleRecipeTagEdit(recipeId){ _tagEditIds[recipeId]=!_tagEditIds[recipeId]; renderRecipesList(); }
+function onToggleRecipeCategoryTag(recipeId,tag){
+  toggleRecipeExtraTag(recipeId,tag);
+  if(typeof renderRecipesList==='function') renderRecipesList();
+  // Αν είναι ανοιχτό και το πλήρες modal της ίδιας συνταγής, ξαναχτίζεται ώστε να συγχρονιστούν τα chips.
+  var modal=document.getElementById('recipe-detail-modal');
+  if(modal && !modal.classList.contains('hidden')){
+    var r=findRecipeById(recipeId);
+    if(r) modal.innerHTML=recipeDetailModalHtml(r);
+  }
+}
 function toggleRecipeExpand(recipeId){ _expandedRecipeIds[recipeId]=!_expandedRecipeIds[recipeId]; renderRecipesList(); }
 function toggleRecipeMealTime(recipeId,category){
   var recipe=findRecipeById(recipeId);
@@ -197,6 +241,36 @@ function recipeCategoryHtml(recipe,mealTimes){
     }).join('')+'</div>';
   }
   return '<div class="rcp-chips"><button type="button" class="rcp-cat-pill" onclick="toggleCategoryEdit(\''+recipe.id+'\')">Χωρίς κατηγορία ▾</button></div>';
+}
+
+// Επεξεργαστής κατηγοριών (trait tags) μιας συνταγής — Όσπρια, Smoothies, Θαλασσινά, κ.λπ. Οι
+// ενσωματωμένες κατηγορίες (από recipe.tags) εμφανίζονται κλειδωμένες· οι υπόλοιπες είναι toggle
+// που γράφουν στο recipeMeta[id].extraTags, οπότε λειτουργεί και για στατικές ΚΑΙ για δικές του συνταγές.
+function recipeTraitEditChips(recipe){
+  return RECIPE_TRAIT_TAG_DEFS.map(function(d){
+    if(recipeBuiltinMatchesTagDef(recipe,d))
+      return '<span class="rcp-chip active" title="Ενσωματωμένη κατηγορία — δεν αφαιρείται">'+d.label+'</span>';
+    var active=recipeHasTraitTag(recipe,d.key);
+    return '<button type="button" class="rcp-chip'+(active?' active':'')+'" onclick="onToggleRecipeCategoryTag(\''+recipe.id+'\',\''+d.label+'\')">'+d.label+'</button>';
+  }).join('');
+}
+// Inline στην κάρτα λίστας: συνοπτική ετικέτα που ανοίγει τα toggle chips (ίδιο μοτίβο με τη ώρα γεύματος).
+function recipeTraitEditHtml(recipe){
+  if(_tagEditIds[recipe.id]){
+    return '<div class="rcp-chips">'+recipeTraitEditChips(recipe)
+      +'<button type="button" class="rcp-cat-done" onclick="toggleRecipeTagEdit(\''+recipe.id+'\')">✓ Κλείσιμο</button></div>';
+  }
+  var activeDefs=RECIPE_TRAIT_TAG_DEFS.filter(function(d){return recipeHasTraitTag(recipe,d.key);});
+  if(activeDefs.length){
+    return '<div class="rcp-chips">'+activeDefs.map(function(d){
+      return '<span class="rcp-cat-pill active" onclick="toggleRecipeTagEdit(\''+recipe.id+'\')">'+d.label+'</span>';
+    }).join('')+'</div>';
+  }
+  return '<div class="rcp-chips"><button type="button" class="rcp-cat-pill" onclick="toggleRecipeTagEdit(\''+recipe.id+'\')">🏷️ Κατηγορίες ▾</button></div>';
+}
+// Πλήρες modal: πάντα ανοιχτά τα toggle chips, με τίτλο ενότητας.
+function recipeCategoryTagEditHtml(recipe){
+  return '<div class="rd-section-title">Κατηγορίες</div><div class="rcp-chips">'+recipeTraitEditChips(recipe)+'</div>';
 }
 
 // Ζωντανή προσομοίωση κλιμάκωσης θερμίδων μιας συνταγής — καθαρά "τι θα γινόταν αν" εργαλείο, δεν
@@ -304,6 +378,7 @@ function recipeRow(recipe){
     +'<div class="rcp-sub">'+recipe.kcal+' kcal · Π'+(m.p||0)+' Λ'+(m.f||0)+' Υ'+(m.c||0)+'</div>'
     +ingredientsHtml
     +recipeCategoryHtml(recipe,mealTimes)
+    +recipeTraitEditHtml(recipe)
     +'</div>';
 }
 
@@ -316,7 +391,7 @@ function renderRecipesList(){
   var filtered=all.filter(function(r){
     if(q){
       var nameMatch=(r.name||'').toLowerCase().indexOf(q)>-1;
-      var tagMatch=(r.tags||[]).some(function(t){return t.toLowerCase().indexOf(q)>-1;});
+      var tagMatch=getEffectiveRecipeTags(r).some(function(t){return t.toLowerCase().indexOf(q)>-1;});
       // Ψάχνει και στα ίδια τα υλικά (π.χ. "σολομός" βρίσκει και συνταγές όπου ο σολομός είναι
       // ένα από τα υλικά, όχι μόνο όσες τον έχουν στο όνομα/tags).
       var ingredientMatch=(r.foods||[]).some(function(f){return (f.n||'').toLowerCase().indexOf(q)>-1;});
@@ -580,7 +655,7 @@ function saveNewRecipe(){
 // onRecipeScaleInput του Phase 1 με scope='modal' ώστε να μη συγκρούεται με τυχόν ανοιχτό inline
 // preview της ίδιας συνταγής στη λίστα (scope='row'). ──
 function recipeDetailModalHtml(recipe){
-  var tags=(recipe.tags||[]).slice(0,6);
+  var tags=getEffectiveRecipeTags(recipe).slice(0,8);
   var tagsHtml=tags.length?'<div class="rcp-chips">'+tags.map(function(t){return '<span class="rcp-chip active">'+esc(t)+'</span>';}).join('')+'</div>':'';
   var prepHtml=recipe.prepTimeMin?'<div class="rd-meta">⏱️ '+recipe.prepTimeMin+' λεπτά</div>':'';
   var ingredientsHtml='<div class="rd-ingredients">'+(recipe.foods||[]).map(function(f,idx){
@@ -593,6 +668,7 @@ function recipeDetailModalHtml(recipe){
     +'<div class="recipe-modal-title"><span>'+esc(recipe.name)+'</span><button class="recipe-modal-close" onclick="closeRecipeDetailModal()">&times;</button></div>'
     +prepHtml
     +tagsHtml
+    +recipeCategoryTagEditHtml(recipe)
     +'<div class="rd-section-title">Υλικά</div>'
     +ingredientsHtml
     +recipeScalerHtml(recipe,'modal')
