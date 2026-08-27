@@ -1344,8 +1344,10 @@ function genPlan(){
   var eff=getDayTgtEff(c,t);
 
   // ✅ PHASE 3A: HYBRID SYSTEM — Allocate per-meal targets from daily totals
+  // Βήμα 2b-bis: περνάμε τον πίνακα γευμάτων (όχι μόνο το πλήθος) ώστε το allocateMealTargets
+  // να ζυγίζει κάθε γεύμα κατά slot (πρωινό/μεσημεριανό/βραδινό/snack) και όχι κατά θέση index.
   for(var d=0;d<7;d++){
-    eff[d].meals = allocateMealTargets(eff[d], tmplDays[d].length);
+    eff[d].meals = allocateMealTargets(eff[d], tmplDays[d]);
   }
 
   // ✅ PHASE 3B: TRY SMART GENERATION WITH 3-PRIORITY FALLBACK

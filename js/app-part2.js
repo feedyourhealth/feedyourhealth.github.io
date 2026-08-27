@@ -960,31 +960,48 @@ function getDayTgtEff(c,t){
 }
 
 // ✅ PHASE 3: ALLOCATE PER-MEAL CALORIE TARGETS
-// Splits daily targets across 5 meals with intelligent distribution
-function allocateMealTargets(dailyTarget, numMeals, mealTiming) {
-  // Default distribution: breakfast 22%, lunch 28%, dinner 25%, snacks 12-13%
-  // This ensures larger meals when appetite is higher (lunch/dinner)
-  // and smaller snacks between meals
-  var mealAlloc = [0.22, 0.28, 0.25, 0.12, 0.13];
-
+// Splits the daily target across the day's meals, weighted BY MEAL SLOT.
+//
+// Βήμα 2b-bis: παλιά η κατανομή [0.22,0.28,0.25,0.12,0.13] εφαρμοζόταν ΚΑΤΑ ΘΕΣΗ index,
+// υποθέτοντας σειρά [πρωινό, μεσημεριανό, βραδινό, snack, snack]. Όμως ο caller περνά τα γεύματα
+// ΜΕΤΑ το reorderMealsToStandardSequence, που δίνει σειρά [πρωινό, snack, μεσημεριανό, snack,
+// βραδινό]. Αποτέλεσμα: το πρωινό ενδιάμεσο έπαιρνε το 28% (μερίδιο μεσημεριανού) + ~47g στόχο
+// πρωτεΐνης από γιαούρτι/φρούτο, ενώ το βραδινό (το πιο πρωτεϊνικό γεύμα των templates) έπαιρνε
+// μερίδιο snack (13% / ~22g) και σκαλωνόταν δραστικά κάτω. Τώρα το βάρος κάθε γεύματος ορίζεται
+// από το slot του (classifyMealSlot), όχι από τη θέση του, και κανονικοποιείται σε άθροισμα 1
+// ώστε όλος ο ημερήσιος στόχος να κατανέμεται για οποιονδήποτε αριθμό γευμάτων (3-meal IF,
+// 5-meal, 6-meal double-training templates).
+//
+// `meals` δέχεται είτε πίνακα γευμάτων (objects με .name, ή ονόματα) είτε — για backward
+// compatibility με παλιούς callers — καθαρό αριθμό γευμάτων (τότε υποτίθεται η τυπική σειρά).
+function allocateMealTargets(dailyTarget, meals, mealTiming) {
   if(!dailyTarget || !dailyTarget.k) {
     console.warn('⚠️ allocateMealTargets: Invalid daily target');
     return [];
   }
 
+  var SLOT_W = { breakfast: 0.22, lunch: 0.28, dinner: 0.25 };
+  var SNACK_BASE = 0.125; // per-snack (και per-"other") βάρος — 2 snacks => 0.25, όπως το legacy
+
+  var names;
+  if (typeof meals === 'number') {
+    // legacy: μόνο πλήθος — υπόθεσε τυπική σειρά [πρωινό, snack, μεσημεριανό, snack, βραδινό, ...]
+    names = ['Πρωινό','Ενδιάμεσο','Μεσημεριανό','Ενδιάμεσο','Βραδινό','Ενδιάμεσο','Ενδιάμεσο'].slice(0, meals);
+  } else {
+    names = (meals || []).map(function(m){ return (typeof m === 'string') ? m : (m && m.name); });
+  }
+  var nMeals = names.length;
+  if (nMeals === 0) return [];
+
+  var weights = names.map(function(nm){
+    var slot = (typeof classifyMealSlot === 'function') ? classifyMealSlot(nm) : 'snack';
+    return (SLOT_W[slot] != null) ? SLOT_W[slot] : SNACK_BASE;
+  });
+  var wSum = weights.reduce(function(a,b){ return a + b; }, 0) || 1;
+
   var targets = [];
-  var n = Math.min(numMeals, mealAlloc.length);
-  // ✅ RE-NORMALIZE when the day has fewer than 5 meals (e.g. intermittent_fasting's 3-meal
-  // eating-window template): taking a raw prefix of the 5-slot percentages (e.g. 22+28+25=75%
-  // for 3 meals) silently left the remaining 25% of the daily target completely unallocated —
-  // confirmed live as the primary cause of intermittent_fasting plans running ~26-30% under
-  // target every day, regardless of goal. Scaling the used slice back up to sum to 100% means
-  // every meal still gets its original *relative* weight, just against the client's real total.
-  var usedSum = 0;
-  for (var s = 0; s < n; s++) usedSum += mealAlloc[s];
-  var norm = usedSum > 0 ? (1 / usedSum) : 1;
-  for (var i = 0; i < n; i++) {
-    var pct = mealAlloc[i] * norm;
+  for (var i = 0; i < nMeals; i++) {
+    var pct = weights[i] / wSum;
     targets.push({
       k: Math.round(dailyTarget.k * pct),
       p: Math.round(dailyTarget.p * pct),
@@ -992,24 +1009,6 @@ function allocateMealTargets(dailyTarget, numMeals, mealTiming) {
       c: Math.round(dailyTarget.c * pct)
     });
   }
-
-  // Handle excess meals (if > 5) by distributing evenly
-  if(numMeals > mealAlloc.length) {
-    var remainingKcal = dailyTarget.k;
-    for(var i = 0; i < mealAlloc.length; i++) {
-      remainingKcal -= targets[i].k;
-    }
-    var perExtraMeal = Math.round(remainingKcal / (numMeals - mealAlloc.length));
-    for(var i = mealAlloc.length; i < numMeals; i++) {
-      targets.push({
-        k: perExtraMeal,
-        p: Math.round(dailyTarget.p * (perExtraMeal / dailyTarget.k)),
-        f: Math.round(dailyTarget.f * (perExtraMeal / dailyTarget.k)),
-        c: Math.round(dailyTarget.c * (perExtraMeal / dailyTarget.k))
-      });
-    }
-  }
-
   return targets;
 }
 

@@ -2152,6 +2152,14 @@ function scaledG(n,origG,r){
   return Math.max(floor,Math.round(origG*r));
 }
 
+// Βήμα 2b: guard-rail για τους ανεξάρτητους macro λόγους. Ένα γεύμα του template με ελάχιστη
+// πρωτεΐνη/υδατάνθρακες (π.χ. ενδιάμεσο με φυτικό γάλα ~2g πρωτ.) έβγαζε ratioP = targetP/~2 ≈ ×8
+// και φούσκωνε ένα τρόφιμο σε εξωφρενική μερίδα (μετρήθηκε: 958g «Γάλα καρύδας» / 1755 kcal σε ένα
+// snack). Το reconcile pass παρακάτω (clamp 0.7–1.4) δεν μπορεί να αναιρέσει τέτοιο σφάλμα σε ένα
+// βήμα. Το clamp εδώ + τα SCALE_CATS caps για 'Όσπρια'/'Αυγά/Γαλακτ.' κρατούν τις μερίδες ρεαλιστικές.
+var SCALE_RATIO_LO=0.3, SCALE_RATIO_HI=3.0;
+function clampRatio(r){ return Math.max(SCALE_RATIO_LO, Math.min(SCALE_RATIO_HI, r)); }
+
 function scalePlan(tmpl,tgt,mealTargets){
   var p=deepClone(tmpl);
 
@@ -2173,7 +2181,7 @@ function scalePlan(tmpl,tgt,mealTargets){
       var targetC=mealTarget.c||0;
 
       var ratioK=targetK/mealTot.k;
-      var ratioP=(targetP>0&&mealTot.pt>0)?targetP/mealTot.pt:ratioK;
+      var ratioP=clampRatio((targetP>0&&mealTot.pt>0)?targetP/mealTot.pt:ratioK);
       var ratioC=(targetC>0&&mealTot.c>0)?targetC/mealTot.c:ratioK;
 
       // ✅ FAT-DRIFT FIX: ratioF used to be targetF/mealTot.f — i.e. computed as if 'Λάδια'/'Ξηροί
@@ -2220,20 +2228,24 @@ function scalePlan(tmpl,tgt,mealTargets){
       // κι όταν κάθε μακροθρεπτικό «πέτυχε» το δικό του γραμμαριαίο στόχο (επιβεβαιωμένο: αποκλίσεις
       // -30% έως +17% στο ημερήσιο σύνολο σε πραγματικά πλάνα). Μία επιπλέον, ενιαία διόρθωση εδώ κλείνει
       // το χάσμα θερμίδων χωρίς να πειράξει σημαντικά τις αναλογίες μακροθρεπτικών που μόλις πετύχαμε.
-      var afterTot=0;
-      m.foods.forEach(function(f){ afterTot+=cm(f.n,f.g).k; });
-      if(afterTot>0){
+      // Βήμα 2c: bounded LOOP αντί για ένα μόνο pass. Ένα clamped pass (0.7–1.4) δεν κλείνει
+      // αποκλίσεις >40% — μέρες που έβγαιναν −20%…−28% kcal έμεναν εκεί. 3 ήπια passes επιτρέπουν
+      // σωρευτική διόρθωση (έως ~×2.7 / ÷0.34) χωρίς βίαια άλματα σε ένα βήμα, και σταματούν μόλις
+      // το γεύμα μπει εντός ±3% του στόχου.
+      for(var rp=0;rp<3;rp++){
+        var afterTot=0;
+        m.foods.forEach(function(f){ afterTot+=cm(f.n,f.g).k; });
+        if(afterTot<=0)break;
         var reconcile=targetK/afterTot;
-        if(Math.abs(reconcile-1)>0.03){
-          reconcile=Math.max(0.7,Math.min(1.4,reconcile));
-          m.foods.forEach(function(f){
-            var cat=FOODS[f.n]?FOODS[f.n].cat:'';
-            var cap=SCALE_CATS[cat];
-            var r=reconcile;
-            if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
-            f.g=snapWholeG(f.n,scaledG(f.n,f.g,r));
-          });
-        }
+        if(Math.abs(reconcile-1)<=0.03)break;
+        reconcile=Math.max(0.7,Math.min(1.4,reconcile));
+        m.foods.forEach(function(f){
+          var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+          var cap=SCALE_CATS[cat];
+          var r=reconcile;
+          if(cap)r=Math.min(cap.hi,Math.max(cap.lo,r));
+          f.g=snapWholeG(f.n,scaledG(f.n,f.g,r));
+        });
       }
     });
     return p;
@@ -2250,7 +2262,7 @@ function scalePlan(tmpl,tgt,mealTargets){
   var targetC=(typeof tgt==='object'&&tgt&&tgt.c)?tgt.c:0;
 
   var ratioK=targetK/tot.k;
-  var ratioP=(targetP>0&&tot.pt>0)?targetP/tot.pt:ratioK;
+  var ratioP=clampRatio((targetP>0&&tot.pt>0)?targetP/tot.pt:ratioK);
   var ratioC=(targetC>0&&tot.c>0)?targetC/tot.c:ratioK;
 
   // ✅ FAT-DRIFT FIX — same reasoning as the per-meal branch above: size ratioF off the fat
