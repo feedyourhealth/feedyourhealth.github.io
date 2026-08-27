@@ -472,11 +472,17 @@ function newRecipeModalHtml(){
   var tagPills=RECIPE_DIET_TAG_DEFS.map(function(d){
     return '<button type="button" class="rcp-chip" id="nr-tag-'+d.key+'" onclick="toggleNewRecipeTag(\''+d.key+'\')">'+d.label+'</button>';
   }).join('');
+  // Κατηγορίες (trait tags) — αποθηκεύεται η ετικέτα ως έχει (π.χ. 'Όσπρια', 'Smoothies'), ώστε να
+  // ταιριάζει με το φίλτρο chips της βιβλιοθήκης (recipeMatchesTagDef κάνει lowercase τη σύγκριση).
+  var traitPills=RECIPE_TRAIT_TAG_DEFS.map(function(d){
+    return '<button type="button" class="rcp-chip" id="nr-tag-'+d.label+'" onclick="toggleNewRecipeTag(\''+d.label+'\')">'+d.label+'</button>';
+  }).join('');
   return '<div class="recipe-modal-content nr-modal-content">'
     +'<div class="recipe-modal-title"><span>Νέα συνταγή</span><button class="recipe-modal-close" onclick="closeNewRecipeModal()">&times;</button></div>'
     +'<div class="nr-field"><label>Όνομα συνταγής</label><input type="text" id="nr-name" placeholder="π.χ. Ομελέτα με σπανάκι"></div>'
     +'<div class="nr-field"><label>Χρόνος προετοιμασίας (λεπτά)</label><input type="number" id="nr-prep" min="0" placeholder="15" style="width:120px"></div>'
-    +'<div class="nr-field"><label>Ετικέτες</label><div class="rcp-chips">'+tagPills+'</div></div>'
+    +'<div class="nr-field"><label>Ετικέτες (τύπος διατροφής)</label><div class="rcp-chips">'+tagPills+'</div></div>'
+    +'<div class="nr-field"><label>Κατηγορίες (όσπρια, smoothies, κ.λπ.)</label><div class="rcp-chips">'+traitPills+'</div></div>'
     +'<div class="nr-field"><label>Υλικά</label><div id="nr-ingredients">'
       +[0,1,2].map(newRecipeIngredientRowHtml).join('')
     +'</div><button type="button" class="nr-add-ing" onclick="addNewRecipeIngredientRow()">+ Πρόσθεσε υλικό</button></div>'
