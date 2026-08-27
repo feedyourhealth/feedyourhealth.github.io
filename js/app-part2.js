@@ -913,12 +913,21 @@ function makeDayTgtDefaults(c,t){
     var dayF=Math.round(dayKcal*fPct/9);
     var dayC=Math.max(0,Math.round((dayKcal-dayP*4-dayF*9)/4)); // floor at 0 — defense-in-depth against p%+f% together exceeding 100
 
+    // Βήμα D0: πρακτικό κατώφλι λίπους ~0.5 g/kg. Το carbBoost/carbload ρίχνει λίπος kcal-for-kcal
+    // για να χωρέσουν υδατάνθρακες· χωρίς κατώφλι, σε αθλητή με sport-preset χαμηλού λίπους ο ημερήσιος
+    // στόχος λίπους έπεφτε στα ~17g (μετρήθηκε) και το πλάνο έβγαινε +200%…+500% λίπος εκείνες τις
+    // μέρες, ενώ τα ~17g/ημέρα είναι κάτω από το φυσιολογικό όριο (ορμονική λειτουργία, λιποδιαλυτές
+    // βιταμίνες). Το «κομμένο» λίπος που ΔΕΝ επιτρέπεται να αφαιρεθεί δεν προστίθεται ως υδατάνθρακες —
+    // μένει ως λίπος (kcal-neutral, το dayC παίρνει μόνο ό,τι πραγματικά ελευθερώθηκε).
+    var fatFloorG=Math.round(0.5*(c.weight||70));
+
     // Apply carb boost redistribution on top of daily macro targets
     if(extraC>0){
-      // Reduce fat by the carb increase amount (carbs are 4kcal/g, fat is 9kcal/g)
-      var kcalFromExtraC=extraC*4;
-      dayF=Math.max(0,Math.round(dayF-(kcalFromExtraC/9)));
-      dayC=dayC+extraC;
+      // Reduce fat by the carb increase amount (carbs are 4kcal/g, fat is 9kcal/g) — but not below fatFloorG
+      var wantCutG=extraC*4/9;
+      var cutG=Math.min(wantCutG, Math.max(0, dayF-fatFloorG));
+      dayF=Math.round(dayF-cutG);
+      dayC=dayC+Math.round(cutG*9/4);
     }
 
     // 🏁 Carb-loading override (only on the specific pre-event days computed above; no-op for everyone else).
@@ -934,9 +943,12 @@ function makeDayTgtDefaults(c,t){
       }
       if(loadCarbG>dayC){
         var extraLoadC=loadCarbG-dayC;
-        var kcalFromExtraLoadC=extraLoadC*4;
-        dayF=Math.max(0,Math.round(dayF-(kcalFromExtraLoadC/9)));
-        dayC=loadCarbG;
+        // Βήμα D0: μη ρίχνεις το λίπος κάτω από fatFloorG ούτε για carb-loading· ο στόχος υδατανθράκων
+        // παίρνει μόνο ό,τι επιτρέπει ο θερμιδικός προϋπολογισμός αφού κρατηθεί το κατώφλι λίπους.
+        var wantLoadCutG=extraLoadC*4/9;
+        var loadCutG=Math.min(wantLoadCutG, Math.max(0, dayF-fatFloorG));
+        dayF=Math.round(dayF-loadCutG);
+        dayC=dayC+Math.round(loadCutG*9/4);
       }
     }
 

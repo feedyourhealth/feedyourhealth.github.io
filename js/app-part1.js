@@ -2102,6 +2102,43 @@ function normalizeWholeTmpls(tmpls){
 }
 normalizeWholeTmpls(DEFAULT_TMPLS);
 
+// Βήμα D1: τα default templates τρέχουν 31-40% θερμίδων από λίπος ενώ τα macro presets ζητούν
+// 23-30% — δομική αναντιστοιχία που ο scalePlan δεν κλείνει (SCALE_CATS floor 0.6 + το μισό λίπος
+// κάθεται σε πρωτεϊνικά τρόφιμα). Μετρημένο overshoot +25%…+76% λίπος/εβδομάδα. Δύο ήπια όρια:
+//   (α) hard cap 8g ελαιόλαδο ανά γεύμα — τα templates βάζουν 8-12g σε ΚΑΙ μεσημεριανό ΚΑΙ βραδινό
+//       (+ ό,τι προσθέτει το ensureSaladAndOil/ensureOilWithVegetables), δηλ. 20-30g/ημέρα.
+//   (β) το ημερήσιο added fat (Λάδια + Ξηροί καρποί, incl. αβοκάντο/ταχίνι/φυστικοβούτυρο) δεν
+//       ξεπερνά ~13% των θερμίδων της ημέρας· το υπόλοιπο λίπος έρχεται από ολόκληρα τρόφιμα.
+// Ίδιο μοτίβο load-time normalizer με το normalizeWholeTmpls από πάνω.
+function trimTemplateAddedFat(tmpls){
+  var PER_MEAL_OIL_MAX=8, MAX_ADDED_FAT_PCT=0.13, MIN_G=3;
+  Object.keys(tmpls).forEach(function(goal){
+    (tmpls[goal]||[]).forEach(function(day){
+      if(!day||!day.length)return;
+      (day||[]).forEach(function(meal){
+        (meal.foods||[]).forEach(function(f){
+          var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+          if(cat==='Λάδια' && f.g>PER_MEAL_OIL_MAX) f.g=PER_MEAL_OIL_MAX;
+        });
+      });
+      var dayK=0, addF=0, addItems=[];
+      (day||[]).forEach(function(meal){
+        (meal.foods||[]).forEach(function(f){
+          var v=cm(f.n,f.g); dayK+=v.k;
+          var cat=FOODS[f.n]?FOODS[f.n].cat:'';
+          if((MACRO_TYPE[cat]||'k')==='f'){ addF+=v.f; addItems.push(f); }
+        });
+      });
+      if(dayK>0 && addF*9 > dayK*MAX_ADDED_FAT_PCT){
+        var r=(dayK*MAX_ADDED_FAT_PCT)/(addF*9);
+        addItems.forEach(function(f){ f.g=Math.max(MIN_G, Math.round(f.g*r)); });
+      }
+    });
+  });
+  return tmpls;
+}
+trimTemplateAddedFat(DEFAULT_TMPLS);
+
 // Mutable copy — editable by the user
 var TMPLS=deepClone(DEFAULT_TMPLS);
 // User-saved custom plan templates
