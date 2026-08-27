@@ -268,6 +268,15 @@ var FOODS={
 'PB Coconut Truffles':{k:430,p:8,c:28,f:34,fi:3.0,cat:'Συνταγές FYH',en:'PB Coconut Truffles',ru:'Трюфели арахис-кокос',tr:'Fıstık Ezmeli Hindistan Cevizi Trüfü'},
 'Energy Bites (FYH)':{k:360,p:7,c:58,f:12,fi:5.5,cat:'Συνταγές FYH',en:'Energy Bites (FYH)',ru:'Энергетические шарики (FYH)',tr:'Enerji Topları (FYH)'},
 'PB Protein Bars':{k:370,p:15,c:35,f:19,fi:3.5,cat:'Συνταγές FYH',en:'PB Protein Bars',ru:'Протеиновые батончики с арахисовой пастой',tr:'Fıstık Ezmeli Protein Bar'},
+// ✅ 2026-08-27: FYH Endurance Bar & Ultra Bar — μακροθρεπτικά ανά 100g από τις επίσημες ετικέτες.
+// Endurance: μπάρα 40g → 158kcal, 2.5g πρωτ., 30.2g υδατ. (19.2g σάκχ.), 2.5g λίπος, 2.7g ίνες → ×2.5 για 100g.
+// Ultra: μπάρα 68g → Φράουλα/Τζίντζερ 279kcal·10.2P·40.9C·9.6F·4.1fi | Σοκολάτα 277kcal·10.2P·40.5C·9.6F·4.2fi → ×(100/68).
+// Και τα 4: vegan, dairy-free, χωρίς πρόσθετη ζάχαρη. Περιέχουν βρώμη (→ QUICK_EXCL Γλουτένη).
+// Ultra επιπλέον: φυστικοβούτυρο (→ Ξηροί καρποί) & απομονωμένη πρωτεΐνη σόγιας (→ Όσπρια).
+'Endurance Bar Φράουλα (FYH)':{k:395,p:6.3,c:75.5,f:6.3,fi:6.8,cat:'Συνταγές FYH',en:'Endurance Bar Strawberry (FYH)',ru:'Endurance Bar «Клубника» (FYH)',tr:'Endurance Bar Çilek (FYH)'},
+'Endurance Bar Σοκολάτα (FYH)':{k:395,p:6.3,c:75.5,f:6.3,fi:6.8,cat:'Συνταγές FYH',en:'Endurance Bar Chocolate (FYH)',ru:'Endurance Bar «Шоколад» (FYH)',tr:'Endurance Bar Çikolata (FYH)'},
+'Ultra Bar Φράουλα & Τζίντζερ (FYH)':{k:410,p:15,c:60.1,f:14.1,fi:6,cat:'Συνταγές FYH',en:'Ultra Bar Strawberries & Ginger (FYH)',ru:'Ultra Bar «Клубника и имбирь» (FYH)',tr:'Ultra Bar Çilek & Zencefil (FYH)'},
+'Ultra Bar Σοκολάτα (FYH)':{k:407,p:15,c:59.6,f:14.1,fi:6.2,cat:'Συνταγές FYH',en:'Ultra Bar Chocolate (FYH)',ru:'Ultra Bar «Шоколад» (FYH)',tr:'Ultra Bar Çikolata (FYH)'},
 'Σάλτσα Ντομάτας (FYH)':{k:133,p:1.2,c:8,f:11,fi:1.3,cat:'Συνταγές FYH',en:'FYH Tomato Sauce',ru:'Томатный соус (FYH)',tr:'Domates Sosu (FYH)'},
 // Petretzeakis Breakfast Recipes
 'Breakfast Burrito (Πετρετζίκης)':{k:420,p:18,c:48,f:16,fi:4.5,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Breakfast Burrito (Petretzikis)',ru:'Буррито на завтрак (Petretzikis)',tr:'Kahvaltı Burritosu (Petretzikis)'}, // real eggs + Κασέρι cheese
@@ -690,12 +699,12 @@ var QUICK_EXCL={
   // carry a real cross-contamination risk (Celiac Disease Foundation, the celiac protocol's own
   // cited source, explicitly warns regular oats need a "certified gluten-free" label). Confirmed
   // live: served 3x/week to a celiac client's plan, unfiltered, before this fix.
-  '🌾 Γλουτένη':['Ψωμί σίκαλης','Ψωμί λευκό','Ψωμί προζύμης','Μακαρόνια (βρ.)','Κριθαράκι (βρ.)','Πίτα αραβική','Κυπριακή πίτα','Μπανανόψωμο','Muffins Μύρτιλου','Ψωμί ολικής άλεσης','Σπαγγέτι ολικής (βρ.)','Τορτίλια (large)','Noodles αυγού (M&S)','Πλιγούρι (βρ.)','Κους κους (βρ.)','Ψωμάκι Brioche','Ψωμάκι Μπιφτεκιού','Κρίθινο παξιμάδι','Τραχανάς (βρ.)','Φρυγανιές','Wasa Φρυγανιές Σίκαλης','Dark Rye Crispbread (Ryvita)','Κράκερ ολικής','Βρώμη (ωμή)'],
+  '🌾 Γλουτένη':['Ψωμί σίκαλης','Ψωμί λευκό','Ψωμί προζύμης','Μακαρόνια (βρ.)','Κριθαράκι (βρ.)','Πίτα αραβική','Κυπριακή πίτα','Μπανανόψωμο','Muffins Μύρτιλου','Ψωμί ολικής άλεσης','Σπαγγέτι ολικής (βρ.)','Τορτίλια (large)','Noodles αυγού (M&S)','Πλιγούρι (βρ.)','Κους κους (βρ.)','Ψωμάκι Brioche','Ψωμάκι Μπιφτεκιού','Κρίθινο παξιμάδι','Τραχανάς (βρ.)','Φρυγανιές','Wasa Φρυγανιές Σίκαλης','Dark Rye Crispbread (Ryvita)','Κράκερ ολικής','Βρώμη (ωμή)','Endurance Bar Φράουλα (FYH)','Endurance Bar Σοκολάτα (FYH)','Ultra Bar Φράουλα & Τζίντζερ (FYH)','Ultra Bar Σοκολάτα (FYH)'],
   '🥩 Κρέας':['Βοδινό άπαχο (ψητό)','Χοιρινό (μπριζόλα)','Κουνέλι (μαγ.)','Αρνί (ψητό)','Βοδινά φιλετάκια','Γαλακτοπουλο (βρ.)','Γαλοπούλα στήθος','Κιμάς κοτόπουλο (μαγ.)','Κοτόπουλο βραστό','Κοτόπουλο μπιφτέκι','Κοτόπουλο μπούτι (ψητό)','Κοτόπουλο σουβλάκι','Κοτόπουλο στήθος (ψητό)','Μοσχάρι (ψητό)','Μοσχάρι κιμάς (μαγ.)','Βοδινός κιμάς (μαγ.)','Βοδινός κιμάς άπαχος (μαγ.)','Μπριζόλα άπαχη','Χοιρινός κιμάς (μαγ.)','Moving Mountains Burger'],
   '🐟 Ψάρια/Θαλ.':['Σολομός (ψητός)','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Γαρίδες (βραστές)','Σαρδέλες','Τσιπούρα (ψητή)','Μπακαλιάρος (ψητός)','Σκουμπρί (ψητό)','Χταπόδι (βρ.)','Καλαμάρι (ψητό)','Μύδια (βρ.)','Γαρίδες γίγαντες (βρ.)','Καβούρι (βρ.)','Καλαμαράκια (ψητά)','Σούπιες (βρ.)','Φιδάκι (ψητό)'],
-  '🫘 Όσπρια':['Φασόλια','Ρεβίθια','Φακές','Μαυρομάτικα','Φάβα','Γίγαντες (βρ.)','Κουκιά (βρ.)','Αρακάς (βρ.)','Φακές κόκκινες (βρ.)','Λούπινα (βρ.)','Κανελλίνι (βρ.)','Φασόλια μπορλότι (βρ.)','Tofu (φυσικό)','Edamame (βρ.)','Beyond Beef (φυτικός κιμάς)'],
+  '🫘 Όσπρια':['Φασόλια','Ρεβίθια','Φακές','Μαυρομάτικα','Φάβα','Γίγαντες (βρ.)','Κουκιά (βρ.)','Αρακάς (βρ.)','Φακές κόκκινες (βρ.)','Λούπινα (βρ.)','Κανελλίνι (βρ.)','Φασόλια μπορλότι (βρ.)','Tofu (φυσικό)','Edamame (βρ.)','Beyond Beef (φυτικός κιμάς)','Ultra Bar Φράουλα & Τζίντζερ (FYH)','Ultra Bar Σοκολάτα (FYH)'],
   '🥚 Αυγά':['Αυγά (ολόκληρα)','Ασπράδια αυγών'],
-  '🌰 Ξηροί καρποί':['Αμύγδαλα','Καρύδια','Φυστικοβούτυρο','Κάσιους','Ταχίνι','Chia seeds','Αβοκάντο']
+  '🌰 Ξηροί καρποί':['Αμύγδαλα','Καρύδια','Φυστικοβούτυρο','Κάσιους','Ταχίνι','Chia seeds','Αβοκάντο','Ultra Bar Φράουλα & Τζίντζερ (FYH)','Ultra Bar Σοκολάτα (FYH)']
 };
 var SUBST_ORDER={
   'Κρέας':       ['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Όσπρια'],
@@ -860,6 +869,10 @@ var FOOD_UNITS={
   'PB Coconut Truffles':{g:30,u:'τεμ.'},
   'Energy Bites (FYH)':{g:30,u:'τεμ.'},
   'PB Protein Bars':{g:50,u:'τεμ.'},
+  'Endurance Bar Φράουλα (FYH)':{g:40,u:'τεμ.'},
+  'Endurance Bar Σοκολάτα (FYH)':{g:40,u:'τεμ.'},
+  'Ultra Bar Φράουλα & Τζίντζερ (FYH)':{g:68,u:'τεμ.'},
+  'Ultra Bar Σοκολάτα (FYH)':{g:68,u:'τεμ.'},
   'Σάλτσα Ντομάτας (FYH)':{g:15,u:'κ.σ.'},
   // Petretzeakis Breakfast Recipes
   'Breakfast Burrito (Πετρετζίκης)':{g:420,u:'μερίδ.'},
@@ -1148,6 +1161,10 @@ var PORTIONS={
 'PB Coconut Truffles':[{n:'1 truffle',g:30},{n:'2 truffles',g:60},{n:'3 truffles',g:90}],
 'Energy Bites (FYH)':[{n:'1 μπαλάκι',g:30},{n:'2 μπαλάκια',g:60},{n:'4 μπαλάκια',g:120}],
 'PB Protein Bars':[{n:'1 μπάρα',g:80},{n:'2 μπάρες',g:160}],
+'Endurance Bar Φράουλα (FYH)':[{n:'1 μπάρα',g:40},{n:'2 μπάρες',g:80}],
+'Endurance Bar Σοκολάτα (FYH)':[{n:'1 μπάρα',g:40},{n:'2 μπάρες',g:80}],
+'Ultra Bar Φράουλα & Τζίντζερ (FYH)':[{n:'1 μπάρα',g:68},{n:'2 μπάρες',g:136}],
+'Ultra Bar Σοκολάτα (FYH)':[{n:'1 μπάρα',g:68},{n:'2 μπάρες',g:136}],
 'Σάλτσα Ντομάτας (FYH)':[{n:'1 κ.σ.',g:15},{n:'2 κ.σ.',g:30},{n:'50ml',g:50},{n:'100ml',g:100}],
 // ════ UNIVERSAL PORTIONS EXPANSION — All remaining foods ════
 // Μπριζόλες / Steaks
@@ -3156,6 +3173,14 @@ var SNACK_RECIPES=[
     {n:'Energy Bites (FYH)',g:50},{n:'Μήλο',g:100}
   ],kcal:232,macro:{p:4,f:6,c:43},tags:['FYH','Ενέργεια','Γρήγορη']},
 
+  {id:'snk_endurance_bar',name:'Endurance Bar (FYH) με Μήλο',foods:[
+    {n:'Endurance Bar Φράουλα (FYH)',g:40},{n:'Μήλο',g:120}
+  ],kcal:220,macro:{p:3,f:3,c:47},tags:['FYH','Ενέργεια','Vegan','Γρήγορη']},
+
+  {id:'snk_ultra_bar',name:'Ultra Bar (FYH)',foods:[
+    {n:'Ultra Bar Φράουλα & Τζίντζερ (FYH)',g:68}
+  ],kcal:279,macro:{p:10,f:10,c:41},tags:['FYH','Πρωτεΐνη','Vegan','Travel']},
+
   // ═══ ΕΝΑΛΛΑΚΤΙΚΑ ═══
   {id:'snk_mixed_nuts',name:'Μίξ Ξηροί Καρποί & Σταφίδες',foods:[
     {n:'Αμύγδαλα',g:15},{n:'Καρύδια',g:15},{n:'Σταφίδες',g:25}
@@ -3532,7 +3557,9 @@ var MED_GRAIN_SWAP={
 var FYH_SNACK_NAMES={
   'Dark Choc Oat Bites':1,'Energy Bites (FYH)':1,'PB Coconut Truffles':1,
   'PB Protein Bars':1,'Muffins Μύρτιλου':1,'Γκρανόλα χωρίς ζάχαρη':1,
-  'Protein Pancakes (FYH)':1,'Μπανανόψωμο':1
+  'Protein Pancakes (FYH)':1,'Μπανανόψωμο':1,
+  'Endurance Bar Φράουλα (FYH)':1,'Endurance Bar Σοκολάτα (FYH)':1,
+  'Ultra Bar Φράουλα & Τζίντζερ (FYH)':1,'Ultra Bar Σοκολάτα (FYH)':1
 };
 var MED_SNACK_FRUITS=['Μήλο','Μπανάνα','Πορτοκάλι','Αχλάδι','Ροδάκινο'];
 var MED_SNACK_NUTS=['Καρύδια','Αμύγδαλα','Κάσιους','Φυστίκι Αιγίνης'];
