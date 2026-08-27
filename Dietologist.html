@@ -2871,8 +2871,7 @@ function saveFoodExclusions(){
     CLINIC:{
       wa:localStorage.getItem('fyh-clinic-wa')||'',
       tel:localStorage.getItem('fyh-clinic-tel')||'',
-      email:localStorage.getItem('fyh-clinic-email')||'',
-      web:localStorage.getItem('fyh-clinic-web')||'https://feedyourhealth.org'
+      email:localStorage.getItem('fyh-clinic-email')||''
     },
 
     publishPlan:function(c){
@@ -3194,7 +3193,7 @@ function saveFoodExclusions(){
       }
 
       var clinic=this.CLINIC||{};
-      var hasContact=!!(clinic.wa||clinic.tel||clinic.email||clinic.web);
+      var hasContact=!!(clinic.wa||clinic.tel||clinic.email);
       return {
         v:1,
         lang:c.lang||'el',
@@ -3204,7 +3203,7 @@ function saveFoodExclusions(){
         height:c.height||null,
         publishedAt:new Date().toISOString(),
         coachNote:(c.portalNote||'').trim(),
-        contact:hasContact?{wa:clinic.wa||'',tel:clinic.tel||'',email:clinic.email||'',web:clinic.web||''}:null,
+        contact:hasContact?{wa:clinic.wa||'',tel:clinic.tel||'',email:clinic.email||''}:null,
         targets:{kcal:Math.round(t.target||0), p:Math.round(t.p||0), c:Math.round(t.carb||0), f:Math.round(t.f||0)},
         hydration:{baseMl:hb, trainMl:ht, matchMl:hm, glassMl:250},
         days:days,

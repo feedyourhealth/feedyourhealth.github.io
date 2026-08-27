@@ -287,7 +287,7 @@
   .sheet .ssub{font-size:12px;color:var(--muted);margin-bottom:14px}
   .sheet a.opt{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink);padding:12px 12px;border:.5px solid var(--bord);border-radius:12px;margin-bottom:9px;font-size:14px;font-weight:600}
   .sheet a.opt i{font-size:20px;width:24px;text-align:center}
-  .sheet a.wa{color:#0e8a4f}.sheet a.tel{color:var(--teal)}.sheet a.mail{color:#b25b00}.sheet a.web{color:#1565C0}
+  .sheet a.wa{color:#0e8a4f}.sheet a.tel{color:var(--teal)}.sheet a.mail{color:#b25b00}
   .sheet .close{width:100%;background:var(--tint);border:none;border-radius:12px;padding:11px;font-size:13px;color:var(--teal-d);font-weight:600;cursor:pointer;margin-top:4px}
   @media (min-width:880px){
     .fab{bottom:24px}
@@ -471,7 +471,7 @@ const SPICES=[
 
 // Επικοινωνία με το διαιτολογικό γραφείο (fallback αν δεν έρθει από το πλάνο).
 // ⬇️ Συμπλήρωσε WhatsApp/τηλέφωνο (διεθνής μορφή, π.χ. 306900000000) για να ενεργοποιηθεί το κουμπί.
-const COACH={ wa:'', tel:'', email:'', web:'https://feedyourhealth.org' };
+const COACH={ wa:'', tel:'', email:'' };
 
 // Πλαίσιο ημέρας που μπορεί προαιρετικά να επιλέξει ο πελάτης όταν καταγράφει βάρος/σημείωση —
 // βοηθά τον διαιτολόγο να καταλάβει ΓΙΑΤΙ έπεσε η τήρηση μια μέρα, χωρίς να μαντεύει.
@@ -536,7 +536,7 @@ const I18N={
     faqQ5:'Καφές, τσάι, αλκοόλ — επιτρέπονται;', faqA5:'Καφές και τσάι χωρίς ζάχαρη: ελεύθερα, όποια ώρα θες. Αλκοόλ: 1-2 φορές/εβδομάδα με μέτρο, όχι σε ημέρα προπόνησης ή αγώνα.',
     faqQ6:'Πάω έξω ή ταξίδι — τι επιλέγω;', faqA6:'Διάλεξε ψητό ή βραστό κρέας/ψάρι, σαλάτα, και μία μερίδα αμύλου (ρύζι, πατάτα, ψωμί) — σαν να έφτιαχνες μόνη σου το πιάτο του πλάνου. Απόφυγε τηγανητά και επιδόρπια όποτε γίνεται.',
     fabAsk:'Ρώτησέ με', contactHdr:'Επικοινωνία', contactSub:'Ρώτησέ με ό,τι χρειάζεσαι για το πλάνο σου.',
-    contactWa:'WhatsApp', contactTel:'Τηλεφώνησε', contactMail:'Email', contactWeb:'Ιστοσελίδα', contactClose:'Κλείσιμο',
+    contactWa:'WhatsApp', contactTel:'Τηλεφώνησε', contactMail:'Email', contactClose:'Κλείσιμο',
     contactGreeting:'Γεια σας! Είμαι ο/η {name} και έχω μια ερώτηση για το πλάνο μου.', contactFallbackName:'πελάτης/πελάτισσα',
     contactQSubject:'Ερώτηση για το πλάνο μου',
     obTitle1:'Το πλάνο σου', obSub1:'Εδώ βλέπεις τα γεύματά σου κάθε μέρα, με ποσότητες και θερμίδες.',
@@ -640,7 +640,7 @@ const I18N={
     faqQ5:'Coffee, tea, alcohol — allowed?', faqA5:'Coffee and tea without sugar: freely, any time. Alcohol: 1-2 times/week in moderation, not on training or match days.',
     faqQ6:'Eating out or traveling — what do I pick?', faqA6:'Choose grilled or boiled meat/fish, a salad, and one portion of starch (rice, potato, bread) — as if building your own plate from the plan. Avoid fried food and desserts when you can.',
     fabAsk:'Ask me', contactHdr:'Contact', contactSub:'Ask me anything about your plan.',
-    contactWa:'WhatsApp', contactTel:'Call', contactMail:'Email', contactWeb:'Website', contactClose:'Close',
+    contactWa:'WhatsApp', contactTel:'Call', contactMail:'Email', contactClose:'Close',
     contactGreeting:'Hi! I\'m {name} and I have a question about my plan.', contactFallbackName:'your client',
     contactQSubject:'Question about my plan',
     obTitle1:'Your plan', obSub1:'Here you see your meals every day, with quantities and calories.',
@@ -744,7 +744,7 @@ const I18N={
     faqQ5:'Кофе, чай, алкоголь — можно?', faqA5:'Кофе и чай без сахара — свободно, в любое время. Алкоголь: 1-2 раза в неделю в меру, не в день тренировки или матча.',
     faqQ6:'Иду в гости или путешествую — что выбрать?', faqA6:'Выбирайте запечённое или отварное мясо/рыбу, салат и одну порцию углеводов (рис, картофель, хлеб) — как если бы вы сами составляли тарелку по плану. По возможности избегайте жареного и десертов.',
     fabAsk:'Спросить', contactHdr:'Связь', contactSub:'Спросите меня о чём угодно по поводу вашего плана.',
-    contactWa:'WhatsApp', contactTel:'Позвонить', contactMail:'Email', contactWeb:'Сайт', contactClose:'Закрыть',
+    contactWa:'WhatsApp', contactTel:'Позвонить', contactMail:'Email', contactClose:'Закрыть',
     contactGreeting:'Здравствуйте! Меня зовут {name}, у меня вопрос по поводу моего плана.', contactFallbackName:'ваш клиент',
     contactQSubject:'Вопрос по моему плану',
     obTitle1:'Ваш план', obSub1:'Здесь вы видите свои приёмы пищи на каждый день, с количеством и калориями.',
@@ -848,7 +848,7 @@ const I18N={
     faqQ5:'Kahve, çay, alkol — izinli mi?', faqA5:'Şekersiz kahve ve çay: istediğin zaman serbest. Alkol: haftada 1-2 kez ölçülü, antrenman veya maç günü hariç.',
     faqQ6:'Dışarıda yiyorum veya seyahatteyim — ne seçmeliyim?', faqA6:'Izgara veya haşlanmış et/balık, salata ve bir porsiyon nişasta (pilav, patates, ekmek) seç — sanki plandaki tabağı kendin hazırlıyormuş gibi. Mümkün olduğunca kızartma ve tatlıdan kaçın.',
     fabAsk:'Bana sor', contactHdr:'İletişim', contactSub:'Planınla ilgili merak ettiğin her şeyi sor.',
-    contactWa:'WhatsApp', contactTel:'Ara', contactMail:'E-posta', contactWeb:'Web sitesi', contactClose:'Kapat',
+    contactWa:'WhatsApp', contactTel:'Ara', contactMail:'E-posta', contactClose:'Kapat',
     contactGreeting:'Merhaba! Ben {name}, planımla ilgili bir sorum var.', contactFallbackName:'danışanınız',
     contactQSubject:'Planımla ilgili soru',
     obTitle1:'Planın', obSub1:'Burada her gün için öğünlerini, miktarlarını ve kalorilerini görürsün.',
@@ -1494,8 +1494,8 @@ function render(){
     +tabBtn('prog','ti-chart-line',T('nav_prog'));
   app.appendChild(nav);
 
-  // Το FAB εμφανίζεται μόνο αν υπάρχει ΠΡΑΓΜΑΤΙΚΟΣ τρόπος επικοινωνίας (WhatsApp/τηλέφωνο/email) —
-  // μόνο το γενικό site link (COACH.web) δεν μετράει σαν «Ρώτησέ με», μπερδεύει τον πελάτη χωρίς λόγο.
+  // Το FAB εμφανίζεται μόνο αν υπάρχει ΠΡΑΓΜΑΤΙΚΟΣ τρόπος επικοινωνίας (WhatsApp/τηλέφωνο/email).
+  // Το γενικό site link δεν εμφανίζεται πλέον — μπέρδευε τον πελάτη χωρίς λόγο.
   if(hasDirectContact()){
     const fab=el('button','fab');
     fab.innerHTML='<i class="ti ti-message-circle"></i>'+T('fabAsk');
@@ -1537,7 +1537,7 @@ function injectManifest(){
 function contactInfo(){return (SNAP&&SNAP.contact)||COACH||{}}
 function contactChannels(){
   const c=contactInfo(),out=[];
-  if(c.wa)out.push('wa'); if(c.tel)out.push('tel'); if(c.email)out.push('email'); if(c.web)out.push('web');
+  if(c.wa)out.push('wa'); if(c.tel)out.push('tel'); if(c.email)out.push('email');
   return out;
 }
 // Μόνο κανάλια που φτάνουν ΚΑΤΕΥΘΕΙΑΝ στον/στην διαιτολόγο (όχι το γενικό site) μετράνε σαν «έχω τρόπο να ρωτήσω».
@@ -1551,7 +1551,6 @@ function openContact(){
   if(c.wa)opts+='<a class="opt wa" href="https://wa.me/'+esc(String(c.wa).replace(/[^0-9]/g,''))+'?text='+msg+'" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i>'+T('contactWa')+'</a>';
   if(c.tel)opts+='<a class="opt tel" href="tel:'+esc(c.tel)+'"><i class="ti ti-phone"></i>'+T('contactTel')+'</a>';
   if(c.email)opts+='<a class="opt mail" href="mailto:'+esc(c.email)+'?subject='+encodeURIComponent(T('contactQSubject'))+'"><i class="ti ti-mail"></i>'+T('contactMail')+'</a>';
-  if(c.web)opts+='<a class="opt web" href="'+esc(c.web)+'" target="_blank" rel="noopener"><i class="ti ti-world"></i>'+T('contactWeb')+'</a>';
   bg.innerHTML='<div class="sheet"><h3>'+T('contactHdr')+'</h3><div class="ssub">'+T('contactSub')+'</div>'
     +opts+'<button class="close" onclick="this.closest(\'.sheet-bg\').remove()">'+T('contactClose')+'</button></div>';
   document.body.appendChild(bg);
