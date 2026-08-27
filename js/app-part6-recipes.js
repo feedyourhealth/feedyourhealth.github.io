@@ -46,6 +46,7 @@ function availableRecipeDietTags(){
 var RECIPE_TRAIT_TAG_DEFS=[
   {key:'seafood',label:'Θαλασσινά',match:['θαλασσινά']},
   {key:'legumes',label:'Όσπρια',match:['όσπρια']},
+  {key:'smoothies',label:'Smoothies',match:['smoothie','smoothies','σμούθι']},
   {key:'light',label:'Ελαφρύ',match:['ελαφρύ','light']},
   {key:'omega3',label:'Ω3',match:['ω3','omega3']},
   {key:'salad',label:'Σαλάτα',match:['σαλάτα']},

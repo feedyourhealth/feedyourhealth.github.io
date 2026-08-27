@@ -2444,7 +2444,7 @@ var MEAL_RECIPES=[
 
   {id:'med_octopus_fava',name:'Χταπόδι με Φάβα & Λεμόνι',foods:[
     {n:'Χταπόδι (βρ.)',g:150},{n:'Φάβα',g:150},{n:'Λεμόνι',g:15},{n:'Μαϊντανός (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:10}
-  ],kcal:517,macro:{p:58,f:14,c:40},tags:['Mediterranean','Θαλασσινά','Ελληνικό']},
+  ],kcal:517,macro:{p:58,f:14,c:40},tags:['Mediterranean','Θαλασσινά','Όσπρια','Ελληνικό']},
 
   {id:'med_orzo_shrimp',name:'Κριθαρότο με Γαρίδες & Ντομάτα',foods:[
     {n:'Κριθαράκι (βρ.)',g:180},{n:'Γαρίδες (βραστές)',g:120},{n:'Τομάτες',g:100},{n:'Σκόρδο',g:5},{n:'Βασιλικός (φρέσκος)',g:3},{n:'Ελαιόλαδο',g:8}
@@ -2541,7 +2541,7 @@ var MEAL_RECIPES=[
   // ═══ VEGAN DIET ═══
   {id:'vegan_buddha_bowl',name:'Buddha Bowl - Κινόα, Τόφου, Λαχανικά',foods:[
     {n:'Κινόα (βρ.)',g:80},{n:'Ρεβίθια',g:100},{n:'Μπρόκολο',g:120},{n:'Tofu (φυσικό)',g:80},{n:'Ελαιόλαδο',g:10}
-  ],kcal:450,macro:{p:22,f:18,c:54},tags:['Vegan','HighFiber','Energizing']},
+  ],kcal:450,macro:{p:22,f:18,c:54},tags:['Vegan','Όσπρια','HighFiber','Energizing']},
 
   {id:'vegan_lentil_curry',name:'Κάρι Λαχανικών με Ρύζι',foods:[
     {n:'Καρότα',g:100},{n:'Μπρόκολο',g:120},{n:'Κολοκυθάκια',g:80},{n:'Κοκος γάλα light',g:100},{n:'Ρύζι άσπρο (βρ.)',g:70}
@@ -2562,7 +2562,7 @@ var MEAL_RECIPES=[
 
   {id:'veg_chickpea_salad',name:'Σαλάτα Ρεβίθια με Ντομάτες & Κολιανδρο',foods:[
     {n:'Ρεβίθια',g:150},{n:'Τομάτες',g:100},{n:'Αγγούρι',g:80},{n:'Βασιλικός (φρέσκος)',g:10},{n:'Ελαιόλαδο',g:12}
-  ],kcal:383,macro:{p:15,f:16,c:48},tags:['Vegetarian','Σαλάτα','Φρέσκια']},
+  ],kcal:383,macro:{p:15,f:16,c:48},tags:['Vegetarian','Όσπρια','Σαλάτα','Φρέσκια']},
 
   // ═══ BODYBUILDING CLEAN EATING - LEAN PROTEINS ═══
   // --- ΚΟΤΟΠΟΥΛΟ (7 recipes) ---
@@ -2657,12 +2657,12 @@ var MEAL_RECIPES=[
   // --- LEGUMES (1 recipe) ---
   {id:'bb_lentils_rice_veggies',name:'Φακές Ρύζι & Λαχανικά',foods:[
     {n:'Φακές',g:180},{n:'Ρύζι άσπρο (βρ.)',g:160},{n:'Τομάτες',g:120},{n:'Καρότα',g:80},{n:'Ελαιόλαδο',g:5}
-  ],kcal:515,macro:{p:22,f:7,c:94},tags:['bodybuilding_clean','legume','vegetarian','vegan','Vegan','high_carb']},
+  ],kcal:515,macro:{p:22,f:7,c:94},tags:['bodybuilding_clean','legume','Όσπρια','vegetarian','vegan','Vegan','high_carb']},
 
   // --- VEGAN PLANT PROTEIN (4 recipes) ---
   {id:'bb_tofu_beans_beetroot',name:'Tofu Φασόλια & Παντζάρι',foods:[
     {n:'Tofu (φυσικό)',g:200},{n:'Φασόλια',g:120},{n:'Παντζάρι (βραστό)',g:100},{n:'Πιπεριά κόκκινη',g:100},{n:'Ελαιόλαδο',g:8}
-  ],kcal:449,macro:{p:29,f:19,c:49},tags:['bodybuilding_clean','vegan','Vegan','high_protein','tofu','legume']},
+  ],kcal:449,macro:{p:29,f:19,c:49},tags:['bodybuilding_clean','vegan','Vegan','high_protein','tofu','legume','Όσπρια']},
 
   {id:'bb_beyond_beef_wholewheat_pasta',name:'Φυτικός Κιμάς Ολικής Ζυμαρικά & Ντομάτα',foods:[
     {n:'Beyond Beef (φυτικός κιμάς)',g:120},{n:'Σπαγγέτι ολικής (βρ.)',g:120},{n:'Τομάτες',g:150},{n:'Σκόρδο',g:8},{n:'Ελαιόλαδο',g:5}
@@ -2776,7 +2776,7 @@ var MEAL_RECIPES=[
   // ═══ ΑΡΝΙ - ΠΕΤΡΕΤΖΙΚΗΣ STYLE ═══
   {id:'lamb_lentils',name:'Αρνί με Φακές Κόκκινες',foods:[
     {n:'Αρνί (ψητό)',g:140},{n:'Φακές κόκκινες (βρ.)',g:100},{n:'Καρότα',g:80},{n:'Σπανάκι',g:100},{n:'Ελαιόλαδο',g:10}
-  ],kcal:621,macro:{p:48,f:34,c:32},tags:['Αρνί','Φακές','Θρεπτική']},
+  ],kcal:621,macro:{p:48,f:34,c:32},tags:['Αρνί','Φακές','Όσπρια','Θρεπτική']},
 
   {id:'lamb_souvlaki',name:'Αρνί Souvlaki με Πατάτες',foods:[
     {n:'Αρνί (ψητό)',g:150},{n:'Πατάτες',g:120},{n:'Σαλάτα εποχής',g:150},{n:'Τζατζίκι',g:40},{n:'Κρεμμύδι',g:40}
@@ -2814,11 +2814,11 @@ var MEAL_RECIPES=[
   // ═══ ΌΣΠΡΙΑ & ΕΛΑΦΡΥ - ΠΕΤΡΕΤΖΙΚΗΣ STYLE ═══
   {id:'lentil_rice',name:'Φακές με Λαχανικά & Ελαιόλαδο',foods:[
     {n:'Φακές',g:170},{n:'Σαλάτα εποχής',g:150},{n:'Μπρόκολο',g:100},{n:'Κρεμμύδι',g:50},{n:'Ελαιόλαδο',g:10}
-  ],kcal:367,macro:{p:20,f:11,c:51},tags:['Φακές','Χορτοφ.','Οικονομική']},
+  ],kcal:367,macro:{p:20,f:11,c:51},tags:['Φακές','Όσπρια','Χορτοφ.','Οικονομική']},
 
   {id:'chickpea_salad',name:'Σαλάτα Ρεβίθια με Ντομάτες',foods:[
     {n:'Ρεβίθια',g:150},{n:'Τομάτες',g:120},{n:'Αγγούρι',g:100},{n:'Ελιές',g:30},{n:'Ελαιόλαδο',g:15}
-  ],kcal:451,macro:{p:16,f:22,c:51},tags:['Ρεβίθια','Σαλάτα','Δροσερή']},
+  ],kcal:451,macro:{p:16,f:22,c:51},tags:['Ρεβίθια','Όσπρια','Σαλάτα','Δροσερή']},
 
   {id:'lentil_tomato',name:'Κριθαράκι Κοκκινιστό με Λαχανικά',foods:[
     {n:'Κριθαράκι (βρ.)',g:80},{n:'Σάλτσα ντομάτας (μαγειρεμένη)',g:120},{n:'Μελιτζάνες',g:100},{n:'Κρεμμύδι',g:50},{n:'Ελαιόλαδο',g:12}
@@ -3184,7 +3184,7 @@ var SNACK_RECIPES=[
 
   {id:'snk_bb_protein_shake_banana',name:'Protein Shake Vanilla με Μπανάνα & Γάλα',foods:[
     {n:'Πρωτεΐνη σκόνη (whey)',g:30},{n:'Γάλα αμυγδάλου',g:250},{n:'Μπανάνα',g:100}
-  ],kcal:252,macro:{p:27,f:6,c:27},tags:['bodybuilding_clean','snack','protein_shake','high_protein','energy']},
+  ],kcal:252,macro:{p:27,f:6,c:27},tags:['bodybuilding_clean','snack','protein_shake','Smoothie','high_protein','energy']},
 
   // ═══ ΑΘΛΗΤΙΚΟΣ/ΚΛΙΝΙΚΟΣ ΠΡΟΣΘΗΚΕΣ (συνέχεια από MEAL_RECIPES) ═══
   {id:'tahini_yogurt_berry_bowl',name:'Ταχίνι-Γιαούρτι Bowl με Μούρα',foods:[
@@ -3197,7 +3197,7 @@ var SNACK_RECIPES=[
 
   {id:'post_workout_recovery_smoothie',name:'Smoothie Ανάκαμψης (Μετά την Προπόνηση)',foods:[
     {n:'Γιαούρτι 2%',g:200},{n:'Μούρα',g:100},{n:'Μπανάνα',g:100},{n:'Μέλι άβραστο',g:10}
-  ],kcal:308,macro:{p:23,f:5,c:49},tags:['Γρήγορη','Ενέργεια'],mealTimes:['Ενδιάμεσα']},
+  ],kcal:308,macro:{p:23,f:5,c:49},tags:['Smoothie','Γρήγορη','Ενέργεια'],mealTimes:['Ενδιάμεσα']},
 
   {id:'cottage_cheese_flax_berries',name:'Cottage Cheese με Λιναρόσπορο & Μούρα',foods:[
     {n:'Cottage cheese',g:150},{n:'Λιναρόσπορος',g:10},{n:'Μούρα',g:80}
@@ -3222,7 +3222,7 @@ var SNACK_RECIPES=[
 
   {id:'green_smoothie_spinach_banana',name:'Smoothie Πράσινο με Σπανάκι & Μπανάνα',foods:[
     {n:'Σπανάκι',g:40},{n:'Μπανάνα',g:120},{n:'Γιαούρτι 2%',g:150}
-  ],kcal:226,macro:{p:17,f:4,c:35},tags:['Vegetarian','Γρήγορη','Ενέργεια'],mealTimes:['Πρωινά','Ενδιάμεσα']},
+  ],kcal:226,macro:{p:17,f:4,c:35},tags:['Vegetarian','Smoothie','Γρήγορη','Ενέργεια'],mealTimes:['Πρωινά','Ενδιάμεσα']},
 
   {id:'rice_cakes_cottage_honey',name:'Ρυζογκοφρέτες με Cottage Cheese & Μέλι',foods:[
     {n:'Ρυζογκοφρέτες',g:30},{n:'Cottage cheese',g:100},{n:'Μέλι άβραστο',g:10}
