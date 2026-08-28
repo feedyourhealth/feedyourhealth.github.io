@@ -3129,7 +3129,16 @@ var MEAL_RECIPES=[
   // 1 κουπέπι = 1 φύλλο (βλ. PORTIONS). 12 φύλλα ≈ μερίδα κύριου γεύματος· γράμμαρια εδώ = 12×4γρ.
   {id:'cypriot_koupepia_mince_rice',name:'Κουπέπια με Κιμά & Ρύζι',foods:[
     {n:'Αμπελόφυλλα (τουρσί)',g:48},{n:'Βοδινός κιμάς άπαχος (μαγ.)',g:100},{n:'Ρύζι άσπρο (βρ.)',g:80},{n:'Κρεμμύδι',g:40},{n:'Ελαιόλαδο',g:15},{n:'Λεμόνι (χυμός)',g:10},{n:'Δυόσμος',g:1},{n:'Μαϊντανός (φρέσκος)',g:3}
-  ],kcal:477,macro:{p:31,f:23,c:35},tags:['Κυπριακή','Κλασική']}
+  ],kcal:477,macro:{p:31,f:23,c:35},tags:['Κυπριακή','Κλασική']},
+
+  // ═══ ΕΤΟΙΜΑ ΓΕΥΜΑΤΑ ΑΓΟΡΑΣ (branded) — kcal/macro = επίσημη ετικέτα του παρασκευαστή ═══
+  // Τα υλικά/γραμμάρια είναι κατά προσέγγιση ανακατασκευή για τον scaler/λίστα υλικών· τα
+  // kcal:878 & macro:{p:48,f:47,c:67} είναι οι δηλωμένες τιμές Marinado και υπερισχύουν.
+  // Marinado — "Lightly spiced marinated boneless grilled chicken thigh with aromatic rice,
+  // red cabbage coleslaw with baby arugula leaves."
+  {id:'marinado_picante_chicken_rice_bowl',name:'Picante Chicken Rice Bowl (Marinado)',foods:[
+    {n:'Κοτόπουλο μπούτι (ψητό)',g:160},{n:'Ρύζι άσπρο (βρ.)',g:200},{n:'Λάχανο',g:90},{n:'Ρόκα',g:15},{n:'Μαγιονέζα light',g:55},{n:'Ελαιόλαδο',g:18}
+  ],kcal:878,macro:{p:48,f:47,c:67},tags:['Κοτόπουλο','Ρύζι','Έτοιμο γεύμα','Marinado']}
 ];
 var SNACK_RECIPES=[
   // ═══ ΓΙΑΟΥΡΤΙ & ΓΑΛΑΚΤΟΚΟΜΙΚΑ ═══
