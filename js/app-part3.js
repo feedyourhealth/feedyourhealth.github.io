@@ -2871,7 +2871,11 @@ function enableMealDragDrop(){
       if(e.pointerType==='mouse'&&e.button!==0)return;
       // Κουμπιά + το πεδίο γραμμαρίων: όχι σύρσιμο. Το πεδίο ΟΝΟΜΑΤΟΣ επιτρέπεται
       // (το σύρσιμο ξεκινά μόνο μετά από κίνηση 6px — απλό κλικ = εστίαση για γράψιμο).
-      if(e.target.closest&&e.target.closest('button, .chip-g, .chip-unit-btn'))return;
+      // .chip-dd: τα dropdown επιλογής μερίδας (≡ «Μερίδες» → .srv-ddi) και αυτόματης
+      // συμπλήρωσης ονόματος (.chip-ddi) ζουν ΜΕΣΑ στο .food-chip — χωρίς αυτή την εξαίρεση
+      // το pointerdown πάνω σε μια επιλογή ξεκινούσε σύρσιμο και το e.preventDefault() έπνιγε
+      // το mousedown, οπότε το pickServing/pickChip δεν έτρεχε ποτέ (π.χ. αδύνατη η αλλαγή σε φλ.).
+      if(e.target.closest&&e.target.closest('button, .chip-g, .chip-unit-btn, .chip-dd'))return;
       var d=parseInt(chip.dataset.d),mi=parseInt(chip.dataset.mi),fi=parseInt(chip.dataset.fi);
       var c=getC();
       if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi]||!c.weekPlan[d][mi].foods[fi])return;
