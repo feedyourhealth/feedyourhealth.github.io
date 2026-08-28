@@ -1288,9 +1288,29 @@ var MET_ACTIVITIES=[
     {id:'rowing_vig',name:'Κωπηλατικό ergometer έντονο',met:7.0},
     {id:'rope_skip',name:'Σκακιστά σχοινί (γενικό)',met:12.3},
     {id:'rope_skip_slow',name:'Σκακιστά σχοινί αργό (<100/min)',met:8.8},
-    {id:'health_club',name:'Γυμναστήριο γενικό',met:5.5},
-    {id:'gym_artistic',name:'Ενόργανη γυμναστική',met:4.5},
-    {id:'gym_rhythmic',name:'Ρυθμική γυμναστική',met:4.5}
+    {id:'health_club',name:'Γυμναστήριο γενικό',met:5.5}
+  ]},
+  {cat:'🤸 Ενόργανη Γυμναστική',items:[
+    {id:'gym_artistic',name:'Ενόργανη — γενική προπόνηση',met:4.5},
+    {id:'gym_floor',name:'Έδαφος (floor)',met:6.0},
+    {id:'gym_vault',name:'Άλμα ίππου (vault)',met:4.0},
+    {id:'gym_rings',name:'Κρίκοι (rings)',met:6.5},
+    {id:'gym_pommel',name:'Πλάγιος ίππος (pommel horse)',met:5.5},
+    {id:'gym_pbars',name:'Παράλληλες / δίζυγο (parallel bars)',met:5.5},
+    {id:'gym_hbar',name:'Μονόζυγο (horizontal bar)',met:5.5},
+    {id:'gym_ubars',name:'Ασύμμετρο δίζυγο (uneven bars)',met:5.5},
+    {id:'gym_beam',name:'Δοκός ισορροπίας (beam)',met:4.0},
+    {id:'gym_conditioning',name:'Φυσική κατάσταση / ενδυνάμωση',met:6.0},
+    {id:'gym_trampoline',name:'Τραμπολίνο (trampoline)',met:3.5},
+    {id:'gym_acro',name:'Ακροβατική γυμναστική (acro)',met:5.5},
+    {id:'gym_flex',name:'Ζέσταμα / διατάσεις / ευλυγισία',met:2.8}
+  ]},
+  {cat:'🎀 Ρυθμική Γυμναστική',items:[
+    {id:'gym_rhythmic',name:'Ρυθμική — γενική προπόνηση',met:4.5},
+    {id:'rg_apparatus',name:'Πρόγραμμα με όργανο (σχοινί/στεφάνι/μπάλα/κορίνες/κορδέλα)',met:5.0},
+    {id:'rg_dance',name:'Χορευτικά / βηματολόγιο',met:5.0},
+    {id:'rg_flex',name:'Ευλυγισία / body difficulty / διατάσεις',met:3.0},
+    {id:'rg_conditioning',name:'Φυσική κατάσταση / ενδυνάμωση',met:5.0}
   ]},
   {cat:'🧘 Pilates / Yoga',items:[
     {id:'pilates_mat',name:'Pilates mat (γενικό)',met:3.0},
