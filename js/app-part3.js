@@ -1888,6 +1888,9 @@ function renderWeekTable(){
         dayMealTiming=c.weekPlan[d][mi].mealTiming;
       }
       html+='<td class="day-cell" data-d="'+d+'" data-mi="'+mi+'" data-meal-timing="'+dayMealTiming+'" style="'+rowBg+'">';
+      if(foods.length){
+        html+='<span class="meal-drag-handle" title="Σύρε ΟΛΟΚΛΗΡΟ το γεύμα σε άλλη ημέρα/γεύμα (αντιγραφή)" aria-label="Σύρε ολόκληρο το γεύμα (αντιγραφή)">&#10303;</span>';
+      }
       html+=mealSourceBadge(c.weekPlan[d]&&c.weekPlan[d][mi]);
       foods.forEach(function(food,fi){
         // Free meal special display
@@ -1925,7 +1928,7 @@ function renderWeekTable(){
           +'<span style="color:#2E7D32">Υ '+Math.round(rvTip.c)+'</span> '
           +'<span style="color:#E65100;font-weight:700">&middot; '+Math.round(rvTip.k)+' kcal</span>'
           +'</div>';
-        html+='<div class="food-chip">'
+        html+='<div class="food-chip" data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'" title="Σύρε αυτό το υλικό σε άλλο γεύμα (αντιγραφή)">'
           +macroTip
           +'<div class="chip-r1">'
           +'<span class="food-dot" style="background:'+borderColor+'" title="Ομάδα τροφίμου"></span>'
@@ -1934,7 +1937,6 @@ function renderWeekTable(){
           +' data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'"'
           +' oninput="showChipSug(this)" onfocus="showChipSug(this)" onblur="closeDD()">'
           +'</div>'
-          +'<button class="chip-move-btn" data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'" onclick="event.stopPropagation();holdFoodForMove('+d+','+mi+','+fi+')" title="Μετακίνηση αυτού του υλικού σε άλλο γεύμα (αντιγραφή)" aria-label="Μετακίνηση αυτού του υλικού σε άλλο γεύμα (αντιγραφή)">&#8599;</button>'
           +'</div>'
           +'<div class="chip-r2">'
           +hasIng
@@ -2161,14 +2163,11 @@ function renderWeekTable(){
     });
     // ✅ Click-to-add target: πάτημα σε κελί το κάνει "ενεργό" ώστε το επόμενο κλικ σε
     // τρόφιμο/συνδυασμό απ' τη βιβλιοθήκη να μπαίνει κατευθείαν εκεί, χωρίς drag.
-    // ✅ Click-to-move: αν κρατάς ένα υλικό (κουμπί ↗), το κλικ σε γεύμα το αντιγράφει εκεί.
     cell.addEventListener('click',function(){
-      if(window._heldFood){depositHeldFood(parseInt(cell.dataset.d),parseInt(cell.dataset.mi));return;}
       setActiveMealTarget(parseInt(cell.dataset.d),parseInt(cell.dataset.mi));
     });
   });
   refreshActiveMealIndicator();
-  refreshHeldFoodUI();
 }
 
 // Εισάγει τρόφιμο/συνδυασμό σε συγκεκριμένο κελί — κοινή λογική για drag&drop ΚΑΙ click-to-add,
@@ -2216,57 +2215,6 @@ function refreshActiveMealIndicator(){
     el.className='active-meal-indicator';
     el.textContent='👆 Πάτα σε ένα γεύμα για να διαλέξεις πού θα προστεθούν τα τρόφιμα με κλικ';
   }
-}
-
-/* ── Click-to-move: κράτα ένα υλικό, μετά πάτα σε γεύμα για ΑΝΤΙΓΡΑΦΗ ──────────
-   Εναλλακτικό του drag & drop (στον Chrome το drag ολόκληρου κελιού «σκιάζει»
-   το drag ανά chip). Πάντα ΑΝΤΙΓΡΑΦΗ — το υλικό μένει και στο γεύμα-πηγή.
-   Ίδιο μοτίβο με τη βιβλιοθήκη τροφίμων (κλικ → ενεργό γεύμα). */
-window._heldFood=window._heldFood||null;
-function holdFoodForMove(d,mi,fi){
-  var c=getC();
-  if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi]||!c.weekPlan[d][mi].foods[fi])return;
-  var f=c.weekPlan[d][mi].foods[fi];
-  if(f.n===FREE_MEAL_MARKER){showErrorToast('Το «Ελεύθερο γεύμα» δεν μεταφέρεται.');return;}
-  // Ξαναπάτημα ↗ στο ίδιο υλικό = ακύρωση
-  if(window._heldFood&&window._heldFood.sourceD===d&&window._heldFood.sourceMi===mi&&window._heldFood.sourceFi===fi){
-    cancelHeldFood();return;
-  }
-  window._heldFood={cId:c.id,sourceD:d,sourceMi:mi,sourceFi:fi,food:deepClone(f),n:f.n,g:f.g};
-  refreshHeldFoodUI();
-}
-function cancelHeldFood(){window._heldFood=null;refreshHeldFoodUI();}
-function depositHeldFood(d,mi){
-  var h=window._heldFood;if(!h)return;
-  var c=getC();
-  if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi]){cancelHeldFood();return;}
-  // Αν άλλαξε πελάτης όσο κρατούσες το υλικό, ακύρωσε — μη το ρίξεις σε λάθος πλάνο.
-  if(h.cId&&c.id&&h.cId!==c.id){cancelHeldFood();return;}
-  c.weekPlan[d][mi].foods.push(deepClone(h.food));
-  var destName=c.weekPlan[d][mi].name;
-  window._heldFood=null;
-  save();renderWeekTable();
-  dietoToast('✅ «'+h.n+'» αντιγράφηκε στο: '+DAYS[d]+' · '+destName);
-}
-function refreshHeldFoodUI(){
-  document.querySelectorAll('.food-chip.chip-held').forEach(function(el){el.classList.remove('chip-held');});
-  var bar=document.getElementById('held-food-bar');
-  var h=window._heldFood;
-  if(!h){if(bar)bar.remove();return;}
-  if(!bar){
-    bar=document.createElement('div');
-    bar.id='held-food-bar';
-    bar.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#025857;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;font-size:12px;z-index:10000;box-shadow:0 3px 14px rgba(0,0,0,.28);display:flex;align-items:center;gap:12px;max-width:92vw';
-    document.body.appendChild(bar);
-  }
-  bar.innerHTML='<span>🖐️ Κρατάς: <b>'+esc(h.n)+'</b> '+h.g+'g — πάτα σε ένα γεύμα για αντιγραφή</span>'
-    +'<button type="button" onclick="cancelHeldFood()" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">✕ Άκυρο (Esc)</button>';
-  var srcBtn=document.querySelector('.chip-move-btn[data-d="'+h.sourceD+'"][data-mi="'+h.sourceMi+'"][data-fi="'+h.sourceFi+'"]');
-  if(srcBtn){var chip=srcBtn.closest('.food-chip');if(chip)chip.classList.add('chip-held');}
-}
-if(!window._heldFoodKeyBound){
-  window._heldFoodKeyBound=true;
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&window._heldFood)cancelHeldFood();});
 }
 
 function updG(d,mi,fi,v){var c=getC();if(!c)return;c.weekPlan[d][mi].foods[fi].g=Math.max(0,parseInt(v)||0);save();renderWeekTable();}
@@ -2906,104 +2854,125 @@ function showSwapUndoToast(dayA,dayB){
   };
 }
 
-/* ---- Meal drag & drop ---- */
+/* ---- Meal & ingredient drag ----
+   Custom pointer-drag (ΟΧΙ HTML5 `draggable` — δεν λειτουργεί αξιόπιστα για
+   στοιχεία μέσα σε <td>, και όταν το ίδιο το <td> είναι draggable «σκιάζει»
+   κάθε εσωτερικό στοιχείο). Πάτα-σύρε-άσε με ποντίκι ή δάχτυλο:
+     • σύρσιμο ενός .food-chip        → αντιγραφή ΕΝΟΣ υλικού σε άλλο γεύμα
+     • σύρσιμο της λαβής ⠿ (ανά κελί) → αντιγραφή ΟΛΟΥ του γεύματος
+   Πάντα ΑΝΤΙΓΡΑΦΗ — η πηγή μένει ανέπαφη. Esc ή pointercancel ακυρώνει.
+   Κατώφλι 6px ώστε ένα απλό κλικ να μη ξεκινά σύρσιμο (κρατά το click-to-select). */
+var _mealDrag=null; // {info, startX, startY, started, ghost}
+
 function enableMealDragDrop(){
-  // Enable drag & drop for copying entire meals between cells
-  var cells=document.querySelectorAll('.day-cell');
-  cells.forEach(function(cell){
-    cell.draggable=true;
-
-    // Add tooltip on hover
-    cell.addEventListener('mouseenter', function(){
-      if(this.innerText.trim().length > 0){
-        this.title='💡 Σύρε το γεύμα σε άλλη ημέρα για αντιγραφή';
-      }
-    });
-
-    // Store source meal data on drag start
-    cell.addEventListener('dragstart',function(e){
-      var sourceD=parseInt(this.dataset.d);
-      var sourceMi=parseInt(this.dataset.mi);
+  // (α) Πάτα-σύρε ένα .food-chip → αντιγραφή ΕΝΟΣ υλικού
+  document.querySelectorAll('#week-con .food-chip').forEach(function(chip){
+    chip.addEventListener('pointerdown',function(e){
+      if(e.pointerType==='mouse'&&e.button!==0)return;
+      // Κουμπιά + το πεδίο γραμμαρίων: όχι σύρσιμο. Το πεδίο ΟΝΟΜΑΤΟΣ επιτρέπεται
+      // (το σύρσιμο ξεκινά μόνο μετά από κίνηση 6px — απλό κλικ = εστίαση για γράψιμο).
+      if(e.target.closest&&e.target.closest('button, .chip-g, .chip-unit-btn'))return;
+      var d=parseInt(chip.dataset.d),mi=parseInt(chip.dataset.mi),fi=parseInt(chip.dataset.fi);
       var c=getC();
-      if(!c||!c.weekPlan[sourceD]||!c.weekPlan[sourceD][sourceMi]){e.preventDefault();return;}
-
-      // Check if meal has foods
-      if(!c.weekPlan[sourceD][sourceMi].foods||c.weekPlan[sourceD][sourceMi].foods.length===0){
-        showErrorToast('Αυτό το γεύμα δεν έχει τροφίμων για αντιγραφή.');e.preventDefault();return;
-      }
-
-      // Store meal data as JSON
-      var mealData=JSON.stringify({
-        sourceD:sourceD,
-        sourceMi:sourceMi,
-        foods:c.weekPlan[sourceD][sourceMi].foods||[]
-      });
-
-      e.dataTransfer.effectAllowed='copy';
-      e.dataTransfer.setData('meal/copy',mealData);
-
-      // Visual feedback
-      this.style.opacity='0.6';
-      this.style.cursor='grabbing';
-    });
-
-    // Reset opacity on drag end
-    cell.addEventListener('dragend',function(e){
-      this.style.opacity='1';
-      this.style.cursor='grab';
-    });
-
-    // Prevent default drag over behavior
-    cell.addEventListener('dragover',function(e){
-      var mealData=e.dataTransfer.getData('meal/copy');
-      if(mealData){
-        e.preventDefault();
-        e.dataTransfer.dropEffect='copy';
-        this.classList.add('meal-drag-over');
-      }
-    });
-
-    // Remove visual feedback when leaving the cell entirely
-    cell.addEventListener('dragleave',function(e){
-      if(!this.contains(e.relatedTarget))this.classList.remove('meal-drag-over');
-    });
-
-    // Handle drop
-    cell.addEventListener('drop',function(e){
-      e.preventDefault();
-      this.classList.remove('meal-drag-over');
-
-      // Get the meal data from the drag source
-      var mealDataStr=e.dataTransfer.getData('meal/copy');
-      if(!mealDataStr)return;
-
-      try{
-        var mealData=JSON.parse(mealDataStr);
-        var c=getC();
-        if(!c)return;
-
-        var targetD=parseInt(this.dataset.d);
-        var targetMi=parseInt(this.dataset.mi);
-
-        // Don't copy to the same cell
-        if(targetD===mealData.sourceD&&targetMi===mealData.sourceMi)return;
-
-        // Copy all foods from source to target
-        if(mealData.foods&&mealData.foods.length>0){
-          // Deep copy foods array
-          mealData.foods.forEach(function(food){
-            c.weekPlan[targetD][targetMi].foods.push(deepClone(food));
-          });
-
-          // Save and refresh UI
-          save();
-          renderWeekTable();
-        }
-      }catch(err){
-        console.error('Σφάλμα κατά την αντιγραφή του γεύματος:',err);
-      }
+      if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi]||!c.weekPlan[d][mi].foods[fi])return;
+      var food=c.weekPlan[d][mi].foods[fi];
+      if(food.n===FREE_MEAL_MARKER)return;
+      _startMealPointerDrag(e,{kind:'food',srcD:d,srcMi:mi,food:food,label:food.n+' · '+(food.g||0)+'g'});
     });
   });
+  // (β) Πάτα-σύρε τη λαβή ⠿ → αντιγραφή ΟΛΟΥ του γεύματος
+  document.querySelectorAll('#week-con .meal-drag-handle').forEach(function(handle){
+    handle.addEventListener('pointerdown',function(e){
+      if(e.pointerType==='mouse'&&e.button!==0)return;
+      var cell=handle.closest('.day-cell');if(!cell)return;
+      var d=parseInt(cell.dataset.d),mi=parseInt(cell.dataset.mi);
+      var c=getC();
+      if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi]||!(c.weekPlan[d][mi].foods||[]).length)return;
+      _startMealPointerDrag(e,{kind:'meal',srcD:d,srcMi:mi,foods:c.weekPlan[d][mi].foods,label:'Γεύμα · '+c.weekPlan[d][mi].foods.length+' τρόφιμα'});
+    });
+  });
+}
+
+function _startMealPointerDrag(e,info){
+  // Μη μπλοκάρεις το pointerdown πάνω σε πεδίο κειμένου — αλλιώς δεν εστιάζει για γράψιμο.
+  if(!(e.target.closest&&e.target.closest('input,textarea')))e.preventDefault();
+  _mealDrag={info:info,startX:e.clientX,startY:e.clientY,started:false,ghost:null};
+  document.addEventListener('pointermove',_onMealDragMove,{capture:true,passive:false});
+  document.addEventListener('pointerup',_onMealDragUp,true);
+  document.addEventListener('pointercancel',_cancelMealDrag,true);
+  document.addEventListener('keydown',_onMealDragKey,true);
+}
+function _onMealDragKey(e){if(e.key==='Escape')_cancelMealDrag();}
+
+function _onMealDragMove(e){
+  var md=_mealDrag;if(!md)return;
+  var dx=e.clientX-md.startX, dy=e.clientY-md.startY;
+  if(!md.started){
+    if(Math.abs(dx)+Math.abs(dy)<6)return;           // κατώφλι — απλό κλικ δεν ξεκινά σύρσιμο
+    md.started=true;
+    // Το σύρσιμο ξεκίνησε από πεδίο ονόματος → σταμάτα τυχόν επιλογή κειμένου/εστίαση
+    if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+    try{var sel=window.getSelection&&window.getSelection();if(sel&&sel.removeAllRanges)sel.removeAllRanges();}catch(_e){}
+    closeDD&&closeDD();
+    document.body.style.userSelect='none';
+    document.body.style.cursor='grabbing';
+    var g=document.createElement('div');
+    g.className='meal-drag-ghost';
+    g.textContent=(md.info.kind==='meal'?'📋 ':'')+md.info.label;
+    document.body.appendChild(g);
+    md.ghost=g;
+  }
+  e.preventDefault();
+  md.ghost.style.left=(e.clientX+14)+'px';
+  md.ghost.style.top=(e.clientY+14)+'px';
+  var prev=document.querySelector('#week-con .day-cell.meal-drag-over');
+  if(prev)prev.classList.remove('meal-drag-over');
+  var t=_mealDragCellAt(e.clientX,e.clientY);
+  if(t&&!(t.d===md.info.srcD&&t.mi===md.info.srcMi))t.cell.classList.add('meal-drag-over');
+}
+function _mealDragCellAt(x,y){
+  var el=document.elementFromPoint(x,y);
+  var cell=el&&el.closest?el.closest('#week-con .day-cell'):null;
+  if(!cell)return null;
+  return {cell:cell,d:parseInt(cell.dataset.d),mi:parseInt(cell.dataset.mi)};
+}
+function _onMealDragUp(e){
+  var md=_mealDrag;
+  var didDrop=false;
+  if(md&&md.started){
+    var t=_mealDragCellAt(e.clientX,e.clientY);
+    if(t){
+      var c=getC();
+      if(c&&c.weekPlan[t.d]&&c.weekPlan[t.d][t.mi]&&!(t.d===md.info.srcD&&t.mi===md.info.srcMi)){
+        if(md.info.kind==='food'){
+          c.weekPlan[t.d][t.mi].foods.push(deepClone(md.info.food));
+        }else{
+          md.info.foods.forEach(function(f){c.weekPlan[t.d][t.mi].foods.push(deepClone(f));});
+        }
+        save();
+        didDrop=true;
+      }
+    }
+    // κατάπιε το click που ακολουθεί (να μη «ενεργοποιήσει» το κελί-στόχο)
+    var swallow=function(ev){ev.stopPropagation();ev.preventDefault();};
+    document.addEventListener('click',swallow,true);
+    setTimeout(function(){document.removeEventListener('click',swallow,true);},0);
+  }
+  _cleanupMealDrag();
+  if(didDrop)renderWeekTable();
+}
+function _cancelMealDrag(){_cleanupMealDrag();}
+function _cleanupMealDrag(){
+  document.removeEventListener('pointermove',_onMealDragMove,{capture:true,passive:false});
+  document.removeEventListener('pointerup',_onMealDragUp,true);
+  document.removeEventListener('pointercancel',_cancelMealDrag,true);
+  document.removeEventListener('keydown',_onMealDragKey,true);
+  var prev=document.querySelector('#week-con .day-cell.meal-drag-over');
+  if(prev)prev.classList.remove('meal-drag-over');
+  if(_mealDrag&&_mealDrag.ghost)_mealDrag.ghost.remove();
+  document.body.style.userSelect='';
+  document.body.style.cursor='';
+  _mealDrag=null;
 }
 
 /* ---- Chip food search ---- */
