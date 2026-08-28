@@ -1925,10 +1925,9 @@ function renderWeekTable(){
           +'<span style="color:#2E7D32">Υ '+Math.round(rvTip.c)+'</span> '
           +'<span style="color:#E65100;font-weight:700">&middot; '+Math.round(rvTip.k)+' kcal</span>'
           +'</div>';
-        html+='<div class="food-chip" data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'">'
+        html+='<div class="food-chip">'
           +macroTip
           +'<div class="chip-r1">'
-          +'<span class="chip-grip" draggable="true" title="Σύρε το υλικό σε άλλο γεύμα (αντιγραφή)" aria-label="Σύρε το υλικό σε άλλο γεύμα">&#10303;</span>'
           +'<span class="food-dot" style="background:'+borderColor+'" title="Ομάδα τροφίμου"></span>'
           +'<div class="chip-name-wrap">'
           +'<input class="chip-inp" type="text" value="'+food.n+'" autocomplete="off" spellcheck="false" title="'+food.n+'"'
@@ -2899,14 +2898,10 @@ function enableMealDragDrop(){
       this.style.cursor='grab';
     });
 
-    // Prevent default drag over behavior.
-    // getData() returns '' during dragover in Chrome (protected mode), so we check
-    // dataTransfer.types instead — covers both whole-meal ('meal/copy') and single
-    // ingredient ('food/copy') drags.
+    // Prevent default drag over behavior
     cell.addEventListener('dragover',function(e){
-      var t=e.dataTransfer.types||[];
-      var has=t.indexOf?function(x){return t.indexOf(x)>=0;}:function(x){return t.contains(x);};
-      if(has('meal/copy')||has('food/copy')){
+      var mealData=e.dataTransfer.getData('meal/copy');
+      if(mealData){
         e.preventDefault();
         e.dataTransfer.dropEffect='copy';
         this.classList.add('meal-drag-over');
@@ -2922,28 +2917,6 @@ function enableMealDragDrop(){
     cell.addEventListener('drop',function(e){
       e.preventDefault();
       this.classList.remove('meal-drag-over');
-
-      // ── Single ingredient drag (chip grip) — copy ONE food into this meal ──
-      // Never removes it from the source meal (copy, not move).
-      var foodDataStr=e.dataTransfer.getData('food/copy');
-      if(foodDataStr){
-        try{
-          var fd=JSON.parse(foodDataStr);
-          var cF=getC();
-          if(!cF)return;
-          var tD=parseInt(this.dataset.d),tMi=parseInt(this.dataset.mi);
-          // Dropping back onto the same meal would just duplicate the line — skip.
-          if(tD===fd.sourceD&&tMi===fd.sourceMi)return;
-          if(cF.weekPlan[tD]&&cF.weekPlan[tD][tMi]&&fd.food){
-            cF.weekPlan[tD][tMi].foods.push(deepClone(fd.food));
-            save();
-            renderWeekTable();
-          }
-        }catch(err){
-          console.error('Σφάλμα κατά την αντιγραφή του υλικού:',err);
-        }
-        return;
-      }
 
       // Get the meal data from the drag source
       var mealDataStr=e.dataTransfer.getData('meal/copy');
@@ -2974,31 +2947,6 @@ function enableMealDragDrop(){
       }catch(err){
         console.error('Σφάλμα κατά την αντιγραφή του γεύματος:',err);
       }
-    });
-  });
-
-  // ── Single-ingredient drag ──────────────────────────────────────────────
-  // Only the small grip handle is draggable (not the whole chip) so clicking
-  // into the name / gram inputs still works. stopPropagation() keeps the
-  // .day-cell whole-meal dragstart from also firing. Always copy, never move.
-  document.querySelectorAll('.food-chip .chip-grip').forEach(function(grip){
-    grip.addEventListener('dragstart',function(e){
-      e.stopPropagation();
-      var chip=this.closest('.food-chip');
-      if(!chip){e.preventDefault();return;}
-      var sd=parseInt(chip.dataset.d),smi=parseInt(chip.dataset.mi),sfi=parseInt(chip.dataset.fi);
-      var c=getC();
-      if(!c||!c.weekPlan[sd]||!c.weekPlan[sd][smi]||!c.weekPlan[sd][smi].foods[sfi]){e.preventDefault();return;}
-      e.dataTransfer.effectAllowed='copy';
-      e.dataTransfer.setData('food/copy',JSON.stringify({
-        sourceD:sd,sourceMi:smi,sourceFi:sfi,
-        food:c.weekPlan[sd][smi].foods[sfi]
-      }));
-      chip.style.opacity='0.6';
-    });
-    grip.addEventListener('dragend',function(e){
-      var chip=this.closest('.food-chip');
-      if(chip)chip.style.opacity='1';
     });
   });
 }
