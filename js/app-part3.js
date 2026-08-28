@@ -1934,6 +1934,7 @@ function renderWeekTable(){
           +' data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'"'
           +' oninput="showChipSug(this)" onfocus="showChipSug(this)" onblur="closeDD()">'
           +'</div>'
+          +'<button class="chip-move-btn" data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'" onclick="event.stopPropagation();holdFoodForMove('+d+','+mi+','+fi+')" title="Μετακίνηση αυτού του υλικού σε άλλο γεύμα (αντιγραφή)" aria-label="Μετακίνηση αυτού του υλικού σε άλλο γεύμα (αντιγραφή)">&#8599;</button>'
           +'</div>'
           +'<div class="chip-r2">'
           +hasIng
@@ -2160,11 +2161,14 @@ function renderWeekTable(){
     });
     // ✅ Click-to-add target: πάτημα σε κελί το κάνει "ενεργό" ώστε το επόμενο κλικ σε
     // τρόφιμο/συνδυασμό απ' τη βιβλιοθήκη να μπαίνει κατευθείαν εκεί, χωρίς drag.
+    // ✅ Click-to-move: αν κρατάς ένα υλικό (κουμπί ↗), το κλικ σε γεύμα το αντιγράφει εκεί.
     cell.addEventListener('click',function(){
+      if(window._heldFood){depositHeldFood(parseInt(cell.dataset.d),parseInt(cell.dataset.mi));return;}
       setActiveMealTarget(parseInt(cell.dataset.d),parseInt(cell.dataset.mi));
     });
   });
   refreshActiveMealIndicator();
+  refreshHeldFoodUI();
 }
 
 // Εισάγει τρόφιμο/συνδυασμό σε συγκεκριμένο κελί — κοινή λογική για drag&drop ΚΑΙ click-to-add,
@@ -2212,6 +2216,57 @@ function refreshActiveMealIndicator(){
     el.className='active-meal-indicator';
     el.textContent='👆 Πάτα σε ένα γεύμα για να διαλέξεις πού θα προστεθούν τα τρόφιμα με κλικ';
   }
+}
+
+/* ── Click-to-move: κράτα ένα υλικό, μετά πάτα σε γεύμα για ΑΝΤΙΓΡΑΦΗ ──────────
+   Εναλλακτικό του drag & drop (στον Chrome το drag ολόκληρου κελιού «σκιάζει»
+   το drag ανά chip). Πάντα ΑΝΤΙΓΡΑΦΗ — το υλικό μένει και στο γεύμα-πηγή.
+   Ίδιο μοτίβο με τη βιβλιοθήκη τροφίμων (κλικ → ενεργό γεύμα). */
+window._heldFood=window._heldFood||null;
+function holdFoodForMove(d,mi,fi){
+  var c=getC();
+  if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi]||!c.weekPlan[d][mi].foods[fi])return;
+  var f=c.weekPlan[d][mi].foods[fi];
+  if(f.n===FREE_MEAL_MARKER){showErrorToast('Το «Ελεύθερο γεύμα» δεν μεταφέρεται.');return;}
+  // Ξαναπάτημα ↗ στο ίδιο υλικό = ακύρωση
+  if(window._heldFood&&window._heldFood.sourceD===d&&window._heldFood.sourceMi===mi&&window._heldFood.sourceFi===fi){
+    cancelHeldFood();return;
+  }
+  window._heldFood={cId:c.id,sourceD:d,sourceMi:mi,sourceFi:fi,food:deepClone(f),n:f.n,g:f.g};
+  refreshHeldFoodUI();
+}
+function cancelHeldFood(){window._heldFood=null;refreshHeldFoodUI();}
+function depositHeldFood(d,mi){
+  var h=window._heldFood;if(!h)return;
+  var c=getC();
+  if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi]){cancelHeldFood();return;}
+  // Αν άλλαξε πελάτης όσο κρατούσες το υλικό, ακύρωσε — μη το ρίξεις σε λάθος πλάνο.
+  if(h.cId&&c.id&&h.cId!==c.id){cancelHeldFood();return;}
+  c.weekPlan[d][mi].foods.push(deepClone(h.food));
+  var destName=c.weekPlan[d][mi].name;
+  window._heldFood=null;
+  save();renderWeekTable();
+  dietoToast('✅ «'+h.n+'» αντιγράφηκε στο: '+DAYS[d]+' · '+destName);
+}
+function refreshHeldFoodUI(){
+  document.querySelectorAll('.food-chip.chip-held').forEach(function(el){el.classList.remove('chip-held');});
+  var bar=document.getElementById('held-food-bar');
+  var h=window._heldFood;
+  if(!h){if(bar)bar.remove();return;}
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='held-food-bar';
+    bar.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#025857;color:#fff;padding:10px 12px 10px 16px;border-radius:10px;font-size:12px;z-index:10000;box-shadow:0 3px 14px rgba(0,0,0,.28);display:flex;align-items:center;gap:12px;max-width:92vw';
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML='<span>🖐️ Κρατάς: <b>'+esc(h.n)+'</b> '+h.g+'g — πάτα σε ένα γεύμα για αντιγραφή</span>'
+    +'<button type="button" onclick="cancelHeldFood()" style="background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">✕ Άκυρο (Esc)</button>';
+  var srcBtn=document.querySelector('.chip-move-btn[data-d="'+h.sourceD+'"][data-mi="'+h.sourceMi+'"][data-fi="'+h.sourceFi+'"]');
+  if(srcBtn){var chip=srcBtn.closest('.food-chip');if(chip)chip.classList.add('chip-held');}
+}
+if(!window._heldFoodKeyBound){
+  window._heldFoodKeyBound=true;
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&window._heldFood)cancelHeldFood();});
 }
 
 function updG(d,mi,fi,v){var c=getC();if(!c)return;c.weekPlan[d][mi].foods[fi].g=Math.max(0,parseInt(v)||0);save();renderWeekTable();}
