@@ -1892,6 +1892,16 @@ function renderWeekTable(){
         html+='<span class="meal-drag-handle" title="Σύρε ΟΛΟΚΛΗΡΟ το γεύμα σε άλλη ημέρα/γεύμα (αντιγραφή)" aria-label="Σύρε ολόκληρο το γεύμα (αντιγραφή)">&#10303;</span>';
       }
       html+=mealSourceBadge(c.weekPlan[d]&&c.weekPlan[d][mi]);
+      // Γραμμή-τίτλος έτοιμου/branded γεύματος — ό,τι βλέπει κι ο πελάτης στο link/PDF, με κουμπί × για αφαίρεση.
+      var _mObj=c.weekPlan[d]&&c.weekPlan[d][mi];
+      if(_mObj&&_mObj.dishLabels&&_mObj.dishLabels.length){
+        _mObj.dishLabels.forEach(function(_lbl,_li){
+          html+='<div style="display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:#025857;background:#e2eee5;border:1px solid #b5dcd6;border-radius:6px;padding:2px 5px;margin-bottom:3px" title="Έτοιμο γεύμα — ο πελάτης το παραγγέλνει με αυτό το όνομα">'
+            +'<span style="flex:1;min-width:0">🍽️ '+esc(_lbl)+'</span>'
+            +'<button onclick="removeDishLabel('+d+','+mi+','+_li+')" title="Αφαίρεση τίτλου" aria-label="Αφαίρεση τίτλου" style="background:none;border:none;cursor:pointer;font-size:12px;line-height:1;color:#025857;opacity:.6;flex-shrink:0">&times;</button>'
+            +'</div>';
+        });
+      }
       foods.forEach(function(food,fi){
         // Free meal special display
         if(food.n===FREE_MEAL_MARKER){
@@ -2559,13 +2569,31 @@ function getClientRecipeFeedback(recipe,c){
 function insertRecipeFoodsIntoMeal(recipe,ctx){
   var c=getC();
   if(!c)return;
+  var meal=c.weekPlan[ctx.d][ctx.mi];
   (recipe.foods||[]).forEach(function(f){
-    c.weekPlan[ctx.d][ctx.mi].foods.push({n:f.n,g:f.g});
+    meal.foods.push({n:f.n,g:f.g});
   });
+  // Έτοιμα/branded γεύματα (tag 'Έτοιμο γεύμα'): κρατάμε το όνομα του πιάτου πάνω στο γεύμα ώστε
+  // ο πελάτης να το βλέπει ως γραμμή-τίτλο πάνω από τα υλικά (client link + PDF) και να μπορεί να
+  // το παραγγείλει με το όνομά του. Το brand name μένει αυτούσιο σε κάθε γλώσσα (δεν μεταφράζεται).
+  if((recipe.tags||[]).indexOf('Έτοιμο γεύμα')>-1 && recipe.name){
+    meal.dishLabels=meal.dishLabels||[];
+    if(meal.dishLabels.indexOf(recipe.name)===-1) meal.dishLabels.push(recipe.name);
+  }
   save();
   renderWeekTable();
   var modal=document.getElementById('food-selector-modal');
   if(modal)modal.remove();
+}
+
+// Αφαίρεση μιας γραμμής-τίτλου έτοιμου γεύματος από το γεύμα (κουμπί × στο εβδομαδιαίο πλάνο).
+function removeDishLabel(d,mi,li){
+  var c=getC();if(!c||!c.weekPlan[d]||!c.weekPlan[d][mi])return;
+  var meal=c.weekPlan[d][mi];
+  if(!meal.dishLabels)return;
+  meal.dishLabels.splice(li,1);
+  if(!meal.dishLabels.length)delete meal.dishLabels;
+  save();renderWeekTable();
 }
 
 function confirmAddRecipeToMeal(recipeId){
@@ -2591,7 +2619,7 @@ function confirmAddRecipeToMeal(recipeId){
   }
 }
 
-function delF(d,mi,fi){var c=getC();if(!c)return;c.weekPlan[d][mi].foods.splice(fi,1);save();renderWeekTable();}
+function delF(d,mi,fi){var c=getC();if(!c)return;var m=c.weekPlan[d][mi];m.foods.splice(fi,1);if(!m.foods.length&&m.dishLabels)delete m.dishLabels;save();renderWeekTable();}
 
 // Επιστρέφει τους δείκτες ημερών (0-6) που έχουν 2+ προπονήσεις στη MET λίστα
 function getDoubleTrainingDays(c){

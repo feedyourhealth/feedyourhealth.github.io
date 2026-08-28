@@ -1929,6 +1929,13 @@ function viewPlan(){
         };
       }
       const body=el('div','card-pad');
+      // Γραμμή-τίτλος έτοιμου/branded πιάτου (π.χ. "Picante Chicken Rice Bowl (Marinado)") πάνω από
+      // τα υλικά — ο πελάτης το παραγγέλνει με αυτό το όνομα. Αυτούσιο σε κάθε γλώσσα.
+      if(m.dishLabel){
+        const dl=el('div',null,'<i class="ti ti-tools-kitchen-2" style="color:var(--teal)"></i><span>'+esc(m.dishLabel)+'</span>');
+        dl.style.cssText='display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--teal-d);margin-bottom:9px;padding-bottom:8px;border-bottom:.5px solid var(--bord-l)';
+        body.appendChild(dl);
+      }
       (m.foods||[]).forEach(f=>{
         body.appendChild(el('div','food','<span>'+esc(f.name)+'</span><span class="q">'+esc(f.qty)+(f.sub?' <span style="color:var(--faint);font-weight:400;font-size:11px">'+esc(f.sub)+'</span>':'')+'</span>'));
       });
@@ -2003,6 +2010,7 @@ function buildPrintHTML(){
       const meal=(d.meals||[])[mi];
       let cell='';
       if(meal && meal.foods && meal.foods.length){
+        if(meal.dishLabel)cell+='<div class="pfr" style="font-weight:700;color:#025857">🍽️ '+esc(meal.dishLabel)+'</div>';
         meal.foods.forEach(f=>{
           cell+='<div class="pfr"><span class="pfn">'+esc(f.name)+'</span> <span class="pfg">'+esc(f.qty||'')+'</span>'+(f.sub?' <span class="pfh">'+esc(f.sub)+'</span>':'')+'</div>';
         });

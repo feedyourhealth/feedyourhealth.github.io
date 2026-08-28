@@ -107,8 +107,13 @@ function exportPDF(lang){
     }
     // 7 day cells
     for(var dd=0;dd<7;dd++){
-      var fds=(weekPlanForPDF[dd]&&weekPlanForPDF[dd][mi])?weekPlanForPDF[dd][mi].foods:[];
+      var _mForPdf=weekPlanForPDF[dd]&&weekPlanForPDF[dd][mi];
+      var fds=_mForPdf?_mForPdf.foods:[];
       var mK=0;var ch='';
+      // Γραμμή-τίτλος έτοιμου/branded γεύματος πάνω από τα υλικά (brand name αυτούσιο σε κάθε γλώσσα).
+      if(_mForPdf&&_mForPdf.dishLabels&&_mForPdf.dishLabels.length){
+        ch+='<div class="fr" style="font-weight:700;color:#025857">🍽️ '+esc(_mForPdf.dishLabels.join(' + '))+'</div>';
+      }
       fds.forEach(function(fd){
         var mv=cm(fd.n,fd.g);mK+=mv.k;
         if(fd.n===FREE_MEAL_MARKER){ch+='<div class="free">🎉 '+(isEn?'Free Meal':'Ελεύθερο')+'</div>';return;}
@@ -1395,8 +1400,13 @@ function exportWord(){
     r+=makeRow(rowBgs,0);
     r+='\\pard\\intbl\\qc\\f0\\b\\fs20\\cf1 '+escRtf(mealNames[mi])+'\\cell\n';
     for(var d=0;d<7;d++){
-      var foods=(c.weekPlan[d]&&c.weekPlan[d][mi])?c.weekPlan[d][mi].foods:[];
+      var _mW=c.weekPlan[d]&&c.weekPlan[d][mi];
+      var foods=_mW?_mW.foods:[];
       var mK=0,cc='';
+      // Γραμμή-τίτλος έτοιμου/branded γεύματος πάνω από τα υλικά (brand name αυτούσιο σε κάθε γλώσσα).
+      if(_mW&&_mW.dishLabels&&_mW.dishLabels.length){
+        cc+='\\pard\\intbl\\ql\\li60\\f0\\b\\fs16\\cf1 '+escRtf(_mW.dishLabels.join(' + '))+'\\b0\\cf0\\line\n';
+      }
       foods.forEach(function(food){
         var mv=cm(food.n,food.g);mK+=mv.k;
         var _rq=fmtFoodQty(food,'g');

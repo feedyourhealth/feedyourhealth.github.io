@@ -3066,6 +3066,9 @@ function saveFoodExclusions(){
             label:mLabel(meal.name),
             time:mealTime,
             title:title,
+            // Όνομα έτοιμου/branded πιάτου — γραμμή-τίτλος πάνω από τα υλικά ώστε ο πελάτης να το
+            // παραγγείλει με το όνομά του. Μένει αυτούσιο σε κάθε γλώσσα (brand name, δεν μεταφράζεται).
+            dishLabel:(meal.dishLabels&&meal.dishLabels.length)?meal.dishLabels.join(' + '):'',
             kcal:Math.round(mk),
             macros:{p:Math.round(mp),c:Math.round(mc),f:Math.round(mf)},
             foods:foods,
