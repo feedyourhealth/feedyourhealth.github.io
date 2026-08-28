@@ -298,8 +298,11 @@ function sendActivityNudge(clientId){
 
 // Ενοποιεί τα σήματα του homeClientsNeedingAttention() (tier -1/0/1 = χρειάζονται ενέργεια τώρα)
 // και του homeStaleLinks() σε ένα "🔴 Χρειάζονται προσοχή", τα πιο ήπια σήματα (tier 2/3 = μέτρηση/
-// check-in gap) σε "🟡 Μπαγιατεμένα", και όλους τους υπόλοιπους ενεργούς πελάτες σε "🟢 Εντάξει" —
-// ώστε η Αρχική να έχει ένα σημείο εισόδου αντί το ίδιο σήμα να εμφανίζεται σε 3 διαφορετικές κάρτες.
+// check-in gap) σε "🟡 Μπαγιατεμένα", και όλους τους υπόλοιπους ενεργούς πελάτες σε "🟢 Εντάξει".
+// Αυτή η λίστα (πλακίδια + γραμμές από κάτω) είναι ΤΟ σημείο για "χρειάζονται προσοχή" στην Αρχική —
+// η παλιά ξεχωριστή ⚠️ κάρτα στο grid έδειχνε ακριβώς τους ίδιους πελάτες (union red+amber) και
+// αφαιρέθηκε: επανέλαβε το ίδιο σήμα και ανακάτευε επείγον (tier ≤1) με μπαγιάτικο (tier 2/3) χωρίς
+// διαχωρισμό, ενώ εδώ κόκκινο/κίτρινο είναι ήδη χωριστά πλακίδια με δικό τους μέτρημα.
 function homeAttentionBuckets(){
   var attn=homeClientsNeedingAttention();
   var red=[],amber=[],redIds={};
@@ -307,12 +310,16 @@ function homeAttentionBuckets(){
   // red bucket παρακάτω, ώστε το πλακίδιο "Νέα από πελάτες" να δείχνει μόνο ό,τι ήρθε από τον ίδιο
   // τον πελάτη, χωρίς να ανακατεύεται με "χωρίς πλάνο"/"μπαγιατεμένο" που είναι διαχειριστικά, όχι δραστηριότητα.
   var activity=attn.filter(function(x){return x.tier===-1;}).map(function(x){return {c:x.c,label:x.label,action:x.action};});
+  // Κρατάμε το x.action (Δημιούργησε πλάνο / 🔔 Υπενθύμιση / ↩️ Απάντησε / 🔕 κ.λπ.) πάνω στη γραμμή —
+  // η λίστα κάτω από τα πλακίδια είναι πλέον το μοναδικό σημείο για "χρειάζονται προσοχή", οπότε πρέπει
+  // να μπορείς να ενεργήσεις από εκεί χωρίς να ανοίξεις τον πελάτη (πριν, μόνο η καταργημένη ⚠️ κάρτα τα είχε).
   attn.forEach(function(x){
-    if(x.tier<=1){ if(!redIds[x.c.id]){redIds[x.c.id]=true;red.push({c:x.c,label:x.label});} }
-    else { amber.push({c:x.c,label:x.label}); }
+    if(x.tier<=1){ if(!redIds[x.c.id]){redIds[x.c.id]=true;red.push({c:x.c,label:x.label,action:x.action});} }
+    else { amber.push({c:x.c,label:x.label,action:x.action}); }
   });
   homeStaleLinks().forEach(function(c){
-    if(!redIds[c.id]){redIds[c.id]=true;red.push({c:c,label:'ο σύνδεσμος δείχνει παλιό πλάνο'});}
+    if(!redIds[c.id]){redIds[c.id]=true;red.push({c:c,label:'ο σύνδεσμος δείχνει παλιό πλάνο',
+      action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>'});}
   });
   var amberIds={}; amber.forEach(function(x){amberIds[x.c.id]=true;});
   var green=clients.filter(function(c){return !c.deleted&&!c.archived&&!redIds[c.id]&&!amberIds[c.id];})
@@ -328,13 +335,28 @@ function homeBucketRow(x,accent){
     +(x.action||'')
     +'</div>';
 }
+// Τίτλος + γραμμές του επιλεγμένου bucket. Ένας helper, δύο κλήσεις (αρχικό render + κάθε αλλαγή
+// πλακιδίου) ώστε ο τίτλος να μη χάνεται στο re-render και να μη διπλογράφεται σε δύο σημεία.
+var HM_BUCKET_TITLES={
+  red:'🔴 Χρειάζονται προσοχή τώρα',
+  amber:'🟡 Μπαγιάτικα / χωρίς πρόσφατη μέτρηση',
+  green:'🟢 Ενεργοί πελάτες — όλα εντάξει',
+  activity:'💬 Νέα από πελάτες'
+};
+function homeBucketListInnerHtml(buckets){
+  buckets=buckets||homeAttentionBuckets();
+  var accent=_homeBucketSel==='red'?'red':(_homeBucketSel==='amber'?'amber':'teal');
+  var items=buckets[_homeBucketSel]||[];
+  var head='<div class="hm-card-title">'+(HM_BUCKET_TITLES[_homeBucketSel]||'')
+    +' <span style="font-weight:400;font-size:10px;color:var(--text-muted)">('+items.length+')</span></div>';
+  return head+(items.length
+    ? items.map(function(x){return homeBucketRow(x,accent);}).join('')
+    : '<div class="hm-empty">Κανένας πελάτης σε αυτή την κατηγορία 👍</div>');
+}
 function homeRenderBucketList(){
   var el=document.getElementById('hm-bucket-list');
   if(!el) return;
-  var buckets=homeAttentionBuckets();
-  var accent=_homeBucketSel==='red'?'red':(_homeBucketSel==='amber'?'amber':'teal');
-  var items=buckets[_homeBucketSel]||[];
-  el.innerHTML=items.length?items.map(function(x){return homeBucketRow(x,accent);}).join(''):'<div class="hm-empty">Κανένας πελάτης σε αυτή την κατηγορία 👍</div>';
+  el.innerHTML=homeBucketListInnerHtml();
 }
 function homeSelectBucket(color){
   _homeBucketSel=color;
@@ -689,17 +711,11 @@ function renderHome(){
     total:_visibleClients.length,
     active:_visibleClients.filter(function(c){return c.weekPlan&&Object.keys(c.weekPlan).length>0;}).length
   };
-  var attentionList=homeClientsNeedingAttention();
+  // attentionIds τροφοδοτεί μόνο το homePendingPlanActions() πιο κάτω (εξαιρεί πελάτες που ήδη
+  // φαίνονται στη λίστα προσοχής). Οι ίδιες οι γραμμές "χρειάζονται προσοχή" ζωγραφίζονται πλέον
+  // αποκλειστικά από τη λίστα πλακιδίων (homeAttentionBuckets), όχι από ξεχωριστή ⚠️ κάρτα.
   var attentionIds={};
-  attentionList.forEach(function(x){attentionIds[x.c.id]=true;});
-  var attentionRows=attentionList.map(function(x){
-    return homeRow(x.c, x.label, 'red', x.action);
-  });
-  // Η κάρτα δείχνει ΟΛΑ τα tiers (και τα πιο ήπια 2/3 = μέτρηση/check-in gap), ενώ το κόκκινο
-  // πλακίδιο από πάνω μετράει μόνο tier<=1 (βλ. homeAttentionBuckets). Επίτηδες διαφορετικό label
-  // από το πλακίδιο ("παρακολούθηση" αντί "προσοχή") ώστε το "0" του πλακιδίου να μη διαβάζεται σαν
-  // αντίφαση με το σύνολο της λίστας από κάτω.
-  var attentionCardTitle='⚠️ Χρειάζονται παρακολούθηση'+(attentionList.length?(' <span style="font-weight:400;font-size:10px;color:var(--text-muted)">('+attentionList.length+')</span>'):'');
+  homeClientsNeedingAttention().forEach(function(x){attentionIds[x.c.id]=true;});
   var staleClients=homeStaleLinks();
   var staleRows=staleClients.map(function(c){
     return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
@@ -729,16 +745,22 @@ function renderHome(){
   html+='<div class="hm-title">🏠 Αρχική</div>';
 
   var buckets=homeAttentionBuckets();
-  _homeBucketSel='red';
+  // Προεπιλογή κόκκινο· αλλά αν το κόκκινο είναι άδειο ενώ υπάρχουν μπαγιάτικα, ξεκίνα στο κίτρινο —
+  // αλλιώς μια άδεια λίστα "χρειάζονται προσοχή" διαβάζεται σαν "τίποτα να κάνω" ενώ υπάρχουν εκκρεμότητες.
+  _homeBucketSel=(buckets.red.length===0 && buckets.amber.length>0)?'amber':'red';
+  // key = bucket του homeAttentionBuckets / id-suffix / όρισμα homeSelectBucket· cssColor = υπάρχουσα
+  // κλάση χρώματος στο styles.css (το "activity" bucket δανείζεται το .hm-tile-teal, δεν έχει δικό του).
+  var _hmTile=function(key,cssColor,num,lbl){
+    return '<div class="hm-tile hm-tile-'+cssColor+(_homeBucketSel===key?' sel':'')+'" id="hm-tile-'+key+'" onclick="homeSelectBucket(\''+key+'\')">'
+      +'<div class="hm-tile-num">'+num+'</div><div class="hm-tile-lbl">'+lbl+'</div></div>';
+  };
   html+='<div class="hm-tiles">'
-    +'<div class="hm-tile hm-tile-red sel" id="hm-tile-red" onclick="homeSelectBucket(\'red\')"><div class="hm-tile-num">'+buckets.red.length+'</div><div class="hm-tile-lbl">🔴 Χρειάζονται προσοχή</div></div>'
-    +'<div class="hm-tile hm-tile-amber" id="hm-tile-amber" onclick="homeSelectBucket(\'amber\')"><div class="hm-tile-num">'+buckets.amber.length+'</div><div class="hm-tile-lbl">🟡 Μπαγιατεμένα πλάνα</div></div>'
-    +'<div class="hm-tile hm-tile-green" id="hm-tile-green" onclick="homeSelectBucket(\'green\')"><div class="hm-tile-num">'+buckets.green.length+'</div><div class="hm-tile-lbl">🟢 Ενεργοί, εντάξει</div></div>'
-    +'<div class="hm-tile hm-tile-teal" id="hm-tile-activity" onclick="homeSelectBucket(\'activity\')"><div class="hm-tile-num">'+buckets.activity.length+'</div><div class="hm-tile-lbl">💬 Νέα από πελάτες</div></div>'
+    +_hmTile('red','red',buckets.red.length,'🔴 Χρειάζονται προσοχή')
+    +_hmTile('amber','amber',buckets.amber.length,'🟡 Μπαγιατεμένα πλάνα')
+    +_hmTile('green','green',buckets.green.length,'🟢 Ενεργοί, εντάξει')
+    +_hmTile('activity','teal',buckets.activity.length,'💬 Νέα από πελάτες')
     +'</div>'
-    +'<div class="hm-card" style="margin-bottom:20px" id="hm-bucket-list">'
-    +(buckets.red.length?buckets.red.map(function(x){return homeBucketRow(x,'red');}).join(''):'<div class="hm-empty">Κανένας πελάτης σε αυτή την κατηγορία 👍</div>')
-    +'</div>';
+    +'<div class="hm-card" style="margin-bottom:20px" id="hm-bucket-list">'+homeBucketListInnerHtml(buckets)+'</div>';
 
   var measuredToday=homeMeasuredToday();
   // ✅ Ring "ενεργοί με πρόσφατο check-in" — πάνω στο ΗΔΗ υπάρχον homePortalActivity()/checkinsFor(),
@@ -766,7 +788,6 @@ function renderHome(){
   var tasteLibraryStatus=homeTasteLibraryStatus();
   var gridCards=[
     homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'ακόμα', 'warning'),
-    homeCard(attentionCardTitle, attentionRows, 'ακόμα', 'danger'),
     homeCard('🔜 Πλησιάζει ανανέωση', approachingRenewalRows, 'ακόμα', 'warning'),
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
     homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
