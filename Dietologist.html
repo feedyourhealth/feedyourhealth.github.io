@@ -330,6 +330,10 @@ setTimeout(function(){
 <!-- portal-comms/* — two-way client-portal messaging (replies, seen-tracking, feedback
      panels), carved out of app-part2.js. All refs runtime/typeof-guarded. -->
 <script src="js/portal-comms/portal-comms.js"></script>
+<!-- client-editor/* — the client editor's sub-tabs, carved out of app-part2.js.
+     tracker.js must precede app-part4.js (its migrateClientSkinfoldBF is called from
+     that file's parse-time client-load IIFE). -->
+<script src="js/client-editor/tracker.js"></script>
 <!-- plan-gen/* — the entire meal-plan generation subsystem, carved out of the old
      monolithic app-part3.js (now fully removed). Pure fn declarations + literal
      state vars; every cross-reference resolves at runtime, so load order among
