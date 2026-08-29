@@ -314,6 +314,9 @@ setTimeout(function(){
      (getMicronutrientTargets, onClientChange, recalculateMacros …). Zero load-time
      code; renderMain/genPlan/makeDayTgtDefaults refs resolve at call time. -->
 <script src="js/calc/macros-recalc.js"></script>
+<!-- calc/micronutrients — micronutrient adequacy analysis, gap→supplement matching,
+     and normalizeGreekText (accent-strip used across plan-gen/*). Pure; callers runtime. -->
+<script src="js/calc/micronutrients.js"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
 <script src="js/core/persistence.js"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
