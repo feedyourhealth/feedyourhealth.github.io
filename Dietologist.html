@@ -332,6 +332,9 @@ setTimeout(function(){
 <!-- client-list/quick-actions — sidebar quick-action sheets + mobile more-sheet
      (toggleQA/renderMSheetQA…), carved out of app-part1.js. All refs runtime. -->
 <script src="js/client-list/quick-actions.js"></script>
+<!-- client-list/clients-tab — the ΠΕΛΑΤΕΣ browsing page + bulk group-assign +
+     SPORT_INFO, carved out of app-part5-home.js. renderClients is runtime. -->
+<script src="js/client-list/clients-tab.js"></script>
 <script src="js/app-part2.js"></script>
 <!-- appointments/* — the "📝 Ραντεβού" tab, carved out of app-part2.js. Pure fns;
      callers (renderMain/swTab, app-part5 portal refresh) are runtime. -->
@@ -385,7 +388,7 @@ setTimeout(function(){
 <!-- tabs/* — the standalone nav tabs (Αρχική / Διατροφές / Μηνύματα / Συνταγές / Tips).
      Pure fn declarations, no load-time code. -->
 <script src="js/tabs/home-diets.js"></script>
-<script src="js/app-part5-home.js"></script>
+<script src="js/tabs/messages.js"></script>
 <script src="js/tabs/recipes.js"></script>
 <script src="js/tabs/tips.js"></script>
 <!-- ✅ CHARTS LIBRARY -->
@@ -1539,7 +1542,7 @@ function applyMedicalProtocol(condition, isChecked) {
 function fabMenu(){
   var menu = document.getElementById('fab-menu');
   // ✅ 2026-08-06: η σελίδα Πελάτες έχει πλέον δικό της "+ Νέος πελάτης" κουμπί στο toolbar (βλ.
-  // renderClients, js/app-part5-home.js) — η ίδια γραμμή εδώ μέσα είναι διπλότυπη ΜΟΝΟ όσο είσαι ήδη
+  // renderClients, js/client-list/clients-tab.js) — η ίδια γραμμή εδώ μέσα είναι διπλότυπη ΜΟΝΟ όσο είσαι ήδη
   // εκεί. Σε κάθε άλλο tab (Αρχική/Διατροφές/Συνταγές/προφίλ πελάτη) παραμένει η μοναδική γρήγορη
   // πρόσβαση, οπότε δεν αφαιρείται ολόκληρη — κρύβεται μόνο όταν είναι πράγματι περιττή. Το
   // #client-list υπάρχει στο DOM μόνο όσο είναι ανοιχτή η λίστα Πελάτες (renderMain/renderHome/κ.λπ.
