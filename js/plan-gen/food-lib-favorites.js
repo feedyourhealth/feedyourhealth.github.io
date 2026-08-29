@@ -1,3 +1,14 @@
+// js/plan-gen/food-lib-favorites.js
+// The last of app-part3.js (module split wave 23 — app-part3.js is now empty and
+// removed). Auto-backup (autoBackupClients, initAutoBackup, + the window 'load'
+// listener that kicks it off 2s after load — the one piece of load-time code),
+// the favourite-meals system (getFavoriteMeals/saveFavoriteMeals/toggleFavoriteMeal/
+// isFavoriteMeal/showFavoriteMeals/pasteFavoriteMeal/removeFavoriteMeal), the plan
+// meal clipboard (copyMealToClipboard/pasteMealFromClipboard), saveCombo/deleteCombo,
+// balanceMacros, and the food-library sidebar (renderFoodLib/filterLib). All callers
+// are onclick strings or runtime render calls from app-part1/2 + sibling plan-gen/*
+// modules. Loads where app-part3.js used to, right before reports/exports.js.
+
 /* ---- Auto-Backup System (Every 1 Hour) ---- */
 function autoBackupClients(){
   try{

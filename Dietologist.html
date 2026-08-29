@@ -324,8 +324,11 @@ setTimeout(function(){
      consumes clients/getC/FOODS/TMPLS from above, so loads right after app-part1.js. -->
 <script src="js/client-list/roster-ui.js"></script>
 <script src="js/app-part2.js"></script>
-<!-- plan-gen/* — meal-plan generation core, carved out of app-part3.js. Pure/leaf
-     pieces first; all refs resolve at runtime so they load right before app-part3.js. -->
+<!-- plan-gen/* — the entire meal-plan generation subsystem, carved out of the old
+     monolithic app-part3.js (now fully removed). Pure fn declarations + literal
+     state vars; every cross-reference resolves at runtime, so load order among
+     these is not load-bearing. food-lib-favorites.js carries the one piece of
+     load-time code (a window 'load' listener that starts the hourly auto-backup). -->
 <script src="js/plan-gen/med-score.js"></script>
 <script src="js/plan-gen/food-distribution.js"></script>
 <script src="js/plan-gen/combos-tips.js"></script>
@@ -339,7 +342,7 @@ setTimeout(function(){
 <script src="js/plan-gen/meal-slots.js"></script>
 <script src="js/plan-gen/micronutrient-html.js"></script>
 <script src="js/plan-gen/publish-modal.js"></script>
-<script src="js/app-part3.js"></script>
+<script src="js/plan-gen/food-lib-favorites.js"></script>
 <!-- reports/* — plan & body-comp exports (PDF/Word/GDocs), backup I/O. Pure fns,
      no load-time code; refs resolve at click time. -->
 <script src="js/reports/exports.js"></script>
@@ -3429,7 +3432,7 @@ function saveFoodExclusions(){
                 // travel across devices even though they now ride along in the same blob.
                 if(Array.isArray(d.savedCombos)){
                   safeStorageSet('savedCombos', d.savedCombos);
-                  // getSavedCombos() (js/app-part3.js) caches this in memory; writing straight
+                  // getSavedCombos() (js/plan-gen/combos-tips.js) caches this in memory; writing straight
                   // to storage here would otherwise leave stale data behind that cache.
                   window._savedCombosCache = d.savedCombos;
                 }
