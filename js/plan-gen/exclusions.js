@@ -8,7 +8,8 @@
 // applyDietTypeCategorySafetyNet, and the exclusion editor (buildExcludeHtml/
 // renderExclWrap/toggleFoodExclude/applyQuickExclude/refilterMealPlanExclusions/
 // showExclSug/addFoodExclude/clearAllExcludes). Only literal table initialisers run at
-// parse time; PREF_PHRASE_MAP's RED_MEAT_FOODS ref is typeof-guarded. Callers:
+// parse time; RED_MEAT_NAME_KEYWORDS / redMeatFoodsList (2026-08-29, "όχι κόκκινο κρέας" →
+// ΟΛΑ τα κόκκινα κρέατα) is lazy and typeof-guards its RED_MEAT_FOODS ref. Callers:
 // gen-plan.js + food-selector.js (runtime) and renderMain (app-part2.js, runtime).
 // Loads with the plan-gen/* group.
 
@@ -170,8 +171,33 @@ function cheeseFoodsList(){
   });
   return out;
 }
+// "κόκκινο κρέας" → ΟΛΑ τα πραγματικά κόκκινα κρέατα στο FOODS (μοσχάρι/βοδινό/χοιρινό/αρνί/κατσίκι/
+// προβατίνα + επεξεργασμένα: λούτζα/παστουρμάς/σαλάμι/ζαμπόν/μπέικον/λουκάνικο + μοσχαρίσιο συκώτι),
+// εντοπισμένα lazily με λέξεις-κλειδιά στο όνομα ώστε νέες καταχωρήσεις κρέατος να πιάνονται αυτόματα —
+// αντί για την 5-θέσεων hardcoded RED_MEAT_FOODS (med-score.js), που άφηνε να περνούν π.χ. "Μπριζόλα
+// άπαχη", "Βοδινός κιμάς άπαχος (μαγ.)", "Συκώτι μοσχαρίσιο" όταν ο πελάτης έχει γράψει "όχι κόκκινο
+// κρέας" στις Προτιμήσεις. Το RED_MEAT_FOODS μένει ως έχει: το χρειάζεται το Mediterranean score
+// (μετρά ΜΕΡΕΣ με κόκκινο κρέας), όχι αποκλεισμό τροφίμων. Πουλερικά (κοτόπουλο/γαλοπούλα), κουνέλι
+// και φυτικά υποκατάστατα κρέατος ΔΕΝ είναι κόκκινο κρέας. Ίδιο μοτίβο με cheeseFoodsList().
+var RED_MEAT_NAME_KEYWORDS=['μοσχαρ','βοδιν','χοιριν','χοιρομερ','αρνι','αρνακ','αρνισ','μπριζολ',
+  'παιδακ','κατσικ','γιδιν','προβειο','προβατ','λουτζα','παστουρμα','σαλαμι','προσουτο','ζαμπον',
+  'μπεικον','πανσετ','λουκανικ'];
+var RED_MEAT_NOT_ACTUAL_RED_MEAT=['κοτοπουλ','γαλοπουλ','κοτετσι','κουνελ']; // πουλερικά/κουνέλι — όχι κόκκινο κρέας
+function redMeatFoodsList(){
+  var out=[];
+  var hard=(typeof RED_MEAT_FOODS!=='undefined')?RED_MEAT_FOODS:[];
+  hard.forEach(function(n){ if(FOODS[n]&&out.indexOf(n)===-1) out.push(n); });
+  Object.keys(FOODS).forEach(function(n){
+    var f=FOODS[n];
+    if(!f||f.plantBased)return; // φυτικά "burger" (Moving Mountains κ.λπ.) δεν είναι κόκκινο κρέας
+    var nn=normalizeGreekText(n);
+    if(RED_MEAT_NOT_ACTUAL_RED_MEAT.some(function(p){return nn.indexOf(p)!==-1;}))return;
+    if(RED_MEAT_NAME_KEYWORDS.some(function(k){return nn.indexOf(k)!==-1;})&&out.indexOf(n)===-1) out.push(n);
+  });
+  return out;
+}
 var PREF_PHRASE_MAP={
-  'κοκκινο κρεας':function(){return (typeof RED_MEAT_FOODS!=='undefined')?RED_MEAT_FOODS:[];},
+  'κοκκινο κρεας':redMeatFoodsList,
   'γαλα':dairyFoodsList,
   'τυρι':cheeseFoodsList,
   // "όχι φέτα" ως σκέτη φράση — η φέτα είναι το 2ο (όχι κεφαλή) λέξη στο "Τυρί φέτα", οπότε ούτε
