@@ -4091,11 +4091,21 @@ function parsePreferenceAvoidFoods(preferencesText){
     });
     if(matchedCat)return;
 
-    // Συγκεκριμένο τρόφιμο — απαιτεί ΟΛΕΣ τις ουσιαστικές λέξεις (≥4 χαρακτήρες, αγνοώντας
-    // παρενθέσεις) του ονόματός του να εμφανίζονται στην πρόταση, έστω σε κλιτό τύπο.
+    // Συγκεκριμένο τρόφιμο — ταιριάζει αν η πρόταση περιέχει ΕΙΤΕ
+    //   (α) ΟΛΕΣ τις ουσιαστικές λέξεις (≥4 χαρακτήρες, αγνοώντας παρενθέσεις) του ονόματος,
+    //       έστω σε κλιτό τύπο, ΕΙΤΕ
+    //   (β) ΜΟΝΟ τη λέξη-κεφαλή του ονόματος (πρώτη ουσιαστική λέξη) — ώστε το "όχι κοτόπουλο"
+    //       να πιάνει "Κοτόπουλο στήθος (ψητό)" / "…μπιφτέκι" / "…σουβλάκι", όχι μόνο τρόφιμα που
+    //       ΟΛΟ το όνομά τους είναι εκείνη η μία λέξη (π.χ. "Βρώμη (ωμή)"). Ακριβής ισότητα λέξης-
+    //       κεφαλής μετρά πάντα (π.χ. "ρύζι" → όλα τα "Ρύζι …")· χαλαρό (κλιτό) ταίριασμα κεφαλής
+    //       μόνο για κεφαλές ≥5 χαρακτήρων, ώστε να μη «σκάει» σε γενικές μικρές λέξεις.
     Object.keys(FOODS).forEach(function(n){
       var nameWords=normalizeGreekText(n).replace(/[()]/g,' ').split(/\s+/).filter(function(w){return w.length>=4;});
-      if(nameWords.length && clauseContainsPhrase(clauseWords,nameWords)) foods.push(n);
+      if(!nameWords.length)return;
+      var allWords=clauseContainsPhrase(clauseWords,nameWords);
+      var head=nameWords[0];
+      var headOnly=clauseWords.some(function(cw){ return cw===head || (head.length>=5 && wordsMatchLoosely(cw,head)); });
+      if(allWords||headOnly) foods.push(n);
     });
   });
   return foods.filter(function(f,i){return foods.indexOf(f)===i;});

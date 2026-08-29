@@ -65,8 +65,10 @@ window.__LOAD_ERRORS__ = [];
 window.addEventListener('error', function(e){
   window.__LOAD_ERRORS__.push(String(e.message || e.error || e));
 });
+// cache-bust so a re-run after editing a module never loads a stale copy
+var __bust = '?nc=' + Date.now();
 document.write(window.__MANIFEST__.map(function(p){
-  return '<script src="' + p + '" onerror="window.__LOAD_ERRORS__.push(\'FAILED TO LOAD: ' + p + '\')"><\/script>';
+  return '<script src="' + p + __bust + '" onerror="window.__LOAD_ERRORS__.push(\'FAILED TO LOAD: ' + p + '\')"><\/script>';
 }).join('\n'));
 </script>
 
