@@ -4025,9 +4025,36 @@ function dairyFoodsList(){
   });
   return out;
 }
+// "τυρί"/"τυριά" → ΟΛΑ τα τυριά (όχι όλη η κατηγορία "Αυγά/Γαλακτ." — αυτή ανακατεύει αυγά,
+// γιαούρτι, γάλα, whey). Δεν υπάρχει ξεχωριστή κατηγορία μόνο-τυριά, οπότε τα εντοπίζουμε με
+// λέξεις-κλειδιά στο όνομα, ΜΕΣΑ στη γαλακτοκομική κατηγορία (ώστε να μη «σκάει» σε πιάτα/συνταγές
+// που τυχαία περιέχουν "φέτα" στο όνομα). Υπολογίζεται lazily ώστε νέα τυριά στο FOODS να πιάνονται
+// αυτόματα. Το quark μένει ΕΚΤΟΣ επίτηδες (χρησιμοποιείται σαν γιαούρτι-υψηλής-πρωτεΐνης).
+var CHEESE_NAME_KEYWORDS=['τυρι','φετα','feta','κασερι','κεφαλοτυρι','κεφαλογραβιερα','λαδοτυρι',
+  'γραβιερα','μοτσαρελα','mozzarella','παρμεζανα','parmesan','ανθοτυρο','μυζηθρα','μανουρι',
+  'μετσοβονε','κοπανιστη','χαλλουμι','χαλουμι','halloumi','ricotta','ρικοτα','cheddar','τσενταρ',
+  'cottage','cream cheese','cheese','edam','γκουντα','gouda','emmental','εμενταλ','σαγανακι',
+  'μασκαρπονε','mascarpone','brie','μπρι','camembert','καμαμπερ','roquefort','ροκφορ','blue cheese','μπλε τυρι'];
+function cheeseFoodsList(){
+  var out=[];
+  Object.keys(FOODS).forEach(function(n){
+    var f=FOODS[n];
+    if(!f||f.plantBased)return;
+    if(f.cat!=='Αυγά/Γαλακτ.'&&f.cat!=='Γαλακτοκομικά')return;
+    if(DAIRY_NOT_ACTUAL_DAIRY.indexOf(n)!==-1)return;
+    var nn=normalizeGreekText(n);
+    if(CHEESE_NAME_KEYWORDS.some(function(k){return nn.indexOf(k)!==-1;})) out.push(n);
+  });
+  return out;
+}
 var PREF_PHRASE_MAP={
   'κοκκινο κρεας':function(){return (typeof RED_MEAT_FOODS!=='undefined')?RED_MEAT_FOODS:[];},
-  'γαλα':dairyFoodsList
+  'γαλα':dairyFoodsList,
+  'τυρι':cheeseFoodsList,
+  // "όχι φέτα" ως σκέτη φράση — η φέτα είναι το 2ο (όχι κεφαλή) λέξη στο "Τυρί φέτα", οπότε ούτε
+  // ο κανόνας λέξης-κεφαλής ούτε το "τυρι" την πιάνουν. Με avoid-marker μπροστά, "φέτα" εννοεί
+  // το τυρί (όχι "φέτα ψωμί").
+  'φετα':function(){return (typeof FOODS!=='undefined'&&FOODS['Τυρί φέτα'])?['Τυρί φέτα']:[];}
 };
 
 // Ελληνικά ουσιαστικά/επίθετα κλίνονται (π.χ. "κρέας"→"κρέατος", "Φιστίκια"→"Φιστικιών") — ένα
