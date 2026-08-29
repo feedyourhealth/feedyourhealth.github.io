@@ -17,6 +17,10 @@
 *.json
 *.log
 
+# ...except the module-split smoke-test fixture (no client data — deterministic
+# calc probes + data-constant fingerprints; see test/smoke.html).
+!test/baseline.json
+
 # Photos / screenshots
 *.jpg
 *.jpeg

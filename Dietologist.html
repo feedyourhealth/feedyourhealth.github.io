@@ -285,6 +285,15 @@ setTimeout(function(){
   </div>
 </div>
 </div>
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MODULE LOAD ORDER  (see docs/module-split-plan.md)
+     Strict dependency order:  data/* → lib/* → core/* → feature modules → tabs/*
+     Everything runs in one shared global scope (no ES modules — ~560 inline
+     on*= handlers depend on globals). The only load-order-sensitive bits are
+     top-level executed code: TMPLS=deepClone(DEFAULT_TMPLS), the tab-lock
+     heartbeat, the app-part4 auto-load IIFE, and window 'load' handlers.
+     The smoke harness in test/smoke.html mirrors this list.
+     ═══════════════════════════════════════════════════════════════════════════ -->
 <script src="js/data.js"></script>
 <script src="js/app-part1.js"></script>
 <script src="js/app-part2.js"></script>

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<title>FYH — module-split smoke harness</title>
+<style>
+  body{font:14px/1.5 system-ui,Segoe UI,Roboto,sans-serif;margin:24px;color:#1a1a1a;background:#fafafa}
+  h1{font-size:18px;margin:0 0 4px}
+  .sub{color:#666;margin:0 0 16px}
+  #summary{font-size:16px;font-weight:700;padding:10px 14px;border-radius:8px;margin:12px 0;display:inline-block}
+  .ok{background:#e6f4ea;color:#1e7e34;border:1px solid #b7e0c4}
+  .bad{background:#fdeaea;color:#c62828;border:1px solid #f2b8b8}
+  table{border-collapse:collapse;width:100%;margin:10px 0;background:#fff}
+  th,td{border:1px solid #e0e0e0;padding:5px 9px;text-align:left;vertical-align:top}
+  th{background:#f2f2f2}
+  td.p{color:#1e7e34;font-weight:700}
+  td.f{color:#c62828;font-weight:700}
+  pre{background:#1e1e1e;color:#e8e8e8;padding:14px;border-radius:8px;overflow:auto;max-height:60vh;font:12px/1.45 ui-monospace,Consolas,monospace}
+  .hint{color:#666;font-size:13px}
+</style>
+</head>
+<body>
+<h1>FYH — module-split smoke harness</h1>
+<p class="sub">Φορτώνει τα js/ modules με την τρέχουσα σειρά, ελέγχει ότι όλα τα κρίσιμα globals + data constants υπάρχουν, και τρέχει pure-calc probes. Σύγκρινε το <code>__SMOKE__.json</code> με το <code>test/baseline.json</code> μετά από κάθε wave.</p>
+
+<!-- Minimal DOM stubs so any stray load-handler that slips past the neutraliser does not hard-crash -->
+<div id="app" style="display:none"></div>
+<div id="loginScreen" style="display:none"></div>
+<div id="sidebar" style="display:none"></div>
+<div id="clientList" style="display:none"></div>
+<div id="mainContent" style="display:none"></div>
+
+<div id="summary">running…</div>
+<div id="report"></div>
+<h3>__SMOKE__.json <span class="hint">(αυτό γράφεται στο test/baseline.json στο Wave 0)</span></h3>
+<pre id="json">…</pre>
+
+<script>
+/* ─── WAVE MANIFEST ───────────────────────────────────────────────────────────
+   Η σειρά φόρτωσης των modules. Ενημέρωσέ το σε ΚΑΘΕ wave, ίδια με το
+   Dietologist.html. chart.js (CDN) παραλείπεται — δεν το αγγίζει το harness.        */
+window.__MANIFEST__ = [
+  '../js/data.js',
+  '../js/app-part1.js',
+  '../js/app-part2.js',
+  '../js/app-part3.js',
+  '../js/app-part4.js',
+  '../js/app-part5-home.js',
+  '../js/app-part6-recipes.js',
+  '../js/app-part7-tips.js',
+  '../js/11-undo-redo.js'
+];
+window.__LOAD_ERRORS__ = [];
+window.addEventListener('error', function(e){
+  window.__LOAD_ERRORS__.push(String(e.message || e.error || e));
+});
+document.write(window.__MANIFEST__.map(function(p){
+  return '<script src="' + p + '" onerror="window.__LOAD_ERRORS__.push(\'FAILED TO LOAD: ' + p + '\')"><\/script>';
+}).join('\n'));
+</script>
+
+<script>
+/* Neutralise the immediate side-effect handlers that assume the full app DOM.
+   All are plain `function` decls or object methods, so reassigning the binding
+   here (after the module scripts have parsed, before window 'load' fires) makes
+   the later load-handlers inert. Pure calc functions are left untouched. */
+(function(){
+  function noop(){}
+  try { initializeApp = noop; } catch(e){}
+  try { renderMain = noop; } catch(e){}
+  try { renderSB = noop; } catch(e){}
+  try { initAutoBackup = noop; } catch(e){}
+  try { if (window.TOUCH_HANDLERS) TOUCH_HANDLERS.init = noop; } catch(e){}
+  try { if (window.MOBILE_VIEWPORT) MOBILE_VIEWPORT.onResize = noop; } catch(e){}
+})();
+</script>
+
+<script>
+/* ─── PROBES ──────────────────────────────────────────────────────────────── */
+(function(){
+  var results = [];   // {name, kind, pass, detail}
+  function fnCheck(name){
+    var ok = false, detail = '';
+    try { ok = (typeof window[name] === 'function'); detail = ok ? 'function' : ('typeof = ' + (typeof window[name])); }
+    catch(e){ detail = 'threw: ' + e.message; }
+    results.push({name:name, kind:'fn', pass:ok, detail:detail});
+  }
+  function constCheck(name, min){
+    var ok = false, detail = '';
+    try {
+      var v = window[name];
+      if (v == null) { detail = String(v); }
+      else if (Array.isArray(v)) { ok = v.length >= (min||1); detail = 'array len ' + v.length; }
+      else if (typeof v === 'object') { var n = Object.keys(v).length; ok = n >= (min||1); detail = 'keys ' + n; }
+      else { ok = true; detail = typeof v; }
+    } catch(e){ detail = 'threw: ' + e.message; }
+    results.push({name:name, kind:'const', pass:ok, detail:detail});
+  }
+
+  // --- critical globals -----------------------------------------------------
+  ['esc','escJsAttr','fmtFoodQty','snapWholeG','pluralUnit','pctRing','pctStatusColor',
+   'deepClone','safeStorageGet','safeStorageSet','save','saveNow',
+   'getC','addClient','selectClient','deleteClient',
+   'calcTDEE','calcMETkcal','getMicronutrientTargets','getPregTrimester','getIOMWeightGainRange',
+   'checkGestationalWeightGain','detectMicronutrientGaps','matchSupplementsToGaps',
+   'resolveFood','cm','minScaleG','scalePlan','scaledG',
+   'renderMain','swTab','renderSB','renderWeekTable','regenerateDay',
+   'genPlan','genPlanWithUndo','generateSmartMeal','findBestRecipe','harvestMealLibrary',
+   'calcMedScore','countFoodFrequency','buildClientExclusionList','applyPostGenerationCleanup',
+   'getSavedCombos','setSavedCombos','buildEffectiveExclusionList','scrubExcludedFoodsFromWeekPlan',
+   'applyMediterraneanRules','ensureOmega3FishIntake','enforceRedMeatFrequency',
+   'exportPDF','exportWord','exportLipometriaPDF','exportBodyCompPDF','exportGoogleDocs',
+   'openPublishModal','publishHandoffMsg',
+   'openFoodSelectorModal','updateFoodSelector','showMealAlternatives','openGapAnalysisModal',
+   'loadTrackingData','saveTrackingData','rateMeal','getSupplementRecommendations',
+   'renderHome','renderDiets','renderClients','renderMessages','renderRecipes','renderTips',
+   'onClientChange','recalculateMacros','initializeApp','buildAppointmentsHtml',
+   'getTipsLibrary','defaultTipsSeed','buildDayTgtHtml','buildMetHtml','buildMacroDistributionHtml',
+   'allocateMealTargets','makeDayTgtDefaults','getDayTgtEff'
+  ].forEach(fnCheck);
+
+  // --- data constants (min sizes are loose floors, not exact) --------------
+  constCheck('FOODS', 100);
+  constCheck('FOOD_ALIASES', 5);
+  constCheck('PORTIONS', 30);
+  constCheck('FOOD_UNITS', 30);
+  constCheck('WHOLE_UNIT_FOODS', 3);
+  constCheck('UNIT_PLURALS', 3);
+  constCheck('COOKED_TO_RAW', 2);
+  constCheck('MET_ACTIVITIES', 10);
+  constCheck('SUPPS', 10);
+  constCheck('SUPP_TIMINGS', 3);
+  constCheck('MICRONUTRIENTS', 8);
+  constCheck('NUTRIENT_UNITS', 5);
+  constCheck('SPORT_PROTOCOLS', 3);
+  constCheck('SPORT_PROFILES', 3);
+  constCheck('MEAL_TIMING_PROFILES', 2);
+  constCheck('MACRO_PRESETS', 3);
+  constCheck('DEFAULT_TMPLS', 3);
+  constCheck('TMPLS', 3);
+  constCheck('MEAL_RECIPES', 10);
+  constCheck('SNACK_RECIPES', 3);
+  constCheck('FYH_RECIPE_EXPAND', 2);
+  constCheck('MED_PLAN', 1);
+  constCheck('GOAL_LABELS', 3);
+  constCheck('DIET_TYPE_BADGE', 3);
+  constCheck('GREEK_MONTHS', 12);
+  constCheck('NAME_DAYS', 20);
+
+  // --- pure-calc baseline probes -----------------------------------------
+  var FIX = {
+    adult:  {age:35,sex:'M',weight:80,height:180,activity:'mod',goal:'maintain',formula:'mifflin',
+             macroP:25,macroF:25,macroC:50,bf:0,leanmass:0,lbm:0,
+             trainDays:[false,false,false,false,false,false,false],trainHoursByDay:[1,1,1,1,1,1,1],metActivities:[]},
+    minorF: {age:15,sex:'F',weight:55,height:165,activity:'active',goal:'maintain',formula:'mifflin',
+             macroP:25,macroF:25,macroC:50,bf:0,
+             trainDays:[true,false,true,false,true,false,false],trainHoursByDay:[1,0,1,0,1,0,0],metActivities:[]},
+    metM:   {age:28,sex:'M',weight:75,height:178,activity:'light',goal:-300,formula:'mifflin',
+             macroP:30,macroF:25,macroC:45,bf:15,
+             trainDays:[true,false,true,false,true,false,true],trainHoursByDay:[1.5,0,1.5,0,1.5,0,1],
+             metActivities:[{met:8,mins:60,days:[0,2,4,6]}]},
+    athlB:  {age:24,sex:'M',weight:82,height:185,activity:'active',goal:'gain',sport:'boxing',dietType:'normal',
+             formula:'mifflin',macroP:30,macroF:25,macroC:45,bf:12,
+             trainDays:[true,true,true,true,true,false,false],trainHoursByDay:[1,1,1,1,1,0,0],metActivities:[]}
+  };
+  var probes = {};
+  function probe(key, fn){ try { probes[key] = fn(); } catch(e){ probes[key] = 'THREW: ' + e.message; } }
+
+  probe('calcMETkcal.metM',          function(){ return calcMETkcal(FIX.metM); });
+  probe('calcTDEE.adult',            function(){ return calcTDEE(FIX.adult); });
+  probe('calcTDEE.minorF',           function(){ return calcTDEE(FIX.minorF); });
+  probe('calcTDEE.metM',             function(){ return calcTDEE(FIX.metM); });
+  probe('calcTDEE.athlB',            function(){ return calcTDEE(FIX.athlB); });
+  probe('getMicronutrientTargets.athlB',  function(){ return getMicronutrientTargets(FIX.athlB); });
+  probe('getMicronutrientTargets.minorF', function(){ return getMicronutrientTargets(FIX.minorF); });
+  probe('getIOMWeightGainRange.22',  function(){ return getIOMWeightGainRange(22); });
+  probe('getIOMWeightGainRange.31',  function(){ return getIOMWeightGainRange(31); });
+  probe('getPregTrimester.9/22/34',  function(){ return [getPregTrimester(9),getPregTrimester(22),getPregTrimester(34)]; });
+  probe('snapWholeG.samples',        function(){ return [snapWholeG('Μπανάνα',137), snapWholeG('Αυγά (ολόκληρα)',6), snapWholeG('__nope__',137)]; });
+  probe('esc.sample',                function(){ return esc('<b>Café & \'x\' "y"</b>'); });
+  probe('pctRing.72',                function(){ return pctRing(72); });
+  probe('pctStatusColor.samples',    function(){ return [pctStatusColor(80),pctStatusColor(50),pctStatusColor(10)]; });
+  probe('resolveFood.samples',       function(){ return [resolveFood('Μπανάνα'), resolveFood('__unknown__')]; });
+  probe('minScaleG.samples',         function(){ return [minScaleG('Μπανάνα'), minScaleG('Κοτόπουλο στήθος (ψητό)')]; });
+
+  // data fingerprints — cheap structural checksums
+  probes['_fingerprints'] = (function(){
+    function n(o){ try { return Array.isArray(o)?o.length:Object.keys(o).length; } catch(e){ return 'ERR'; } }
+    function len(o){ try { return JSON.stringify(o).length; } catch(e){ return 'ERR'; } }
+    return {
+      FOODS_keys:n(window.FOODS), FOODS_json:len(window.FOODS),
+      PORTIONS_keys:n(window.PORTIONS), PORTIONS_json:len(window.PORTIONS),
+      FOOD_UNITS_keys:n(window.FOOD_UNITS), FOOD_UNITS_json:len(window.FOOD_UNITS),
+      MEAL_RECIPES_len:n(window.MEAL_RECIPES), MEAL_RECIPES_json:len(window.MEAL_RECIPES),
+      SNACK_RECIPES_len:n(window.SNACK_RECIPES),
+      SUPPS_len:n(window.SUPPS), SUPPS_json:len(window.SUPPS),
+      MET_ACTIVITIES_len:n(window.MET_ACTIVITIES), MET_ACTIVITIES_json:len(window.MET_ACTIVITIES),
+      MICRONUTRIENTS_keys:n(window.MICRONUTRIENTS), MICRONUTRIENTS_json:len(window.MICRONUTRIENTS),
+      SPORT_PROTOCOLS_keys:n(window.SPORT_PROTOCOLS), SPORT_PROTOCOLS_json:len(window.SPORT_PROTOCOLS),
+      SPORT_PROFILES_keys:n(window.SPORT_PROFILES),
+      DEFAULT_TMPLS_keys:n(window.DEFAULT_TMPLS), DEFAULT_TMPLS_json:len(window.DEFAULT_TMPLS),
+      spot_FOODS_chicken: (window.FOODS ? window.FOODS['Κοτόπουλο στήθος (ψητό)'] : 'no FOODS'),
+      spot_FOOD_UNITS_banana: (window.FOOD_UNITS ? window.FOOD_UNITS['Μπανάνα'] : 'no FOOD_UNITS'),
+      spot_SUPPS_0: (window.SUPPS ? window.SUPPS[0] : 'no SUPPS'),
+      spot_MET_0: (window.MET_ACTIVITIES ? window.MET_ACTIVITIES[0] : 'no MET_ACTIVITIES')
+    };
+  })();
+
+  // --- assemble -----------------------------------------------------------
+  var fnFails    = results.filter(function(r){ return r.kind==='fn'    && !r.pass; });
+  var constFails = results.filter(function(r){ return r.kind==='const' && !r.pass; });
+  var probeThrew = Object.keys(probes).filter(function(k){ return typeof probes[k]==='string' && probes[k].indexOf('THREW:')===0; });
+  var loadErrs   = window.__LOAD_ERRORS__.slice();
+
+  var payload = {
+    generatedAt: '(deterministic-only — timestamp intentionally omitted)',
+    manifest: window.__MANIFEST__,
+    counts: { fnChecked: results.filter(function(r){return r.kind==='fn';}).length,
+              constChecked: results.filter(function(r){return r.kind==='const';}).length,
+              probes: Object.keys(probes).length },
+    fnFails: fnFails.map(function(r){return r.name+' ('+r.detail+')';}),
+    constFails: constFails.map(function(r){return r.name+' ('+r.detail+')';}),
+    probeThrew: probeThrew,
+    loadErrors: loadErrs,
+    probes: probes
+  };
+
+  var pass = fnFails.length===0 && constFails.length===0 && probeThrew.length===0 && loadErrs.length===0;
+  window.__SMOKE__ = { pass: pass, json: JSON.stringify(payload, null, 2), payload: payload, diff: 'pending' };
+
+  // --- render -----------------------------------------------------------
+  var s = document.getElementById('summary');
+  s.textContent = pass ? '✓ SMOKE PASS' : ('✗ SMOKE FAIL  —  fn:' + fnFails.length + '  const:' + constFails.length + '  probeThrew:' + probeThrew.length + '  loadErr:' + loadErrs.length);
+  s.className = pass ? 'ok' : 'bad';
+
+  // --- baseline diff (async) ------------------------------------------
+  // Compares this run's `probes` block against test/baseline.json. The probes
+  // exercise the pure calc/data core, so a clean diff == the split preserved
+  // behaviour. `counts` and the fail arrays are compared too.
+  (function(){
+    function walk(a, b, path, out){
+      if (JSON.stringify(a) === JSON.stringify(b)) return;
+      if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object' || Array.isArray(a) !== Array.isArray(b)){
+        out.push(path + ' :  ' + JSON.stringify(a) + '  →  ' + JSON.stringify(b));
+        return;
+      }
+      var keys = {}; Object.keys(a).forEach(function(k){keys[k]=1;}); Object.keys(b).forEach(function(k){keys[k]=1;});
+      Object.keys(keys).forEach(function(k){ walk(a[k], b[k], path ? path+'.'+k : k, out); });
+    }
+    fetch('../test/baseline.json', {cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(base){
+        var diffs = [];
+        walk(base.probes, payload.probes, 'probes', diffs);
+        walk(base.counts, payload.counts, 'counts', diffs);
+        walk(base.fnFails, payload.fnFails, 'fnFails', diffs);
+        walk(base.constFails, payload.constFails, 'constFails', diffs);
+        var clean = diffs.length === 0;
+        window.__SMOKE__.diff = clean ? 'CLEAN' : diffs;
+        window.__SMOKE__.pass = window.__SMOKE__.pass && clean;
+        var d = document.createElement('div');
+        d.style.cssText = 'padding:10px 14px;border-radius:8px;margin:12px 0;font-weight:700;display:inline-block';
+        d.className = clean ? 'ok' : 'bad';
+        d.textContent = clean ? '✓ BASELINE DIFF CLEAN' : ('✗ BASELINE DIFF — ' + diffs.length + ' change(s)');
+        s.parentNode.insertBefore(d, s.nextSibling);
+        if(!clean){
+          var pre = document.createElement('pre');
+          pre.textContent = diffs.join('\n');
+          d.parentNode.insertBefore(pre, d.nextSibling);
+        }
+      })
+      .catch(function(e){
+        window.__SMOKE__.diff = 'NO BASELINE (' + e.message + ')';
+        var d = document.createElement('div');
+        d.style.cssText = 'padding:10px 14px;border-radius:8px;margin:12px 0;display:inline-block';
+        d.className = 'bad';
+        d.textContent = 'baseline.json not loaded: ' + e.message + '  — first run? copy __SMOKE__.json into test/baseline.json';
+        s.parentNode.insertBefore(d, s.nextSibling);
+      });
+  })();
+
+  var rows = results.map(function(r){
+    return '<tr><td>'+r.name+'</td><td>'+r.kind+'</td><td class="'+(r.pass?'p':'f')+'">'+(r.pass?'PASS':'FAIL')+'</td><td>'+r.detail+'</td></tr>';
+  }).join('');
+  document.getElementById('report').innerHTML =
+    (loadErrs.length ? '<p class="bad" style="padding:8px 12px;border-radius:6px;display:block">Load errors: '+loadErrs.map(esc0).join(' | ')+'</p>' : '') +
+    '<table><thead><tr><th>symbol</th><th>kind</th><th>result</th><th>detail</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  function esc0(x){ return String(x).replace(/</g,'&lt;'); }
+
+  document.getElementById('json').textContent = window.__SMOKE__.json;
+})();
+</script>
+</body>
+</html>
