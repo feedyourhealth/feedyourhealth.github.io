@@ -294,7 +294,17 @@ setTimeout(function(){
      heartbeat, the app-part4 auto-load IIFE, and window 'load' handlers.
      The smoke harness in test/smoke.html mirrors this list.
      ═══════════════════════════════════════════════════════════════════════════ -->
-<script src="js/data.js"></script>
+<!-- data/* (no dependencies) — split out of the old js/data.js in module-split wave 1 -->
+<script src="js/data/foods.js"></script>
+<script src="js/data/portions.js"></script>
+<script src="js/data/met-activities.js"></script>
+<script src="js/data/supplements.js"></script>
+<script src="js/data/protocols.js"></script>
+<script src="js/data/micronutrients.js"></script>
+<script src="js/data/food-aliases.js"></script>
+<script src="js/data/templates.js"></script>
+<script src="js/data/recipes.js"></script>
+<script src="js/data/misc.js"></script>
 <script src="js/app-part1.js"></script>
 <script src="js/app-part2.js"></script>
 <script src="js/app-part3.js"></script>
