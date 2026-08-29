@@ -310,6 +310,10 @@ setTimeout(function(){
 <script src="js/lib/food-resolve.js"></script>
 <!-- calc/* — pure energy & scaling calc (depend on data/* + lib/helpers.js) -->
 <script src="js/calc/plan-energy.js"></script>
+<!-- calc/macros-recalc — micronutrient targets + the cascade-recalc engine
+     (getMicronutrientTargets, onClientChange, recalculateMacros …). Zero load-time
+     code; renderMain/genPlan/makeDayTgtDefaults refs resolve at call time. -->
+<script src="js/calc/macros-recalc.js"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
 <script src="js/core/persistence.js"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
