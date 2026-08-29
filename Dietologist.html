@@ -319,6 +319,10 @@ setTimeout(function(){
      TOUCH_HANDLERS/MOBILE_VIEWPORT, field validation, toggleSidebar -->
 <script src="js/core/state.js"></script>
 <script src="js/app-part1.js"></script>
+<!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
+     per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
+     consumes clients/getC/FOODS/TMPLS from above, so loads right after app-part1.js. -->
+<script src="js/client-list/roster-ui.js"></script>
 <script src="js/app-part2.js"></script>
 <script src="js/app-part3.js"></script>
 <!-- reports/* — plan & body-comp exports (PDF/Word/GDocs), backup I/O. Pure fns,
