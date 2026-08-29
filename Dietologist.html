@@ -307,10 +307,14 @@ setTimeout(function(){
 <script src="js/data/misc.js"></script>
 <!-- lib/* — pure leaf helpers (depend only on data/*) -->
 <script src="js/lib/helpers.js"></script>
+<script src="js/lib/food-resolve.js"></script>
 <!-- calc/* — pure energy & scaling calc (depend on data/* + lib/helpers.js) -->
 <script src="js/calc/plan-energy.js"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
 <script src="js/core/persistence.js"></script>
+<!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
+     (needs snapWholeG, cm, deepClone, DEFAULT_TMPLS — all loaded above) -->
+<script src="js/core/templates.js"></script>
 <script src="js/app-part1.js"></script>
 <script src="js/app-part2.js"></script>
 <script src="js/app-part3.js"></script>
