@@ -324,6 +324,9 @@ setTimeout(function(){
      consumes clients/getC/FOODS/TMPLS from above, so loads right after app-part1.js. -->
 <script src="js/client-list/roster-ui.js"></script>
 <script src="js/app-part2.js"></script>
+<!-- appointments/* — the "📝 Ραντεβού" tab, carved out of app-part2.js. Pure fns;
+     callers (renderMain/swTab, app-part5 portal refresh) are runtime. -->
+<script src="js/appointments/appointments.js"></script>
 <!-- plan-gen/* — the entire meal-plan generation subsystem, carved out of the old
      monolithic app-part3.js (now fully removed). Pure fn declarations + literal
      state vars; every cross-reference resolves at runtime, so load order among
