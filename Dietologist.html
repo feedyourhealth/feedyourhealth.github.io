@@ -324,6 +324,9 @@ setTimeout(function(){
      consumes clients/getC/FOODS/TMPLS from above, so loads right after app-part1.js. -->
 <script src="js/client-list/roster-ui.js"></script>
 <script src="js/app-part2.js"></script>
+<!-- plan-gen/* — meal-plan generation core, carved out of app-part3.js. Pure/leaf
+     pieces first; all refs resolve at runtime so they load right before app-part3.js. -->
+<script src="js/plan-gen/med-score.js"></script>
 <script src="js/app-part3.js"></script>
 <!-- reports/* — plan & body-comp exports (PDF/Word/GDocs), backup I/O. Pure fns,
      no load-time code; refs resolve at click time. -->
