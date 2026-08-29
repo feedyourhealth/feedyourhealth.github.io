@@ -1,15 +1,15 @@
-
-// ══════════════════════════════════════════════════════════════════════════════
-// CHEF-INSPIRED MEAL RECIPES — Culinary-sensible combinations
-// ══════════════════════════════════════════════════════════════════════════════
-
-// ══════════════════════════════════════════════════════════════════════════════
-// SNACK RECIPES — Κατάλληλα για Ενδιάμεσα Γεύματα (ΜΟΝΟ! Όχι κύρια)
-// ══════════════════════════════════════════════════════════════════════════════
-
-// Maps each food category to the macro it primarily contributes
-// Used by scalePlan for per-macro scaling
-
+// js/client-editor/diet-panels.js
+// The last of app-part1.js (module split wave 35 — app-part1.js is now removed).
+// The two diet-management panels of the client editor:
+//   TEMPLATE EDITOR: curTmplGoal, selectTmpl, renderTemplateEditor, swTmplGoal,
+//     renderTmplTable, tmplUpdG/tmplAddF/tmplDelF, resetTmpl, buildTmplSelectorHtml,
+//     showSaveTmplPanel/closeSaveTmplPanel/doSaveAsTmpl
+//   PLAN HISTORY: showSavePlanPanel/closeSavePlanPanel/doSavePlan, renderPlanCharts,
+//     calculatePlanStats, loadPlanAsActive, deletePlanFromHistory, duplicatePlan,
+//     buildPlanHistoryHtml, buildPlanHistoryHtmlInner
+// Only `var curTmplGoal = 'maintain'` runs at parse time. Callers (renderMain,
+// core/persistence save-hook, form-controls tab switch, app-part2 selectTmplForClient,
+// meal-slots) are all runtime. Loads last in the client-editor/ group.
 
 /* ======== TEMPLATE EDITOR ======== */
 var curTmplGoal='maintain';

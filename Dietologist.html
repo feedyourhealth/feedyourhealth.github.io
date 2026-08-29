@@ -325,10 +325,9 @@ setTimeout(function(){
 <!-- core/state — client roster/selection (clients/curId/getC), CRUD, JSON_CACHE,
      TOUCH_HANDLERS/MOBILE_VIEWPORT, field validation, toggleSidebar -->
 <script src="js/core/state.js"></script>
-<script src="js/app-part1.js"></script>
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
-     consumes clients/getC/FOODS/TMPLS from above, so loads right after app-part1.js. -->
+     consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
 <script src="js/client-list/roster-ui.js"></script>
 <!-- client-list/quick-actions — sidebar quick-action sheets + mobile more-sheet
      (toggleQA/renderMSheetQA…), carved out of app-part1.js. All refs runtime. -->
@@ -347,6 +346,9 @@ setTimeout(function(){
 <script src="js/client-editor/day-targets.js"></script>
 <script src="js/client-editor/form-controls.js"></script>
 <script src="js/client-editor/render-main.js"></script>
+<!-- client-editor/diet-panels — template editor + plan history/save/charts, the last
+     of the old app-part1.js (now removed). Only `var curTmplGoal` at parse time. -->
+<script src="js/client-editor/diet-panels.js"></script>
 <!-- plan-gen/* — the entire meal-plan generation subsystem, carved out of the old
      monolithic app-part3.js (now fully removed). Pure fn declarations + literal
      state vars; every cross-reference resolves at runtime, so load order among
