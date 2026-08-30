@@ -609,6 +609,7 @@ const I18N={
     bmiUnderweight:'Ελλιποβαρές', bmiNormal:'Φυσιολογικό', bmiOverweight:'Υπέρβαρο', bmiObese1:'Παχυσαρκία Ι', bmiObese2:'Παχυσαρκία ΙΙ', bmiObese3:'Παχυσαρκία ΙΙΙ',
     whtrNormal:'Φυσιολογικό', whtrElevated:'Αυξημένος κίνδυνος', whtrHigh:'Υψηλός κίνδυνος',
     bfEssential:'Απαραίτητο', bfAthletic:'Αθλητικό', bfFit:'Φυσιολογικό', bfAcceptable:'Αποδεκτό', bfObese:'Παχυσαρκία',
+    bfGalLow:'Κάτω από το υγιές', bfGalHealthy:'Υγιές', bfGalOverfat:'Υπέρβαρο', bfGalObese:'Παχυσαρκία', bfGalHealthyLbl:'Υγιές εύρος', bfGalRef:'Υγιή εύρη κατά ηλικία & φύλο (Gallagher 2000)',
     acsmRef:'Τιμές αναφοράς ACSM', lastMeasureHdr:'Τελευταία μέτρηση', waistLbl:'Περιφέρεια μέσης', bodyfatLbl:'Σωματικό λίπος', lbmLbl:'Άλιπη μάζα',
     sinceStart:'από την αρχή', chartAriaLabel:'Γράφημα', chartGoalLbl:'στόχος',
     pdfLegend:'Π = Πρωτεΐνη · Λ = Λιπαρά · Υ = Υδατάνθρακες', pdfTrainBadge:'ημέρα προπόνησης',
@@ -713,6 +714,7 @@ const I18N={
     bmiUnderweight:'Underweight', bmiNormal:'Normal', bmiOverweight:'Overweight', bmiObese1:'Obese I', bmiObese2:'Obese II', bmiObese3:'Obese III',
     whtrNormal:'Normal', whtrElevated:'Elevated risk', whtrHigh:'High risk',
     bfEssential:'Essential', bfAthletic:'Athletic', bfFit:'Fit', bfAcceptable:'Acceptable', bfObese:'Obese',
+    bfGalLow:'Below healthy', bfGalHealthy:'Healthy', bfGalOverfat:'Overweight', bfGalObese:'Obesity', bfGalHealthyLbl:'Healthy range', bfGalRef:'Age & sex healthy ranges (Gallagher 2000)',
     acsmRef:'ACSM reference values', lastMeasureHdr:'Latest measurement', waistLbl:'Waist circumference', bodyfatLbl:'Body fat', lbmLbl:'Lean mass',
     sinceStart:'since the start', chartAriaLabel:'Chart', chartGoalLbl:'goal',
     pdfLegend:'P = Protein · F = Fat · C = Carbs', pdfTrainBadge:'training day',
@@ -817,6 +819,7 @@ const I18N={
     bmiUnderweight:'Недостаточный вес', bmiNormal:'Норма', bmiOverweight:'Избыточный вес', bmiObese1:'Ожирение I', bmiObese2:'Ожирение II', bmiObese3:'Ожирение III',
     whtrNormal:'Норма', whtrElevated:'Повышенный риск', whtrHigh:'Высокий риск',
     bfEssential:'Незаменимый', bfAthletic:'Спортивный', bfFit:'Хорошая форма', bfAcceptable:'Приемлемый', bfObese:'Ожирение',
+    bfGalLow:'Ниже нормы', bfGalHealthy:'Норма', bfGalOverfat:'Избыточный вес', bfGalObese:'Ожирение', bfGalHealthyLbl:'Здоровый диапазон', bfGalRef:'Здоровые диапазоны по возрасту и полу (Gallagher, 2000)',
     acsmRef:'Референсные значения ACSM', lastMeasureHdr:'Последнее измерение', waistLbl:'Окружность талии', bodyfatLbl:'Процент жира', lbmLbl:'Безжировая масса',
     sinceStart:'с начала', chartAriaLabel:'График', chartGoalLbl:'цель',
     pdfLegend:'Б = Белки · Ж = Жиры · У = Углеводы', pdfTrainBadge:'день тренировки',
@@ -921,6 +924,7 @@ const I18N={
     bmiUnderweight:'Zayıf', bmiNormal:'Normal', bmiOverweight:'Fazla Kilolu', bmiObese1:'Obez I', bmiObese2:'Obez II', bmiObese3:'Obez III',
     whtrNormal:'Normal', whtrElevated:'Yüksek risk', whtrHigh:'Çok yüksek risk',
     bfEssential:'Temel', bfAthletic:'Atletik', bfFit:'Fit', bfAcceptable:'Kabul edilebilir', bfObese:'Obez',
+    bfGalLow:'Sağlıklının altında', bfGalHealthy:'Sağlıklı', bfGalOverfat:'Fazla kilolu', bfGalObese:'Obezite', bfGalHealthyLbl:'Sağlıklı aralık', bfGalRef:'Yaşa ve cinsiyete göre sağlıklı aralıklar (Gallagher 2000)',
     acsmRef:'ACSM referans değerleri', lastMeasureHdr:'Son ölçüm', waistLbl:'Bel çevresi', bodyfatLbl:'Vücut yağı', lbmLbl:'Yağsız kütle',
     sinceStart:'başlangıçtan bu yana', chartAriaLabel:'Grafik', chartGoalLbl:'hedef',
     pdfLegend:'P = Protein · Y = Yağ · K = Karbonhidrat', pdfTrainBadge:'antrenman günü',
@@ -2352,9 +2356,9 @@ function viewProg(){
     if(bfLog.length>=2){
       const c=el('div','card');const cp=el('div','card-pad');
       cp.appendChild(chartHeader(T('bfChartLbl'),bfLog[bfLog.length-1].bf,'%',bfLog[0].bf,-1));
-      const bands=(p.showBFBands&&s.sex)?bfBands(s.sex):null;
+      const bands=(p.showBFBands&&s.sex)?bfBandsChart(s.sex,s.age):null;
       cp.appendChild(sparklineKey(bfLog,'bf',p.goalBF,'#c77d11',{bands:bands}));
-      if(bands)cp.appendChild(bfBandsLegend(s.sex));
+      if(bands)cp.appendChild(bfBandsLegend(s.sex,s.age));
       c.appendChild(cp);v.appendChild(c);
     }else if(p.bodyfat!=null){
       const c=el('div','card');const cp=el('div','card-pad');
@@ -2398,9 +2402,19 @@ function viewProg(){
     const bmiCatNow=(bmiNow!=null&&!isMinorNow)?(bmiNow<18.5?T('bmiUnderweight'):bmiNow<25?T('bmiNormal'):bmiNow<30?T('bmiOverweight'):bmiNow<35?T('bmiObese1'):bmiNow<40?T('bmiObese2'):T('bmiObese3')):null;
     const bmiColNow=(bmiNow!=null&&!isMinorNow)?(bmiNow<18.5?'#1565C0':bmiNow<25?'var(--ok)':bmiNow<30?'#f57c00':'#c62828'):null;
     const bfBandsNow=bfBands(s.sex);
-    const bfLabelsNow=[T('bfEssential'),T('bfAthletic'),T('bfFit'),T('bfAcceptable'),T('bfObese')];
-    let bfCatNow=null,bfColNow=null;
-    if(p.bodyfat!=null){bfBandsNow.forEach((b,i)=>{if(p.bodyfat>=b.lo){bfCatNow=bfLabelsNow[i];bfColNow=b.col;}});}
+    // age-adjusted verdict (Gallagher 2000) when the snapshot carries the client's age;
+    // else the non-age-adjusted ACE 5-band. bfBoundsNow = the range-bar zone stops.
+    const bfGalNow=(p.bodyfat!=null)?bfHealthByAge(p.bodyfat,s.sex,s.age):null;
+    let bfCatNow=null,bfColNow=null,bfBoundsNow=null;
+    if(bfGalNow){
+      const GLN={low:T('bfGalLow'),healthy:T('bfGalHealthy'),overfat:T('bfGalOverfat'),obese:T('bfGalObese')};
+      bfCatNow=GLN[bfGalNow.key]+' ('+bfGalNow.ageBand+')'; bfColNow=bfGalNow.col;
+      bfBoundsNow=[{v:s.sex==='F'?5:0,col:'#1565C0'},{v:bfGalNow.healthy[0],col:'var(--ok)'},{v:bfGalNow.healthy[1]+1,col:'#f57c00'},{v:bfGalNow.obeseLo,col:'#c62828'}];
+    }else if(p.bodyfat!=null){
+      const bfLabelsNow=[T('bfEssential'),T('bfAthletic'),T('bfFit'),T('bfAcceptable'),T('bfObese')];
+      bfBandsNow.forEach((b,i)=>{if(p.bodyfat>=b.lo){bfCatNow=bfLabelsNow[i];bfColNow=b.col;}});
+      bfBoundsNow=[{v:s.sex==='F'?5:0,col:bfBandsNow[0].col},{v:bfBandsNow[1].lo,col:bfBandsNow[1].col},{v:bfBandsNow[2].lo,col:bfBandsNow[2].col},{v:bfBandsNow[3].lo,col:bfBandsNow[3].col},{v:bfBandsNow[4].lo,col:bfBandsNow[4].col}];
+    }
     const whtrNow=(p.waist&&s.height)?+(p.waist/s.height).toFixed(2):null;
     const whtrCatNow=whtrNow!=null?(whtrNow<0.5?T('whtrNormal'):whtrNow<0.6?T('whtrElevated'):T('whtrHigh')):null;
     const whtrColNow=whtrNow!=null?(whtrNow<0.5?'var(--ok)':whtrNow<0.6?'#f57c00':'#c62828'):null;
@@ -2410,7 +2424,12 @@ function viewProg(){
         +'<div class="card-hdr" style="margin-bottom:0"><i class="ti ti-activity"></i>'+T('analysisHdr')+'</div>'
         +'<span style="font-size:10px;color:var(--faint)">'+T('analysisGoalLegend')+'</span></div>';
       if(bmiNow!=null)ah+=rangeBar(T('bmiLbl'),decSep(String(bmiNow)),bmiColNow||'var(--ink)',bmiCatNow,isMinorNow?null:[{v:15,col:'#1565C0'},{v:18.5,col:'var(--ok)'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmiNow,24.9);
-      if(p.bodyfat!=null)ah+=rangeBar(T('bfPctLbl'),decSep(String(p.bodyfat))+'%',bfColNow,bfCatNow,[{v:s.sex==='F'?5:0,col:bfBandsNow[0].col},{v:bfBandsNow[1].lo,col:bfBandsNow[1].col},{v:bfBandsNow[2].lo,col:bfBandsNow[2].col},{v:bfBandsNow[3].lo,col:bfBandsNow[3].col},{v:bfBandsNow[4].lo,col:bfBandsNow[4].col}],s.sex==='F'?45:35,p.bodyfat,(p.goalBF||bfBandsNow[2].hi));
+      if(p.bodyfat!=null){
+        const bfMax=bfGalNow?bfGalNow.obeseLo+8:(s.sex==='F'?45:35);
+        const bfGoalMark=p.goalBF||(bfGalNow?bfGalNow.healthy[1]:bfBandsNow[2].hi);
+        ah+=rangeBar(T('bfPctLbl'),decSep(String(p.bodyfat))+'%',bfColNow,bfCatNow,bfBoundsNow,bfMax,p.bodyfat,bfGoalMark);
+        if(bfGalNow)ah+='<div style="font-size:10px;color:var(--faint);margin:-6px 0 12px">'+T('bfGalHealthyLbl')+': '+bfGalNow.healthy[0]+'–'+bfGalNow.healthy[1]+'%</div>';
+      }
       if(whtrNow!=null)ah+=rangeBar(T('whtrLbl'),decSep(String(whtrNow)),whtrColNow,whtrCatNow,[{v:0.35,col:'var(--ok)'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtrNow,0.5);
       cp.innerHTML=ah; c.appendChild(cp); v.appendChild(c);
     }
@@ -2443,21 +2462,45 @@ function chartHeader(title,curVal,unit,startVal,goodDir){
 }
 // Ζώνες αναφοράς %BF — ΚΡΑΤΑ ΤΙΣ ΤΙΜΕΣ ΙΔΙΕΣ με το js/lib/bf-norms.js (BF_BANDS) της
 // κύριας εφαρμογής· το plan.html είναι standalone (χωρίς κοινό script scope) οπότε δεν
-// γίνεται import. Μοντέλο 5 ζωνών ACE/ACSM — ΧΩΡΙΣ διόρθωση ηλικίας.
-// ⚠️ TODO (follow-up): η κύρια app + τα PDF δείχνουν πλέον τα age×sex υγιή εύρη Gallagher
-// 2000 (bfHealthByAge). Το client portal μένει προς το παρόν στο 5-band ACE — χρειάζεται
-// mirror του Gallagher εδώ + 4-γλωσσα strings πριν ενοποιηθεί.
+// γίνεται import. Μοντέλο 5 ζωνών ACE/ACSM — ΧΩΡΙΣ διόρθωση ηλικίας· fallback όταν λείπει ηλικία.
 function bfBands(sex){
   return sex==='F'
     ?[{lo:10,hi:13,col:'#1565C0'},{lo:14,hi:20,col:'var(--ok)'},{lo:21,hi:24,col:'#558b2f'},{lo:25,hi:31,col:'#f57c00'},{lo:32,hi:60,col:'#c62828'}]
     :[{lo:2,hi:5,col:'#1565C0'},{lo:6,hi:13,col:'var(--ok)'},{lo:14,hi:17,col:'#558b2f'},{lo:18,hi:24,col:'#f57c00'},{lo:25,hi:60,col:'#c62828'}];
 }
-function bfBandsLegend(sex){
-  const labels=[T('bfEssential'),T('bfAthletic'),T('bfFit'),T('bfAcceptable'),T('bfObese')];
-  const bands=bfBands(sex);
+// ── Gallagher et al. 2000 (Am J Clin Nutr 72:694-701, Table 4) — age×sex υγιή εύρη %BF.
+// MIRROR του bfHealthByAge()/GALLAGHER_BF στο js/lib/bf-norms.js — κράτα τα νούμερα ίδια.
+const GALLAGHER_BF={
+  M:[{aLo:20,aHi:39,h:[8,19],o:25},{aLo:40,aHi:59,h:[11,21],o:28},{aLo:60,aHi:79,h:[13,24],o:30}],
+  F:[{aLo:20,aHi:39,h:[21,32],o:39},{aLo:40,aHi:59,h:[23,33],o:40},{aLo:60,aHi:79,h:[24,35],o:42}]
+};
+function bfGalRow(sex,age){
+  if(!(age>0))return null;
+  const rows=GALLAGHER_BF[sex==='F'?'F':'M'];
+  const a=age<20?20:(age>79?79:age);
+  return rows.find(r=>a>=r.aLo&&a<=r.aHi)||rows[rows.length-1];
+}
+function bfHealthByAge(bf,sex,age){
+  const row=bfGalRow(sex,age);
+  if(!(bf>0)||!row)return null;
+  let key; if(bf<row.h[0])key='low'; else if(bf<=row.h[1])key='healthy'; else if(bf<row.o)key='overfat'; else key='obese';
+  const col={low:'#1565C0',healthy:'var(--ok)',overfat:'#f57c00',obese:'#c62828'}[key];
+  return {key,col,healthy:row.h.slice(),obeseLo:row.o,ageBand:row.aLo+'–'+row.aHi};
+}
+// Ζώνες για το γράφημα τάσης — Gallagher 4 ζώνες αν υπάρχει ηλικία, αλλιώς ACE 5.
+function bfBandsChart(sex,age){
+  const row=bfGalRow(sex,age);
+  if(!row)return bfBands(sex);
+  return [{lo:0,hi:row.h[0],col:'#1565C0'},{lo:row.h[0],hi:row.h[1],col:'var(--ok)'},{lo:row.h[1],hi:row.o,col:'#f57c00'},{lo:row.o,hi:60,col:'#c62828'}];
+}
+function bfBandsLegend(sex,age){
+  const row=bfGalRow(sex,age);
+  let labels,bands;
+  if(row){ labels=[T('bfGalLow'),T('bfGalHealthy'),T('bfGalOverfat'),T('bfGalObese')]; bands=bfBandsChart(sex,age); }
+  else { labels=[T('bfEssential'),T('bfAthletic'),T('bfFit'),T('bfAcceptable'),T('bfObese')]; bands=bfBands(sex); }
   let items='';
   bands.forEach((b,i)=>{items+='<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px"><span style="width:8px;height:8px;border-radius:2px;background:'+b.col+';display:inline-block"></span>'+labels[i]+'</span>';});
-  return el('div',null,'<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8">'+items+'<div style="margin-top:2px">'+T('acsmRef')+'</div></div>');
+  return el('div',null,'<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.8">'+items+'<div style="margin-top:2px">'+(row?T('bfGalRef'):T('acsmRef'))+'</div></div>');
 }
 // Μπάρα αναφοράς Low→High (ΔΜΣ/%Λίπους/WHtR) με ◆ δείκτη στόχου — ίδια λογική με το έντυπο λιπομέτρησης.
 function rbPct(v,min,max){return Math.max(0,Math.min(100,(v-min)/(max-min)*100));}

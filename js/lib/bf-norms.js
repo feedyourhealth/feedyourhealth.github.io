@@ -6,9 +6,9 @@
 // in 4 places (helpers.js, exports.js ×2, plan.html) and had already drifted in
 // shape (some had `lo`, some only `hi`); now the numbers live here once.
 //
-// plan.html keeps its OWN mirrored copy (function bfBands / rangeBar) because it is
-// a standalone file served to clients with no shared <script> scope — if you change
-// a number here, change it there too (grep "bfBands(sex)" in plan.html).
+// plan.html (the standalone client portal, no shared <script> scope) keeps its OWN
+// mirrors of BOTH models — bfBands() and GALLAGHER_BF/bfHealthByAge()/bfBandsChart().
+// If you change a number here, change it there too (grep "GALLAGHER_BF" in plan.html).
 //
 // MODELS:
 //  - BF_BANDS: the 5-band Essential/Athletic/Fitness/Acceptable/Obesity split — the
