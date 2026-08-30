@@ -235,7 +235,14 @@ function el(id){ return document.getElementById(id); }
 (async function boot(){
   if(!TOK){ return renderState('err','invalidTitle','invalidBody'); }
   try{
-    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    // Stateless client on purpose: this page is served from the same origin as the
+    // dietitian app, which persists its Supabase auth session to localStorage. Without
+    // this, createClient() would silently adopt whatever dietitian is logged in on this
+    // browser and run every call as them. The client form must always be anonymous and
+    // reach the data only through the get_intake / submit_intake RPCs.
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+      auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
+    });
   }catch(e){ return renderState('err','netTitle','netErr'); }
   let data,error;
   try{

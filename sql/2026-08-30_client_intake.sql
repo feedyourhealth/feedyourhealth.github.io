@@ -30,12 +30,22 @@ create table if not exists client_intake (
 
 alter table client_intake enable row level security;
 
--- The dietitian can see / insert / update / delete only their own rows.
+-- HARD lock for the anonymous client: intake.html ships the public anon key, so the
+-- anon role must never touch this table directly (a plain `select * from client_intake`
+-- would otherwise dump every dietitian's payload). It reaches the data ONLY through the
+-- two SECURITY DEFINER RPCs below, which run as the function owner and are unaffected by
+-- this revoke. Supabase's default grants hand `anon`/`authenticated` table privileges on
+-- every new public table, so we take them back from anon explicitly.
+revoke all on table client_intake from anon;
+grant  select, insert, update, delete on table client_intake to authenticated;
+
+-- The dietitian (authenticated) can see / insert / update / delete only their own rows.
 -- (drop-then-create so the whole file is safe to re-run.)
 drop policy if exists "dietitian manages own intake rows" on client_intake;
 create policy "dietitian manages own intake rows"
   on client_intake
   for all
+  to authenticated
   using (dietitian_id = auth.uid())
   with check (dietitian_id = auth.uid());
 
