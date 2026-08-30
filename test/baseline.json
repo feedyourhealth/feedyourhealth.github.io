@@ -30,6 +30,7 @@
     "../js/client-editor/day-targets.js",
     "../js/client-editor/form-controls.js",
     "../js/client-editor/render-main.js",
+    "../js/client-editor/intake.js",
     "../js/client-editor/diet-panels.js",
     "../js/plan-gen/med-score.js",
     "../js/plan-gen/red-meat.js",
@@ -60,9 +61,9 @@
     "../js/11-undo-redo.js"
   ],
   "counts": {
-    "fnChecked": 98,
+    "fnChecked": 103,
     "constChecked": 30,
-    "probes": 34
+    "probes": 37
   },
   "fnFails": [],
   "constFails": [],
@@ -801,6 +802,27 @@
       "showsHealthyRange": true,
       "verdictHealthy": true,
       "fallsBackWhenNoAge": true
+    },
+    "intakeLangFor.samples": {
+      "en": "en",
+      "el": "el",
+      "fromClientLangEn": "en",
+      "fromClientLangRu": "el",
+      "none": "el"
+    },
+    "intakeHandoffMsg.samples": {
+      "elMsgHasUrl": true,
+      "elMsgFirstName": true,
+      "elSubj": "Ερωτηματολόγιο εισαγωγής — Feed Your Health",
+      "enSubj": "Intake questionnaire — Feed Your Health",
+      "enBodyHasUrl": true
+    },
+    "buildIntakeCardHtml.states": {
+      "noneHasSendBtn": true,
+      "sentHasPending": true,
+      "submHasDone": true,
+      "supHasReplaced": true,
+      "emptyClient": true
     },
     "_fingerprints": {
       "FOODS_keys": 332,

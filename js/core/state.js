@@ -457,6 +457,14 @@ function selectClient(id){
       }
       c.lastAccess=Date.now();
       save(); // Save the lastAccess update (+ any age refresh above)
+
+      // 📋 Ερωτηματολόγιο εισαγωγής (Upgrades Phase 2): αν έχει σταλεί, τσέκαρε στη βάση
+      // αν ο πελάτης το συμπλήρωσε στο μεταξύ και ξανακάνε render μόνο αν κάτι άλλαξε.
+      if(c.intakeToken && window.Cloud && typeof window.Cloud.fetchIntakeStatus==='function'){
+        window.Cloud.fetchIntakeStatus(c).then(function(changed){
+          if(changed && typeof getC==='function' && getC()===c && typeof renderMain==='function') renderMain();
+        }).catch(function(){});
+      }
     }
 
     var tb=document.getElementById('tmpl-sb-btn');

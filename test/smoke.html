@@ -69,6 +69,7 @@ window.__MANIFEST__ = [
   '../js/client-editor/day-targets.js',
   '../js/client-editor/form-controls.js',
   '../js/client-editor/render-main.js',
+  '../js/client-editor/intake.js',
   '../js/client-editor/diet-panels.js',
   '../js/plan-gen/med-score.js',
   '../js/plan-gen/red-meat.js',
@@ -169,7 +170,8 @@ document.write(window.__MANIFEST__.map(function(p){
    'renderHome','renderDiets','renderClients','renderMessages','renderRecipes','renderTips',
    'onClientChange','recalculateMacros','initializeApp','buildAppointmentsHtml',
    'getTipsLibrary','defaultTipsSeed','buildDayTgtHtml','buildMetHtml','buildMacroDistributionHtml',
-   'allocateMealTargets','makeDayTgtDefaults','getDayTgtEff'
+   'allocateMealTargets','makeDayTgtDefaults','getDayTgtEff',
+   'buildIntakeCardHtml','intakeHandoffMsg','intakeLangFor','openIntakeModal','refreshIntakeCard'
   ].forEach(fnCheck);
 
   // --- data constants (min sizes are loose floors, not exact) --------------
@@ -300,6 +302,28 @@ document.write(window.__MANIFEST__.map(function(p){
              showsHealthyRange: g.indexOf('Υγιές εύρος: 21–32%')!==-1,
              verdictHealthy: g.indexOf('30% — Υγιές')!==-1,
              fallsBackWhenNoAge: bfGaugeHtml(30,'F',false,0).indexOf('ACE/ACSM')!==-1 }; });
+
+  // --- intake questionnaire (Upgrades Phase 2 — dietitian side, js/client-editor/intake.js) ---
+  probe('intakeLangFor.samples', function(){
+    return { en: intakeLangFor({intakeLang:'en'}), el: intakeLangFor({intakeLang:'el'}),
+             fromClientLangEn: intakeLangFor({lang:'en'}), fromClientLangRu: intakeLangFor({lang:'ru'}),
+             none: intakeLangFor({}) }; });
+  probe('intakeHandoffMsg.samples', function(){
+    var el=intakeHandoffMsg({name:'Μαρία Παπαδοπούλου'},'https://x/y?t=abc','el');
+    var en=intakeHandoffMsg({name:'John Smith'},'https://x/y?t=abc','en');
+    return { elMsgHasUrl: el.msg.indexOf('https://x/y?t=abc')!==-1, elMsgFirstName: el.msg.indexOf('Μαρία')!==-1 && el.msg.indexOf('Παπαδοπούλου')===-1,
+             elSubj: el.subj, enSubj: en.subj, enBodyHasUrl: en.ebody.indexOf('https://x/y?t=abc')!==-1 }; });
+  probe('buildIntakeCardHtml.states', function(){
+    function has(h,s){ return h.indexOf(s)!==-1; }
+    var none=buildIntakeCardHtml({id:'c1',name:'Χ'});
+    var sent=buildIntakeCardHtml({id:'c1',name:'Χ',intakeToken:'t',intakeStatus:'sent',intakeSentAt:'2026-08-30T10:00:00Z'});
+    var subm=buildIntakeCardHtml({id:'c1',name:'Χ',intakeToken:'t',intakeStatus:'submitted',intakeSubmittedAt:'2026-08-30T10:00:00Z'});
+    var sup =buildIntakeCardHtml({id:'c1',name:'Χ',intakeToken:'t',intakeStatus:'superseded'});
+    return { noneHasSendBtn: has(none,'openIntakeModal()') && has(none,'Δεν έχει σταλεί'),
+             sentHasPending: has(sent,'εκκρεμεί') && has(sent,'refreshIntakeCard'),
+             submHasDone: has(subm,'Συμπληρώθηκε'),
+             supHasReplaced: has(sup,'αντικαταστάθηκε'),
+             emptyClient: buildIntakeCardHtml(null)==='' }; });
 
   // data fingerprints — cheap structural checksums
   probes['_fingerprints'] = (function(){

@@ -350,6 +350,9 @@ setTimeout(function(){
 <script src="js/client-editor/day-targets.js"></script>
 <script src="js/client-editor/form-controls.js"></script>
 <script src="js/client-editor/render-main.js"></script>
+<!-- client-editor/intake — Upgrades Phase 2: intake-questionnaire card in s1 + send
+     modal. Pure fn declarations; needs render-main.js (calls renderMain) at runtime. -->
+<script src="js/client-editor/intake.js"></script>
 <!-- client-editor/diet-panels — template editor + plan history/save/charts, the last
      of the old app-part1.js (now removed). Only `var curTmplGoal` at parse time. -->
 <script src="js/client-editor/diet-panels.js"></script>
@@ -3033,6 +3036,75 @@ function saveFoodExclusions(){
         delete c._publishedPlanHashVer;
         try{ if(typeof save==='function') save(); }catch(e){}
       });
+    },
+
+    // ── 📋 ΕΡΩΤΗΜΑΤΟΛΟΓΙΟ ΕΙΣΑΓΩΓΗΣ (intake.html) ──────────────────────────
+    // Ξεχωριστός πίνακας client_intake (μία γραμμή ανά αποστολή, μοτίβο custom_recipes):
+    // ο διαιτολόγος διαβάζει/γράφει τις δικές του γραμμές απευθείας (RLS)· ο πελάτης
+    // (χωρίς λογαριασμό) μπαίνει μόνο από τα RPC get_intake / submit_intake. Ο σύνδεσμος
+    // ΔΕΝ λήγει· status: 'sent' → 'submitted' (μία φορά, κλειδώνει) και νέα αποστολή
+    // γυρίζει την παλιά γραμμή σε 'superseded'. Βλ. sql/2026-08-30_client_intake.sql.
+    INTAKE_BASE:'https://feedyourhealth.github.io/intake.html',
+
+    // Φτιάχνει ΝΕΟ σύνδεσμο ερωτηματολογίου για τον πελάτη. Αν υπάρχει ήδη ενεργός
+    // ('sent'), τον κάνει 'superseded' πρώτα. lang: 'el' | 'en'. Resolve → {url, token}.
+    sendIntake:function(c, lang){
+      var self=this;
+      if(!this.enabled || !this.user){ return Promise.reject(new Error('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις ερωτηματολόγιο.')); }
+      if(!c || !c.id){ return Promise.reject(new Error('Δεν υπάρχει επιλεγμένος πελάτης.')); }
+      var lg=(lang==='en')?'en':'el';
+      return this.sb.auth.getSession().then(function(res){
+        var session=(res&&res.data)?res.data.session:null;
+        if(!session || !session.user){
+          self.user=null; self._showLogin();
+          throw new Error('Η σύνδεσή σου στο cloud έχει λήξει. Συνδέσου ξανά και ξαναπροσπάθησε.');
+        }
+        self.user=session.user;
+        var uid=session.user.id;
+        // 1) όσα ενεργά ('sent') → 'superseded'
+        return self.sb.from('client_intake').update({status:'superseded'})
+          .eq('dietitian_id',uid).eq('client_id',c.id).eq('status','sent').then(function(){
+            // 2) νέα γραμμή
+            var tok=genSecureToken();
+            var prefill={ name:c.name||'', birthDate:c.birthDate||'', heightCm:(c.height!=null?c.height:null) };
+            var row={ token:tok, dietitian_id:uid, client_id:c.id, client_name:c.name||'', status:'sent', lang:lg, prefill:prefill };
+            return self.sb.from('client_intake').insert(row).then(function(res2){
+              if(res2.error){
+                var detail=[res2.error.code,res2.error.details,res2.error.hint].filter(Boolean).join(' — ');
+                if(/row-level security/i.test(res2.error.message||''))
+                  throw new Error('Δεν επιτρέπεται η αποθήκευση (κανόνας ασφαλείας της βάσης). Χρειάζεται έλεγχος στο Supabase.'+(detail?' ['+detail+']':''));
+                if(/client_intake|does not exist|relation/i.test(res2.error.message||''))
+                  throw new Error('Ο πίνακας client_intake δεν βρέθηκε — τρέξε το sql/2026-08-30_client_intake.sql στο Supabase.'+(detail?' ['+detail+']':''));
+                throw new Error('Απέτυχε η δημιουργία του συνδέσμου. Δοκίμασε ξανά.'+(res2.error.message?' ['+res2.error.message+']':''));
+              }
+              c.intakeToken=tok;
+              c.intakeLang=lg;
+              c.intakeStatus='sent';
+              c.intakeSentAt=new Date().toISOString();
+              delete c.intakeSubmittedAt;
+              c._intakeFetchedAt=Date.now();
+              try{ if(typeof save==='function') save(); }catch(e){}
+              return { url:self.INTAKE_BASE+'?t='+tok, token:tok };
+            });
+          });
+      });
+    },
+
+    // Διαβάζει την τρέχουσα κατάσταση του ενεργού συνδέσμου του πελάτη από τη βάση.
+    // Ενημερώνει c.intakeStatus / c.intakeSubmittedAt. Resolve → true αν κάτι άλλαξε
+    // σε σχέση με την cache (ώστε ο caller να ξανακάνει render), αλλιώς false.
+    fetchIntakeStatus:function(c){
+      var self=this;
+      if(!this.enabled || !this.user || !c || !c.intakeToken) return Promise.resolve(false);
+      return this.sb.from('client_intake').select('status,submitted_at').eq('token',c.intakeToken).maybeSingle().then(function(res){
+        c._intakeFetchedAt=Date.now();
+        if(res.error || !res.data) return false;
+        var changed = (c.intakeStatus!==res.data.status) || (c.intakeSubmittedAt!==res.data.submitted_at);
+        c.intakeStatus=res.data.status;
+        c.intakeSubmittedAt=res.data.submitted_at||null;
+        if(changed){ try{ if(typeof save==='function') save(); }catch(e){} }
+        return changed;
+      }).catch(function(){ return false; });
     },
 
     // JSON.stringify με ταξινομημένα keys σε κάθε επίπεδο — έτσι το hash δεν αλλάζει μόνο και μόνο επειδή

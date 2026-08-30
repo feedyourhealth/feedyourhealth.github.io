@@ -356,6 +356,8 @@ function renderMain(){
     +buildDayTgtHtml(c,t)
     +'</div>'
     +'</div>'
+    // 📋 Ερωτηματολόγιο εισαγωγής (Upgrades Phase 2) — κάρτα κατάστασης + κουμπί αποστολής
+    +(typeof buildIntakeCardHtml==='function'?buildIntakeCardHtml(c):'')
     // +buildExcludeHtml(c)
     // ✅ TEMPLATE SELECTOR - Show available nutrition plan templates
     +buildTmplSelectorHtml(c)

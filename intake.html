@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#025857">
+<title>Feed Your Health — Ερωτηματολόγιο</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ερωτηματολόγιο">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --teal:#025857; --teal-d:#014545; --teal-l:#037070;
+    --tint:#E2EEE5; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
+    --bg:#f4f8f6; --card:#ffffff; --danger:#b71c1c; --warn:#a15c00;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --teal:#3aa8a6; --teal-d:#8fd4d2; --teal-l:#4bb8b6;
+      --tint:#173230; --bord:#2c413e; --bord-l:#1c302e;
+      --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --ok:#68bf6c;
+      --bg:#111917; --card:#18211f; --danger:#e0715f; --warn:#d6a24d;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55; font-size:16px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:0 16px 64px}
+  header{
+    display:flex; align-items:center; gap:10px;
+    padding:16px 4px 14px; margin-bottom:8px;
+  }
+  .mark{
+    width:30px;height:30px;border-radius:8px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--teal),var(--teal-d));
+  }
+  header b{font-size:.82rem;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:1.5rem;margin:.2em 0 .1em;color:var(--teal-d)}
+  .lead{color:var(--muted);font-size:.95rem;margin:0 0 8px}
+
+  .savepill{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:.72rem;font-weight:600;color:var(--ok);
+    background:color-mix(in srgb,var(--ok) 14%,transparent);
+    border-radius:999px;padding:3px 10px;margin:10px 0 4px;opacity:0;transition:opacity .25s
+  }
+  .savepill.on{opacity:1}
+  .savepill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok)}
+
+  .card{
+    background:var(--card);border:1px solid var(--bord);border-radius:14px;
+    padding:16px 15px;margin:12px 0;
+  }
+  .card h2{
+    font-size:.98rem;margin:0 0 12px;color:var(--teal-d);
+    font-family:Georgia,serif;font-weight:700;
+  }
+  .fg{margin:0 0 14px}
+  .fg:last-child{margin-bottom:0}
+  label.lbl{
+    display:block;font-size:.72rem;font-weight:600;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--faint);margin-bottom:6px
+  }
+  .opt{font-weight:400;letter-spacing:0;text-transform:none;color:var(--faint)}
+  input[type=text],input[type=number],input[type=date],textarea,select{
+    width:100%;font:inherit;font-size:.95rem;color:var(--ink);
+    background:var(--card);border:1px solid var(--bord);border-radius:9px;
+    padding:10px 11px;outline:none;-webkit-appearance:none;appearance:none;
+  }
+  input:focus,textarea:focus,select:focus{border-color:var(--teal-l);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal-l) 22%,transparent)}
+  textarea{min-height:64px;resize:vertical;line-height:1.5}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236d8f89' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+  .row2{display:flex;gap:10px}
+  .row2 > *{flex:1;min-width:0}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{
+    font-size:.86rem;border:1px solid var(--bord);border-radius:999px;
+    padding:7px 13px;color:var(--muted);background:var(--card);cursor:pointer;
+    user-select:none;-webkit-tap-highlight-color:transparent;transition:none
+  }
+  .chip:active{transform:scale(.97)}
+  .chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+  .chip.radio[aria-pressed="true"]{background:var(--teal)}
+  .hint{font-size:.76rem;color:var(--faint);margin:7px 0 0}
+
+  .btn{
+    display:block;width:100%;font:inherit;font-size:1rem;font-weight:700;
+    background:var(--teal);color:#fff;border:none;border-radius:11px;
+    padding:14px;cursor:pointer;-webkit-tap-highlight-color:transparent
+  }
+  .btn:disabled{opacity:.55;cursor:default}
+  .btn.sec{background:var(--card);color:var(--teal-d);border:1px solid var(--bord)}
+
+  .state{
+    text-align:center;padding:48px 18px;max-width:420px;margin:0 auto
+  }
+  .state .big{
+    width:60px;height:60px;border-radius:50%;margin:0 auto 16px;
+    display:grid;place-items:center;font-size:1.7rem;
+    background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)
+  }
+  .state .big.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+  .state .big.err{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+  .state h1{margin-bottom:8px}
+  .state p{color:var(--muted);font-size:.95rem}
+  .spin{
+    width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--teal);
+    border-radius:50%;animation:sp 1s linear infinite;margin:60px auto
+  }
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+
+  .err-inline{color:var(--danger);font-size:.85rem;margin:10px 0 0;display:none}
+  .err-inline.on{display:block}
+
+  .langbar{display:flex;gap:6px;margin-left:auto}
+  .langbar button{
+    font:inherit;font-size:.74rem;font-weight:700;padding:4px 9px;border-radius:7px;
+    border:1px solid var(--bord);background:var(--card);color:var(--faint);cursor:pointer
+  }
+  .langbar button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+  .footnote{text-align:center;font-size:.74rem;color:var(--faint);margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mark"></span><b>Feed Your Health</b>
+    <div class="langbar" id="langbar" hidden>
+      <button type="button" data-l="el" onclick="setLang('el')">EL</button>
+      <button type="button" data-l="en" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+  <div id="root"><div class="spin" role="status" aria-label="Loading"></div></div>
+  <div class="footnote" id="footnote" hidden></div>
+</div>
+
+<script>
+'use strict';
+const SUPABASE_URL='https://vqmzrmotdqqoswlgfgrn.supabase.co';
+const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+
+function tokenParam(){ const p=new URLSearchParams(location.search); return p.get('t')||p.get('token')||''; }
+const TOK=tokenParam();
+let sb=null, L='el', PREFILL={}, DRAFT_KEY='fyh_intake_draft_'+TOK;
+
+/* ── i18n ─────────────────────────────────────────────────────────────── */
+const TXT={
+  el:{
+    hi:'Γεια σου', intro:'Ο διαιτολόγος σου θέλει μερικές πληροφορίες πριν ετοιμάσει το πλάνο σου. Παίρνει 3–4 λεπτά — μπορείς να σταματήσεις και να συνεχίσεις αργότερα από τον ίδιο σύνδεσμο.',
+    saving:'Αποθηκεύεται αυτόματα',
+    secProfile:'Τα στοιχεία σου', name:'Ονοματεπώνυμο', birth:'Ημερομηνία γέννησης', height:'Ύψος (εκ.)', weightToday:'Βάρος σήμερα (κιλά)', optional:'προαιρετικό',
+    secGoal:'Ο στόχος σου',
+    g_weight_loss:'Απώλεια βάρους', g_muscle_gain:'Αύξηση μυϊκής μάζας', g_maintenance:'Συντήρηση', g_health:'Βελτίωση υγείας', g_other:'Άλλο',
+    goalOther:'Περίγραψέ τον στόχο σου',
+    secMedical:'Ιατρικό ιστορικό',
+    c_diabetes:'Διαβήτης', c_hypertension:'Υπέρταση', c_hypothyroid:'Υποθυρεοειδισμός', c_cholesterol:'Υψηλή χοληστερίνη', c_ibs:'Ευερέθιστο έντερο', c_none:'Τίποτα από τα παραπάνω',
+    preg:'Εγκυμοσύνη ή θηλασμός;', yes:'Ναι', no:'Όχι',
+    meds:'Φάρμακα ή συμπληρώματα', medsPh:'π.χ. Λεβοθυροξίνη 50mcg το πρωί — ή άφησέ το κενό',
+    secAllergy:'Αλλεργίες ή δυσανεξίες',
+    a_milk:'Γάλα / λακτόζη', a_egg:'Αυγό', a_nuts:'Ξηροί καρποί', a_fish:'Ψάρι & θαλασσινά', a_gluten:'Σιτάρι / γλουτένη', a_soy:'Σόγια', a_legumes:'Όσπρια',
+    allergyOther:'Άλλη αλλεργία', allergyNote:'Θα τα δει ο διαιτολόγος και θα τα περάσει ο ίδιος στο πλάνο.',
+    secAvoid:'Τρόφιμα που αποφεύγεις',
+    v_red_meat:'Κόκκινο κρέας', v_pork:'Χοιρινό', v_fish:'Ψάρι', v_dairy:'Γαλακτοκομικά', v_vegetarian:'Χορτοφαγία', v_vegan:'Vegan', v_none:'Κανένα',
+    secHabits:'Καθημερινές συνήθειες',
+    mealsPerDay:'Γεύματα την ημέρα', breakfast:'Τρως πρωινό;', b_yes:'Ναι', b_sometimes:'Μερικές μέρες', b_no:'Όχι',
+    hunger:'Πότε πεινάς πιο πολύ;', hungerPh:'π.χ. απόγευμα / αργά το βράδυ',
+    cooking:'Μαγειρεύεις ή τρως έξω;', ck_home:'Κυρίως σπίτι', ck_mixed:'Μισό-μισό', ck_out:'Κυρίως έξω',
+    water:'Νερό την ημέρα', waterPh:'π.χ. ~1,5 λίτρο',
+    sleep:'Ύπνος το βράδυ', sleepPh:'π.χ. ~7 ώρες',
+    exercise:'Άσκηση (είδος, φορές/βδομάδα, ώρα)', exercisePh:'π.χ. περπάτημα 3 φορές/βδομάδα, βράδυ',
+    secLikes:'Προτιμήσεις',
+    likes:'Αγαπημένα φαγητά / τρόφιμα', dislikes:'Τρόφιμα που δεν σου αρέσουν', note:'Κάτι άλλο που θες να ξέρω;',
+    submit:'Υποβολή', submitting:'Γίνεται υποβολή…',
+    submitNote:'Μετά την υποβολή δεν μπορείς να το αλλάξεις. Αν χρειαστεί κάτι, στείλε μήνυμα στον διαιτολόγο σου.',
+    thanksTitle:'Ευχαριστούμε!', thanksBody:'Ο διαιτολόγος σου θα δει τις απαντήσεις σου και θα ετοιμάσει το πλάνο σου.',
+    lockedTitle:'Το ερωτηματολόγιο υποβλήθηκε', lockedBody:'Ο σύνδεσμος έχει κλειδώσει. Αν χρειάζεται κάτι, στείλε μήνυμα στον διαιτολόγο σου.',
+    supersededTitle:'Αυτός ο σύνδεσμος αντικαταστάθηκε', supersededBody:'Ο διαιτολόγος σου έστειλε νεότερο σύνδεσμο. Άνοιξε το πιο πρόσφατο μήνυμά του.',
+    invalidTitle:'Μη έγκυρος σύνδεσμος', invalidBody:'Ο σύνδεσμος δεν βρέθηκε. Ζήτησε καινούριο από τον διαιτολόγο σου.',
+    netTitle:'Κάτι πήγε στραβά', netErr:'Πρόβλημα σύνδεσης. Έλεγξε το internet και δοκίμασε ξανά σε λίγο.',
+    reqName:'Συμπλήρωσε το όνομά σου.', reqGoal:'Διάλεξε στόχο.',
+    privacy:'Τα στοιχεία σου τα βλέπει μόνο ο διαιτολόγος σου.'
+  },
+  en:{
+    hi:'Hi', intro:'Your dietitian needs a few details before building your plan. It takes 3–4 minutes — you can stop and continue later from the same link.',
+    saving:'Saved automatically',
+    secProfile:'Your details', name:'Full name', birth:'Date of birth', height:'Height (cm)', weightToday:'Weight today (kg)', optional:'optional',
+    secGoal:'Your goal',
+    g_weight_loss:'Weight loss', g_muscle_gain:'Muscle gain', g_maintenance:'Maintenance', g_health:'Better health', g_other:'Other',
+    goalOther:'Describe your goal',
+    secMedical:'Medical history',
+    c_diabetes:'Diabetes', c_hypertension:'Hypertension', c_hypothyroid:'Hypothyroidism', c_cholesterol:'High cholesterol', c_ibs:'Irritable bowel', c_none:'None of the above',
+    preg:'Pregnant or breastfeeding?', yes:'Yes', no:'No',
+    meds:'Medication or supplements', medsPh:'e.g. Levothyroxine 50mcg in the morning — or leave blank',
+    secAllergy:'Allergies or intolerances',
+    a_milk:'Milk / lactose', a_egg:'Egg', a_nuts:'Tree nuts', a_fish:'Fish & seafood', a_gluten:'Wheat / gluten', a_soy:'Soy', a_legumes:'Legumes',
+    allergyOther:'Other allergy', allergyNote:'Your dietitian will review these and apply them to the plan.',
+    secAvoid:'Foods you avoid',
+    v_red_meat:'Red meat', v_pork:'Pork', v_fish:'Fish', v_dairy:'Dairy', v_vegetarian:'Vegetarian', v_vegan:'Vegan', v_none:'None',
+    secHabits:'Daily habits',
+    mealsPerDay:'Meals per day', breakfast:'Do you eat breakfast?', b_yes:'Yes', b_sometimes:'Some days', b_no:'No',
+    hunger:'When are you hungriest?', hungerPh:'e.g. afternoon / late evening',
+    cooking:'Do you cook or eat out?', ck_home:'Mostly home', ck_mixed:'Half and half', ck_out:'Mostly out',
+    water:'Water per day', waterPh:'e.g. ~1.5 litres',
+    sleep:'Sleep at night', sleepPh:'e.g. ~7 hours',
+    exercise:'Exercise (type, times/week, time of day)', exercisePh:'e.g. walking 3x/week, evening',
+    secLikes:'Preferences',
+    likes:'Favourite foods', dislikes:'Foods you dislike', note:'Anything else I should know?',
+    submit:'Submit', submitting:'Submitting…',
+    submitNote:'You can’t change it after submitting. If something comes up, message your dietitian.',
+    thanksTitle:'Thank you!', thanksBody:'Your dietitian will review your answers and build your plan.',
+    lockedTitle:'Questionnaire submitted', lockedBody:'This link is now locked. If something changes, message your dietitian.',
+    supersededTitle:'This link was replaced', supersededBody:'Your dietitian sent a newer link. Open their most recent message.',
+    invalidTitle:'Invalid link', invalidBody:'This link was not found. Ask your dietitian for a new one.',
+    netTitle:'Something went wrong', netErr:'Connection problem. Check your internet and try again in a moment.',
+    reqName:'Please enter your name.', reqGoal:'Please pick a goal.',
+    privacy:'Only your dietitian can see your answers.'
+  }
+};
+function T(k){ return (TXT[L]&&TXT[L][k]!=null)?TXT[L][k]:TXT.el[k]; }
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
+function el(id){ return document.getElementById(id); }
+
+/* ── boot ─────────────────────────────────────────────────────────────── */
+(async function boot(){
+  if(!TOK){ return renderState('err','invalidTitle','invalidBody'); }
+  try{
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  }catch(e){ return renderState('err','netTitle','netErr'); }
+  let data,error;
+  try{
+    ({data,error}=await sb.rpc('get_intake',{p_token:TOK}));
+  }catch(e){ return renderState('err','netTitle','netErr'); }
+  if(error){ console.error('[intake] get_intake',error); return renderState('err','netTitle','netErr'); }
+  if(!data){ return renderState('err','invalidTitle','invalidBody'); }
+
+  L=(data.lang==='en')?'en':'el';
+  document.documentElement.lang=L;
+  PREFILL=data.prefill||{};
+  const langbar=el('langbar'); if(langbar){ langbar.hidden=false; syncLangbar(); }
+
+  if(data.status==='submitted'){ return renderState('ok','lockedTitle','lockedBody', data.submitted_at); }
+  if(data.status==='superseded'){ return renderState('warn','supersededTitle','supersededBody'); }
+  if(data.status!=='sent'){ return renderState('err','invalidTitle','invalidBody'); }
+
+  renderForm(data.client_name||PREFILL.name||'');
+})();
+
+function syncLangbar(){
+  document.querySelectorAll('#langbar button').forEach(function(b){
+    b.setAttribute('aria-pressed', b.dataset.l===L ? 'true':'false');
+  });
+}
+function setLang(l){
+  if(l===L) return;
+  L=l; document.documentElement.lang=L; syncLangbar();
+  const snap=collect(); renderForm(snap.profile.name||''); applyDraft(snap);
+}
+
+/* ── states ───────────────────────────────────────────────────────────── */
+function renderState(kind,titleK,bodyK,stamp){
+  const foot=el('footnote'); if(foot) foot.hidden=true;
+  const badge = kind==='ok'?'✓' : kind==='warn'?'!' : '×';
+  let stampHtml='';
+  if(stamp){
+    const d=new Date(stamp);
+    if(!isNaN(d)) stampHtml='<p style="font-size:.8rem;color:var(--faint);margin-top:14px">'+esc(d.toLocaleString(L==='en'?'en-GB':'el-GR',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}))+'</p>';
+  }
+  el('root').innerHTML =
+    '<div class="state">'+
+      '<div class="big '+(kind==='ok'?'':kind)+'">'+badge+'</div>'+
+      '<h1>'+esc(T(titleK))+'</h1>'+
+      '<p>'+esc(T(bodyK))+'</p>'+ stampHtml +
+    '</div>';
+}
+
+/* ── form ─────────────────────────────────────────────────────────────── */
+const GOALS=['weight_loss','muscle_gain','maintenance','health','other'];
+const CONDS=['diabetes','hypertension','hypothyroid','cholesterol','ibs'];
+const ALLERGS=['milk','egg','nuts','fish','gluten','soy','legumes'];
+const AVOIDS=['red_meat','pork','fish','dairy','vegetarian','vegan'];
+const CKEYS={diabetes:'c_diabetes',hypertension:'c_hypertension',hypothyroid:'c_hypothyroid',cholesterol:'c_cholesterol',ibs:'c_ibs'};
+const AKEYS={milk:'a_milk',egg:'a_egg',nuts:'a_nuts',fish:'a_fish',gluten:'a_gluten',soy:'a_soy',legumes:'a_legumes'};
+const VKEYS={red_meat:'v_red_meat',pork:'v_pork',fish:'v_fish',dairy:'v_dairy',vegetarian:'v_vegetarian',vegan:'v_vegan'};
+const GKEYS={weight_loss:'g_weight_loss',muscle_gain:'g_muscle_gain',maintenance:'g_maintenance',health:'g_health',other:'g_other'};
+
+function chip(group,val,labelK,radio){
+  return '<button type="button" class="chip'+(radio?' radio':'')+'" role="'+(radio?'radio':'checkbox')+'" aria-pressed="false" '+
+    'data-g="'+group+'" data-v="'+esc(val)+'" onclick="toggleChip(this,'+(radio?'true':'false')+')">'+esc(T(labelK))+'</button>';
+}
+function fieldText(id,labelK,ph,optional){
+  return '<div class="fg"><label class="lbl" for="'+id+'">'+esc(T(labelK))+(optional?' <span class="opt">— '+esc(T('optional'))+'</span>':'')+'</label>'+
+    '<input type="text" id="'+id+'" placeholder="'+esc(ph?T(ph):'')+'"></div>';
+}
+function fieldArea(id,labelK){
+  return '<div class="fg"><label class="lbl" for="'+id+'">'+esc(T(labelK))+'</label><textarea id="'+id+'"></textarea></div>';
+}
+
+function renderForm(nameVal){
+  const foot=el('footnote');
+  const p=PREFILL||{};
+  const heightVal = (p.heightCm!=null && p.heightCm!=='') ? p.heightCm : '';
+  const birthVal  = p.birthDate || '';
+  const fname=(nameVal||'').trim().split(' ')[0]||'';
+
+  el('root').innerHTML =
+    '<h1>'+esc(T('hi'))+(fname?(' '+esc(fname)):'')+' 👋</h1>'+
+    '<p class="lead">'+esc(T('intro'))+'</p>'+
+    '<div class="savepill" id="savepill">'+esc(T('saving'))+'</div>'+
+
+    /* profile */
+    '<div class="card"><h2>'+esc(T('secProfile'))+'</h2>'+
+      '<div class="fg"><label class="lbl" for="f-name">'+esc(T('name'))+'</label><input type="text" id="f-name" value="'+esc(nameVal||'')+'"></div>'+
+      '<div class="row2">'+
+        '<div class="fg"><label class="lbl" for="f-birth">'+esc(T('birth'))+'</label><input type="date" id="f-birth" value="'+esc(birthVal)+'" max="'+new Date().toISOString().slice(0,10)+'"></div>'+
+        '<div class="fg"><label class="lbl" for="f-height">'+esc(T('height'))+'</label><input type="number" id="f-height" inputmode="numeric" min="90" max="230" value="'+esc(heightVal)+'"></div>'+
+      '</div>'+
+      '<div class="fg"><label class="lbl" for="f-weight">'+esc(T('weightToday'))+' <span class="opt">— '+esc(T('optional'))+'</span></label><input type="number" id="f-weight" inputmode="decimal" min="25" max="400" step="0.1"></div>'+
+    '</div>'+
+
+    /* goal */
+    '<div class="card"><h2>'+esc(T('secGoal'))+'</h2>'+
+      '<div class="chips" role="radiogroup" id="grp-goal">'+GOALS.map(function(g){return chip('goal',g,GKEYS[g],true);}).join('')+'</div>'+
+      '<div class="fg" id="goal-other-wrap" style="display:none;margin-top:12px"><label class="lbl" for="f-goal-other">'+esc(T('goalOther'))+'</label><input type="text" id="f-goal-other"></div>'+
+      '<p class="err-inline" id="err-goal">'+esc(T('reqGoal'))+'</p>'+
+    '</div>'+
+
+    /* medical */
+    '<div class="card"><h2>'+esc(T('secMedical'))+'</h2>'+
+      '<div class="fg"><div class="chips" id="grp-cond">'+
+        CONDS.map(function(k){return chip('cond',k,CKEYS[k],false);}).join('')+
+        chip('cond','none','c_none',false)+
+      '</div></div>'+
+      '<div class="fg"><label class="lbl">'+esc(T('preg'))+'</label>'+
+        '<div class="chips" role="radiogroup" id="grp-preg">'+
+          chip('preg','yes','yes',true)+chip('preg','no','no',true)+
+        '</div></div>'+
+      fieldArea('f-meds','meds')+
+      '<div style="margin-top:-8px"><span class="hint">'+esc(T('medsPh'))+'</span></div>'+
+    '</div>'+
+
+    /* allergies */
+    '<div class="card"><h2>'+esc(T('secAllergy'))+'</h2>'+
+      '<div class="fg"><div class="chips" id="grp-allergy">'+ALLERGS.map(function(k){return chip('allergy',k,AKEYS[k],false);}).join('')+'</div></div>'+
+      fieldText('f-allergy-other','allergyOther',null,true)+
+      '<p class="hint">'+esc(T('allergyNote'))+'</p>'+
+    '</div>'+
+
+    /* avoid */
+    '<div class="card"><h2>'+esc(T('secAvoid'))+'</h2>'+
+      '<div class="chips" id="grp-avoid">'+
+        AVOIDS.map(function(k){return chip('avoid',k,VKEYS[k],false);}).join('')+
+        chip('avoid','none','v_none',false)+
+      '</div>'+
+    '</div>'+
+
+    /* habits */
+    '<div class="card"><h2>'+esc(T('secHabits'))+'</h2>'+
+      '<div class="row2">'+
+        '<div class="fg"><label class="lbl" for="f-meals">'+esc(T('mealsPerDay'))+'</label><input type="number" id="f-meals" inputmode="numeric" min="1" max="8" value="3"></div>'+
+        '<div class="fg"><label class="lbl" for="f-cooking">'+esc(T('cooking'))+'</label><select id="f-cooking"><option value="home">'+esc(T('ck_home'))+'</option><option value="mixed">'+esc(T('ck_mixed'))+'</option><option value="out">'+esc(T('ck_out'))+'</option></select></div>'+
+      '</div>'+
+      '<div class="fg"><label class="lbl">'+esc(T('breakfast'))+'</label>'+
+        '<div class="chips" role="radiogroup" id="grp-breakfast">'+
+          chip('breakfast','yes','b_yes',true)+chip('breakfast','sometimes','b_sometimes',true)+chip('breakfast','no','b_no',true)+
+        '</div></div>'+
+      fieldText('f-hunger','hunger','hungerPh')+
+      '<div class="row2">'+
+        '<div class="fg"><label class="lbl" for="f-water">'+esc(T('water'))+'</label><input type="text" id="f-water" placeholder="'+esc(T('waterPh'))+'"></div>'+
+        '<div class="fg"><label class="lbl" for="f-sleep">'+esc(T('sleep'))+'</label><input type="text" id="f-sleep" placeholder="'+esc(T('sleepPh'))+'"></div>'+
+      '</div>'+
+      fieldText('f-exercise','exercise','exercisePh')+
+    '</div>'+
+
+    /* preferences */
+    '<div class="card"><h2>'+esc(T('secLikes'))+'</h2>'+
+      fieldArea('f-likes','likes')+fieldArea('f-dislikes','dislikes')+fieldArea('f-note','note')+
+    '</div>'+
+
+    '<button type="button" class="btn" id="submitBtn" onclick="doSubmit()">'+esc(T('submit'))+'</button>'+
+    '<p class="hint" style="text-align:center;margin-top:10px">'+esc(T('submitNote'))+'</p>'+
+    '<p class="err-inline" id="err-name" style="text-align:center">'+esc(T('reqName'))+'</p>'+
+    '<p class="err-inline" id="err-net" style="text-align:center">'+esc(T('netErr'))+'</p>';
+
+  if(foot){ foot.hidden=false; foot.textContent=T('privacy'); }
+
+  // restore any draft
+  const saved=loadDraft();
+  if(saved) applyDraft(saved);
+
+  // autosave wiring
+  document.querySelectorAll('#root input,#root textarea,#root select').forEach(function(node){
+    node.addEventListener('input', queueSave);
+    node.addEventListener('change', queueSave);
+  });
+}
+
+function toggleChip(btn,radio){
+  if(radio){
+    const grp=btn.parentElement;
+    grp.querySelectorAll('.chip').forEach(function(c){ c.setAttribute('aria-pressed','false'); });
+    btn.setAttribute('aria-pressed','true');
+    if(btn.dataset.g==='goal'){
+      el('goal-other-wrap').style.display = (btn.dataset.v==='other')?'block':'none';
+    }
+  } else {
+    const on = btn.getAttribute('aria-pressed')==='true';
+    btn.setAttribute('aria-pressed', on?'false':'true');
+    // "none" chips are mutually exclusive with the rest of their group
+    const grp=btn.parentElement;
+    if(btn.dataset.v==='none' && !on){
+      grp.querySelectorAll('.chip').forEach(function(c){ if(c!==btn) c.setAttribute('aria-pressed','false'); });
+    } else if(btn.dataset.v!=='none' && !on){
+      const none=grp.querySelector('.chip[data-v="none"]'); if(none) none.setAttribute('aria-pressed','false');
+    }
+  }
+  queueSave();
+}
+
+/* ── collect / draft ──────────────────────────────────────────────────── */
+function pressed(groupId){
+  return Array.from(document.querySelectorAll('#'+groupId+' .chip[aria-pressed="true"]')).map(function(c){return c.dataset.v;});
+}
+function radioVal(groupId){
+  const c=document.querySelector('#'+groupId+' .chip[aria-pressed="true"]');
+  return c?c.dataset.v:'';
+}
+function val(id){ const n=el(id); return n?n.value.trim():''; }
+function numOrNull(id){ const n=el(id); if(!n||n.value==='') return null; const x=parseFloat(n.value); return isNaN(x)?null:x; }
+
+function collect(){
+  return {
+    v:1, submittedVia:'intake.html', lang:L,
+    profile:{ name:val('f-name'), birthDate:val('f-birth'), heightCm:numOrNull('f-height'), weightKg:numOrNull('f-weight') },
+    goal:radioVal('grp-goal'), goalOther:val('f-goal-other'),
+    conditions:pressed('grp-cond'),
+    pregnancyBreastfeeding: radioVal('grp-preg')==='yes',
+    meds:val('f-meds'),
+    allergies:pressed('grp-allergy'), allergiesOther:val('f-allergy-other'),
+    avoid:pressed('grp-avoid'),
+    habits:{
+      mealsPerDay:numOrNull('f-meals'), breakfast:radioVal('grp-breakfast'),
+      hungerTime:val('f-hunger'), cooking:(el('f-cooking')||{}).value||'',
+      water:val('f-water'), sleep:val('f-sleep'), exercise:val('f-exercise')
+    },
+    likes:val('f-likes'), dislikes:val('f-dislikes'), note:val('f-note')
+  };
+}
+
+let saveTimer=null;
+function queueSave(){
+  const pill=el('savepill');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(function(){
+    try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(collect())); }catch(e){}
+    if(pill){ pill.classList.add('on'); clearTimeout(pill._t); pill._t=setTimeout(function(){pill.classList.remove('on');},1400); }
+  },450);
+}
+function loadDraft(){
+  try{ const raw=localStorage.getItem(DRAFT_KEY); return raw?JSON.parse(raw):null; }catch(e){ return null; }
+}
+function setChipGroup(groupId,vals){
+  const set=new Set(vals||[]);
+  document.querySelectorAll('#'+groupId+' .chip').forEach(function(c){
+    c.setAttribute('aria-pressed', set.has(c.dataset.v)?'true':'false');
+  });
+}
+function applyDraft(d){
+  if(!d) return;
+  const P=d.profile||{};
+  if(el('f-name')&&P.name) el('f-name').value=P.name;
+  if(el('f-birth')&&P.birthDate) el('f-birth').value=P.birthDate;
+  if(el('f-height')&&P.heightCm!=null) el('f-height').value=P.heightCm;
+  if(el('f-weight')&&P.weightKg!=null) el('f-weight').value=P.weightKg;
+  if(d.goal){ setChipGroup('grp-goal',[d.goal]); if(d.goal==='other') el('goal-other-wrap').style.display='block'; }
+  if(el('f-goal-other')&&d.goalOther) el('f-goal-other').value=d.goalOther;
+  setChipGroup('grp-cond',d.conditions);
+  setChipGroup('grp-preg',[d.pregnancyBreastfeeding?'yes':'no']);
+  if(el('f-meds')&&d.meds) el('f-meds').value=d.meds;
+  setChipGroup('grp-allergy',d.allergies);
+  if(el('f-allergy-other')&&d.allergiesOther) el('f-allergy-other').value=d.allergiesOther;
+  setChipGroup('grp-avoid',d.avoid);
+  const H=d.habits||{};
+  if(el('f-meals')&&H.mealsPerDay!=null) el('f-meals').value=H.mealsPerDay;
+  setChipGroup('grp-breakfast',[H.breakfast]);
+  if(el('f-hunger')&&H.hungerTime) el('f-hunger').value=H.hungerTime;
+  if(el('f-cooking')&&H.cooking) el('f-cooking').value=H.cooking;
+  if(el('f-water')&&H.water) el('f-water').value=H.water;
+  if(el('f-sleep')&&H.sleep) el('f-sleep').value=H.sleep;
+  if(el('f-exercise')&&H.exercise) el('f-exercise').value=H.exercise;
+  if(el('f-likes')&&d.likes) el('f-likes').value=d.likes;
+  if(el('f-dislikes')&&d.dislikes) el('f-dislikes').value=d.dislikes;
+  if(el('f-note')&&d.note) el('f-note').value=d.note;
+}
+
+/* ── submit ───────────────────────────────────────────────────────────── */
+async function doSubmit(){
+  const payload=collect();
+  ['err-name','err-goal','err-net'].forEach(function(id){ const n=el(id); if(n) n.classList.remove('on'); });
+  if(!payload.profile.name){ el('err-name').classList.add('on'); el('f-name').focus(); return; }
+  if(!payload.goal){ el('err-goal').classList.add('on'); return; }
+
+  const btn=el('submitBtn');
+  btn.disabled=true; btn.textContent=T('submitting');
+  let data,error;
+  try{
+    ({data,error}=await sb.rpc('submit_intake',{p_token:TOK,p_payload:payload}));
+  }catch(e){ error=e; }
+
+  if(error || !data){
+    console.error('[intake] submit_intake',error);
+    btn.disabled=false; btn.textContent=T('submit');
+    el('err-net').classList.add('on');
+    return;
+  }
+  if(data.ok===true){
+    try{ localStorage.removeItem(DRAFT_KEY); }catch(e){}
+    renderState('ok','thanksTitle','thanksBody', new Date().toISOString());
+    window.scrollTo(0,0);
+    return;
+  }
+  // ok:false — reason tells us why
+  if(data.reason==='submitted'){ renderState('ok','lockedTitle','lockedBody'); return; }
+  if(data.reason==='superseded'){ renderState('warn','supersededTitle','supersededBody'); return; }
+  if(data.reason==='not_found'){ renderState('err','invalidTitle','invalidBody'); return; }
+  btn.disabled=false; btn.textContent=T('submit');
+  el('err-net').classList.add('on');
+}
+</script>
+</body>
+</html>
