@@ -149,7 +149,7 @@ document.write(window.__MANIFEST__.map(function(p){
 
   // --- critical globals -----------------------------------------------------
   ['esc','escJsAttr','fmtFoodQty','snapWholeG','pluralUnit','pctRing','pctStatusColor',
-   'BF_BANDS','bfBandFor','bfGoalTarget','bfGaugeHtml',
+   'BF_BANDS','bfBandFor','bfGoalTarget','bfGaugeHtml','bfHealthByAge','bfHealthBoundaries',
    'deepClone','safeStorageGet','safeStorageSet','save','saveNow',
    'getC','addClient','selectClient','deleteClient',
    'calcTDEE','calcMETkcal','getMicronutrientTargets','getPregTrimester','getIOMWeightGainRange',
@@ -201,6 +201,8 @@ document.write(window.__MANIFEST__.map(function(p){
   constCheck('NAME_DAYS', 20);
   constCheck('QUICK_EXCL', 5);
   constCheck('BF_BAND_KEYS', 5);
+  constCheck('GALLAGHER_ZONE_KEYS', 4);
+  constCheck('GALLAGHER_BF', 2);
 
   // --- pure-calc baseline probes -----------------------------------------
   var FIX = {
@@ -282,6 +284,22 @@ document.write(window.__MANIFEST__.map(function(p){
              goalTickWhenSet: withG.indexOf('bf-gauge-goal')!==-1,
              noGoalTickWhenUnset: noG.indexOf('bf-gauge-goal')===-1,
              hasCategoryLabel: withG.indexOf('Φυσιολογικό')!==-1 || withG.indexOf('Αποδεκτό')!==-1 }; });
+  probe('bfHealthByAge.samples', function(){
+    function k(bf,sex,age){ var v=bfHealthByAge(bf,sex,age); return v?[v.key,v.healthy[0],v.healthy[1],v.obeseLo,v.ageBand]:null; }
+    return { m18_2039:k(18,'M',30), m22_2039:k(22,'M',30), m26_2039:k(26,'M',30), m6_2039:k(6,'M',30),
+             f30_2039:k(30,'F',28), f36_4059:k(36,'F',50), f43_6079:k(43,'F',70),
+             noAge:bfHealthByAge(22,'F',null), zeroBf:bfHealthByAge(0,'F',30),
+             youngClamp:k(22,'M',17), oldClamp:k(30,'F',85) }; });
+  probe('bfHealthBoundaries.sample', function(){
+    var v=bfHealthByAge(22,'M',30);
+    return bfHealthBoundaries(v).map(function(b){return [b.v,b.col];}); });
+  probe('bfGaugeHtml.ageAdjusted', function(){
+    var g = bfGaugeHtml(30,'F',false,0,34);   // F 34y, 30% -> Gallagher healthy (21-32)
+    return { usesGallagher: g.indexOf('Gallagher 2000')!==-1,
+             showsAgeBand: g.indexOf('20–39')!==-1,
+             showsHealthyRange: g.indexOf('Υγιές εύρος: 21–32%')!==-1,
+             verdictHealthy: g.indexOf('30% — Υγιές')!==-1,
+             fallsBackWhenNoAge: bfGaugeHtml(30,'F',false,0).indexOf('ACE/ACSM')!==-1 }; });
 
   // data fingerprints — cheap structural checksums
   probes['_fingerprints'] = (function(){

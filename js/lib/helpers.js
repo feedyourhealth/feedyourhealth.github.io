@@ -32,49 +32,63 @@ function pctStatusColor(pct){
   if(pct>=33) return 'var(--warn)';
   return 'var(--danger)';
 }
-// Ημικυκλικό gauge — θέση του %BF μέσα στις 5 ζώνες αναφοράς (.bf-gauge-*, css/styles.css).
-// Το μοντέλο ζωνών ΚΑΙ ο στόχος έρχονται πλέον από js/lib/bf-norms.js (BF_BANDS /
-// bfGoalTarget) — μοιράζονται με τα 2 PDF exporters· το plan.html κρατά δικό του mirror.
-// Επιστρέφει '' όταν λείπει %BF ή για ανήλικους (οι κατηγορίες ενηλίκων δεν ισχύουν κλινικά
-// σε αυτούς — ίδιος περιορισμός με το latestBMIStatus). goalBF: ο πραγματικός στόχος του
-// πελάτη (c.goalBF) — σχεδιάζει έναν ◆ δείκτη στο τόξο· παραλείπεται αν 0/κενό.
-function bfGaugeHtml(bf,sex,isMinor,goalBF){
+// Ημικυκλικό gauge — θέση του %BF στις ζώνες αναφοράς (.bf-gauge-*, css/styles.css).
+// Όλα τα δεδομένα από js/lib/bf-norms.js. Όταν δίνεται ηλικία (age>0) το gauge δείχνει
+// τα age×sex ΥΓΙΗ ΕΥΡΗ του Gallagher 2000 (bfHealthByAge) — 4 ζώνες, ηλικιακά διορθωμένες.
+// Χωρίς ηλικία, πέφτει πίσω στο μη-ηλικιακά-διορθωμένο 5-band ACE/ACSM (BF_BANDS).
+// Επιστρέφει '' όταν λείπει %BF ή για ανήλικους. goalBF: ο στόχος %BF του πελάτη (c.goalBF)
+// — σχεδιάζει έναν ◆ δείκτη στο τόξο· παραλείπεται αν 0/κενό.
+function bfGaugeHtml(bf,sex,isMinor,goalBF,age){
   if(!(bf>0)||isMinor)return'';
-  // Το gauge είναι πάντα ελληνικό (διαιτολόγος) — αντιστοίχιση των γλωσσικά-ουδέτερων keys.
-  var LBL={essential:'Απαραίτητο',athletic:'Αθλητικό',fitness:'Φυσιολογικό',acceptable:'Αποδεκτό',obesity:'Παχυσαρκία'};
-  var bands=BF_BANDS(sex);
-  // Η ζώνη "Παχυσαρκία" είναι ανοιχτή (έως 60) — σε γραμμική κλίμακα 0-60 θα κατάπινε οπτικά το
-  // 60% του τόξου, συμπιέζοντας τις κλινικά σημαντικές χαμηλές ζώνες σε μια λωρίδα δυσανάγνωστη. Η
-  // κλίμακα ΚΟΒΕΤΑΙ οπτικά λίγο μετά το "Αποδεκτό" (visualMax) — η βελόνα/το τόξο "καρφώνονται" εκεί
-  // για πολύ υψηλές τιμές, αλλά η ΕΤΙΚΕΤΑ (zone πιο κάτω) συνεχίζει να υπολογίζεται στα πραγματικά
-  // (μη περικομμένα) όρια, άρα παραμένει σωστή ακόμα κι όταν το βέλος έχει "τερματίσει".
-  var visualMax=bands[3].hi+7;
+  var gv=(typeof bfHealthByAge==='function')?bfHealthByAge(bf,sex,age):null;
+  var bands,visualMax,headerTxt,stampTxt,zoneLbl,zoneCol,extraLine='';
+  if(gv){
+    // Gallagher 2000 — τέσσερις ηλικιακά-εξειδικευμένες ζώνες γύρω από το υγιές εύρος.
+    var hLo=gv.healthy[0],hHi=gv.healthy[1],oLo=gv.obeseLo;
+    bands=[{hi:hLo,col:'#1565C0'},{hi:hHi,col:'#2e7d32'},{hi:oLo-1,col:'#f57c00'},{hi:9999,col:'#c62828'}];
+    visualMax=oLo+7;
+    var GLBL={low:'Κάτω από το υγιές',healthy:'Υγιές',overfat:'Υπέρβαρο',obese:'Παχυσαρκία'};
+    zoneLbl=GLBL[gv.key];zoneCol=gv.col;
+    headerTxt='🎯 Θέση %BF — υγιές εύρος για '+(sex==='F'?'γυναίκα':'άνδρα')+' '+gv.ageBand+' ετών';
+    stampTxt='υγιή εύρη %BF κατά ηλικία & φύλο (Gallagher 2000) — όχι διάγνωση';
+    extraLine='<div style="text-align:center;font-size:10px;color:var(--text-muted);margin-top:1px">Υγιές εύρος: '+hLo+'–'+hHi+'%</div>';
+  } else {
+    // Χωρίς ηλικία — 5-band ACE/ACSM (χωρίς διόρθωση ηλικίας).
+    var aceBands=BF_BANDS(sex);
+    var LBL={essential:'Απαραίτητο',athletic:'Αθλητικό',fitness:'Φυσιολογικό',acceptable:'Αποδεκτό',obesity:'Παχυσαρκία'};
+    bands=aceBands.map(function(b){return{hi:b.hi,col:b.col,key:b.key};});
+    visualMax=aceBands[3].hi+7;
+    var z=bands.find(function(b){return bf<=b.hi;})||bands[bands.length-1];
+    zoneLbl=LBL[z.key];zoneCol=z.col;
+    headerTxt='🎯 Θέση %BF — κατηγορίες ACE/ACSM (5 ζώνες, χωρίς διόρθωση ηλικίας)';
+    stampTxt='στατιστικά όρια αναφοράς, όχι διάγνωση';
+  }
+  // Η τελευταία ζώνη είναι ανοιχτή — σε γραμμική κλίμακα θα κατάπινε οπτικά το τόξο. Η κλίμακα
+  // ΚΟΒΕΤΑΙ στο visualMax· η βελόνα "καρφώνεται" εκεί για πολύ υψηλές τιμές, αλλά η ΕΤΙΚΕΤΑ
+  // (zoneLbl, υπολογισμένη πιο πάνω στα πραγματικά όρια) παραμένει σωστή.
   var acc=0,stops=[];
   bands.forEach(function(b){
     var pct=Math.min(b.hi,visualMax)/visualMax*50;
     if(pct>acc){stops.push(b.col+' '+acc.toFixed(2)+'% '+pct.toFixed(2)+'%');acc=pct;}
   });
   // from 270deg: το conic-gradient μετρά τις γωνίες από τις 12 (0deg) δεξιόστροφα — 270deg = 9 η ώρα
-  // (αριστερά). Ξεκινώντας εκεί και σαρώνοντας δεξιόστροφα 0%→50% διαγράφεται ακριβώς το πάνω μισό
-  // του κύκλου (αριστερά → πάνω → δεξιά), που είναι το μόνο κομμάτι που μένει ορατό (.bf-gauge-wrap
-  // κόβει το κάτω μισό με overflow:hidden).
+  // (αριστερά). Σαρώνοντας δεξιόστροφα 0%→50% διαγράφεται το πάνω μισό του κύκλου (το μόνο ορατό —
+  // .bf-gauge-wrap κόβει το κάτω μισό με overflow:hidden).
   var gradient='conic-gradient(from 270deg,'+stops.join(',')+',transparent 50% 100%)';
-  var clampedForNeedle=Math.max(0,Math.min(visualMax,bf));
-  var angle=(clampedForNeedle/visualMax*180-90).toFixed(1);
-  var zone=bands.find(function(b){return bf<=b.hi;})||bands[bands.length-1];
-  // ✅ per-client goal marker — ο δικός του στόχος %BF (c.goalBF), που πριν φαινόταν μόνο στο
-  // PDF / στο portal του πελάτη· ίδιο transform-origin με τη βελόνα.
+  var angle=(Math.max(0,Math.min(visualMax,bf))/visualMax*180-90).toFixed(1);
+  // ✅ per-client goal marker — ο στόχος %BF (c.goalBF)· ίδιο transform-origin με τη βελόνα.
   var goalTick='';
   if(goalBF>0){
     var gAngle=(Math.max(0,Math.min(visualMax,goalBF))/visualMax*180-90).toFixed(1);
     goalTick='<div class="bf-gauge-goal" style="transform:rotate('+gAngle+'deg)"></div>';
   }
   return '<div style="margin-top:10px;padding:10px 10px 12px;background:var(--card-bg);border:1px solid var(--border-light);border-radius:8px">'
-    +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">🎯 Θέση %BF — κατηγορίες ACE/ACSM (5 ζώνες, χωρίς διόρθωση ηλικίας)</div>'
+    +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">'+headerTxt+'</div>'
     +'<div class="bf-gauge-wrap"><div class="bf-gauge-arc" style="background:'+gradient+'"></div>'+goalTick+'<div class="bf-gauge-needle" style="transform:rotate('+angle+'deg)"></div></div>'
-    +'<div style="text-align:center;font-size:13px;font-weight:700;color:'+zone.col+'">'+bf+'% — '+LBL[zone.key]+'</div>'
+    +'<div style="text-align:center;font-size:13px;font-weight:700;color:'+zoneCol+'">'+bf+'% — '+zoneLbl+'</div>'
+    +extraLine
     +(goalBF>0?'<div style="text-align:center;font-size:10px;color:var(--text-muted);margin-top:1px">🎯 Στόχος: '+goalBF+'%</div>':'')
-    +'<div style="text-align:center;font-size:9px;color:var(--text-muted);margin-top:3px">στατιστικά όρια αναφοράς, όχι διάγνωση</div>'
+    +'<div style="text-align:center;font-size:9px;color:var(--text-muted);margin-top:3px">'+stampTxt+'</div>'
     +'</div>';
 }
 // Ποσοστό προόδου προς τον στόχο βάρους — ίδιος ακριβώς υπολογισμός με το goalBarHtml στην

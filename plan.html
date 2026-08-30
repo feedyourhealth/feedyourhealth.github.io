@@ -2444,6 +2444,9 @@ function chartHeader(title,curVal,unit,startVal,goodDir){
 // Ζώνες αναφοράς %BF — ΚΡΑΤΑ ΤΙΣ ΤΙΜΕΣ ΙΔΙΕΣ με το js/lib/bf-norms.js (BF_BANDS) της
 // κύριας εφαρμογής· το plan.html είναι standalone (χωρίς κοινό script scope) οπότε δεν
 // γίνεται import. Μοντέλο 5 ζωνών ACE/ACSM — ΧΩΡΙΣ διόρθωση ηλικίας.
+// ⚠️ TODO (follow-up): η κύρια app + τα PDF δείχνουν πλέον τα age×sex υγιή εύρη Gallagher
+// 2000 (bfHealthByAge). Το client portal μένει προς το παρόν στο 5-band ACE — χρειάζεται
+// mirror του Gallagher εδώ + 4-γλωσσα strings πριν ενοποιηθεί.
 function bfBands(sex){
   return sex==='F'
     ?[{lo:10,hi:13,col:'#1565C0'},{lo:14,hi:20,col:'var(--ok)'},{lo:21,hi:24,col:'#558b2f'},{lo:25,hi:31,col:'#f57c00'},{lo:32,hi:60,col:'#c62828'}]

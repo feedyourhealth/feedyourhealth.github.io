@@ -60,9 +60,9 @@
     "../js/11-undo-redo.js"
   ],
   "counts": {
-    "fnChecked": 96,
-    "constChecked": 28,
-    "probes": 31
+    "fnChecked": 98,
+    "constChecked": 30,
+    "probes": 34
   },
   "fnFails": [],
   "constFails": [],
@@ -709,6 +709,98 @@
       "goalTickWhenSet": true,
       "noGoalTickWhenUnset": true,
       "hasCategoryLabel": true
+    },
+    "bfHealthByAge.samples": {
+      "m18_2039": [
+        "healthy",
+        8,
+        19,
+        25,
+        "20–39"
+      ],
+      "m22_2039": [
+        "overfat",
+        8,
+        19,
+        25,
+        "20–39"
+      ],
+      "m26_2039": [
+        "obese",
+        8,
+        19,
+        25,
+        "20–39"
+      ],
+      "m6_2039": [
+        "low",
+        8,
+        19,
+        25,
+        "20–39"
+      ],
+      "f30_2039": [
+        "healthy",
+        21,
+        32,
+        39,
+        "20–39"
+      ],
+      "f36_4059": [
+        "overfat",
+        23,
+        33,
+        40,
+        "40–59"
+      ],
+      "f43_6079": [
+        "obese",
+        24,
+        35,
+        42,
+        "60–79"
+      ],
+      "noAge": null,
+      "zeroBf": null,
+      "youngClamp": [
+        "overfat",
+        8,
+        19,
+        25,
+        "20–39"
+      ],
+      "oldClamp": [
+        "healthy",
+        24,
+        35,
+        42,
+        "60–79"
+      ]
+    },
+    "bfHealthBoundaries.sample": [
+      [
+        0,
+        "#1565C0"
+      ],
+      [
+        8,
+        "#2e7d32"
+      ],
+      [
+        20,
+        "#f57c00"
+      ],
+      [
+        25,
+        "#c62828"
+      ]
+    ],
+    "bfGaugeHtml.ageAdjusted": {
+      "usesGallagher": true,
+      "showsAgeBand": true,
+      "showsHealthyRange": true,
+      "verdictHealthy": true,
+      "fallsBackWhenNoAge": true
     },
     "_fingerprints": {
       "FOODS_keys": 332,

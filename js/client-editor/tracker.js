@@ -172,7 +172,7 @@ function buildTrackerHtml(c){
       +(latest.waist?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #9c27b0"><div style="color:#666">Μέση</div><div style="font-size:14px;font-weight:700;color:#9c27b0">'+latest.waist+' cm</div></div>':'')
       +(latest.hip?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #f57c00"><div style="color:#666">Γοφοί</div><div style="font-size:14px;font-weight:700;color:#f57c00">'+latest.hip+' cm</div></div>':'')
       +'</div>'
-      +bfGaugeHtml(latest.bf,c.sex||'M',isMinorC,c.goalBF)
+      +bfGaugeHtml(latest.bf,c.sex||'M',isMinorC,c.goalBF,(c.birthDate?ageAtDate(c.birthDate):c.age))
       +'</div>';
 
     // ✅ TREND LINES: Weight & Body Fat % Charts

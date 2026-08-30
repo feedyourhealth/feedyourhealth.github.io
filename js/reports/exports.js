@@ -697,6 +697,14 @@ function exportLipometriaPDF(){
   var bfCatLabel='—',bfCatCol='#555';
   if(bf){bfRefs.forEach(function(r){if(bf>=r.lo){bfCatLabel=r.lbl;bfCatCol=r.col;}});}
   var bfGoal=bfGoalTarget(c); // c.goalBF when the dietitian set one, else top of "Fitness"
+  // ✅ age-adjusted verdict (Gallagher 2000) when the client's age is known — overrides the
+  // non-age-adjusted ACE category for the label/colour and the range-bar zones below.
+  var GBF_LBL={low:T('Κάτω από το υγιές','Below healthy'),healthy:T('Υγιές','Healthy'),overfat:T('Υπέρβαρο','Overweight'),obese:T('Παχυσαρκία','Obesity')};
+  var bfGv=(bf&&typeof bfHealthByAge==='function')?bfHealthByAge(bf,isFem?'F':'M',c.age):null;
+  var bfSrcLbl=bfGv?T('υγιή εύρη κατά ηλικία & φύλο (Gallagher 2000)','age & sex healthy ranges (Gallagher 2000)'):T('κατηγορίες ACE/ACSM','ACE/ACSM categories');
+  if(bfGv){ bfCatLabel=GBF_LBL[bfGv.key]+' ('+bfGv.ageBand+')'; bfCatCol=bfGv.col; }
+  var bfBoundaries=(bfGv&&typeof bfHealthBoundaries==='function')?bfHealthBoundaries(bfGv)
+    :[{v:isFem?5:0,col:bfRefs[0].col},{v:bfRefs[1].lo,col:bfRefs[1].col},{v:bfRefs[2].lo,col:bfRefs[2].col},{v:bfRefs[3].lo,col:bfRefs[3].col},{v:bfRefs[4].lo,col:bfRefs[4].col}];
 
   // Deltas vs previous tracker entry
   var wDelta=(prevEntry&&prevEntry.weight!=null&&weight!=null)?+(weight-prevEntry.weight).toFixed(1):null;
@@ -809,7 +817,7 @@ function exportLipometriaPDF(){
     +'<div class="card">'
     +'<div class="card-lbl">'+T('Συνολική ανάλυση','Overall analysis')+' <span style="font-weight:400;color:#b3bab8;text-transform:none">· ◆ '+T('στόχος','goal')+'</span></div>'
     +rangeBar(T('ΔΜΣ','BMI'),bmi?String(bmi):'—',bmiCol,(bmi&&!isMinor)?bmiCat:null,deltaSpan(bmiDelta,1,'','down'),isMinor?null:[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmi,24.9)
-    +rangeBar(T('% Λίπους','% Body fat'),bf?bf+'%':'—',bfCatCol,bf?bfCatLabel:null,deltaSpan(bfDelta,1,'','down'),[{v:isFem?5:0,col:bfRefs[0].col},{v:bfRefs[1].lo,col:bfRefs[1].col},{v:bfRefs[2].lo,col:bfRefs[2].col},{v:bfRefs[3].lo,col:bfRefs[3].col},{v:bfRefs[4].lo,col:bfRefs[4].col}],isFem?45:35,bf,bfGoal)
+    +rangeBar(T('% Λίπους','% Body fat'),bf?bf+'%':'—',bfCatCol,bf?bfCatLabel:null,deltaSpan(bfDelta,1,'','down'),bfBoundaries,isFem?45:35,bf,bfGoal)
     +(whtr!=null?rangeBar('WHtR',String(whtr),whtrCatCol,whtrCatLabel,deltaSpan(whtrDelta,2,'','down'),[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtr,0.5):'')
     +'</div>'
     +'</div>'
@@ -870,9 +878,9 @@ function exportLipometriaPDF(){
 
     // Footer
     +'<div class="footer">'
-    +'<div class="footer-row"><span>Feed Your Health &mdash; '+T('Ανάλυση Σωματικής Σύνθεσης','Body Composition Analysis')+' &nbsp;|&nbsp; ACSM Reference Ranges</span><span>'+T('Επόμενο ραντεβού','Next appointment')+': ________________</span></div>'
+    +'<div class="footer-row"><span>Feed Your Health &mdash; '+T('Ανάλυση Σωματικής Σύνθεσης','Body Composition Analysis')+' &nbsp;|&nbsp; '+bfSrcLbl+'</span><span>'+T('Επόμενο ραντεβού','Next appointment')+': ________________</span></div>'
     +'<div style="margin-top:2px;color:#b3bab8">'+T('Οι τάσεις (▲▼) συγκρίνουν με την προηγούμενη καταχώρηση tracker. Χωρίς ζυγαριά βιοηλεκτρικής εμπέδησης (BIA) — δεν εμφανίζονται νερό/πρωτεΐνη/οστά/σπλαχνικό λίπος.','Trends (▲▼) compare against the previous tracker entry. No bioelectrical impedance (BIA) scale — water/protein/bone/visceral fat are not shown.')+'</div>'
-    +'<div style="margin-top:2px;color:#b3bab8">'+T('ΔΜΣ = Δείκτης Μάζας Σώματος (kg/m²) · WHtR = Λόγος Περιμέτρου Μέσης προς Ύψος. Οι κατηγορίες ACSM είναι στατιστικά όρια αναφοράς, όχι ιατρική διάγνωση.','BMI = Body Mass Index (kg/m²) · WHtR = Waist-to-Height Ratio. ACSM categories are statistical reference ranges, not a medical diagnosis.')+'</div>'
+    +'<div style="margin-top:2px;color:#b3bab8">'+T('ΔΜΣ = Δείκτης Μάζας Σώματος (kg/m²) · WHtR = Λόγος Περιμέτρου Μέσης προς Ύψος. Οι κατηγορίες %BF είναι στατιστικά όρια αναφοράς, όχι ιατρική διάγνωση.','BMI = Body Mass Index (kg/m²) · WHtR = Waist-to-Height Ratio. %BF categories are statistical reference ranges, not a medical diagnosis.')+'</div>'
     +'</div></body></html>';
 
   var w=window.open('','_blank');
@@ -904,6 +912,11 @@ function exportBodyCompPDF(){
   if(latestBF){
     bfRefs.forEach(function(r){if(latestBF>=r.lo){bfCatLabel=r.lbl;bfCatCol=r.col;}});
   }
+  // ✅ age-adjusted verdict (Gallagher 2000) when the client's age is known.
+  var GBF_LBL={low:T('Κάτω από το υγιές','Below healthy'),healthy:T('Υγιές','Healthy'),overfat:T('Υπέρβαρο','Overweight'),obese:T('Παχυσαρκία','Obesity')};
+  var bfGv=(latestBF&&typeof bfHealthByAge==='function')?bfHealthByAge(latestBF,sex,c.age):null;
+  var bfSrcLbl=bfGv?T('υγιή εύρη κατά ηλικία & φύλο (Gallagher 2000)','age & sex healthy ranges (Gallagher 2000)'):T('κατηγορίες ACE/ACSM','ACE/ACSM categories');
+  if(bfGv){ bfCatLabel=GBF_LBL[bfGv.key]+' ('+bfGv.ageBand+')'; bfCatCol=bfGv.col; }
 
   // ── SVG dual chart ─────────────────────────────────────────────────────────
   var weights=sorted.map(function(e){return e.weight;});
@@ -983,16 +996,28 @@ function exportBodyCompPDF(){
   });
 
   // ── BF% reference bar ─────────────────────────────────────────────────────
+  // Age-adjusted 4 zones (Gallagher 2000) when the client's age is known, else the
+  // non-age-adjusted ACE 5-band. `refRows` normalises both to {lbl, lo, hi, col}.
+  var refRows;
+  if(bfGv){
+    var _oCap=bfGv.obeseLo+8;
+    refRows=[
+      {lbl:GBF_LBL.low,     lo:isFem?5:0,      hi:bfGv.healthy[0], col:'#1565C0'},
+      {lbl:GBF_LBL.healthy, lo:bfGv.healthy[0],hi:bfGv.healthy[1], col:'#2e7d32'},
+      {lbl:GBF_LBL.overfat, lo:bfGv.healthy[1],hi:bfGv.obeseLo,    col:'#f57c00'},
+      {lbl:GBF_LBL.obese,   lo:bfGv.obeseLo,   hi:_oCap,           col:'#c62828'}
+    ];
+  } else { refRows=bfRefs; }
   var refBarHtml='<div style="margin:10px 0 14px">';
-  var totalRange=bfRefs[bfRefs.length-1].hi-bfRefs[0].lo;
+  var totalRange=refRows[refRows.length-1].hi-refRows[0].lo;
   refBarHtml+='<div style="display:flex;height:12px;border-radius:4px;overflow:hidden;margin-bottom:4px">';
-  bfRefs.forEach(function(r){
+  refRows.forEach(function(r){
     var w=Math.round((r.hi-r.lo)/totalRange*100);
     refBarHtml+='<div style="flex:'+w+';background:'+r.col+';opacity:.7" title="'+r.lbl+'"></div>';
   });
   refBarHtml+='</div>';
   refBarHtml+='<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:6.5pt">';
-  bfRefs.forEach(function(r){
+  refRows.forEach(function(r){
     refBarHtml+='<span><span style="display:inline-block;width:8px;height:8px;background:'+r.col+';border-radius:2px;vertical-align:middle;margin-right:2px;opacity:.8"></span>'+r.lbl+' ('+r.lo+'–'+r.hi+'%)</span>';
   });
   refBarHtml+='</div></div>';
@@ -1055,7 +1080,7 @@ function exportBodyCompPDF(){
       +(hasBF?'<svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#1565C0" stroke-width="2" stroke-dasharray="5,3"/></svg><span>'+T('Λίπος σώματος (%) — δεξί άξονας','Body fat (%) — right axis')+'</span>':'')
       +'</div>':'')
     // Ref ranges
-    +'<div class="sec-title">'+T('Τιμές Αναφοράς %BF','%BF Reference Values')+' &nbsp;<span style="font-size:7pt;font-weight:400;color:#888">ACSM (American College of Sports Medicine)</span></div>'
+    +'<div class="sec-title">'+T('Τιμές Αναφοράς %BF','%BF Reference Values')+' &nbsp;<span style="font-size:7pt;font-weight:400;color:#888">'+bfSrcLbl+'</span></div>'
     +refBarHtml
     // History table
     +'<div class="sec-title">'+T('Ιστορικό Μετρήσεων','Measurement History')+'</div>'
@@ -1063,7 +1088,7 @@ function exportBodyCompPDF(){
     +'<tbody>'+tblRows+'</tbody></table>'
     +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:4px">'+T('📐 = μέτρηση με δερματοπτυχόμετρο','📐 = skinfold caliper measurement')+' · JP 4-site: Jackson &amp; Pollock (1985) · JP 3-site / JP 7-site: Jackson &amp; Pollock (1978/1980) · Slaughter: Slaughter et al. (1988)</div>'
     +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:2px">'+T('%BF = Ποσοστό Λίπους Σώματος · LBM = Άλιπη Μάζα Σώματος · FM = Λιπώδης Μάζα','%BF = Body Fat Percentage · LBM = Lean Body Mass · FM = Fat Mass')+'</div>'
-    +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:2px">'+T('Οι κατηγορίες ACSM είναι στατιστικά όρια αναφοράς, όχι ιατρική διάγνωση.','ACSM categories are statistical reference ranges, not a medical diagnosis.')+'</div>'
+    +'<div style="font-size:6.5pt;color:var(--text-muted);margin-top:2px">'+T('Οι κατηγορίες %BF είναι στατιστικά όρια αναφοράς, όχι ιατρική διάγνωση.','%BF categories are statistical reference ranges, not a medical diagnosis.')+'</div>'
     // Footer
     +'<div class="footer"><span>Feed Your Health — '+T('Ιστορικό Σωματικής Σύνθεσης','Body Composition History')+'</span><span>'+esc(c.name||'')+'  ·  '+T('Εκτυπώθηκε','Printed')+': '+today+'</span></div>'
     +'</body></html>';
