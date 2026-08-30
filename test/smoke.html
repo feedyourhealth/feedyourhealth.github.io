@@ -157,6 +157,8 @@ document.write(window.__MANIFEST__.map(function(p){
    'genPlan','genPlanWithUndo','generateSmartMeal','findBestRecipe','harvestMealLibrary',
    'calcMedScore','countFoodFrequency','buildClientExclusionList','applyPostGenerationCleanup',
    'getSavedCombos','setSavedCombos','buildEffectiveExclusionList','scrubExcludedFoodsFromWeekPlan',
+   'parseAllergies','parsePreferenceAvoidFoods','foodIsExcludedByNameOrIngredient','applyFoodExclusions',
+   'redMeatFoodsList','cheeseFoodsList','dairyFoodsList','applyDietTypeCategorySafetyNet','applyQuickExclude',
    'applyMediterraneanRules','ensureOmega3FishIntake','enforceRedMeatFrequency',
    'exportPDF','exportWord','exportLipometriaPDF','exportBodyCompPDF','exportGoogleDocs',
    'openPublishModal','publishHandoffMsg',
@@ -195,6 +197,7 @@ document.write(window.__MANIFEST__.map(function(p){
   constCheck('DIET_TYPE_BADGE', 3);
   constCheck('GREEK_MONTHS', 12);
   constCheck('NAME_DAYS', 20);
+  constCheck('QUICK_EXCL', 5);
 
   // --- pure-calc baseline probes -----------------------------------------
   var FIX = {
@@ -231,6 +234,34 @@ document.write(window.__MANIFEST__.map(function(p){
   probe('pctStatusColor.samples',    function(){ return [pctStatusColor(80),pctStatusColor(50),pctStatusColor(10)]; });
   probe('resolveFood.samples',       function(){ return [resolveFood('Μπανάνα'), resolveFood('__unknown__')]; });
   probe('minScaleG.samples',         function(){ return [minScaleG('Μπανάνα'), minScaleG('Κοτόπουλο στήθος (ψητό)')]; });
+
+  // --- exclusion engine (the surface Phase 2's intake chips will drive) -------------------
+  probe('parseAllergies.sample',     function(){ return parseAllergies(' Φιστίκια, γάλα ,,  ΣΟΓΙΑ '); });
+  probe('redMeatFoodsList.shape',    function(){ var a=redMeatFoodsList(); return { n:a.length,
+                                        hasBeef:a.some(function(x){return /Μοσχ|Βοδιν/.test(x);}),
+                                        excludesPoultry:!a.some(function(x){return /Κοτόπουλ|Γαλοπούλ/.test(x);}) }; });
+  probe('cheeseFoodsList.shape',     function(){ var a=cheeseFoodsList(); return { n:a.length, hasFeta:a.indexOf('Τυρί φέτα')!==-1 }; });
+  probe('dairyFoodsList.shape',      function(){ var a=dairyFoodsList(); return { n:a.length, excludesWholeEggs:a.indexOf('Αυγά (ολόκληρα)')===-1 }; });
+  probe('parsePrefAvoid.redmeat',    function(){ return parsePreferenceAvoidFoods('όχι κόκκινο κρέας').slice().sort(); });
+  probe('parsePrefAvoid.cheese_n',   function(){ return parsePreferenceAvoidFoods('χωρίς τυρί').length; });
+  probe('parsePrefAvoid.noMarker',   function(){ return parsePreferenceAvoidFoods('περισσότερο ψάρι, λιγότερη ζάχαρη'); });
+  probe('QUICK_EXCL.groupSizes',     function(){ var o={}; Object.keys(QUICK_EXCL).forEach(function(k){ o[k]=QUICK_EXCL[k].length; }); return o; });
+  probe('buildClientExclusionList.merged', function(){
+    var c={foodExclude:['Μπανάνα'],allergies:'γάλα',preferences:'όχι κόκκινο κρέας',foodPrefs:[{food:'Μπρόκολο',pref:'dislike'},{food:'Ρύζι λευκό βραστό',pref:'like'}]};
+    var out=buildClientExclusionList(c,['Ζάχαρη λευκή']);
+    return { n:out.length, banana:out.indexOf('Μπανάνα')!==-1, protocol:out.indexOf('Ζάχαρη λευκή')!==-1,
+             dislike:out.indexOf('Μπρόκολο')!==-1, likeNotIncluded:out.indexOf('Ρύζι λευκό βραστό')===-1 }; });
+  probe('planPipeline.exclusion_safetynet', function(){
+    // the food-mutation steps genPlan() runs before scaling: name-level exclusion filter →
+    // diet-type category safety net. Pure, no DOM. Locks the contract Phase 2 endangers.
+    var wp={ '0':[{name:'Μεσημεριανό',foods:[{n:'Μπανάνα',g:120},{n:'Μοσχαρίσιο φιλέτο (ψητό)',g:150},{n:'Ρύζι λευκό βραστό',g:120}]}],
+             '1':[{name:'Μεσημεριανό',foods:[{n:'Χοιρινή μπριζόλα (ψητή)',g:150},{n:'Πατάτα βραστή',g:150}]}] };
+    var excl=['Μπανάνα'];
+    Object.keys(wp).forEach(function(d){ wp[d].forEach(function(m){ m.foods=m.foods.filter(function(f){ return excl.indexOf(f.n)===-1; }); }); });
+    applyDietTypeCategorySafetyNet(wp,'vegan',null,null);
+    var flat=[]; Object.keys(wp).forEach(function(d){ wp[d].forEach(function(m){ m.foods.forEach(function(f){ flat.push(f.n); }); }); });
+    return { bananaLeak:flat.indexOf('Μπανάνα')!==-1,
+             meatLeak:flat.some(function(n){ var f=FOODS[n]; return !!(f && f.cat==='Κρέας'); }) }; });
 
   // data fingerprints — cheap structural checksums
   probes['_fingerprints'] = (function(){

@@ -38,6 +38,10 @@ function getStorageKey(baseKey) {
       if(!c.suppExclude)c.suppExclude=[];
       if(!c.foodExclude)c.foodExclude=[];
       if(c.selectedTemplate===undefined)c.selectedTemplate=null;
+      // ✅ keep the denormalised c.age cache in step with birthDate on load — see the same
+      // refresh in selectClient (js/core/state.js). Covers the roster list + any boot-time
+      // calc before the client is opened.
+      if(c.birthDate && typeof ageAtDate==='function'){ var _ca=ageAtDate(c.birthDate); if(_ca!=null)c.age=_ca; }
     });
     if(typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(clients);
     renderSB();

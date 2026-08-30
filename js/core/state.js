@@ -445,8 +445,18 @@ function selectClient(id){
     // ✅ Update lastAccess timestamp for sorting
     var c=clients.find(function(x){return x.id===id;});
     if(c){
+      // ✅ c.age is a denormalised cache, only rewritten when the birth-date field is re-committed
+      // (commitBirthdate → upd('age',…)). A client who has aged past 18 since then would still be
+      // classified as a minor by the tracker's Slaughter/JP4 default, calcTDEE's child BMR
+      // equations, the ≤2-fish-servings note and the PDF. Refresh it from birthDate (authoritative
+      // when set) on every open — same birthDate-first rule already used in form-controls.js:579
+      // and render-main.js:120.
+      if(c.birthDate && typeof ageAtDate==='function'){
+        var _a=ageAtDate(c.birthDate);
+        if(_a!=null) c.age=_a;
+      }
       c.lastAccess=Date.now();
-      save(); // Save the lastAccess update
+      save(); // Save the lastAccess update (+ any age refresh above)
     }
 
     var tb=document.getElementById('tmpl-sb-btn');

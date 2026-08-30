@@ -106,6 +106,11 @@ function buildTrackerHtml(c){
     +'<input type="number" id="tr-weight" placeholder="kg" min="20" max="300" step="0.1" class="tracker-inp" style="width:64px" value="'+(ee&&ee.weight?ee.weight:'')+'">'
     +'<label style="font-size:10px;color:#666;align-self:center" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">🧮 Λίπος %:</label>'
     +'<input type="number" id="tr-bf" placeholder="%" min="3" max="60" step="0.1" class="tracker-inp" style="width:56px" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση" value="'+(ee&&ee.bf?ee.bf:'')+'">'
+    // ✅ πώς μετρήθηκε το %BF — αποθηκεύεται στο entry.bfMethod μαζί με τη μέτρηση. Το δερματοπτυχόμετρο
+    // παραπάνω γεμίζει αυτό σε 'caliper' αυτόματα (applySkinfoldBF). Παλιές μετρήσεις δεν έχουν .bfMethod.
+    +'<select id="tr-bf-method" class="tracker-inp" style="width:132px;font-size:10px" title="Πώς μετρήθηκε το ποσοστό λίπους — αποθηκεύεται μαζί με τη μέτρηση">'
+    +weightSelectOptions(ee?ee.bfMethod:'',[['','μέθοδος %…'],['caliper','📐 Δερματοπτυχές'],['bia','⚡ Λιπομετρητής/BIA'],['dexa','🩻 DEXA/εργαστ.'],['estimate','≈ Εκτίμηση/άλλο']])
+    +'</select>'
     +'</div>'
     +'<div style="font-size:10px;color:var(--text-muted);width:100%;margin:8px 0 2px">Περιφέρειες (cm)</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
@@ -261,10 +266,13 @@ function buildTrackerHtml(c){
       var energyBolts=e.energy?'⚡'.repeat(e.energy):'—';
       var sfProtoLabel={jp4:'JP4',jp3:'JP3',jp7:'JP7',slaughter:'SL'};
       var sfBadge=e.sfProtocol?'<span title="Μέτρηση με δερματοπτυχόμετρο ('+e.sfProtocol.toUpperCase()+')" style="font-size:8px;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 4px;margin-left:3px;font-weight:700;cursor:default">📐'+(sfProtoLabel[e.sfProtocol]||e.sfProtocol)+'</span>':'';
+      // ✅ μέθοδος μέτρησης για μη-δερματοπτυχικές εγγραφές (οι δερματοπτυχικές έχουν ήδη το 📐 badge)
+      var bfMethodLabel={caliper:'📐',bia:'⚡BIA',dexa:'🩻DEXA',estimate:'≈'};
+      var methBadge=(e.bfMethod&&!e.sfProtocol)?'<span title="Μέθοδος μέτρησης λίπους" style="font-size:8px;background:#eef2f7;color:#456;border-radius:3px;padding:1px 4px;margin-left:3px;font-weight:700;cursor:default">'+(bfMethodLabel[e.bfMethod]||e.bfMethod)+'</span>':'';
       wHtml+='<tr>'
         +'<td style="white-space:nowrap">'+e.date+'</td>'
         +'<td><b>'+e.weight+' kg</b></td>'
-        +'<td>'+(e.bf?e.bf+'%'+sfBadge:'—')+'</td>'
+        +'<td>'+(e.bf?e.bf+'%'+sfBadge+methBadge:'—')+'</td>'
         +'<td>'+(lbm!=='—'?lbm+' kg':'—')+'</td>'
         +'<td>'+(e.waist?e.waist+' cm':'—')+'</td>'
         +'<td>'+(e.hip?e.hip+' cm':'—')+'</td>'
@@ -571,6 +579,9 @@ function applySkinfoldBF(){
   if(res.bf===null)return;
   var bfInp=document.getElementById('tr-bf');
   if(bfInp){bfInp.value=res.bf;bfInp.style.background='#e8f5e9';bfInp.style.borderColor='#81c784';setTimeout(function(){bfInp.style.background='';bfInp.style.borderColor='';},1200);}
+  // ✅ a skinfold-derived %BF is a caliper measurement — mark the method select to match
+  var mSel=document.getElementById('tr-bf-method');
+  if(mSel)mSel.value='caliper';
 }
 
 function getSkinfoldEntry(){
@@ -769,7 +780,7 @@ function finishBatchErgoImport(texts){
       var age=ageAtDate(c.birthDate||r.birthDate,r.testDate)||c.age||25;
       var fields={tricep:r.tricep||0,subscapular:r.subscapular||0,abdomen:r.abdomen||0,suprailiac:r.suprailiac||0,thigh:r.thigh||0};
       var res=calcSkinfoldBF('jp4',c.sex||'M',age,fields);
-      c.weightLog.push({date:r.testDate,weight:r.weight,bf:res.bf||0,waist:0,hip:0,arm:0,sleep:0,energy:0,compliance:0,notes:'',sfProtocol:'jp4',sfFields:fields});
+      c.weightLog.push({date:r.testDate,weight:r.weight,bf:res.bf||0,waist:0,hip:0,arm:0,sleep:0,energy:0,compliance:0,notes:'',sfProtocol:'jp4',sfFields:fields,bfMethod:'caliper'});
     });
     c.weightLog.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
 
@@ -824,8 +835,13 @@ function addWeightEntry(){
     return;
   }
   var sfEntry=getSkinfoldEntry();
+  var bfMethodSel=(document.getElementById('tr-bf-method')||{}).value||'';
   var entry={date:date,weight:weight,bf:bf,waist:waist,hip:hip,arm:arm,sleep:sleep,energy:energy,compliance:compliance,notes:notes};
   if(sfEntry){entry.sfProtocol=sfEntry.protocol;entry.sfFields=sfEntry.fields;}
+  // ✅ record HOW the %BF was obtained — skinfold panel open ⇒ 'caliper' implicitly, otherwise
+  // whatever the dietitian picked in #tr-bf-method. Only when a %BF value was actually entered;
+  // older entries just have no .bfMethod (Phase 1 percentile work treats that as "unknown").
+  if(bf>0){ var _bfm=sfEntry?'caliper':bfMethodSel; if(_bfm)entry.bfMethod=_bfm; }
   var wasEdit=(_weightEditIdx>=0 && !!c.weightLog[_weightEditIdx]); // captured before the reset below, so the toast message can tell add apart from edit
   if(wasEdit){
     // ✅ editing an existing entry (editWeightEntry) — replace it in place instead of pushing a
