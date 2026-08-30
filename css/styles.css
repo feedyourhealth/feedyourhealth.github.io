@@ -77,6 +77,10 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f
 .bf-gauge-arc{position:absolute;top:0;left:0;width:168px;height:168px;border-radius:50%}
 .bf-gauge-needle{position:absolute;left:50%;bottom:0;width:2px;height:66px;background:var(--text-strong);transform-origin:bottom center;border-radius:2px;margin-left:-1px}
 .bf-gauge-needle::after{content:"";position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:10px;height:10px;border-radius:50%;background:var(--text-strong)}
+/* per-client %BF goal marker (c.goalBF) — same geometry as the needle, teal & thinner,
+   with a small ◆ at the arc end. Drawn behind the needle so a matching value still shows both. */
+.bf-gauge-goal{position:absolute;left:50%;bottom:0;width:2px;height:66px;background:var(--teal);opacity:.55;transform-origin:bottom center;border-radius:2px;margin-left:-1px}
+.bf-gauge-goal::after{content:"";position:absolute;top:-4px;left:-3px;width:8px;height:8px;background:var(--teal);border-radius:1px;transform:rotate(45deg)}
 .app{display:flex;min-height:100vh;position:relative}
 /* ✅ IMPROVED: Card-based client design */
 /* Sidebar clients */

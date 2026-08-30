@@ -690,13 +690,13 @@ function exportLipometriaPDF(){
   if(prevEntry&&prevEntry.sfFields){var pv=Object.values(prevEntry.sfFields);if(pv.length)prevSfSum=pv.reduce(function(s,v){return s+v;},0);}
   var sfSumDelta=(sfSum!=null&&prevSfSum!=null)?Math.round(sfSum-prevSfSum):null;
 
-  // ACSM %BF reference categories (used for both category lookup and the range bar)
-  var bfRefs=isFem
-    ?[{lo:10,hi:13,lbl:T('Απαραίτητο','Essential'),col:'#1565C0'},{lo:14,hi:20,lbl:T('Αθλητικό','Athletic'),col:'#2e7d32'},{lo:21,hi:24,lbl:T('Φυσιολογικό','Fitness'),col:'#558b2f'},{lo:25,hi:31,lbl:T('Αποδεκτό','Acceptable'),col:'#f57c00'},{lo:32,hi:60,lbl:T('Παχυσαρκία','Obesity'),col:'#c62828'}]
-    :[{lo:2,hi:5,lbl:T('Απαραίτητο','Essential'),col:'#1565C0'},{lo:6,hi:13,lbl:T('Αθλητικό','Athletic'),col:'#2e7d32'},{lo:14,hi:17,lbl:T('Φυσιολογικό','Fitness'),col:'#558b2f'},{lo:18,hi:24,lbl:T('Αποδεκτό','Acceptable'),col:'#f57c00'},{lo:25,hi:60,lbl:T('Παχυσαρκία','Obesity'),col:'#c62828'}];
+  // %BF reference bands — shared model from js/lib/bf-norms.js (BF_BANDS); the
+  // language-neutral keys get this exporter's own T() labels here.
+  var BF_LBL={essential:T('Απαραίτητο','Essential'),athletic:T('Αθλητικό','Athletic'),fitness:T('Φυσιολογικό','Fitness'),acceptable:T('Αποδεκτό','Acceptable'),obesity:T('Παχυσαρκία','Obesity')};
+  var bfRefs=BF_BANDS(isFem?'F':'M').map(function(b){return{lo:b.lo,hi:b.hi,col:b.col,lbl:BF_LBL[b.key]};});
   var bfCatLabel='—',bfCatCol='#555';
   if(bf){bfRefs.forEach(function(r){if(bf>=r.lo){bfCatLabel=r.lbl;bfCatCol=r.col;}});}
-  var bfGoal=bfRefs[2].hi; // upper bound of "Φυσιολογικό"/"Fitness"
+  var bfGoal=bfGoalTarget(c); // c.goalBF when the dietitian set one, else top of "Fitness"
 
   // Deltas vs previous tracker entry
   var wDelta=(prevEntry&&prevEntry.weight!=null&&weight!=null)?+(weight-prevEntry.weight).toFixed(1):null;
@@ -896,10 +896,9 @@ function exportBodyCompPDF(){
   var sex=c.sex||'M';
   var isFem=sex==='F';
 
-  // ACSM Body Fat Reference Ranges by sex
-  var bfRefs=isFem
-    ?[{lbl:T('Απαραίτητο','Essential'),lo:10,hi:13,col:'#1565C0'},{lbl:T('Αθλητικό','Athletic'),lo:14,hi:20,col:'#2e7d32'},{lbl:T('Φυσιολογικό','Fitness'),lo:21,hi:24,col:'#558b2f'},{lbl:T('Αποδεκτό','Acceptable'),lo:25,hi:31,col:'#f57c00'},{lbl:T('Παχυσαρκία','Obesity'),lo:32,hi:60,col:'#c62828'}]
-    :[{lbl:T('Απαραίτητο','Essential'),lo:2,hi:5,col:'#1565C0'},{lbl:T('Αθλητικό','Athletic'),lo:6,hi:13,col:'#2e7d32'},{lbl:T('Φυσιολογικό','Fitness'),lo:14,hi:17,col:'#558b2f'},{lbl:T('Αποδεκτό','Acceptable'),lo:18,hi:24,col:'#f57c00'},{lbl:T('Παχυσαρκία','Obesity'),lo:25,hi:60,col:'#c62828'}];
+  // %BF reference bands — shared model from js/lib/bf-norms.js (BF_BANDS).
+  var BF_LBL={essential:T('Απαραίτητο','Essential'),athletic:T('Αθλητικό','Athletic'),fitness:T('Φυσιολογικό','Fitness'),acceptable:T('Αποδεκτό','Acceptable'),obesity:T('Παχυσαρκία','Obesity')};
+  var bfRefs=BF_BANDS(isFem?'F':'M').map(function(b){return{lbl:BF_LBL[b.key],lo:b.lo,hi:b.hi,col:b.col};});
   // Find current category
   var bfCatLabel='—',bfCatCol='#555';
   if(latestBF){

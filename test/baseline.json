@@ -11,6 +11,7 @@
     "../js/data/templates.js",
     "../js/data/recipes.js",
     "../js/data/misc.js",
+    "../js/lib/bf-norms.js",
     "../js/lib/helpers.js",
     "../js/lib/food-resolve.js",
     "../js/calc/plan-energy.js",
@@ -59,9 +60,9 @@
     "../js/11-undo-redo.js"
   ],
   "counts": {
-    "fnChecked": 92,
-    "constChecked": 27,
-    "probes": 27
+    "fnChecked": 96,
+    "constChecked": 28,
+    "probes": 31
   },
   "fnFails": [],
   "constFails": [],
@@ -632,6 +633,82 @@
     "planPipeline.exclusion_safetynet": {
       "bananaLeak": false,
       "meatLeak": false
+    },
+    "BF_BANDS.mf": {
+      "m": [
+        [
+          "essential",
+          2,
+          5
+        ],
+        [
+          "athletic",
+          6,
+          13
+        ],
+        [
+          "fitness",
+          14,
+          17
+        ],
+        [
+          "acceptable",
+          18,
+          24
+        ],
+        [
+          "obesity",
+          25,
+          60
+        ]
+      ],
+      "f": [
+        [
+          "essential",
+          10,
+          13
+        ],
+        [
+          "athletic",
+          14,
+          20
+        ],
+        [
+          "fitness",
+          21,
+          24
+        ],
+        [
+          "acceptable",
+          25,
+          31
+        ],
+        [
+          "obesity",
+          32,
+          60
+        ]
+      ]
+    },
+    "bfBandFor.samples": {
+      "m10": "athletic",
+      "m20": "acceptable",
+      "m40": "obesity",
+      "f18": "athletic",
+      "f0": null
+    },
+    "bfGoalTarget.samples": {
+      "withGoal": 12,
+      "noGoalM": 17,
+      "noGoalF": 24,
+      "zeroGoal": 17
+    },
+    "bfGaugeHtml.render": {
+      "minorEmpty": true,
+      "noBfEmpty": true,
+      "goalTickWhenSet": true,
+      "noGoalTickWhenUnset": true,
+      "hasCategoryLabel": true
     },
     "_fingerprints": {
       "FOODS_keys": 332,

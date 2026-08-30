@@ -50,6 +50,7 @@ window.__MANIFEST__ = [
   '../js/data/templates.js',
   '../js/data/recipes.js',
   '../js/data/misc.js',
+  '../js/lib/bf-norms.js',
   '../js/lib/helpers.js',
   '../js/lib/food-resolve.js',
   '../js/calc/plan-energy.js',
@@ -148,6 +149,7 @@ document.write(window.__MANIFEST__.map(function(p){
 
   // --- critical globals -----------------------------------------------------
   ['esc','escJsAttr','fmtFoodQty','snapWholeG','pluralUnit','pctRing','pctStatusColor',
+   'BF_BANDS','bfBandFor','bfGoalTarget','bfGaugeHtml',
    'deepClone','safeStorageGet','safeStorageSet','save','saveNow',
    'getC','addClient','selectClient','deleteClient',
    'calcTDEE','calcMETkcal','getMicronutrientTargets','getPregTrimester','getIOMWeightGainRange',
@@ -198,6 +200,7 @@ document.write(window.__MANIFEST__.map(function(p){
   constCheck('GREEK_MONTHS', 12);
   constCheck('NAME_DAYS', 20);
   constCheck('QUICK_EXCL', 5);
+  constCheck('BF_BAND_KEYS', 5);
 
   // --- pure-calc baseline probes -----------------------------------------
   var FIX = {
@@ -262,6 +265,23 @@ document.write(window.__MANIFEST__.map(function(p){
     var flat=[]; Object.keys(wp).forEach(function(d){ wp[d].forEach(function(m){ m.foods.forEach(function(f){ flat.push(f.n); }); }); });
     return { bananaLeak:flat.indexOf('Μπανάνα')!==-1,
              meatLeak:flat.some(function(n){ var f=FOODS[n]; return !!(f && f.cat==='Κρέας'); }) }; });
+
+  // --- %BF norms (js/lib/bf-norms.js — shared band model + per-client goal) --------------
+  probe('BF_BANDS.mf', function(){
+    return { m: BF_BANDS('M').map(function(b){return [b.key,b.lo,b.hi];}),
+             f: BF_BANDS('F').map(function(b){return [b.key,b.lo,b.hi];}) }; });
+  probe('bfBandFor.samples', function(){
+    return { m10:(bfBandFor(10,'M')||{}).key, m20:(bfBandFor(20,'M')||{}).key, m40:(bfBandFor(40,'M')||{}).key,
+             f18:(bfBandFor(18,'F')||{}).key, f0:bfBandFor(0,'F') }; });
+  probe('bfGoalTarget.samples', function(){
+    return { withGoal: bfGoalTarget({sex:'M',goalBF:12}), noGoalM: bfGoalTarget({sex:'M'}),
+             noGoalF: bfGoalTarget({sex:'F'}), zeroGoal: bfGoalTarget({sex:'M',goalBF:0}) }; });
+  probe('bfGaugeHtml.render', function(){
+    var withG = bfGaugeHtml(22,'F',false,26), noG = bfGaugeHtml(22,'F',false,0);
+    return { minorEmpty: bfGaugeHtml(22,'F',true,26)==='', noBfEmpty: bfGaugeHtml(0,'F',false,0)==='',
+             goalTickWhenSet: withG.indexOf('bf-gauge-goal')!==-1,
+             noGoalTickWhenUnset: noG.indexOf('bf-gauge-goal')===-1,
+             hasCategoryLabel: withG.indexOf('Φυσιολογικό')!==-1 || withG.indexOf('Αποδεκτό')!==-1 }; });
 
   // data fingerprints — cheap structural checksums
   probes['_fingerprints'] = (function(){
