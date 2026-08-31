@@ -11,10 +11,10 @@ var MACRO_TYPE={
   // πλάνα η κύρια πηγή πρωτεΐνης δεν ανέβαινε ποτέ προς τον στόχο. Cap στο SCALE_CATS['Όσπρια'].
   // Λαχανικά, Συνταγές FYH, Άλλα → fallback to calorie ratio
 };
-var GOAL_LABELS={loss:'Απώλεια βάρους',mild:'Ήπια απώλεια',maintain:'Διατήρηση',gain:'Αύξηση μάζας',football:'⚽ Ποδόσφαιρο',
+var GOAL_LABELS={loss:'Απώλεια βάρους',mild:'Ήπια απώλεια',maintain:'Διατήρηση',gain:'Αύξηση μάζας',football:'⚽ Ποδόσφαιρο',running:'🏃 Δρομείς',
   kcal2000:'2000 kcal',kcal2300:'2300 kcal',kcal2500:'2500 kcal',kcal2700:'2700 kcal',kcal3000:'3000 kcal',
   mediterranean:'🫒 Μεσογειακή Διατροφή'};
-var GOAL_KEYS=['loss','mild','maintain','gain','football','kcal2000','kcal2300','kcal2500','kcal2700','kcal3000','mediterranean'];
+var GOAL_KEYS=['loss','mild','maintain','gain','football','running','kcal2000','kcal2300','kcal2500','kcal2700','kcal3000','mediterranean'];
 // Short badge labels for a client/template's dietType — used wherever a saved plan/template
 // needs to show which diet it was built for (template manager list, "Βάση πλάνου" dropdown).
 var DIET_TYPE_BADGE={normal:'',vegetarian:'🥬 Χορτοφαγική',vegan:'🌱 Vegan',keto:'⚡ Κετογονική',

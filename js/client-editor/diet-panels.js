@@ -151,8 +151,10 @@ function buildTmplSelectorHtml(c){
   if(typeof swTab !== 'undefined'){
     // This will be hidden by swTab logic
   }
-  // Built-in calorie-level reference templates
-  var kcalKeys=['kcal2000','kcal2300','kcal2500','kcal2700','kcal3000','mediterranean'];
+  // Built-in reference templates: calorie-level references + sport-specific plans
+  // (football/running are keyed in DEFAULT_TMPLS like any goal but have no "κύριος στόχος"
+  // radio — expose them here so a dietitian can base any client's plan on them).
+  var kcalKeys=['kcal2000','kcal2300','kcal2500','kcal2700','kcal3000','mediterranean','running','football'];
   kcalKeys.forEach(function(k){
     opts+='<option value="__kcal_'+k+'"'+(sel==='__kcal_'+k?' selected':'')+'>📊 '+GOAL_LABELS[k]+'</option>';
   });
