@@ -137,8 +137,8 @@ function openPublishModal(){
     // Viber: σε αντίθεση με το wa.me, το επίσημο viber://chat?number= δεν υποστηρίζει pre-filled
     // κείμενο μαζί με συγκεκριμένο αριθμό (μόνο το viber://forward?text= το κάνει, αλλά χωρίς
     // προεπιλεγμένο παραλήπτη — ανοίγει λίστα επαφών). Οπότε: με τηλέφωνο → ανοίγει κατευθείαν
-    // το chat (ο διαιτολόγος επικολλά το μήνυμα από το κουμπί αντιγραφής από κάτω)· χωρίς
-    // τηλέφωνο → forward με το μήνυμα έτοιμο, ο διαιτολόγος διαλέγει επαφή.
+    // το chat ΚΑΙ το onclick του link αντιγράφει αυτόματα το μήνυμα στο clipboard (ο διαιτολόγος
+    // απλώς επικολλά)· χωρίς τηλέφωνο → forward με το μήνυμα έτοιμο, ο διαιτολόγος διαλέγει επαφή.
     var vb=phone?('viber://chat?number='+encodeURIComponent('+'+phone)):('viber://forward?text='+encodeURIComponent(msg));
     // Email: άνοιγμα του email προγράμματος με συμπληρωμένα στοιχεία
     var subj=hm.subj;
@@ -177,9 +177,10 @@ function openPublishModal(){
       +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="copyPublishUrl(this)">Αντιγραφή</button></div>'
       +'<a href="'+wa+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📱 WhatsApp'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
       +(phone?'':'<div style="font-size:11px;color:#e08a00;margin:0 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει τηλέφωνο στην καρτέλα — δεν θα ανοίξει συνομιλία με συγκεκριμένο παραλήπτη. Πρόσθεσέ το στα «Βασικά Στοιχεία».</div>')
-      +'<a href="'+esc(vb)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#7360F2;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">💬 Viber'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
+      +'<a href="'+esc(vb)+'" target="_blank" rel="noopener"'+(phone?' onclick="var b=document.getElementById(\'publish-viber-copy\');if(b)copyPublishViberMsg(b);"':'')+' style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#7360F2;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">💬 Viber'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
       +(phone?'<textarea id="publish-viber-msg" style="position:absolute;left:-9999px;top:-9999px;" readonly>'+esc(msg)+'</textarea>'
-        +'<button id="publish-viber-copy" type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:8px" onclick="copyPublishViberMsg(this)">📋 Το Viber δεν γεμίζει μόνο του το μήνυμα — αντιγραφή</button>'
+        +'<div style="font-size:11px;color:#5a8a82;line-height:1.4;margin:2px 0 6px">📋 Το Viber δεν δέχεται έτοιμο κείμενο — <b>αντιγράφεται αυτόματα</b> μόλις πατήσεις το κουμπί. Στη συνομιλία: κράτα πατημένο στο πεδίο → <b>Επικόλληση</b>.</div>'
+        +'<button id="publish-viber-copy" type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:8px" onclick="copyPublishViberMsg(this)">📋 Αντιγραφή μηνύματος ξανά</button>'
         :'<div style="font-size:11px;color:#9fb5b0;line-height:1.4;margin-bottom:8px">Θα ανοίξει η λίστα επαφών του Viber με το μήνυμα έτοιμο — διάλεξε τον/την '+esc(c.name||'πελάτη')+'.</div>')
       +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📧 Πρόγραμμα Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
       // Δεύτερο, ισότιμο κουμπί (audit finding: "δεν ανοίγει κάτι στο email" — το mailto: δεν κάνει
