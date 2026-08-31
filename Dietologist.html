@@ -3116,6 +3116,35 @@ function saveFoodExclusions(){
       }).catch(function(){ return false; });
     },
 
+    // Μαζικός έλεγχος κατάστασης για ΟΛΑ τα εκκρεμή ('sent') ερωτηματολόγια σε μία κλήση —
+    // τροφοδοτεί το σήμα «εκκρεμεί» στην Αρχική (Upgrades Phase 2d) χωρίς να περιμένει να
+    // ανοίξει ο διαιτολόγος κάθε πελάτη. Ενημερώνει c.intakeStatus/c.intakeSubmittedAt όπου
+    // άλλαξε, ξανασχεδιάζει roster + Αρχική. Resolve → true αν κάτι άλλαξε.
+    refreshIntakeStatuses:function(){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve(false);
+      var pend=(window.clients||[]).filter(function(c){ return c && c.intakeToken && c.intakeStatus==='sent' && !c.deleted; });
+      if(!pend.length) return Promise.resolve(false);
+      var tokens=pend.map(function(c){ return c.intakeToken; });
+      return this.sb.from('client_intake').select('token,status,submitted_at').in('token',tokens).then(function(res){
+        if(res.error){ console.error('[CLOUD] refreshIntakeStatuses', res.error); return false; }
+        var byTok={}; (res.data||[]).forEach(function(r){ byTok[r.token]=r; });
+        var changed=false;
+        pend.forEach(function(c){
+          var r=byTok[c.intakeToken]; if(!r) return;
+          if(c.intakeStatus!==r.status || c.intakeSubmittedAt!==(r.submitted_at||null)){
+            c.intakeStatus=r.status; c.intakeSubmittedAt=r.submitted_at||null; c._intakeFetchedAt=Date.now(); changed=true;
+          }
+        });
+        if(changed){
+          try{ if(typeof save==='function') save(); }catch(e){}
+          if(typeof renderSB==='function') renderSB();
+          if(curId===null && typeof renderHome==='function') renderHome();
+        }
+        return changed;
+      }).catch(function(e){ console.error('[CLOUD] refreshIntakeStatuses network', e && e.message); return false; });
+    },
+
     // Διαβάζει τις ΠΛΗΡΕΙΣ απαντήσεις (payload jsonb) του υποβληθέντος ερωτηματολογίου —
     // για το read-back panel στην καρτέλα πελάτη (Upgrades Phase 2b). Δεν γράφει τίποτα
     // στον πελάτη· ο caller (js/client-editor/intake.js) κρατά runtime-only cache ώστε το

@@ -173,7 +173,8 @@ document.write(window.__MANIFEST__.map(function(p){
    'allocateMealTargets','makeDayTgtDefaults','getDayTgtEff',
    'buildIntakeCardHtml','intakeHandoffMsg','intakeLangFor','openIntakeModal','refreshIntakeCard',
    'buildIntakeReadbackHtml','ensureIntakePayload','copyIntakeSummary','intakeDiffRows',
-   'porkFoodsList','intakeApplyAvoid','intakeApplyMeds','intakeApplyProfile','intakeCopyAllergies'
+   'porkFoodsList','intakeApplyAvoid','intakeApplyMeds','intakeApplyProfile','intakeCopyAllergies',
+   'homeClientsNeedingAttention','homeResendIntake'
   ].forEach(fnCheck);
 
   // --- data constants (min sizes are loose floors, not exact) --------------
@@ -371,6 +372,29 @@ document.write(window.__MANIFEST__.map(function(p){
       allergCopyShown: has(h1,'intakeCopyAllergies(this)'), condHint: has(h1,'🩺 Ιατρικές Συνθήκες'),
       profileApplyShown: has(h1,'intakeApplyProfile()'),
       appliedStateAvoid: has(h2,'✓ Εφαρμόστηκε'), appliedStateMeds: has(h2,'✓ Καταχωρήθηκε') }; });
+  // --- Αρχική "ερωτηματολόγιο εκκρεμεί" signal (Upgrades Phase 2d) ---
+  probe('intake2d.pendingSignal', function(){
+    var save=window.clients;
+    var d=function(days){ return new Date(Date.now()-days*86400000).toISOString(); };
+    try{
+      window.clients=[
+        {id:'old',name:'Παλιό',intakeToken:'a',intakeStatus:'sent',intakeSentAt:d(5),weekPlan:{0:[]}},
+        {id:'fresh',name:'Φρέσκο',intakeToken:'b',intakeStatus:'sent',intakeSentAt:d(1),weekPlan:{0:[]}},
+        {id:'done',name:'Έγινε',intakeToken:'c',intakeStatus:'submitted',intakeSentAt:d(9),weekPlan:{0:[]}}
+      ];
+      var out=homeClientsNeedingAttention();
+      var byId={}; out.forEach(function(x){ byId[x.c.id]=x; });
+      var isIntake=function(x){ return !!x && x.label.indexOf('ερωτηματολόγιο εισαγωγής εκκρεμεί')!==-1; };
+      return {
+        oldFlagged: isIntake(byId.old),
+        oldTier: byId.old ? byId.old.tier : null,
+        oldGap: byId.old ? byId.old.gap : null,
+        oldHasResend: !!byId.old && (byId.old.action||'').indexOf('homeResendIntake')!==-1,
+        freshNotIntake: !isIntake(byId.fresh),
+        doneNotIntake: !isIntake(byId.done)
+      };
+    } finally { window.clients=save; }
+  });
 
   // data fingerprints — cheap structural checksums
   probes['_fingerprints'] = (function(){

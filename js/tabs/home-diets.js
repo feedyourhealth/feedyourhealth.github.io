@@ -22,7 +22,7 @@
 // ή με πλάνο 30+ ημερών δεν εμφανιζόταν πουθενά στην Αρχική πριν αν είχε πρόσφατη μέτρηση βάρους.
 // Ο ξεπερασμένος σύνδεσμος portal εξαιρείται σκόπιμα εδώ (έχει ήδη δική του κάρτα με δικό της κουμπί).
 function homeClientsNeedingAttention(){
-  var WEIGHT_GAP_DAYS=30, CHECKIN_GAP_DAYS=2;
+  var WEIGHT_GAP_DAYS=30, CHECKIN_GAP_DAYS=2, INTAKE_PENDING_DAYS=3;
   var now=Date.now();
   var out=[];
   clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
@@ -52,6 +52,18 @@ function homeClientsNeedingAttention(){
       out.push({c:c,tier:-1,gap:0,label:'💬 νέα σημείωση πελάτη ('+esc(latestLog.date)+')',
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες σημείωση</button>'});
       return;
+    }
+    // 📋 Ερωτηματολόγιο εισαγωγής στάλθηκε αλλά δεν συμπληρώθηκε ακόμα (Upgrades Phase 2d).
+    // Έρχεται ΠΡΙΝ το "χωρίς πλάνο": δεν μπορείς να ετοιμάσεις πλάνο όσο εκκρεμεί το ερωτηματολόγιο.
+    // c.intakeSentAt / c.intakeStatus συντηρούνται από Cloud.sendIntake + fetchIntakeStatus +
+    // (μαζικά, στην Αρχική) refreshIntakeStatuses.
+    if(c.intakeToken && c.intakeStatus==='sent' && c.intakeSentAt){
+      var intakeGap=Math.floor((now-new Date(c.intakeSentAt))/86400000);
+      if(intakeGap>=INTAKE_PENDING_DAYS){
+        out.push({c:c,tier:0,gap:intakeGap,label:'📋 ερωτηματολόγιο εισαγωγής εκκρεμεί '+intakeGap+' ημέρες',
+          action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeResendIntake(\''+c.id+'\')">Ξαναστείλε</button>'});
+        return;
+      }
     }
     var hasPlan=(typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
     if(!hasPlan){
@@ -99,6 +111,15 @@ function homeSnoozeClient(clientId){
   // #hm-bucket-list only exists on the Αρχική markup — a cheap way to tell which of the two
   // screens that can show this button is currently on-page, without a separate nav-state variable.
   if(document.getElementById('hm-bucket-list')) renderHome(); else renderDiets();
+}
+
+// "Ξαναστείλε" στη γραμμή "ερωτηματολόγιο εισαγωγής εκκρεμεί" (Upgrades Phase 2d) — ανοίγει τον
+// πελάτη + το modal αποστολής (link view με WhatsApp/Gmail/copy + «🔄 Νέος σύνδεσμος»).
+function homeResendIntake(clientId){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  selectClient(clientId);
+  if(typeof openIntakeModal==='function') openIntakeModal();
 }
 
 // Πελάτες με στόχο απώλειας/αύξησης (goalMain) που η τάση βάρους τους (τελευταίες έως 5 μετρήσεις,

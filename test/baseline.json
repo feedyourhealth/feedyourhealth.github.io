@@ -61,9 +61,9 @@
     "../js/11-undo-redo.js"
   ],
   "counts": {
-    "fnChecked": 112,
+    "fnChecked": 114,
     "constChecked": 30,
-    "probes": 39
+    "probes": 40
   },
   "fnFails": [],
   "constFails": [],
@@ -847,6 +847,14 @@
       "profileApplyShown": true,
       "appliedStateAvoid": true,
       "appliedStateMeds": true
+    },
+    "intake2d.pendingSignal": {
+      "oldFlagged": true,
+      "oldTier": 0,
+      "oldGap": 5,
+      "oldHasResend": true,
+      "freshNotIntake": true,
+      "doneNotIntake": true
     },
     "_fingerprints": {
       "FOODS_keys": 332,
