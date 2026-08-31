@@ -3697,6 +3697,28 @@ function saveFoodExclusions(){
         return {ok:true,recipe:saved};
       }).catch(function(e){ console.error('[CLOUD] saveCustomRecipe', e); return {ok:false,error:e}; });
     },
+    // Επεξεργασία υπάρχουσας δικής του συνταγής — ίδιο μοτίβο με το saveCustomRecipe, αλλά UPDATE
+    // στη γραμμή αντί για INSERT. Το RLS policy ("for all") ήδη καλύπτει το UPDATE· το
+    // eq('dietitian_id',...) εδώ είναι άμυνα-σε-βάθος, όπως και στο deleteCustomRecipe.
+    updateCustomRecipe:function(dbId, recipeData){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve({ok:false,error:'Δεν είσαι συνδεδεμένος'});
+      var patch={
+        name:recipeData.name, foods:recipeData.foods||[], kcal:recipeData.kcal||0,
+        macro:recipeData.macro||{p:0,f:0,c:0}, tags:recipeData.tags||[], instructions:recipeData.instructions||'',
+        prep_time_min:recipeData.prepTimeMin||null, updated_at:new Date().toISOString()
+      };
+      return self.sb.from('custom_recipes').update(patch).eq('id',dbId).eq('dietitian_id',self.user.id).select().single().then(function(res){
+        if(res.error){ console.error('[CLOUD] updateCustomRecipe', res.error); return {ok:false,error:res.error}; }
+        var saved={
+          id:'custom_'+res.data.id, dbId:res.data.id, name:res.data.name, foods:res.data.foods||[], kcal:res.data.kcal||0,
+          macro:res.data.macro||{p:0,f:0,c:0}, tags:res.data.tags||[], instructions:res.data.instructions||'',
+          prepTimeMin:res.data.prep_time_min||null, source:'custom'
+        };
+        window.customRecipes=(window.customRecipes||[]).map(function(r){ return r.dbId===res.data.id ? saved : r; });
+        return {ok:true,recipe:saved};
+      }).catch(function(e){ console.error('[CLOUD] updateCustomRecipe', e); return {ok:false,error:e}; });
+    },
     deleteCustomRecipe:function(dbId){
       var self=this;
       if(!this.enabled || !this.user) return Promise.resolve({ok:false,error:'Δεν είσαι συνδεδεμένος'});

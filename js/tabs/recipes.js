@@ -373,7 +373,10 @@ function recipeRow(recipe){
     +'<button type="button" class="rcp-name rcp-name-link" title="Πλήρης προβολή συνταγής" onclick="showRecipeDetailModal(\''+recipe.id+'\')">'+esc(recipe.name)+'</button>'
     +(recipe.source==='custom'?'<span class="rcp-custom-badge" title="Δική σου συνταγή">δική σου</span>':'')
     +'</div>'
+    +'<div class="rcp-row-actions">'
+    +(recipe.source==='custom'?'<button type="button" class="rcp-edit-btn" title="Επεξεργασία συνταγής" aria-label="Επεξεργασία συνταγής" onclick="openNewRecipeModal(\''+recipe.id+'\')">✏️</button>':'')
     +'<button type="button" class="rcp-star'+(popular?' active':'')+'" title="Δημοφιλές" onclick="onToggleRecipePopular(\''+recipe.id+'\')">⭐</button>'
+    +'</div>'
     +'</div>'
     +'<div class="rcp-sub">'+recipe.kcal+' kcal · Π'+(m.p||0)+' Λ'+(m.f||0)+' Υ'+(m.c||0)+'</div>'
     +ingredientsHtml
@@ -474,6 +477,9 @@ function renderRecipes(){
 // MEAL_RECIPES/SNACK_RECIPES). Ίδιο lazy-modal pattern με το showRecipeModal (js/app-part4.js). ──
 var _newRecipeIngredientCount=0;
 var _newRecipeSelectedTags=[];
+// dbId της custom συνταγής που επεξεργαζόμαστε τώρα (null = δημιουργία νέας). Το ίδιο modal
+// (openNewRecipeModal / newRecipeModalHtml / saveNewRecipe) εξυπηρετεί και τις δύο ροές.
+var _editingRecipeDbId=null;
 
 // Το datalist περιορίζει (μέσω προτάσεων + validation στο saveNewRecipe) τα ονόματα υλικών σε
 // πραγματικά κλειδιά της βάσης FOODS — χωρίς αυτό, ένα ελεύθερο όνομα σαν "Κοτόπουλο" (αντί για
@@ -488,10 +494,14 @@ function ensureFoodNameDatalist(){
   }).join('');
   document.body.appendChild(dl);
 }
-function newRecipeIngredientRowHtml(idx){
+// `food` (προαιρετικό {n,g}) προ-συμπληρώνει τη γραμμή — χρησιμοποιείται όταν ανοίγουμε το modal
+// σε λειτουργία επεξεργασίας υπάρχουσας συνταγής.
+function newRecipeIngredientRowHtml(idx,food){
+  var nv=(food&&food.n)?' value="'+esc(food.n)+'"':'';
+  var gv=(food&&food.g)?' value="'+esc(String(food.g))+'"':'';
   return '<div class="nr-ing-row" id="nr-ing-row-'+idx+'">'
-    +'<input type="text" class="nr-ing-name" list="fyh-food-names" placeholder="Υλικό (π.χ. Κοτόπουλο στήθος (ψητό))" aria-label="Όνομα υλικού" oninput="recomputeNewRecipeMacros()">'
-    +'<input type="number" class="nr-ing-g" placeholder="γρ." aria-label="Γραμμάρια" min="0" oninput="recomputeNewRecipeMacros()">'
+    +'<input type="text" class="nr-ing-name" list="fyh-food-names" placeholder="Υλικό (π.χ. Κοτόπουλο στήθος (ψητό))" aria-label="Όνομα υλικού" oninput="recomputeNewRecipeMacros()"'+nv+'>'
+    +'<input type="number" class="nr-ing-g" placeholder="γρ." aria-label="Γραμμάρια" min="0" oninput="recomputeNewRecipeMacros()"'+gv+'>'
     +'<button type="button" class="nr-ing-remove" title="Αφαίρεση" aria-label="Αφαίρεση υλικού" onclick="removeNewRecipeIngredientRow('+idx+')">×</button>'
     +'</div>';
 }
@@ -543,40 +553,59 @@ function toggleNewRecipeTag(key){
   else { _newRecipeSelectedTags.push(key); if(el) el.classList.add('active'); }
 }
 
-function newRecipeModalHtml(){
+// `editRecipe` (προαιρετικό) — όταν δίνεται, το modal ανοίγει προ-συμπληρωμένο για επεξεργασία
+// υπάρχουσας δικής του (custom) συνταγής αντί για δημιουργία νέας.
+function newRecipeModalHtml(editRecipe){
+  var curTags=(editRecipe && editRecipe.tags)?editRecipe.tags:[];
   var tagPills=RECIPE_DIET_TAG_DEFS.map(function(d){
-    return '<button type="button" class="rcp-chip" id="nr-tag-'+d.key+'" onclick="toggleNewRecipeTag(\''+d.key+'\')">'+d.label+'</button>';
+    var on=curTags.indexOf(d.key)>-1;
+    return '<button type="button" class="rcp-chip'+(on?' active':'')+'" id="nr-tag-'+d.key+'" onclick="toggleNewRecipeTag(\''+d.key+'\')">'+d.label+'</button>';
   }).join('');
   // Κατηγορίες (trait tags) — αποθηκεύεται η ετικέτα ως έχει (π.χ. 'Όσπρια', 'Smoothies'), ώστε να
   // ταιριάζει με το φίλτρο chips της βιβλιοθήκης (recipeMatchesTagDef κάνει lowercase τη σύγκριση).
   var traitPills=RECIPE_TRAIT_TAG_DEFS.map(function(d){
-    return '<button type="button" class="rcp-chip" id="nr-tag-'+d.label+'" onclick="toggleNewRecipeTag(\''+d.label+'\')">'+d.label+'</button>';
+    var on=curTags.indexOf(d.label)>-1;
+    return '<button type="button" class="rcp-chip'+(on?' active':'')+'" id="nr-tag-'+d.label+'" onclick="toggleNewRecipeTag(\''+d.label+'\')">'+d.label+'</button>';
   }).join('');
+  var ingRows=(editRecipe && editRecipe.foods && editRecipe.foods.length)?editRecipe.foods:[null,null,null];
+  var title=editRecipe?'Επεξεργασία συνταγής':'Νέα συνταγή';
+  var saveLabel=editRecipe?'💾 Αποθήκευσε αλλαγές':'💾 Αποθήκευσε συνταγή';
+  var nameV=editRecipe?' value="'+esc(editRecipe.name||'')+'"':'';
+  var prepV=(editRecipe && editRecipe.prepTimeMin)?' value="'+esc(String(editRecipe.prepTimeMin))+'"':'';
+  var instrV=editRecipe?esc(editRecipe.instructions||''):'';
   return '<div class="recipe-modal-content nr-modal-content">'
-    +'<div class="recipe-modal-title"><span>Νέα συνταγή</span><button class="recipe-modal-close" onclick="closeNewRecipeModal()">&times;</button></div>'
-    +'<div class="nr-field"><label>Όνομα συνταγής</label><input type="text" id="nr-name" placeholder="π.χ. Ομελέτα με σπανάκι"></div>'
-    +'<div class="nr-field"><label>Χρόνος προετοιμασίας (λεπτά)</label><input type="number" id="nr-prep" min="0" placeholder="15" style="width:120px"></div>'
+    +'<div class="recipe-modal-title"><span>'+title+'</span><button class="recipe-modal-close" onclick="closeNewRecipeModal()">&times;</button></div>'
+    +'<div class="nr-field"><label>Όνομα συνταγής</label><input type="text" id="nr-name" placeholder="π.χ. Ομελέτα με σπανάκι"'+nameV+'></div>'
+    +'<div class="nr-field"><label>Χρόνος προετοιμασίας (λεπτά)</label><input type="number" id="nr-prep" min="0" placeholder="15" style="width:120px"'+prepV+'></div>'
     +'<div class="nr-field"><label>Ετικέτες (τύπος διατροφής)</label><div class="rcp-chips">'+tagPills+'</div></div>'
     +'<div class="nr-field"><label>Κατηγορίες (όσπρια, smoothies, κ.λπ.)</label><div class="rcp-chips">'+traitPills+'</div></div>'
     +'<div class="nr-field"><label>Υλικά</label><div id="nr-ingredients">'
-      +[0,1,2].map(newRecipeIngredientRowHtml).join('')
+      +ingRows.map(function(f,i){return newRecipeIngredientRowHtml(i,f);}).join('')
     +'</div><button type="button" class="nr-add-ing" onclick="addNewRecipeIngredientRow()">+ Πρόσθεσε υλικό</button></div>'
     +'<div class="nr-field"><label>Θερμίδες &amp; μακροθρεπτικά (αυτόματος υπολογισμός από τα υλικά)</label>'
       +'<div class="nr-macro-summary" id="nr-macro-summary">Πρόσθεσε υλικά με γραμμάρια για αυτόματο υπολογισμό θερμίδων.</div></div>'
-    +'<div class="nr-field"><label>Οδηγίες παρασκευής</label><textarea id="nr-instructions" rows="3" placeholder="Περίγραψε τα βήματα παρασκευής..."></textarea></div>'
+    +'<div class="nr-field"><label>Οδηγίες παρασκευής</label><textarea id="nr-instructions" rows="3" placeholder="Περίγραψε τα βήματα παρασκευής...">'+instrV+'</textarea></div>'
     +'<div id="nr-error" class="nr-error"></div>'
-    +'<button type="button" class="nr-save-btn" onclick="saveNewRecipe()">💾 Αποθήκευσε συνταγή</button>'
+    +'<button type="button" class="nr-save-btn" onclick="saveNewRecipe()">'+saveLabel+'</button>'
     +'</div>';
 }
 
-function openNewRecipeModal(){
+// `editRecipeId` (προαιρετικό) — id δικής του (custom) συνταγής για επεξεργασία. Στατικές συνταγές
+// της βιβλιοθήκης (MEAL_RECIPES/SNACK_RECIPES) δεν επεξεργάζονται εδώ — αγνοούνται σιωπηλά.
+function openNewRecipeModal(editRecipeId){
   if(!window.Cloud || !window.Cloud.user){
     if(typeof showErrorToast==='function') showErrorToast('Χρειάζεται σύνδεση στο cloud για να αποθηκεύσεις δικές σου συνταγές');
     return;
   }
+  var editRecipe=null;
+  if(editRecipeId){
+    var r=findRecipeById(editRecipeId);
+    if(r && r.source==='custom' && r.dbId) editRecipe=r;
+  }
   ensureFoodNameDatalist();
-  _newRecipeIngredientCount=3;
-  _newRecipeSelectedTags=[];
+  _editingRecipeDbId=editRecipe?editRecipe.dbId:null;
+  _newRecipeIngredientCount=(editRecipe && editRecipe.foods && editRecipe.foods.length)?editRecipe.foods.length:3;
+  _newRecipeSelectedTags=editRecipe?(editRecipe.tags||[]).slice():[];
   var modal=document.getElementById('recipe-form-modal');
   if(!modal){
     modal=document.createElement('div');
@@ -587,12 +616,20 @@ function openNewRecipeModal(){
     document.body.appendChild(modal);
     modal.addEventListener('click',function(e){ if(e.target===modal) closeNewRecipeModal(); });
   }
-  modal.innerHTML=newRecipeModalHtml();
+  modal.innerHTML=newRecipeModalHtml(editRecipe);
   modal.classList.remove('hidden');
+  if(editRecipe) recomputeNewRecipeMacros();
 }
 function closeNewRecipeModal(){
   var modal=document.getElementById('recipe-form-modal');
   if(modal) modal.classList.add('hidden');
+  _editingRecipeDbId=null;
+}
+// Άνοιγμα του επεξεργαστή από το πλήρες modal μιας συνταγής — κλείνει πρώτα το detail modal ώστε
+// να μη στοιβάζονται δύο overlays.
+function openEditRecipeFromDetail(recipeId){
+  closeRecipeDetailModal();
+  openNewRecipeModal(recipeId);
 }
 
 function saveNewRecipe(){
@@ -632,16 +669,21 @@ function saveNewRecipe(){
   });
   var kcal=Math.round(totals.k), p=Math.round(totals.p), c=Math.round(totals.c), f=Math.round(totals.f);
 
+  var editing=!!_editingRecipeDbId;
   var saveBtn=document.querySelector('#recipe-form-modal .nr-save-btn');
   if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='Αποθήκευση...'; }
 
-  window.Cloud.saveCustomRecipe({
+  var payload={
     name:name, kcal:kcal, macro:{p:p,c:c,f:f}, tags:_newRecipeSelectedTags.slice(),
     instructions:instructions, prepTimeMin:prep, foods:foods
-  }).then(function(result){
+  };
+  var op=editing
+    ?window.Cloud.updateCustomRecipe(_editingRecipeDbId, payload)
+    :window.Cloud.saveCustomRecipe(payload);
+  op.then(function(result){
     if(!result.ok){
       if(errorEl) errorEl.textContent='Η αποθήκευση απέτυχε: '+((result.error&&result.error.message)||'άγνωστο σφάλμα');
-      if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 Αποθήκευσε συνταγή'; }
+      if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent=editing?'💾 Αποθήκευσε αλλαγές':'💾 Αποθήκευσε συνταγή'; }
       return;
     }
     closeNewRecipeModal();
@@ -675,8 +717,9 @@ function recipeDetailModalHtml(recipe){
     +instructionsHtml
     +'<button type="button" class="rcp-add-btn rd-shop-btn" onclick="toggleRecipeShoppingList(\''+recipe.id+'\')">🛒 <span id="rd-shop-label-'+recipe.id+'">Πρόσθεσε στη λίστα αγορών</span></button>'
     +'<div id="rd-shop-panel-'+recipe.id+'" class="rd-shop-panel" style="display:none"></div>'
-    // Διαγραφή μόνο για δικές σου (custom) συνταγές — οι στατικές MEAL_RECIPES/SNACK_RECIPES δεν
-    // διαγράφονται ποτέ από εδώ.
+    // Επεξεργασία & διαγραφή μόνο για δικές σου (custom) συνταγές — οι στατικές MEAL_RECIPES/
+    // SNACK_RECIPES δεν αλλάζουν ποτέ από εδώ.
+    +(recipe.source==='custom'?'<button type="button" class="rd-edit-btn" onclick="openEditRecipeFromDetail(\''+recipe.id+'\')">✏️ Επεξεργασία συνταγής</button>':'')
     +(recipe.source==='custom'?'<button type="button" class="rd-delete-btn" onclick="confirmDeleteCustomRecipe(\''+recipe.id+'\')">🗑️ Διαγραφή συνταγής</button>':'')
     +'</div>';
 }
