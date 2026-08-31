@@ -171,7 +171,8 @@ document.write(window.__MANIFEST__.map(function(p){
    'onClientChange','recalculateMacros','initializeApp','buildAppointmentsHtml',
    'getTipsLibrary','defaultTipsSeed','buildDayTgtHtml','buildMetHtml','buildMacroDistributionHtml',
    'allocateMealTargets','makeDayTgtDefaults','getDayTgtEff',
-   'buildIntakeCardHtml','intakeHandoffMsg','intakeLangFor','openIntakeModal','refreshIntakeCard'
+   'buildIntakeCardHtml','intakeHandoffMsg','intakeLangFor','openIntakeModal','refreshIntakeCard',
+   'buildIntakeReadbackHtml','ensureIntakePayload','copyIntakeSummary','intakeDiffRows'
   ].forEach(fnCheck);
 
   // --- data constants (min sizes are loose floors, not exact) --------------
@@ -324,6 +325,25 @@ document.write(window.__MANIFEST__.map(function(p){
              submHasDone: has(subm,'Συμπληρώθηκε'),
              supHasReplaced: has(sup,'αντικαταστάθηκε'),
              emptyClient: buildIntakeCardHtml(null)==='' }; });
+  probe('buildIntakeReadbackHtml.sample', function(){
+    function has(h,s){ return h.indexOf(s)!==-1; }
+    window.INTAKE_PAYLOAD_CACHE = window.INTAKE_PAYLOAD_CACHE || {};
+    window.INTAKE_PAYLOAD_CACHE['tb'] = {
+      v:1, profile:{name:'Μαρία', birthDate:'1990-05-01', heightCm:170, weightKg:72},
+      goal:'other', goalOther:'να νιώθω καλά',
+      conditions:['hypothyroid'], pregnancyBreastfeeding:true, meds:'Λεβοθυροξίνη 50',
+      allergies:['milk'], allergiesOther:'', avoid:['red_meat','none'],
+      habits:{mealsPerDay:4, breakfast:'sometimes', cooking:'mixed', hungerTime:'βράδυ', water:'1.5L', sleep:'7ω', exercise:'τρέξιμο 3×'},
+      likes:'κοτόπουλο', dislikes:'μπρόκολο', note:'—' };
+    var c={id:'c1',name:'Μαρία Π.',intakeToken:'tb',intakeStatus:'submitted',intakeSubmittedAt:'2026-08-31T09:00:00Z',
+           birthDate:'1988-01-01', height:165, weight:80};
+    var h=buildIntakeReadbackHtml(c);
+    var miss=buildIntakeReadbackHtml({id:'c2',name:'X',intakeToken:'nope',intakeStatus:'submitted'});
+    var dr=intakeDiffRows(c, window.INTAKE_PAYLOAD_CACHE['tb']);
+    return { hasGoalOther: has(h,'να νιώθω καλά'), hasCondGr: has(h,'Υποθυρεοειδισμός'),
+             hasAvoidGr: has(h,'Κόκκινο κρέας'), hasCopyBtn: has(h,'copyIntakeSummary'),
+             diffCount: dr.length, diffLabels: dr.map(function(r){return r[0];}).join('|'),
+             cacheMissLoading: has(miss,'Φόρτωση απαντήσεων') }; });
 
   // data fingerprints — cheap structural checksums
   probes['_fingerprints'] = (function(){

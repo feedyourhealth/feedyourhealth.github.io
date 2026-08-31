@@ -41,7 +41,8 @@ function buildIntakeCardHtml(c){
   if(st==='submitted'){
     dot='#2e7d32';
     line='Συμπληρώθηκε '+intakeDateShort(c.intakeSubmittedAt||c.intakeSentAt);
-    actions='<button class="btn" style="background:var(--card-bg);color:#014545;border:1px solid #c5ddd8;font-size:12px" onclick="openIntakeModal()">🔄 Νέα αποστολή</button>';
+    actions='<button class="btn" style="background:var(--card-bg);color:#014545;border:1px solid #c5ddd8;font-size:12px" onclick="openIntakeModal()">🔄 Νέα αποστολή</button>'
+      +'<button class="btn" style="background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:12px" onclick="refreshIntakeCard(this)" title="Επαναφόρτωση απαντήσεων">↻ Ανανέωση</button>';
   } else if(st==='sent'){
     dot='#e08a00';
     line='Στάλθηκε '+intakeDateShort(c.intakeSentAt)+' · εκκρεμεί';
@@ -64,16 +65,176 @@ function buildIntakeCardHtml(c){
     +'<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#5a8a82;font-family:ui-monospace,Menlo,monospace;margin-bottom:10px">'
       +'<span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex:none"></span>'+esc(line)+'</div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+actions+'</div>'
+    +(st==='submitted'?buildIntakeReadbackHtml(c):'')
     +'</div></div>';
 }
 
-// ↻ button on the "sent" card — re-check the DB and re-render if it changed.
+// ── read-back panel (Upgrades Phase 2b) ───────────────────────────────────
+// Shows the client's submitted answers inside the card, grouped, plus a "τι
+// διαφέρει από την καρτέλα" strip and a copy-summary button. The full payload
+// is NOT stored on the client blob — it lives in a runtime-only cache keyed by
+// token (see ensureIntakePayload), re-fetched once per session.
+var INTAKE_PAYLOAD_CACHE = {};
+try{ window.INTAKE_PAYLOAD_CACHE = INTAKE_PAYLOAD_CACHE; }catch(e){}
+
+var INTAKE_LBL={
+  goal:{weight_loss:'Απώλεια βάρους',muscle_gain:'Μυϊκή μάζα',maintenance:'Συντήρηση',health:'Βελτίωση υγείας',other:'Άλλο'},
+  cond:{diabetes:'Διαβήτης',hypertension:'Υπέρταση',hypothyroid:'Υποθυρεοειδισμός',cholesterol:'Χοληστερίνη',ibs:'Ευερέθιστο έντερο',none:'Κανένα από τα παραπάνω'},
+  allergy:{milk:'Γάλα / λακτόζη',egg:'Αυγό',nuts:'Ξηροί καρποί',fish:'Ψάρι & θαλασσινά',gluten:'Σιτάρι / γλουτένη',soy:'Σόγια',legumes:'Όσπρια'},
+  avoid:{red_meat:'Κόκκινο κρέας',pork:'Χοιρινό',fish:'Ψάρι',dairy:'Γαλακτοκομικά',vegetarian:'Χορτοφαγία',vegan:'Vegan',none:'Κανένα'},
+  breakfast:{yes:'Ναι',sometimes:'Μερικές μέρες',no:'Όχι'},
+  cooking:{home:'Κυρίως σπίτι',mixed:'Μισό-μισό',out:'Κυρίως έξω'}
+};
+function intakeMap(dict,keys){
+  if(!keys || !keys.length) return '';
+  return keys.map(function(k){ return (INTAKE_LBL[dict] && INTAKE_LBL[dict][k]) || k; }).join(', ');
+}
+function intakeNum(v){ var x=parseFloat(v); return isNaN(x)?null:x; }
+
+// runtime cache accessor + fetcher — called from selectClient (state.js) and refreshIntakeCard
+function ensureIntakePayload(c){
+  if(!c || !c.intakeToken || c.intakeStatus!=='submitted') return Promise.resolve(null);
+  if(Object.prototype.hasOwnProperty.call(INTAKE_PAYLOAD_CACHE, c.intakeToken))
+    return Promise.resolve(INTAKE_PAYLOAD_CACHE[c.intakeToken]);
+  if(!window.Cloud || typeof window.Cloud.fetchIntakePayload!=='function') return Promise.resolve(null);
+  return window.Cloud.fetchIntakePayload(c).then(function(p){
+    INTAKE_PAYLOAD_CACHE[c.intakeToken] = p || null;
+    return INTAKE_PAYLOAD_CACHE[c.intakeToken];
+  }).catch(function(){ return null; });
+}
+
+// "τι διαφέρει από την καρτέλα" — profile mismatches + safety-relevant new info.
+function intakeDiffRows(c,p){
+  var rows=[], prof=(p && p.profile) || {};
+  var pb=prof.birthDate||'', cb=c.birthDate||'';
+  if(pb && pb!==cb) rows.push(['Ημ. γέννησης', cb||'—', pb]);
+  var ph=intakeNum(prof.heightCm), ch=intakeNum(c.height);
+  if(ph!=null && ph!==ch) rows.push(['Ύψος', (ch!=null?ch+' εκ.':'—'), ph+' εκ.']);
+  var pw=intakeNum(prof.weightKg), cw=intakeNum(c.weight);
+  if(pw!=null && (cw==null || Math.abs(pw-cw)>=0.5)) rows.push(['Βάρος', (cw!=null?cw+' κιλά':'—'), pw+' κιλά']);
+  var pn=(prof.name||'').trim(), cn=(c.name||'').trim();
+  if(pn && pn!==cn) rows.push(['Όνομα', cn||'—', pn]);
+  if(p && p.pregnancyBreastfeeding && !c.pregnant)
+    rows.push(['Εγκυμοσύνη / θηλασμός', 'Όχι (καρτέλα)', 'ΝΑΙ (ερωτηματολόγιο)']);
+  return rows;
+}
+
+function intakeReadRow(label,val){
+  if(val==null || val==='') return '';
+  return '<div style="display:flex;gap:8px;padding:3px 0;font-size:12px;line-height:1.45">'
+    +'<span style="color:#9fb5b0;flex:0 0 128px">'+esc(label)+'</span>'
+    +'<span style="color:#014545;flex:1;min-width:0">'+esc(val)+'</span></div>';
+}
+
+function buildIntakeReadbackHtml(c){
+  if(!c || !c.intakeToken || c.intakeStatus!=='submitted') return '';
+  var cache=(window.INTAKE_PAYLOAD_CACHE||{});
+  var p = Object.prototype.hasOwnProperty.call(cache,c.intakeToken) ? cache[c.intakeToken] : undefined;
+  if(p===undefined)
+    return '<div style="font-size:11.5px;color:#9fb5b0;margin-top:12px">Φόρτωση απαντήσεων…</div>';
+  if(p===null)
+    return '<div style="font-size:11.5px;color:#c0392b;margin-top:12px">Δεν φορτώθηκαν οι απαντήσεις — πάτα «↻ Ανανέωση».</div>';
+
+  var prof=p.profile||{}, hab=p.habits||{};
+  var goalTxt=(INTAKE_LBL.goal[p.goal]||p.goal||'—')+(p.goal==='other'&&p.goalOther?(' — '+p.goalOther):'');
+  var conds=(p.conditions||[]).filter(function(k){return k!=='none';});
+  var allerg=(p.allergies||[]).slice();
+  var allergTxt=intakeMap('allergy',allerg)+((p.allergiesOther?((allerg.length?', ':'')+p.allergiesOther):''));
+  var avoid=(p.avoid||[]).filter(function(k){return k!=='none';});
+
+  var diff=intakeDiffRows(c,p);
+  var diffHtml='';
+  if(diff.length){
+    diffHtml='<div style="margin:10px 0 4px;padding:8px 10px;border:1px solid #f0d8a8;background:#fff9ec;border-radius:8px">'
+      +'<div style="font-size:11px;font-weight:700;color:#a15c00;margin-bottom:4px">🔺 Διαφορετικό από την καρτέλα</div>'
+      +diff.map(function(r){
+        return '<div style="font-size:12px;color:#7a5a1e;line-height:1.5"><b>'+esc(r[0])+':</b> '+esc(r[1])+' → <b>'+esc(r[2])+'</b></div>';
+      }).join('')
+      +'</div>';
+  }
+
+  var body=''
+    +intakeReadRow('Στόχος', goalTxt)
+    +intakeReadRow('Παθήσεις', conds.length?intakeMap('cond',conds):'—')
+    +intakeReadRow('Εγκυμοσύνη/θηλ.', p.pregnancyBreastfeeding?'Ναι':'Όχι')
+    +intakeReadRow('Φάρμακα / συμπλ.', p.meds||'—')
+    +intakeReadRow('Αλλεργίες', allergTxt||'—')
+    +intakeReadRow('Αποφεύγει', avoid.length?intakeMap('avoid',avoid):'—')
+    +intakeReadRow('Γεύματα/μέρα', hab.mealsPerDay!=null?String(hab.mealsPerDay):'')
+    +intakeReadRow('Πρωινό', INTAKE_LBL.breakfast[hab.breakfast]||'')
+    +intakeReadRow('Μαγείρεμα', INTAKE_LBL.cooking[hab.cooking]||'')
+    +intakeReadRow('Πεινάει πιο πολύ', hab.hungerTime)
+    +intakeReadRow('Νερό', hab.water)
+    +intakeReadRow('Ύπνος', hab.sleep)
+    +intakeReadRow('Άσκηση', hab.exercise)
+    +intakeReadRow('Προτιμά', p.likes)
+    +intakeReadRow('Δεν του αρέσουν', p.dislikes)
+    +intakeReadRow('Σχόλιο', p.note);
+
+  return '<details open style="margin-top:12px;border-top:1px solid #e4efec;padding-top:8px">'
+    +'<summary style="cursor:pointer;font-size:12px;font-weight:700;color:#025857;list-style:none">📄 Απαντήσεις πελάτη</summary>'
+    +diffHtml
+    +'<div style="margin-top:6px">'+body+'</div>'
+    +'<button type="button" class="btn" style="width:100%;margin-top:10px;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px" onclick="copyIntakeSummary(this)">📋 Αντιγραφή σύνοψης (για επικόλληση στις σημειώσεις)</button>'
+    +'</details>';
+}
+
+// ↻ / re-check the DB, pull the payload if it flipped to submitted, re-render.
+function copyIntakeSummary(btn){
+  var c=getC(); if(!c) return;
+  var p=(window.INTAKE_PAYLOAD_CACHE||{})[c.intakeToken];
+  if(!p){ showErrorToast('Οι απαντήσεις δεν έχουν φορτωθεί ακόμα.'); return; }
+  var prof=p.profile||{}, hab=p.habits||{};
+  var conds=(p.conditions||[]).filter(function(k){return k!=='none';});
+  var avoid=(p.avoid||[]).filter(function(k){return k!=='none';});
+  var allerg=(p.allergies||[]).slice();
+  var allergTxt=intakeMap('allergy',allerg)+((p.allergiesOther?((allerg.length?', ':'')+p.allergiesOther):''));
+  var when=intakeDateShort(c.intakeSubmittedAt||c.intakeSentAt);
+  var L=[];
+  L.push('— Ερωτηματολόγιο εισαγωγής'+(when?(' ('+when+')'):'')+' —');
+  L.push('Στόχος: '+((INTAKE_LBL.goal[p.goal]||p.goal||'—'))+(p.goal==='other'&&p.goalOther?(' — '+p.goalOther):''));
+  if(conds.length) L.push('Παθήσεις: '+intakeMap('cond',conds));
+  if(p.pregnancyBreastfeeding) L.push('Εγκυμοσύνη/θηλασμός: ΝΑΙ');
+  if(p.meds) L.push('Φάρμακα/συμπληρώματα: '+p.meds);
+  if(allergTxt) L.push('Αλλεργίες: '+allergTxt);
+  if(avoid.length) L.push('Αποφεύγει: '+intakeMap('avoid',avoid));
+  var h=[];
+  if(hab.mealsPerDay!=null) h.push(hab.mealsPerDay+' γεύματα/μέρα');
+  if(hab.breakfast) h.push('πρωινό: '+(INTAKE_LBL.breakfast[hab.breakfast]||hab.breakfast));
+  if(hab.cooking) h.push('μαγείρεμα: '+(INTAKE_LBL.cooking[hab.cooking]||hab.cooking));
+  if(hab.hungerTime) h.push('πεινάει: '+hab.hungerTime);
+  if(hab.water) h.push('νερό: '+hab.water);
+  if(hab.sleep) h.push('ύπνος: '+hab.sleep);
+  if(hab.exercise) h.push('άσκηση: '+hab.exercise);
+  if(h.length) L.push('Συνήθειες: '+h.join(' · '));
+  if(p.likes) L.push('Προτιμά: '+p.likes);
+  if(p.dislikes) L.push('Δεν του αρέσουν: '+p.dislikes);
+  if(p.note) L.push('Σχόλιο: '+p.note);
+  var txt=L.join('\n');
+  var ta=document.createElement('textarea');
+  ta.value=txt; ta.style.cssText='position:fixed;left:-9999px;top:-9999px';
+  document.body.appendChild(ta); ta.select();
+  var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){},function(){}); ok=true; }
+  ta.remove();
+  if(ok && btn){ var o=btn.textContent; btn.textContent='✓ Αντιγράφηκε — επικόλλησέ το όπου θες'; setTimeout(function(){btn.textContent=o;},2200); }
+}
+
+// ↻ button — re-check the DB, (re)load the submitted payload, re-render.
+// On the "submitted" card this also force-refreshes the answers (busts the cache).
 function refreshIntakeCard(btn){
   var c=getC(); if(!c || !c.intakeToken || !window.Cloud || !window.Cloud.fetchIntakeStatus) return;
-  if(btn){ btn.disabled=true; var o=btn.textContent; btn.textContent='↻ …'; }
-  window.Cloud.fetchIntakeStatus(c).then(function(changed){
+  var o=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='↻ …'; }
+  try{ if(window.INTAKE_PAYLOAD_CACHE) delete window.INTAKE_PAYLOAD_CACHE[c.intakeToken]; }catch(e){}
+  var done=function(changed){
     if(changed && typeof renderMain==='function') renderMain();
     else if(btn){ btn.disabled=false; btn.textContent=o; }
+  };
+  window.Cloud.fetchIntakeStatus(c).then(function(changed){
+    if(c.intakeStatus==='submitted' && typeof ensureIntakePayload==='function'){
+      ensureIntakePayload(c).then(function(){ done(true); }).catch(function(){ done(changed); });
+    } else { done(changed); }
   }).catch(function(){ if(btn){ btn.disabled=false; btn.textContent=o; } });
 }
 

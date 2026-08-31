@@ -61,9 +61,9 @@
     "../js/11-undo-redo.js"
   ],
   "counts": {
-    "fnChecked": 103,
+    "fnChecked": 107,
     "constChecked": 30,
-    "probes": 37
+    "probes": 38
   },
   "fnFails": [],
   "constFails": [],
@@ -823,6 +823,15 @@
       "submHasDone": true,
       "supHasReplaced": true,
       "emptyClient": true
+    },
+    "buildIntakeReadbackHtml.sample": {
+      "hasGoalOther": true,
+      "hasCondGr": true,
+      "hasAvoidGr": true,
+      "hasCopyBtn": true,
+      "diffCount": 5,
+      "diffLabels": "Ημ. γέννησης|Ύψος|Βάρος|Όνομα|Εγκυμοσύνη / θηλασμός",
+      "cacheMissLoading": true
     },
     "_fingerprints": {
       "FOODS_keys": 332,

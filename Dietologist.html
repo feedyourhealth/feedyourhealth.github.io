@@ -3107,6 +3107,18 @@ function saveFoodExclusions(){
       }).catch(function(){ return false; });
     },
 
+    // Διαβάζει τις ΠΛΗΡΕΙΣ απαντήσεις (payload jsonb) του υποβληθέντος ερωτηματολογίου —
+    // για το read-back panel στην καρτέλα πελάτη (Upgrades Phase 2b). Δεν γράφει τίποτα
+    // στον πελάτη· ο caller (js/client-editor/intake.js) κρατά runtime-only cache ώστε το
+    // whole-blob save στο cloud να μη φουσκώνει. Resolve → payload object | null.
+    fetchIntakePayload:function(c){
+      if(!this.enabled || !this.user || !c || !c.intakeToken) return Promise.resolve(null);
+      return this.sb.from('client_intake').select('payload,status').eq('token',c.intakeToken).maybeSingle().then(function(res){
+        if(res.error || !res.data || res.data.status!=='submitted') return null;
+        return res.data.payload||null;
+      }).catch(function(){ return null; });
+    },
+
     // JSON.stringify με ταξινομημένα keys σε κάθε επίπεδο — έτσι το hash δεν αλλάζει μόνο και μόνο επειδή
     // η σειρά των keys άλλαξε (π.χ. το jsonb column στο Supabase ΔΕΝ εγγυάται διατήρηση της αρχικής σειράς
     // keys όταν αποθηκεύει/επιστρέφει ένα object — ένα Cloud.load() μετά τη δημοσίευση θα έδειχνε "ξεπερασμένο"

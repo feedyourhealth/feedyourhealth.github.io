@@ -462,7 +462,13 @@ function selectClient(id){
       // αν ο πελάτης το συμπλήρωσε στο μεταξύ και ξανακάνε render μόνο αν κάτι άλλαξε.
       if(c.intakeToken && window.Cloud && typeof window.Cloud.fetchIntakeStatus==='function'){
         window.Cloud.fetchIntakeStatus(c).then(function(changed){
-          if(changed && typeof getC==='function' && getC()===c && typeof renderMain==='function') renderMain();
+          var reRender=function(){ if(typeof getC==='function' && getC()===c && typeof renderMain==='function') renderMain(); };
+          // Phase 2b: αν είναι υποβεβλημένο, τράβα και τις απαντήσεις (read-back panel).
+          // Το payload ΔΕΝ αποθηκεύεται στον πελάτη — μπαίνει σε runtime cache (ensureIntakePayload).
+          if(c.intakeStatus==='submitted' && typeof ensureIntakePayload==='function'
+             && !(window.INTAKE_PAYLOAD_CACHE && Object.prototype.hasOwnProperty.call(window.INTAKE_PAYLOAD_CACHE,c.intakeToken))){
+            ensureIntakePayload(c).then(function(){ reRender(); }).catch(function(){ if(changed) reRender(); });
+          } else if(changed){ reRender(); }
         }).catch(function(){});
       }
     }
