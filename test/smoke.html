@@ -174,7 +174,8 @@ document.write(window.__MANIFEST__.map(function(p){
    'buildIntakeCardHtml','intakeHandoffMsg','intakeLangFor','openIntakeModal','refreshIntakeCard',
    'buildIntakeReadbackHtml','ensureIntakePayload','copyIntakeSummary','intakeDiffRows',
    'porkFoodsList','intakeApplyAvoid','intakeApplyMeds','intakeApplyProfile','intakeCopyAllergies',
-   'homeClientsNeedingAttention','homeResendIntake'
+   'homeClientsNeedingAttention','homeResendIntake',
+   'buildTrackerHtml','calcSkinfoldBF','ageAtDate','migrateClientSkinfoldBF','initTrendCharts'
   ].forEach(fnCheck);
 
   // --- data constants (min sizes are loose floors, not exact) --------------
@@ -394,6 +395,58 @@ document.write(window.__MANIFEST__.map(function(p){
         doneNotIntake: !isIntake(byId.done)
       };
     } finally { window.clients=save; }
+  });
+
+  // --- tracker / weightLog: load client → read weightLog → render tracker → check the numbers
+  //     (safety net for a future measurements data-model change — the cross-cutting weightLog read) ---
+  probe('tracker.weightLogRender', function(){
+    function has(h,s){ return h.indexOf(s)!==-1; }
+    function count(h,s){ var n=0,i=0; while((i=h.indexOf(s,i))!==-1){ n++; i+=s.length; } return n; }
+    // stop the post-render setTimeout(initTrendCharts) — Chart.js isn't loaded in the harness
+    var _it=(typeof initTrendCharts==='function')?initTrendCharts:null;
+    try{ initTrendCharts=function(){}; }catch(e){}
+    var c={ id:'trk', sex:'M', height:180, birthDate:'1988-01-01', consultLog:[],
+      weightLog:[
+        {date:'2026-06-01', weight:92.0, bf:26.0, waist:100, hip:104, arm:34, sleep:3, energy:2, compliance:7, notes:''},
+        {date:'2026-07-01', weight:89.5, bf:24.0, waist:97,  hip:103, arm:34, sleep:4, energy:3, compliance:8, notes:''},
+        {date:'2026-08-01', weight:86.0, bf:21.0, waist:93,  hip:101, arm:35, sleep:4, energy:4, compliance:9, notes:'ok'}
+      ] };
+    var h=buildTrackerHtml(c);
+    try{ if(_it) initTrendCharts=_it; }catch(e){}
+
+    // cross-cutting: Αρχική "N ημ. χωρίς μέτρηση" reads wl[last].date
+    var _cl=window.clients, homeRow=null;
+    var oldDate=new Date(Date.now()-45*86400000).toISOString().slice(0,10);
+    try{
+      window.clients=[{ id:'g', name:'G', weekPlan:{0:[{name:'x',foods:[]}]},
+        planGeneratedAt:Date.now()-3*86400000, weightLog:[{date:oldDate, weight:80, bf:20}] }];
+      var out=homeClientsNeedingAttention();
+      homeRow=out.length?out[0]:null;
+    } finally { window.clients=_cl; }
+
+    return {
+      latestWeight:      has(h,'86 kg'),
+      latestLBM:         has(h,'67.9 kg'),
+      latestBMI:         has(h,'26.5'),
+      bmiStatusOverwt:   has(h,'Υπέρβαρος'),
+      noRoundingLeak:    !has(h,'67.94') && !has(h,'26.543'),
+      progressRange:     has(h,'92→86kg'),
+      weightDelta:       has(h,'-6 kg'),
+      bfDelta:           has(h,'-5%'),
+      lbmDelta:          has(h,'-0.2 kg'),
+      measCount:         has(h,'3 μετρήσεις'),
+      fatMassLabel:      has(h,'Fat Mass: 18.1 kg (21%)'),
+      tableRows:         count(h,'editWeightEntry('),
+      gaugeGallagher:    has(h,'Gallagher 2000'),
+      homeGapTier:       homeRow?homeRow.tier:null,
+      homeGapLabel:      homeRow?(homeRow.label.indexOf('χωρίς μέτρηση')!==-1):false,
+      homeGapInRange:    homeRow?(homeRow.gap>=40 && homeRow.gap<=50):false,
+      jp4_M:             calcSkinfoldBF('jp4','M',40,{abdomen:20,suprailiac:15,tricep:10,thigh:15}).bf,
+      slaughter_M:       calcSkinfoldBF('slaughter','M',14,{tricep:12,calf:10}).bf,
+      ageAtDate_before:  ageAtDate('1990-06-15','2026-06-01'),
+      ageAtDate_after:   ageAtDate('1990-06-15','2026-06-20'),
+      ageAtDate_null:    ageAtDate(null)
+    };
   });
 
   // data fingerprints — cheap structural checksums

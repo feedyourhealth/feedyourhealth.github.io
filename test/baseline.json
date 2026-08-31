@@ -61,9 +61,9 @@
     "../js/11-undo-redo.js"
   ],
   "counts": {
-    "fnChecked": 114,
+    "fnChecked": 119,
     "constChecked": 30,
-    "probes": 40
+    "probes": 41
   },
   "fnFails": [],
   "constFails": [],
@@ -855,6 +855,29 @@
       "oldHasResend": true,
       "freshNotIntake": true,
       "doneNotIntake": true
+    },
+    "tracker.weightLogRender": {
+      "latestWeight": true,
+      "latestLBM": true,
+      "latestBMI": true,
+      "bmiStatusOverwt": true,
+      "noRoundingLeak": true,
+      "progressRange": true,
+      "weightDelta": true,
+      "bfDelta": true,
+      "lbmDelta": true,
+      "measCount": true,
+      "fatMassLabel": true,
+      "tableRows": 3,
+      "gaugeGallagher": true,
+      "homeGapTier": 2,
+      "homeGapLabel": true,
+      "homeGapInRange": true,
+      "jp4_M": 16.3,
+      "slaughter_M": 17.2,
+      "ageAtDate_before": 35,
+      "ageAtDate_after": 36,
+      "ageAtDate_null": null
     },
     "_fingerprints": {
       "FOODS_keys": 332,
