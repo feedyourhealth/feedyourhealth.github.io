@@ -46,6 +46,7 @@ function renderClients(){
     +'<option value="mild"'+sel(_clientFilterGoal,'mild')+'>Ήπια απώλεια</option>'
     +'<option value="maintain"'+sel(_clientFilterGoal,'maintain')+'>Διατήρηση</option>'
     +'<option value="gain"'+sel(_clientFilterGoal,'gain')+'>Αύξηση μάζας</option>'
+    +'<option value="running"'+sel(_clientFilterGoal,'running')+'>🏃 Δρομείς</option>'
     +'</select>';
   html+='<select id="client-filter-status" class="clients-toolbar-select" aria-label="Φίλτρο κατάστασης πλάνου" onchange="setClientFilter(\'status\',this.value)">'
     +'<option value=""'+sel(_clientFilterStatus,'')+'>Κάθε κατάσταση πλάνου</option>'

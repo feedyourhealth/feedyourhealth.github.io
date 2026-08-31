@@ -121,7 +121,7 @@ function renderMain(){
   var basicPreview=[c.name||'—', c.sex==='M'?'Άνδρας':(c.sex==='F'?'Γυναίκα':''), (ageForPreview!=null&&!isNaN(ageForPreview))?(ageForPreview+' ετών'):''].filter(function(x){return x;}).join(' · ');
   var sportPreview=[c.sport&&SPORT_PROFILES[c.sport]?SPORT_PROFILES[c.sport].name:'',{sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'}[c.activity]||''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
   var anthroPreview=[c.weight?c.weight+'kg':'', c.height?c.height+'cm':'', (c.weight&&c.height)?('BMI '+(Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10)):''].filter(function(x){return x;}).join(' · ')||'Χωρίς στοιχεία';
-  var goalPreview=(c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'}[c.goalMain]||c.goalMain):'Χωρίς στόχο')+' · '+(goalCalAdj>=0?'+':'')+goalCalAdj+' kcal';
+  var goalPreview=(c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας',running:'Δρομείς'}[c.goalMain]||c.goalMain):'Χωρίς στόχο')+' · '+(goalCalAdj>=0?'+':'')+goalCalAdj+' kcal';
   // ✅ 2026-08-22: class="client-header-row"/"client-header-actions" — audit finding: σε κινητό,
   // χωρίς flex-wrap, ένα μεγαλύτερο ελληνικό όνομα (π.χ. διπλό επώνυμο) + τα 3 κουμπιά δεν χωράνε
   // σε μία σειρά· ζωντανά μετρήθηκε 399px περιεχόμενο σε 355px χώρο, το όνομα συμπιεζόταν στα
@@ -170,7 +170,7 @@ function renderMain(){
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">🎯 Στόχος</span>'
-      +'<span id="header-goal" style="font-size:13px;font-weight:600;color:#025857">' + (c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'}[c.goalMain]||c.goalMain):'—') + (c.goal&&parseInt(c.goal)?' ('+(parseInt(c.goal)>=0?'+':'')+parseInt(c.goal)+' kcal)':'') + '</span>'
+      +'<span id="header-goal" style="font-size:13px;font-weight:600;color:#025857">' + (c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας',running:'Δρομείς'}[c.goalMain]||c.goalMain):'—') + (c.goal&&parseInt(c.goal)?' ('+(parseInt(c.goal)>=0?'+':'')+parseInt(c.goal)+' kcal)':'') + '</span>'
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">🏅 Άθλημα</span>'
@@ -290,7 +290,7 @@ function renderMain(){
     // ✅ All 3 goal cards share one neutral/teal selection language (selected=teal, unselected=grey)
     // instead of red/teal/green per goal — losing weight isn't "bad" (red) and gaining isn't
     // inherently "good" (green); which goal is right depends entirely on the client.
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;">'
+    +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px;">'
     +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='loss'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='loss'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
     +'<input type="radio" name="goal-main" value="loss" '+(c.goalMain==='loss'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
     +'<div><div style="font-weight:600;color:var(--text-strong);font-size:11px;">📉 Απώλεια</div><div style="font-size:9px;color:var(--text-muted);">-500 kcal</div></div>'
@@ -302,6 +302,10 @@ function renderMain(){
     +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='gain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='gain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
     +'<input type="radio" name="goal-main" value="gain" '+(c.goalMain==='gain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
     +'<div><div style="font-weight:600;color:var(--text-strong);font-size:11px;">📈 Αύξηση</div><div style="font-size:9px;color:var(--text-muted);">+300 kcal</div></div>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='running'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='running'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<input type="radio" name="goal-main" value="running" '+(c.goalMain==='running'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
+    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:11px;">🏃 Δρομείς</div><div style="font-size:9px;color:var(--text-muted);">0 kcal · υδατ.</div></div>'
     +'</label>'
     +'</div></div></div>'
     +'<div class="fg"><div class="fgrp"><label style="font-weight:700;color:#025857;font-size:13px;">🎯 ΠΡΟΣΑΡΜΟΓΗ ΘΕΡΜΙΔΩΝ (-500 έως +500)</label>'
@@ -398,6 +402,7 @@ function renderMain(){
     +'<option value="mild"'+(c.goalMain==='mild'?' selected':'')+'>Ήπια απώλεια</option>'
     +'<option value="maintain"'+(c.goalMain==='maintain'?' selected':'')+'>Διατήρηση</option>'
     +'<option value="gain"'+(c.goalMain==='gain'?' selected':'')+'>Αύξηση μάζας</option>'
+    +'<option value="running"'+(c.goalMain==='running'?' selected':'')+'>🏃 Δρομείς</option>'
     +'</select>'
     +'<button class="btn" style="padding:5px 12px;font-size:11px;background:#025857;color:#fff;border:none" onclick="doSaveAsTmpl()">&#10003; Αποθήκευση</button>'
     +'<button class="btn" style="padding:5px 10px;font-size:11px;background:#eee;color:#555;border:none" onclick="closeSaveTmplPanel()">&#10005;</button>'

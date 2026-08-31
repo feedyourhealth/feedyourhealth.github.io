@@ -516,7 +516,8 @@ function applyGoalMacros(goalType) {
   var goalDeltas = {
     loss: -500,
     maintain: 0,
-    gain: 300
+    gain: 300,
+    running: 0   // δρομείς: ξεκίνα σε συντήρηση — ο διαιτολόγος ρυθμίζει το ±kcal με τον slider ανάλογα με τον όγκο προπόνησης
   };
 
   c.goal = String(goalDeltas[goalType] || 0);

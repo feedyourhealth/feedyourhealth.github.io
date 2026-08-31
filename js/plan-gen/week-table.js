@@ -66,7 +66,7 @@ function renderWeekTable(){
 
   // Define activity & goal labels locally for this function
   var actL = {sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'};
-  var goalL = {mild:'Ήπια απώλεια',loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'};
+  var goalL = {mild:'Ήπια απώλεια',loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας',running:'Δρομείς'};
 
   // ✅ Fallback '—' αντί για το ίδιο το JS "undefined" όταν λείπει εντελώς το πεδίο (π.χ. ελλιπώς
   // συμπληρωμένος πελάτης) — πριν εμφανιζόταν κυριολεκτικά η λέξη "undefined" στο summary card.

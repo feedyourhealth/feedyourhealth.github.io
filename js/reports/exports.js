@@ -44,8 +44,8 @@ function exportPDF(lang){
   function tu(u){return (isEn&&EN_UNITS[u])||u;}                      // unit label
   function tc(cat){return (isEn&&EN_CAT_NAMES[cat])||cat;}            // category name
   var goalL=isEn
-    ?{mild:'Mild Weight Loss',loss:'Weight Loss',maintain:'Maintenance',gain:'Muscle Gain'}
-    :{mild:'Ήπια απώλεια',loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας'};
+    ?{mild:'Mild Weight Loss',loss:'Weight Loss',maintain:'Maintenance',gain:'Muscle Gain',running:'Running / Endurance'}
+    :{mild:'Ήπια απώλεια',loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας',running:'Δρομείς'};
   var actL=isEn
     ?{sed:'Sedentary',light:'Lightly Active',mod:'Moderately Active',active:'Highly Active'}
     :{sed:'Καθιστικός',light:'Ελαφρά ενεργός',mod:'Μέτρια ενεργός',active:'Έντονα ενεργός'};

@@ -13,7 +13,7 @@ var MACRO_PRESETS={
 };
 // Sensible starting preset per goalMain — applied by applyGoalMacros() only as a first-time
 // default (never overrides a preset the dietitian already picked deliberately for this client).
-var DEFAULT_MACRO_PRESET_BY_GOAL={loss:'loss',mild:'loss',maintain:'balanced',gain:'strength'};
+var DEFAULT_MACRO_PRESET_BY_GOAL={loss:'loss',mild:'loss',maintain:'balanced',gain:'strength',running:'endurance'};
 var SPORT_PROFILES={
   bjj:{name:'Brazilian Jiu Jitsu',p:32,f:24,c:44,icon:'🥋',notes:'High protein for explosive power & recovery. Moderate carbs for training endurance.',isMET:true},
   boxing:{name:'Boxing',p:30,f:24,c:46,icon:'🥊',notes:'High protein for power. Strategic carbs for rounds & recovery between sparring.',isMET:true},
