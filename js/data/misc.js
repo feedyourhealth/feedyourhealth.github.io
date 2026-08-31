@@ -329,6 +329,7 @@ var FX=[
   {n:'Πεπόνι',     por:'3/4 φλιτζάνι',             porEn:'3/4 cup',               porRu:'3/4 чашки',                    porTr:'3/4 su bardağı',              g:280},
   {n:'Πορτοκάλι',  por:'1 μικρό',                  porEn:'1 small',               porRu:'1 маленький',                  porTr:'1 küçük',                     g:180},
   {n:'Ροδάκινο',   por:'1 μέτριο',                 porEn:'1 medium',              porRu:'1 средний',                    porTr:'1 orta boy',                  g:110},
+  {n:'Ρόδι',       por:'½ ρόδι (≈ ½ φλιτζ. σπόροι)', porEn:'½ pomegranate (≈ ½ cup arils)', porRu:'½ граната (≈ ½ чашки зёрен)', porTr:'½ nar (≈ ½ su bardağı tane)', g:85},
   {n:'Σταφίδες',   por:'1 κουτ. σούπας',           porEn:'1 tbsp',                porRu:'1 ст. л.',                     porTr:'1 yemek kaşığı',              g:15},
   {n:'Σταφύλια',   por:'17 ρόγες μικρές',          porEn:'17 small grapes',       porRu:'17 маленьких ягод',            porTr:'17 küçük tane',               g:85},
   {n:'Φράουλες',   por:'10 μικρές ή 1¼ φλιτζάνι', porEn:'10 small or 1¼ cup',    porRu:'10 маленьких или 1¼ чашки',    porTr:'10 küçük veya 1¼ su bardağı', g:190}
