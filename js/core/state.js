@@ -151,7 +151,7 @@ var PERF_METRICS={
 // broke validateAllCalculations()/logValidation() (rule.validate was undefined).
 var FIELD_VALIDATION_RULES = {
   'name': {min: 2, max: 100, required: true, pattern: /^[^\n]{2,100}$/},
-  'age': {min: 13, max: 120, required: true},
+  'age': {min: 3, max: 120, required: true},
   'weight': {min: 20, max: 300, required: true},
   'height': {min: 100, max: 250, required: true},
   'activity': {required: true, values: ['sed', 'light', 'mod', 'active', 'vactive']},
@@ -165,7 +165,7 @@ var VALIDATION_MESSAGES_GR = {
   'name_short': '⚠️ Το όνομα πρέπει να έχει τουλάχιστον 2 χαρακτήρες',
   'name_long': '⚠️ Το όνομα δεν πρέπει να υπερβαίνει τα 100 χαρακτήρες',
   'age_required': '⚠️ Παρακαλώ εισάγετε ηλικία',
-  'age_invalid': '⚠️ Η ηλικία πρέπει να είναι μεταξύ 13-120 ετών',
+  'age_invalid': '⚠️ Η ηλικία πρέπει να είναι μεταξύ 3-120 ετών',
   'weight_required': '⚠️ Παρακαλώ εισάγετε βάρος',
   'weight_invalid': '⚠️ Το βάρος πρέπει να είναι μεταξύ 20-300 kg',
   'height_required': '⚠️ Παρακαλώ εισάγετε ύψος',
@@ -193,11 +193,16 @@ function validateClientData(client) {
   }
 
   // Age validation
-  if(!client.age) {
+  // ✅ c.age is a denormalised cache written only by commitBirthdate()→upd('age',…). A present
+  // c.birthDate is the authoritative signal that an age was entered — treat it as satisfying
+  // "required" so a stale/rejected age cache can't produce a false age_required (it did for
+  // minors: the old min:13 rule made upd('age',<13) reject the write, leaving c.age blank while
+  // the birth-date field was visibly filled — "it says I didn't enter the age even though I did").
+  if(!client.age && !client.birthDate) {
     errors.push('age_required');
-  } else {
+  } else if(client.age) {
     var age = parseInt(client.age);
-    if(isNaN(age) || age < 13 || age > 120) {
+    if(isNaN(age) || age < 3 || age > 120) {
       errors.push('age_invalid');
     }
   }
