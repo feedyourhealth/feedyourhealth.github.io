@@ -2337,6 +2337,11 @@ function openMedicalConditionsModal(){
     +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hydration\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'</div>'
+    +'<div style="border-top:2px solid #ddd;padding-top:15px;margin-bottom:20px">'
+    +'<label for="medications-modal" style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">💊 Φάρμακα / συμπληρώματα:</label>'
+    +'<textarea id="medications-modal" style="width:100%;padding:10px;border:1px solid var(--border-light);border-radius:4px;font-size:14px;height:64px" placeholder="π.χ. Λεβοθυροξίνη 50mcg το πρωί — ή κενό">'+esc(c.medications||'')+'</textarea>'
+    +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Σημείωση αναφοράς — δεν αλλάζει αυτόματα το πλάνο. Συμπληρώνεται και από το ερωτηματολόγιο εισαγωγής.</div>'
+    +'</div>'
     +'<div style="border-top:2px solid #ddd;padding-top:15px">'
     +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:10px">👩 Μητρικός Κύκλος (Γυναίκες):</label>'
     +'<div style="display:grid;gap:8px">'
@@ -2391,6 +2396,9 @@ function saveMedicalConditions(){
 
   var menstrualValue=document.querySelector('input[name="menstrual"]:checked').value;
   c.menstrualCycle=menstrualValue;
+
+  var medsEl=document.getElementById('medications-modal');
+  if(medsEl) c.medications=medsEl.value.trim();
 
   // ⚕️ Give the client a correct starting macro-% distribution, but only when one of the conditions that was
   // JUST turned on (off→on) actually specifies a macro target itself (e.g. Διαβήτης). Otherwise leave macros
@@ -3082,6 +3090,7 @@ function saveFoodExclusions(){
               c.intakeStatus='sent';
               c.intakeSentAt=new Date().toISOString();
               delete c.intakeSubmittedAt;
+              delete c.intakeApplied; // Phase 2c: νέο ερωτηματολόγιο ⇒ ξανά μη-εφαρμοσμένο
               c._intakeFetchedAt=Date.now();
               try{ if(typeof save==='function') save(); }catch(e){}
               return { url:self.INTAKE_BASE+'?t='+tok, token:tok };

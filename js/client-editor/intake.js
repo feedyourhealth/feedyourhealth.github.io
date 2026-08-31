@@ -119,11 +119,143 @@ function intakeDiffRows(c,p){
   return rows;
 }
 
-function intakeReadRow(label,val){
-  if(val==null || val==='') return '';
-  return '<div style="display:flex;gap:8px;padding:3px 0;font-size:12px;line-height:1.45">'
+function intakeReadRow(label,val,actionHtml){
+  if((val==null || val==='') && !actionHtml) return '';
+  return '<div style="display:flex;gap:8px;padding:3px 0;font-size:12px;line-height:1.45;align-items:flex-start">'
     +'<span style="color:#9fb5b0;flex:0 0 128px">'+esc(label)+'</span>'
-    +'<span style="color:#014545;flex:1;min-width:0">'+esc(val)+'</span></div>';
+    +'<span style="color:#014545;flex:1;min-width:0">'+esc(val==null?'':val)+(actionHtml?(' '+actionHtml):'')+'</span></div>';
+}
+
+// ── apply buttons (Upgrades Phase 2c) ─────────────────────────────────────
+// Each intake answer that has a real home in the client card gets a one-click
+// "Εφαρμογή". Structured enum keys only — every avoid chip maps deterministically
+// to redMeatFoodsList()/dairyFoodsList()/QUICK_EXCL keys or a dietType. Allergies
+// are NEVER auto-written to c.allergies (live-wired to genPlan) — copy-only.
+// Medical conditions are shown but NOT applied here — they belong in the
+// «🩺 Ιατρικές Συνθήκες» modal, which owns the protocol-activation logic.
+var PORK_NAME_KEYWORDS=['χοιριν','χοιρομερ','πανσετ','λουτζα','μπεικον','προσουτο'];
+function porkFoodsList(){
+  var out=[];
+  if(typeof FOODS==='undefined') return out;
+  Object.keys(FOODS).forEach(function(n){
+    var f=FOODS[n]; if(!f||f.plantBased) return;
+    var nn=(typeof normalizeGreekText==='function')?normalizeGreekText(n):String(n).toLowerCase();
+    if(PORK_NAME_KEYWORDS.some(function(k){return nn.indexOf(k)!==-1;})) out.push(n);
+  });
+  return out;
+}
+var INTAKE_AVOID_PLAN={
+  red_meat:{type:'exclude', label:'κόκκινο κρέας', list:function(){ return (typeof redMeatFoodsList==='function')?redMeatFoodsList():[]; }},
+  pork:{type:'exclude', label:'χοιρινό', list:porkFoodsList},
+  fish:{type:'exclude', label:'ψάρι & θαλασσινά', quick:'🐟 Ψάρια/Θαλ.'},
+  dairy:{type:'exclude', label:'γαλακτοκομικά', list:function(){ return (typeof dairyFoodsList==='function')?dairyFoodsList():[]; }},
+  vegetarian:{type:'diet', label:'χορτοφαγική', dietType:'vegetarian'},
+  vegan:{type:'diet', label:'vegan', dietType:'vegan'}
+};
+
+function intakeAvoidFoodNames(a){
+  if(a.quick) return (typeof QUICK_EXCL!=='undefined' && QUICK_EXCL[a.quick]) ? QUICK_EXCL[a.quick].slice() : [];
+  return a.list ? a.list() : [];
+}
+
+function intakeApplyAvoid(){
+  var c=getC(); if(!c) return;
+  var p=(window.INTAKE_PAYLOAD_CACHE||{})[c.intakeToken];
+  if(!p){ showErrorToast('Οι απαντήσεις δεν έχουν φορτωθεί ακόμα.'); return; }
+  var chips=(p.avoid||[]).filter(function(k){ return k!=='none' && INTAKE_AVOID_PLAN[k]; });
+  if(!chips.length){ showErrorToast('Δεν υπάρχουν επιλογές αποφυγής να εφαρμοστούν.'); return; }
+  var namesToAdd=[], dietTarget=null, parts=[];
+  chips.forEach(function(k){
+    var a=INTAKE_AVOID_PLAN[k];
+    if(a.type==='diet'){ dietTarget=a.dietType; parts.push('τύπος διατροφής → «'+a.label+'»'); return; }
+    intakeAvoidFoodNames(a).forEach(function(fn){ if(namesToAdd.indexOf(fn)===-1) namesToAdd.push(fn); });
+    parts.push(a.label);
+  });
+  var cur=c.foodExclude||[];
+  var newOnes=namesToAdd.filter(function(n){ return cur.indexOf(n)===-1; });
+  var hasPlan=Object.keys(c.weekPlan||{}).length>0;
+  var q='Θα εφαρμοστούν οι αποφυγές του πελάτη: '+parts.join(' · ')+'.\n\n';
+  if(newOnes.length) q+='• '+newOnes.length+' τρόφιμα θα προστεθούν στους αποκλεισμούς\n';
+  if(dietTarget) q+='• Ο τύπος διατροφής θα γίνει «'+dietTarget+'» (θα ξαναϋπολογιστούν τα μακροθρεπτικά)\n';
+  if(hasPlan && newOnes.length) q+='• Τα αποκλεισμένα τρόφιμα θα αφαιρεθούν από το υπάρχον πλάνο\n';
+  if(!newOnes.length && !dietTarget){ showErrorToast('Όλα ήδη εφαρμοσμένα.'); return; }
+  showConfirmDialog(q+'\nΣυνέχεια;', function(){
+    if(!c.foodExclude) c.foodExclude=[];
+    newOnes.forEach(function(n){ c.foodExclude.push(n); });
+    if(!c.intakeApplied) c.intakeApplied={};
+    c.intakeApplied.avoid=true;
+    if(dietTarget && typeof setDietType==='function') setDietType(dietTarget); // save() + onClientChange()
+    else save();
+    if(Object.keys(c.weekPlan||{}).length && newOnes.length && typeof refilterMealPlanExclusions==='function') refilterMealPlanExclusions(c);
+    if(typeof renderMain==='function') renderMain();
+    showSuccessToast('✅ Οι αποφυγές εφαρμόστηκαν.');
+  }, {confirmLabel:'Εφαρμογή', icon:'🚫'});
+}
+
+function intakeApplyMeds(){
+  var c=getC(); if(!c) return;
+  var p=(window.INTAKE_PAYLOAD_CACHE||{})[c.intakeToken];
+  if(!p || !p.meds){ showErrorToast('Δεν υπάρχει καταχώρηση φαρμάκων.'); return; }
+  var txt=String(p.meds).trim();
+  var existing=(c.medications||'').trim();
+  var q=existing
+    ? 'Το πεδίο «Φάρμακα / συμπληρώματα» έχει ήδη:\n"'+existing+'"\n\nΝα προστεθεί το κείμενο του πελάτη;\n"'+txt+'"'
+    : 'Θα καταχωρηθεί στο πεδίο «Φάρμακα / συμπληρώματα» (Ιατρικές Συνθήκες):\n\n"'+txt+'"';
+  showConfirmDialog(q, function(){
+    c.medications = existing ? (existing+'\n'+txt) : txt;
+    if(!c.intakeApplied) c.intakeApplied={};
+    c.intakeApplied.meds=true;
+    save();
+    if(typeof renderMain==='function') renderMain();
+    showSuccessToast('✅ Καταχωρήθηκε. Δες/επεξεργάσου το στις «🩺 Ιατρικές Συνθήκες».');
+  }, {confirmLabel:'Καταχώρηση', icon:'💊'});
+}
+
+function intakeApplyProfile(){
+  var c=getC(); if(!c) return;
+  var p=(window.INTAKE_PAYLOAD_CACHE||{})[c.intakeToken];
+  if(!p){ showErrorToast('Οι απαντήσεις δεν έχουν φορτωθεί ακόμα.'); return; }
+  var prof=p.profile||{}, changes=[];
+  var pb=prof.birthDate||'', ph=intakeNum(prof.heightCm), pw=intakeNum(prof.weightKg);
+  if(pb && pb!==(c.birthDate||'')) changes.push(['birthDate', pb, 'Ημ. γέννησης: '+(c.birthDate||'—')+' → '+pb]);
+  if(ph!=null && ph!==intakeNum(c.height)) changes.push(['height', ph, 'Ύψος: '+(c.height!=null?c.height:'—')+' → '+ph+' εκ.']);
+  if(pw!=null && (intakeNum(c.weight)==null || Math.abs(pw-intakeNum(c.weight))>=0.5)) changes.push(['weight', pw, 'Βάρος: '+(c.weight!=null?c.weight:'—')+' → '+pw+' κιλά']);
+  if(!changes.length){ showErrorToast('Δεν υπάρχουν διαφορές στα βασικά στοιχεία.'); return; }
+  var q='Θα ενημερωθεί η καρτέλα με τα στοιχεία του πελάτη:\n\n'
+    +changes.map(function(x){ return '• '+x[2]; }).join('\n')
+    +'\n\n(Θα ξαναϋπολογιστούν ηλικία / θερμίδες / μακροθρεπτικά.)\n\nΣυνέχεια;';
+  showConfirmDialog(q, function(){
+    changes.forEach(function(x){ if(x[0]==='birthDate') c.birthDate=x[1]; else c[x[0]]=x[1]; });
+    if(c.birthDate && typeof ageAtDate==='function'){ var a=ageAtDate(c.birthDate); if(a!=null) c.age=a; }
+    if(!c.intakeApplied) c.intakeApplied={};
+    c.intakeApplied.profile=true;
+    save();
+    if(typeof onClientChange==='function') onClientChange();
+    else if(typeof renderMain==='function') renderMain();
+    showSuccessToast('✅ Τα βασικά στοιχεία ενημερώθηκαν.');
+  }, {confirmLabel:'Ενημέρωση', icon:'📝'});
+}
+
+function intakeCopyAllergies(btn){
+  var c=getC(); if(!c) return;
+  var p=(window.INTAKE_PAYLOAD_CACHE||{})[c.intakeToken];
+  if(!p){ showErrorToast('Οι απαντήσεις δεν έχουν φορτωθεί ακόμα.'); return; }
+  var allerg=(p.allergies||[]).slice();
+  var txt=intakeMap('allergy',allerg)+((p.allergiesOther?((allerg.length?', ':'')+p.allergiesOther):''));
+  if(!txt){ showErrorToast('Δεν δηλώθηκαν αλλεργίες.'); return; }
+  var ta=document.createElement('textarea');
+  ta.value=txt; ta.style.cssText='position:fixed;left:-9999px;top:-9999px';
+  document.body.appendChild(ta); ta.select();
+  var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(function(){},function(){}); ok=true; }
+  ta.remove();
+  if(ok && btn){ var o=btn.textContent; btn.textContent='✓ Αντιγράφηκε'; setTimeout(function(){btn.textContent=o;},1600); }
+}
+
+// small trailing button for a read-back row
+function intakeRowBtn(onclick, label, done){
+  if(done) return '<span style="font-size:10.5px;color:#2e7d32;white-space:nowrap">✓ '+esc(done)+'</span>';
+  return '<button type="button" class="btn" style="padding:1px 7px;font-size:10.5px;background:var(--card-bg);color:#025857;border:1px solid #c5ddd8;white-space:nowrap;vertical-align:baseline" onclick="'+onclick+'">'+esc(label)+'</button>';
 }
 
 function buildIntakeReadbackHtml(c){
@@ -136,30 +268,42 @@ function buildIntakeReadbackHtml(c){
     return '<div style="font-size:11.5px;color:#c0392b;margin-top:12px">Δεν φορτώθηκαν οι απαντήσεις — πάτα «↻ Ανανέωση».</div>';
 
   var prof=p.profile||{}, hab=p.habits||{};
+  var applied=c.intakeApplied||{};
   var goalTxt=(INTAKE_LBL.goal[p.goal]||p.goal||'—')+(p.goal==='other'&&p.goalOther?(' — '+p.goalOther):'');
   var conds=(p.conditions||[]).filter(function(k){return k!=='none';});
   var allerg=(p.allergies||[]).slice();
   var allergTxt=intakeMap('allergy',allerg)+((p.allergiesOther?((allerg.length?', ':'')+p.allergiesOther):''));
   var avoid=(p.avoid||[]).filter(function(k){return k!=='none';});
+  var applicableAvoid=avoid.filter(function(k){ return INTAKE_AVOID_PLAN[k]; });
 
   var diff=intakeDiffRows(c,p);
   var diffHtml='';
   if(diff.length){
+    // profile fields the "Εφαρμογή στην καρτέλα" button can write (name/pregnancy are excluded)
+    var canApplyProfile=diff.some(function(r){ return ['Ημ. γέννησης','Ύψος','Βάρος'].indexOf(r[0])!==-1; });
     diffHtml='<div style="margin:10px 0 4px;padding:8px 10px;border:1px solid #f0d8a8;background:#fff9ec;border-radius:8px">'
       +'<div style="font-size:11px;font-weight:700;color:#a15c00;margin-bottom:4px">🔺 Διαφορετικό από την καρτέλα</div>'
       +diff.map(function(r){
         return '<div style="font-size:12px;color:#7a5a1e;line-height:1.5"><b>'+esc(r[0])+':</b> '+esc(r[1])+' → <b>'+esc(r[2])+'</b></div>';
       }).join('')
+      +(canApplyProfile?('<div style="margin-top:6px">'+intakeRowBtn('intakeApplyProfile()','✓ Εφαρμογή στην καρτέλα', applied.profile?'Εφαρμόστηκε':'')+'</div>'):'')
       +'</div>';
   }
 
+  var medsBtn = p.meds ? intakeRowBtn('intakeApplyMeds()','✓ Καταχώρηση', applied.meds?'Καταχωρήθηκε':'') : '';
+  var allergBtn = allergTxt ? intakeRowBtn('intakeCopyAllergies(this)','📋 Αντιγραφή', '') : '';
+  var avoidBtn = applicableAvoid.length ? intakeRowBtn('intakeApplyAvoid()','✓ Εφαρμογή', applied.avoid?'Εφαρμόστηκε':'') : '';
+  var condHint = conds.length ? '<span style="font-size:10.5px;color:#9fb5b0;white-space:nowrap">→ 🩺 Ιατρικές Συνθήκες</span>' : '';
+  var allergNote = allergTxt ? '<div style="font-size:10px;color:#9fb5b0;margin:0 0 2px 136px">Δεν εφαρμόζονται αυτόματα — πέρασέ τες στο πεδίο «Αλλεργίες».</div>' : '';
+
   var body=''
     +intakeReadRow('Στόχος', goalTxt)
-    +intakeReadRow('Παθήσεις', conds.length?intakeMap('cond',conds):'—')
+    +intakeReadRow('Παθήσεις', conds.length?intakeMap('cond',conds):'—', condHint)
     +intakeReadRow('Εγκυμοσύνη/θηλ.', p.pregnancyBreastfeeding?'Ναι':'Όχι')
-    +intakeReadRow('Φάρμακα / συμπλ.', p.meds||'—')
-    +intakeReadRow('Αλλεργίες', allergTxt||'—')
-    +intakeReadRow('Αποφεύγει', avoid.length?intakeMap('avoid',avoid):'—')
+    +intakeReadRow('Φάρμακα / συμπλ.', p.meds||'—', medsBtn)
+    +intakeReadRow('Αλλεργίες', allergTxt||'—', allergBtn)
+    +allergNote
+    +intakeReadRow('Αποφεύγει', avoid.length?intakeMap('avoid',avoid):'—', avoidBtn)
     +intakeReadRow('Γεύματα/μέρα', hab.mealsPerDay!=null?String(hab.mealsPerDay):'')
     +intakeReadRow('Πρωινό', INTAKE_LBL.breakfast[hab.breakfast]||'')
     +intakeReadRow('Μαγείρεμα', INTAKE_LBL.cooking[hab.cooking]||'')

@@ -172,7 +172,8 @@ document.write(window.__MANIFEST__.map(function(p){
    'getTipsLibrary','defaultTipsSeed','buildDayTgtHtml','buildMetHtml','buildMacroDistributionHtml',
    'allocateMealTargets','makeDayTgtDefaults','getDayTgtEff',
    'buildIntakeCardHtml','intakeHandoffMsg','intakeLangFor','openIntakeModal','refreshIntakeCard',
-   'buildIntakeReadbackHtml','ensureIntakePayload','copyIntakeSummary','intakeDiffRows'
+   'buildIntakeReadbackHtml','ensureIntakePayload','copyIntakeSummary','intakeDiffRows',
+   'porkFoodsList','intakeApplyAvoid','intakeApplyMeds','intakeApplyProfile','intakeCopyAllergies'
   ].forEach(fnCheck);
 
   // --- data constants (min sizes are loose floors, not exact) --------------
@@ -344,6 +345,32 @@ document.write(window.__MANIFEST__.map(function(p){
              hasAvoidGr: has(h,'Κόκκινο κρέας'), hasCopyBtn: has(h,'copyIntakeSummary'),
              diffCount: dr.length, diffLabels: dr.map(function(r){return r[0];}).join('|'),
              cacheMissLoading: has(miss,'Φόρτωση απαντήσεων') }; });
+  // --- intake apply buttons (Upgrades Phase 2c) ---
+  probe('intake2c.applyPlan', function(){
+    function has(h,s){ return h.indexOf(s)!==-1; }
+    var pork=porkFoodsList();
+    var fishKeys=(typeof QUICK_EXCL!=='undefined'&&QUICK_EXCL['🐟 Ψάρια/Θαλ.'])||[];
+    var redN=(typeof redMeatFoodsList==='function')?redMeatFoodsList().length:-1;
+    var dairyN=(typeof dairyFoodsList==='function')?dairyFoodsList().length:-1;
+    window.INTAKE_PAYLOAD_CACHE = window.INTAKE_PAYLOAD_CACHE || {};
+    window.INTAKE_PAYLOAD_CACHE['t2c'] = {
+      v:1, profile:{name:'Α', birthDate:'1985-01-01', heightCm:180, weightKg:90},
+      goal:'health', conditions:['diabetes'], pregnancyBreastfeeding:false, meds:'Μετφορμίνη 500',
+      allergies:['milk'], allergiesOther:'', avoid:['red_meat','fish','vegan'],
+      habits:{}, likes:'', dislikes:'', note:'' };
+    var c1={id:'a',name:'Α',intakeToken:'t2c',intakeStatus:'submitted',birthDate:'1985-01-01',height:175,weight:88};
+    var h1=buildIntakeReadbackHtml(c1);
+    var c2={id:'a',name:'Α',intakeToken:'t2c',intakeStatus:'submitted',birthDate:'1985-01-01',height:180,weight:90,
+            intakeApplied:{avoid:true,meds:true,profile:true}};
+    var h2=buildIntakeReadbackHtml(c2);
+    return {
+      porkNonEmpty: pork.length>0, porkHasChoirino: pork.some(function(n){return n.indexOf('Χοιριν')!==-1||n.indexOf('χοιριν')!==-1;}),
+      fishGroupFound: fishKeys.length>0, redListN: redN, dairyListN: dairyN,
+      planKeys: Object.keys(INTAKE_AVOID_PLAN).sort().join(','),
+      avoidBtnShown: has(h1,'intakeApplyAvoid()'), medsBtnShown: has(h1,'intakeApplyMeds()'),
+      allergCopyShown: has(h1,'intakeCopyAllergies(this)'), condHint: has(h1,'🩺 Ιατρικές Συνθήκες'),
+      profileApplyShown: has(h1,'intakeApplyProfile()'),
+      appliedStateAvoid: has(h2,'✓ Εφαρμόστηκε'), appliedStateMeds: has(h2,'✓ Καταχωρήθηκε') }; });
 
   // data fingerprints — cheap structural checksums
   probes['_fingerprints'] = (function(){
