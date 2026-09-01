@@ -130,6 +130,7 @@ var MICRONUTRIENTS={
   'Καβούρι (βρ.)':{Fe:0.7,Zn:3.5,Mg:26,Ca:50,B1:0.08,B2:0.06,B3:2.6,B6:0.24,B12:9.8,Folate:43,Omega3:0.3,Omega6:0.03,Iodine:60,Choline:65,DHA:150},
   'Καλαμαράκια (ψητά)':{Fe:0.7,Zn:1.5,Mg:33,Ca:32,B1:0.02,B2:0.4,B3:2.2,B6:0.18,B12:1.3,Folate:5,Omega3:0.5,Omega6:0.02,Iodine:15,Choline:65,DHA:150},
   'Φιδάκι (ψητό)':{Fe:0.5,Zn:0.5,Mg:35,Ca:15,B1:0.1,B2:0.1,B3:3.0,B6:0.4,B12:2.0,Folate:8,Omega3:0.5,Omega6:0.1,Iodine:25,Choline:65,DHA:300},
+  'Κοκκινόψαρο (ψητό)':{Fe:0.7,Zn:0.5,Mg:33,Ca:117,B1:0.11,B2:0.11,B3:2.0,B6:0.23,B12:1.0,Folate:9,Omega3:0.5,Omega6:0.03,Iodine:50,Choline:65,DHA:250,VitD:2},
   // Eggs / Dairy
   'Cream cheese':{Fe:0.15,Zn:0.15,Mg:5,Ca:98,B1:0.02,B2:0.14,B3:0.05,B6:0.02,B12:0.2,Folate:9,Omega3:0.05,Omega6:0.7,Iodine:5,Choline:20,DHA:0},
   'Μοτσαρέλα':{Fe:0.15,Zn:2.9,Mg:20,Ca:505,B1:0.02,B2:0.28,B3:0.1,B6:0.06,B12:1.2,Folate:7,Omega3:0.1,Omega6:0.5,Iodine:20,Choline:15,DHA:0},

@@ -313,6 +313,11 @@ var FOODS={
 'Καβούρι (βρ.)':{k:89,p:19,c:0,f:0.7,fi:0,cat:'Ψάρια',en:'Crab (cooked)',ru:'Краб (варёный)',tr:'Yengeç (pişmiş)'},
 'Καλαμαράκια (ψητά)':{k:170,p:28,c:5.5,f:2.5,fi:0,cat:'Ψάρια',en:'Baby Squid (grilled)',ru:'Мини-кальмары (гриль)',tr:'Küçük Kalamar (ızgara)'},
 'Φιδάκι (ψητό)':{k:116,p:24,c:1.2,f:1,fi:0,cat:'Ψάρια',en:'Garfish (grilled)',ru:'Сарган (гриль)',tr:'Zargana (ızgara)'},
+// ✅ 2026-09-01: Κοκκινόψαρο (Sebastes mantella / redfish – ocean perch) — ωμό προφίλ ετικέτας EMA
+// Foods (emafoods.com.cy): ανά 100g ωμό 79kcal / 16g πρωτ. / 2g λιπ. (0.3g κορ.) / 0g υδατ. / 0.7g αλάτι.
+// Αποθηκεύεται ως ψητό (σύμβαση όπως τα υπόλοιπα ψάρια) — ωμές τιμές × 1.20 συντ. μαγειρέματος
+// (ίδιος με Μπακαλιάρο/Φιδάκι, άπαχο λευκό ψάρι): k 79→98, p 16→19.2, f 2→2.4.
+'Κοκκινόψαρο (ψητό)':{k:98,p:19.2,c:0,f:2.4,fi:0,cat:'Ψάρια',en:'Redfish (grilled)',ru:'Морской окунь (гриль)',tr:'Kızıl Balık (ızgara)'},
 'Λούτζα':{k:243,p:24,c:0.5,f:16,fi:0,cat:'Κρέας',en:'Lountza (cured pork loin)',ru:'Лунца (вяленая свиная корейка)',tr:'Lountza (kürlenmiş domuz eti)'},
 'Moving Mountains Burger':{k:270,p:14.3,c:6.1,f:19.8,fi:5,cat:'Κρέας',en:'Moving Mountains Burger',ru:'Moving Mountains Burger (бургер)',tr:'Moving Mountains Burger'},
 'Grillman Chicken Burger':{k:162,p:18,c:6,f:7.4,fi:1.7,cat:'Κρέας',en:'Grillman Chicken Burger',ru:'Grillman Chicken Burger (куриный бургер)',tr:'Grillman Chicken Burger'},
