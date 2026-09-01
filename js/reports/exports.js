@@ -3,8 +3,7 @@
 // (module split wave 7). Pure function declarations, zero load-time code:
 //   shopRound / shopDisp (shopping-list rounding)
 //   exportPDF, exportWord, exportGoogleDocs (the weekly plan)
-//   escRtf, exportLipometriaPDF, exportBodyCompPDF, sendBodyCompReport,
-//   sendLipometriaReport (body comp)
+//   escRtf, exportLipometriaPDF, exportBodyCompPDF, sendLipometriaReport (body comp)
 //   showDebugPanel, showReferences
 //   exportBackup, exportClientsJSON, importClientsJSON
 // All refs (getC, cm, esc, FOODS, TMPLS, jsPDF/JSZip via CDN, renderWeekTable, …)
@@ -1138,31 +1137,11 @@ function exportBodyCompPDF(){
   setTimeout(function(){w.print();},600);
 }
 
-// Ανοίγει το ίδιο έντυπο Ιστορικού (exportBodyCompPDF) για αποθήκευση ως PDF, και ταυτόχρονα
+// Ανοίγει το «Έντυπο Λιπομέτρησης» (exportLipometriaPDF) για αποθήκευση ως PDF, και ταυτόχρονα
 // προετοιμάζει WhatsApp ή Email προς τον πελάτη με έτοιμο μήνυμα — ο διαιτολόγος απλά επισυνάπτει
 // το PDF που μόλις αποθήκευσε. Δεν γίνεται αυτόματη επισύναψη: τα wa.me/mailto links δεν το
-// υποστηρίζουν (browser security), ίδιος περιορισμός όπως στο sendFeedbackReminder.
-function sendBodyCompReport(channel){
-  var c=getC();if(!c)return;
-  if(!c.weightLog||!c.weightLog.length){showErrorToast('Δεν υπάρχουν εγγραφές tracker.');return;}
-  var fname=(c.name||'').split(' ')[0]||'σου';
-  var d=clientMsgDict(c);
-  var msg=d.bodyComp(fname);
-  if(channel==='wa'){
-    var phone=normalizePhoneIntl(c.phone);
-    if(!phone){showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.');return;}
-    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
-  } else {
-    if(!c.email){showErrorToast('Δεν υπάρχει email για τον/την '+(c.name||'πελάτη')+'.');return;}
-    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.bodyCompSubj)+'&body='+encodeURIComponent(msg);
-  }
-  exportBodyCompPDF();
-  showSuccessToast('Άνοιξε το PDF για αποθήκευση — επισύναψέ το στο μήνυμα που άνοιξε.');
-}
-
-// Ίδια λογική με το sendBodyCompReport, αλλά για το μονό «Έντυπο Λιπομέτρησης»
-// (exportLipometriaPDF) αντί για το ιστορικό. Δουλεύει και χωρίς εγγραφές tracker —
-// το έντυπο πέφτει πίσω στα στοιχεία της καρτέλας (c.weight/c.bf) όταν λείπει weightLog.
+// υποστηρίζουν (browser security), ίδιος περιορισμός όπως στο sendFeedbackReminder. Δουλεύει και
+// χωρίς εγγραφές tracker — το έντυπο πέφτει πίσω στα στοιχεία της καρτέλας (c.weight/c.bf).
 function sendLipometriaReport(channel){
   var c=getC();if(!c)return;
   var fname=(c.name||'').split(' ')[0]||'σου';
