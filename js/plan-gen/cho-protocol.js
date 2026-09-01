@@ -490,13 +490,19 @@ function computeCHOTargets(c, t, dayIdx){
   var isMinor = !!(t.isMinor) || (c.age != null && c.age > 0 && c.age < 18);
 
   // ── PRE ──
-  // Grams are graded mostly by how far ahead the meal sits (Thomas 2016: ~1 g/kg an hour out …
-  // ~4 g/kg ~4 h out — a GI-tolerance ceiling), with a smaller lift for session load/intensity.
+  // g/kg is driven by ABSOLUTE lead time (Thomas 2016: ~1 g/kg ~1 h out, ~1.5 at 2 h, ~2.7 at 4 h —
+  // a GI-tolerance ramp), with only a small lift/cut for session load, then clamped to the sport's
+  // own [gPerKgLo, gPerKgHi]. Deliberately NOT scaled inside each sport's arbitrary leadMin window:
+  // that window differs per sport (cycling 60–240 vs running 120–180), which used to hand cyclists a
+  // bigger pre than runners for the exact same 2 h lead + load. Longer manual `preLeadMin` → more
+  // grams, which is the correct way to get a big 3–4 h pre-load.
   var preLeadMin = (ov.preLeadMin != null) ? ov.preLeadMin : Math.round(choLerp(P.pre.leadMinLo, P.pre.leadMinHi, pos));
-  var leadSpan = Math.max(1, P.pre.leadMinHi - P.pre.leadMinLo);
-  var leadFrac = Math.max(0, Math.min(1, (preLeadMin - P.pre.leadMinLo) / leadSpan));
-  var prePos = 0.65 * leadFrac + 0.35 * pos;
-  var preGPerKg = (manual && ov.gPerKgPre != null) ? +ov.gPerKgPre : choLerp(P.pre.gPerKgLo, P.pre.gPerKgHi, prePos);
+  var preHrs = Math.max(0.5, (preLeadMin || 120) / 60);
+  var preByLead = 0.3 + 0.6 * preHrs;            // 1h→0.9 · 2h→1.5 · 3h→2.1 · 4h→2.7 g/kg
+  var preLoadAdj = (pos - 0.35) * 0.9;           // ~ -0.23 (very light) … +0.59 (ultra)
+  var preGPerKg = (manual && ov.gPerKgPre != null)
+    ? +ov.gPerKgPre
+    : Math.max(P.pre.gPerKgLo, Math.min(P.pre.gPerKgHi, preByLead + preLoadAdj));
   var preGrams = Math.round(preGPerKg * wBasis);
   var preTime = sessionStart ? choAddMinutes(sessionStart, -preLeadMin) : null;
 

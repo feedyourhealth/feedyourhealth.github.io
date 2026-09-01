@@ -23,9 +23,9 @@
   Και τα δύο no-op χωρίς `choProtocol.enabled`.
 - Mockup: `design/cho-protocol/mockup-phase3-surfaces.html` (και οι 4 επιφάνειες).
 
-**CHO Training Protocol: Phases 1-3 COMPLETE + `LOAD_BANDS` κουρδισμένα (2026-09-01).** Ανοιχτά:
-validation `LOAD_BANDS` σε δείγμα πραγματικών πλάνων FYH· Phase 2.1 (σκληρότερη ανακατανομή /
-dedicated pre-workout meal slot)· cycling-pre μοχλός· `judo`/SPORT_PROFILES.
+**CHO Training Protocol: Phases 1-3 COMPLETE + `LOAD_BANDS` + pre-CHO lever κουρδισμένα (2026-09-01).**
+Ανοιχτά: validation `LOAD_BANDS` + pre curve σε δείγμα πραγματικών πλάνων FYH· Phase 2.1 (σκληρότερη
+ανακατανομή / dedicated pre-workout meal slot)· `judo`/SPORT_PROFILES.
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).
@@ -432,9 +432,14 @@ interrupt.
 - Ίδιο `byDay[d]` με το `makeDayTgtDefaults` — **καμία δεύτερη πηγή φορτίου**.
 
 **Phase 1 implementation notes (2026-09-01):**
-- **Pre-CHO grams** κλιμακώνονται κυρίως από τον **χρόνο πριν** (`prePos = 0.65·leadFrac + 0.35·pos`),
-  όχι καθαρά από το φορτίο — το 1–4 g/kg της βιβλιογραφίας είναι time-graded (Thomas 2016), όχι
-  intensity-graded· διαφορετικά ένας δρομέας 60 kg έπαιρνε 240 g pre 2h πριν.
+- **Pre-CHO g/kg** = συνάρτηση **απόλυτου χρόνου πριν** (`preByLead = 0.3 + 0.6·ώρες` → 1h≈0.9,
+  2h≈1.5, 3h≈2.1, 4h≈2.7 g/kg) + μικρό load nudge (`(pos−0.35)·0.9`), clamped στο `[gPerKgLo,
+  gPerKgHi]` του αθλήματος (Thomas 2016: time-graded, όχι intensity-graded). **Αναθεωρήθηκε 2026-09-01**
+  (ήταν `prePos = 0.65·leadFrac + 0.35·pos`): το `leadFrac` μετρούσε θέση μέσα στο *αυθαίρετο*
+  leadMin-window κάθε αθλήματος (cycling 60–240 vs running 120–180), οπότε ένας ποδηλάτης έπαιρνε
+  μεγαλύτερο pre από δρομέα για το **ίδιο** 2ωρο lead. Τώρα consistent ανά άθλημα: 2ω lead → ~2 g/kg
+  παντού· cycling 2ωρη μέρα 134 g αντί 175. Μεγάλο pre-load (3–4 g/kg) = ο διαιτολόγος βάζει
+  μεγαλύτερο `preLeadMin` (σωστό workflow — μεγαλύτερο γεύμα, τρώγεται νωρίτερα).
 - `CHO_TIMING_BY_SPORT`: προστέθηκαν προαιρετικά πεδία `campFloorGPerKg` (combat/weight-class, τροφοδοτεί
   το `weightCutSupervision`), `preTopUp` (team/power «50–100 g 1h πριν»), module-level `CHO_POST_EXTENDED`
   (1.0–1.2 g/kg/h × 4h, ίδιο παντού). 17 κλειδιά = 11 αθλήματα + 6 fallbacks (`__endurance/__team/__combat/__strength/__power/__generic`).
@@ -454,9 +459,8 @@ interrupt.
 
 1. `LOAD_BANDS` κουρδίστηκαν 2026-09-01 (§2.2, νέα 6-band καμπύλη + `CHO_RACE_LOAD_PER_KG`=20) από
    exercise-physiology reasoning — **ακόμα δεν** έχουν validated σε δείγμα πραγματικών πλάνων FYH.
-   Επίσης ανοιχτό: το `prePos = 0.65·leadFrac + 0.35·pos` κρατά το cycling-pre ~2.5 g/kg σε 2ωρη
-   μέρα (leadFrac 0.33 λόγω leadMin 60–240)· αν φανεί υψηλό → ξεχωριστός μοχλός (cycling `gPerKgHi`
-   ή το prePos βάρος), όχι `LOAD_BANDS`.
+   Το pre-CHO lever αναθεωρήθηκε 2026-09-01 (§Phase 1 notes: `preByLead` απόλυτου χρόνου αντί
+   `leadFrac` μέσα σε per-sport window) — cycling & running πλέον consistent στο ίδιο lead.
 2. **Phase 2.1 (αν χρειαστεί):** σκληρότερη ανακατανομή — post-`scalePlan` pass που σπρώχνει τα carb
    foods του pre/post γεύματος πάνω / fat foods κάτω προς τους `computeCHOTargets` στόχους· πιο
    επιθετικό αλλά ρισκάρει το calorie-consistency guard. Ή: νέο "pre-workout meal" slot στα templates.
