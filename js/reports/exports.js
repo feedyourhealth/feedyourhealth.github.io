@@ -1152,7 +1152,7 @@ function sendBodyCompReport(channel){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else {
     if(!c.email){showErrorToast('Δεν υπάρχει email για τον/την '+(c.name||'πελάτη')+'.');return;}
-    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Το ιστορικό μετρήσεών σου — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Το ιστορικό μετρήσεών σου — Feed Your Health')+'&body='+encodeURIComponent(msg);
   }
   exportBodyCompPDF();
   showSuccessToast('Άνοιξε το PDF για αποθήκευση — επισύναψέ το στο μήνυμα που άνοιξε.');

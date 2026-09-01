@@ -238,7 +238,7 @@ function sendFeedbackReminder(clientId){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
     sent=true;
   } else if(c.email){
-    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Πες μου πώς πήγε η εβδομάδα — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Πες μου πώς πήγε η εβδομάδα — Feed Your Health')+'&body='+encodeURIComponent(msg);
     sent=true;
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
@@ -303,7 +303,7 @@ function sendWeeklyRecap(clientId){
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
-    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Η εβδομάδα σου — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Η εβδομάδα σου — Feed Your Health')+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
   }
@@ -322,7 +322,7 @@ function sendActivityNudge(clientId){
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
-    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Πώς πάει; — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Πώς πάει; — Feed Your Health')+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
   }

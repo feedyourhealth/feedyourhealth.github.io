@@ -143,7 +143,7 @@ function openPublishModal(){
     // Email: άνοιγμα του email προγράμματος με συμπληρωμένα στοιχεία
     var subj=hm.subj;
     var ebody=hm.ebody;
-    var mailto='mailto:'+encodeURIComponent(c.email||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(ebody);
+    var mailto='mailto:'+encodeURIComponent(c.email||'').replace(/%40/g,'@')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(ebody);
     // ✅ audit fix follow-up: το mailto: δεν κάνει ΤΙΠΟΤΑ ορατό όταν δεν υπάρχει προεπιλεγμένο
     // πρόγραμμα email (π.χ. ο χρήστης χρησιμοποιεί μόνο Gmail στον browser) — βλ. σχόλιο παρακάτω.
     // Gmail compose URL (view=cm) δουλεύει σε κάθε browser χωρίς προεπιλεγμένο mail client,

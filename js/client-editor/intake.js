@@ -452,7 +452,7 @@ function renderIntakeLinkView(c){
   var phone=(typeof normalizePhoneIntl==='function')?normalizePhoneIntl(c.phone):'';
   var wa='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(hm.msg);
   var gmail='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(c.email||'')+'&su='+encodeURIComponent(hm.subj)+'&body='+encodeURIComponent(hm.ebody);
-  var mailto='mailto:'+encodeURIComponent(c.email||'')+'?subject='+encodeURIComponent(hm.subj)+'&body='+encodeURIComponent(hm.ebody);
+  var mailto='mailto:'+encodeURIComponent(c.email||'').replace(/%40/g,'@')+'?subject='+encodeURIComponent(hm.subj)+'&body='+encodeURIComponent(hm.ebody);
   var submittedNote = (c.intakeStatus==='submitted')
     ? '<div style="font-size:11.5px;color:#2e7d32;margin:0 0 10px">✓ Ο πελάτης έχει ήδη υποβάλει αυτό το ερωτηματολόγιο. Νέα αποστολή θα δημιουργήσει νέο, κενό.</div>' : '';
 
