@@ -485,7 +485,31 @@ function buildDayTgtHtml(c,t){
     }
     choIntRow+='</tr>';
   }
-  var tbody=trainRow+matchRow+dayRowHtml+choIntRow;
+  // 🏃 Τύπος συνεδρίας (improvement #3) — auto/steady/intervals per training day; «intervals»
+  // + σύντομη + υψηλού φορτίου μειώνει ΜΟΝΟ το ημερήσιο CHO. Only when the CHO module is on.
+  var choKindRow='';
+  if(choEnabled){
+    var choKindManual=(cp&&Array.isArray(cp.sessionKindByDay))?cp.sessionKindByDay:[null,null,null,null,null,null,null];
+    choKindRow='<tr class="train-row" style="background:#f2fbf8"><td style="color:#00786f">&#127939; Τύπος</td>';
+    for(var _si=0;_si<7;_si++){
+      var _sr=choResults[_si];
+      if(!_sr||(!_sr.isTrainingDay&&!_sr.isMatchDay)){
+        choKindRow+='<td style="text-align:center;color:#c8c8c8;font-size:10px;font-weight:700">&mdash;</td>';continue;
+      }
+      var _seff=_sr.sessionKind||'steady';
+      var _sman=choKindManual[_si]==='steady'||choKindManual[_si]==='intervals';
+      var _sdamp=_sr.dailyCHO&&_sr.dailyCHO.intervalDampen<1;
+      var _slbl=(_seff==='intervals'?'Διαλ.':'Συνεχής');
+      choKindRow+='<td style="text-align:center"><button type="button" onclick="cycleSessionKind('+_si+')"'
+        +' title="Τύπος συνεδρίας — auto (από τη δραστηριότητα MET) → Συνεχής → Διαλειμματική. Η διαλειμματική μειώνει μόνο το ημερήσιο CHO."'
+        +' style="padding:2px 7px;border-radius:999px;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;min-width:52px;'
+        +'border:1px solid '+(_seff==='intervals'?'#e0836f':'#bcd')+';'
+        +'background:'+(_sdamp?'#fdecea':'#fff')+';color:'+(_seff==='intervals'?'#9a3b22':'#478')+';'
+        +(_sman?'':'font-style:italic;opacity:.7')+'">'+(_sdamp?'⚡':'')+_slbl+'</button></td>';
+    }
+    choKindRow+='</tr>';
+  }
+  var tbody=trainRow+matchRow+dayRowHtml+choIntRow+choKindRow;
   macros.forEach(function(m){
     tbody+='<tr class="'+m.cls+'"><td>'+m.label+'</td>';
     for(var i=0;i<7;i++){

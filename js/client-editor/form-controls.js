@@ -261,10 +261,13 @@ function setMatchTimeBucket(bucket){
 function ensureChoProtocol(c){
   if(!c.choProtocol){
     c.choProtocol={enabled:false,mode:'auto',overrides:{preLeadMin:120,postWindowMin:30},
-      dailyTargetGPerKg:null,weekPhase:'build',experimentalDuringHighRate:false,weightCutAcknowledged:false};
+      dailyTargetGPerKg:null,weekPhase:'build',sessionKindByDay:[null,null,null,null,null,null,null],
+      experimentalDuringHighRate:false,weightCutAcknowledged:false};
   }
   if(!c.choProtocol.overrides)c.choProtocol.overrides={preLeadMin:120,postWindowMin:30};
   if(['base','build','peak','taper','race'].indexOf(c.choProtocol.weekPhase)===-1)c.choProtocol.weekPhase='build';
+  if(!Array.isArray(c.choProtocol.sessionKindByDay)||c.choProtocol.sessionKindByDay.length!==7)
+    c.choProtocol.sessionKindByDay=[null,null,null,null,null,null,null];
   return c.choProtocol;
 }
 function setChoEnabled(on){
@@ -297,6 +300,18 @@ function setChoWeekPhase(phase){
   var c=getC();if(!c)return;
   if(['base','build','peak','taper','race'].indexOf(phase)===-1)return;
   ensureChoProtocol(c).weekPhase=phase;
+  save();
+  upd('choProtocol',c.choProtocol);
+  renderMain();
+}
+// Τύπος συνεδρίας ημέρας (improvement #3): auto(null) → 'steady' → 'intervals' → auto.
+// «intervals» + σύντομη + υψηλού φορτίου → μειωμένο ΜΟΝΟ το ημερήσιο CHO (όχι pre/κατά/μετά).
+function cycleSessionKind(d){
+  var c=getC();if(!c)return;
+  var cp=ensureChoProtocol(c);
+  var ORDER=[null,'steady','intervals'];
+  var cur=(cp.sessionKindByDay[d]==null)?null:cp.sessionKindByDay[d];
+  cp.sessionKindByDay[d]=ORDER[(ORDER.indexOf(cur)+1)%ORDER.length];
   save();
   upd('choProtocol',c.choProtocol);
   renderMain();

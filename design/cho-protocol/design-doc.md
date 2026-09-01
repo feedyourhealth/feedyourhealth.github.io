@@ -33,11 +33,28 @@
   + νέα read-only γραμμή «🍚 CHO ημέρας» στο `buildDayTgtHtml` (day-targets.js)· smoke probe
   `cho.periodisation`. **Παραμένει display-only** — σύσταση στο grid, δεν ξαναγράφει το `eff[d].c`.
   Mockup: `design/cho-protocol/mockup-improvements.html`.
+- **Improvement #3 SHIPPED** (2026-09-01): **interval / HIIT dampening**. Μια σύντομη, σκληρή,
+  γλυκολυτική συνεδρία παίρνει **μειωμένο ημερήσιο** load (το `loadPerKg` υποθέτει γραμμική
+  κλιμάκωση της ανάγκης CHO με την ένταση — το marathon-plan validation έδειξε ~+23% υπερεκτίμηση
+  σε μια 45λεπτη HIIT μέρα). Trigger: (α) `sessionKind==='intervals'` — `c.choProtocol.
+  sessionKindByDay[d]` (`null`=auto από το όνομα δραστηριότητας MET μέσω `CHO_INTERVAL_KEYWORDS`,
+  αλλιώς `'steady'`/`'intervals'`), (β) διάρκεια `< CHO_INTERVAL_MAX_MIN` (60′), (γ) `loadPerKg >
+  CHO_INTERVAL_MIN_LOAD` (8). Τότε `dailyLoadPos = pos · CHO_INTERVAL_DAMPEN` (0.90) **πριν** το
+  `^1.6` και το #1 periodisation — **όχι band re-pick** (τα bands είναι χοντρά, ένα −10% load
+  συχνά μένει στο ίδιο). **Pre/κατά/μετά κρατάνε το γραμμικό αδιατάρακτο `pos`** (η επαναφόρτωση
+  γλυκογόνου μετά από γλυκολυτική συνεδρία είναι πραγματική ανάγκη). Νέα: `CHO_INTERVAL_DAMPEN/
+  MIN_LOAD/MAX_MIN/KEYWORDS` + `choSessionKind(c,d)` (cho-protocol.js)· `sessionKindByDay` στο
+  `ensureChoProtocol` + `cycleSessionKind(d)` (form-controls.js)· νέα γραμμή «🏃 Τύπος»
+  (auto/Συνεχής/Διαλ., ⚡ όταν το dampen είναι ενεργό) στο `buildDayTgtHtml` (day-targets.js)·
+  info flag `intervalDampened`· smoke probe `cho.intervalDampen`. **Παραμένει display-only.**
+  Ο συντελεστής 0.90 είναι **εκτίμηση από ένα πραγματικό πλάνο** (το mockup εξέτασε 0.85) —
+  χρειάζεται 2-3 ακόμη πραγματικά interval-day πλάνα· είναι one-line σταθερά.
 
 **CHO Training Protocol: Phases 1-3 COMPLETE + `LOAD_BANDS` + pre-CHO + daily-CHO κουρδισμένα &
-validated έναντι πραγματικού marathon plan + improvement #1 (weekly periodisation) (2026-09-01).**
-Ανοιχτά: improvement #3 (HIIT dampening)· improvement #2 (pre-workout meal slot / Phase 2 cleanup)·
-combat daily range (non-cut δείγμα)· `judo`/SPORT_PROFILES.
+validated έναντι πραγματικού marathon plan + improvements #1 (weekly periodisation) & #3 (interval
+dampening) (2026-09-01).** Ανοιχτά: improvement #2 (pre-workout meal slot / Phase 2 redistribution
+cleanup)· dampen factor tuning σε περισσότερα πραγματικά interval-day πλάνα· combat daily range
+(non-cut δείγμα)· `judo`/SPORT_PROFILES.
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).
@@ -478,11 +495,13 @@ interrupt.
 
 ### 6.2 Ανοιχτά
 
-0. **Improvement #1 (weekly periodisation) SHIPPED 2026-09-01** — βλ. Status πάνω. Το «stateless
-   per-day» πρόβλημα («κάθε μεγάλη μέρα = carb-load level») λύθηκε: auto κύρια-συνεδρία + φάση
-   εβδομάδας. Επόμενα από τη λίστα βελτιώσεων: **#3** HIIT/διαλειμματικό dampening (μικρό
-   `loadPerKg *= ~0.85` σε <60′ υψηλού φορτίου· θέλει 2-3 πραγματικά πλάνα για το factor)· **#2**
-   ή pre-workout meal slot στα templates ή υποβάθμιση Phase 2 σε καθαρή display-only σύσταση.
+0. **Improvements #1 (weekly periodisation) & #3 (interval dampening) SHIPPED 2026-09-01** — βλ.
+   Status πάνω. Απομένει από τη λίστα βελτιώσεων: **#2** — ή pre-workout meal slot στα templates
+   ή υποβάθμιση της Phase 2 redistribution σε καθαρή display-only σύσταση. Επίσης: το
+   `CHO_INTERVAL_DAMPEN=0.90` του #3 είναι εκτίμηση από **ένα** πραγματικό πλάνο — χρειάζεται
+   2-3 ακόμη πραγματικά interval-day πλάνα για να κουρδιστεί (one-line σταθερά). Ανοιχτό ερώτημα:
+   αν πρέπει να δαμπάρει και μετά το `^1.6`/phase-mult, όχι μόνο πριν — τώρα η επίδραση σε
+   endurance μέρα είναι μέτρια (~−12 g/72kg) λόγω του στενού 5-9 g/kg εύρους + της convex καμπύλης.
 1. `LOAD_BANDS` κουρδίστηκαν 2026-09-01 (§2.2, νέα 6-band καμπύλη + `CHO_RACE_LOAD_PER_KG`=20) από
    exercise-physiology reasoning — **ακόμα δεν** έχουν validated σε δείγμα πραγματικών πλάνων FYH.
    Το pre-CHO lever αναθεωρήθηκε 2026-09-01 (§Phase 1 notes: `preByLead` απόλυτου χρόνου αντί

@@ -189,36 +189,41 @@ Pre/κατά/μετά <b>άθικτα</b>. Σύσταση στο grid («🍚 CH
 Δεν ισχύει: μια 45λεπτη HIIT διάβασε <b>+23%</b> πάνω από ό,τι προγραμμάτισε ο διαιτολόγος στο πραγματικό marathon πλάνο.</div>
 
 <div class="frame">
-  <h3>Στο day-targets grid — νέος διακόπτης ανά μέρα προπόνησης</h3>
+  <div style="display:inline-block;background:var(--ok);color:#fff;font-size:10px;font-weight:700;border-radius:6px;padding:2px 8px;margin-bottom:8px">✓ SHIPPED 2026-09-01 — verified live</div>
+  <h3>Στο day-targets grid — νέα γραμμή «🏃 Τύπος» ανά μέρα προπόνησης</h3>
   <div class="ctrlstrip">
     <div class="ctrlrow">
-      <span class="lb">🏃 Τύπος συνεδρίας</span>
+      <span class="lb">🏃 Τύπος (ανά μέρα)</span>
       <div class="seg">
-        <button class="on">Συνεχής</button><button>Διαλειμματική / HIIT</button>
+        <button>auto</button><button class="on">Συνεχής</button><button>Διαλ.</button>
       </div>
-      <span class="hint" style="margin:0 0 0 4px">αυτόματα από τη δραστηριότητα MET («intervals», «HIIT», «fartlek» στο όνομα) — override εδώ</span>
+      <span class="hint" style="margin:0 0 0 4px">auto = από το όνομα της δραστηριότητας MET (interval/HIIT/fartlek/sprint/crossfit/circuit/spin/tabata/διαλειμμ…) — κύκλος με κλικ</span>
     </div>
   </div>
 
   <table class="wk">
-    <thead><tr><th>Τετάρτη — 45′ έντονη</th><th>loadPerKg</th><th>θέση (pos)</th><th>Ημερήσιο CHO</th><th>vs διαιτολόγος</th></tr></thead>
+    <thead><tr><th>Τετ — «Intervals 6×800», 45′ (72 kg)</th><th>loadPerKg</th><th>Ημερήσιο CHO</th><th>pre / κατά / μετά</th></tr></thead>
     <tbody>
-      <tr><td>ΤΩΡΑ</td><td class="b4">11.0</td><td class="b4">0.47</td><td class="b4">472 g &nbsp;<span class="u">6.6 g/kg</span></td><td class="b4">+23%</td></tr>
-      <tr><td>ΜΕΤΑ <span class="u">(×0.85 dampen)</span></td><td class="af">9.4</td><td class="af">0.39</td><td class="af">408 g &nbsp;<span class="u">5.7 g/kg</span></td><td class="af">+2%</td></tr>
+      <tr><td>Συνεχής <span class="u">(ή auto χωρίς interval-λέξη)</span></td><td class="b4">11.8</td><td class="b4">436 g · 6.06 g/kg</td><td class="b4">118 / — / 72 g</td></tr>
+      <tr><td>⚡ Διαλ. <span class="u">(×0.90 dampen)</span></td><td class="af">11.8</td><td class="key">424 g · 5.89 g/kg</td><td class="af">118 / — / 72 g</td></tr>
     </tbody>
   </table>
-  <div class="cap">Ο dampener πέφτει μόνο σε σύντομες (&lt;60′) υψηλού-φορτίου συνεδρίες. Το <b>pre / κατά / μετα</b> μένουν στη γραμμική <code>pos</code> —
-  η γλυκογονόλυση σε HIIT δικαιολογεί κανονικό post-CHO· αλλάζει μόνο το ημερήσιο σύνολο.</div>
+  <div class="cap">Πραγματικά νούμερα από το shipped build. Ο dampener πέφτει μόνο σε <b>σύντομες (&lt;60′) υψηλού-φορτίου (&gt;8 MET-h)</b> συνεδρίες.
+  <b>pre / κατά / μετά μένουν άθικτα</b> — η επαναφόρτωση γλυκογόνου μετά από γλυκολυτική συνεδρία είναι πραγματική ανάγκη. Αλλάζει μόνο το ημερήσιο σύνολο,
+  και μέτρια (−12 g εδώ) — το εύρος endurance είναι στενό (5-9 g/kg) και η καμπύλη convex.</div>
 </div>
-<div class="mech">Μηχανισμός: πριν το <code>choPickLoadBand()</code> — <code>if (dayHrs·60 &lt; 60 &amp;&amp; loadPerKg &gt; 9) loadPerKg *= 0.85</code>·
-νέο <code>c.choProtocol.sessionKindByDay[d]</code> (<code>steady</code>/<code>intervals</code>) με auto-ανίχνευση από <code>MET_ACTIVITIES</code> label.
-Χρειάζεται 2–3 ακόμη πραγματικά πλάνα για επικύρωση του 0.85 — γι' αυτό η Phase 1 έμεινε read-only.</div>
+<div class="mech">Μηχανισμός (shipped): <code>choSessionKind(c,d)</code> = `sessionKindByDay[d]` (null→auto από
+<code>CHO_INTERVAL_KEYWORDS</code> στο όνομα/id της MET δραστηριότητας) → όταν intervals + <code>dayHrs·60 &lt; CHO_INTERVAL_MAX_MIN</code>(60)
++ <code>loadPerKg &gt; CHO_INTERVAL_MIN_LOAD</code>(8): <code>dailyLoadPos = pos · CHO_INTERVAL_DAMPEN</code>(0.90) <b>πριν</b> το <code>^1.6</code>
++ το #1 periodisation. <b>Όχι band re-pick</b> — τα bands είναι χοντρά, ένα −10% load μένει στο ίδιο.
+Info flag <code>intervalDampened</code>. Ο συντελεστής 0.90 = εκτίμηση από 1 πραγματικό πλάνο (mockup: 0.85)· θέλει 2-3 ακόμη.</div>
 
 
-<div class="rec" style="margin-top:34px;border-left-color:var(--teal)">
-  <b style="color:var(--teal-d)">Σειρά υλοποίησης:</b> 1 (φάση εβδομάδας) → 3 (HIIT dampen) → 2 (γεύμα προ-προπόνησης).
-  Το 1 &amp; 3 είναι μικρές, ντετερμινιστικές αλλαγές στο <code>cho-protocol.js</code> + λίγο UI· το 2 αγγίζει templates &amp; genPlan, το κρατάμε τελευταίο.
-  Μετά απ' αυτά, τα «μικρότερα» (auto→ένταση hint, session-time flag, «πώς βγήκε αυτό», judo dropdown).
+<div class="rec" style="margin-top:34px;border-left-color:var(--ok)">
+  <b style="color:var(--ok)">Κατάσταση:</b> 1 (φάση εβδομάδας) ✓ SHIPPED · 3 (interval dampen) ✓ SHIPPED ·
+  <b>2 (γεύμα προ-προπόνησης / Phase 2 cleanup) — απομένει</b>· αγγίζει templates &amp; genPlan, γι' αυτό τελευταίο.
+  Μετά, τα «μικρότερα» (auto→ένταση hint, session-time flag, «πώς βγήκε αυτό», judo dropdown) + tuning του
+  <code>CHO_INTERVAL_DAMPEN</code> σε περισσότερα πραγματικά interval-day πλάνα.
 </div>
 
 </body>

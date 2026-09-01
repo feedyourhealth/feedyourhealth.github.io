@@ -224,6 +224,27 @@ var CHO_PHASE_SECONDARY = { base: 0.55, build: 0.80, peak: 1.00, taper: 0.55, ra
 var CHO_PHASE_KEY       = { base: 1.00, build: 1.00, peak: 1.06, taper: 0.80, race: 1.10 };
 var CHO_PHASE_KEY_BONUS = { peak: 0.3, race: 0.8 };   // extra g/kg on the key day, post-lerp
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Interval / HIIT dampening (improvement #3). `loadPerKg` (≈ MET-hours) treats CHO
+   need as scaling linearly with intensity — but a short, very hard interval session
+   burns a lot of glycogen without the total substrate cost the MET integral implies.
+   Validation against a real marathon plan showed the module read a 45-min hard
+   session ~+23% over what the dietitian programmed for that day's DAILY carbs.
+
+   So for a session that is (a) tagged / detected as intervals, (b) shorter than
+   CHO_INTERVAL_MAX_MIN, and (c) still high-load (> CHO_INTERVAL_MIN_LOAD), the DAILY
+   CHO target is computed from a dampened load. Pre / during / post keep the linear,
+   undampened `pos` — post-exercise glycogen resynthesis after a glycolytic session
+   is a real demand. sessionKindByDay[d]: null = auto-detect from MET activity name,
+   else 'steady' | 'intervals'. Factor is an estimate from ONE real plan — the mockup
+   explored 0.85; starting conservative at 0.90 pending more real interval-day plans.
+   ───────────────────────────────────────────────────────────────────────────── */
+var CHO_INTERVAL_DAMPEN   = 0.90;   // daily-CHO load multiplier for a qualifying interval session
+var CHO_INTERVAL_MIN_LOAD = 8;      // loadPerKg (≈ MET-hours) at/below this: never dampen
+var CHO_INTERVAL_MAX_MIN  = 60;     // session longer than this: treat as steady endurance, no dampen
+var CHO_INTERVAL_KEYWORDS = ['hiit', 'interval', 'tabata', 'fartlek', 'sprint', 'crossfit',
+  'circuit', 'spin', 'bootcamp', 'boot camp', 'διαλειμμ', 'σπριντ', 'φαρτλεκ'];
+
 /* ── small pure helpers ──────────────────────────────────────────────────── */
 function choLerp(lo, hi, pos){
   var p = pos < 0 ? 0 : (pos > 1 ? 1 : pos);
@@ -294,6 +315,33 @@ function choKeySessionIndex(c, t){
     if(score >= bestScore){ bestScore = score; best = d; }
   }
   return best;
+}
+// c.choProtocol.sessionKindByDay may be missing / short / hold junk — clean 7-slot array
+function normalizeSessionKindByDay(arr){
+  var out = [null, null, null, null, null, null, null];
+  if(Array.isArray(arr)){
+    for(var i = 0; i < 7; i++){
+      out[i] = (arr[i] === 'steady' || arr[i] === 'intervals') ? arr[i] : null;
+    }
+  }
+  return out;
+}
+// Session kind for day d (improvement #3): an explicit sessionKindByDay[d] wins; else
+// 'intervals' if any MET activity on that day has an interval-ish id/name, else 'steady'.
+function choSessionKind(c, d){
+  if(!c) return 'steady';
+  var manual = normalizeSessionKindByDay(c.choProtocol && c.choProtocol.sessionKindByDay)[d];
+  if(manual) return manual;
+  var acts = c.metActivities || [];
+  for(var i = 0; i < acts.length; i++){
+    var a = acts[i];
+    if(!a || !Array.isArray(a.days) || a.days.indexOf(d) === -1) continue;
+    var hay = (String(a.id || '') + ' ' + String(a.name || '')).toLowerCase();
+    for(var k = 0; k < CHO_INTERVAL_KEYWORDS.length; k++){
+      if(hay.indexOf(CHO_INTERVAL_KEYWORDS[k]) !== -1) return 'intervals';
+    }
+  }
+  return 'steady';
 }
 // ── meal-role classification (Phase 2: feeds allocateMealTargets) ─────────────
 // Mirrors the default meal clock in initializeMealTiming (js/plan-gen/meal-slots.js:493-498).
@@ -415,6 +463,16 @@ function buildCHOFlags(c, t, x){
       'Πειραματικός ρυθμός κατά την άσκηση',
       x.duringGPerHr + ' g/h > 90 — μόνο gut-trained αθλητές αντοχής, 0.8:1 φρουκτόζη:γλυκόζη (tier c).',
       { dismissible: false, triggeredBy: 'experimentalDuringHighRate' }));
+  }
+
+  // intervalDampened — short hard glycolytic session; daily CHO computed from a dampened load
+  if(x.intervalDampen != null && x.intervalDampen < 1){
+    f.push(choMkFlag('intervalDampened', 'info',
+      'Διαλειμματική συνεδρία — μειωμένο ημερήσιο CHO',
+      'Σύντομη υψηλής έντασης συνεδρία: το ημερήσιο CHO υπολογίζεται με συντελεστή ' + x.intervalDampen
+        + ' (εκτίμηση από ένα πραγματικό πλάνο· pre/κατά/μετά δεν επηρεάζονται). '
+        + 'Άλλαξέ το με τον διακόπτη 🏃 Τύπος (Συνεχής / Διαλ.).',
+      { dismissible: false, triggeredBy: 'sessionKind=intervals + <' + CHO_INTERVAL_MAX_MIN + '′ + load>' + CHO_INTERVAL_MIN_LOAD }));
   }
 
   // noStructuredProtocol — fell back to a category / generic framework
@@ -574,7 +632,19 @@ function computeCHOTargets(c, t, dayIdx){
   // showed the linear `pos` put ordinary ~1 h training days mid-range when a dietitian keeps them
   // near the floor. The convex curve keeps normal days low and still reaches the ceiling for a
   // genuine 2 h+ long-run / carb-load day.
-  var dailyPos = Math.pow(pos, 1.6);
+  // ── interval / HIIT dampening (improvement #3) — a short, hard, glycolytic session
+  //    gets a dampened DAILY load; pre/during/post keep the linear undampened `pos`. ──
+  var sessionKind = choSessionKind(c, d);
+  var intervalDampen = 1;
+  if(sessionKind === 'intervals' && loadPerKg != null
+     && loadPerKg > CHO_INTERVAL_MIN_LOAD
+     && dayHrs > 0 && (dayHrs * 60) < CHO_INTERVAL_MAX_MIN){
+    intervalDampen = CHO_INTERVAL_DAMPEN;
+  }
+  // Dampen the POSITION directly, not via a band re-pick: the load bands are coarse enough
+  // that a ~10% load cut usually stays in the same band and does nothing.
+  var dailyLoadPos = (intervalDampen < 1) ? pos * intervalDampen : pos;
+  var dailyPos = Math.pow(dailyLoadPos, 1.6);
   // ── weekly periodisation (improvement #1) — scale the daily total by the week's
   //    phase + whether this is the week's key session. Never touches pre/during/post. ──
   var weekPhase = (CHO_WEEK_PHASES.indexOf(cp.weekPhase) !== -1) ? cp.weekPhase : 'build';
@@ -602,7 +672,8 @@ function computeCHOTargets(c, t, dayIdx){
     dailyGPerKg: dailyGPerKg, duringGPerHr: duringGPerHr,
     sessionStart: sessionStart, isMinor: isMinor,
     carbLoadOverlap: carbLoadOverlap, resolved: resolved,
-    loadPerKg: loadPerKg, dayHrs: dayHrs
+    loadPerKg: loadPerKg, dayHrs: dayHrs,
+    sessionKind: sessionKind, intervalDampen: intervalDampen
   };
   var flags = buildCHOFlags(c, t, flagCtx);
 
@@ -613,6 +684,7 @@ function computeCHOTargets(c, t, dayIdx){
     intensity: intensity,
     intensitySource: intensitySource,
     loadPerKg: loadPerKg,
+    sessionKind: sessionKind,
     weightBasisKg: wBasis,
     sessionStart: sessionStart,
     pre: {
@@ -632,7 +704,8 @@ function computeCHOTargets(c, t, dayIdx){
     dailyCHO: {
       gramsTarget: dailyTarget, gPerKg: +dailyGPerKg.toFixed(2),
       deltaVsBaselineG: deltaVsBaselineG,
-      weekPhase: weekPhase, isKeySession: isKeySession, keySessionDayIdx: keyIdx
+      weekPhase: weekPhase, isKeySession: isKeySession, keySessionDayIdx: keyIdx,
+      intervalDampen: intervalDampen
     },
     // Scaffold for the future allocateMealTargets 3rd arg (design §2.6). perMeal is
     // attached by the Phase 2 genPlan hook, which has the actual meals array. Ignored today.

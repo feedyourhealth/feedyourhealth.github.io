@@ -264,6 +264,26 @@ document.write(window.__MANIFEST__.map(function(p){
     return {base:base,peak:peak};
   });
 
+  // --- CHO protocol · interval / HIIT dampening (improvement #3) -------------
+  probe('cho.intervalDampen', function(){
+    if(typeof computeCHOTargets!=='function') return 'no computeCHOTargets';
+    var cc=deepClone(FIX.metM); cc.sport='running';
+    cc.trainDays=[false,false,true,false,false,false,true];
+    cc.trainHoursByDay=[0,0,0.75,0,0,0,2.5];
+    // Wed = short hard interval session (auto-detected via the name); Sun = 2.5h long run
+    cc.metActivities=[{id:'run_14',name:'Τρέξιμο intervals',met:15,mins:45,days:[2]},
+                      {id:'run_marathon',name:'Long run',met:9,mins:150,days:[6]}];
+    cc.choProtocol={enabled:true,mode:'auto',overrides:{preLeadMin:120,postWindowMin:30},weekPhase:'build'};
+    var t=calcTDEE(cc);
+    function row(d){ var r=computeCHOTargets(cc,t,d); return r?{kind:r.sessionKind,damp:r.dailyCHO.intervalDampen,
+      daily:r.dailyCHO.gramsTarget,pre:r.pre.grams,post:r.post.grams}:null; }
+    var auto={wed:row(2),sun:row(6),
+      kindFn:(typeof choSessionKind==='function')?choSessionKind(cc,2):'no fn'};
+    cc.choProtocol.sessionKindByDay=[null,null,'steady',null,null,null,null];
+    var forcedSteady={wed:row(2)};
+    return {auto:auto,forcedSteady:forcedSteady};
+  });
+
   // --- exclusion engine (the surface Phase 2's intake chips will drive) -------------------
   probe('parseAllergies.sample',     function(){ return parseAllergies(' Φιστίκια, γάλα ,,  ΣΟΓΙΑ '); });
   probe('redMeatFoodsList.shape',    function(){ var a=redMeatFoodsList(); return { n:a.length,

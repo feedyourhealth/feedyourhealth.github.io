@@ -63,7 +63,7 @@
   "counts": {
     "fnChecked": 119,
     "constChecked": 30,
-    "probes": 42
+    "probes": 43
   },
   "fnFails": [],
   "constFails": [],
@@ -604,6 +604,34 @@
           "g": 657,
           "gPerKg": 8.76,
           "key": true
+        }
+      }
+    },
+    "cho.intervalDampen": {
+      "auto": {
+        "wed": {
+          "kind": "intervals",
+          "damp": 0.9,
+          "daily": 442,
+          "pre": 123,
+          "post": 75
+        },
+        "sun": {
+          "kind": "steady",
+          "damp": 1,
+          "daily": 620,
+          "pre": 148,
+          "post": 86
+        },
+        "kindFn": "intervals"
+      },
+      "forcedSteady": {
+        "wed": {
+          "kind": "steady",
+          "damp": 1,
+          "daily": 454,
+          "pre": 123,
+          "post": 75
         }
       }
     },
