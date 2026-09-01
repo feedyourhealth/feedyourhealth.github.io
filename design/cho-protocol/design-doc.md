@@ -23,9 +23,10 @@
   Και τα δύο no-op χωρίς `choProtocol.enabled`.
 - Mockup: `design/cho-protocol/mockup-phase3-surfaces.html` (και οι 4 επιφάνειες).
 
-**CHO Training Protocol: Phases 1-3 COMPLETE + `LOAD_BANDS` + pre-CHO lever κουρδισμένα (2026-09-01).**
-Ανοιχτά: validation `LOAD_BANDS` + pre curve σε δείγμα πραγματικών πλάνων FYH· Phase 2.1 (σκληρότερη
-ανακατανομή / dedicated pre-workout meal slot)· `judo`/SPORT_PROFILES.
+**CHO Training Protocol: Phases 1-3 COMPLETE + `LOAD_BANDS` + pre-CHO + daily-CHO κουρδισμένα &
+validated έναντι πραγματικού marathon plan (2026-09-01).** Ανοιχτά: combat daily range (non-cut
+δείγμα)· περιοδισμός «κανονική vs peak/taper εβδομάδα» (το module είναι stateless per-day)·
+Phase 2.1 (σκληρότερη ανακατανομή)· `judo`/SPORT_PROFILES.
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).
@@ -443,6 +444,15 @@ interrupt.
 - `CHO_TIMING_BY_SPORT`: προστέθηκαν προαιρετικά πεδία `campFloorGPerKg` (combat/weight-class, τροφοδοτεί
   το `weightCutSupervision`), `preTopUp` (team/power «50–100 g 1h πριν»), module-level `CHO_POST_EXTENDED`
   (1.0–1.2 g/kg/h × 4h, ίδιο παντού). 17 κλειδιά = 11 αθλήματα + 6 fallbacks (`__endurance/__team/__combat/__strength/__power/__generic`).
+- **Daily-CHO validation 2026-09-01** — έναντι πραγματικού πλάνου elite μαραθωνοδρόμου (M, 80 kg, Πίσινος
+  case study): ο διαιτολόγος προγραμματίζει **5.6–6.2 g/kg** σε κανονικές εβδομάδες προπόνησης, **8.3 g/kg**
+  μόνο σε carb-load. Το γραμμικό `pos` έβγαζε ~8 g/kg για μια απλή ~1ωρη μέρα → αλλαγές: (α) endurance
+  `dailyGPerKg` 6–10 → **5–9**· (β) daily χρησιμοποιεί **`dailyPos = pos^1.6`** (convex) — κρατά τις
+  κανονικές μέρες στο floor, φτάνει το ceiling μόνο σε 2ω+ long run. Μετά: easy 10km μέρα 447 g vs
+  δ/λόγου 445 g (ακριβές)· long run 2ω 8.3 g/kg = ακριβώς το carb-load νούμερο· residual +23% στο HIIT
+  (glycolytic — ο διαιτολόγος το κρατά χαμηλά, το module το διαβάζει πιο σκληρό). Combat: ένα πλάνο
+  (~2.9 g/kg) αλλά είναι φάση weight-cut 1750 kcal — ο διαιτολόγος βάζει `dailyTargetGPerKg` χαμηλά και
+  το `weightCutSupervision` flag πυροδοτεί· η combat range δεν αλλάχθηκε (χρειάζεται non-cut δείγμα).
 - Panel: control strip + row `🥤 Ένταση` δείχνονται όποτε υπάρχει sport (η ένταση είναι top-level, ανεξάρτητη
   από `enabled`)· οι 3 read-only CHO σειρές + flag strip μόνο όταν `enabled`. `block/alert/warn` flags ως
   χρωματιστές γραμμές, `info` flags ως ένα muted `ℹ️` line.

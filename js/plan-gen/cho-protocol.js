@@ -28,21 +28,21 @@ var CHO_TIMING_BY_SPORT = {
   // ── Endurance ──────────────────────────────────────────────────────────────
   running: {
     category: 'endurance', confidence: 'a', sourceTag: 'Thomas2016 / SPORT_PROTOCOLS.running',
-    dailyGPerKg: { lo: 6, hi: 10 },
+    dailyGPerKg: { lo: 5, hi: 9 },
     pre:   { gPerKgLo: 1, gPerKgHi: 4, leadMinLo: 120, leadMinHi: 180 },
     during:{ gPerHrLo: 30, gPerHrHi: 60, minDurationMin: 90 },
     post:  { gPerKgLo: 0.8, gPerKgHi: 1.2, windowMin: 30, ratioCHOtoPRO: 3 }
   },
   cycling: {
     category: 'endurance', confidence: 'a', sourceTag: 'Thomas2016',
-    dailyGPerKg: { lo: 6, hi: 10 },
+    dailyGPerKg: { lo: 5, hi: 9 },
     pre:   { gPerKgLo: 1, gPerKgHi: 4, leadMinLo: 60, leadMinHi: 240 },
     during:{ gPerHrLo: 30, gPerHrHi: 60, minDurationMin: 90 },
     post:  { gPerKgLo: 1.0, gPerKgHi: 1.2, windowMin: 30, ratioCHOtoPRO: 3 }
   },
   swimming: {
     category: 'endurance', confidence: 'a', sourceTag: 'Thomas2016',
-    dailyGPerKg: { lo: 6, hi: 10 },
+    dailyGPerKg: { lo: 5, hi: 9 },
     pre:   { gPerKgLo: 1, gPerKgHi: 4, leadMinLo: 60, leadMinHi: 240 },
     during:{ gPerHrLo: 30, gPerHrHi: 60, minDurationMin: 60 },
     post:  { gPerKgLo: 1.0, gPerKgHi: 1.2, windowMin: 30, ratioCHOtoPRO: 3 }
@@ -114,7 +114,7 @@ var CHO_TIMING_BY_SPORT = {
   // ── Category fallbacks (fallback level 2) ─────────────────────────────────
   __endurance: {
     category: 'endurance', confidence: 'a', sourceTag: 'Thomas2016',
-    dailyGPerKg: { lo: 6, hi: 10 },
+    dailyGPerKg: { lo: 5, hi: 9 },
     pre:   { gPerKgLo: 1, gPerKgHi: 4, leadMinLo: 120, leadMinHi: 240 },
     during:{ gPerHrLo: 30, gPerHrHi: 60, minDurationMin: 90 },
     post:  { gPerKgLo: 0.8, gPerKgHi: 1.2, windowMin: 30, ratioCHOtoPRO: 3 }
@@ -522,8 +522,14 @@ function computeCHOTargets(c, t, dayIdx){
   var postAnchor = sessionEnd || (sessionStart ? choAddMinutes(sessionStart, Math.round((dayHrs || 1) * 60)) : null);
   var postTime = postAnchor ? choAddMinutes(postAnchor, postWindowMin) : null;
 
-  // ── daily CHO (informational in Phase 1) ──
-  var dailyGPerKg = choLerp(P.dailyGPerKg.lo, P.dailyGPerKg.hi, pos);
+  // ── daily CHO ──
+  // Uses a COMPRESSED position (pos^1.6): validation against real elite endurance plans (an 80 kg
+  // marathoner programmed at 5.6–6.2 g/kg on normal training weeks, only 8+ on carb-load days)
+  // showed the linear `pos` put ordinary ~1 h training days mid-range when a dietitian keeps them
+  // near the floor. The convex curve keeps normal days low and still reaches the ceiling for a
+  // genuine 2 h+ long-run / carb-load day.
+  var dailyPos = Math.pow(pos, 1.6);
+  var dailyGPerKg = choLerp(P.dailyGPerKg.lo, P.dailyGPerKg.hi, dailyPos);
   var dailyTarget = Math.round(dailyGPerKg * wBasis);
   // Phase 1 is strictly per-meal kcal-neutral: the module never shifts the day's CHO total,
   // so deltaVsBaselineG stays 0. Phase 2 may honour cp.dailyTargetGPerKg here (see design §2.5).
