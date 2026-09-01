@@ -147,6 +147,19 @@ function renderWeekTable(){
     if(trainD[di]&&c.sport){
       sportStr='<div class="sport-header-dietitian" style="font-size:10px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
     }
+    // 🥤 CHO Training Protocol (Phase 3) — compact pre·during·post strip on training-day headers,
+    // mirrors what the client sees. No-op unless the dietitian opted the client in.
+    var choStr='';
+    if(c.choProtocol&&c.choProtocol.enabled&&typeof computeCHOTargets==='function'){
+      var _ccr=null; try{_ccr=computeCHOTargets(c,tdeeInfo,di);}catch(_e){_ccr=null;}
+      if(_ccr&&(_ccr.isTrainingDay||_ccr.isMatchDay)){
+        var _dur=_ccr.during.applicable?(_ccr.during.gramsPerHour+'/h'):'—';
+        choStr='<div title="Υδατάνθρακες πριν · κατά · μετά (g) — ίδιο με το πλάνο του πελάτη" '
+          +'style="font-size:9px;font-weight:700;color:#00786f;background:#f2fbf8;border:1px dashed #7fcbbf;'
+          +'border-radius:6px;padding:1px 4px;margin-top:3px;cursor:help">🥤 '
+          +_ccr.pre.grams+'·'+_dur+'·'+_ccr.post.grams+' g</div>';
+      }
+    }
     // ✅ Ένα κουμπί "⋮" αντί για 2 γυμνά εικονίδια — το μενού που ανοίγει έχει ορατό κείμενο
     // ("Αντιγραφή σε άλλες ημέρες" κ.λπ.) αντί να βασίζεται μόνο σε tooltip πάνω σε 2 μικρά
     // εικονίδια δίπλα-δίπλα, δύσκολα να τα ανακαλύψει κανείς την πρώτη φορά.
@@ -157,7 +170,7 @@ function renderWeekTable(){
       +'<button onclick="regenerateDay('+di+');closeDayMenu(\''+dayMenuId+'\')">🔄 Αναδημιουργία μόνο αυτής</button>'
       +'<button onclick="swapDayPrompt(this,'+di+');closeDayMenu(\''+dayMenuId+'\')">🔁 Ανταλλαγή με άλλη ημέρα</button>'
       +'</div>';
-    html+='<th style="position:relative">'+d+badge+timeStr+sportStr+dayMenuBtn+dayMenuDropdown+'</th>';
+    html+='<th style="position:relative">'+d+badge+timeStr+sportStr+choStr+dayMenuBtn+dayMenuDropdown+'</th>';
   });
   html+='</tr></thead><tbody>';
 

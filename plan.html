@@ -247,6 +247,21 @@
   .freeze-chip.used{color:var(--faint);background:var(--bord-l)}
 
   /* exclusions/allergies the plan already avoids — surfaced so the client can confirm it, not just trust it */
+  /* 🥤 CHO Training Protocol card (Phase 3) — plan.html renders SNAP.days[i].cho, server-baked. */
+  .cho-card{background:var(--card);border:.5px solid var(--bord);border-radius:14px;padding:14px;margin-bottom:12px}
+  .cho-card .ch-hd{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--teal-d);margin-bottom:2px}
+  .cho-card .ch-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+  .cho3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .cho-col{background:var(--tint2);border-radius:12px;padding:11px 7px;text-align:center;display:flex;flex-direction:column;gap:3px}
+  .cho-col .ph{font-size:18px;line-height:1}
+  .cho-col .lbl{font-size:10px;color:var(--teal-l);font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+  .cho-col .amt{font-size:18px;font-weight:700;color:var(--teal-d);line-height:1.1}
+  .cho-col .amt small{font-size:10px;font-weight:600;color:var(--muted)}
+  .cho-col .tm{font-size:10px;color:var(--faint)}
+  .cho-col .eg{font-size:10px;color:var(--muted);line-height:1.3;margin-top:2px}
+  .cho-why{display:flex;gap:8px;align-items:flex-start;background:var(--tint);border-radius:10px;padding:9px 11px;margin-top:11px;font-size:11px;color:var(--ink)}
+  .cho-note{font-size:10px;color:var(--muted);background:var(--bord-l);border-radius:10px;padding:8px 10px;margin-top:9px;line-height:1.4}
+  .cho-foot{font-size:9px;color:var(--faint);text-align:center;margin-top:7px;font-style:italic}
   .excl-card{background:var(--card);border:.5px solid var(--bord);border-left:3px solid var(--danger);border-radius:14px;padding:12px 14px}
   .excl-card .nh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--danger);margin-bottom:7px}
   .excl-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -1654,6 +1669,9 @@ function viewHome(){
     +statBox(T('statFat'),nfmt(tg.f||0),unitG);
   v.appendChild(stats);
 
+  // 🥤 CHO γύρω από την προπόνηση — μόνο όταν το σήμερα είναι ημέρα προπόνησης με cho block
+  const choHome=choCard(day&&day.cho); if(choHome)v.appendChild(choHome);
+
   // today meals — with check-off
   const meals=(day&&day.meals)||[];
   const eaten=getMeals();
@@ -1883,6 +1901,34 @@ function glanceCard(){
   c.appendChild(cp); return c;
 }
 
+// 🥤 CHO Training Protocol card — renders SNAP.days[i].cho (server-baked & translated in
+// _buildSnapshot). Returns null when the day has no cho block (rest day / feature off / old link).
+function choCard(cho){
+  if(!cho) return null;
+  const c=el('div','cho-card');
+  const col=(o)=>{
+    const amt = o.applicable===false
+      ? '<div class="amt" style="font-size:13px;color:var(--muted)">—</div>'
+      : (o.perHour!=null
+          ? '<div class="amt">'+nfmt(o.perHour)+'<small> '+esc(o.unit||'g/hr')+'</small></div>'
+          : '<div class="amt">'+nfmt(o.grams||0)+'<small> g</small></div>');
+    const tm = o.time ? '<div class="tm">'+esc(o.time)+(o.sub?' · '+esc(o.sub):'')+'</div>'
+                      : (o.sub?'<div class="tm">'+esc(o.sub)+'</div>':'');
+    const extra = (o.applicable!==false && o.total!=null)
+      ? '<div class="tm">'+esc(o.approx||'~')+nfmt(o.total)+' g</div>' : '';
+    return '<div class="cho-col"><div class="ph">'+esc(o.ph)+'</div><div class="lbl">'+esc(o.label||'')+'</div>'
+      +tm+amt+extra+(o.eg?'<div class="eg">'+esc(o.eg)+'</div>':'')+'</div>';
+  };
+  const pre={...cho.pre,ph:'⚡'}, dur={...cho.during,ph:'🔥'}, post={...cho.post,ph:'💪'};
+  c.innerHTML='<div class="ch-hd"><span>🥤</span><span>'+esc(cho.title||'')+'</span></div>'
+    +(cho.sessionStart?'<div class="ch-sub">'+esc(cho.sessionStart)+'</div>':'')
+    +'<div class="cho3">'+col(pre)+col(dur)+col(post)+'</div>'
+    +(cho.why?'<div class="cho-why"><span>🎯</span><span>'+esc(cho.why)+'</span></div>':'')
+    +(cho.note?'<div class="cho-note">'+esc(cho.note)+'</div>':'')
+    +(cho.foot?'<div class="cho-foot">'+esc(cho.foot)+'</div>':'');
+  return c;
+}
+
 // ── PLAN ──────────────────────────────────────────────────────────────────
 function viewPlan(){
   const s=SNAP, v=el('div','view active');
@@ -1899,6 +1945,9 @@ function viewPlan(){
   meta.style.cssText='display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 2px';
   meta.innerHTML='<span>'+esc(dayHeader(curDay))+'</span><span>'+(day&&day.kcal?nfmt(day.kcal)+' kcal':'')+'</span>';
   v.appendChild(meta);
+
+  // 🥤 CHO γύρω από την προπόνηση — μόνο σε ημέρες με cho block
+  const choC=choCard(day&&day.cho); if(choC)v.appendChild(choC);
 
   // Το curDay είναι απλά η μέρα της εβδομάδας (Δευ..Κυρ) του template — για retroactive check-off
   // πρέπει να το «αγκυρώσουμε» στην πραγματική ημερομηνία ΑΥΤΗΣ της εβδομάδας, όχι σε προηγούμενη/επόμενη.

@@ -9,7 +9,15 @@
   **Γνωστό όριο:** τα recipe-matching + `scalePlan` caps απορροφούν μέρος της ανακατανομής — το
   ορατό swing στο *παραγόμενο* πλάνο είναι μέτριο (~+10-15 g CHO στο pre snack). Μεγαλύτερο swing
   θέλει πραγματικό pre-workout meal slot στο template (follow-up).
-- Phase 3 (portal/PDF) εκκρεμεί.
+- **Phase 3a SHIPPED** (2026-09-01): client portal + dietitian week-table.
+  - `_buildSnapshot` (Dietologist.html): `CHO_TXT` dict (el/en/ru/tr) + `buildDayCho(d)` → βάζει
+    μεταφρασμένο `cho` object στο `SNAP.days[d]` για κάθε ημέρα προπόνησης/αγώνα όταν `choProtocol.enabled`.
+  - `plan.html`: `choCard(cho)` (pure render) στο `viewPlan()` (ανά ημέρα) + `viewHome()` («σήμερα»),
+    3 στήλες Πριν/Κατά/Μετά + why/note/foot· null όταν δεν υπάρχει `cho` block (rest / off / παλιό link).
+  - `js/plan-gen/week-table.js`: συμπαγής strip `🥤 Ν·Ν/h·Ν g` στην κεφαλίδα κάθε ημέρας προπόνησης.
+  - Όλα display-only· `plan.html` καμία μαθηματική client-side.
+- **Phase 3b** (PDF/Word export) εκκρεμεί.
+- Mockup: `design/cho-protocol/mockup-phase3-surfaces.html` (και οι 4 επιφάνειες).
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).
