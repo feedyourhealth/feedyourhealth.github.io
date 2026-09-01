@@ -140,6 +140,86 @@ function normalizePhoneIntl(raw){
   return phone;
 }
 
+// ── Client-facing hand-off messages (WhatsApp / Email) in the client's plan language ──────
+// c.lang: 'el' | 'en' | 'ru' | 'tr', mirroring PUBLISH_MSG_DICTS (js/plan-gen/publish-modal.js).
+// Consumed at runtime by the dietitian's one-click sends: feedback reminder / weekly recap /
+// activity nudge (js/tabs/home-diets.js), client-note & plan-feedback replies
+// (js/portal-comms/portal-comms.js), body-comp report send (js/reports/exports.js).
+// NOTE: the plan-feedback category label (lbl) passed to replyPfRow still comes from the
+// Greek PF_ROW_LABELS map and is not translated yet — only the sentence frame is localised.
+var CLIENT_MSG_DICTS={
+  el:{
+    fbReminder:function(fn,url){return 'Γεια σου '+fn+'! Πριν φτιάξω το πλάνο της επόμενης εβδομάδας, πες μου γρήγορα πώς πήγε αυτή — 30 δευτερόλεπτα, στην καρτέλα Πρόοδος: '+url;},
+    fbReminderSubj:'Πες μου πώς πήγε η εβδομάδα — Feed Your Health',
+    recapAdherence:function(pct){return pct+'% τήρηση αυτή την εβδομάδα';},
+    recapWeight:function(delta){return delta+' βάρος';},
+    recapStreak:function(n){return '🔥 '+n+' '+(n===1?'μέρα':'μέρες')+' σερί';},
+    recap:function(fn,parts){return 'Καλή Κυριακή '+fn+'! Η εβδομάδα σου: '+parts+' 👏';},
+    recapSubj:'Η εβδομάδα σου — Feed Your Health',
+    nudge:function(fn,url){return 'Γεια σου '+fn+'! Είδα ότι δεν έχεις τσεκάρει τίποτα στο πλάνο σου τελευταία — όλα καλά; Το link είναι εδώ αν θες να ρίξεις μια ματιά: '+url;},
+    nudgeSubj:'Πώς πάει; — Feed Your Health',
+    replyNote:function(fn,note){return 'Γεια σου '+fn+'! Είδα το μήνυμά σου: «'+note+'» — ';},
+    replySubj:'Απάντηση — Feed Your Health',
+    replyPfRow:function(fn,lbl,reasons){return 'Γεια σου '+fn+'! Είδα ότι το '+lbl+' σου φάνηκε λίγο'+(reasons?(' ('+reasons+')'):'')+' αυτή την εβδομάδα — ας το προσαρμόσουμε μαζί, πες μου τι θα σε βόλευε καλύτερα.';},
+    replyPfGeneral:function(fn){return 'Γεια σου '+fn+'! Είδα το feedback σου για το πλάνο αυτής της εβδομάδας — θέλω να το προσαρμόσουμε ώστε να σου ταιριάζει καλύτερα. Πες μου τι σε δυσκόλεψε περισσότερο.';},
+    bodyComp:function(fn){return 'Γεια σου '+fn+'! Σου στέλνω το ιστορικό μετρήσεών σου (βάρος, σύσταση σώματος) σε PDF 📎';},
+    bodyCompSubj:'Το ιστορικό μετρήσεών σου — Feed Your Health'
+  },
+  en:{
+    fbReminder:function(fn,url){return 'Hi '+fn+'! Before I build next week’s plan, tell me quickly how this one went — 30 seconds, on the Progress tab: '+url;},
+    fbReminderSubj:'Tell me how your week went — Feed Your Health',
+    recapAdherence:function(pct){return pct+'% adherence this week';},
+    recapWeight:function(delta){return delta+' weight';},
+    recapStreak:function(n){return '🔥 '+n+' '+(n===1?'day':'days')+' streak';},
+    recap:function(fn,parts){return 'Happy Sunday '+fn+'! Your week: '+parts+' 👏';},
+    recapSubj:'Your week — Feed Your Health',
+    nudge:function(fn,url){return 'Hi '+fn+'! I noticed you haven’t checked anything off in your plan lately — all good? Here’s the link if you want to take a look: '+url;},
+    nudgeSubj:'How’s it going? — Feed Your Health',
+    replyNote:function(fn,note){return 'Hi '+fn+'! I saw your message: “'+note+'” — ';},
+    replySubj:'Reply — Feed Your Health',
+    replyPfRow:function(fn,lbl,reasons){return 'Hi '+fn+'! I saw that '+lbl+' felt a bit off'+(reasons?(' ('+reasons+')'):'')+' this week — let’s adjust it together, tell me what would work better for you.';},
+    replyPfGeneral:function(fn){return 'Hi '+fn+'! I saw your feedback on this week’s plan — I want to adjust it so it fits you better. Tell me what was hardest for you.';},
+    bodyComp:function(fn){return 'Hi '+fn+'! Sending you your measurement history (weight, body composition) as a PDF 📎';},
+    bodyCompSubj:'Your measurement history — Feed Your Health'
+  },
+  ru:{
+    fbReminder:function(fn,url){return 'Привет, '+fn+'! Прежде чем я составлю план на следующую неделю, расскажи коротко, как прошла эта — 30 секунд, во вкладке «Прогресс»: '+url;},
+    fbReminderSubj:'Расскажи, как прошла неделя — Feed Your Health',
+    recapAdherence:function(pct){return pct+'% выполнения на этой неделе';},
+    recapWeight:function(delta){return delta+' вес';},
+    recapStreak:function(n){var m=n%10,h=n%100;var w=(m===1&&h!==11)?'день':((m>=2&&m<=4)&&(h<10||h>=20)?'дня':'дней');return '🔥 '+n+' '+w+' подряд';},
+    recap:function(fn,parts){return 'Хорошего воскресенья, '+fn+'! Твоя неделя: '+parts+' 👏';},
+    recapSubj:'Твоя неделя — Feed Your Health',
+    nudge:function(fn,url){return 'Привет, '+fn+'! Я заметил, что ты давно ничего не отмечал в плане — всё в порядке? Вот ссылка, если хочешь заглянуть: '+url;},
+    nudgeSubj:'Как дела? — Feed Your Health',
+    replyNote:function(fn,note){return 'Привет, '+fn+'! Я видел твоё сообщение: «'+note+'» — ';},
+    replySubj:'Ответ — Feed Your Health',
+    replyPfRow:function(fn,lbl,reasons){return 'Привет, '+fn+'! Я вижу, что «'+lbl+'» на этой неделе показалось не очень'+(reasons?(' ('+reasons+')'):'')+' — давай подстроим вместе, скажи, что было бы удобнее.';},
+    replyPfGeneral:function(fn){return 'Привет, '+fn+'! Я видел твой отзыв о плане на эту неделю — хочу подстроить его под тебя. Скажи, что было сложнее всего.';},
+    bodyComp:function(fn){return 'Привет, '+fn+'! Отправляю тебе историю измерений (вес, состав тела) в PDF 📎';},
+    bodyCompSubj:'История твоих измерений — Feed Your Health'
+  },
+  tr:{
+    fbReminder:function(fn,url){return 'Merhaba '+fn+'! Gelecek haftanın planını hazırlamadan önce bu haftanın nasıl geçtiğini kısaca söyle — 30 saniye, İlerleme sekmesinde: '+url;},
+    fbReminderSubj:'Haftan nasıl geçti anlat — Feed Your Health',
+    recapAdherence:function(pct){return 'bu hafta %'+pct+' uyum';},
+    recapWeight:function(delta){return delta+' kilo';},
+    recapStreak:function(n){return '🔥 '+n+' gün üst üste';},
+    recap:function(fn,parts){return 'İyi pazarlar '+fn+'! Haftan: '+parts+' 👏';},
+    recapSubj:'Haftan — Feed Your Health',
+    nudge:function(fn,url){return 'Merhaba '+fn+'! Son zamanlarda planında hiçbir şey işaretlemediğini fark ettim — her şey yolunda mı? Bakmak istersen link burada: '+url;},
+    nudgeSubj:'Nasıl gidiyor? — Feed Your Health',
+    replyNote:function(fn,note){return 'Merhaba '+fn+'! Mesajını gördüm: “'+note+'” — ';},
+    replySubj:'Yanıt — Feed Your Health',
+    replyPfRow:function(fn,lbl,reasons){return 'Merhaba '+fn+'! Bu hafta '+lbl+' biraz iyi gelmemiş'+(reasons?(' ('+reasons+')'):'')+' — birlikte ayarlayalım, sana ne daha iyi gelir söyle.';},
+    replyPfGeneral:function(fn){return 'Merhaba '+fn+'! Bu haftaki plan hakkındaki geri bildirimini gördüm — sana daha iyi uyması için ayarlamak istiyorum. En çok ne zorladı söyle.';},
+    bodyComp:function(fn){return 'Merhaba '+fn+'! Ölçüm geçmişini (kilo, vücut kompozisyonu) PDF olarak gönderiyorum 📎';},
+    bodyCompSubj:'Ölçüm geçmişin — Feed Your Health'
+  }
+};
+// Το λεξικό hand-off μηνυμάτων στη γλώσσα του πελάτη — fallback στα ελληνικά για κενό/άγνωστο c.lang.
+function clientMsgDict(c){ return CLIENT_MSG_DICTS[(c&&c.lang)] || CLIENT_MSG_DICTS.el; }
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ✅ PHASE 1: FOOD PAIRING DATABASE — Chef-Inspired Meal Combinations
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -43,12 +43,13 @@ function replyToClientNote(clientId,date,noteRaw){
   var c=clients.find(function(x){return x.id===clientId;});
   if(!c) return;
   var fname=(c.name||'').split(' ')[0];
-  var msg='Γεια σου '+fname+'! Είδα το μήνυμά σου: «'+noteRaw+'» — ';
+  var d=clientMsgDict(c);
+  var msg=d.replyNote(fname,noteRaw);
   var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
-    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Απάντηση — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.replySubj)+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
     return;
@@ -84,19 +85,20 @@ function replyToPlanFeedback(clientId,weekStart,key){
   var entry=entries.filter(function(e){return e.week_start===weekStart;})[0];
   if(!entry) return;
   var fname=(c.name||'').split(' ')[0];
+  var d=clientMsgDict(c);
   var msg;
   if(key){
     var reasons=((entry.low_rating_reasons||{})[key]||[]).join(', ');
     var lbl=(typeof PF_ROW_LABELS!=='undefined'&&PF_ROW_LABELS[key])||key;
-    msg='Γεια σου '+fname+'! Είδα ότι το '+lbl+' σου φάνηκε λίγο'+(reasons?(' ('+reasons+')'):'')+' αυτή την εβδομάδα — ας το προσαρμόσουμε μαζί, πες μου τι θα σε βόλευε καλύτερα.';
+    msg=d.replyPfRow(fname,lbl,reasons);
   } else {
-    msg='Γεια σου '+fname+'! Είδα το feedback σου για το πλάνο αυτής της εβδομάδας — θέλω να το προσαρμόσουμε ώστε να σου ταιριάζει καλύτερα. Πες μου τι σε δυσκόλεψε περισσότερο.';
+    msg=d.replyPfGeneral(fname);
   }
   var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
-    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Απάντηση — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.replySubj)+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
     return;

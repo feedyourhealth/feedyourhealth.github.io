@@ -231,14 +231,15 @@ function sendFeedbackReminder(clientId){
   var base=(window.Cloud&&window.Cloud.PORTAL_BASE)||'https://feedyourhealth.github.io/plan.html';
   var url=base+'?t='+c.shareToken;
   var fname=(c.name||'').split(' ')[0];
-  var msg='Γεια σου '+fname+'! Πριν φτιάξω το πλάνο της επόμενης εβδομάδας, πες μου γρήγορα πώς πήγε αυτή — 30 δευτερόλεπτα, στην καρτέλα Πρόοδος: '+url;
+  var d=clientMsgDict(c);
+  var msg=d.fbReminder(fname,url);
   var phone=normalizePhoneIntl(c.phone);
   var sent=false;
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
     sent=true;
   } else if(c.email){
-    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Πες μου πώς πήγε η εβδομάδα — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.fbReminderSubj)+'&body='+encodeURIComponent(msg);
     sent=true;
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
@@ -284,12 +285,13 @@ function buildWeeklyRecapText(c){
   var streak=ckStreak(byDate);
   var wDelta=weeklyWeightDeltaText(c);
   var fname=(c.name||'').split(' ')[0];
+  var d=clientMsgDict(c);
   var parts=[];
-  if(score!=null) parts.push(score+'% τήρηση αυτή την εβδομάδα');
-  if(wDelta) parts.push(wDelta+' βάρος');
-  if(streak>0) parts.push('🔥 '+streak+' '+(streak===1?'μέρα':'μέρες')+' σερί');
+  if(score!=null) parts.push(d.recapAdherence(score));
+  if(wDelta) parts.push(d.recapWeight(wDelta));
+  if(streak>0) parts.push(d.recapStreak(streak));
   if(!parts.length) return null;
-  return 'Καλή Κυριακή '+fname+'! Η εβδομάδα σου: '+parts.join(', ')+' 👏';
+  return d.recap(fname,parts.join(', '));
 }
 // Στέλνει το πραγματικό ανακεφαλαιωτικό (σκορ/βάρος/σερί) ΣΤΟΝ πελάτη — το αντίστροφο του κουμπιού
 // «Κοινοποίησε την πρόοδό σου» στο plan.html, που ο πελάτης πρέπει ο ίδιος να το πατήσει και να
@@ -303,7 +305,7 @@ function sendWeeklyRecap(clientId){
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
-    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Η εβδομάδα σου — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(clientMsgDict(c).recapSubj)+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
   }
@@ -317,12 +319,13 @@ function sendActivityNudge(clientId){
   var base=(window.Cloud&&window.Cloud.PORTAL_BASE)||'https://feedyourhealth.github.io/plan.html';
   var url=base+'?t='+c.shareToken;
   var fname=(c.name||'').split(' ')[0];
-  var msg='Γεια σου '+fname+'! Είδα ότι δεν έχεις τσεκάρει τίποτα στο πλάνο σου τελευταία — όλα καλά; Το link είναι εδώ αν θες να ρίξεις μια ματιά: '+url;
+  var d=clientMsgDict(c);
+  var msg=d.nudge(fname,url);
   var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else if(c.email){
-    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Πώς πάει; — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.nudgeSubj)+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
   }

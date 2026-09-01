@@ -1145,14 +1145,15 @@ function sendBodyCompReport(channel){
   var c=getC();if(!c)return;
   if(!c.weightLog||!c.weightLog.length){showErrorToast('Δεν υπάρχουν εγγραφές tracker.');return;}
   var fname=(c.name||'').split(' ')[0]||'σου';
-  var msg='Γεια σου '+fname+'! Σου στέλνω το ιστορικό μετρήσεών σου (βάρος, σύσταση σώματος) σε PDF 📎';
+  var d=clientMsgDict(c);
+  var msg=d.bodyComp(fname);
   if(channel==='wa'){
     var phone=normalizePhoneIntl(c.phone);
     if(!phone){showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.');return;}
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else {
     if(!c.email){showErrorToast('Δεν υπάρχει email για τον/την '+(c.name||'πελάτη')+'.');return;}
-    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Το ιστορικό μετρήσεών σου — Feed Your Health')+'&body='+encodeURIComponent(msg);
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.bodyCompSubj)+'&body='+encodeURIComponent(msg);
   }
   exportBodyCompPDF();
   showSuccessToast('Άνοιξε το PDF για αποθήκευση — επισύναψέ το στο μήνυμα που άνοιξε.');
