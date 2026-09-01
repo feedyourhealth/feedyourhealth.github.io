@@ -166,19 +166,37 @@ var CHO_SPORT_CATEGORY = {
 };
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   2. LOAD_BANDS — maps the day's MET exercise load (kcal/kg) onto a position
-   (0..1) inside the sport's g/kg range. Thresholds are FIRST-PASS ESTIMATES;
-   they need tuning against real FYH client plans before they are treated as
-   settled (design §6.2 #1).
+   2. LOAD_BANDS — maps the day's MET exercise load onto a position (0..1) inside
+   the sport's g/kg range.
+
+   `loadPerKg` = calcMETkcal().byDay[d] / bodyweight. For a non-pregnant client
+   the weight cancels out, so it reduces to  MET × minutes × 0.0175  ≈  MET-hours
+   of training that day. The thresholds below are therefore read as MET-hours:
+     ≤3    ≤~30 min easy / skill work
+     3–7   ~30–60 min easy–moderate
+     7–12  ~1 h moderate, or ~45 min hard
+     12–18 ~60–90 min mod-high, hard combat/team session
+     18–26 ~2 h+ endurance / long hard session
+     >26   2.5 h+ / stage / ultra-endurance
+
+   Tuned 2026-09-01 from the first-pass estimates (was 4/9/14 → 0.15/0.45/0.75/1.0):
+   the old curve pushed an ordinary ~1 h steady session to "high" (pos 0.75) and
+   compressed everything ≥14 MET-h into pos 1.0, so a 2 h ride and a 5 h ultra got
+   identical treatment. This curve keeps ~45–90 min sessions "moderate" and leaves
+   headroom between a hard 2 h day and a true ultra day. Grounded in the ACSM/AND/DC
+   daily-CHO tiers (Thomas 2016: 3–5 / 5–7 / 6–10 / 8–12 g/kg by training volume),
+   not yet validated against a sample of real FYH athlete plans.
    ───────────────────────────────────────────────────────────────────────────── */
 var CHO_LOAD_BANDS = [
-  { maxLoadPerKg: 4,          pos: 0.15, tag: 'low'  },
-  { maxLoadPerKg: 9,          pos: 0.45, tag: 'mod'  },
-  { maxLoadPerKg: 14,         pos: 0.75, tag: 'high' },
+  { maxLoadPerKg: 3,          pos: 0.10, tag: 'low'  },
+  { maxLoadPerKg: 7,          pos: 0.30, tag: 'low'  },
+  { maxLoadPerKg: 12,         pos: 0.50, tag: 'mod'  },
+  { maxLoadPerKg: 18,         pos: 0.70, tag: 'high' },
+  { maxLoadPerKg: 26,         pos: 0.88, tag: 'high' },
   { maxLoadPerKg: Infinity,   pos: 1.00, tag: 'high' }
 ];
-// loadPerKg at/above this, AND a match day, auto-promotes intensity to 'race'
-var CHO_RACE_LOAD_PER_KG = 16;
+// loadPerKg (≈ MET-hours) at/above this, AND a match day, auto-promotes intensity to 'race'
+var CHO_RACE_LOAD_PER_KG = 20;
 // manual tag -> position inside the range
 var CHO_MANUAL_POS = { low: 0.05, mod: 0.50, high: 0.95, race: 1.00 };
 // gross-bucket start times when only c.matchTimeBucket is known (mirrors plan.html MATCH_TIME_H)

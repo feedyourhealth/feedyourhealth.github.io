@@ -23,8 +23,9 @@
   Και τα δύο no-op χωρίς `choProtocol.enabled`.
 - Mockup: `design/cho-protocol/mockup-phase3-surfaces.html` (και οι 4 επιφάνειες).
 
-**CHO Training Protocol: Phases 1-3 COMPLETE.** Ανοιχτά: κούρδισμα `LOAD_BANDS` σε πραγματικά
-πλάνα FYH· Phase 2.1 (σκληρότερη ανακατανομή / dedicated pre-workout meal slot)· `judo`/SPORT_PROFILES.
+**CHO Training Protocol: Phases 1-3 COMPLETE + `LOAD_BANDS` κουρδισμένα (2026-09-01).** Ανοιχτά:
+validation `LOAD_BANDS` σε δείγμα πραγματικών πλάνων FYH· Phase 2.1 (σκληρότερη ανακατανομή /
+dedicated pre-workout meal slot)· cycling-pre μοχλός· `judo`/SPORT_PROFILES.
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).
@@ -142,16 +143,23 @@ loadPerKg = calcMETkcal(c).byDay[dayIdx] / weightBasisKg      // kcal άσκησ
 (έτσι δεν χάνεται μέρα ορισμένη μόνο μέσω MET δραστηριότητας — λύνει το `trainDays` vs
 `metActivities.days` mismatch).
 
-**Χαρτογράφηση φορτίου → θέση στο εύρος g/kg του αθλήματος** — `LOAD_BANDS`, tunable const στο
-module· τα κατώφλια είναι **αρχικές εκτιμήσεις**, θέλουν κούρδισμα πάνω σε πραγματικά πλάνα
-πελατών πριν κλειδώσουν:
+**Χαρτογράφηση φορτίου → θέση στο εύρος g/kg του αθλήματος** — `LOAD_BANDS`, tunable const στο module.
+Για μη-έγκυο πελάτη το βάρος απλοποιείται, οπότε `loadPerKg = MET × λεπτά × 0.0175 ≈ MET-ώρες` της
+ημέρας. **Κουρδίστηκε 2026-09-01** (ήταν 4/9/14 → 0.15/0.45/0.75/1.0) — η παλιά καμπύλη έσπρωχνε μια
+συνηθισμένη ~1ωρη προπόνηση στο «high» και συμπίεζε τα πάντα ≥14 MET-h στο pos 1.0· η νέα κρατά τα
+45–90′ στο «moderate» και αφήνει περιθώριο ανάμεσα σε σκληρή 2ωρη μέρα και σε ultra. Grounded στα
+ACSM/AND/DC daily-CHO tiers (Thomas 2016), **όχι ακόμα validated σε δείγμα πραγματικών πλάνων FYH**.
 
-| `loadPerKg` (kcal άσκησης / kg) | Θέση | Ισοδύναμο tag |
-|---|---|---|
-| ≤ ~4 | κάτω άκρο εύρους | ≈ `low` |
-| ~4 – 9 | μέση | ≈ `mod` |
-| ~9 – 14 | άνω-μέση | ≈ `high` |
-| ≥ ~14 | πάνω άκρο | ≈ `high` / `race` |
+| `loadPerKg` (≈ MET-ώρες) | pos | tag | ~ νόημα |
+|---|---|---|---|
+| ≤ 3 | 0.10 | `low` | ≤~30′ χαλαρά / τεχνική |
+| 3 – 7 | 0.30 | `low` | ~30–60′ χαλαρά–μέτρια |
+| 7 – 12 | 0.50 | `mod` | ~1ω μέτρια, ή ~45′ σκληρά |
+| 12 – 18 | 0.70 | `high` | ~60–90′ μεσαία-υψηλή, σκληρό combat/team |
+| 18 – 26 | 0.88 | `high` | ~2ω+ αντοχή / μεγάλη σκληρή συνεδρία |
+| > 26 | 1.00 | `high` | 2.5ω+ / stage / ultra |
+
+`CHO_RACE_LOAD_PER_KG` = **20** (ήταν 16) — auto-`race` όταν το φορτίο ≥ αυτό **και** `matchDays[d]`.
 
 **Επηρεάζει:** το **ημερήσιο** CHO g/kg και το **post-exercise** g/kg (κλιμάκωση εντός του
 εύρους του αθλήματος).
@@ -444,9 +452,11 @@ interrupt.
 
 ### 6.2 Ανοιχτά
 
-1. Τα κατώφλια `LOAD_BANDS` (§2.2, `loadPerKg` → θέση) + το `CHO_RACE_LOAD_PER_KG` (16) + το βάρος
-   `prePos = 0.65·leadFrac + 0.35·pos` είναι **αρχικές εκτιμήσεις** — θέλουν κούρδισμα πάνω σε
-   πραγματικά πλάνα πελατών (FYH) πριν κλειδώσουν. Αυτός είναι ο λόγος που το Phase 1 είναι read-only.
+1. `LOAD_BANDS` κουρδίστηκαν 2026-09-01 (§2.2, νέα 6-band καμπύλη + `CHO_RACE_LOAD_PER_KG`=20) από
+   exercise-physiology reasoning — **ακόμα δεν** έχουν validated σε δείγμα πραγματικών πλάνων FYH.
+   Επίσης ανοιχτό: το `prePos = 0.65·leadFrac + 0.35·pos` κρατά το cycling-pre ~2.5 g/kg σε 2ωρη
+   μέρα (leadFrac 0.33 λόγω leadMin 60–240)· αν φανεί υψηλό → ξεχωριστός μοχλός (cycling `gPerKgHi`
+   ή το prePos βάρος), όχι `LOAD_BANDS`.
 2. **Phase 2.1 (αν χρειαστεί):** σκληρότερη ανακατανομή — post-`scalePlan` pass που σπρώχνει τα carb
    foods του pre/post γεύματος πάνω / fat foods κάτω προς τους `computeCHOTargets` στόχους· πιο
    επιθετικό αλλά ρισκάρει το calorie-consistency guard. Ή: νέο "pre-workout meal" slot στα templates.
