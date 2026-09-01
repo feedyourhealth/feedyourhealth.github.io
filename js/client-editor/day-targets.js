@@ -383,7 +383,17 @@ function buildDayTgtHtml(c,t){
         choIntRow+='<td><button type="button" disabled style="padding:2px 6px;border-radius:999px;border:1px solid #eee;background:#f0f0f0;color:#bbb;font-size:9px;font-weight:700;min-width:38px;cursor:not-allowed;font-family:inherit">—</button></td>';
       }else{
         var _iv=intByDay[_xi];
-        choIntRow+='<td><button type="button" onclick="cycleTrainIntensity('+_xi+')" title="Ένταση συνεδρίας — κύκλος auto→low→mod→high→race" style="'+choIntPillStyle(_iv)+'">'+(_iv||'auto')+'</button></td>';
+        // auto (null) → show what computeCHOTargets actually resolved it to, so the dietitian
+        // isn't guessing what "auto" landed on. Only when the CHO module is on (else no result).
+        var _ivHint='';
+        if(!_iv&&choEnabled){
+          var _ivR=choResults[_xi];
+          if(_ivR&&_ivR.intensity&&(_ivR.isTrainingDay||_ivR.isMatchDay)){
+            var _IVLBL={low:'χαμηλή',mod:'μέτρια',high:'υψηλή',race:'αγώνας'};
+            _ivHint='<small style="display:block;font-weight:600;color:#8aa;font-size:8px">&rarr; '+(_IVLBL[_ivR.intensity]||_ivR.intensity)+'</small>';
+          }
+        }
+        choIntRow+='<td style="text-align:center"><button type="button" onclick="cycleTrainIntensity('+_xi+')" title="Ένταση συνεδρίας — κύκλος auto&rarr;low&rarr;mod&rarr;high&rarr;race. Στο «auto» φαίνεται από κάτω τι υπολόγισε το MET φορτίο." style="'+choIntPillStyle(_iv)+'">'+(_iv||'auto')+'</button>'+_ivHint+'</td>';
       }
     }
     choIntRow+='</tr>';

@@ -501,15 +501,20 @@ interrupt.
 
 ### 6.2 Ανοιχτά
 
-0. **Improvements #1, #3, και το #2 cleanup SHIPPED 2026-09-01** — βλ. Status πάνω. Το #2 cleanup
-   αφαίρεσε εντελώς το Phase-2 `redistributeCHOForTraining` (η ορατή επίδραση ήταν ~+12 g σε ένα
-   snack ενώ πρόσθετε non-determinism + calorie-guard έκθεση)· η CHO είναι πλέον display-only
-   end-to-end. **Απομένει ως feature (όχι tune):** αποκλειστικό «pre-workout meal slot» στα
-   αθλητικά templates — εκεί μπορεί να μπει ένα πραγματικό pre-CHO φορτίο (90-140 g). Bundle το με
-   άλλη δουλειά πάνω στα templates. Επίσης: το `CHO_INTERVAL_DAMPEN=0.90` του #3 είναι εκτίμηση από
-   **ένα** πραγματικό πλάνο — χρειάζεται 2-3 ακόμη· ανοιχτό αν πρέπει να δαμπάρει και μετά το
-   `^1.6`/phase-mult (τώρα η επίδραση σε endurance μέρα είναι μέτρια, ~−12 g/72kg, λόγω του στενού
-   5-9 g/kg εύρους + της convex καμπύλης).
+0. **Improvements #1, #3, το #2 cleanup, και 2 «μικρότερα» SHIPPED 2026-09-01** — βλ. Status πάνω.
+   Το #2 cleanup αφαίρεσε εντελώς το Phase-2 `redistributeCHOForTraining` (η ορατή επίδραση ήταν
+   ~+12 g σε ένα snack ενώ πρόσθετε non-determinism + calorie-guard έκθεση)· η CHO είναι πλέον
+   display-only end-to-end. **Μικρότερα shipped:** (α) στη γραμμή 🥤 Ένταση, όταν είναι «auto»
+   φαίνεται από κάτω το resolved (`→ χαμηλή/μέτρια/υψηλή/αγώνας` από το MET φορτίο)· (β) **`judo`
+   προστέθηκε στο `SPORT_PROFILES`** (`32/24/44`, 🥋, `isMET`) — το `SPORT_PROTOCOLS.judo` +
+   `CHO_TIMING_BY_SPORT.judo` (level-1) γίνονται επιτέλους reachable· ταυτόχρονα διορθώθηκαν τα
+   supp-id mismatches που θα έβγαζαν raw labels (`calcium→calc`, `betaalanine→b_alanine` σε
+   judo+football) + προστέθηκε `caffeine` στο `SUPPS`.
+   **Απομένει ως feature (όχι tune):** αποκλειστικό «pre-workout meal slot» στα αθλητικά templates
+   — 90-140 g pre-CHO φορτίο. Bundle το με άλλη δουλειά πάνω στα templates. Επίσης: το
+   `CHO_INTERVAL_DAMPEN=0.90` του #3 είναι εκτίμηση από **ένα** πραγματικό πλάνο — χρειάζεται 2-3
+   ακόμη· ανοιχτό αν πρέπει να δαμπάρει και μετά το `^1.6`/phase-mult. Και το «πώς βγήκε αυτό»
+   expandable (μέχρι να το ζητήσει διαιτολόγος).
 1. `LOAD_BANDS` κουρδίστηκαν 2026-09-01 (§2.2, νέα 6-band καμπύλη + `CHO_RACE_LOAD_PER_KG`=20) από
    exercise-physiology reasoning — **ακόμα δεν** έχουν validated σε δείγμα πραγματικών πλάνων FYH.
    Το pre-CHO lever αναθεωρήθηκε 2026-09-01 (§Phase 1 notes: `preByLead` απόλυτου χρόνου αντί

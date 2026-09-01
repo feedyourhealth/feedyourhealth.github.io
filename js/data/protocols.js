@@ -18,6 +18,7 @@ var SPORT_PROFILES={
   bjj:{name:'Brazilian Jiu Jitsu',p:32,f:24,c:44,icon:'🥋',notes:'High protein for explosive power & recovery. Moderate carbs for training endurance.',isMET:true},
   boxing:{name:'Boxing',p:30,f:24,c:46,icon:'🥊',notes:'High protein for power. Strategic carbs for rounds & recovery between sparring.',isMET:true},
   mma:{name:'Mixed Martial Arts',p:32,f:23,c:45,icon:'🤼',notes:'Maximum protein (strength + cardio combo). Balanced carbs for both power & endurance.',isMET:true},
+  judo:{name:'Judo',p:32,f:24,c:44,icon:'🥋',notes:'High protein for explosive grappling power & recovery. Weight-category sport — monitor cutting closely (see SPORT_PROTOCOLS.judo).',isMET:true},
   football:{name:'Ποδόσφαιρο',p:26,f:25,c:49,icon:'⚽',notes:'Balanced macro for mixed sport (speed, power, endurance). High carbs for match intensity.',isMET:true},
   basketball:{name:'Μπάσκετ',p:27,f:25,c:48,icon:'🏀',notes:'Moderate protein. Higher carbs for explosive jumps & court sprints.',isMET:true},
   weightlifting:{name:'Weightlifting',p:32,f:26,c:42,icon:'🏋️',notes:'Maximum protein for strength gains. Moderate carbs to preserve glycogen.',isMET:true},
@@ -111,7 +112,7 @@ var SPORT_PROTOCOLS={
     recommendedSupplements:[
       {id:'creatine',required:true,dose:'3-5g/day',protocol:'Loading: 5-7g/day×5-7d, then 3-5g/day'},
       {id:'caffeine',required:false,dose:'3-6mg/kg',timing:'60min before match'},
-      {id:'betaalanine',required:false,dose:'3-5g/day',protocol:'4-6 weeks loading'},
+      {id:'b_alanine',required:false,dose:'3-5g/day',protocol:'4-6 weeks loading'},
       {id:'iron',required:false,condition:'if deficient'},
       {id:'vit_d3',required:false,condition:'if deficient'}
     ],
@@ -143,9 +144,9 @@ var SPORT_PROTOCOLS={
       {id:'creatine',required:true,dose:'3-5g/day',notes:'Improves strength + power'},
       {id:'caffeine',required:true,dose:'3-6mg/kg',timing:'60min before competition'},
       {id:'iron',required:true,condition:'if serum ferritin <30µg/L women, <50µg/L men'},
-      {id:'calcium',required:false,condition:'if dietary intake <1000mg/day'},
+      {id:'calc',required:false,condition:'if dietary intake <1000mg/day'},
       {id:'vit_d3',required:false,condition:'if deficient (likely in weight-cutters)'},
-      {id:'betaalanine',required:false,dose:'3-5g/day',protocol:'4-6 weeks loading'}
+      {id:'b_alanine',required:false,dose:'3-5g/day',protocol:'4-6 weeks loading'}
     ],
     redSAlert:{risk:'VERY HIGH',minCalories:55,details:'⚠️ WEIGHT CYCLING HIGH RISK - Monitor irregular periods (F), low testosterone (M), frequent injuries, persistent fatigue, poor concentration'},
     hydration:{daily:35,training:45,duringTraining:'150-250ml every 15-20min',postTraining:'150% weight loss'},
