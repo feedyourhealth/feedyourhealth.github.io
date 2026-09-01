@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#025857">
+<title>CHO block — client plan view (mockup)</title>
+<style>
+  /* Tokens αντιγραμμένα read-only από plan.html :root (γρ. 17-46). Standalone — τίποτα από το πραγματικό portal. */
+  :root{
+    --teal:#025857; --teal-d:#014545; --teal-l:#037070;
+    --tint:#E2EEE5; --tint2:#E8F5E9; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
+    --bg:#f4f8f6; --card:#ffffff;
+    --amber-bg:#FFF4E5; --amber-bord:#F0A048; --amber-ink:#8A5200;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --teal-d:#8fe0d4; --teal:#1a8f8a; --teal-l:#1a8f8a;
+      --tint:#152722; --tint2:#16302a; --bord:#283b36; --bord-l:#1f2f2a;
+      --ink:#e7f2ef; --muted:#8fb6af; --faint:#6f948d; --ok:#4caf50;
+      --bg:#0d1614; --card:#131f1c;
+      --amber-bg:#3a2a12; --amber-bord:#b3782f; --amber-ink:#f0c48a;
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5}
+  #app{max-width:480px;margin:0 auto;min-height:100vh;padding:16px 14px 40px}
+
+  .mock-note{font-size:11px;color:var(--muted);text-align:center;margin-bottom:12px;font-style:italic}
+
+  .langbar{display:flex;justify-content:flex-end;gap:6px;margin-bottom:10px}
+  .langbar button{border:.5px solid var(--bord);background:var(--card);color:var(--muted);
+    font-size:12px;font-weight:600;border-radius:8px;padding:5px 12px;cursor:pointer;font-family:inherit}
+  .langbar button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+
+  /* .card / .card-hdr — plan.html γρ. 63-67 */
+  .card{background:var(--card);border:.5px solid var(--bord);border-radius:14px;overflow:hidden;margin-bottom:12px}
+  .card-pad{padding:14px}
+  .card-hdr{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--teal-d);margin-bottom:4px}
+  .card-sub{font-size:12px;color:var(--muted);margin-bottom:12px}
+
+  /* 3 στήλες πριν/κατά/μετά — βασισμένο στο .stats grid της plan.html (γρ. 69-74) */
+  .cho3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .cho{background:var(--tint2);border-radius:12px;padding:12px 8px;text-align:center;display:flex;flex-direction:column;gap:4px}
+  .cho .ph{font-size:20px;line-height:1}
+  .cho .lbl{font-size:11px;color:var(--teal-l);font-weight:600}
+  .cho .amt{font-size:20px;font-weight:700;color:var(--teal-d);line-height:1.1}
+  .cho .amt small{font-size:11px;font-weight:600;color:var(--muted)}
+  .cho .time{font-size:11px;color:var(--faint)}
+  .cho .eg{font-size:11px;color:var(--muted);line-height:1.35;margin-top:2px}
+
+  .why{display:flex;gap:8px;align-items:flex-start;background:var(--tint);border-radius:10px;
+    padding:10px 12px;margin-top:12px;font-size:12px;color:var(--ink)}
+  .why .i{font-size:15px;line-height:1.3}
+
+  .note{font-size:11px;color:var(--amber-ink);background:var(--amber-bg);border:.5px solid var(--amber-bord);
+    border-radius:10px;padding:9px 11px;margin-top:10px;line-height:1.4}
+
+  .foot{font-size:10px;color:var(--faint);text-align:center;margin-top:8px;font-style:italic}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="mock-note">MOCKUP — dummy δεδομένα, όπως θα φαινόταν μέσα στο plan.html link του πελάτη</div>
+
+  <div class="langbar">
+    <button id="btn-el" class="on" onclick="setLang('el')">ΕΛ</button>
+    <button id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+
+  <div class="card">
+    <div class="card-pad">
+      <div class="card-hdr"><span>🥤</span><span data-t="title">Η διατροφή σου γύρω από την προπόνηση</span></div>
+      <div class="card-sub" data-t="sub">Τετάρτη · προπόνηση 18:00 – 19:30</div>
+
+      <div class="cho3">
+        <div class="cho">
+          <div class="ph">⚡</div>
+          <div class="lbl" data-t="pre">Πριν</div>
+          <div class="time" data-t="preT">16:00 (2 ώρες πριν)</div>
+          <div class="amt">80<small> g</small></div>
+          <div class="eg" data-t="preEg">π.χ. 1 μπανάνα + 2 φέτες ψωμί με μέλι</div>
+        </div>
+        <div class="cho">
+          <div class="ph">🔥</div>
+          <div class="lbl" data-t="dur">Κατά τη διάρκεια</div>
+          <div class="time" data-t="durT">κάθε ώρα</div>
+          <div class="amt">45<small> g/ώρα</small></div>
+          <div class="eg" data-t="durEg">π.χ. αθλητικό ποτό ή 1 gel + νερό</div>
+        </div>
+        <div class="cho">
+          <div class="ph">💪</div>
+          <div class="lbl" data-t="post">Μετά</div>
+          <div class="time" data-t="postT">20:00 (μέσα σε 30′)</div>
+          <div class="amt">65<small> g</small></div>
+          <div class="eg" data-t="postEg">π.χ. ρύζι + κοτόπουλο, ή smoothie με φρούτα &amp; γιαούρτι</div>
+        </div>
+      </div>
+
+      <div class="why">
+        <span class="i">🎯</span>
+        <span data-t="why">Στόχος: γεμάτες ενεργειακές αποθήκες πριν ξεκινήσεις, σταθερή ενέργεια όσο προπονείσαι, και γρήγορη ανάκαμψη μετά — χωρίς βάρος στο στομάχι.</span>
+      </div>
+
+      <div class="note" data-t="note">Οι ποσότητες είναι για σένα (βάρος 58 kg). Αν η προπόνηση είναι πιο σύντομη ή πιο χαλαρή, μείωσέ τες λίγο. Πες μου πώς σου κάθονται.</div>
+
+      <div class="foot" data-t="foot">Ενδεικτικά τρόφιμα — δες το πλήρες πλάνο σου για τις ακριβείς μερίδες.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Καθαρά mockup — μικρό δίγλωσσο dict, ίδιο μοτίβο με το I18N/T() της plan.html (γρ. 516,938).
+   Δεν υπάρχει SNAP / Supabase εδώ· οι τιμές είναι σταθερές για επίδειξη. */
+var I18N = {
+  el: {
+    title:'Η διατροφή σου γύρω από την προπόνηση',
+    sub:'Τετάρτη · προπόνηση 18:00 – 19:30',
+    pre:'Πριν', preT:'16:00 (2 ώρες πριν)', preEg:'π.χ. 1 μπανάνα + 2 φέτες ψωμί με μέλι',
+    dur:'Κατά τη διάρκεια', durT:'κάθε ώρα', durEg:'π.χ. αθλητικό ποτό ή 1 gel + νερό',
+    post:'Μετά', postT:'20:00 (μέσα σε 30′)', postEg:'π.χ. ρύζι + κοτόπουλο, ή smoothie με φρούτα & γιαούρτι',
+    why:'Στόχος: γεμάτες ενεργειακές αποθήκες πριν ξεκινήσεις, σταθερή ενέργεια όσο προπονείσαι, και γρήγορη ανάκαμψη μετά — χωρίς βάρος στο στομάχι.',
+    note:'Οι ποσότητες είναι για σένα (βάρος 58 kg). Αν η προπόνηση είναι πιο σύντομη ή πιο χαλαρή, μείωσέ τες λίγο. Πες μου πώς σου κάθονται.',
+    foot:'Ενδεικτικά τρόφιμα — δες το πλήρες πλάνο σου για τις ακριβείς μερίδες.'
+  },
+  en: {
+    title:'Fuelling around your training',
+    sub:'Wednesday · training 18:00 – 19:30',
+    pre:'Before', preT:'16:00 (2 hours before)', preEg:'e.g. 1 banana + 2 slices of bread with honey',
+    dur:'During', durT:'every hour', durEg:'e.g. a sports drink or 1 gel + water',
+    post:'After', postT:'20:00 (within 30 min)', postEg:'e.g. rice + chicken, or a fruit & yoghurt smoothie',
+    why:'The goal: full energy stores before you start, steady energy while you train, and fast recovery afterwards — without a heavy stomach.',
+    note:'These amounts are for you (58 kg body weight). If the session is shorter or easier, scale them down a little. Let me know how they feel.',
+    foot:'Example foods — check your full plan for exact portions.'
+  }
+};
+function setLang(lang){
+  document.documentElement.lang = lang;
+  var d = I18N[lang] || I18N.el;
+  document.querySelectorAll('[data-t]').forEach(function(el){
+    var k = el.getAttribute('data-t');
+    if(d[k] != null) el.textContent = d[k];
+  });
+  document.getElementById('btn-el').classList.toggle('on', lang==='el');
+  document.getElementById('btn-en').classList.toggle('on', lang==='en');
+}
+setLang('el');
+</script>
+</body>
+</html>

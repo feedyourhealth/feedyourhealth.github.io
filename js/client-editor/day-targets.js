@@ -251,10 +251,39 @@ function getMealTimingGuide(c){
   return guide;
 }
 
+// 🥤 CHO Training Protocol — pill style for the per-day intensity toggle (Phase 1, display-only).
+// v: null (=auto) | 'low' | 'mod' | 'high' | 'race'. Mirrors the .int-tog states in
+// design/cho-protocol/mockup-dietitian-panel-in-grid.html.
+function choIntPillStyle(v){
+  var base='padding:2px 6px;border-radius:999px;cursor:pointer;font-size:9px;font-weight:700;min-width:38px;font-family:inherit;';
+  if(v==='race') return base+'background:#e65100;color:#fff;border:1px solid #e65100';
+  if(v==='high') return base+'background:#00897b;color:#fff;border:1px solid #00897b';
+  if(v==='mod')  return base+'background:#e0f2ee;color:#00786f;border:1px solid #cfe6e1';
+  if(v==='low')  return base+'background:#fff;color:#00786f;border:1px solid #cfe6e1';
+  return base+'background:#fff;color:#8aa;border:1px dashed #cfe6e1'; // auto (null)
+}
+
 function buildDayTgtHtml(c,t){
   var abbr=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
   var eff=getDayTgtEff(c,t);
   var td=c.trainDays||[false,false,false,false,false,false,false];
+
+  // ── 🥤 CHO Training Protocol (Phase 1: display-only inside this grid) ──────────
+  // Renders ONLY when a real sport is selected. computeCHOTargets / normalizeIntensityByDay
+  // live in js/plan-gen/cho-protocol.js — guarded so load order here is not load-bearing.
+  var choSportOn=!!(c.sport&&c.sport!=='custom');
+  var cp=c.choProtocol||null;
+  var choEnabled=choSportOn&&!!(cp&&cp.enabled);
+  var choManual=choEnabled&&cp.mode==='manual';
+  var intByDay=(typeof normalizeIntensityByDay==='function')
+    ?normalizeIntensityByDay(c.trainIntensityByDay)
+    :[null,null,null,null,null,null,null];
+  var choResults=[];
+  if(choEnabled&&typeof computeCHOTargets==='function'){
+    for(var _cdi=0;_cdi<7;_cdi++){
+      try{choResults[_cdi]=computeCHOTargets(c,t,_cdi);}catch(_e){choResults[_cdi]=null;}
+    }
+  }
   var macros=[
     {key:'k',label:'Kcal',cls:'mrow-k',icls:'dt-inp-k',mn:500,mx:6000},
     {key:'p',label:'Πρωτεΐνη g',cls:'mrow-p',icls:'dt-inp-p',mn:0,mx:500},
@@ -331,7 +360,22 @@ function buildDayTgtHtml(c,t){
     timeRow+='</tr>';
     dayRowHtml=hrsRow+timeRow;
   }
-  var tbody=trainRow+matchRow+dayRowHtml;
+  // 🥤 Session-intensity row — writes c.trainIntensityByDay[d] (null=auto from MET load).
+  // Independent of whether the CHO module is enabled; shown whenever a sport is set.
+  var choIntRow='';
+  if(choSportOn){
+    choIntRow='<tr class="train-row" style="background:#f2fbf8"><td style="color:#00786f">&#129346; Ένταση</td>';
+    for(var _xi=0;_xi<7;_xi++){
+      if(!td[_xi]){
+        choIntRow+='<td><button type="button" disabled style="padding:2px 6px;border-radius:999px;border:1px solid #eee;background:#f0f0f0;color:#bbb;font-size:9px;font-weight:700;min-width:38px;cursor:not-allowed;font-family:inherit">—</button></td>';
+      }else{
+        var _iv=intByDay[_xi];
+        choIntRow+='<td><button type="button" onclick="cycleTrainIntensity('+_xi+')" title="Ένταση συνεδρίας — κύκλος auto→low→mod→high→race" style="'+choIntPillStyle(_iv)+'">'+(_iv||'auto')+'</button></td>';
+      }
+    }
+    choIntRow+='</tr>';
+  }
+  var tbody=trainRow+matchRow+dayRowHtml+choIntRow;
   macros.forEach(function(m){
     tbody+='<tr class="'+m.cls+'"><td>'+m.label+'</td>';
     for(var i=0;i<7;i++){
@@ -341,6 +385,33 @@ function buildDayTgtHtml(c,t){
     }
     tbody+='</tr>';
   });
+  // 🥤 Read-only CHO πριν/κατά/μετά rows — output of computeCHOTargets(c,t,d), inside the
+  // day's "Υδατάνθρακες g" number (kcal-neutral, no calories added). Only when enabled.
+  if(choEnabled){
+    var choRowDefs=[
+      {ic:'⚡',lb:'CHO πριν',pick:function(r){return r&&r.pre?{main:r.pre.grams+' g',sub:r.pre.timeLabel||''}:null;}},
+      {ic:'🔥',lb:'CHO κατά',pick:function(r){
+        if(!r||!r.during)return null;
+        if(!r.during.applicable)return{main:'—',sub:'<'+r.during.minDurationMin+'′'};
+        return{main:r.during.gramsPerHour+' g/h',sub:'~'+r.during.totalGrams+' g'};
+      }},
+      {ic:'💪',lb:'CHO μετά',pick:function(r){return r&&r.post?{main:r.post.grams+' g',sub:r.post.timeLabel||''}:null;}}
+    ];
+    choRowDefs.forEach(function(rd){
+      tbody+='<tr class="train-row" style="background:#f2fbf8"><td style="color:#00786f">'+rd.ic+' '+rd.lb+'</td>';
+      for(var _ci=0;_ci<7;_ci++){
+        var _r=choResults[_ci];
+        var _cell=_r?rd.pick(_r):null;
+        if(!_cell||!_r||(!_r.isTrainingDay&&!_r.isMatchDay)){
+          tbody+='<td style="text-align:center;color:#c8c8c8;font-size:10px;font-weight:700">—</td>';
+        }else{
+          tbody+='<td style="text-align:center"><span style="font-size:10px;font-weight:700;color:#00786f;display:block">'+_cell.main
+            +(_cell.sub?'<small style="display:block;font-weight:600;color:#8aa;font-size:8px">'+_cell.sub+'</small>':'')+'</span></td>';
+        }
+      }
+      tbody+='</tr>';
+    });
+  }
   var carbBoostVal=c.carbBoost!=null?c.carbBoost:20;
   var timingGuide=getMealTimingGuide(c);
   // 🏁 Carb-loading status (ISSN Position Stand: Nutrient Timing) — only shows when an event date is set
@@ -352,6 +423,44 @@ function buildDayTgtHtml(c,t){
     var namesCL=carbLoadIdxs.slice().sort(function(a,b){return a-b;}).map(function(ix){return dAbbrCL[ix];});
     var loadCarbGPreview=Math.round((c.weight||70)*10);
     carbLoadNote='<div style="background:#fff3e0;border:1px solid #ffb74d;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#e65100"><b>🏁 Ενεργή καρβοφόρτωση:</b> '+namesCL.join(', ')+' — στόχος ~'+loadCarbGPreview+'g υδατάνθρακες/ημέρα (ISSN: 8-12g/kg)</div>';
+  }
+  // 🥤 CHO Training Protocol — control strip (same look as .carb-boost-row, dashed green tint).
+  var choCtrlHtml='';
+  if(choSportOn){
+    var choOv=(cp&&cp.overrides)||{};
+    choCtrlHtml='<div class="carb-boost-row" style="border:1px dashed #7fcbbf;background:#f2fbf8;border-radius:6px;padding:6px 10px;margin-top:6px">'
+      +'<label style="font-weight:600"><input type="checkbox" '+(choEnabled?'checked':'')+' onchange="setChoEnabled(this.checked)" style="vertical-align:-2px"> &#129346; Πρωτόκολλο CHO προπόνησης</label>'
+      +(choEnabled?(
+        '&nbsp;·&nbsp;'
+        +'<label><input type="radio" name="choMode" '+(!choManual?'checked':'')+' onchange="setChoMode(\'auto\')"> auto</label> '
+        +'<label><input type="radio" name="choMode" '+(choManual?'checked':'')+' onchange="setChoMode(\'manual\')"> χειροκίνητο</label>'
+        +'&nbsp;·&nbsp;'
+        +'<label>pre <input class="carb-boost-inp" type="number" step="0.1" min="0" max="6" value="'+(choOv.gPerKgPre!=null?choOv.gPerKgPre:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerKgPre\',this.value)"> g/kg</label> '
+        +'<label>κατά <input class="carb-boost-inp" type="number" min="0" max="120" value="'+(choOv.gPerHrDuring!=null?choOv.gPerHrDuring:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerHrDuring\',this.value)"> g/h</label> '
+        +'<label>μετά <input class="carb-boost-inp" type="number" step="0.1" min="0" max="3" value="'+(choOv.gPerKgPost!=null?choOv.gPerKgPost:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerKgPost\',this.value)"> g/kg</label>'
+      ):'<span style="color:#8aa">— ενεργοποίησέ το για CHO πριν/κατά/μετά ανά ημέρα προπόνησης (Thomas 2016 · Ricci 2025)</span>')
+      +'</div>';
+  }
+  // 🥤 Flag strip — dedup by code, block/alert/warn only (info flags stay quiet here).
+  var choFlagHtml='';
+  if(choEnabled){
+    var _seenF={},_flatF=[];
+    choResults.forEach(function(r){if(r&&r.flags)r.flags.forEach(function(fl){if(!_seenF[fl.code]){_seenF[fl.code]=1;_flatF.push(fl);}});});
+    var _showF=_flatF.filter(function(fl){return fl.severity!=='info';});
+    if(_showF.length){
+      choFlagHtml=_showF.map(function(fl){
+        var col=fl.severity==='block'?{bg:'#fdecea',bd:'#f0a048',fg:'#8a1c1c',ic:'⛔'}
+              :fl.severity==='alert'?{bg:'#fdecea',bd:'#e57373',fg:'#c62828',ic:'🔴'}
+              :{bg:'#fff4e5',bd:'#f0a048',fg:'#8a5200',ic:'⚠️'};
+        return '<div style="display:flex;gap:8px;align-items:flex-start;background:'+col.bg+';border:1px solid '+col.bd+';border-radius:6px;padding:7px 10px;margin-top:8px;font-size:10px;color:'+col.fg+';line-height:1.4">'
+          +'<span>'+col.ic+'</span><span><b>'+esc(fl.title)+'</b> — '+esc(fl.detail)+'</span></div>';
+      }).join('');
+    }
+    var _infoF=_flatF.filter(function(fl){return fl.severity==='info';});
+    if(_infoF.length){
+      choFlagHtml+='<div style="font-size:10px;color:#6b6b6b;margin-top:6px;line-height:1.5">'
+        +_infoF.map(function(fl){return 'ℹ️ <b>'+esc(fl.title)+'</b> — '+esc(fl.detail);}).join('<br>')+'</div>';
+    }
   }
   return '<div class="day-tgt-wrap">'
     +'<div class="day-tgt-head"><span class="day-tgt-title">Θερμίδες &amp; μακροθρεπτικά ανά ημέρα</span>'
@@ -365,6 +474,7 @@ function buildDayTgtHtml(c,t){
     +'<label>&#127937; Ημερομηνία αγώνα (καρβοφόρτωση):</label>'
     +'<input class="carb-boost-inp" type="date" value="'+(c.eventDate||'')+'" onchange="setEventDate(this.value)" style="width:auto">'
     +'</div>'
+    +choCtrlHtml
     +carbLoadNote
     +'<div style="font-size:10px;color:var(--text-muted);margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; Μ=ημέρα αγώνα (δεν αλλάζει θερμίδες/macros, μόνο το πλάνο του πελάτη) &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
     +(matchDaysArr.some(function(x){return x;})?(
@@ -384,6 +494,7 @@ function buildDayTgtHtml(c,t){
     +'<div>😴 <b>Ημέρες Ανάπαυσης (R):</b> Σταθερή Πρωτεΐνη, -15% Υδατάνθρακες, +15% Λιπαρά (ορμονική ισορροπία)</div>'
     +'</div>'
     +'</div>'
+    +choFlagHtml
     +'<table class="day-tgt-table"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></div>';
 }
 

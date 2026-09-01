@@ -254,6 +254,55 @@ function setMatchTimeBucket(bucket){
   renderMain();
 }
 
+// 🥤 CHO Training Protocol (Phase 1: display-only). Οι χειριστές μεταλλάσσουν c.choProtocol /
+// c.trainIntensityByDay και ξανασχεδιάζουν την καρτέλα. Δεν αγγίζουν θερμίδες/macros, γι' αυτό
+// save()+upd()+renderMain() (χωρίς onClientChange TDEE cascade) — ίδιο μοτίβο με setMatchDay.
+// computeCHOTargets/normalizeIntensityByDay ζουν στο js/plan-gen/cho-protocol.js.
+function ensureChoProtocol(c){
+  if(!c.choProtocol){
+    c.choProtocol={enabled:false,mode:'auto',overrides:{preLeadMin:120,postWindowMin:30},
+      dailyTargetGPerKg:null,experimentalDuringHighRate:false,weightCutAcknowledged:false};
+  }
+  if(!c.choProtocol.overrides)c.choProtocol.overrides={preLeadMin:120,postWindowMin:30};
+  return c.choProtocol;
+}
+function setChoEnabled(on){
+  var c=getC();if(!c)return;
+  ensureChoProtocol(c).enabled=!!on;
+  save();
+  upd('choProtocol',c.choProtocol);
+  renderMain();
+}
+function setChoMode(mode){
+  var c=getC();if(!c)return;
+  ensureChoProtocol(c).mode=(mode==='manual')?'manual':'auto';
+  save();
+  upd('choProtocol',c.choProtocol);
+  renderMain();
+}
+function setChoOverride(key,v){
+  var c=getC();if(!c)return;
+  if(['gPerKgPre','gPerHrDuring','gPerKgPost','preLeadMin','postWindowMin'].indexOf(key)===-1)return;
+  var cp=ensureChoProtocol(c);
+  var num=parseFloat(v);
+  cp.overrides[key]=(v===''||v==null||isNaN(num))?null:num;
+  save();
+  upd('choProtocol',c.choProtocol);
+  renderMain();
+}
+// Κύκλος έντασης ημέρας: auto(null) → low → mod → high → race → auto
+function cycleTrainIntensity(d){
+  var c=getC();if(!c)return;
+  if(!Array.isArray(c.trainIntensityByDay)||c.trainIntensityByDay.length!==7)
+    c.trainIntensityByDay=[null,null,null,null,null,null,null];
+  var ORDER=[null,'low','mod','high','race'];
+  var idx=ORDER.indexOf(c.trainIntensityByDay[d]==null?null:c.trainIntensityByDay[d]);
+  c.trainIntensityByDay[d]=ORDER[(idx+1)%ORDER.length];
+  save();
+  upd('trainIntensityByDay',c.trainIntensityByDay);
+  renderMain();
+}
+
 function excludeSupp(id,timing){
   var c=getC();if(!c)return;
   if(!c.suppExclude)c.suppExclude=[];

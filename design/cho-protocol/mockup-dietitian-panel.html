@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHO Training Protocol — Dietitian panel (mockup)</title>
+<style>
+  /* Παλέτα & primitives αντιγραμμένα read-only από css/styles.css + js/client-editor/render-main.js
+     (sport-supplements block). Τίποτα δεν φορτώνεται από το πραγματικό app — καθαρό static mockup. */
+  :root{
+    --teal:#025857; --teal-d:#014545;
+    --card-bg:#fff; --border-light:#e0e0e0;
+    --text-strong:#1a1a1a; --text-muted:#6b6b6b;
+    --activity:#7CB342;
+    --amber-bg:#FFF4E5; --amber-bord:#F0A048; --amber-ink:#8A5200;
+    --page:#f2f4f3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px 16px;background:var(--page);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--text-strong);font-size:13px;line-height:1.5}
+  .wrap{max-width:780px;margin:0 auto}
+  .mock-note{font-size:11px;color:var(--text-muted);text-align:center;margin-bottom:16px;font-style:italic}
+
+  /* ── .section-card / .section-header — css/styles.css:547,555 ── */
+  .section-card{background:var(--card-bg);border-left:4px solid var(--activity);border-radius:14px;
+    padding:16px;margin-bottom:12px;box-shadow:0 2px 4px rgba(0,0,0,.06)}
+  .section-header{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;
+    margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #f0f0f0;color:var(--teal);flex-wrap:wrap}
+  .section-icon{font-size:18px;line-height:1}
+
+  /* ── .fg / .fgrp — css/styles.css:539,542,543 ── */
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .fgrp label{display:block;font-size:11px;color:#555;margin-bottom:5px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.3px}
+  .fgrp select,.fgrp input{width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid #e0e0e0;
+    background:#fff;color:#1a1a1a;font-size:12px;min-height:36px;font-family:inherit}
+  .fgrp input:disabled{background:#f4f4f4;color:#999}
+  .hint{font-size:10px;color:#666;margin-top:4px;font-style:italic}
+
+  /* ── Tinted callout — ίδιο ύφος με το sport-supplements block (render-main.js:266) ── */
+  .callout{background:#E8F5E9;padding:12px;border-radius:5px;margin:12px 0;border-left:4px solid var(--teal)}
+  .callout > b{color:var(--teal)}
+
+  /* ── Ένταση ανά ημέρα ── */
+  .day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px}
+  .day-col{background:#fafbfb;border:1px solid #eee;border-radius:8px;padding:6px 4px;text-align:center}
+  .day-col.rest{opacity:.4}
+  .day-col .dn{font-size:11px;font-weight:700;color:var(--teal-d);margin-bottom:4px}
+  .day-col .dsub{font-size:8px;color:#999;margin-bottom:5px;min-height:10px}
+  .int-btn{display:block;width:100%;margin:2px 0;padding:3px 0;font-size:9px;border-radius:4px;
+    border:1px solid #ddd;background:#fff;color:#555;cursor:pointer;font-family:inherit}
+  .int-btn.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}
+  .day-col.rest .int-btn{cursor:not-allowed}
+
+  /* ── Toggle override ── */
+  .ovr-row{display:flex;align-items:center;gap:8px;margin:10px 0 4px}
+  .ovr-row input{width:16px;height:16px;cursor:pointer}
+  .ovr-row label{font-size:12px;font-weight:600;color:var(--text-strong);cursor:pointer;text-transform:none;letter-spacing:0}
+  .ovr-inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+  .ovr-inputs .fgrp label{font-size:10px}
+
+  /* ── Πίνακας εξόδου ── */
+  table.out{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}
+  table.out th,table.out td{border:1px solid #e6e6e6;padding:7px 8px;text-align:center}
+  table.out thead th{background:#E8F5E9;color:var(--teal-d);font-weight:700}
+  table.out tbody th{background:#fafbfb;text-align:left;font-weight:700;color:#444;white-space:nowrap}
+  table.out .g{font-weight:700;color:var(--teal);font-size:13px}
+  table.out .tm{font-size:9px;color:#888;display:block;margin-top:1px}
+  .race-cell{background:#FFF9E9}
+
+  /* ── Warning flag ── */
+  .flag{display:flex;gap:10px;background:var(--amber-bg);border:1px solid var(--amber-bord);
+    border-radius:8px;padding:10px 12px;margin:12px 0;color:var(--amber-ink)}
+  .flag .fi{font-size:18px;line-height:1.2}
+  .flag .ft{font-weight:700;font-size:12px;margin-bottom:2px}
+  .flag .fd{font-size:11px;line-height:1.45}
+  .flag code{font-size:10px;background:rgba(0,0,0,.06);padding:1px 4px;border-radius:3px}
+  .flag .fbadge{display:inline-block;margin-top:6px;font-size:9px;font-weight:700;background:var(--amber-bord);
+    color:#fff;border-radius:4px;padding:2px 6px;text-transform:uppercase;letter-spacing:.4px}
+  .flag.info{background:#EEF4F2;border-color:#c5ddd8;color:#3d5c57}
+
+  .foot{font-size:10px;color:#999;margin-top:10px;font-style:italic;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mock-note">MOCKUP — dummy δεδομένα inline, καμία σύνδεση με state.js / persistence.js / Supabase. Οι τιμές είναι προϋπολογισμένες για επίδειξη (δεν τρέχει computeCHOTargets εδώ).</div>
+
+  <div class="section-card">
+    <div class="section-header"><span class="section-icon">🥤</span>Πρωτόκολλο Υδατανθράκων Προπόνησης&nbsp;·&nbsp;<span style="font-weight:600;color:#777">CHO Training Protocol</span></div>
+
+    <!-- Πελάτης (dummy) -->
+    <div class="fg">
+      <div class="fgrp">
+        <label>Άθλημα</label>
+        <select>
+          <option>🚴 Ποδηλασία (cycling)</option>
+          <option>🏊 Κολύμβηση (swimming)</option>
+          <option>🥋 Brazilian Jiu Jitsu (bjj)</option>
+          <option>🥊 Boxing</option>
+          <option>⚽ Ποδόσφαιρο (football)</option>
+          <option>🏀 Μπάσκετ (basketball)</option>
+          <option>🏋️ Weightlifting</option>
+          <option>⚡ CrossFit</option>
+        </select>
+        <div class="hint">Auto τιμές: SPORT_PROTOCOLS.mealTiming + CHO_TIMING_BY_SPORT (reference table)</div>
+      </div>
+      <div class="fgrp">
+        <label>Προφίλ πελάτη</label>
+        <input type="text" value="Άννα Κ. · 17 ετών · Θ · 58 kg" disabled>
+        <div class="hint">βάρος &amp; ηλικία από την καρτέλα (birthDate → ageAtDate)</div>
+      </div>
+    </div>
+
+    <!-- Ένταση συνεδρίας ανά ημέρα (7 κουμπιά low/mod/high/race) -->
+    <div class="fgrp">
+      <label>Ένταση συνεδρίας ανά ημέρα</label>
+      <div class="day-grid">
+        <div class="day-col">
+          <div class="dn">Δε</div><div class="dsub">προπόνηση</div>
+          <button class="int-btn" onclick="pickInt(this)">low</button>
+          <button class="int-btn on" onclick="pickInt(this)">mod</button>
+          <button class="int-btn" onclick="pickInt(this)">high</button>
+          <button class="int-btn" onclick="pickInt(this)">race</button>
+        </div>
+        <div class="day-col rest">
+          <div class="dn">Τρ</div><div class="dsub">ανάπαυση</div>
+          <button class="int-btn" disabled>low</button><button class="int-btn" disabled>mod</button>
+          <button class="int-btn" disabled>high</button><button class="int-btn" disabled>race</button>
+        </div>
+        <div class="day-col">
+          <div class="dn">Τε</div><div class="dsub">προπόνηση</div>
+          <button class="int-btn" onclick="pickInt(this)">low</button>
+          <button class="int-btn" onclick="pickInt(this)">mod</button>
+          <button class="int-btn on" onclick="pickInt(this)">high</button>
+          <button class="int-btn" onclick="pickInt(this)">race</button>
+        </div>
+        <div class="day-col rest">
+          <div class="dn">Πε</div><div class="dsub">ανάπαυση</div>
+          <button class="int-btn" disabled>low</button><button class="int-btn" disabled>mod</button>
+          <button class="int-btn" disabled>high</button><button class="int-btn" disabled>race</button>
+        </div>
+        <div class="day-col">
+          <div class="dn">Πα</div><div class="dsub">προπόνηση</div>
+          <button class="int-btn" onclick="pickInt(this)">low</button>
+          <button class="int-btn" onclick="pickInt(this)">mod</button>
+          <button class="int-btn" onclick="pickInt(this)">high</button>
+          <button class="int-btn on" onclick="pickInt(this)">race</button>
+        </div>
+        <div class="day-col rest">
+          <div class="dn">Σα</div><div class="dsub">ανάπαυση</div>
+          <button class="int-btn" disabled>low</button><button class="int-btn" disabled>mod</button>
+          <button class="int-btn" disabled>high</button><button class="int-btn" disabled>race</button>
+        </div>
+        <div class="day-col rest">
+          <div class="dn">Κυ</div><div class="dsub">ανάπαυση</div>
+          <button class="int-btn" disabled>low</button><button class="int-btn" disabled>mod</button>
+          <button class="int-btn" disabled>high</button><button class="int-btn" disabled>race</button>
+        </div>
+      </div>
+      <div class="hint">low = τεχνική/αποκατάσταση · mod = τυπική · high = ένταση/όγκος · race = αγώνας/time-trial. Οι ημέρες ανάπαυσης είναι ανενεργές. (Πηγή: c.trainIntensityByDay[7])</div>
+    </div>
+
+    <!-- Override toggle -->
+    <div class="ovr-row">
+      <input type="checkbox" id="ovr" onchange="toggleOverride()">
+      <label for="ovr">✏️ Χειροκίνητο override g/kg (αντί για auto)</label>
+    </div>
+    <div class="ovr-inputs">
+      <div class="fgrp"><label>Pre — g/kg ΣΒ</label><input id="ovrPre" type="number" step="0.1" value="2.5" disabled></div>
+      <div class="fgrp"><label>Κατά — g/ώρα</label><input id="ovrDur" type="number" step="1" value="50" disabled></div>
+      <div class="fgrp"><label>Μετά — g/kg ΣΒ</label><input id="ovrPost" type="number" step="0.1" value="1.0" disabled></div>
+    </div>
+
+    <!-- Warning flag: νεαρός αθλητής -->
+    <div class="flag">
+      <div class="fi">⚠️</div>
+      <div>
+        <div class="ft">Νεαρός αθλητής — 17 ετών &nbsp;<code>youthRestrictionBlock</code></div>
+        <div class="fd">Οι νέοι αθλητές <b>δεν</b> πρέπει να έχουν περιορισμό θερμίδων ή υδατανθράκων. Η ενεργειακή διαθεσιμότητα (EA) πρέπει να μείνει ≥ 45 kcal/kg FFM/ημέρα. Τα κατά-την-άσκηση g/h έχουν χαμηλότερο απόλυτο ceiling (~1 g/min).</div>
+        <span class="fbadge">Απαιτείται επιβεβαίωση πριν τη δημιουργία πλάνου</span>
+      </div>
+    </div>
+
+    <!-- Δευτερεύον info flag -->
+    <div class="flag info">
+      <div class="fi">ℹ️</div>
+      <div>
+        <div class="ft">Κλιμάκωση σε σωματικό βάρος &nbsp;<code>femaleLeanMassScaling</code></div>
+        <div class="fd">Δεν υπάρχει καταχωρημένη άλιπη μάζα (LBM / % λίπους) — οι στόχοι υπολογίστηκαν σε σωματικό βάρος. Ο στόχος ~12 g/kg LBM/ημέρα για υπερ-αναπλήρωση γλυκογόνου δεν υπολογίζεται.</div>
+      </div>
+    </div>
+
+    <!-- Callout: πίνακας εξόδου -->
+    <div class="callout">
+      <b>🔬 Στόχοι CHO ανά ημέρα προπόνησης</b>
+      <table class="out">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Δευτέρα<br><span style="font-weight:400">mod · 18:00</span></th>
+            <th>Τετάρτη<br><span style="font-weight:400">high · 08:00</span></th>
+            <th class="race-cell">Παρασκευή<br><span style="font-weight:400">race · 17:00</span></th>
+          </tr>
+        </thead>
+        <tbody id="outBody">
+          <tr>
+            <th>⚡ Πριν (pre)</th>
+            <td><span class="g" data-auto="116 g" data-man="145 g">116 g</span><span class="tm">16:00</span></td>
+            <td><span class="g" data-auto="174 g" data-man="145 g">174 g</span><span class="tm">06:00</span></td>
+            <td class="race-cell"><span class="g" data-auto="232 g" data-man="145 g">232 g</span><span class="tm">15:00</span></td>
+          </tr>
+          <tr>
+            <th>🔥 Κατά (during)</th>
+            <td><span class="g" data-auto="45 g/h" data-man="50 g/h">45 g/h</span><span class="tm">~68 g / 1.5h</span></td>
+            <td><span class="g" data-auto="55 g/h" data-man="50 g/h">55 g/h</span><span class="tm">~110 g / 2h</span></td>
+            <td class="race-cell"><span class="g" data-auto="60 g/h" data-man="50 g/h">60 g/h</span><span class="tm">~120 g / 2h</span></td>
+          </tr>
+          <tr>
+            <th>💪 Μετά (post)</th>
+            <td><span class="g" data-auto="64 g" data-man="58 g">64 g</span><span class="tm">19:45</span></td>
+            <td><span class="g" data-auto="70 g" data-man="58 g">70 g</span><span class="tm">10:30</span></td>
+            <td class="race-cell"><span class="g" data-auto="70 g" data-man="58 g">70 g</span><span class="tm">19:30</span></td>
+          </tr>
+          <tr>
+            <th>Ημ. σύνολο CHO</th>
+            <td><span class="tm" style="font-size:11px;color:#555">≈ 405 g · 7.0 g/kg</span></td>
+            <td><span class="tm" style="font-size:11px;color:#555">≈ 464 g · 8.0 g/kg</span></td>
+            <td class="race-cell"><span class="tm" style="font-size:11px;color:#555">≈ 522 g · 9.0 g/kg</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="foot">
+        Auto τιμές = εύρος αθλήματος × ένταση ημέρας, κλιμακωμένες σε 58 kg. «Κατά» = g/ώρα × διάρκεια συνεδρίας.
+        Ώρες: pre = έναρξη − 120′ · post = λήξη + 30′ (ίδιος υπολογισμός με getMealTimingGuide).
+        Πηγές: Thomas/Erdman/Burke 2016 (endurance master framework), Desbrow 2014 (youth).
+        Το ημ. σύνολο είναι kcal-neutral (ανακατανομή, όχι προσθήκη θερμίδων).
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* Καθαρά mockup JS — δουλεύει ΜΟΝΟ πάνω στο ήδη-render-αρισμένο static markup αυτής της σελίδας.
+   Δεν υπάρχει computeCHOTargets· το override απλά εναλλάσσει προϋπολογισμένες data-auto / data-man τιμές. */
+function pickInt(btn){
+  var col = btn.closest('.day-col');
+  col.querySelectorAll('.int-btn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  /* mockup: ο πίνακας εξόδου παραμένει σταθερός για επίδειξη */
+}
+function toggleOverride(){
+  var on = document.getElementById('ovr').checked;
+  ['ovrPre','ovrDur','ovrPost'].forEach(function(id){ document.getElementById(id).disabled = !on; });
+  document.querySelectorAll('#outBody .g[data-auto]').forEach(function(el){
+    el.textContent = on ? el.getAttribute('data-man') : el.getAttribute('data-auto');
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHO Protocol μέσα στο day-targets grid (mockup)</title>
+<style>
+  /* Όλα τα class names & τιμές αντιγραμμένα read-only από css/styles.css (γρ. 930-1068, 1124)
+     + τη δομή του buildDayTgtHtml() στο js/client-editor/day-targets.js (γρ. 256-388).
+     Τα ΝΕΑ κομμάτια του CHO module έχουν κίτρινο-πράσινο tint (.cho-new) για να ξεχωρίζουν. */
+  :root{ --teal:#025857; --text-muted:#6b6b6b; }
+  *{box-sizing:border-box}
+  body{margin:0;padding:22px 14px;background:#f2f4f3;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:#1a1a1a;font-size:13px;line-height:1.5}
+  .wrap{max-width:560px;margin:0 auto}
+  .mock-note{font-size:11px;color:var(--text-muted);text-align:center;margin-bottom:14px;font-style:italic}
+  .legend-key{max-width:560px;margin:0 auto 14px;font-size:11px;color:#555;background:#fff;
+    border:1px solid #e0e0e0;border-radius:10px;padding:8px 12px}
+  .legend-key .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+
+  /* ── buildDayTgtHtml container — styles.css:930-933 ── */
+  .day-tgt-wrap{background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:10px 12px;margin-bottom:12px}
+  .day-tgt-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .day-tgt-title{font-size:11px;font-weight:700;color:#555}
+  .day-tgt-reset{border:none;background:none;cursor:pointer;font-size:11px;color:var(--teal);font-weight:600;padding:0}
+
+  /* ── getMealTimingGuide() green box — day-targets.js:226-239 ── */
+  .mtg{background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;padding:10px 12px;margin-bottom:10px}
+  .mtg .h{font-size:11px;font-weight:700;color:#2e7d32;margin-bottom:6px}
+  .mtg .r{font-size:10px;color:#1a1a1a;padding:4px 6px;background:#f1f8f6;border-radius:4px}
+  .mtg .r b{color:#1a3330}
+  .mtg .pre{color:#1565C0}.mtg .post{color:#e65100}
+
+  /* ── .carb-boost-row — styles.css:1066-1068 ── */
+  .carb-boost-row{display:flex;align-items:center;gap:6px;font-size:10px;color:#666;margin-top:5px;flex-wrap:wrap}
+  .carb-boost-row label{white-space:nowrap}
+  .carb-boost-inp{width:44px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;font-size:11px;font-weight:700;color:var(--teal);text-align:center}
+  .carb-boost-inp:disabled{color:#bbb;background:#f4f4f4}
+
+  .legend-it{font-size:10px;color:var(--text-muted);margin:4px 0 6px;font-style:italic}
+
+  /* match time bucket pills — day-targets.js:374-377 */
+  .bkt{padding:5px 10px;border-radius:14px;border:1px solid #ccc;background:#fff;color:#333;font-size:11px;cursor:pointer}
+  .bkt.on{border-color:#025857;background:#025857;color:#fff}
+
+  /* blue macro-adjust box — day-targets.js:380-386 */
+  .madj{background:#f0f7ff;border:1px solid #80d4ff;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#0056b3}
+  .madj .h{font-weight:700;margin-bottom:4px}
+  .madj div{line-height:1.5}
+
+  /* ── .day-tgt-table — styles.css:941-955, 1048-1065, 1124 ── */
+  .day-tgt-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+  .day-tgt-table th{font-size:10px;font-weight:700;color:#888;padding:3px;text-align:center;border-bottom:1px solid #e0e0e0;white-space:nowrap}
+  .day-tgt-table th:first-child{text-align:left;min-width:78px;padding-left:0}
+  .day-tgt-table td{padding:2px}
+  .day-tgt-table td:first-child{font-size:10px;font-weight:700;padding-right:4px;white-space:nowrap}
+  .train-row td:first-child{color:var(--teal);font-weight:700;font-size:10px}
+  .mrow-k td:first-child{color:var(--teal)}
+  .mrow-p td:first-child{color:#1565C0}
+  .mrow-f td:first-child{color:#e65100}
+  .mrow-c td:first-child{color:#2e7d32}
+  .dt-inp{width:100%;padding:3px 2px;border-radius:10px;border:1px solid #ddd;font-size:11px;font-weight:700;text-align:center;font-family:inherit}
+  .dt-inp-k{color:var(--teal)}.dt-inp-p{color:#1565C0}.dt-inp-f{color:#e65100}.dt-inp-c{color:#2e7d32}
+  .train-tog{padding:2px 7px;border-radius:999px;border:none;cursor:pointer;font-size:10px;font-weight:700}
+  .train-t{background:var(--teal);color:#fff}
+  .train-r{background:#eee;color:#6b6b6b}
+  .match-tog{padding:2px 7px;border-radius:999px;border:none;cursor:pointer;font-size:10px;font-weight:700}
+  .match-on{background:#1565C0;color:#fff}
+  .match-off{background:#eee;color:#6b6b6b}
+  .hrs-inp{width:100%;padding:2px 1px;border-radius:5px;border:1px solid #ddd;font-size:10px;font-weight:700;text-align:center;font-family:inherit;background:#f9f9f9}
+  .time-inp{width:100%;padding:2px 3px;border-radius:5px;border:1px solid #ddd;font-size:10px;font-weight:600;text-align:center;font-family:inherit;background:#f9f9f9}
+  .time-t{border-color:var(--teal);color:var(--teal);background:#f0f8f7}
+  .time-r{color:#ccc;background:#f5f5f5}
+
+  /* ═══ ΝΕΑ στοιχεία του CHO module ═══ */
+  .cho-new > td{background:#f2fbf8}
+  .cho-new td:first-child{color:#00786f}
+  .cho-ctrl{background:#f2fbf8;border:1px dashed #7fcbbf;border-radius:6px;padding:6px 10px;margin-top:6px}
+  /* κύκλος έντασης — pill σαν το .train-tog αλλά 4 καταστάσεων */
+  .int-tog{padding:2px 6px;border-radius:999px;border:1px solid #cfe6e1;cursor:pointer;font-size:9px;font-weight:700;background:#fff;color:#00786f;min-width:38px}
+  .int-tog[data-v="mod"]{background:#e0f2ee}
+  .int-tog[data-v="high"]{background:#00897b;color:#fff;border-color:#00897b}
+  .int-tog[data-v="race"]{background:#e65100;color:#fff;border-color:#e65100}
+  .int-tog.rest{background:#f0f0f0;color:#bbb;border-color:#eee;cursor:not-allowed}
+  .cho-val{font-size:10px;font-weight:700;color:#00786f;text-align:center;display:block}
+  .cho-val small{display:block;font-weight:600;color:#8aa;font-size:8px}
+  .cho-val.dim{color:#c8c8c8}
+  .cho-off .cho-new{opacity:.35}
+
+  .flag1{display:flex;gap:8px;align-items:flex-start;background:#FFF4E5;border:1px solid #F0A048;
+    border-radius:6px;padding:7px 10px;margin-top:8px;font-size:10px;color:#8A5200;line-height:1.4}
+  .flag1 code{background:rgba(0,0,0,.06);padding:1px 3px;border-radius:3px}
+  .foot{font-size:10px;color:#999;margin-top:8px;font-style:italic;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mock-note">MOCKUP — dummy δεδομένα. Δείχνει το CHO panel <b>ενσωματωμένο μέσα στο υπάρχον grid «Θερμίδες &amp; μακροθρεπτικά ανά ημέρα»</b> (buildDayTgtHtml). Πράσινο-κίτρινο tint = ΝΕΑ κομμάτια.</div>
+
+  <div class="legend-key">
+    <span class="sw" style="background:#f2fbf8;border:1px dashed #7fcbbf"></span> ΝΕΟ — προστίθεται από το CHO module &nbsp;&nbsp;·&nbsp;&nbsp;
+    <span class="sw" style="background:#fff;border:1px solid #ccc"></span> υπάρχει ήδη στο grid σήμερα
+  </div>
+
+  <div class="day-tgt-wrap" id="wrap">
+    <div class="day-tgt-head">
+      <span class="day-tgt-title">Θερμίδες &amp; μακροθρεπτικά ανά ημέρα</span>
+      <button class="day-tgt-reset">&#8635; Επαναφορά TDEE</button>
+    </div>
+
+    <!-- getMealTimingGuide() — υπάρχει ήδη -->
+    <div class="mtg">
+      <div class="h">⏰ Προτεινόμενα γεύματα ανά ημέρα</div>
+      <div class="r"><b>Δε, Τε, Πα</b> — προπόνηση ·
+        <span class="pre">⚡ Pre (2h πριν)</span> / <span class="post">💪 Post (30′ μετά)</span> ανά ημέρα κάτω</div>
+    </div>
+
+    <!-- carb-boost rows — υπάρχουν ήδη -->
+    <div class="carb-boost-row">
+      <label>&#127947; Carb boost ημέρας προπόνησης:</label>
+      <input class="carb-boost-inp" type="number" value="20">%
+    </div>
+    <div class="carb-boost-row">
+      <label>&#127937; Ημερομηνία αγώνα (καρβοφόρτωση):</label>
+      <input class="carb-boost-inp" type="date" value="" style="width:auto">
+    </div>
+
+    <!-- ═══ ΝΕΟ: control strip του CHO module, ίδιο ύφος με .carb-boost-row ═══ -->
+    <div class="carb-boost-row cho-ctrl" id="choCtrl">
+      <label><input type="checkbox" id="choOn" checked onchange="toggleCho()" style="vertical-align:-2px"> &#129346; Πρωτόκολλο CHO προπόνησης</label>
+      &nbsp;·&nbsp;
+      <label><input type="radio" name="chomode" checked onchange="setMode(false)"> auto</label>
+      <label><input type="radio" name="chomode" onchange="setMode(true)"> χειροκίνητο</label>
+      &nbsp;·&nbsp;
+      <label>pre <input class="carb-boost-inp" id="mPre" type="number" step="0.1" value="2.5" disabled> g/kg</label>
+      <label>κατά <input class="carb-boost-inp" id="mDur" type="number" value="50" disabled> g/h</label>
+      <label>μετά <input class="carb-boost-inp" id="mPost" type="number" step="0.1" value="1.0" disabled> g/kg</label>
+    </div>
+
+    <div class="legend-it">T=προπόνηση · R=ανάπαυση · Μ=ημέρα αγώνα · ⏱ ώρες · 🕐 ώρα έναρξης (pre −2h, post +30′) · Carb boost: +20%
+      &nbsp;·&nbsp; <b style="color:#00786f">🥤 Ένταση</b>=ένταση συνεδρίας → κλιμακώνει τα g/kg CHO (πάτα για κύκλο low→mod→high→race)</div>
+
+    <!-- match time bucket — υπάρχει ήδη (φαίνεται όταν υπάρχει ημέρα αγώνα) -->
+    <div class="carb-boost-row">
+      <label>&#9917; Ώρα αγώνα (χοντρικά):</label>
+      <div style="display:flex;gap:6px">
+        <button class="bkt">πρωί</button><button class="bkt">μεσημέρι</button>
+        <button class="bkt on">απόγευμα</button><button class="bkt">βράδυ</button>
+      </div>
+    </div>
+
+    <!-- blue macro-adjust box — υπάρχει ήδη -->
+    <div class="madj">
+      <div class="h">⚡ Προσαρμογή Macros ανάλογα Προπόνησης</div>
+      <div>📈 <b>Ημέρες Προπόνησης (T):</b> +10% Πρωτ., +20% Υδατ., -15% Λιπ.</div>
+      <div>😴 <b>Ημέρες Ανάπαυσης (R):</b> σταθερή Πρωτ., -15% Υδατ., +15% Λιπ.</div>
+    </div>
+
+    <!-- ═══ ΝΕΟ: youthRestrictionBlock — συμπαγής μορφή μέσα στο grid ═══ -->
+    <div class="flag1">
+      <span>⚠️</span>
+      <span><b>Νεαρός αθλητής (17 ετών)</b> <code>youthRestrictionBlock</code> — χωρίς περιορισμό θερμίδων/CHO· EA ≥ 45 kcal/kg FFM/ημέρα· κατά-την-άσκηση ≤ ~1 g/min. Απαιτείται επιβεβαίωση στη «Δημιουργία πλάνου».</span>
+    </div>
+
+    <table class="day-tgt-table">
+      <thead>
+        <tr><th></th><th>Δε</th><th>Τρ</th><th>Τε</th><th>Πε</th><th>Πα</th><th>Σα</th><th>Κυ</th></tr>
+      </thead>
+      <tbody>
+        <!-- Τύπος — υπάρχει ήδη -->
+        <tr class="train-row">
+          <td>Τύπος</td>
+          <td><button class="train-tog train-t">T</button></td>
+          <td><button class="train-tog train-r">R</button></td>
+          <td><button class="train-tog train-t">T</button></td>
+          <td><button class="train-tog train-r">R</button></td>
+          <td><button class="train-tog train-t">T</button></td>
+          <td><button class="train-tog train-r">R</button></td>
+          <td><button class="train-tog train-r">R</button></td>
+        </tr>
+        <!-- ⚽ Αγώνας — υπάρχει ήδη -->
+        <tr class="train-row">
+          <td>⚽ Αγώνας</td>
+          <td><button class="match-tog match-off">—</button></td>
+          <td><button class="match-tog match-off">—</button></td>
+          <td><button class="match-tog match-off">—</button></td>
+          <td><button class="match-tog match-off">—</button></td>
+          <td><button class="match-tog match-on">Μ</button></td>
+          <td><button class="match-tog match-off">—</button></td>
+          <td><button class="match-tog match-off">—</button></td>
+        </tr>
+        <!-- ⏱ ώρες — υπάρχει ήδη -->
+        <tr class="hrs-row">
+          <td>⏱ ώρες</td>
+          <td><input class="hrs-inp" value="1.5"></td><td><input class="hrs-inp" value="0"></td>
+          <td><input class="hrs-inp" value="2"></td><td><input class="hrs-inp" value="0"></td>
+          <td><input class="hrs-inp" value="2"></td><td><input class="hrs-inp" value="0"></td>
+          <td><input class="hrs-inp" value="0"></td>
+        </tr>
+        <!-- 🕐 Ώρα — υπάρχει ήδη -->
+        <tr class="time-row">
+          <td>🕐 Ώρα</td>
+          <td><input class="time-inp time-t" value="18:00"></td><td><input class="time-inp time-r" value="" disabled></td>
+          <td><input class="time-inp time-t" value="08:00"></td><td><input class="time-inp time-r" value="" disabled></td>
+          <td><input class="time-inp time-t" value="17:00"></td><td><input class="time-inp time-r" value="" disabled></td>
+          <td><input class="time-inp time-r" value="" disabled></td>
+        </tr>
+
+        <!-- ═══ ΝΕΑ ΓΡΑΜΜΗ: ένταση συνεδρίας ανά ημέρα (c.trainIntensityByDay[7]) ═══ -->
+        <tr class="cho-new">
+          <td>🥤 Ένταση</td>
+          <td><button class="int-tog" data-v="mod" onclick="cycleInt(this)">mod</button></td>
+          <td><button class="int-tog rest" disabled>—</button></td>
+          <td><button class="int-tog" data-v="high" onclick="cycleInt(this)">high</button></td>
+          <td><button class="int-tog rest" disabled>—</button></td>
+          <td><button class="int-tog" data-v="race" onclick="cycleInt(this)">race</button></td>
+          <td><button class="int-tog rest" disabled>—</button></td>
+          <td><button class="int-tog rest" disabled>—</button></td>
+        </tr>
+
+        <!-- Θερμίδες + macros — υπάρχουν ήδη -->
+        <tr class="mrow-k"><td>Θερμ. kcal</td>
+          <td><input class="dt-inp dt-inp-k" value="2650"></td><td><input class="dt-inp dt-inp-k" value="2400"></td>
+          <td><input class="dt-inp dt-inp-k" value="2900"></td><td><input class="dt-inp dt-inp-k" value="2400"></td>
+          <td><input class="dt-inp dt-inp-k" value="2950"></td><td><input class="dt-inp dt-inp-k" value="2400"></td>
+          <td><input class="dt-inp dt-inp-k" value="2400"></td>
+        </tr>
+        <tr class="mrow-p"><td>Πρωτεΐνη g</td>
+          <td><input class="dt-inp dt-inp-p" value="145"></td><td><input class="dt-inp dt-inp-p" value="140"></td>
+          <td><input class="dt-inp dt-inp-p" value="150"></td><td><input class="dt-inp dt-inp-p" value="140"></td>
+          <td><input class="dt-inp dt-inp-p" value="150"></td><td><input class="dt-inp dt-inp-p" value="140"></td>
+          <td><input class="dt-inp dt-inp-p" value="140"></td>
+        </tr>
+        <tr class="mrow-f"><td>Λιπαρά g</td>
+          <td><input class="dt-inp dt-inp-f" value="70"></td><td><input class="dt-inp dt-inp-f" value="88"></td>
+          <td><input class="dt-inp dt-inp-f" value="66"></td><td><input class="dt-inp dt-inp-f" value="88"></td>
+          <td><input class="dt-inp dt-inp-f" value="64"></td><td><input class="dt-inp dt-inp-f" value="88"></td>
+          <td><input class="dt-inp dt-inp-f" value="88"></td>
+        </tr>
+        <tr class="mrow-c"><td>Υδατάνθρακες g</td>
+          <td><input class="dt-inp dt-inp-c" value="405"></td><td><input class="dt-inp dt-inp-c" value="330"></td>
+          <td><input class="dt-inp dt-inp-c" value="464"></td><td><input class="dt-inp dt-inp-c" value="330"></td>
+          <td><input class="dt-inp dt-inp-c" value="522"></td><td><input class="dt-inp dt-inp-c" value="330"></td>
+          <td><input class="dt-inp dt-inp-c" value="330"></td>
+        </tr>
+
+        <!-- ═══ ΝΕΕΣ ΓΡΑΜΜΕΣ read-only: το output του computeCHOTargets (μέρος των «Υδατ. g» παραπάνω) ═══ -->
+        <tr class="cho-new">
+          <td>⚡ CHO πριν</td>
+          <td><span class="cho-val">116 g<small>16:00</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val">174 g<small>06:00</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val">232 g<small>15:00</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val dim">—</span></td>
+        </tr>
+        <tr class="cho-new">
+          <td>🔥 CHO κατά</td>
+          <td><span class="cho-val">45<small>g/h · ~68g</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val">55<small>g/h · ~110g</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val">60<small>g/h · ~120g</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val dim">—</span></td>
+        </tr>
+        <tr class="cho-new">
+          <td>💪 CHO μετά</td>
+          <td><span class="cho-val">64 g<small>19:45</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val">70 g<small>10:30</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val">70 g<small>19:30</small></span></td>
+          <td><span class="cho-val dim">—</span></td>
+          <td><span class="cho-val dim">—</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="foot">
+      Οι 3 γραμμές «CHO πριν/κατά/μετά» είναι <b>read-only</b> — παράγονται από <code>computeCHOTargets(c, t, d)</code> και είναι
+      <b>μέσα</b> στο νούμερο «Υδατάνθρακες g» της ίδιας ημέρας (ανακατανομή, kcal-neutral — δεν προστίθενται θερμίδες).
+      Στη «Δημιουργία πλάνου» τροφοδοτούν το per-meal allocation ώστε τα pre/post-workout γεύματα να πάρουν αυτά τα g.
+      «—» = ημέρα ανάπαυσης. Πηγές: Thomas 2016 (endurance), Desbrow 2014 (youth).
+    </div>
+  </div>
+</div>
+
+<script>
+/* Καθαρά mockup JS — μόνο πάνω στο static markup αυτής της σελίδας. Κανένα computeCHOTargets. */
+var ORDER = ['low','mod','high','race'];
+function cycleInt(btn){
+  var cur = btn.getAttribute('data-v') || 'low';
+  var nxt = ORDER[(ORDER.indexOf(cur)+1) % ORDER.length];
+  btn.setAttribute('data-v', nxt);
+  btn.textContent = nxt;
+  /* mockup: οι γραμμές CHO μένουν σταθερές για επίδειξη */
+}
+function toggleCho(){
+  var on = document.getElementById('choOn').checked;
+  document.getElementById('wrap').classList.toggle('cho-off', !on);
+  document.querySelectorAll('#choCtrl input').forEach(function(el){
+    if(el.id!=='choOn') el.disabled = !on || (el.type==='number' && !manual);
+  });
+}
+var manual = false;
+function setMode(m){
+  manual = m;
+  ['mPre','mDur','mPost'].forEach(function(id){ document.getElementById(id).disabled = !m; });
+}
+</script>
+</body>
+</html>
