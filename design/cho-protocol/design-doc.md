@@ -1,8 +1,15 @@
 # CHO Training Protocol — Design Document
 
-**Status:** **Phase 1 SHIPPED** (2026-09-01) — νέο `js/plan-gen/cho-protocol.js` (pure), `c.trainIntensityByDay`
-στο factory, panel μέσα στο `buildDayTgtHtml` (**display-only**, κανένας hook στο `genPlan()`), χειριστές
-στο `form-controls.js`. Phases 2 (genPlan hook + gate) και 3 (portal/PDF) εκκρεμούν.
+**Status:** **Phases 1 + 2 SHIPPED** (2026-09-01).
+- Phase 1: `js/plan-gen/cho-protocol.js` (pure), `c.trainIntensityByDay` στο factory, display-only panel στο `buildDayTgtHtml`, χειριστές στο `form-controls.js`.
+- Phase 2: `choMealRoles` (cho-protocol.js) + `redistributeCHOForTraining` patch στο `allocateMealTargets`
+  (bounded, kcal-neutral carb shuffle προς pre/post-workout γεύματα, per-meal kcal + protein + day
+  totals conserved exactly) + hook στο `genPlan()` (per-day `computeCHOTargets` → 3ο όρισμα του
+  `allocateMealTargets`) + `choProtocolCheck` gate ως 3ος κρίκος στο `genPlanWithUndo()`.
+  **Γνωστό όριο:** τα recipe-matching + `scalePlan` caps απορροφούν μέρος της ανακατανομής — το
+  ορατό swing στο *παραγόμενο* πλάνο είναι μέτριο (~+10-15 g CHO στο pre snack). Μεγαλύτερο swing
+  θέλει πραγματικό pre-workout meal slot στο template (follow-up).
+- Phase 3 (portal/PDF) εκκρεμεί.
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).
@@ -425,7 +432,9 @@ interrupt.
 1. Τα κατώφλια `LOAD_BANDS` (§2.2, `loadPerKg` → θέση) + το `CHO_RACE_LOAD_PER_KG` (16) + το βάρος
    `prePos = 0.65·leadFrac + 0.35·pos` είναι **αρχικές εκτιμήσεις** — θέλουν κούρδισμα πάνω σε
    πραγματικά πλάνα πελατών (FYH) πριν κλειδώσουν. Αυτός είναι ο λόγος που το Phase 1 είναι read-only.
-2. Phase 2: hook στο `genPlan()` (§5) + wiring του `choProtocolCheck` + `allocateMealTargets` 3ο όρισμα.
+2. **Phase 2.1 (αν χρειαστεί):** σκληρότερη ανακατανομή — post-`scalePlan` pass που σπρώχνει τα carb
+   foods του pre/post γεύματος πάνω / fat foods κάτω προς τους `computeCHOTargets` στόχους· πιο
+   επιθετικό αλλά ρισκάρει το calorie-consistency guard. Ή: νέο "pre-workout meal" slot στα templates.
 3. Integration `CHO_TIMING_BY_SPORT` → `SPORT_PROTOCOLS.mealTiming` τώρα (structured rewrite των 3
    υπαρχόντων) ή αργότερα (module self-contained);
 4. Το `judo`/`SPORT_PROFILES` mismatch — να προστεθεί το judo στο dropdown ως ξεχωριστό

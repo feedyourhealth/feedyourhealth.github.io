@@ -231,6 +231,63 @@ function choSessionStart(c, d, isMatchDay){
   if(isMatchDay) return CHO_MATCH_TIME_H[c.matchTimeBucket || 'απόγευμα'] || '17:00';
   return null;
 }
+// ── meal-role classification (Phase 2: feeds allocateMealTargets) ─────────────
+// Mirrors the default meal clock in initializeMealTiming (js/plan-gen/meal-slots.js:493-498).
+var CHO_DEFAULT_MEAL_TIMES = { breakfast: '08:00', snack: '15:30', lunch: '13:00', dinner: '20:00', other: '12:00' };
+function choHHMMtoMin(hhmm){
+  if(!hhmm) return null;
+  var p = String(hhmm).split(':');
+  var h = parseInt(p[0], 10), m = parseInt(p[1], 10) || 0;
+  return isNaN(h) ? null : h * 60 + m;
+}
+function choMealClock(name, c){
+  var mt = (c && c.mealTimes) || {};
+  var slot = (typeof classifyMealSlot === 'function') ? classifyMealSlot(name) : 'other';
+  if(slot === 'breakfast') return mt.breakfast || CHO_DEFAULT_MEAL_TIMES.breakfast;
+  if(slot === 'lunch')     return mt.lunch     || CHO_DEFAULT_MEAL_TIMES.lunch;
+  if(slot === 'dinner')    return mt.dinner    || CHO_DEFAULT_MEAL_TIMES.dinner;
+  if(slot === 'snack')     return mt.snack     || CHO_DEFAULT_MEAL_TIMES.snack;
+  return CHO_DEFAULT_MEAL_TIMES.other;
+}
+// Role per meal, parallel to `meals`: 'pre' | 'post' | 'regular'. At most ONE meal per role.
+// Order of evidence: (1) an already-stamped meal.mealTiming wins outright; otherwise (2) the
+// single meal whose clock sits closest to the ideal pre / post time and inside a plausible
+// window becomes that role. (3) No sessionStart → all 'regular' (redistribution stays inert;
+// computeCHOTargets has already raised sessionTimeMissing).
+function choMealRoles(meals, sessionStart, c){
+  meals = meals || [];
+  var startMin = choHHMMtoMin(sessionStart);
+  var roles = meals.map(function(m){
+    var mt = (m && typeof m === 'object' && m.mealTiming) ? m.mealTiming : null;
+    if(mt === 'pre-workout') return 'pre';
+    if(mt === 'post-workout' || mt === 'recovery') return 'post';
+    return 'regular';
+  });
+  if(startMin == null) return roles;
+
+  var preIdeal = startMin - 120, postIdeal = startMin + 30;
+  var bestPre = -1, bestPreD = Infinity, bestPost = -1, bestPostD = Infinity;
+  meals.forEach(function(m, i){
+    if(roles[i] !== 'regular') return;                 // stamped meals already claimed
+    var name = (typeof m === 'string') ? m : (m && m.name);
+    var cm = choHHMMtoMin(choMealClock(name, c));
+    if(cm == null) return;
+    if(cm >= startMin - 210 && cm <= startMin - 45){
+      var dp = Math.abs(cm - preIdeal);
+      if(dp < bestPreD){ bestPreD = dp; bestPre = i; }
+    }
+    if(cm >= startMin - 15 && cm <= startMin + 150){
+      var dq = Math.abs(cm - postIdeal);
+      if(dq < bestPostD){ bestPostD = dq; bestPost = i; }
+    }
+  });
+  // don't let the same meal be both; pre keeps it (closer, earlier need)
+  if(bestPost === bestPre) bestPost = -1;
+  if(roles.indexOf('pre') === -1 && bestPre !== -1) roles[bestPre] = 'pre';
+  if(roles.indexOf('post') === -1 && bestPost !== -1) roles[bestPost] = 'post';
+  return roles;
+}
+
 function choMkFlag(code, severity, title, detail, extra){
   extra = extra || {};
   return {

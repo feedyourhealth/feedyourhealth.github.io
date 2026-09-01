@@ -47,7 +47,9 @@ function genPlanWithUndo(){
   var c=getC();if(!c)return;
   var errors=validateClientData(c);
   if(errors.length>0){ showValidationErrors(errors); return; }
-  pregnancyBlockCheck(c, function(){ calorieConsistencyCheck(c, function(){ _genPlanWithUndoProceed(c); }); });
+  // 🥤 CHO Training Protocol gate — 3rd link, no-op unless c.choProtocol.enabled (js/plan-gen/cho-protocol.js).
+  var _choGate = (typeof choProtocolCheck === 'function') ? choProtocolCheck : function(_c, fn){ fn(); };
+  pregnancyBlockCheck(c, function(){ calorieConsistencyCheck(c, function(){ _choGate(c, function(){ _genPlanWithUndoProceed(c); }); }); });
 }
 
 function _genPlanWithUndoProceed(c){
@@ -272,8 +274,25 @@ function genPlan(){
   // ✅ PHASE 3A: HYBRID SYSTEM — Allocate per-meal targets from daily totals
   // Βήμα 2b-bis: περνάμε τον πίνακα γευμάτων (όχι μόνο το πλήθος) ώστε το allocateMealTargets
   // να ζυγίζει κάθε γεύμα κατά slot (πρωινό/μεσημεριανό/βραδινό/snack) και όχι κατά θέση index.
+  //
+  // 🥤 CHO Training Protocol (Phase 2): όταν c.choProtocol.enabled, το computeCHOTargets δίνει
+  // pre/post-workout CHO στόχους ανά ημέρα προπόνησης· περνούν ως 3ο όρισμα στο allocateMealTargets,
+  // που ανακατανέμει υδατάνθρακες προς τα pre/post γεύματα kcal-neutral. Αδρανές αλλιώς.
+  var choByDay=[];
+  if(c.choProtocol&&c.choProtocol.enabled&&typeof computeCHOTargets==='function'){
+    for(var _cd=0;_cd<7;_cd++){
+      try{choByDay[_cd]=computeCHOTargets(c,t,_cd);}catch(_e){choByDay[_cd]=null;}
+    }
+  }
   for(var d=0;d<7;d++){
-    eff[d].meals = allocateMealTargets(eff[d], tmplDays[d]);
+    var _mta=null;
+    var _cr=choByDay[d];
+    if(_cr&&_cr.mealTimingArg&&typeof choMealRoles==='function'){
+      _mta=_cr.mealTimingArg;
+      _mta.weightKg=_cr.weightBasisKg;
+      _mta.perMeal=choMealRoles(tmplDays[d],_cr.sessionStart,c).map(function(role){return{role:role};});
+    }
+    eff[d].meals = allocateMealTargets(eff[d], tmplDays[d], _mta);
   }
 
   // ✅ PHASE 3B: TRY SMART GENERATION WITH 3-PRIORITY FALLBACK
