@@ -3,7 +3,8 @@
 // (module split wave 7). Pure function declarations, zero load-time code:
 //   shopRound / shopDisp (shopping-list rounding)
 //   exportPDF, exportWord, exportGoogleDocs (the weekly plan)
-//   escRtf, exportLipometriaPDF, exportBodyCompPDF, sendBodyCompReport (body comp)
+//   escRtf, exportLipometriaPDF, exportBodyCompPDF, sendBodyCompReport,
+//   sendLipometriaReport (body comp)
 //   showDebugPanel, showReferences
 //   exportBackup, exportClientsJSON, importClientsJSON
 // All refs (getC, cm, esc, FOODS, TMPLS, jsPDF/JSZip via CDN, renderWeekTable, …)
@@ -1156,6 +1157,26 @@ function sendBodyCompReport(channel){
     location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.bodyCompSubj)+'&body='+encodeURIComponent(msg);
   }
   exportBodyCompPDF();
+  showSuccessToast('Άνοιξε το PDF για αποθήκευση — επισύναψέ το στο μήνυμα που άνοιξε.');
+}
+
+// Ίδια λογική με το sendBodyCompReport, αλλά για το μονό «Έντυπο Λιπομέτρησης»
+// (exportLipometriaPDF) αντί για το ιστορικό. Δουλεύει και χωρίς εγγραφές tracker —
+// το έντυπο πέφτει πίσω στα στοιχεία της καρτέλας (c.weight/c.bf) όταν λείπει weightLog.
+function sendLipometriaReport(channel){
+  var c=getC();if(!c)return;
+  var fname=(c.name||'').split(' ')[0]||'σου';
+  var d=clientMsgDict(c);
+  var msg=d.lipoForm(fname);
+  if(channel==='wa'){
+    var phone=normalizePhoneIntl(c.phone);
+    if(!phone){showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.');return;}
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  } else {
+    if(!c.email){showErrorToast('Δεν υπάρχει email για τον/την '+(c.name||'πελάτη')+'.');return;}
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.lipoFormSubj)+'&body='+encodeURIComponent(msg);
+  }
+  exportLipometriaPDF();
   showSuccessToast('Άνοιξε το PDF για αποθήκευση — επισύναψέ το στο μήνυμα που άνοιξε.');
 }
 
