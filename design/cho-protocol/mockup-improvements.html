@@ -152,35 +152,30 @@ Pre/κατά/μετά <b>άθικτα</b>. Σύσταση στο grid («🍚 CH
 ~+10–15&nbsp;g CHO στο απογευματινό σνακ. Προσθέσαμε non-determinism και μια ολόκληρη διαδρομή κώδικα για ελάχιστο αποτέλεσμα.</div>
 
 <div class="frame">
+  <div style="display:inline-block;background:var(--ok);color:#fff;font-size:10px;font-weight:700;border-radius:6px;padding:2px 8px;margin-bottom:8px">✓ CLEANUP SHIPPED 2026-09-01</div>
+  <p style="font-size:12.5px;color:#455a64;margin:0 0 12px">Το Phase-2 <code>redistributeCHOForTraining</code> <b>αφαιρέθηκε εντελώς</b> — ο κώδικας διαγράφηκε από <code>day-targets.js</code>,
+  το hook στο <code>genPlan()</code> έγινε πάλι απλό <code>allocateMealTargets(eff[d], tmplDays[d])</code>, το <code>choProtocolCheck</code> βγήκε από την αλυσίδα του <code>genPlanWithUndo()</code>.
+  Τα pre/κατά/μετά/ημέρας CHO παραμένουν <b>σύσταση</b> στο day-targets grid (read-only γραμμές + νέα διευκρίνιση «συστάσεις προς χειροκίνητη τοποθέτηση»).
+  Η CHO είναι πλέον <b>display-only end-to-end</b> — μηδέν non-determinism, μηδέν έκθεση στο calorie-consistency guard.</p>
   <div class="cols">
+    <div class="opt">
+      <h4>Τι έγινε τώρα — καθαρή υποβάθμιση σε σύσταση</h4>
+      <p class="plus">+ −118 γραμμές risky bounded-shuffle κώδικα· + genPlan ξανά deterministic ως προς την CHO· + καμία σιωπηλή μετάλλαξη πλάνου· + smoke PASS + diff CLEAN.</p>
+      <p class="minus">− Το ~+12 g swing στο snack χάθηκε — αλλά ήταν αόρατο ούτως ή άλλως.</p>
+    </div>
     <div class="opt pick">
-      <h4>Α — Ειδικό γεύμα «Προ-προπόνησης» στα αθλητικά templates <span class="badge">ΠΡΟΤΕΙΝΟΜΕΝΟ</span></h4>
-      <p>Το <code>running</code> / <code>football</code> template αποκτά μια θέση <b>🏋️ Προ-προπόνησης</b> που το <code>genPlan()</code>
-      γεμίζει· η ανακατανομή έχει πλέον πού να βάλει 90–140&nbsp;g υδατάνθρακα.</p>
+      <h4>Τι απομένει — αποκλειστικό γεύμα «Προ-προπόνησης» στα templates <span class="badge">FEATURE, ΟΧΙ TUNE</span></h4>
+      <p>Το <code>running</code>/<code>football</code> template αποκτά θέση <b>🏋️ Προ-προπόνησης</b> που το <code>genPlan()</code> γεμίζει —
+      εκεί μπαίνει πραγματικό pre-CHO φορτίο 90–140 g. Λύνει τη ρίζα («σνακ 400 kcal δεν χωράει πλήρες pre-load»).</p>
       <table class="tpl">
-        <tr><td>08:00 Πρωινό</td><td>Βρώμη, γιαούρτι, μέλι, φρούτο</td></tr>
         <tr><td>13:00 Μεσημεριανό</td><td>Ρύζι, κοτόπουλο, σαλάτα</td></tr>
         <tr class="new"><td>16:00 🏋️ Προ-προπόνησης</td><td>Ζυμαρικά + ψωμί + χυμός &nbsp;·&nbsp; <b>130 g CHO</b></td></tr>
         <tr><td>20:30 Βραδινό <span class="mut">(post)</span></td><td>Πατάτα, σολομός, λαχανικά</td></tr>
       </table>
-      <p class="plus">+ Πραγματική, ορατή μετατόπιση· + ξεκάθαρο στον πελάτη τι/πότε να φάει· + η ανακατανομή γίνεται deterministic.</p>
-      <p class="minus">− Θέλει επεξεργασία 2–3 templates + editor UI για τη νέα θέση.</p>
-    </div>
-    <div class="opt">
-      <h4>Β — Η Phase 2 γίνεται σύσταση display-only</h4>
-      <p>Καμία σιωπηλή μετάλλαξη πλάνου. Στο week-table εμφανίζεται «Προτεινόμενη ανακατανομή» με κουμπί που ο διαιτολόγος
-      πατάει <i>χειροκίνητα</i> όταν συμφωνεί.</p>
-      <div class="applybar">
-        🔀 Προτ. ανακατανομή Τετ.: −18&nbsp;g CHO πρωινό · +22&nbsp;g προ-προπ. σνακ · θερμίδες σταθερές
-        <button>Εφάρμοσέ το</button>
-      </div>
-      <p class="plus">+ Μηδέν ρίσκο στο calorie-consistency guard· + πλήρης έλεγχος στον διαιτολόγο· + καθόλου non-determinism.</p>
-      <p class="minus">− Ένα κλικ παραπάνω ανά εβδομάδα· − αν δεν το πατήσει, δεν γίνεται τίποτα.</p>
+      <p class="minus">− Αγγίζει 2–3 templates + editor UI + genPlan — bundle το με άλλη δουλειά πάνω στα αθλητικά templates. <code>choMealRoles</code> + <code>mealTimingArg</code> μένουν reserved γι' αυτό.</p>
     </div>
   </div>
 </div>
-<div class="rec"><b>Πρόταση: Α.</b> Το να υπάρχει πραγματική θέση «προ-προπόνησης» λύνει και τη ρίζα του Known-limit της Phase 2
-(«ένα σνακ 400 kcal δεν χωράει πλήρες pre-CHO φορτίο») και το κάνει κατανοητό στον πελάτη. Το Β είναι το ασφαλές fallback αν δεν θέλεις άγγιγμα στα templates.</div>
 
 
 <!-- ═══════════════ 3 · HIIT DAMPENING ═══════════════ -->

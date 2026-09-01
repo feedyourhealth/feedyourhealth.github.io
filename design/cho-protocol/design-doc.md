@@ -1,14 +1,18 @@
 # CHO Training Protocol — Design Document
 
-**Status:** **Phases 1 + 2 SHIPPED** (2026-09-01).
+**Status:** **Phases 1 + 2 + 3 + improvements #1 & #3 SHIPPED· CHO Training Protocol = display-only
+end-to-end** (2026-09-01).
 - Phase 1: `js/plan-gen/cho-protocol.js` (pure), `c.trainIntensityByDay` στο factory, display-only panel στο `buildDayTgtHtml`, χειριστές στο `form-controls.js`.
-- Phase 2: `choMealRoles` (cho-protocol.js) + `redistributeCHOForTraining` patch στο `allocateMealTargets`
-  (bounded, kcal-neutral carb shuffle προς pre/post-workout γεύματα, per-meal kcal + protein + day
-  totals conserved exactly) + hook στο `genPlan()` (per-day `computeCHOTargets` → 3ο όρισμα του
-  `allocateMealTargets`) + `choProtocolCheck` gate ως 3ος κρίκος στο `genPlanWithUndo()`.
-  **Γνωστό όριο:** τα recipe-matching + `scalePlan` caps απορροφούν μέρος της ανακατανομής — το
-  ορατό swing στο *παραγόμενο* πλάνο είναι μέτριο (~+10-15 g CHO στο pre snack). Μεγαλύτερο swing
-  θέλει πραγματικό pre-workout meal slot στο template (follow-up).
+- **Phase 2 — REVERTED to display-only (2026-09-01, improvement #2 cleanup).** Το `redistributeCHOForTraining`
+  (bounded kcal-neutral carb shuffle προς pre/post γεύματα) **αφαιρέθηκε** — ο κώδικας διαγράφηκε από
+  `day-targets.js`, το hook στο `genPlan()` έγινε πάλι απλό `allocateMealTargets(eff[d], tmplDays[d])`,
+  και το `choProtocolCheck` βγήκε από την αλυσίδα του `genPlanWithUndo()`. **Γιατί:** το ορατό swing
+  ήταν ~+12 g CHO σε ένα snack (τα recipe-matching + `scalePlan` caps απορροφούσαν τα υπόλοιπα) ενώ
+  πρόσθετε non-determinism + έκθεση στο calorie-consistency guard. Τα pre/κατά/μετά/ημέρας CHO
+  παραμένουν **σύσταση** στο day-targets grid (read-only γραμμές) — ο διαιτολόγος τα τοποθετεί
+  χειροκίνητα· το παραγόμενο πλάνο κρατά την κανονική κατανομή ανά γεύμα. `choMealRoles` +
+  `mealTimingArg` + `choProtocolCheck` μένουν ορισμένα (pure, unused) — reserved για ένα μελλοντικό
+  αποκλειστικό «pre-workout meal slot» στα αθλητικά templates (το πραγματικό home του redistribution).
 - **Phase 3a SHIPPED** (2026-09-01): client portal + dietitian week-table.
   - `_buildSnapshot` (Dietologist.html): `CHO_TXT` dict (el/en/ru/tr) + `buildDayCho(d)` → βάζει
     μεταφρασμένο `cho` object στο `SNAP.days[d]` για κάθε ημέρα προπόνησης/αγώνα όταν `choProtocol.enabled`.
@@ -52,9 +56,11 @@
 
 **CHO Training Protocol: Phases 1-3 COMPLETE + `LOAD_BANDS` + pre-CHO + daily-CHO κουρδισμένα &
 validated έναντι πραγματικού marathon plan + improvements #1 (weekly periodisation) & #3 (interval
-dampening) (2026-09-01).** Ανοιχτά: improvement #2 (pre-workout meal slot / Phase 2 redistribution
-cleanup)· dampen factor tuning σε περισσότερα πραγματικά interval-day πλάνα· combat daily range
-(non-cut δείγμα)· `judo`/SPORT_PROFILES.
+dampening) + #2 cleanup (Phase-2 redistribution αφαιρέθηκε — CHO = display-only end-to-end)
+(2026-09-01).** Ανοιχτά: αποκλειστικό pre-workout meal slot στα αθλητικά templates (το future home
+του redistribution — feature, όχι tune)· dampen factor tuning σε περισσότερα πραγματικά interval-day
+πλάνα· combat daily range (non-cut δείγμα)· `judo`/SPORT_PROFILES· τα «μικρότερα» (auto→intensity
+hint, session-time flag, «πώς βγήκε αυτό» expandable).
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).
@@ -495,13 +501,15 @@ interrupt.
 
 ### 6.2 Ανοιχτά
 
-0. **Improvements #1 (weekly periodisation) & #3 (interval dampening) SHIPPED 2026-09-01** — βλ.
-   Status πάνω. Απομένει από τη λίστα βελτιώσεων: **#2** — ή pre-workout meal slot στα templates
-   ή υποβάθμιση της Phase 2 redistribution σε καθαρή display-only σύσταση. Επίσης: το
-   `CHO_INTERVAL_DAMPEN=0.90` του #3 είναι εκτίμηση από **ένα** πραγματικό πλάνο — χρειάζεται
-   2-3 ακόμη πραγματικά interval-day πλάνα για να κουρδιστεί (one-line σταθερά). Ανοιχτό ερώτημα:
-   αν πρέπει να δαμπάρει και μετά το `^1.6`/phase-mult, όχι μόνο πριν — τώρα η επίδραση σε
-   endurance μέρα είναι μέτρια (~−12 g/72kg) λόγω του στενού 5-9 g/kg εύρους + της convex καμπύλης.
+0. **Improvements #1, #3, και το #2 cleanup SHIPPED 2026-09-01** — βλ. Status πάνω. Το #2 cleanup
+   αφαίρεσε εντελώς το Phase-2 `redistributeCHOForTraining` (η ορατή επίδραση ήταν ~+12 g σε ένα
+   snack ενώ πρόσθετε non-determinism + calorie-guard έκθεση)· η CHO είναι πλέον display-only
+   end-to-end. **Απομένει ως feature (όχι tune):** αποκλειστικό «pre-workout meal slot» στα
+   αθλητικά templates — εκεί μπορεί να μπει ένα πραγματικό pre-CHO φορτίο (90-140 g). Bundle το με
+   άλλη δουλειά πάνω στα templates. Επίσης: το `CHO_INTERVAL_DAMPEN=0.90` του #3 είναι εκτίμηση από
+   **ένα** πραγματικό πλάνο — χρειάζεται 2-3 ακόμη· ανοιχτό αν πρέπει να δαμπάρει και μετά το
+   `^1.6`/phase-mult (τώρα η επίδραση σε endurance μέρα είναι μέτρια, ~−12 g/72kg, λόγω του στενού
+   5-9 g/kg εύρους + της convex καμπύλης).
 1. `LOAD_BANDS` κουρδίστηκαν 2026-09-01 (§2.2, νέα 6-band καμπύλη + `CHO_RACE_LOAD_PER_KG`=20) από
    exercise-physiology reasoning — **ακόμα δεν** έχουν validated σε δείγμα πραγματικών πλάνων FYH.
    Το pre-CHO lever αναθεωρήθηκε 2026-09-01 (§Phase 1 notes: `preByLead` απόλυτου χρόνου αντί

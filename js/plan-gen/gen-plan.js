@@ -47,9 +47,11 @@ function genPlanWithUndo(){
   var c=getC();if(!c)return;
   var errors=validateClientData(c);
   if(errors.length>0){ showValidationErrors(errors); return; }
-  // 🥤 CHO Training Protocol gate — 3rd link, no-op unless c.choProtocol.enabled (js/plan-gen/cho-protocol.js).
-  var _choGate = (typeof choProtocolCheck === 'function') ? choProtocolCheck : function(_c, fn){ fn(); };
-  pregnancyBlockCheck(c, function(){ calorieConsistencyCheck(c, function(){ _choGate(c, function(){ _genPlanWithUndoProceed(c); }); }); });
+  // 🥤 CHO Training Protocol is display-only — it does not gate or alter generation. Its safety
+  // flags (youth restriction / low EA / weight-cut) render in the day-targets grid flag strip;
+  // low-EA also surfaces via calorieConsistencyCheck below. choProtocolCheck() stays defined in
+  // js/plan-gen/cho-protocol.js but is not wired into this chain.
+  pregnancyBlockCheck(c, function(){ calorieConsistencyCheck(c, function(){ _genPlanWithUndoProceed(c); }); });
 }
 
 function _genPlanWithUndoProceed(c){
@@ -274,25 +276,10 @@ function genPlan(){
   // ✅ PHASE 3A: HYBRID SYSTEM — Allocate per-meal targets from daily totals
   // Βήμα 2b-bis: περνάμε τον πίνακα γευμάτων (όχι μόνο το πλήθος) ώστε το allocateMealTargets
   // να ζυγίζει κάθε γεύμα κατά slot (πρωινό/μεσημεριανό/βραδινό/snack) και όχι κατά θέση index.
-  //
-  // 🥤 CHO Training Protocol (Phase 2): όταν c.choProtocol.enabled, το computeCHOTargets δίνει
-  // pre/post-workout CHO στόχους ανά ημέρα προπόνησης· περνούν ως 3ο όρισμα στο allocateMealTargets,
-  // που ανακατανέμει υδατάνθρακες προς τα pre/post γεύματα kcal-neutral. Αδρανές αλλιώς.
-  var choByDay=[];
-  if(c.choProtocol&&c.choProtocol.enabled&&typeof computeCHOTargets==='function'){
-    for(var _cd=0;_cd<7;_cd++){
-      try{choByDay[_cd]=computeCHOTargets(c,t,_cd);}catch(_e){choByDay[_cd]=null;}
-    }
-  }
+  // (Το CHO Training Protocol είναι display-only — δεν ανακατανέμει τους per-meal στόχους· βλ.
+  //  allocateMealTargets στο js/client-editor/day-targets.js.)
   for(var d=0;d<7;d++){
-    var _mta=null;
-    var _cr=choByDay[d];
-    if(_cr&&_cr.mealTimingArg&&typeof choMealRoles==='function'){
-      _mta=_cr.mealTimingArg;
-      _mta.weightKg=_cr.weightBasisKg;
-      _mta.perMeal=choMealRoles(tmplDays[d],_cr.sessionStart,c).map(function(role){return{role:role};});
-    }
-    eff[d].meals = allocateMealTargets(eff[d], tmplDays[d], _mta);
+    eff[d].meals = allocateMealTargets(eff[d], tmplDays[d]);
   }
 
   // ✅ PHASE 3B: TRY SMART GENERATION WITH 3-PRIORITY FALLBACK

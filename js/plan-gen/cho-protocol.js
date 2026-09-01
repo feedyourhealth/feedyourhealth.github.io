@@ -343,7 +343,9 @@ function choSessionKind(c, d){
   }
   return 'steady';
 }
-// ── meal-role classification (Phase 2: feeds allocateMealTargets) ─────────────
+// ── meal-role classification — labels which meal is the pre / post-workout one.
+// Currently UNUSED (the Phase-2 carb redistribution it fed was removed 2026-09-01; kept pure +
+// reusable for a future dedicated pre-workout meal slot in the athlete templates).
 // Mirrors the default meal clock in initializeMealTiming (js/plan-gen/meal-slots.js:493-498).
 var CHO_DEFAULT_MEAL_TIMES = { breakfast: '08:00', snack: '15:30', lunch: '13:00', dinner: '20:00', other: '12:00' };
 function choHHMMtoMin(hhmm){
@@ -707,8 +709,9 @@ function computeCHOTargets(c, t, dayIdx){
       weekPhase: weekPhase, isKeySession: isKeySession, keySessionDayIdx: keyIdx,
       intervalDampen: intervalDampen
     },
-    // Scaffold for the future allocateMealTargets 3rd arg (design §2.6). perMeal is
-    // attached by the Phase 2 genPlan hook, which has the actual meals array. Ignored today.
+    // Structured pre/during/post bundle. Was the allocateMealTargets 3rd arg for the Phase-2
+    // carb redistribution (removed 2026-09-01); kept as a convenient shape for a future
+    // dedicated pre-workout meal slot. Nothing consumes it today.
     mealTimingArg: {
       kcalNeutral: true,
       dayCHOTotalG: dailyTarget,

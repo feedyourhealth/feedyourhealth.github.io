@@ -186,110 +186,13 @@ function allocateMealTargets(dailyTarget, meals, mealTiming) {
     });
   }
 
-  // 🥤 CHO Training Protocol (Phase 2) — when a structured arg is passed, shift carbs toward the
-  // pre/post-workout meals, kcal-neutral (fat ↔ carbs at 4:9), pulling the same grams back out of
-  // the regular meals. Day CHO / day fat / every meal's kcal + protein stay put. Arg absent or
-  // malformed → `targets` returned unchanged (backward compatible with every legacy caller).
-  if (mealTiming && mealTiming.kcalNeutral && Array.isArray(mealTiming.perMeal)
-      && mealTiming.perMeal.length === nMeals && typeof redistributeCHOForTraining === 'function') {
-    targets = redistributeCHOForTraining(targets, mealTiming, dailyTarget);
-  }
-  return targets;
-}
-
-// Bounded, kcal-neutral carb shuffle used only by allocateMealTargets above. `mta` carries
-// { perMeal:[{role}], preChoG, postChoG, weightKg }. Never touches protein; keeps each meal's
-// kcal fixed by swapping fat for carbs at 4:9; conserves the day's total CHO and fat exactly.
-function redistributeCHOForTraining(targets, mta, dayTgt) {
-  var n = targets.length;
-  var roles = mta.perMeal.map(function(pm){ return pm && pm.role; });
-  var preIdx = [], postIdx = [], regIdx = [];
-  for (var i = 0; i < n; i++) {
-    if (roles[i] === 'pre') preIdx.push(i);
-    else if (roles[i] === 'post') postIdx.push(i);
-    else regIdx.push(i);
-  }
-  if ((preIdx.length === 0 && postIdx.length === 0) || regIdx.length === 0) return targets;
-
-  var wKg = mta.weightKg || 70;
-  var dayK = dayTgt.k || targets.reduce(function(s,t){ return s + (t.k||0); }, 0) || 1;
-  // Regular meals keep a conservative fat floor (slice of 0.5 g/kg/day) + 75%-kcal carb ceiling.
-  // The pre/post-workout meal legitimately runs low-fat / high-carb for fast digestion
-  // (MEAL_TIMING_PROFILES 'pre-workout' = 75% CHO / 10% fat), so it gets a looser floor + ceiling.
-  function fatFloor(t, targeted){
-    return targeted ? 3 : Math.max(3, Math.round(0.5 * wKg * ((t.k||0) / dayK)));
-  }
-  function carbCeil(t, targeted){ return Math.max(0, Math.round((targeted ? 0.85 : 0.75) * (t.k||0) / 4)); }
-  function fatCeil(t){ return Math.max(0, Math.round(0.55 * (t.k||0) / 9)); }
-
-  // 1) how much extra CHO each targeted meal can actually take (bounded by fat floor + carb ceiling)
-  function groupGains(idxs, groupTargetG){
-    if (!idxs.length || !(groupTargetG > 0)) return {};
-    var per = groupTargetG / idxs.length;
-    var gains = {};
-    idxs.forEach(function(i){
-      var t = targets[i];
-      var want = Math.max(0, per - (t.c || 0));              // only ever boost
-      var byFat = ((t.f || 0) - fatFloor(t, true)) * 9 / 4;  // CHO the fat budget allows
-      var byCeil = carbCeil(t, true) - (t.c || 0);
-      gains[i] = Math.max(0, Math.round(Math.min(want, byFat, byCeil)));
-    });
-    return gains;
-  }
-  var gains = {};
-  var g1 = groupGains(preIdx, mta.preChoG);
-  var g2 = groupGains(postIdx, mta.postChoG);
-  Object.keys(g1).forEach(function(k){ gains[k] = g1[k]; });
-  Object.keys(g2).forEach(function(k){ gains[k] = g2[k]; });
-  var addedC = Object.keys(gains).reduce(function(s,k){ return s + gains[k]; }, 0);
-  if (addedC <= 0) return targets;
-
-  // 2) pull `addedC` back out of the regular meals, proportional to their current carbs,
-  //    bounded so regular carbs stay ≥ a small floor and regular fat ≤ its ceiling
-  var regCarbSum = regIdx.reduce(function(s,i){ return s + (targets[i].c || 0); }, 0) || 1;
-  var drops = {};
-  var droppedTotal = 0;
-  regIdx.forEach(function(i){
-    var t = targets[i];
-    var share = Math.round(addedC * ((t.c || 0) / regCarbSum));
-    var carbFloor = Math.max(5, Math.round(0.10 * (t.k || 0) / 4));
-    var byCarb = (t.c || 0) - carbFloor;
-    var byFat = fatCeil(t) - (t.f || 0);                   // room to absorb fat back
-    var d = Math.max(0, Math.min(share, byCarb, byFat));
-    drops[i] = d;
-    droppedTotal += d;
-  });
-
-  // 3) reconcile: whatever couldn't be pulled from regular meals, don't add to targeted meals
-  var residual = addedC - droppedTotal;
-  if (residual > 0) {
-    // trim the gains (post first, then pre) so added == dropped exactly
-    var order = postIdx.concat(preIdx).filter(function(i){ return gains[i] > 0; });
-    for (var oi = 0; oi < order.length && residual > 0; oi++) {
-      var take = Math.min(gains[order[oi]], residual);
-      gains[order[oi]] -= take;
-      residual -= take;
-    }
-    addedC = Object.keys(gains).reduce(function(s,k){ return s + gains[k]; }, 0);
-  }
-  if (addedC <= 0) return targets;
-
-  // 4) apply — carbs up / fat down on targeted meals; carbs down / fat up on regular meals.
-  //    Fat delta is left fractional (= carb delta × 4/9) so each meal's kcal is held EXACTLY
-  //    and, because step 3 forced added == dropped, the day's CHO and fat totals are unchanged.
-  //    scalePlan() rounds grams itself downstream.
-  Object.keys(gains).forEach(function(k){
-    var i = +k, gc = gains[k];
-    if (gc <= 0) return;
-    targets[i].c += gc;
-    targets[i].f = Math.max(0, targets[i].f - gc * 4 / 9);
-  });
-  regIdx.forEach(function(i){
-    var dc = drops[i];
-    if (!dc) return;
-    targets[i].c -= dc;
-    targets[i].f += dc * 4 / 9;
-  });
+  // 🥤 CHO Training Protocol: the pre/during/post CHO targets are surfaced as a READ-ONLY
+  // recommendation in buildDayTgtHtml (the "CHO πριν/κατά/μετά" rows) — the module deliberately
+  // does NOT rewrite the generated plan's per-meal split. (An earlier "Phase 2" bounded carb
+  // shuffle toward the pre/post meals lived here; removed 2026-09-01 — the visible effect was
+  // ~+12 g to one snack while adding non-determinism + calorie-consistency-guard exposure. A
+  // real pre-workout meal slot in the athlete templates is the right home for it, if built.)
+  // The 3rd arg is accepted and ignored, so every caller stays backward compatible.
   return targets;
 }
 
@@ -519,8 +422,9 @@ function buildDayTgtHtml(c,t){
     }
     tbody+='</tr>';
   });
-  // 🥤 Read-only CHO πριν/κατά/μετά rows — output of computeCHOTargets(c,t,d), inside the
-  // day's "Υδατάνθρακες g" number (kcal-neutral, no calories added). Only when enabled.
+  // 🥤 Read-only CHO πριν/κατά/μετά + ημέρας rows — output of computeCHOTargets(c,t,d). These are
+  // a RECOMMENDATION the dietitian hand-places; the generated plan keeps its normal per-meal
+  // split (the module writes nothing back to eff[d] or the plan). Only when enabled.
   if(choEnabled){
     var choRowDefs=[
       {ic:'⚡',lb:'CHO πριν',pick:function(r){return r&&r.pre?{main:r.pre.grams+' g',sub:r.pre.timeLabel||''}:null;}},
@@ -583,7 +487,8 @@ function buildDayTgtHtml(c,t){
           return '<button type="button" onclick="setChoWeekPhase(\''+pk+'\')" style="padding:3px 9px;border-radius:12px;border:1px solid '+(on?'#00786f':'#bcd')+';background:'+(on?'#00786f':'#fff')+';color:'+(on?'#fff':'#478')+';font-size:10px;font-weight:600;cursor:pointer;margin:2px 3px 0 0;font-family:inherit">'+CHO_PHASE_LBL[pk]+'</button>';
         }).join('')
         +(choKeyIdx>=0?'<span style="margin-left:6px;color:#8a5200">🔑 Κύρια: <b>'+abbr[choKeyIdx]+'</b></span>':'')
-        +'<div style="color:#8aa;font-size:9px;margin-top:3px">Μόνο η κύρια συνεδρία φτάνει στην οροφή g/kg· οι υπόλοιπες μέρες πλησιάζουν το κατώφλι. Σύσταση — δεν αλλάζει θερμίδες/macros.</div>'
+        +'<div style="color:#8aa;font-size:9px;margin-top:3px">Μόνο η κύρια συνεδρία φτάνει στην οροφή g/kg· οι υπόλοιπες μέρες πλησιάζουν το κατώφλι.</div>'
+        +'<div style="color:#8aa;font-size:9px;margin-top:2px">Όλες οι τιμές CHO (πριν/κατά/μετά/ημέρας) είναι <b>συστάσεις προς χειροκίνητη τοποθέτηση</b> — το παραγόμενο πλάνο κρατά την κανονική κατανομή ανά γεύμα, δεν αλλάζει θερμίδες/macros.</div>'
         +'</div>'
       ):'<span style="color:#8aa">— ενεργοποίησέ το για CHO πριν/κατά/μετά ανά ημέρα προπόνησης (Thomas 2016 · Ricci 2025)</span>')
       +'</div>';
