@@ -16,8 +16,15 @@
     3 στήλες Πριν/Κατά/Μετά + why/note/foot· null όταν δεν υπάρχει `cho` block (rest / off / παλιό link).
   - `js/plan-gen/week-table.js`: συμπαγής strip `🥤 Ν·Ν/h·Ν g` στην κεφαλίδα κάθε ημέρας προπόνησης.
   - Όλα display-only· `plan.html` καμία μαθηματική client-side.
-- **Phase 3b** (PDF/Word export) εκκρεμεί.
+- **Phase 3b SHIPPED** (2026-09-01): `js/reports/exports.js` — `exportPDF` παίρνει ενότητα
+  «Υδατάνθρακες γύρω από την προπόνηση» (πίνακας class `st`, μία γραμμή ανά ημέρα προπόνησης,
+  `page-break-inside:avoid`, μετά τον πίνακα πλάνου πριν τα συμπληρώματα, el/en). `exportWord`
+  παίρνει το ίδιο ως απλές RTF παραγράφους (χωρίς πίνακα — κρατά ανέγγιχτη τη γεωμετρία RTF).
+  Και τα δύο no-op χωρίς `choProtocol.enabled`.
 - Mockup: `design/cho-protocol/mockup-phase3-surfaces.html` (και οι 4 επιφάνειες).
+
+**CHO Training Protocol: Phases 1-3 COMPLETE.** Ανοιχτά: κούρδισμα `LOAD_BANDS` σε πραγματικά
+πλάνα FYH· Phase 2.1 (σκληρότερη ανακατανομή / dedicated pre-workout meal slot)· `judo`/SPORT_PROFILES.
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).

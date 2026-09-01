@@ -390,6 +390,43 @@ function exportPDF(lang){
     shopHtml+='</tr></table>';
   }
 
+  // 🥤 CHO Training Protocol section (Phase 3b) — one compact row per training day.
+  // Only when the dietitian has opted the client in; reuses the supplements table style
+  // (class "st") for visual consistency and stays on one page (page-break-inside:avoid).
+  var choPdfHtml='';
+  if(c.choProtocol&&c.choProtocol.enabled&&typeof computeCHOTargets==='function'){
+    var choRows='', choN=0;
+    for(var chd=0;chd<7;chd++){
+      var chr=null; try{chr=computeCHOTargets(c,t,chd);}catch(e){chr=null;}
+      if(!chr||(!chr.isTrainingDay&&!chr.isMatchDay))continue;
+      choN++;
+      var chDur=chr.during.applicable
+        ? ('<b>'+chr.during.gramsPerHour+(isEn?' g/hr':' g/ώρα')+'</b> <span style="color:#777">(~'+chr.during.totalGrams+' g)</span>')
+        : '<span style="color:#777">'+(isEn?'not needed':'δεν χρειάζεται')+'</span>';
+      var chPreT=chr.pre.timeLabel?' <span style="color:#777">'+chr.pre.timeLabel+'</span>':'';
+      var chPostT=chr.post.timeLabel?' <span style="color:#777">'+chr.post.timeLabel+'</span>':'';
+      choRows+='<tr'+(choN%2===0?' class="alt"':'')+'>'
+        +'<td style="white-space:nowrap;font-weight:700;color:#025857">'+dayFull[chd]+'</td>'
+        +'<td><b>'+chr.pre.grams+' g</b>'+chPreT+'</td>'
+        +'<td>'+chDur+'</td>'
+        +'<td><b>'+chr.post.grams+' g</b>'+chPostT+'</td>'
+        +'</tr>';
+    }
+    if(choRows){
+      choPdfHtml='<div style="page-break-inside:avoid;break-inside:avoid;margin-top:8px">'
+        +'<div class="sec-title">'+(isEn?'Carbohydrates around training':'Υδατάνθρακες γύρω από την προπόνηση')+'</div>'
+        +'<table class="st"><thead><tr>'
+        +'<th>'+(isEn?'Day':'Ημέρα')+'</th><th>⚡ '+(isEn?'Before':'Πριν')+'</th>'
+        +'<th>🔥 '+(isEn?'During':'Κατά')+'</th><th>💪 '+(isEn?'After':'Μετά')+'</th>'
+        +'</tr></thead><tbody>'+choRows+'</tbody></table>'
+        +'<div style="font-size:5pt;color:#777;font-style:italic;margin:-6px 0 8px">'
+        +(isEn
+          ? 'Part of the daily total, not extra. Example foods: banana + bread with honey (before) · sports drink / gel + water (during) · rice + chicken or a smoothie (after). Source: Thomas 2016.'
+          : 'Μέρος του ημερήσιου συνόλου, όχι επιπλέον. Ενδεικτικά: μπανάνα + ψωμί με μέλι (πριν) · αθλητικό ποτό / gel + νερό (κατά) · ρύζι + κοτόπουλο ή smoothie (μετά). Πηγή: Thomas 2016.')
+        +'</div></div>';
+    }
+  }
+
   // ── Assemble HTML ─────────────────────────────────────────────────────────────
   var FF="'Century Gothic','Avant Garde',Avantgarde,'Trebuchet MS',Trebuchet,sans-serif";
   var html='<!DOCTYPE html><html lang="'+(isEn?'en':'el')+'"><head><meta charset="UTF-8">'
@@ -565,6 +602,7 @@ function exportPDF(lang){
        +'</div>'
     )
     +'<table class="mt"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>'
+    +choPdfHtml
     +selectedSuppHtml
     +suppHtml
     +hydrationHtml
@@ -1455,6 +1493,29 @@ function exportWord(){
       r+=cc+'\\cell\n';
     }
     r+='\\pard\\row\n';
+  }
+
+  // 🥤 CHO Training Protocol (Phase 3b) — compact per-training-day paragraphs (no table, keeps
+  // the RTF geometry untouched). Only when the dietitian has opted the client in.
+  if(c.choProtocol&&c.choProtocol.enabled&&typeof computeCHOTargets==='function'){
+    var choRtf='';
+    for(var wchd=0;wchd<7;wchd++){
+      var wchr=null; try{wchr=computeCHOTargets(c,t,wchd);}catch(e){wchr=null;}
+      if(!wchr||(!wchr.isTrainingDay&&!wchr.isMatchDay))continue;
+      var wDur=wchr.during.applicable
+        ? (wchr.during.gramsPerHour+'g/'+escRtf('ώρα')+' (~'+wchr.during.totalGrams+'g)')
+        : escRtf('δεν χρειάζεται');
+      choRtf+='{\\pard\\f0\\fs18\\cf0 \\b '+escRtf(DAYS[wchd])+':\\b0  '
+        +escRtf('Πριν ')+'\\b '+wchr.pre.grams+'g\\b0'+(wchr.pre.timeLabel?escRtf(' ('+wchr.pre.timeLabel+')'):'')
+        +escRtf('   Κατά ')+wDur
+        +escRtf('   Μετά ')+'\\b '+wchr.post.grams+'g\\b0'+(wchr.post.timeLabel?escRtf(' ('+wchr.post.timeLabel+')'):'')
+        +'\\par}\n';
+    }
+    if(choRtf){
+      r+='\\par{\\pard\\f0\\b\\fs24\\cf1 '+escRtf('Υδατάνθρακες γύρω από την προπόνηση')+'\\par}\n'
+        +choRtf
+        +'{\\pard\\f0\\i\\fs14\\cf4 '+escRtf('Μέρος του ημερήσιου συνόλου, όχι επιπλέον. Πηγή: Thomas 2016.')+'\\i0\\par}\\par\n';
+    }
   }
 
   // ── Supplements section ──── (TWO-LEVEL CONSOLIDATION) ────────────────────────
