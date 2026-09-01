@@ -108,6 +108,9 @@ function clientGoalWeightPct(c){
 // literal (\ και '), μετά escape για το ίδιο το HTML attribute (" < > &) —
 // χωρίς το δεύτερο βήμα, ένα " στο κείμενο του πελάτη σπάει έξω από το onclick="..."
 // (βλ. audit finding: app-part2.js noteJs, στο client-portal note field).
+// Οι αλλαγές γραμμής γίνονται \n/\r ΜΕΤΑ το διπλασιασμό του backslash — ένα raw newline
+// μέσα σε single-quoted JS string literal είναι SyntaxError, οπότε ο inline handler δεν
+// μεταγλωττιζόταν καθόλου (π.χ. «↩️ Απάντησε» σε πολύγραμμο μήνυμα πελάτη από <textarea>).
 function escJsAttr(s){
   return String(s==null?'':s)
     .replace(/&/g,'&amp;')
@@ -115,7 +118,9 @@ function escJsAttr(s){
     .replace(/'/g,"\\'")
     .replace(/"/g,'&quot;')
     .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;');
+    .replace(/>/g,'&gt;')
+    .replace(/\r/g,'\\r')
+    .replace(/\n/g,'\\n');
 }
 var DAYS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
 // Κοινή κανονικοποίηση τηλεφώνου για wa.me links — πελάτες σε Ελλάδα (10ψήφιο, χωρίς/με 30) ΚΑΙ
