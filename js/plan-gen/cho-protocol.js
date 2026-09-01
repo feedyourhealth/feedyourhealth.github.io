@@ -204,6 +204,26 @@ var CHO_MATCH_TIME_H = { 'πρωί': '09:00', 'μεσημέρι': '13:00', 'απ
 // post-exercise "keep topping up" guidance, identical across sports (1.0-1.2 g/kg/h up to ~4h)
 var CHO_POST_EXTENDED = { gPerKgPerHrLo: 1.0, gPerKgPerHrHi: 1.2, hours: 4 };
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Weekly periodisation (improvement #1). The DAILY CHO target is scaled by two
+   things the per-day math can't see on its own:
+     • the week's training PHASE  (c.choProtocol.weekPhase)
+     • whether the day is the week's KEY session — the single hardest training day
+   Rationale: "fuel for the work required" (Impey 2018). The stateless per-day model
+   let every hard day reach ~ceiling g/kg; a dietitian who periodises keeps only the
+   key session that high and pulls the secondary days toward the floor. Pre / during
+   / post are NOT touched — only the daily total.
+
+   The multipliers act on `dailyPos` (the convex position pos^1.6) BEFORE the lerp
+   into the sport's [dailyGPerKg.lo, dailyGPerKg.hi]. `KEY_BONUS` is g/kg added AFTER
+   the lerp, so a peak / race key day can deliberately exceed `hi` (carb-load).
+   Auto key-session detection is always on; weekPhase defaults to 'build' (neutral).
+   ───────────────────────────────────────────────────────────────────────────── */
+var CHO_WEEK_PHASES = ['base', 'build', 'peak', 'taper', 'race'];
+var CHO_PHASE_SECONDARY = { base: 0.55, build: 0.80, peak: 1.00, taper: 0.55, race: 0.65 };
+var CHO_PHASE_KEY       = { base: 1.00, build: 1.00, peak: 1.06, taper: 0.80, race: 1.10 };
+var CHO_PHASE_KEY_BONUS = { peak: 0.3, race: 0.8 };   // extra g/kg on the key day, post-lerp
+
 /* ── small pure helpers ──────────────────────────────────────────────────── */
 function choLerp(lo, hi, pos){
   var p = pos < 0 ? 0 : (pos > 1 ? 1 : pos);
@@ -248,6 +268,32 @@ function choSessionStart(c, d, isMatchDay){
   if(times[d]) return times[d];
   if(isMatchDay) return CHO_MATCH_TIME_H[c.matchTimeBucket || 'απόγευμα'] || '17:00';
   return null;
+}
+// ── week's KEY session (improvement #1) ──────────────────────────────────────
+// The single hardest training day of the week — the one periodisation lets reach
+// the top of the daily g/kg range. Score = MET load per kg, with a big bonus for
+// match days and days manually tagged 'race' (they outrank any plain session);
+// ties resolve to the LATER day. Returns -1 when there is no identifiable training
+// day (caller then applies no periodisation scaling). Pure.
+function choKeySessionIndex(c, t){
+  if(!c) return -1;
+  var byDay = (t && t.byDay && t.byDay.length === 7)
+    ? t.byDay
+    : (typeof calcMETkcal === 'function' ? (calcMETkcal(c).byDay || null) : null);
+  var wBasis = (c.pregnant && c.prePregnancyWeight > 0) ? c.prePregnancyWeight : (c.weight || 0);
+  var man = normalizeIntensityByDay(c.trainIntensityByDay);
+  var trainDays = c.trainDays || [], matchDays = c.matchDays || [];
+  var best = -1, bestScore = -Infinity;
+  for(var d = 0; d < 7; d++){
+    var metDay = byDay ? (byDay[d] || 0) : 0;
+    var isT = (trainDays[d] === true) || (metDay > 0) || (matchDays[d] === true);
+    if(!isT) continue;
+    var score = (wBasis > 0 ? metDay / wBasis : 0)
+      + (matchDays[d] === true ? 1000 : 0)
+      + (man[d] === 'race' ? 1000 : 0);
+    if(score >= bestScore){ bestScore = score; best = d; }
+  }
+  return best;
 }
 // ── meal-role classification (Phase 2: feeds allocateMealTargets) ─────────────
 // Mirrors the default meal clock in initializeMealTiming (js/plan-gen/meal-slots.js:493-498).
@@ -529,10 +575,22 @@ function computeCHOTargets(c, t, dayIdx){
   // near the floor. The convex curve keeps normal days low and still reaches the ceiling for a
   // genuine 2 h+ long-run / carb-load day.
   var dailyPos = Math.pow(pos, 1.6);
-  var dailyGPerKg = choLerp(P.dailyGPerKg.lo, P.dailyGPerKg.hi, dailyPos);
+  // ── weekly periodisation (improvement #1) — scale the daily total by the week's
+  //    phase + whether this is the week's key session. Never touches pre/during/post. ──
+  var weekPhase = (CHO_WEEK_PHASES.indexOf(cp.weekPhase) !== -1) ? cp.weekPhase : 'build';
+  var keyIdx = choKeySessionIndex(c, (t && t.byDay && t.byDay.length === 7) ? t : { byDay: byDay });
+  var periodiseOn = (keyIdx !== -1);
+  // every match day and every explicitly 'race'-tagged day fuels like a key session
+  var isKeySession = periodiseOn && (keyIdx === d || isMatchDay || manualTag === 'race');
+  var phaseMult = !periodiseOn ? 1
+    : (isKeySession ? (CHO_PHASE_KEY[weekPhase] || 1) : (CHO_PHASE_SECONDARY[weekPhase] || 1));
+  var dailyPosAdj = Math.max(0, Math.min(1, dailyPos * phaseMult));
+  var dailyGPerKg = choLerp(P.dailyGPerKg.lo, P.dailyGPerKg.hi, dailyPosAdj);
+  if(isKeySession && CHO_PHASE_KEY_BONUS[weekPhase]) dailyGPerKg += CHO_PHASE_KEY_BONUS[weekPhase];
   var dailyTarget = Math.round(dailyGPerKg * wBasis);
-  // Phase 1 is strictly per-meal kcal-neutral: the module never shifts the day's CHO total,
-  // so deltaVsBaselineG stays 0. Phase 2 may honour cp.dailyTargetGPerKg here (see design §2.5).
+  // Still strictly per-meal kcal-neutral in the plan: the module surfaces this daily
+  // target as a RECOMMENDATION in the day-targets grid, it does not rewrite eff[d].c.
+  // Phase 2 may honour cp.dailyTargetGPerKg here (see design §2.5).
   var deltaVsBaselineG = 0;
 
   var carbLoadIdxs = (typeof getCarbLoadDayIndexes === 'function') ? getCarbLoadDayIndexes(c) : [];
@@ -573,7 +631,8 @@ function computeCHOTargets(c, t, dayIdx){
     },
     dailyCHO: {
       gramsTarget: dailyTarget, gPerKg: +dailyGPerKg.toFixed(2),
-      deltaVsBaselineG: deltaVsBaselineG
+      deltaVsBaselineG: deltaVsBaselineG,
+      weekPhase: weekPhase, isKeySession: isKeySession, keySessionDayIdx: keyIdx
     },
     // Scaffold for the future allocateMealTargets 3rd arg (design §2.6). perMeal is
     // attached by the Phase 2 genPlan hook, which has the actual meals array. Ignored today.

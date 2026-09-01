@@ -261,9 +261,10 @@ function setMatchTimeBucket(bucket){
 function ensureChoProtocol(c){
   if(!c.choProtocol){
     c.choProtocol={enabled:false,mode:'auto',overrides:{preLeadMin:120,postWindowMin:30},
-      dailyTargetGPerKg:null,experimentalDuringHighRate:false,weightCutAcknowledged:false};
+      dailyTargetGPerKg:null,weekPhase:'build',experimentalDuringHighRate:false,weightCutAcknowledged:false};
   }
   if(!c.choProtocol.overrides)c.choProtocol.overrides={preLeadMin:120,postWindowMin:30};
+  if(['base','build','peak','taper','race'].indexOf(c.choProtocol.weekPhase)===-1)c.choProtocol.weekPhase='build';
   return c.choProtocol;
 }
 function setChoEnabled(on){
@@ -286,6 +287,16 @@ function setChoOverride(key,v){
   var cp=ensureChoProtocol(c);
   var num=parseFloat(v);
   cp.overrides[key]=(v===''||v==null||isNaN(num))?null:num;
+  save();
+  upd('choProtocol',c.choProtocol);
+  renderMain();
+}
+// Φάση εβδομάδας (improvement #1): base/build/peak/taper/race — μετατοπίζει μόνο το ημερήσιο
+// CHO recommendation ανά ημέρα, όχι το pre/κατά/μετά, όχι τις θερμίδες/macros του πλάνου.
+function setChoWeekPhase(phase){
+  var c=getC();if(!c)return;
+  if(['base','build','peak','taper','race'].indexOf(phase)===-1)return;
+  ensureChoProtocol(c).weekPhase=phase;
   save();
   upd('choProtocol',c.choProtocol);
   renderMain();

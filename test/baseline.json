@@ -63,7 +63,7 @@
   "counts": {
     "fnChecked": 119,
     "constChecked": 30,
-    "probes": 41
+    "probes": 42
   },
   "fnFails": [],
   "constFails": [],
@@ -580,6 +580,33 @@
       60,
       5
     ],
+    "cho.periodisation": {
+      "base": {
+        "wed": {
+          "g": 429,
+          "gPerKg": 5.73,
+          "key": false
+        },
+        "sun": {
+          "g": 620,
+          "gPerKg": 8.26,
+          "key": true
+        },
+        "keyIdx": 6
+      },
+      "peak": {
+        "wed": {
+          "g": 474,
+          "gPerKg": 6.32,
+          "key": false
+        },
+        "sun": {
+          "g": 657,
+          "gPerKg": 8.76,
+          "key": true
+        }
+      }
+    },
     "parseAllergies.sample": [
       "φιστίκια",
       "γάλα",
@@ -619,7 +646,7 @@
       "🥛 Γαλακτοκομικά": 20,
       "🌾 Γλουτένη": 28,
       "🥩 Κρέας": 20,
-      "🐟 Ψάρια/Θαλ.": 16,
+      "🐟 Ψάρια/Θαλ.": 17,
       "🫘 Όσπρια": 17,
       "🥚 Αυγά": 2,
       "🌰 Ξηροί καρποί": 9
@@ -880,10 +907,10 @@
       "ageAtDate_null": null
     },
     "_fingerprints": {
-      "FOODS_keys": 332,
-      "FOODS_json": 53414,
-      "PORTIONS_keys": 257,
-      "PORTIONS_json": 21106,
+      "FOODS_keys": 333,
+      "FOODS_json": 53570,
+      "PORTIONS_keys": 258,
+      "PORTIONS_json": 21175,
       "FOOD_UNITS_keys": 164,
       "FOOD_UNITS_json": 6703,
       "MEAL_RECIPES_len": 162,
@@ -893,8 +920,8 @@
       "SUPPS_json": 7498,
       "MET_ACTIVITIES_len": 13,
       "MET_ACTIVITIES_json": 8276,
-      "MICRONUTRIENTS_keys": 258,
-      "MICRONUTRIENTS_json": 44357,
+      "MICRONUTRIENTS_keys": 259,
+      "MICRONUTRIENTS_json": 44542,
       "SPORT_PROTOCOLS_keys": 3,
       "SPORT_PROTOCOLS_json": 5908,
       "SPORT_PROFILES_keys": 11,

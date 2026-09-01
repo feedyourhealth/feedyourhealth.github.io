@@ -247,6 +247,23 @@ document.write(window.__MANIFEST__.map(function(p){
   probe('resolveFood.samples',       function(){ return [resolveFood('Μπανάνα'), resolveFood('__unknown__')]; });
   probe('minScaleG.samples',         function(){ return [minScaleG('Μπανάνα'), minScaleG('Κοτόπουλο στήθος (ψητό)')]; });
 
+  // --- CHO protocol · weekly periodisation (improvement #1) ------------------
+  probe('cho.periodisation', function(){
+    if(typeof computeCHOTargets!=='function') return 'no computeCHOTargets';
+    var cc=deepClone(FIX.metM); cc.sport='running';
+    // Wed = ordinary 1h run, Sun = 2.5h long run → Sun is the key session
+    cc.trainDays=[false,false,true,false,false,false,true];
+    cc.trainHoursByDay=[0,0,1,0,0,0,2.5];
+    cc.metActivities=[{met:9,mins:60,days:[2]},{met:9,mins:150,days:[6]}];
+    cc.choProtocol={enabled:true,mode:'auto',overrides:{preLeadMin:120,postWindowMin:30},weekPhase:'base'};
+    var t=calcTDEE(cc);
+    function row(d){ var r=computeCHOTargets(cc,t,d); return r?{g:r.dailyCHO.gramsTarget,gPerKg:r.dailyCHO.gPerKg,key:r.dailyCHO.isKeySession}:null; }
+    var base={wed:row(2),sun:row(6),keyIdx:(typeof choKeySessionIndex==='function')?choKeySessionIndex(cc,t):'no fn'};
+    cc.choProtocol.weekPhase='peak'; t=calcTDEE(cc);
+    var peak={wed:row(2),sun:row(6)};
+    return {base:base,peak:peak};
+  });
+
   // --- exclusion engine (the surface Phase 2's intake chips will drive) -------------------
   probe('parseAllergies.sample',     function(){ return parseAllergies(' Φιστίκια, γάλα ,,  ΣΟΓΙΑ '); });
   probe('redMeatFoodsList.shape',    function(){ var a=redMeatFoodsList(); return { n:a.length,

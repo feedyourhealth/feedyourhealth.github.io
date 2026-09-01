@@ -22,11 +22,22 @@
   παίρνει το ίδιο ως απλές RTF παραγράφους (χωρίς πίνακα — κρατά ανέγγιχτη τη γεωμετρία RTF).
   Και τα δύο no-op χωρίς `choProtocol.enabled`.
 - Mockup: `design/cho-protocol/mockup-phase3-surfaces.html` (και οι 4 επιφάνειες).
+- **Improvement #1 SHIPPED** (2026-09-01): **weekly periodisation**. Το ημερήσιο CHO target
+  πλέον κλιμακώνεται από (α) τη **φάση εβδομάδας** `c.choProtocol.weekPhase` (base/build/peak/
+  taper/race, default 'build') και (β) το αν η ημέρα είναι η **κύρια συνεδρία** — η μοναδική
+  σκληρότερη ημέρα (max MET load· match days + 'race'-tagged ημέρες μετράνε ως κύριες). Μόνο η
+  κύρια φτάνει στην οροφή g/kg· οι δευτερεύουσες πλησιάζουν το κατώφλι ("fuel for the work
+  required", Impey 2018). Pre/κατά/μετά **δεν** αγγίζονται. Νέα: `CHO_WEEK_PHASES`,
+  `CHO_PHASE_SECONDARY/KEY/KEY_BONUS`, `choKeySessionIndex(c,t)` (cho-protocol.js)· `weekPhase`
+  στο `ensureChoProtocol` + `setChoWeekPhase` (form-controls.js)· φάση-selector + «🔑 Κύρια» readout
+  + νέα read-only γραμμή «🍚 CHO ημέρας» στο `buildDayTgtHtml` (day-targets.js)· smoke probe
+  `cho.periodisation`. **Παραμένει display-only** — σύσταση στο grid, δεν ξαναγράφει το `eff[d].c`.
+  Mockup: `design/cho-protocol/mockup-improvements.html`.
 
 **CHO Training Protocol: Phases 1-3 COMPLETE + `LOAD_BANDS` + pre-CHO + daily-CHO κουρδισμένα &
-validated έναντι πραγματικού marathon plan (2026-09-01).** Ανοιχτά: combat daily range (non-cut
-δείγμα)· περιοδισμός «κανονική vs peak/taper εβδομάδα» (το module είναι stateless per-day)·
-Phase 2.1 (σκληρότερη ανακατανομή)· `judo`/SPORT_PROFILES.
+validated έναντι πραγματικού marathon plan + improvement #1 (weekly periodisation) (2026-09-01).**
+Ανοιχτά: improvement #3 (HIIT dampening)· improvement #2 (pre-workout meal slot / Phase 2 cleanup)·
+combat daily range (non-cut δείγμα)· `judo`/SPORT_PROFILES.
 
 **Βάση:** το read-only audit + verification pass (canonical repo
 `C:\Users\steph\feedyourhealth-site`, git `main`, commit `bf4d15f`).
@@ -467,6 +478,11 @@ interrupt.
 
 ### 6.2 Ανοιχτά
 
+0. **Improvement #1 (weekly periodisation) SHIPPED 2026-09-01** — βλ. Status πάνω. Το «stateless
+   per-day» πρόβλημα («κάθε μεγάλη μέρα = carb-load level») λύθηκε: auto κύρια-συνεδρία + φάση
+   εβδομάδας. Επόμενα από τη λίστα βελτιώσεων: **#3** HIIT/διαλειμματικό dampening (μικρό
+   `loadPerKg *= ~0.85` σε <60′ υψηλού φορτίου· θέλει 2-3 πραγματικά πλάνα για το factor)· **#2**
+   ή pre-workout meal slot στα templates ή υποβάθμιση Phase 2 σε καθαρή display-only σύσταση.
 1. `LOAD_BANDS` κουρδίστηκαν 2026-09-01 (§2.2, νέα 6-band καμπύλη + `CHO_RACE_LOAD_PER_KG`=20) από
    exercise-physiology reasoning — **ακόμα δεν** έχουν validated σε δείγμα πραγματικών πλάνων FYH.
    Το pre-CHO lever αναθεωρήθηκε 2026-09-01 (§Phase 1 notes: `preByLead` απόλυτου χρόνου αντί

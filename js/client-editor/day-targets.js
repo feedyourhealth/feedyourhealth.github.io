@@ -389,6 +389,11 @@ function buildDayTgtHtml(c,t){
       try{choResults[_cdi]=computeCHOTargets(c,t,_cdi);}catch(_e){choResults[_cdi]=null;}
     }
   }
+  // improvement #1 — weekly periodisation readout (key session + phase)
+  var choKeyIdx=(choEnabled&&typeof choKeySessionIndex==='function')
+    ?(function(){try{return choKeySessionIndex(c,t);}catch(_e){return -1;}})():-1;
+  var choPhase=(cp&&['base','build','peak','taper','race'].indexOf(cp.weekPhase)!==-1)?cp.weekPhase:'build';
+  var CHO_PHASE_LBL={base:'Βάση',build:'Χτίσιμο',peak:'Αιχμή',taper:'Αποφόρτιση',race:'Εβδ. αγώνα'};
   var macros=[
     {key:'k',label:'Kcal',cls:'mrow-k',icls:'dt-inp-k',mn:500,mx:6000},
     {key:'p',label:'Πρωτεΐνη g',cls:'mrow-p',icls:'dt-inp-p',mn:0,mx:500},
@@ -500,7 +505,11 @@ function buildDayTgtHtml(c,t){
         if(!r.during.applicable)return{main:'—',sub:'<'+r.during.minDurationMin+'′'};
         return{main:r.during.gramsPerHour+' g/h',sub:'~'+r.during.totalGrams+' g'};
       }},
-      {ic:'💪',lb:'CHO μετά',pick:function(r){return r&&r.post?{main:r.post.grams+' g',sub:r.post.timeLabel||''}:null;}}
+      {ic:'💪',lb:'CHO μετά',pick:function(r){return r&&r.post?{main:r.post.grams+' g',sub:r.post.timeLabel||''}:null;}},
+      {ic:'🍚',lb:'CHO ημέρας',pick:function(r){
+        if(!r||!r.dailyCHO)return null;
+        return{main:r.dailyCHO.gramsTarget+' g',sub:(r.dailyCHO.isKeySession?'🔑 ':'')+r.dailyCHO.gPerKg+' g/kg'};
+      }}
     ];
     choRowDefs.forEach(function(rd){
       tbody+='<tr class="train-row" style="background:#f2fbf8"><td style="color:#00786f">'+rd.ic+' '+rd.lb+'</td>';
@@ -543,6 +552,15 @@ function buildDayTgtHtml(c,t){
         +'<label>pre <input class="carb-boost-inp" type="number" step="0.1" min="0" max="6" value="'+(choOv.gPerKgPre!=null?choOv.gPerKgPre:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerKgPre\',this.value)"> g/kg</label> '
         +'<label>κατά <input class="carb-boost-inp" type="number" min="0" max="120" value="'+(choOv.gPerHrDuring!=null?choOv.gPerHrDuring:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerHrDuring\',this.value)"> g/h</label> '
         +'<label>μετά <input class="carb-boost-inp" type="number" step="0.1" min="0" max="3" value="'+(choOv.gPerKgPost!=null?choOv.gPerKgPost:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerKgPost\',this.value)"> g/kg</label>'
+        +'<div style="margin-top:6px;font-size:11px;color:#00786f">'
+        +'<span style="font-weight:700">🗓️ Φάση εβδομάδας:</span> '
+        +['base','build','peak','taper','race'].map(function(pk){
+          var on=choPhase===pk;
+          return '<button type="button" onclick="setChoWeekPhase(\''+pk+'\')" style="padding:3px 9px;border-radius:12px;border:1px solid '+(on?'#00786f':'#bcd')+';background:'+(on?'#00786f':'#fff')+';color:'+(on?'#fff':'#478')+';font-size:10px;font-weight:600;cursor:pointer;margin:2px 3px 0 0;font-family:inherit">'+CHO_PHASE_LBL[pk]+'</button>';
+        }).join('')
+        +(choKeyIdx>=0?'<span style="margin-left:6px;color:#8a5200">🔑 Κύρια: <b>'+abbr[choKeyIdx]+'</b></span>':'')
+        +'<div style="color:#8aa;font-size:9px;margin-top:3px">Μόνο η κύρια συνεδρία φτάνει στην οροφή g/kg· οι υπόλοιπες μέρες πλησιάζουν το κατώφλι. Σύσταση — δεν αλλάζει θερμίδες/macros.</div>'
+        +'</div>'
       ):'<span style="color:#8aa">— ενεργοποίησέ το για CHO πριν/κατά/μετά ανά ημέρα προπόνησης (Thomas 2016 · Ricci 2025)</span>')
       +'</div>';
   }

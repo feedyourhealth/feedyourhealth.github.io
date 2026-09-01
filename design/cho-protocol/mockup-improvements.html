@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHO Protocol — 3 βελτιώσεις (mockup)</title>
+<style>
+  :root{
+    --teal:#025857; --teal-d:#014545; --teal-l:#037070;
+    --tint:#E2EEE5; --tint2:#E8F5E9; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
+    --bg:#f4f8f6; --card:#ffffff;
+    --amber-bg:#FFF4E5; --amber-bord:#F0A048; --amber-ink:#8A5200;
+    --red-bg:#FDECEA; --red-bord:#E0836F; --red-ink:#9A3B22;
+    --blue-bg:#E8F1FA; --blue-bord:#7Fb0DA; --blue-ink:#1C5687;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px 14px 80px;background:#eceff1;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.5}
+  h1{max-width:900px;margin:0 auto 6px;font-size:19px;color:var(--teal-d)}
+  .lead{max-width:900px;margin:0 auto 26px;font-size:13px;color:#546e7a}
+  h2.sec{max-width:900px;margin:40px auto 4px;font-size:15px;color:#263238;border-left:4px solid var(--teal);
+    padding:8px 12px;background:#fff;border-radius:0 8px 8px 0}
+  h2.sec b{color:var(--teal-d)}
+  .why{max-width:900px;margin:0 auto 14px;font-size:12.5px;color:#455a64;padding:2px 12px}
+  .why .tag{display:inline-block;background:var(--red-bg);color:var(--red-ink);border:.5px solid var(--red-bord);
+    border-radius:6px;font-size:11px;font-weight:700;padding:1px 7px;margin-right:6px}
+  .frame{max-width:900px;margin:0 auto 10px;background:var(--bg);border:1px solid #cfd8dc;border-radius:16px;
+    padding:16px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .frame h3{margin:0 0 10px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+  .frame + .frame{margin-top:0}
+  .cap{max-width:900px;margin:6px auto 4px;font-size:12px;color:#607d8b;font-style:italic}
+  .rec{max-width:900px;margin:10px auto 0;font-size:12.5px;background:var(--tint2);border:.5px solid var(--bord);
+    border-left:4px solid var(--ok);border-radius:0 10px 10px 0;padding:10px 13px;color:var(--ink)}
+  .rec b{color:var(--ok)}
+
+  /* control primitives — mirror day-targets.js look */
+  .ctrlstrip{background:#fff;border:.5px solid var(--bord);border-radius:12px;padding:12px 13px;margin-bottom:12px}
+  .ctrlrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+  .ctrlrow:last-child{margin-bottom:0}
+  .ctrlrow .lb{font-size:12px;font-weight:700;color:var(--teal-d);min-width:132px}
+  .seg{display:flex;gap:4px;flex-wrap:wrap}
+  .seg button{border:.5px solid var(--bord);background:#fff;color:var(--muted);font-size:12px;font-weight:600;
+    border-radius:8px;padding:5px 11px;cursor:pointer;font-family:inherit}
+  .seg button.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .seg button.k{padding-right:8px}
+  .hint{font-size:11px;color:var(--faint);margin-top:3px}
+
+  table.wk{border-collapse:collapse;width:100%;font-size:11.5px;margin-top:4px}
+  table.wk th{background:#fafafa;border:1px solid #e0e0e0;padding:5px 7px;color:#555;font-weight:700;text-align:center}
+  table.wk th:first-child{text-align:left}
+  table.wk td{border:1px solid #e0e0e0;padding:5px 7px;text-align:center;color:#444}
+  table.wk td:first-child{text-align:left;font-weight:700;color:#555;white-space:nowrap}
+  table.wk td.key{background:#fff8e1;font-weight:700;color:var(--amber-ink)}
+  table.wk td.rest{color:#b0bec5}
+  table.wk .u{font-size:9px;color:#90a4ae;font-weight:400}
+  .b4{color:var(--red-ink)}
+  .af{color:var(--ok);font-weight:700}
+  .delta{font-size:10px;color:var(--faint)}
+
+  .cho3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+  .cho{background:var(--tint2);border-radius:12px;padding:10px 7px;text-align:center;display:flex;flex-direction:column;gap:3px}
+  .cho .ph{font-size:17px;line-height:1}
+  .cho .lbl{font-size:10px;color:var(--teal-l);font-weight:700}
+  .cho .amt{font-size:17px;font-weight:700;color:var(--teal-d);line-height:1.1}
+  .cho .amt small{font-size:10px;font-weight:600;color:var(--muted)}
+  .cho .tm{font-size:10px;color:var(--faint)}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){ .cols{grid-template-columns:1fr} .cho3{grid-template-columns:1fr} h2.sec{font-size:14px} .ctrlrow .lb{min-width:0;flex-basis:100%} }
+  .opt{background:#fff;border:.5px solid var(--bord);border-radius:12px;padding:13px}
+  .opt.pick{border:1.5px solid var(--ok);box-shadow:0 0 0 3px rgba(46,125,50,.10)}
+  .opt h4{margin:0 0 4px;font-size:13px;color:var(--teal-d)}
+  .opt h4 .badge{font-size:10px;font-weight:700;background:var(--ok);color:#fff;border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+  .opt p{margin:6px 0;font-size:11.5px;color:#546e7a}
+  .opt .plus{color:var(--ok);font-size:11.5px} .opt .minus{color:var(--red-ink);font-size:11.5px}
+
+  table.tpl{border-collapse:collapse;width:100%;font-size:11px;margin-top:8px}
+  table.tpl td{border:1px solid #e0e0e0;padding:4px 7px;color:#444}
+  table.tpl td:first-child{font-weight:700;color:#555;white-space:nowrap}
+  table.tpl tr.new td{background:#f2fbf8;color:#00786f;font-weight:700}
+  table.tpl tr.new td:first-child{color:#00786f}
+
+  .applybar{display:flex;align-items:center;gap:10px;background:#f2fbf8;border:1px dashed #7fcbbf;border-radius:10px;
+    padding:9px 11px;margin-top:8px;font-size:11.5px;color:#00786f}
+  .applybar button{margin-left:auto;border:none;background:var(--teal);color:#fff;font-size:11.5px;font-weight:700;
+    border-radius:8px;padding:6px 13px;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .mut{color:#90a4ae}
+  code{background:#eef4f2;border-radius:4px;padding:1px 5px;font-size:11px;color:var(--teal-d)}
+  .mech{max-width:900px;margin:8px auto 0;font-size:11.5px;color:#607d8b;padding:2px 12px}
+  .mech code{font-size:10.5px}
+</style>
+</head>
+<body>
+
+<h1>CHO Protocol — 3 βελτιώσεις προς υλοποίηση</h1>
+<div class="lead"><b>MOCKUP · dummy data</b> — Δ. Παπαδόπουλος, άνδρας, 72 kg, δρομέας, 5 προπονήσεις/εβδομάδα.
+Δείχνει <i>πώς</i> θα φαίνονται οι αλλαγές πριν γραφτεί κώδικας. Καμία σύνδεση με το πραγματικό app.</div>
+
+
+<!-- ═══════════════ 1 · WEEKLY PERIODISATION ═══════════════ -->
+<h2 class="sec"><b>1.</b> Φάση προπόνησης — το module βλέπει την εβδομάδα, όχι μόνο τη μέρα</h2>
+<div class="why"><span class="tag">ΤΩΡΑ</span> Κάθε μέρα με 2ωρη προπόνηση βγάζει «carb-load level» (~8&nbsp;g/kg), είτε είναι base week
+είτε αιχμή. Ο διαιτολόγος που περιοδικοποιεί βλέπει το ίδιο νούμερο παντού — και χάνει την εμπιστοσύνη του στη λειτουργία.</div>
+
+<div class="frame">
+  <div style="display:inline-block;background:var(--ok);color:#fff;font-size:10px;font-weight:700;border-radius:6px;padding:2px 8px;margin-bottom:8px">✓ SHIPPED 2026-09-01 — verified live</div>
+  <h3>Στο day-targets grid — νέα γραμμή ελέγχου (μία φορά ανά εβδομάδα, όχι ανά μέρα)</h3>
+  <div class="ctrlstrip">
+    <div class="ctrlrow">
+      <span class="lb">🗓️ Φάση εβδομάδας</span>
+      <div class="seg">
+        <button>Βάση</button><button class="on">Χτίσιμο</button><button>Αιχμή</button>
+        <button>Αποφόρτιση</button><button>Εβδ. αγώνα</button>
+      </div>
+      <span class="hint" style="margin:0 0 0 4px">default «Χτίσιμο» = ουδέτερο</span>
+    </div>
+    <div class="ctrlrow">
+      <span class="lb">🔑 Κύρια συνεδρία</span>
+      <div class="seg"><button class="k" style="cursor:default">Αυτόματα → <b>Κυρ</b> &nbsp;<span class="mut">(η μέρα με max MET load· match/‘race’ μέρες μετράνε ως κύριες)</span></button></div>
+    </div>
+    <div class="hint">Auto — καμία υποχρέωση να το πατήσεις. Μόνο η κύρια συνεδρία φτάνει στην οροφή g/kg· οι δευτερεύουσες πλησιάζουν το κατώφλι. Pre/κατά/μετά δεν αλλάζουν.</div>
+  </div>
+
+  <table class="wk">
+    <thead><tr><th>Ημερήσιο CHO — 72&nbsp;kg δρομέας</th><th>Τε <span class="u">1ω run</span></th><th>Πα <span class="u">1ω run</span></th><th>Κυ 🔑 <span class="u">2.5ω long</span></th></tr></thead>
+    <tbody>
+      <tr><td>ΠΡΙΝ <span class="u">(stateless — ό,τι έβγαζε το module)</span></td>
+        <td class="b4">455 g · 6.32</td><td class="b4">455 g · 6.32</td><td class="b4">595 g · 8.26</td></tr>
+      <tr><td>«Χτίσιμο» <span class="u">(default)</span></td>
+        <td class="af">436 g · 6.06</td><td class="af">436 g · 6.06</td><td class="key">595 g · 8.26</td></tr>
+      <tr><td>«Βάση»</td>
+        <td class="af">412 g · 5.73</td><td class="af">412 g · 5.73</td><td class="key">595 g · 8.26</td></tr>
+      <tr><td>«Αιχμή»</td>
+        <td class="af">455 g · 6.32</td><td class="af">455 g · 6.32</td><td class="key">630 g · 8.76</td></tr>
+      <tr><td>«Αποφόρτιση»</td>
+        <td class="af">412 g · 5.73</td><td class="af">412 g · 5.73</td><td class="key">548 g · 7.61</td></tr>
+    </tbody>
+  </table>
+  <div class="cap">Πραγματικά νούμερα από το shipped build. Το «Χτίσιμο» ακουμπάει ελαφρά (−0.3 στις δευτερεύουσες)· «Βάση»/«Αποφόρτιση» τραβούν ~−0.6 προς το κατώφλι· «Αιχμή» ανεβάζει και κρατά την κύρια ψηλά (+0.5)· «Αποφόρτιση» κόβει και την κύρια. Όσο περισσότερες «σκληρές» μέρες έχει η εβδομάδα, τόσο πιο ορατή η διαφοροποίηση.</div>
+</div>
+<div class="mech">Μηχανισμός (shipped): <code>c.choProtocol.weekPhase</code> ∈ base/build/peak/taper/race →
+<code>dailyPos *= isKey ? CHO_PHASE_KEY[phase] : CHO_PHASE_SECONDARY[phase]</code> πριν το lerp στο
+<code>[dailyGPerKg.lo, hi]</code>· η κύρια μέρα σε peak/race παίρνει και <code>+CHO_PHASE_KEY_BONUS</code> g/kg μετά το lerp (carb-load).
+Κύρια συνεδρία: <code>choKeySessionIndex(c,t)</code> = argmax MET load (match/‘race’ +1000, ties → later).
+Pre/κατά/μετά <b>άθικτα</b>. Σύσταση στο grid («🍚 CHO ημέρας» γραμμή) — δεν ξαναγράφει το <code>eff[d].c</code>.</div>
+
+
+<!-- ═══════════════ 2 · PHASE 2 REDISTRIBUTION ═══════════════ -->
+<h2 class="sec"><b>2.</b> Η ανακατανομή CHO της Phase 2 — να διαλέξουμε κατεύθυνση</h2>
+<div class="why"><span class="tag">ΤΩΡΑ</span> Μετά το recipe-matching + τα caps του <code>scalePlan</code>, η ορατή μετατόπιση στο τελικό πλάνο είναι
+~+10–15&nbsp;g CHO στο απογευματινό σνακ. Προσθέσαμε non-determinism και μια ολόκληρη διαδρομή κώδικα για ελάχιστο αποτέλεσμα.</div>
+
+<div class="frame">
+  <div class="cols">
+    <div class="opt pick">
+      <h4>Α — Ειδικό γεύμα «Προ-προπόνησης» στα αθλητικά templates <span class="badge">ΠΡΟΤΕΙΝΟΜΕΝΟ</span></h4>
+      <p>Το <code>running</code> / <code>football</code> template αποκτά μια θέση <b>🏋️ Προ-προπόνησης</b> που το <code>genPlan()</code>
+      γεμίζει· η ανακατανομή έχει πλέον πού να βάλει 90–140&nbsp;g υδατάνθρακα.</p>
+      <table class="tpl">
+        <tr><td>08:00 Πρωινό</td><td>Βρώμη, γιαούρτι, μέλι, φρούτο</td></tr>
+        <tr><td>13:00 Μεσημεριανό</td><td>Ρύζι, κοτόπουλο, σαλάτα</td></tr>
+        <tr class="new"><td>16:00 🏋️ Προ-προπόνησης</td><td>Ζυμαρικά + ψωμί + χυμός &nbsp;·&nbsp; <b>130 g CHO</b></td></tr>
+        <tr><td>20:30 Βραδινό <span class="mut">(post)</span></td><td>Πατάτα, σολομός, λαχανικά</td></tr>
+      </table>
+      <p class="plus">+ Πραγματική, ορατή μετατόπιση· + ξεκάθαρο στον πελάτη τι/πότε να φάει· + η ανακατανομή γίνεται deterministic.</p>
+      <p class="minus">− Θέλει επεξεργασία 2–3 templates + editor UI για τη νέα θέση.</p>
+    </div>
+    <div class="opt">
+      <h4>Β — Η Phase 2 γίνεται σύσταση display-only</h4>
+      <p>Καμία σιωπηλή μετάλλαξη πλάνου. Στο week-table εμφανίζεται «Προτεινόμενη ανακατανομή» με κουμπί που ο διαιτολόγος
+      πατάει <i>χειροκίνητα</i> όταν συμφωνεί.</p>
+      <div class="applybar">
+        🔀 Προτ. ανακατανομή Τετ.: −18&nbsp;g CHO πρωινό · +22&nbsp;g προ-προπ. σνακ · θερμίδες σταθερές
+        <button>Εφάρμοσέ το</button>
+      </div>
+      <p class="plus">+ Μηδέν ρίσκο στο calorie-consistency guard· + πλήρης έλεγχος στον διαιτολόγο· + καθόλου non-determinism.</p>
+      <p class="minus">− Ένα κλικ παραπάνω ανά εβδομάδα· − αν δεν το πατήσει, δεν γίνεται τίποτα.</p>
+    </div>
+  </div>
+</div>
+<div class="rec"><b>Πρόταση: Α.</b> Το να υπάρχει πραγματική θέση «προ-προπόνησης» λύνει και τη ρίζα του Known-limit της Phase 2
+(«ένα σνακ 400 kcal δεν χωράει πλήρες pre-CHO φορτίο») και το κάνει κατανοητό στον πελάτη. Το Β είναι το ασφαλές fallback αν δεν θέλεις άγγιγμα στα templates.</div>
+
+
+<!-- ═══════════════ 3 · HIIT DAMPENING ═══════════════ -->
+<h2 class="sec"><b>3.</b> Διαλειμματικές / υψηλής έντασης μέρες — να μη διαβάζονται υπερβολικά ψηλά</h2>
+<div class="why"><span class="tag">ΤΩΡΑ</span> Το <code>loadPerKg ≈ MET-hours</code> υποθέτει ότι η ανάγκη σε CHO κλιμακώνεται γραμμικά με την ένταση.
+Δεν ισχύει: μια 45λεπτη HIIT διάβασε <b>+23%</b> πάνω από ό,τι προγραμμάτισε ο διαιτολόγος στο πραγματικό marathon πλάνο.</div>
+
+<div class="frame">
+  <h3>Στο day-targets grid — νέος διακόπτης ανά μέρα προπόνησης</h3>
+  <div class="ctrlstrip">
+    <div class="ctrlrow">
+      <span class="lb">🏃 Τύπος συνεδρίας</span>
+      <div class="seg">
+        <button class="on">Συνεχής</button><button>Διαλειμματική / HIIT</button>
+      </div>
+      <span class="hint" style="margin:0 0 0 4px">αυτόματα από τη δραστηριότητα MET («intervals», «HIIT», «fartlek» στο όνομα) — override εδώ</span>
+    </div>
+  </div>
+
+  <table class="wk">
+    <thead><tr><th>Τετάρτη — 45′ έντονη</th><th>loadPerKg</th><th>θέση (pos)</th><th>Ημερήσιο CHO</th><th>vs διαιτολόγος</th></tr></thead>
+    <tbody>
+      <tr><td>ΤΩΡΑ</td><td class="b4">11.0</td><td class="b4">0.47</td><td class="b4">472 g &nbsp;<span class="u">6.6 g/kg</span></td><td class="b4">+23%</td></tr>
+      <tr><td>ΜΕΤΑ <span class="u">(×0.85 dampen)</span></td><td class="af">9.4</td><td class="af">0.39</td><td class="af">408 g &nbsp;<span class="u">5.7 g/kg</span></td><td class="af">+2%</td></tr>
+    </tbody>
+  </table>
+  <div class="cap">Ο dampener πέφτει μόνο σε σύντομες (&lt;60′) υψηλού-φορτίου συνεδρίες. Το <b>pre / κατά / μετα</b> μένουν στη γραμμική <code>pos</code> —
+  η γλυκογονόλυση σε HIIT δικαιολογεί κανονικό post-CHO· αλλάζει μόνο το ημερήσιο σύνολο.</div>
+</div>
+<div class="mech">Μηχανισμός: πριν το <code>choPickLoadBand()</code> — <code>if (dayHrs·60 &lt; 60 &amp;&amp; loadPerKg &gt; 9) loadPerKg *= 0.85</code>·
+νέο <code>c.choProtocol.sessionKindByDay[d]</code> (<code>steady</code>/<code>intervals</code>) με auto-ανίχνευση από <code>MET_ACTIVITIES</code> label.
+Χρειάζεται 2–3 ακόμη πραγματικά πλάνα για επικύρωση του 0.85 — γι' αυτό η Phase 1 έμεινε read-only.</div>
+
+
+<div class="rec" style="margin-top:34px;border-left-color:var(--teal)">
+  <b style="color:var(--teal-d)">Σειρά υλοποίησης:</b> 1 (φάση εβδομάδας) → 3 (HIIT dampen) → 2 (γεύμα προ-προπόνησης).
+  Το 1 &amp; 3 είναι μικρές, ντετερμινιστικές αλλαγές στο <code>cho-protocol.js</code> + λίγο UI· το 2 αγγίζει templates &amp; genPlan, το κρατάμε τελευταίο.
+  Μετά απ' αυτά, τα «μικρότερα» (auto→ένταση hint, session-time flag, «πώς βγήκε αυτό», judo dropdown).
+</div>
+
+</body>
+</html>
