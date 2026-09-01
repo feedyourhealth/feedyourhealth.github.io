@@ -798,6 +798,10 @@ function saveClinicContact() {
     Cloud.CLINIC.wa = wa;
     Cloud.CLINIC.email = email;
   }
+  // Σκανδάλισε cloud sync — το _pushNow() διαβάζει τα clinic πεδία από το Cloud.CLINIC (μόλις
+  // ενημερώθηκε παραπάνω) και τα ανεβάζει μέσα στο ενιαίο user_data blob, ώστε να ταξιδεύουν
+  // μεταξύ συσκευών όπως τα υπόλοιπα δεδομένα.
+  try { if (typeof save === 'function') save(); } catch (e) {}
   // Η αποθήκευση γίνεται σιωπηλά σε κάθε onblur — χωρίς αυτό δεν υπάρχει καμία ένδειξη
   // ότι κάτι αποθηκεύτηκε, οπότε έμοιαζε "δεν σώζεται" παρόλο που η τιμή περνούσε κανονικά.
   if (typeof showSuccessToast === 'function') showSuccessToast('✓ Τα στοιχεία επικοινωνίας αποθηκεύτηκαν');
@@ -3657,6 +3661,17 @@ function saveFoodExclusions(){
                   window._tipsLibraryCache = d.tipsLibrary;
                 }
               }
+              // Clinic contact — raw localStorage keys (read by loadSettingsPanel + _buildSnapshot
+              // via self.CLINIC) plus the in-memory self.CLINIC object so a publish right after
+              // load already carries it without a page reload.
+              if(d.clinicContact && typeof d.clinicContact==='object'){
+                try{
+                  localStorage.setItem('fyh-clinic-wa', d.clinicContact.wa||'');
+                  localStorage.setItem('fyh-clinic-tel', d.clinicContact.tel||'');
+                  localStorage.setItem('fyh-clinic-email', d.clinicContact.email||'');
+                }catch(e){}
+                if(self.CLINIC){ self.CLINIC.wa=d.clinicContact.wa||''; self.CLINIC.tel=d.clinicContact.tel||''; self.CLINIC.email=d.clinicContact.email||''; }
+              }
             }catch(e){ console.error('[CLOUD] apply data', e); }
             self._loaded=true; self._loadCustomRecipes().then(resolve);
           } else {
@@ -3680,6 +3695,15 @@ function saveFoodExclusions(){
           recipeMeta: (typeof getRecipeMeta==='function'?getRecipeMeta():null),
           savedCombos: (typeof safeStorageGet==='function'?safeStorageGet('savedCombos',[]):[]),
           tipsLibrary: (typeof safeStorageGet==='function'?safeStorageGet('tipsLibrary',[]):[]),
+          // Clinic contact (WhatsApp/phone/email shown to the client in the plan's «Ρώτησέ με»
+          // sheet) used to be localStorage-only, so publishing from another browser/device gave
+          // the client a contact-less link. Rides along in the same blob now; self.CLINIC is
+          // kept in sync by saveClinicContact() and is re-seeded from d.clinicContact on load().
+          clinicContact: {
+            wa:(self.CLINIC&&self.CLINIC.wa)||'',
+            tel:(self.CLINIC&&self.CLINIC.tel)||'',
+            email:(self.CLINIC&&self.CLINIC.email)||''
+          },
           updatedAt: new Date().toISOString()
         };
         var expected=self._version||0;
@@ -3875,6 +3899,14 @@ function saveFoodExclusions(){
               safeStorageSet('tipsLibrary', d.tipsLibrary);
               window._tipsLibraryCache = d.tipsLibrary;
             }
+          }
+          if(d.clinicContact && typeof d.clinicContact==='object'){
+            try{
+              localStorage.setItem('fyh-clinic-wa', d.clinicContact.wa||'');
+              localStorage.setItem('fyh-clinic-tel', d.clinicContact.tel||'');
+              localStorage.setItem('fyh-clinic-email', d.clinicContact.email||'');
+            }catch(e){}
+            if(self.CLINIC){ self.CLINIC.wa=d.clinicContact.wa||''; self.CLINIC.tel=d.clinicContact.tel||''; self.CLINIC.email=d.clinicContact.email||''; }
           }
           try{ localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); }catch(e){}
         }catch(e){ console.error('[CLOUD] forceReloadFromCloud apply', e); }
