@@ -257,6 +257,12 @@ var VALIDATION_RULES={
     name:'BMR (Mifflin-St Jeor)',
     validate:function(c,t){
       if(!c.weight||!c.height||!c.age)return{ok:true,msg:'Missing data'};
+      // calcTDEE legitimately uses Schofield (minors), Katch-McArdle (BF%/lean mass),
+      // measured RMR or Cunningham depending on the client — only re-derive & compare when
+      // Mifflin-St Jeor was actually the method used, otherwise this rule fires a false mismatch.
+      if(t.bmrMethod && t.bmrMethod!=='Mifflin-St Jeor'){
+        return{ok:true,msg:'✓ BMR via '+t.bmrMethod+' ('+t.bmr+' kcal) — Mifflin check n/a'};
+      }
       var expected;
       if(c.sex==='M'){
         expected=Math.round(10*c.weight+6.25*c.height-5*c.age+5);
