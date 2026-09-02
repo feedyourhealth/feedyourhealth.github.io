@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Εργαλείο Διαιτολόγου</title>
+<!-- Defense-in-depth CSP (audit finding). No external scripts after the vendor/ move, so
+     script-src is 'self' only; 'unsafe-inline' is unavoidable here (large amounts of inline
+     <script> + onclick handlers). connect-src is limited to this project's Supabase host.
+     frame-ancestors is ignored in a <meta> CSP (needs a real header) but kept to document intent. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
 <script src="vendor/supabase-js.min.js"></script>

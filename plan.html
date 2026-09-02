@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#025857">
 <title>Feed Your Health — Το πλάνο μου</title>
+<!-- Defense-in-depth CSP (audit finding). Scripts are self-hosted (vendor/) + inline;
+     'unsafe-inline' is unavoidable (inline <script> + onclick). connect-src limited to this
+     project's Supabase host. frame-ancestors is ignored in a <meta> CSP but kept for intent. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
 <!-- PWA / add-to-home-screen -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
