@@ -5,13 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Εργαλείο Διαιτολόγου</title>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
+<script src="vendor/supabase-js.min.js"></script>
 <script>
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
 <link rel="stylesheet" href="css/styles.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- Self-hosted (vendor/) — pinned JSZip 3.10.1 -->
+<script src="vendor/jszip.min.js"></script>
 </head>
 <body>
 <!-- Autosave indicator -->
@@ -396,8 +398,8 @@ setTimeout(function(){
 <script src="js/tabs/messages.js"></script>
 <script src="js/tabs/recipes.js"></script>
 <script src="js/tabs/tips.js"></script>
-<!-- ✅ CHARTS LIBRARY -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ✅ CHARTS LIBRARY — self-hosted (vendor/), pinned Chart.js 4.5.1 UMD -->
+<script src="vendor/chart.umd.min.js"></script>
 
 <!-- ✅ PHASE 4: UNDO/REDO SYSTEM -->
 <script src="js/11-undo-redo.js"></script>
@@ -2870,7 +2872,7 @@ function saveFoodExclusions(){
             console.warn('[CLOUD] supabase-js δεν φορτώθηκε, νέα προσπάθεια '+this._loadRetries+'/3...');
             setTimeout(function(){
               var s=document.createElement('script');
-              s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+              s.src='vendor/supabase-js.min.js';
               s.onload=function(){ self.init(); };
               s.onerror=function(){ self.init(); };
               document.head.appendChild(s);
