@@ -484,17 +484,24 @@ function pickChip(el){
   var d=parseInt(el.dataset.d),mi=parseInt(el.dataset.mi),fi=parseInt(el.dataset.fi);
   var selectedFoodName=el.dataset.n;
   if(el.dataset.mode==='tmpl'){
-    TMPLS[curTmplGoal][d][mi].foods[fi].n=selectedFoodName;
+    var tf=TMPLS[curTmplGoal][d][mi].foods[fi];
+    tf.n=selectedFoodName;
+    // Ακέραιο τρόφιμο (ψωμί/αυγό/φρούτο): «κούμπωσε» τα γραμμάρια που μεταφέρθηκαν από
+    // το προηγούμενο υλικό σε ακέραιη μερίδα — αλλιώς μια υπο-μερίδα τιμή μένει κρυμμένη
+    // πίσω από το «1 φέτα» του chip ενώ tooltip/σύνολα/PDF μετρούν τα λίγα γραμμάρια.
+    if(typeof snapWholeG==='function') tf.g=snapWholeG(selectedFoodName,tf.g);
     closeDD();renderTmplTable();
   } else {
     var c=getC();if(!c)return;
+    var wf=c.weekPlan[d][mi].foods[fi];
     // Update the food name
-    c.weekPlan[d][mi].foods[fi].n=selectedFoodName;
+    wf.n=selectedFoodName;
     // If it's an expandable recipe, set its reference portion so the
     // "Άνοιγμα υλικών" button (🔽) scales the ingredients correctly.
     // The recipe stays as a single line — the user opens it on demand.
     var rx=FYH_RECIPE_EXPAND[selectedFoodName];
-    if(rx)c.weekPlan[d][mi].foods[fi].g=rx.base;
+    if(rx)wf.g=rx.base;
+    else if(typeof snapWholeG==='function') wf.g=snapWholeG(selectedFoodName,wf.g); // ακέραια τρόφιμα → ακέραιη μερίδα
     save();closeDD();renderWeekTable();
   }
 }

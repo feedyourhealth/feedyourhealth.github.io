@@ -461,6 +461,24 @@ function selectClient(id){
         if(_a!=null) c.age=_a;
       }
       c.lastAccess=Date.now();
+
+      // 🩹 Self-heal: ακέραια τρόφιμα (ψωμί/αυγά/φρούτα ανά τεμάχιο) που κόλλησαν σε
+      // υπο-μερίδα γραμμάρια — τυπικά μετά από μετονομασία υλικού στο chip, όπου τα
+      // γραμμάρια του προηγούμενου τροφίμου μεταφέρθηκαν αυτούσια. Το chip έδειχνε
+      // «1 φέτα» (Math.max(1,…)) ενώ tooltip/σύνολα/PDF/link μετρούσαν τα λίγα γραμμάρια.
+      // Κούμπωσέ τα σε ακέραιη μερίδα — no-op για κάθε άλλο τρόφιμο. Το save() ακολουθεί.
+      if(c.weekPlan && typeof snapWholeG==='function' && typeof WHOLE_UNIT_FOODS!=='undefined'){
+        Object.keys(c.weekPlan).forEach(function(dk){
+          var day=c.weekPlan[dk];
+          if(!day||!day.forEach)return;
+          day.forEach(function(meal){
+            var fs=meal&&meal.foods;
+            if(!fs||!fs.forEach)return;
+            fs.forEach(function(f){ if(f&&f.n&&WHOLE_UNIT_FOODS[f.n]) f.g=snapWholeG(f.n,f.g); });
+          });
+        });
+      }
+
       save(); // Save the lastAccess update (+ any age refresh above)
 
       // 📋 Ερωτηματολόγιο εισαγωγής (Upgrades Phase 2): αν έχει σταλεί, τσέκαρε στη βάση

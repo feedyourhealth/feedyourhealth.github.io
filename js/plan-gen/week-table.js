@@ -231,7 +231,11 @@ function renderWeekTable(){
         // Use stored unit (food.u) if available, otherwise use default from FOOD_UNITS
         var displayUnit = food.u !== undefined ? food.u : (fu ? fu.u : 'g');
         var chipVal, chipMax, chipChg;
-        if (displayUnit === 'g' || !fu) {
+        // Ακέραιο τρόφιμο (ψωμί/αυγό/φρούτο) με αποθηκευμένα γραμμάρια < μισή μερίδα:
+        // δείξε τα ΠΡΑΓΜΑΤΙΚΑ γραμμάρια, όχι ψεύτικο «1 φέτα» που κρύβει τη διαφορά από
+        // tooltip/σύνολα/PDF (self-heal στο selectClient/pickChip το διορθώνει κανονικά).
+        var subUnitWhole = fu && displayUnit !== 'g' && WHOLE_UNIT_FOODS[food.n] && Math.round(food.g / fu.g) < 1;
+        if (displayUnit === 'g' || !fu || subUnitWhole) {
           chipVal = food.g;
           chipMax = 999;
           chipChg = 'updG('+d+','+mi+','+fi+',this.value)';
@@ -242,7 +246,7 @@ function renderWeekTable(){
           chipMax = 10;
           chipChg = 'updG('+d+','+mi+','+fi+',this.value*'+fu.g+')';
         }
-        var chipUnit = pluralUnit(displayUnit, chipVal);
+        var chipUnit = pluralUnit(subUnitWhole ? 'g' : displayUnit, chipVal);
         var hasIng=((FOODS[food.n]&&FOODS[food.n].ingredients)||(typeof FYH_RECIPE_EXPAND!=='undefined'&&FYH_RECIPE_EXPAND[food.n]))?'<button class="chip-srv" onclick="showRecipeModal(\''+food.n.replace(/'/g,"\\'")+'\')" title="Δείτε τα συστατικά" aria-label="Δείτε τα συστατικά">📖</button>':'';
         var hasExpand=FYH_RECIPE_EXPAND[food.n]?'<button class="chip-srv" onclick="expandRecipeInPlan('+d+','+mi+','+fi+')" title="Άνοιγμα υλικών — επεξεργασία ποσοτήτων" aria-label="Άνοιγμα υλικών — επεξεργασία ποσοτήτων">🔽</button>':'';
         var borderColor=getFoodColorHex(food.n);
@@ -267,7 +271,7 @@ function renderWeekTable(){
           +hasIng
           +hasExpand
           +(hasSrv?'<button class="chip-srv" onmousedown="event.preventDefault();showPortions(this,'+d+','+mi+','+fi+')" aria-label="Μερίδες">&#8801;</button>':'')
-          +'<input class="chip-g" type="number" min="0" step="'+(displayUnit==='g'||!fu?'1':'0.1')+'" max="'+chipMax+'" value="'+chipVal+'" onchange="'+chipChg+'">'
+          +'<input class="chip-g" type="number" min="0" step="'+(displayUnit==='g'||!fu||subUnitWhole?'1':'0.1')+'" max="'+chipMax+'" value="'+chipVal+'" onchange="'+chipChg+'">'
           +'<button class="chip-unit-btn" onclick="cycleUnit('+d+','+mi+','+fi+')" title="Αλλαγή μονάδας" aria-label="Αλλαγή μονάδας">'+chipUnit+'</button>'
           +(fu&&fu.u==='μερίδ.'?'<span class="chip-ghint">('+food.g+'g)</span>':'')
           +'<button class="chip-swap-btn" onclick="showMealAlternatives('+d+','+mi+')" title="Εναλλακτικό γεύμα" aria-label="Εναλλακτικό γεύμα">🔄</button>'

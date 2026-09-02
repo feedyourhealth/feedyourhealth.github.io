@@ -80,7 +80,9 @@ function renderTmplTable(){
         var tfu=FOOD_UNITS[food.n];
         var tDisplayUnit = food.u !== undefined ? food.u : (tfu ? tfu.u : 'g');
         var tVal, tMax, tChg;
-        if (tDisplayUnit === 'g' || !tfu) {
+        // Ακέραιο τρόφιμο με γραμμάρια < μισή μερίδα → δείξε πραγματικά γραμμάρια, όχι «1 φέτα».
+        var tSubUnitWhole = tfu && tDisplayUnit !== 'g' && WHOLE_UNIT_FOODS[food.n] && Math.round(food.g / tfu.g) < 1;
+        if (tDisplayUnit === 'g' || !tfu || tSubUnitWhole) {
           tVal = food.g;
           tMax = 999;
           tChg = 'tmplUpdG('+d+','+mi+','+fi+',this.value)';
@@ -91,14 +93,14 @@ function renderTmplTable(){
           tMax = 10;
           tChg = 'tmplUpdG('+d+','+mi+','+fi+',this.value*'+tfu.g+')';
         }
-        var tUnit = pluralUnit(tDisplayUnit, tVal);
+        var tUnit = pluralUnit(tSubUnitWhole ? 'g' : tDisplayUnit, tVal);
         html+='<div class="food-chip">'
           +'<div class="chip-name-wrap">'
           +'<input class="chip-inp" type="text" value="'+food.n+'" autocomplete="off" spellcheck="false"'
           +' data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'" data-mode="tmpl"'
           +' oninput="showChipSug(this)" onfocus="showChipSug(this)" onblur="closeDD()">'
           +'</div>'
-          +'<input class="chip-g" type="number" min="0" step="'+(tDisplayUnit==='g'||!tfu?'1':'0.1')+'" max="'+tMax+'" value="'+tVal+'" onchange="'+tChg+'">'
+          +'<input class="chip-g" type="number" min="0" step="'+(tDisplayUnit==='g'||!tfu||tSubUnitWhole?'1':'0.1')+'" max="'+tMax+'" value="'+tVal+'" onchange="'+tChg+'">'
           +'<span class="chip-unit">'+tUnit+'</span>'
           +'<button class="chip-del" onclick="tmplDelF('+d+','+mi+','+fi+')" aria-label="Διαγραφή τροφίμου">&#10005;</button>'
           +'</div>';
