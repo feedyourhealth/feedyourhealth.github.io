@@ -191,6 +191,8 @@ const TXT={
     supersededTitle:'Αυτός ο σύνδεσμος αντικαταστάθηκε', supersededBody:'Ο διαιτολόγος σου έστειλε νεότερο σύνδεσμο. Άνοιξε το πιο πρόσφατο μήνυμά του.',
     invalidTitle:'Μη έγκυρος σύνδεσμος', invalidBody:'Ο σύνδεσμος δεν βρέθηκε. Ζήτησε καινούριο από τον διαιτολόγο σου.',
     netTitle:'Κάτι πήγε στραβά', netErr:'Πρόβλημα σύνδεσης. Έλεγξε το internet και δοκίμασε ξανά σε λίγο.',
+    tooLong:'Οι απαντήσεις σου είναι πολύ μεγάλες — σύντομε λίγο τα κείμενα (Προτιμήσεις / Σχόλιο) και ξαναδοκίμασε.',
+    badData:'Κάτι δεν πήγε καλά με τις απαντήσεις — ανανέωσε τη σελίδα και ξαναπροσπάθησε.',
     reqName:'Συμπλήρωσε το όνομά σου.', reqGoal:'Διάλεξε στόχο.',
     privacy:'Τα στοιχεία σου τα βλέπει μόνο ο διαιτολόγος σου.'
   },
@@ -226,6 +228,8 @@ const TXT={
     supersededTitle:'This link was replaced', supersededBody:'Your dietitian sent a newer link. Open their most recent message.',
     invalidTitle:'Invalid link', invalidBody:'This link was not found. Ask your dietitian for a new one.',
     netTitle:'Something went wrong', netErr:'Connection problem. Check your internet and try again in a moment.',
+    tooLong:'Your answers are too long — please shorten the text (Preferences / Notes) and try again.',
+    badData:'Something went wrong with your answers — refresh the page and try again.',
     reqName:'Please enter your name.', reqGoal:'Please pick a goal.',
     privacy:'Only your dietitian can see your answers.'
   }
@@ -314,7 +318,9 @@ function fieldText(id,labelK,ph,optional){
     '<input type="text" id="'+id+'" placeholder="'+esc(ph?T(ph):'')+'"></div>';
 }
 function fieldArea(id,labelK){
-  return '<div class="fg"><label class="lbl" for="'+id+'">'+esc(T(labelK))+'</label><textarea id="'+id+'"></textarea></div>';
+  // maxlength caps each free-text answer so the whole payload stays well under the
+  // submit_intake 60 KB server limit (see doSubmit's 'too_large' handling).
+  return '<div class="fg"><label class="lbl" for="'+id+'">'+esc(T(labelK))+'</label><textarea id="'+id+'" maxlength="2000"></textarea></div>';
 }
 
 function renderForm(nameVal){
@@ -518,6 +524,7 @@ function applyDraft(d){
 async function doSubmit(){
   const payload=collect();
   ['err-name','err-goal','err-net'].forEach(function(id){ const n=el(id); if(n) n.classList.remove('on'); });
+  { const en=el('err-net'); if(en) en.textContent=T('netErr'); }  // reset any prior too_large / bad_payload text
   if(!payload.profile.name){ el('err-name').classList.add('on'); el('f-name').focus(); return; }
   if(!payload.goal){ el('err-goal').classList.add('on'); return; }
 
@@ -544,6 +551,11 @@ async function doSubmit(){
   if(data.reason==='submitted'){ renderState('ok','lockedTitle','lockedBody'); return; }
   if(data.reason==='superseded'){ renderState('warn','supersededTitle','supersededBody'); return; }
   if(data.reason==='not_found'){ renderState('err','invalidTitle','invalidBody'); return; }
+  if(data.reason==='too_large' || data.reason==='bad_payload'){
+    btn.disabled=false; btn.textContent=T('submit');
+    const en=el('err-net'); if(en){ en.textContent=T(data.reason==='too_large'?'tooLong':'badData'); en.classList.add('on'); }
+    return;
+  }
   btn.disabled=false; btn.textContent=T('submit');
   el('err-net').classList.add('on');
 }
