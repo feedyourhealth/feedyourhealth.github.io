@@ -257,6 +257,12 @@ var VALIDATION_RULES={
     name:'BMR (Mifflin-St Jeor)',
     validate:function(c,t){
       if(!c.weight||!c.height||!c.age)return{ok:true,msg:'Missing data'};
+      // calcTDEE legitimately uses Schofield (minors), Katch-McArdle (BF%/lean mass),
+      // measured RMR or Cunningham depending on the client — only re-derive & compare when
+      // Mifflin-St Jeor was actually the method used, otherwise this rule fires a false mismatch.
+      if(t.bmrMethod && t.bmrMethod!=='Mifflin-St Jeor'){
+        return{ok:true,msg:'✓ BMR via '+t.bmrMethod+' ('+t.bmr+' kcal) — Mifflin check n/a'};
+      }
       var expected;
       if(c.sex==='M'){
         expected=Math.round(10*c.weight+6.25*c.height-5*c.age+5);
@@ -371,8 +377,11 @@ var VALIDATION_RULES={
     name:'Energy Availability (RED-S)',
     validate:function(c,t){
       if(!t.ea||t.ea===null)return{ok:true,msg:'EA not calculated'};
+      // Same failure threshold as calcTDEE's warnings/gate: only <30 (the 🔴 CRITICAL tier)
+      // counts as a validation failure. 30–45 is calcTDEE's badge-only "monitor" tier — surface
+      // it here as an informational pass, not a fail, so the two sources agree.
       if(t.ea<30)return{ok:false,msg:'🔴 CRITICAL: EA='+t.ea+' kcal/kgLBM (RED-S threshold <30)',severity:'alert'};
-      if(t.ea<45)return{ok:false,msg:'🟡 WARNING: EA='+t.ea+' kcal/kgLBM (borderline, should be >45)',severity:'warn'};
+      if(t.ea<45)return{ok:true,msg:'🟡 EA='+t.ea+' kcal/kgLBM (monitor tier 30–45, badge-only)'};
       return{ok:true,msg:'✓ EA safe: '+t.ea+' kcal/kgLBM'};
     }
   }

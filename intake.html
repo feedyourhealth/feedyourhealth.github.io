@@ -5,11 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#025857">
 <title>Feed Your Health — Ερωτηματολόγιο</title>
+<!-- Defense-in-depth CSP (audit finding). Scripts are self-hosted (vendor/) + inline;
+     'unsafe-inline' is unavoidable (inline <script> + onclick). connect-src limited to this
+     project's Supabase host. frame-ancestors is ignored in a <meta> CSP but kept for intent. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Ερωτηματολόγιο">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="vendor/supabase-js.min.js"></script>
 <style>
   :root{
     --teal:#025857; --teal-d:#014545; --teal-l:#037070;
@@ -187,6 +191,8 @@ const TXT={
     supersededTitle:'Αυτός ο σύνδεσμος αντικαταστάθηκε', supersededBody:'Ο διαιτολόγος σου έστειλε νεότερο σύνδεσμο. Άνοιξε το πιο πρόσφατο μήνυμά του.',
     invalidTitle:'Μη έγκυρος σύνδεσμος', invalidBody:'Ο σύνδεσμος δεν βρέθηκε. Ζήτησε καινούριο από τον διαιτολόγο σου.',
     netTitle:'Κάτι πήγε στραβά', netErr:'Πρόβλημα σύνδεσης. Έλεγξε το internet και δοκίμασε ξανά σε λίγο.',
+    tooLong:'Οι απαντήσεις σου είναι πολύ μεγάλες — σύντομε λίγο τα κείμενα (Προτιμήσεις / Σχόλιο) και ξαναδοκίμασε.',
+    badData:'Κάτι δεν πήγε καλά με τις απαντήσεις — ανανέωσε τη σελίδα και ξαναπροσπάθησε.',
     reqName:'Συμπλήρωσε το όνομά σου.', reqGoal:'Διάλεξε στόχο.',
     privacy:'Τα στοιχεία σου τα βλέπει μόνο ο διαιτολόγος σου.'
   },
@@ -222,6 +228,8 @@ const TXT={
     supersededTitle:'This link was replaced', supersededBody:'Your dietitian sent a newer link. Open their most recent message.',
     invalidTitle:'Invalid link', invalidBody:'This link was not found. Ask your dietitian for a new one.',
     netTitle:'Something went wrong', netErr:'Connection problem. Check your internet and try again in a moment.',
+    tooLong:'Your answers are too long — please shorten the text (Preferences / Notes) and try again.',
+    badData:'Something went wrong with your answers — refresh the page and try again.',
     reqName:'Please enter your name.', reqGoal:'Please pick a goal.',
     privacy:'Only your dietitian can see your answers.'
   }
@@ -310,7 +318,9 @@ function fieldText(id,labelK,ph,optional){
     '<input type="text" id="'+id+'" placeholder="'+esc(ph?T(ph):'')+'"></div>';
 }
 function fieldArea(id,labelK){
-  return '<div class="fg"><label class="lbl" for="'+id+'">'+esc(T(labelK))+'</label><textarea id="'+id+'"></textarea></div>';
+  // maxlength caps each free-text answer so the whole payload stays well under the
+  // submit_intake 60 KB server limit (see doSubmit's 'too_large' handling).
+  return '<div class="fg"><label class="lbl" for="'+id+'">'+esc(T(labelK))+'</label><textarea id="'+id+'" maxlength="2000"></textarea></div>';
 }
 
 function renderForm(nameVal){
@@ -514,6 +524,7 @@ function applyDraft(d){
 async function doSubmit(){
   const payload=collect();
   ['err-name','err-goal','err-net'].forEach(function(id){ const n=el(id); if(n) n.classList.remove('on'); });
+  { const en=el('err-net'); if(en) en.textContent=T('netErr'); }  // reset any prior too_large / bad_payload text
   if(!payload.profile.name){ el('err-name').classList.add('on'); el('f-name').focus(); return; }
   if(!payload.goal){ el('err-goal').classList.add('on'); return; }
 
@@ -540,6 +551,11 @@ async function doSubmit(){
   if(data.reason==='submitted'){ renderState('ok','lockedTitle','lockedBody'); return; }
   if(data.reason==='superseded'){ renderState('warn','supersededTitle','supersededBody'); return; }
   if(data.reason==='not_found'){ renderState('err','invalidTitle','invalidBody'); return; }
+  if(data.reason==='too_large' || data.reason==='bad_payload'){
+    btn.disabled=false; btn.textContent=T('submit');
+    const en=el('err-net'); if(en){ en.textContent=T(data.reason==='too_large'?'tooLong':'badData'); en.classList.add('on'); }
+    return;
+  }
   btn.disabled=false; btn.textContent=T('submit');
   el('err-net').classList.add('on');
 }

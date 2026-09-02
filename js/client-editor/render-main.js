@@ -355,7 +355,7 @@ function renderMain(){
     // ✅ MET Activities table moved inside SECTION 3
     // ✅ Day targets table with macros per day (with T/R badges) — S1 ONLY, collapsible (derived from TDEE, rarely hand-edited)
     +'<div class="section-card" id="sec-daytgt" style="margin-top:12px;">'
-    +'<div class="section-header sec-collapse-hd" onclick="toggleSec(\'daytgt\')"><div><span class="section-icon">📊</span>Ημερήσιοι Στόχοι ανά Ημέρα'+(secState.daytgt?'<div class="sec-collapse-preview">~'+avgTarget+' kcal/ημέρα (μέσος όρος)</div>':'')+'</div><span class="sec-chevron'+(secState.daytgt?'':' open')+'">▸</span></div>'
+    +'<div class="section-header sec-collapse-hd" onclick="toggleSec(\'daytgt\')"><div><span class="section-icon">📊</span>Ημερήσιοι Στόχοι ανά Ημέρα'+(secState.daytgt?'<div class="sec-collapse-preview">'+(t.incomplete?'— συμπλήρωσε βάρος/ύψος/ηλικία':'~'+avgTarget+' kcal/ημέρα (μέσος όρος)')+'</div>':'')+'</div><span class="sec-chevron'+(secState.daytgt?'':' open')+'">▸</span></div>'
     +'<div id="sec-daytgt-body" style="display:'+(secState.daytgt?'none':'block')+'">'
     +buildDayTgtHtml(c,t)
     +'</div>'

@@ -4,14 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Εργαλείο Διαιτολόγου</title>
+<!-- Defense-in-depth CSP (audit finding). No external scripts after the vendor/ move, so
+     script-src is 'self' only; 'unsafe-inline' is unavoidable here (large amounts of inline
+     <script> + onclick handlers). connect-src is limited to this project's Supabase host.
+     frame-ancestors is ignored in a <meta> CSP (needs a real header) but kept to document intent. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
+<script src="vendor/supabase-js.min.js"></script>
 <script>
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
 <link rel="stylesheet" href="css/styles.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- Self-hosted (vendor/) — pinned JSZip 3.10.1 -->
+<script src="vendor/jszip.min.js"></script>
 </head>
 <body>
 <!-- Autosave indicator -->
@@ -396,8 +403,8 @@ setTimeout(function(){
 <script src="js/tabs/messages.js"></script>
 <script src="js/tabs/recipes.js"></script>
 <script src="js/tabs/tips.js"></script>
-<!-- ✅ CHARTS LIBRARY -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ✅ CHARTS LIBRARY — self-hosted (vendor/), pinned Chart.js 4.5.1 UMD -->
+<script src="vendor/chart.umd.min.js"></script>
 
 <!-- ✅ PHASE 4: UNDO/REDO SYSTEM -->
 <script src="js/11-undo-redo.js"></script>
@@ -1468,7 +1475,7 @@ function showMedicalProtocol(condition) {
     html += '<ul style="margin:8px 0;color:#0d47a1;">';
     protocol.sources.forEach(function(source) {
       html += '<li style="margin:6px 0;">';
-      html += '<a href="' + source.url + '" target="_blank" style="color:#1976d2;text-decoration:none;font-weight:500;">';
+      html += '<a href="' + source.url + '" target="_blank" rel="noopener noreferrer" style="color:#1976d2;text-decoration:none;font-weight:500;">';
       html += source.name + ' ↗';
       html += '</a>';
       html += ' <span style="color:var(--text-muted);font-size:11px;">[Επίσημη πηγή]</span>';
@@ -1795,9 +1802,9 @@ document.addEventListener('click', function(event) {
   }
 });
 
-document.addEventListener('DOMContentLoaded', function(){
-  setTimeout(initOnboarding, 2000);
-});
+// Onboarding tip ("Πάτα το + για γρήγορες ενέργειες") is triggered from Cloud._enterApp()
+// AFTER login — not on DOMContentLoaded, which fired it on the login screen where there is
+// no "+" yet. initOnboarding() keeps its own once-per-browser guard + 1s delay.
 
 // ✅ IMPROVED UX: Enhanced notifications with animations
 var originalShowSuccessToast = showSuccessToast;
@@ -2870,7 +2877,7 @@ function saveFoodExclusions(){
             console.warn('[CLOUD] supabase-js δεν φορτώθηκε, νέα προσπάθεια '+this._loadRetries+'/3...');
             setTimeout(function(){
               var s=document.createElement('script');
-              s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+              s.src='vendor/supabase-js.min.js';
               s.onload=function(){ self.init(); };
               s.onerror=function(){ self.init(); };
               document.head.appendChild(s);
@@ -2913,7 +2920,7 @@ function saveFoodExclusions(){
       if(ac) ac.style.display='none';
     },
 
-    _enterApp:function(){ if(typeof goToApp==='function') goToApp(); },
+    _enterApp:function(){ if(typeof goToApp==='function') goToApp(); if(typeof initOnboarding==='function') initOnboarding(); },
 
     _msg:function(text,isError){
       var el=document.getElementById('cloud-login-msg');

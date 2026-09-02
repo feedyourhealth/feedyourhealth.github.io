@@ -310,15 +310,9 @@ function restoreFromSnapshot(){
   try { snaps = JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY)) || []; } catch(e){ snaps = []; }
   if(!snaps.length){ showErrorToast('Δεν υπάρχουν διαθέσιμα snapshots ακόμη.\nΘα δημιουργηθούν αυτόματα καθώς δουλεύετε.'); return; }
   var rev = snaps.slice().reverse(); // newest first
-  var msg = 'Επιλέξτε snapshot για επαναφορά:\n\n';
-  rev.forEach(function(s, i){
-    msg += (i+1) + ') ' + new Date(s.ts).toLocaleString('el-GR') + '  —  ' + s.count + ' πελάτες\n';
-  });
-  msg += '\nΓράψτε τον αριθμό (1 = πιο πρόσφατο):';
-  showPromptDialog(msg, '1', function(pick){
-    var idx = parseInt(pick, 10);
-    if(!(idx >= 1 && idx <= rev.length)){ showErrorToast('Άκυρη επιλογή.'); return; }
-    var chosen = rev[idx-1];
+
+  // ⚠️ "Αντικατάσταση ΟΛΩΝ των δεδομένων" — same confirm step as before, unchanged.
+  function confirmAndRestore(chosen){
     showConfirmDialog('⚠️ Θα αντικατασταθούν ΟΛΑ τα τρέχοντα δεδομένα με το snapshot της '
         + new Date(chosen.ts).toLocaleString('el-GR') + ' (' + chosen.count + ' πελάτες).\n\nΣυνέχεια;', function(){
       var d = chosen.data || {};
@@ -331,7 +325,41 @@ function restoreFromSnapshot(){
       if(typeof renderMain === 'function') renderMain();
       showSuccessToast('✅ Επαναφορά ολοκληρώθηκε: ' + clients.length + ' πελάτες.');
     }, {confirmLabel:'Αντικατάσταση'});
-  }, {title:'Επαναφορά από snapshot'});
+  }
+
+  // Button-per-snapshot chooser (was a "type the number" prompt — error-prone for a
+  // destructive action). One click per snapshot, date/time + client count as the label.
+  var old = document.getElementById('snapshot-restore-overlay');
+  if(old) old.remove();
+  var ov = document.createElement('div');
+  ov.id = 'snapshot-restore-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.onclick = function(e){ if(e.target === ov) ov.remove(); };
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:14px;max-width:420px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:92vh;overflow:auto';
+  var h = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:22px">↩️</span>'
+    + '<div style="font-size:17px;font-weight:700;color:#014545">Επαναφορά από snapshot</div></div>'
+    + '<div style="font-size:12.5px;color:#5a8a82;margin-bottom:14px">Διάλεξε ποιο αντίγραφο θα φορτωθεί. Θα ζητηθεί επιβεβαίωση πριν αντικατασταθούν τα τρέχοντα δεδομένα.</div>';
+  rev.forEach(function(s, i){
+    h += '<button type="button" data-i="' + i + '" style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;'
+      + 'background:#f4f8f6;border:1px solid #c5ddd8;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;color:#014545">'
+      + '<b>' + esc(new Date(s.ts).toLocaleString('el-GR')) + '</b>'
+      + (i === 0 ? ' <span style="color:#5a8a82;font-weight:400">(πιο πρόσφατο)</span>' : '')
+      + '<br><span style="font-size:11.5px;color:#5a8a82">' + (s.count || 0) + ' πελάτες</span></button>';
+  });
+  h += '<div style="text-align:right;margin-top:10px"><button type="button" id="snapshot-restore-cancel" class="btn" '
+    + 'style="background:#eee;color:#555;border:none;border-radius:6px;padding:8px 14px;cursor:pointer">Άκυρο</button></div>';
+  box.innerHTML = h;
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  box.querySelector('#snapshot-restore-cancel').onclick = function(){ ov.remove(); };
+  box.querySelectorAll('button[data-i]').forEach(function(b){
+    b.onclick = function(){
+      var chosen = rev[parseInt(b.getAttribute('data-i'), 10)];
+      ov.remove();
+      if(chosen) confirmAndRestore(chosen);
+    };
+  });
 }
 
 // Στοχευμένη ανάκτηση: ψάχνει ΜΟΝΟ τα savedPlans ενός πελάτη μέσα στα τοπικά snapshots
