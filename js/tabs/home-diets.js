@@ -193,15 +193,46 @@ function homeMeasuredToday(){
 }
 
 // Πελάτες με πρόσφατο check-in στο portal, ταξινομημένοι με το πιο πρόσφατο πρώτα.
+// Κάθε εγγραφή κουβαλάει και το σκορ εβδομάδας (ίδιος υπολογισμός με το πάνελ "📲 Πρόοδος
+// πελάτη" στο Ραντεβού) + σημαίες hasNote/hasFeedback, ώστε η κάρτα της Αρχικής να δείχνει
+// με μια ματιά αν υπάρχει κάτι να διαβάσεις, χωρίς να ανοίξεις τον πελάτη.
 function homePortalActivity(){
   if(!window.Cloud || !window.Cloud.checkinsFor) return [];
+  var wkStart=ckWeekDates(0)[0];
   return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;})
     .map(function(c){
       var rows=window.Cloud.checkinsFor(c);
-      return {c:c, rows:rows, gap:ckDaysSinceLast(rows)};
+      var score=rows.length?ckWeekScore(ckRowsByDate(rows),0):null;
+      var hasNote=(typeof clientHasNewClientNote==='function') && clientHasNewClientNote(c);
+      var pfLatest=(window.Cloud.planFeedbackFor?window.Cloud.planFeedbackFor(c)[0]:null);
+      var hasFeedback=!!(pfLatest && pfLatest.week_start===wkStart);
+      return {c:c, rows:rows, gap:ckDaysSinceLast(rows), score:score, hasNote:hasNote, hasFeedback:hasFeedback};
     })
     .filter(function(x){return x.rows.length && isFinite(x.gap);})
     .sort(function(a,b){return a.gap-b.gap;});
+}
+// Χρωματιστό chip σκορ εβδομάδας (ίδιες ζώνες με pctStatusColor: ≥66 καλό, 33-65 μέτριο, <33 κακό).
+function homeActivityScoreChipHtml(score){
+  if(score==null) return '';
+  var band=score>=66?'good':(score>=33?'warn':'bad');
+  return '<span class="hm-act-score hm-act-score-'+band+'" title="Σκορ τήρησης αυτής της εβδομάδας">'+score+'%</span>';
+}
+// Γραμμή της κάρτας "📱 Πρόσφατη δραστηριότητα": ίδιο look με homeRow (avatar/όνομα/sub) +
+// σκορ % + 💬/⭐ σήματα, και κλικ που πάει ΚΑΤΕΥΘΕΙΑΝ στο tab "📝 Ραντεβού" (εκεί ζει το
+// πλήρες πάνελ προόδου/σημειώσεων/feedback), όχι στη γενική καρτέλα του πελάτη.
+function homeActivityRow(x,sub){
+  var c=x.c;
+  var sig='';
+  if(x.hasNote) sig+='<span class="hm-act-sig" title="Νέα γραπτή σημείωση πελάτη">💬</span>';
+  if(x.hasFeedback) sig+='<span class="hm-act-sig" title="Νέο εβδομαδιαίο feedback πλάνου">⭐</span>';
+  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS)">'
+    +'<div class="hm-avatar hm-avatar-teal">'+initials(c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +sig
+    +homeActivityScoreChipHtml(x.score)
+    +'<span class="hm-act-goto">→ Ραντεβού</span>'
+    +'<span class="hm-row-sub">'+sub+'</span>'
+    +'</div>';
 }
 
 // Ίδιο day-of-week gate με την ⭐ κάρτα feedback στο plan.html (Παρ/Σαβ/Κυρ) — δεν έχει νόημα να
@@ -765,7 +796,7 @@ function renderHome(){
     :'');
   var activityRows=homePortalActivity().map(function(x){
     var sub=x.gap===0?'σήμερα':(x.gap===1?'χθες':'πριν '+x.gap+' ημέρες');
-    return homeRow(x.c,sub,'teal');
+    return homeActivityRow(x,sub);
   });
   var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
   var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
