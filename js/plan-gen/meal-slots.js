@@ -316,7 +316,7 @@ function enableMealDragDrop(){
 function _startMealPointerDrag(e,info){
   // Μη μπλοκάρεις το pointerdown πάνω σε πεδίο κειμένου — αλλιώς δεν εστιάζει για γράψιμο.
   if(!(e.target.closest&&e.target.closest('input,textarea')))e.preventDefault();
-  _mealDrag={info:info,startX:e.clientX,startY:e.clientY,started:false,ghost:null};
+  _mealDrag={info:info,startX:e.clientX,startY:e.clientY,started:false,ghost:null,lastX:e.clientX,lastY:e.clientY,raf:0,vEl:null};
   document.addEventListener('pointermove',_onMealDragMove,{capture:true,passive:false});
   document.addEventListener('pointerup',_onMealDragUp,true);
   document.addEventListener('pointercancel',_cancelMealDrag,true);
@@ -341,14 +341,79 @@ function _onMealDragMove(e){
     g.textContent=(md.info.kind==='meal'?'📋 ':'')+md.info.label;
     document.body.appendChild(g);
     md.ghost=g;
+    _startMealDragAutoScroll();   // edge auto-scroll ενόσω κρατάμε το τρόφιμο κοντά στα άκρα
   }
   e.preventDefault();
-  md.ghost.style.left=(e.clientX+14)+'px';
-  md.ghost.style.top=(e.clientY+14)+'px';
+  md.lastX=e.clientX; md.lastY=e.clientY;
+  _mealDragGhostAndHover(e.clientX,e.clientY);
+}
+
+// Θέση ghost + highlight κελιού-στόχου. Καλείται και από τον βρόχο auto-scroll,
+// όπου ο δείκτης μένει ακίνητος ενώ το περιεχόμενο κυλά από κάτω του.
+function _mealDragGhostAndHover(x,y){
+  var md=_mealDrag;if(!md||!md.started)return;
+  if(md.ghost){md.ghost.style.left=(x+14)+'px';md.ghost.style.top=(y+14)+'px';}
   var prev=document.querySelector('#week-con .day-cell.meal-drag-over');
   if(prev)prev.classList.remove('meal-drag-over');
-  var t=_mealDragCellAt(e.clientX,e.clientY);
+  var t=_mealDragCellAt(x,y);
   if(t&&!(t.d===md.info.srcD&&t.mi===md.info.srcMi))t.cell.classList.add('meal-drag-over');
+}
+
+/* ---- Edge auto-scroll κατά το σύρσιμο ----
+   Όταν ο δείκτης πλησιάζει το πάνω/κάτω άκρο της περιοχής πλάνου, κυλά αυτόματα
+   ο κάθετος scroller (το .main) ώστε να φτάσεις σε γεύμα εκτός οθόνης
+   (π.χ. πρωινό → βραδινό) χωρίς να αφήσεις το τρόφιμο. Αντίστοιχα, κοντά στο
+   αριστερό/δεξί άκρο κυλά οριζόντια το .week-main (7 μέρες). */
+var _MEAL_DRAG_EDGE=72;      // ζώνη ενεργοποίησης (px) από κάθε άκρο
+var _MEAL_DRAG_MAX_SPEED=24; // μέγιστη ταχύτητα (px ανά frame)
+function _mealDragVScrollEl(){
+  var el=document.getElementById('week-con');
+  while(el&&el!==document.body){
+    var s=window.getComputedStyle(el);
+    if(/(auto|scroll)/.test(s.overflowY)&&el.scrollHeight>el.clientHeight+2)return el;
+    el=el.parentElement;
+  }
+  return document.scrollingElement||document.documentElement;
+}
+function _startMealDragAutoScroll(){
+  var md=_mealDrag;if(!md)return;
+  md.vEl=_mealDragVScrollEl();
+  function step(){
+    var m=_mealDrag;
+    if(!m||!m.started)return;
+    m.raf=requestAnimationFrame(step);
+    if(m.lastY==null)return;
+    var moved=false;
+    // --- κάθετα ---
+    var se=m.vEl||(m.vEl=_mealDragVScrollEl());
+    var isRoot=(se===document.scrollingElement||se===document.documentElement);
+    var vb=isRoot?{top:0,bottom:window.innerHeight}:se.getBoundingClientRect();
+    var vy=0;
+    if(m.lastY<vb.top+_MEAL_DRAG_EDGE)          vy=-(vb.top+_MEAL_DRAG_EDGE-m.lastY)/_MEAL_DRAG_EDGE;
+    else if(m.lastY>vb.bottom-_MEAL_DRAG_EDGE)  vy=(m.lastY-(vb.bottom-_MEAL_DRAG_EDGE))/_MEAL_DRAG_EDGE;
+    vy=Math.max(-1,Math.min(1,vy));
+    if(vy){
+      var b=se.scrollTop;
+      se.scrollTop=b+Math.round(vy*_MEAL_DRAG_MAX_SPEED);
+      if(se.scrollTop!==b)moved=true;
+    }
+    // --- οριζόντια (.week-main) ---
+    var wm=document.querySelector('.week-main');
+    if(wm&&wm.scrollWidth>wm.clientWidth+2){
+      var r=wm.getBoundingClientRect();
+      var vx=0;
+      if(m.lastX<r.left+_MEAL_DRAG_EDGE&&m.lastX>r.left-48)          vx=-(r.left+_MEAL_DRAG_EDGE-m.lastX)/_MEAL_DRAG_EDGE;
+      else if(m.lastX>r.right-_MEAL_DRAG_EDGE&&m.lastX<r.right+48)   vx=(m.lastX-(r.right-_MEAL_DRAG_EDGE))/_MEAL_DRAG_EDGE;
+      vx=Math.max(-1,Math.min(1,vx));
+      if(vx){
+        var bx=wm.scrollLeft;
+        wm.scrollLeft=bx+Math.round(vx*_MEAL_DRAG_MAX_SPEED);
+        if(wm.scrollLeft!==bx)moved=true;
+      }
+    }
+    if(moved)_mealDragGhostAndHover(m.lastX,m.lastY);
+  }
+  md.raf=requestAnimationFrame(step);
 }
 function _mealDragCellAt(x,y){
   var el=document.elementFromPoint(x,y);
@@ -383,6 +448,7 @@ function _onMealDragUp(e){
 }
 function _cancelMealDrag(){_cleanupMealDrag();}
 function _cleanupMealDrag(){
+  if(_mealDrag&&_mealDrag.raf)cancelAnimationFrame(_mealDrag.raf);
   document.removeEventListener('pointermove',_onMealDragMove,{capture:true,passive:false});
   document.removeEventListener('pointerup',_onMealDragUp,true);
   document.removeEventListener('pointercancel',_cancelMealDrag,true);
