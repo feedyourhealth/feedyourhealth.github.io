@@ -58,11 +58,15 @@ function calcTDEE(c){
       else bmr=12.2*w+746;
     }
     bmr=Math.round(bmr);
+    t.bmrMethod='Schofield (παιδιά/έφηβοι)';
+    t.ffmUsed=null;
     // DRI growth allowance on top of activity needs (not BMR)
     growthAdd=c.age<11?100:(c.age<15?150:200);
   } else if(c.formula==='cunningham'&&c.lbm>0){
     // Cunningham: more accurate for athletes — uses lean body mass
     bmr=500+22*c.lbm;
+    t.bmrMethod='Cunningham';
+    t.ffmUsed=c.lbm;
   } else {
     // ✅ PRIORITY SYSTEM for BMR (Katch-McArdle when possible)
     // Priority 1: Measured Lean Mass (NEW: c.leanmass)
