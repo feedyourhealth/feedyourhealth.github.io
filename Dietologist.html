@@ -1802,9 +1802,9 @@ document.addEventListener('click', function(event) {
   }
 });
 
-document.addEventListener('DOMContentLoaded', function(){
-  setTimeout(initOnboarding, 2000);
-});
+// Onboarding tip ("Πάτα το + για γρήγορες ενέργειες") is triggered from Cloud._enterApp()
+// AFTER login — not on DOMContentLoaded, which fired it on the login screen where there is
+// no "+" yet. initOnboarding() keeps its own once-per-browser guard + 1s delay.
 
 // ✅ IMPROVED UX: Enhanced notifications with animations
 var originalShowSuccessToast = showSuccessToast;
@@ -2920,7 +2920,7 @@ function saveFoodExclusions(){
       if(ac) ac.style.display='none';
     },
 
-    _enterApp:function(){ if(typeof goToApp==='function') goToApp(); },
+    _enterApp:function(){ if(typeof goToApp==='function') goToApp(); if(typeof initOnboarding==='function') initOnboarding(); },
 
     _msg:function(text,isError){
       var el=document.getElementById('cloud-login-msg');
