@@ -1458,7 +1458,7 @@ function fail(title,sub,titleEn,subEn,retry){
   // which measured below WCAG AA on the dark background.
   $('#app').innerHTML='<div class="center"><i class="ti ti-leaf" style="font-size:40px;color:var(--teal)"></i><div style="font-size:17px;font-weight:600;color:var(--teal-d)">'+esc(title)+'</div><div style="color:var(--ink)">'+esc(sub)+'</div>'
     +'<div style="margin-top:12px;font-size:15px;font-weight:600;color:var(--teal-d)">'+esc(titleEn)+'</div><div style="color:var(--ink)">'+esc(subEn)+'</div>'
-    +(retry?'<button class="swap-btn" style="justify-content:center;max-width:220px;color:var(--teal-d);border-color:var(--teal-d)" onclick="boot()"><i class="ti ti-refresh"></i>Δοκίμασε ξανά / Try again</button>':'')+'</div>';
+    +(retry?'<button class="swap-btn" style="justify-content:center;flex-wrap:wrap;text-align:center;max-width:300px;color:var(--teal-d);border-color:var(--teal-d)" onclick="boot()"><i class="ti ti-refresh"></i>Δοκίμασε ξανά / Try again / Ещё раз / Tekrar dene</button>':'')+'</div>';
 }
 
 // Χειροκίνητος έλεγχος για ενημερωμένο πλάνο (header button) — χωρίς αυτό, μια ήδη ανοιχτή καρτέλα
