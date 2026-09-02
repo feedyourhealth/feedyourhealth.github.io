@@ -61,6 +61,12 @@ var FOODS={
 'Γιαούρτι 2%':{k:73,p:10,c:4,f:2,fi:0,cat:'Αυγά/Γαλακτ.',en:'Yogurt 2%',ru:'Йогурт 2%',tr:'Yoğurt %2'},
 'Arla Protein Γιαουρτάκι Σοκολάτα (πουτίγκα)':{k:77,p:10,c:6.6,f:1.5,fi:0,cat:'Αυγά/Γαλακτ.',en:'Arla Protein Chocolate Yogurt (pudding)',ru:'Arla Protein шоколадный йогурт (пудинг)',tr:'Arla Protein Çikolatalı Yoğurt (puding)'},
 'Arla Protein Ρόφημα Σοκολάτα':{k:51,p:5.6,c:4.9,f:0.9,fi:0,cat:'Αυγά/Γαλακτ.',en:'Arla Protein Chocolate Drink',ru:'Arla Protein шоколадный напиток',tr:'Arla Protein Çikolatalı İçecek'},
+// Zita Super Protein (Cyprus) — 200g κύπελλο, fat-free lactose-free protein yogurt; per-100g from label (zitadairies.com), Strawberry & Berries variants label-identical
+'Zita Super Protein Φράουλα':{k:86,p:10.5,c:11,f:0,fi:0,cat:'Αυγά/Γαλακτ.',en:'Zita Super Protein Strawberry Yogurt',ru:'Zita Super Protein клубничный йогурт',tr:'Zita Super Protein Çilekli Yoğurt'},
+'Zita Super Protein Μούρα':{k:86,p:10.5,c:11,f:0,fi:0,cat:'Αυγά/Γαλακτ.',en:'Zita Super Protein Berries Yogurt',ru:'Zita Super Protein йогурт с лесными ягодами',tr:'Zita Super Protein Orman Meyveli Yoğurt'},
+// Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης (Cyprus) — 200g κύπελλο, lactose-free, ~0% fat, ~22g protein/pot; per-100g from label (alphamega.com.cy)
+'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Φράουλα':{k:83,p:11,c:9.5,f:0.1,fi:0.1,cat:'Αυγά/Γαλακτ.',en:'Charalambides Christis Protein Yogurt Strawberry (lactose-free)',ru:'Charalambides Christis протеиновый йогурт клубника (без лактозы)',tr:'Charalambides Christis Proteinli Yoğurt Çilek (laktozsuz)'},
+'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Μούρα':{k:88,p:11,c:9.6,f:0.5,fi:0.4,cat:'Αυγά/Γαλακτ.',en:'Charalambides Christis Protein Yogurt Berries (lactose-free)',ru:'Charalambides Christis протеиновый йогурт с ягодами (без лактозы)',tr:'Charalambides Christis Proteinli Yoğurt Orman Meyveli (laktozsuz)'},
 'Cottage cheese':{k:98,p:11,c:3.4,f:4.3,fi:0,cat:'Αυγά/Γαλακτ.',en:'Cottage Cheese',ru:'Творог (Cottage cheese)',tr:'Lor Peyniri (Cottage cheese)'},
 'Cream cheese':{k:342,p:5.9,c:4.1,f:34,fi:0,cat:'Αυγά/Γαλακτ.',en:'Cream Cheese',ru:'Сливочный сыр',tr:'Krem Peynir'},
 'Τυρί φέτα':{k:264,p:14,c:4,f:21,fi:0,cat:'Αυγά/Γαλακτ.',en:'Feta Cheese',ru:'Сыр фета',tr:'Feta Peyniri'},

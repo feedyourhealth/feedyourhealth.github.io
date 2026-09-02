@@ -650,7 +650,7 @@
       "hasFeta": true
     },
     "dairyFoodsList.shape": {
-      "n": 29,
+      "n": 33,
       "excludesWholeEggs": true
     },
     "parsePrefAvoid.redmeat": [
@@ -893,7 +893,7 @@
       "porkHasChoirino": true,
       "fishGroupFound": true,
       "redListN": 13,
-      "dairyListN": 29,
+      "dairyListN": 33,
       "planKeys": "dairy,fish,pork,red_meat,vegan,vegetarian",
       "avoidBtnShown": true,
       "medsBtnShown": true,
@@ -935,12 +935,12 @@
       "ageAtDate_null": null
     },
     "_fingerprints": {
-      "FOODS_keys": 333,
-      "FOODS_json": 53570,
-      "PORTIONS_keys": 258,
-      "PORTIONS_json": 21175,
-      "FOOD_UNITS_keys": 164,
-      "FOOD_UNITS_json": 6703,
+      "FOODS_keys": 337,
+      "FOODS_json": 54656,
+      "PORTIONS_keys": 262,
+      "PORTIONS_json": 21545,
+      "FOOD_UNITS_keys": 168,
+      "FOOD_UNITS_json": 6953,
       "MEAL_RECIPES_len": 162,
       "MEAL_RECIPES_json": 50502,
       "SNACK_RECIPES_len": 39,
@@ -948,8 +948,8 @@
       "SUPPS_json": 7760,
       "MET_ACTIVITIES_len": 13,
       "MET_ACTIVITIES_json": 8276,
-      "MICRONUTRIENTS_keys": 259,
-      "MICRONUTRIENTS_json": 44542,
+      "MICRONUTRIENTS_keys": 263,
+      "MICRONUTRIENTS_json": 45338,
       "SPORT_PROTOCOLS_keys": 3,
       "SPORT_PROTOCOLS_json": 5901,
       "SPORT_PROFILES_keys": 12,

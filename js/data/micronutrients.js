@@ -57,6 +57,11 @@ var MICRONUTRIENTS={
   'Γιαούρτι 2%':{Fe:0.04,Zn:0.60,Mg:11,Ca:115,B1:0.044,B2:0.233,B3:0.197,B6:0.055,B12:0.52,Folate:12,Omega3:0.02,Omega6:0.07,Iodine:20,Choline:14,DHA:0},
   'Arla Protein Γιαουρτάκι Σοκολάτα (πουτίγκα)':{Fe:0.10,Zn:0.55,Mg:24,Ca:160,B1:0.04,B2:0.20,B3:0.15,B6:0.05,B12:0.55,Folate:6,Omega3:0.01,Omega6:0.04,Iodine:8,Choline:12,DHA:0},
   'Arla Protein Ρόφημα Σοκολάτα':{Fe:0.05,Zn:0.45,Mg:13,Ca:135,B1:0.04,B2:0.19,B3:0.12,B6:0.04,B12:0.48,Folate:5,Omega3:0.01,Omega6:0.03,Iodine:8,Choline:10,DHA:0},
+  // Estimates — labels carry macros only; modeled on Arla Protein Γιαουρτάκι + strained 0% yogurt / Quark (0%)
+  'Zita Super Protein Φράουλα':{Fe:0.08,Zn:0.55,Mg:14,Ca:150,B1:0.04,B2:0.22,B3:0.15,B6:0.05,B12:0.55,Folate:8,Omega3:0.01,Omega6:0.03,Iodine:8,Choline:14,DHA:0},
+  'Zita Super Protein Μούρα':{Fe:0.08,Zn:0.55,Mg:14,Ca:150,B1:0.04,B2:0.22,B3:0.15,B6:0.05,B12:0.55,Folate:8,Omega3:0.01,Omega6:0.03,Iodine:8,Choline:14,DHA:0},
+  'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Φράουλα':{Fe:0.08,Zn:0.58,Mg:14,Ca:150,B1:0.04,B2:0.23,B3:0.15,B6:0.05,B12:0.58,Folate:8,Omega3:0.01,Omega6:0.03,Iodine:8,Choline:15,DHA:0},
+  'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Μούρα':{Fe:0.12,Zn:0.60,Mg:18,Ca:148,B1:0.04,B2:0.23,B3:0.16,B6:0.05,B12:0.55,Folate:9,Omega3:0.05,Omega6:0.10,Iodine:8,Choline:15,DHA:0},
   'Cottage cheese':{Fe:0.13,Zn:0.51,Mg:9,Ca:111,B1:0.02,B2:0.251,B3:0.103,B6:0.057,B12:0.47,Folate:8,Omega3:0.01,Omega6:0.04,Iodine:14,Choline:18,DHA:0},
   'Γάλα πλήρες':{Fe:0.03,Zn:0.37,Mg:10,Ca:113,B1:0.046,B2:0.169,B3:0.089,B6:0.036,B12:0.45,Folate:5,Omega3:0.08,Omega6:0.12,Iodine:19,Choline:12,DHA:0},
   // Fruits

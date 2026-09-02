@@ -222,5 +222,15 @@ var FOOD_ALIASES={
   'Γαλοπούλα ψητή':'Γαλοπούλα στήθος',
   'Μπάρα σοκολάτας ολικής':'Dark Choc Oat Bites',
   'Dark Choc Oat Bites (vegan)':'Dark Choc Oat Bites',
-  'Κολοκυθάκια (ψητά)':'Κολοκυθάκια'
+  'Κολοκυθάκια (ψητά)':'Κολοκυθάκια',
+  // Branded protein yogurts (Cyprus) — added 2026-09-02
+  'Zita Super Protein Strawberry':'Zita Super Protein Φράουλα',
+  'Zita Super Protein Berries':'Zita Super Protein Μούρα',
+  'Zita Super Protein Φράουλα Γιαούρτι':'Zita Super Protein Φράουλα',
+  'Zita Super Protein Μούρα Γιαούρτι':'Zita Super Protein Μούρα',
+  'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης με Γεύση Φράουλα':'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Φράουλα',
+  'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης με Γεύση Μούρων':'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Μούρα',
+  'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Μούρων':'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Μούρα',
+  'Christis Protein Yogurt Strawberry':'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Φράουλα',
+  'Christis Protein Yogurt Berries':'Χαραλαμπίδης Κρίστης Γιαούρτι Πρωτεΐνης Μούρα'
 };
