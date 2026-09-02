@@ -1475,7 +1475,7 @@ function showMedicalProtocol(condition) {
     html += '<ul style="margin:8px 0;color:#0d47a1;">';
     protocol.sources.forEach(function(source) {
       html += '<li style="margin:6px 0;">';
-      html += '<a href="' + source.url + '" target="_blank" style="color:#1976d2;text-decoration:none;font-weight:500;">';
+      html += '<a href="' + source.url + '" target="_blank" rel="noopener noreferrer" style="color:#1976d2;text-decoration:none;font-weight:500;">';
       html += source.name + ' ↗';
       html += '</a>';
       html += ' <span style="color:var(--text-muted);font-size:11px;">[Επίσημη πηγή]</span>';
