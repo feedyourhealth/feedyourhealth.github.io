@@ -272,6 +272,13 @@ function choIntPillStyle(v){
 }
 
 function buildDayTgtHtml(c,t){
+  // Not enough entered yet for a real BMR (see calcTDEE's incomplete flag) — show a prompt
+  // instead of a grid full of placeholder-based numbers.
+  if(t&&t.incomplete){
+    return '<div class="section-card" style="margin-top:12px;padding:14px;color:#8a6d1f;background:#fff8e1;'
+      +'border:1px solid #ffe08a;border-radius:8px;font-size:13px">Συμπλήρωσε <b>βάρος, ύψος και ηλικία</b> '
+      +'για να υπολογιστούν οι ημερήσιοι στόχοι.</div>';
+  }
   var abbr=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
   var eff=getDayTgtEff(c,t);
   var td=c.trainDays||[false,false,false,false,false,false,false];

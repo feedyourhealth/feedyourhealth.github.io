@@ -97,7 +97,13 @@ function calcTDEE(c){
       // (το BMR εξίσωσης δεν είναι επικυρωμένο πάνω σε εγκυμονούσα φυσιολογία με το τρέχον βάρος·
       // η επιπλέον ενεργειακή ανάγκη προστίθεται ξεχωριστά παρακάτω μέσω pregAdd, βάσει IOM/DRI ανά τρίμηνο)
       var bmrW=(c.pregnant&&c.prePregnancyWeight>0)?c.prePregnancyWeight:c.weight;
-      bmr=c.sex==='M'?10*bmrW+6.25*c.height-5*c.age+5:10*bmrW+6.25*c.height-5*c.age-161;
+      // Guard: while the dietitian is still typing, weight/height/age can be undefined/null.
+      // Raw Mifflin then yields NaN (missing field) or a silent over-estimate (null age → 0).
+      // Flag the result as incomplete so the live editor preview can show "—", and compute
+      // with neutral placeholders so nothing downstream sees NaN.
+      if(!(bmrW>0)||!(c.height>0)||!(c.age>0)) t.incomplete=true;
+      var _mw=bmrW>0?bmrW:70, _mh=c.height>0?c.height:170, _ma=c.age>0?c.age:30;
+      bmr=c.sex==='M'?10*_mw+6.25*_mh-5*_ma+5:10*_mw+6.25*_mh-5*_ma-161;
       t.bmrMethod='Mifflin-St Jeor';
       t.ffmUsed=null;
     }
@@ -300,7 +306,8 @@ function calcTDEE(c){
     isMinor:isMinor,growthAdd:growthAdd,neat:neat,
     pregTrimester:pregTri,pregAdd:pregAdd,
     protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA,warnings:warnings,
-    bmrMethod:t.bmrMethod||'Mifflin-St Jeor',ffmUsed:t.ffmUsed||null,usedRMR:t.usedRMR||false};
+    bmrMethod:t.bmrMethod||'Mifflin-St Jeor',ffmUsed:t.ffmUsed||null,usedRMR:t.usedRMR||false,
+    incomplete:!!t.incomplete};
 }
 // Minimum grams a food may be scaled down to.
 // Foods shown in pieces (FOOD_UNITS) get a floor of half a piece, so the
