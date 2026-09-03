@@ -377,6 +377,41 @@ function homeFirstWeekRow(x){
   return homeRow(x.c, 'πλάνο '+ageTxt+' · '+x.n+' check-in ✓', 'teal');
 }
 
+// Μέση τήρηση ανά ημέρα εβδομάδας (Δε–Κυ), όλοι οι πελάτες με σύνδεσμο, ~4 εβδομάδες. ckOverallScore
+// ανά ημέρα -> μέσος όρος ανά weekday. Δείχνει ΠΟΤΕ πέφτει η δέσμευση (π.χ. Κυριακή -> nudge Σάββατο).
+function homeWeekdayHeatmap(){
+  if(!window.Cloud || typeof window.Cloud.checkinsFor!=='function') return null;
+  var sums=[0,0,0,0,0,0,0], cnts=[0,0,0,0,0,0,0];
+  var wk0=ckWeekDates(0)[0];
+  var minKey=ckDayKey(new Date(new Date(wk0+'T00:00:00').getTime()-21*86400000));
+  var todayKey=ckDayKey(new Date());
+  clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;}).forEach(function(c){
+    window.Cloud.checkinsFor(c).forEach(function(r){
+      if(!r.date || r.date<minKey || r.date>todayKey) return;
+      var sc=ckOverallScore(ckPillarStats([r]));
+      if(sc==null) return;
+      var js=new Date(r.date+'T00:00:00').getDay(), wd=(js===0?6:js-1);
+      sums[wd]+=sc; cnts[wd]++;
+    });
+  });
+  if(!cnts.some(function(n){return n>0;})) return null;
+  return sums.map(function(s,i){ return cnts[i]?Math.round(s/cnts[i]):null; });
+}
+function homeWeekdayHeatmapHtml(vals){
+  if(!vals) return '';
+  var names=['Δε','Τρ','Τε','Πε','Πα','Σα','Κυ'];
+  var cells=vals.map(function(v,i){
+    var bg=v==null?'var(--panel-bg)':(v>=75?'#0F6E56':v>=60?'#3f9e82':v>=45?'#5DCAA5':v>=33?'#9FE1CB':v>=20?'#f0c39a':'#e79a9a');
+    var fg=v==null?'#888':(v<45?'#333':'#fff');
+    return '<div style="flex:1;text-align:center">'
+      +'<div style="font-size:10px;color:#888;margin-bottom:3px">'+names[i]+'</div>'
+      +'<div style="font-size:10px;font-weight:700;padding:5px 0;border-radius:6px;background:'+bg+';color:'+fg+'">'+(v==null?'—':v+'%')+'</div>'
+      +'</div>';
+  }).join('');
+  return '<div class="hm-card hm-card-info"><div class="hm-card-title">🗓 Τήρηση ανά ημέρα (4 εβδ.)</div>'
+    +'<div style="display:flex;gap:5px;margin-top:4px">'+cells+'</div></div>';
+}
+
 // Ίδιο day-of-week gate με την ⭐ κάρτα feedback στο plan.html (Παρ/Σαβ/Κυρ) — δεν έχει νόημα να
 // ζητάμε υπενθύμιση feedback τις μέρες που ο πελάτης δεν βλέπει καν τη φόρμα.
 function isFeedbackReminderWindow(){
@@ -863,6 +898,17 @@ function homeCard(title,items,moreLabel,variant){
   return html;
 }
 
+// Μια ζώνη της Αρχικής: επικεφαλίδα + πλήθος καρτών + το grid τους. collapsed=true -> <details>
+// κλειστό εξ ορισμού (για τα soft-touch, που δεν είναι εκκρεμότητες). Άδεια ζώνη -> ''.
+function homeZoneHtml(label, cards, collapsed){
+  if(!cards.length) return '';
+  var head=label+' <span class="hm-zone-n">'+cards.length+'</span>';
+  var grid='<div class="hm-grid">'+cards.join('')+'</div>';
+  return collapsed
+    ? '<details class="hm-zone"><summary class="hm-zone-h">'+head+'</summary>'+grid+'</details>'
+    : '<div class="hm-zone"><div class="hm-zone-h">'+head+'</div>'+grid+'</div>';
+}
+
 // Ξαναδημοσιεύει το πλάνο ενός πελάτη απευθείας από την Αρχική, χωρίς να φύγουμε από τη σελίδα.
 function homeQuickRepublish(clientId,btn){
   var c=clients.find(function(x){return x.id===clientId;});
@@ -943,6 +989,7 @@ function renderHome(){
   var stoppedLoggingRows=homeStoppedLogging(attentionIds).map(homeStoppedLoggingRow);
   var lowAdherenceRows=homeLowAdherence(attentionIds).map(homeLowAdherenceRow);
   var firstWeekRows=homeFirstWeek().map(homeFirstWeekRow);
+  var weekdayHeat=homeWeekdayHeatmap();
   var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
   var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
   var reminderRows=homeClientsNeedingFeedbackReminder().map(function(c){
@@ -984,6 +1031,18 @@ function renderHome(){
   var _withLink=clients.filter(function(c){return !c.deleted&&!c.archived&&c.shareToken;});
   var _recentActiveN=homePortalActivity().filter(function(x){return x.gap<=7;}).length;
   var _activePct=_withLink.length?Math.round(_recentActiveN/_withLink.length*100):null;
+  // «Παλμός πρακτικής»: Μ.Ο. σκορ τήρησης portal αυτή την εβδομάδα + μεταβολή vs προηγούμενη
+  // (ckWeekScore 0 vs -1, μόνο πελάτες με δεδομένα). Το «−N» εδώ πιάνει κάτι συστημικό πριν
+  // φανεί πελάτη-πελάτη στις κάρτες.
+  function _avgWk(off){
+    var v=_withLink.map(function(c){
+      var r=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
+      return r.length?ckWeekScore(ckRowsByDate(r),off):null;
+    }).filter(function(x){return x!=null;});
+    return v.length?Math.round(v.reduce(function(a,b){return a+b;},0)/v.length):null;
+  }
+  var _avgAdh=_avgWk(0), _avgAdhPrev=_avgWk(-1);
+  var _adhWow=(_avgAdh!=null&&_avgAdhPrev!=null)?(_avgAdh-_avgAdhPrev):null;
   html+='<div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Δες όλους τους πελάτες"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'active\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'active\')" role="button" tabindex="0" title="Δες πελάτες με ενεργό πλάνο"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
@@ -996,29 +1055,46 @@ function renderHome(){
       +'<span style="text-align:left"><span class="hm-stat-lbl" style="display:block">Ενεργοί με<br>check-in (7 ημ.)</span></span>'
       +'</div>'
     ))
+    +(_avgAdh==null?'':(
+      '<div class="hm-stat" title="Μέσος όρος σκορ τήρησης portal αυτή την εβδομάδα, από πελάτες με σύνδεσμο">'
+      +'<div class="hm-stat-num">'+_avgAdh+'%</div><div class="hm-stat-lbl">Μ.Ο. τήρησης (εβδ.)</div>'
+      +(_adhWow==null?'':'<div class="hm-stat-wow '+(_adhWow>=3?'up':(_adhWow<=-3?'dn':'flat'))+'">'
+        +(_adhWow>0?'▲ +'+_adhWow:(_adhWow<0?'▼ '+_adhWow:'→ ίδιο'))+' vs προηγ.</div>')
+      +'</div>'
+    ))
     +'</div>';
 
   var groupBreakdown=homeGroupBreakdown(buckets);
   var tasteLibraryStatus=homeTasteLibraryStatus();
-  var gridCards=[
-    homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'ακόμα', 'warning'),
-    homeCard('🔜 Πλησιάζει ανανέωση', approachingRenewalRows, 'ακόμα', 'warning'),
+  // 3 ζώνες αντί για έναν επίπεδο τοίχο ~11 καρτών: «Δράση τώρα» (κόκκινες/warning που θέλουν
+  // ενέργεια), «Παρακολούθηση» (portal σήματα + admin), «Soft-touch» (💛, collapsed — δεν είναι
+  // εκκρεμότητες). Καμία κάρτα δεν αφαιρείται· η homeCard() επιστρέφει '' όταν είναι άδεια.
+  var zActNow=[
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
     homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
+    homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'ακόμα', 'warning'),
     homeCard(staleCardTitle, staleRows, 'ακόμα', 'warning'),
+    homeCard('🔜 Πλησιάζει ανανέωση', approachingRenewalRows, 'ακόμα', 'warning')
+  ].filter(Boolean);
+  var zWatch=[
     homeCard('📉 Σταμάτησαν να καταγράφουν', stoppedLoggingRows, 'ακόμα', 'warning'),
     homeCard('📊 Χαμηλή τήρηση αυτή την εβδομάδα', lowAdherenceRows, 'ακόμα', 'warning'),
     isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info'):'',
-    groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
-    tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):'',
     homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info'),
+    weekdayHeat?homeWeekdayHeatmapHtml(weekdayHeat):'',
+    groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
+    tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):''
+  ].filter(Boolean);
+  var zSoft=[
     homeCard('🌱 Πρώτη εβδομάδα', firstWeekRows, 'ακόμα', 'info'),
     homeCard('🎂 Γενέθλια', birthdayRows, 'ακόμα', 'info'),
     homeCard('🥳 Ονομαστικές εορτές', nameDayRows, 'ακόμα', 'info')
-  ].filter(function(c){return c;});
+  ].filter(Boolean);
 
-  if(gridCards.length){
-    html+='<div class="hm-grid">'+gridCards.join('')+'</div>';
+  if(zActNow.length+zWatch.length+zSoft.length){
+    html+=homeZoneHtml('⚠️ Δράση τώρα', zActNow, false)
+        +homeZoneHtml('👁 Παρακολούθηση', zWatch, false)
+        +homeZoneHtml('💛 Soft-touch', zSoft, true);
   } else {
     html+='<div class="hm-empty" style="text-align:center;padding:20px 0">Καμία εκκρεμότητα αυτή τη στιγμή — όλοι οι πελάτες είναι εντάξει 👍</div>';
   }

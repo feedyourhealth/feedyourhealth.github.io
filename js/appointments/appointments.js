@@ -559,6 +559,45 @@ function buildAppointmentsHtml(c){
     var diffCur=realAppts[realAppts.length-1], diffPrev=realAppts[realAppts.length-2];
     var diffItems=[];
     if(lastW&&prevW)diffItems.push('<div class="appt-diffitem"><span class="lbl">Βάρος</span><span class="val">'+wDeltaHtml+'</span></div>');
+
+    // Portal deltas: σκορ τήρησης / σερί / πυλώνες — σύγκριση της εβδομάδας του ΠΡΟΗΓΟΥΜΕΝΟΥ
+    // ραντεβού με την τρέχουσα. Ίδια cached πηγή (window.Cloud.checkinsFor) με το "📲 Πρόοδος πελάτη".
+    if(c.shareToken && window.Cloud && typeof window.Cloud.checkinsFor==='function'){
+      var _ckRows=window.Cloud.checkinsFor(c);
+      if(_ckRows.length){
+        var _bd=ckRowsByDate(_ckRows);
+        var _wkKeys=function(dstr){
+          var d=new Date(dstr+'T00:00:00'), js=d.getDay(), toMon=(js===0?-6:1-js);
+          var mon=new Date(d); mon.setDate(d.getDate()+toMon); mon.setHours(0,0,0,0);
+          var a=[]; for(var i=0;i<7;i++){var x=new Date(mon);x.setDate(mon.getDate()+i);a.push(ckDayKey(x));}
+          return a;
+        };
+        var _stNow=ckPillarStats(ckWeekDates(0).map(function(k){return _bd[k];}).filter(Boolean));
+        var _stPrev=ckPillarStats(_wkKeys(diffPrev.date).map(function(k){return _bd[k];}).filter(Boolean));
+        var _scNow=_stNow.anyData?ckOverallScore(_stNow):null;
+        var _scPrev=_stPrev.anyData?ckOverallScore(_stPrev):null;
+        if(_scNow!=null && _scPrev!=null){
+          var _scCls=_scNow>_scPrev?'good':(_scNow<_scPrev?'bad':'');
+          diffItems.push('<div class="appt-diffitem"><span class="lbl">Τήρηση portal</span><span class="val '+_scCls+'">'+_scPrev+'% → '+_scNow+'%</span></div>');
+        }
+        if(typeof homeRunEndingAt==='function'){
+          var _rNow=ckStreak(_bd), _rPrev=homeRunEndingAt(_bd, diffPrev.date);
+          if(_rNow!==_rPrev){
+            diffItems.push('<div class="appt-diffitem"><span class="lbl">Σερί</span><span class="val '+(_rNow>_rPrev?'good':'bad')+'">'+_rPrev+' → '+_rNow+' μέρες</span></div>');
+          }
+        }
+        var _pill=[];
+        [['🍽','diet'],['💧','wat'],['💊','sup']].forEach(function(p){
+          var dt=_stNow[p[1]+'Tot'], pt=_stPrev[p[1]+'Tot'];
+          if(!dt && !pt) return;
+          var nr=dt?_stNow[p[1]+'Done']/dt:0, pr=pt?_stPrev[p[1]+'Done']/pt:0;
+          if(Math.abs(nr-pr)<0.14) return;
+          _pill.push('<span'+(nr<pr?' style="color:#c62828"':'')+'>'+p[0]+' '+Math.round(pr*100)+'%→'+Math.round(nr*100)+'%</span>');
+        });
+        if(_pill.length) diffItems.push('<div class="appt-diffitem"><span class="lbl">Πυλώνες</span><span class="val">'+_pill.join(' · ')+'</span></div>');
+      }
+    }
+
     if(diffCur.gi>0&&diffPrev.gi>0){
       var diffGiCls=diffCur.gi<diffPrev.gi?'good':(diffCur.gi>diffPrev.gi?'bad':'');
       diffItems.push('<div class="appt-diffitem"><span class="lbl">Πεπτικά συμπτώματα</span><span class="val '+diffGiCls+'">'+diffPrev.gi+' → '+diffCur.gi+'</span></div>');

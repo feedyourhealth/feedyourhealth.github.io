@@ -270,6 +270,26 @@ body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f
 .hm-stat-clickable{cursor:pointer}
 .hm-stat-clickable:hover,.hm-stat-clickable:focus-visible{background:#e3f0f0}
 .hm-stat-clickable:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+/* «Παλμός πρακτικής» — βελάκι μεταβολής vs προηγούμενη εβδομάδα κάτω από ένα stat */
+.hm-stat-wow{font-size:10px;font-weight:800;margin-top:4px}
+.hm-stat-wow.up{color:#1E7E34}
+.hm-stat-wow.dn{color:#c62828}
+.hm-stat-wow.flat{color:#6b6b6b}
+body.dark-mode .hm-stat-wow.up{color:#8bc98f}
+body.dark-mode .hm-stat-wow.dn{color:#f09595}
+body.dark-mode .hm-stat-wow.flat{color:#aaa}
+/* Ζώνες Αρχικής — ομαδοποίηση των καρτών σε «Δράση τώρα / Παρακολούθηση / Soft-touch» */
+.hm-zone{margin-bottom:22px}
+.hm-zone:last-child{margin-bottom:0}
+.hm-zone-h{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#6b6b6b;margin:0 0 10px;list-style:none}
+.hm-zone-h::-webkit-details-marker{display:none}
+.hm-zone-h::after{content:"";flex:1;height:1px;background:var(--border-light,#e0e0e0)}
+.hm-zone-n{background:var(--panel-bg,#f5f5f5);border-radius:999px;padding:0 7px;font-size:10px;font-weight:700}
+details.hm-zone>summary{cursor:pointer}
+details.hm-zone>summary::before{content:"\25B8  ";color:#6b6b6b}
+details.hm-zone[open]>summary::before{content:"\25BE  "}
+body.dark-mode .hm-zone-h{color:#aaa}
+body.dark-mode .hm-zone-n{background:#242424}
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px}
 .hm-card{background:#fff;border:1px solid #e0e0e0;border-left:4px solid #e0e0e0;border-radius:14px;padding:14px 16px;container-type:inline-size}
 .hm-card-danger{border-left-color:#E24B4A}
