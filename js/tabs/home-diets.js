@@ -318,6 +318,65 @@ function homeStoppedLoggingRow(x){
     +'</div>';
 }
 
+// Bottom-3: ενεργοί πελάτες με πλάνο ΚΑΙ πρόσφατο check-in (<=FRESH_DAYS) που έχουν το χαμηλότερο
+// σκορ εβδομάδας (<LOW_MAX). Διαφορετικό από το homeStoppedLogging: αυτοί ΚΑΤΑΓΡΑΦΟΥΝ, απλά δεν
+// τηρούν το πλάνο -> nudge ή απλούστερο πλάνο. Το «χαμηλό σκορ» δεν είναι σήμα στο
+// homeClientsNeedingAttention, οπότε χωρίς αυτή την κάρτα περνάει απαρατήρητο. skipIds ίδια λογική.
+function homeLowAdherence(skipIds){
+  if(!window.Cloud || typeof window.Cloud.checkinsFor!=='function') return [];
+  var LOW_MAX=45, FRESH_DAYS=3;
+  return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;})
+    .filter(function(c){return !(skipIds && skipIds[c.id]);})
+    .filter(function(c){return (typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);})
+    .map(function(c){
+      var rows=window.Cloud.checkinsFor(c);
+      if(!rows.length) return null;
+      var byDate=ckRowsByDate(rows);
+      var gap=ckDaysSinceLast(rows), score=ckWeekScore(byDate,0);
+      if(score==null || !isFinite(gap) || gap>FRESH_DAYS || score>=LOW_MAX) return null;
+      return {c:c, score:score, gap:gap};
+    })
+    .filter(Boolean)
+    .sort(function(a,b){return a.score-b.score;})
+    .slice(0,3);
+}
+function homeLowAdherenceRow(x){
+  var c=x.c;
+  var band=x.score>=33?'warn':'bad';
+  var sub=x.gap===0?'check-in σήμερα':(x.gap===1?'check-in χθες':'check-in πριν '+x.gap+' μέρες');
+  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS)">'
+    +'<div class="hm-avatar hm-avatar-teal">'+initials(c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-act-score hm-act-score-'+band+'" title="Σκορ τήρησης αυτής της εβδομάδας">'+x.score+'%</span>'
+    +'<span class="hm-row-sub">'+sub+'</span>'
+    +'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendActivityNudge(\''+c.id+'\')">🔔 Υπενθύμιση</button>'
+    +'</div>';
+}
+
+// «🌱 Πρώτη εβδομάδα» — πελάτες με πλάνο < FIRSTWEEK_DAYS ημερών που ΕΧΟΥΝ αρχίσει check-in (soft-touch,
+// ίδιο ύφος με 🎂/🥳: χωρίς κουμπί ενέργειας). Μηδέν check-in -> πάει ήδη στο «χρειάζονται προσοχή»,
+// δεν το διπλώνουμε εδώ. Μετράμε μόνο check-in ΑΠΟ τη δημοσίευση του πλάνου (c.planGeneratedAt).
+function homeFirstWeek(){
+  if(!window.Cloud || typeof window.Cloud.checkinsFor!=='function') return [];
+  var FIRSTWEEK_DAYS=10, now=Date.now();
+  return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken && c.planGeneratedAt;})
+    .map(function(c){
+      var ageD=Math.floor((now-c.planGeneratedAt)/86400000);
+      if(ageD<0 || ageD>=FIRSTWEEK_DAYS) return null;
+      var rows=window.Cloud.checkinsFor(c);
+      if(!rows.length) return null;
+      var since=ckDayKey(new Date(c.planGeneratedAt));
+      var n=rows.filter(function(r){return r.date>=since;}).length;
+      return n?{c:c, ageD:ageD, n:n}:null;
+    })
+    .filter(Boolean)
+    .sort(function(a,b){return a.ageD-b.ageD;});
+}
+function homeFirstWeekRow(x){
+  var ageTxt=x.ageD===0?'σήμερα':(x.ageD===1?'χθες':'πριν '+x.ageD+' μέρες');
+  return homeRow(x.c, 'πλάνο '+ageTxt+' · '+x.n+' check-in ✓', 'teal');
+}
+
 // Ίδιο day-of-week gate με την ⭐ κάρτα feedback στο plan.html (Παρ/Σαβ/Κυρ) — δεν έχει νόημα να
 // ζητάμε υπενθύμιση feedback τις μέρες που ο πελάτης δεν βλέπει καν τη φόρμα.
 function isFeedbackReminderWindow(){
@@ -882,6 +941,8 @@ function renderHome(){
     return homeActivityRow(x,sub);
   });
   var stoppedLoggingRows=homeStoppedLogging(attentionIds).map(homeStoppedLoggingRow);
+  var lowAdherenceRows=homeLowAdherence(attentionIds).map(homeLowAdherenceRow);
+  var firstWeekRows=homeFirstWeek().map(homeFirstWeekRow);
   var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
   var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
   var reminderRows=homeClientsNeedingFeedbackReminder().map(function(c){
@@ -946,10 +1007,12 @@ function renderHome(){
     homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
     homeCard(staleCardTitle, staleRows, 'ακόμα', 'warning'),
     homeCard('📉 Σταμάτησαν να καταγράφουν', stoppedLoggingRows, 'ακόμα', 'warning'),
+    homeCard('📊 Χαμηλή τήρηση αυτή την εβδομάδα', lowAdherenceRows, 'ακόμα', 'warning'),
     isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info'):'',
     groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
     tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):'',
     homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info'),
+    homeCard('🌱 Πρώτη εβδομάδα', firstWeekRows, 'ακόμα', 'info'),
     homeCard('🎂 Γενέθλια', birthdayRows, 'ακόμα', 'info'),
     homeCard('🥳 Ονομαστικές εορτές', nameDayRows, 'ακόμα', 'info')
   ].filter(function(c){return c;});

@@ -126,16 +126,48 @@ function buildClientProgressHtml(c){
   }
   var byDate=ckRowsByDate(rows);
   var score=ckWeekScore(byDate,0);
+  var prevScore=ckWeekScore(byDate,-1);
   var streak=ckStreak(byDate);
   var st=ckPillarStats(ckWeekDates(0).map(function(k){return byDate[k];}).filter(Boolean));
   var gap=ckDaysSinceLast(rows);
   var lastTxt=gap===0?'σήμερα':gap===1?'χθες':gap+' μέρες πριν';
 
+  // ▲/▼ vs προηγούμενη εβδομάδα — ίδιο κατώφλι (>=5 μονάδες) με την Αρχική (homeActivityTrendHtml).
+  var trendChip='';
+  if(score!=null && prevScore!=null){
+    var dS=score-prevScore;
+    if(dS>=5) trendChip=' <span style="font-size:11px;font-weight:700;color:var(--good)" title="από '+prevScore+'% την περασμένη εβδομάδα">▲ +'+dS+'</span>';
+    else if(dS<=-5) trendChip=' <span style="font-size:11px;font-weight:700;color:#c62828" title="από '+prevScore+'% την περασμένη εβδομάδα">▼ '+dS+'</span>';
+  }
+
+  // Βάρος: τελευταία δήλωση πελάτη (client_logs.weight_kg) vs τελευταία δική σου μέτρηση (c.weightLog).
+  function cpDaysAgo(dstr){ if(!dstr) return null; var a=new Date(dstr+'T00:00:00'), b=new Date(); b.setHours(0,0,0,0); return Math.round((b-a)/86400000); }
+  var _logs=(window.Cloud&&window.Cloud.allClientLogsFor)?window.Cloud.allClientLogsFor(c):[];
+  var lastSelfW=null;
+  for(var _li=0; _li<_logs.length; _li++){ if(_logs[_li].weight_kg>0){ lastSelfW=_logs[_li]; break; } }
+  var _wl=c.weightLog||[], lastMeasW=_wl.length?_wl[_wl.length-1]:null;
+  var weightStrip='';
+  if(lastSelfW){
+    var _sa=cpDaysAgo(lastSelfW.date), _saTxt=_sa===0?'σήμερα':_sa===1?'χθες':'πριν '+_sa+' μέρες';
+    var _cmp='';
+    if(lastMeasW && lastMeasW.weight>0){
+      var _d=Math.round((lastSelfW.weight_kg-lastMeasW.weight)*10)/10;
+      var _fav=c.goalMain==='loss'?(_d<0):(c.goalMain==='gain'?(_d>0):null);
+      var _col=_fav==null?'#6B756F':(_fav?'#1E7E34':'#c62828');
+      _cmp='<span style="color:#6B756F">| δική σου μέτρηση '+lastMeasW.weight+' kg (πριν '+cpDaysAgo(lastMeasW.date)+' μ.)</span> '
+        +'<span style="font-weight:800;color:'+_col+'">→ '+(_d>0?'+':'')+_d+' kg '+(_d>0?'▲':_d<0?'▼':'■')+'</span>';
+    }
+    weightStrip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12px;background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:8px 10px;margin-bottom:12px">'
+      +'<span>⚖️ <b style="font-size:14px">'+lastSelfW.weight_kg+' kg</b> <span style="color:#6B756F">δήλωση πελάτη · '+_saTxt+'</span></span>'
+      +_cmp+'</div>';
+  }
+
   function bar(label,done,tot){
     if(!tot) return '';
     var pct=Math.round(done/tot*100);
-    return '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>'+label+'</span><span style="color:#6B756F">'+done+'/'+tot+' μέρες</span></div>'
-      +'<div style="height:6px;border-radius:3px;background:#E2EEE5;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:#0F6E56"></div></div></div>';
+    var weak=pct<60;
+    return '<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>'+label+(weak?' <span style="color:#c62828">⚠</span>':'')+'</span><span style="color:#6B756F">'+done+'/'+tot+' μέρες</span></div>'
+      +'<div style="height:6px;border-radius:3px;background:#E2EEE5;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+(weak?'#c62828':'#0F6E56')+'"></div></div></div>';
   }
   var hist='';
   for(var w=-3; w<=0; w++){
@@ -143,11 +175,23 @@ function buildClientProgressHtml(c){
     var hh=ws==null?4:Math.max(4,Math.round(ws*0.28));
     hist+='<div style="width:14px;height:'+hh+'px;background:'+(ws==null?'#E2EEE5':(ws>=85?'#0F6E56':ws>=60?'#5DCAA5':'#9FE1CB'))+';border-radius:2px" title="Εβδ. '+(w+4)+': '+(ws==null?'—':ws+'%')+'"></div>';
   }
+  // Sparkline 14 ημερών — ημερήσιο σκορ τήρησης (ckOverallScore ανά ημέρα): δείχνει το ΣΧΗΜΑ
+  // (σταθερό / πτώση / κενά ΣΚ), σε αντίθεση με τις 4 εβδομαδιαίες μπάρες που δείχνουν μόνο επίπεδο.
+  var spark='';
+  var _t0=new Date(); _t0.setHours(0,0,0,0);
+  for(var _s=13; _s>=0; _s--){
+    var _k=ckDayKey(new Date(_t0.getTime()-_s*86400000)), _r=byDate[_k];
+    var _v=_r?ckOverallScore(ckPillarStats([_r])):null;
+    var _h=_v==null?3:Math.max(3,Math.round(_v*0.26));
+    var _bg=_v==null?'#E2EEE5':(_v>=66?'#0F6E56':_v>=33?'#5DCAA5':'#9FE1CB');
+    spark+='<div style="flex:1;min-width:4px;height:'+_h+'px;background:'+_bg+';border-radius:2px" title="'+_k+': '+(_v==null?'—':_v+'%')+'"></div>';
+  }
 
   return '<div class="tracker-section">'
     +'<div class="tracker-head" style="margin-bottom:10px">📲 Πρόοδος πελάτη (portal)</div>'
+    +weightStrip
     +'<div style="display:flex;gap:18px;align-items:center;margin-bottom:14px;flex-wrap:wrap">'
-    +'<div style="font-size:13px"><b style="font-size:20px;color:#025857">'+(score==null?'—':score+'%')+'</b> σκορ εβδομάδας</div>'
+    +'<div style="font-size:13px"><b style="font-size:20px;color:#025857">'+(score==null?'—':score+'%')+'</b> σκορ εβδομάδας'+trendChip+'</div>'
     +'<div style="font-size:13px">🔥 <b>'+streak+'</b> μέρες σερί</div>'
     +'<div style="font-size:12px;color:#888">Τελευταίο check-in: '+lastTxt+'</div>'
     +'</div>'
@@ -155,6 +199,7 @@ function buildClientProgressHtml(c){
     +bar('Νερό',st.watDone,st.watTot)
     +bar('Συμπληρώματα',st.supDone,st.supTot)
     +'<div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span style="font-size:11px;color:#888">4 εβδ.:</span><div style="display:flex;gap:4px;align-items:flex-end;height:28px">'+hist+'</div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:11px;color:#888">14 ημ.:</span><div style="display:flex;gap:3px;align-items:flex-end;height:30px;flex:1;max-width:240px">'+spark+'</div></div>'
     +'</div>';
 }
 
