@@ -132,12 +132,12 @@ function buildClientProgressHtml(c){
   var gap=ckDaysSinceLast(rows);
   var lastTxt=gap===0?'σήμερα':gap===1?'χθες':gap+' μέρες πριν';
 
-  // ▲/▼ vs προηγούμενη εβδομάδα — ίδιο κατώφλι (>=5 μονάδες) με την Αρχική (homeActivityTrendHtml).
+  // ▲/▼ vs προηγούμενη εβδομάδα — κοινό κατώφλι CK_TREND_MIN_PP με την Αρχική (homeActivityTrendHtml).
   var trendChip='';
   if(score!=null && prevScore!=null){
     var dS=score-prevScore;
-    if(dS>=5) trendChip=' <span style="font-size:11px;font-weight:700;color:var(--good)" title="από '+prevScore+'% την περασμένη εβδομάδα">▲ +'+dS+'</span>';
-    else if(dS<=-5) trendChip=' <span style="font-size:11px;font-weight:700;color:#c62828" title="από '+prevScore+'% την περασμένη εβδομάδα">▼ '+dS+'</span>';
+    if(dS>=CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:var(--good)" title="από '+prevScore+'% την περασμένη εβδομάδα">▲ +'+dS+'</span>';
+    else if(dS<=-CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:#c62828" title="από '+prevScore+'% την περασμένη εβδομάδα">▼ '+dS+'</span>';
   }
 
   // Βάρος: τελευταία δήλωση πελάτη (client_logs.weight_kg) vs τελευταία δική σου μέτρηση (c.weightLog).
@@ -153,7 +153,7 @@ function buildClientProgressHtml(c){
     if(lastMeasW && lastMeasW.weight>0){
       var _d=Math.round((lastSelfW.weight_kg-lastMeasW.weight)*10)/10;
       var _fav=c.goalMain==='loss'?(_d<0):(c.goalMain==='gain'?(_d>0):null);
-      var _col=_fav==null?'#6B756F':(_fav?'#1E7E34':'#c62828');
+      var _col=_fav==null?'#6B756F':(_fav?'var(--good)':'#c62828');
       _cmp='<span style="color:#6B756F">| δική σου μέτρηση '+lastMeasW.weight+' kg (πριν '+cpDaysAgo(lastMeasW.date)+' μ.)</span> '
         +'<span style="font-weight:800;color:'+_col+'">→ '+(_d>0?'+':'')+_d+' kg '+(_d>0?'▲':_d<0?'▼':'■')+'</span>';
     }

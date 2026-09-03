@@ -4107,11 +4107,19 @@ function saveFoodExclusions(){
 
 // ── Βοηθητικές συναρτήσεις για το σκορ/σερί προόδου πελάτη από τα checkins ──
 function ckDayKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function ckWeekDates(offset){
-  var now=new Date(); var js=now.getDay(); var toMon=(js===0?-6:1-js);
-  var mon=new Date(now); mon.setDate(now.getDate()+toMon+(offset||0)*7); mon.setHours(0,0,0,0);
+// «Σημαντική» μεταβολή σκορ τήρησης εβδομάδα-με-εβδομάδα (μονάδες %) — κοινό κατώφλι για όλα τα ▲/▼.
+var CK_TREND_MIN_PP=5;
+// Τα 7 κλειδιά ημερών (Δευ→Κυρ) της εβδομάδας που περιέχει το `ref` (Date ή 'YYYY-MM-DD'· default: σήμερα).
+function ckWeekKeysFor(ref){
+  var base=ref==null?new Date():(typeof ref==='string'?new Date(ref+'T00:00:00'):new Date(ref));
+  var js=base.getDay(), toMon=(js===0?-6:1-js);
+  var mon=new Date(base); mon.setDate(base.getDate()+toMon); mon.setHours(0,0,0,0);
   var arr=[]; for(var i=0;i<7;i++){var d=new Date(mon);d.setDate(mon.getDate()+i);arr.push(ckDayKey(d));}
   return arr;
+}
+function ckWeekDates(offset){
+  var d=new Date(); d.setDate(d.getDate()+(offset||0)*7);
+  return ckWeekKeysFor(d);
 }
 function ckRowsByDate(rows){
   var m={}; (rows||[]).forEach(function(r){m[r.date]=r;}); return m;
@@ -4135,18 +4143,19 @@ function ckWeekScore(byDate,offset){
   var st=ckPillarStats(rows);
   return st.anyData?ckOverallScore(st):null;
 }
+// «Καλή» ημέρα check-in = τηρήθηκαν ΟΛΟΙ οι στόχοι που ορίστηκαν (γεύματα/συμπληρώματα/νερό).
+function ckIsGoodDay(r){
+  if(!r) return false;
+  if(r.meals_total && r.meals_done<r.meals_total) return false;
+  if(r.supps_total && r.supps_done<r.supps_total) return false;
+  if(r.water_goal && r.water_glasses<r.water_goal) return false;
+  return true;
+}
 function ckStreak(byDate){
-  function good(k){
-    var r=byDate[k]; if(!r) return false;
-    if(r.meals_total && r.meals_done<r.meals_total) return false;
-    if(r.supps_total && r.supps_done<r.supps_total) return false;
-    if(r.water_goal && r.water_glasses<r.water_goal) return false;
-    return true;
-  }
   var n=0, d=new Date(); d.setHours(0,0,0,0);
-  if(!good(ckDayKey(d))) d.setDate(d.getDate()-1);
+  if(!ckIsGoodDay(byDate[ckDayKey(d)])) d.setDate(d.getDate()-1);
   var guard=0;
-  while(good(ckDayKey(d))){ n++; d.setDate(d.getDate()-1); guard++; if(guard>365)break; }
+  while(ckIsGoodDay(byDate[ckDayKey(d)])){ n++; d.setDate(d.getDate()-1); guard++; if(guard>365)break; }
   return n;
 }
 // Μέρες από το τελευταίο check-in (Infinity αν δεν υπάρχει κανένα).

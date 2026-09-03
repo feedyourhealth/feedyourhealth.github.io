@@ -272,10 +272,9 @@ body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f
 .hm-stat-clickable:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 /* «Παλμός πρακτικής» — βελάκι μεταβολής vs προηγούμενη εβδομάδα κάτω από ένα stat */
 .hm-stat-wow{font-size:10px;font-weight:800;margin-top:4px}
-.hm-stat-wow.up{color:#1E7E34}
+.hm-stat-wow.up{color:var(--good)}
 .hm-stat-wow.dn{color:#c62828}
 .hm-stat-wow.flat{color:#6b6b6b}
-body.dark-mode .hm-stat-wow.up{color:#8bc98f}
 body.dark-mode .hm-stat-wow.dn{color:#f09595}
 body.dark-mode .hm-stat-wow.flat{color:#aaa}
 /* Ζώνες Αρχικής — ομαδοποίηση των καρτών σε «Δράση τώρα / Παρακολούθηση / Soft-touch» */

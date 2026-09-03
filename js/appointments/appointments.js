@@ -566,14 +566,8 @@ function buildAppointmentsHtml(c){
       var _ckRows=window.Cloud.checkinsFor(c);
       if(_ckRows.length){
         var _bd=ckRowsByDate(_ckRows);
-        var _wkKeys=function(dstr){
-          var d=new Date(dstr+'T00:00:00'), js=d.getDay(), toMon=(js===0?-6:1-js);
-          var mon=new Date(d); mon.setDate(d.getDate()+toMon); mon.setHours(0,0,0,0);
-          var a=[]; for(var i=0;i<7;i++){var x=new Date(mon);x.setDate(mon.getDate()+i);a.push(ckDayKey(x));}
-          return a;
-        };
         var _stNow=ckPillarStats(ckWeekDates(0).map(function(k){return _bd[k];}).filter(Boolean));
-        var _stPrev=ckPillarStats(_wkKeys(diffPrev.date).map(function(k){return _bd[k];}).filter(Boolean));
+        var _stPrev=ckPillarStats(ckWeekKeysFor(diffPrev.date).map(function(k){return _bd[k];}).filter(Boolean));
         var _scNow=_stNow.anyData?ckOverallScore(_stNow):null;
         var _scPrev=_stPrev.anyData?ckOverallScore(_stPrev):null;
         if(_scNow!=null && _scPrev!=null){

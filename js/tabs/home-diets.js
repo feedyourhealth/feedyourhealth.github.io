@@ -237,13 +237,13 @@ function homeActivityPillarsHtml(ps){
   seg('💊',ps.supDone,ps.supTot);
   return parts.length?'<span class="hm-pillars">'+parts.join(' · ')+'</span>':'';
 }
-// Βέλος τάσης vs προηγούμενη εβδομάδα — μόνο όταν η μεταβολή είναι ουσιαστική (≥5 μονάδες),
+// Βέλος τάσης vs προηγούμενη εβδομάδα — μόνο όταν η μεταβολή είναι ουσιαστική (CK_TREND_MIN_PP),
 // αλλιώς η γραμμή γεμίζει θόρυβο από φυσιολογικές μικροδιακυμάνσεις.
 function homeActivityTrendHtml(score,prev){
   if(score==null || prev==null) return '';
   var d=score-prev;
-  if(d>=5) return '<span class="hm-act-trend hm-act-trend-up" title="από '+prev+'% την περασμένη εβδομάδα">▲</span>';
-  if(d<=-5) return '<span class="hm-act-trend hm-act-trend-down" title="από '+prev+'% την περασμένη εβδομάδα">▼</span>';
+  if(d>=CK_TREND_MIN_PP) return '<span class="hm-act-trend hm-act-trend-up" title="από '+prev+'% την περασμένη εβδομάδα">▲</span>';
+  if(d<=-CK_TREND_MIN_PP) return '<span class="hm-act-trend hm-act-trend-down" title="από '+prev+'% την περασμένη εβδομάδα">▼</span>';
   return '';
 }
 // Γραμμή της κάρτας "📱 Πρόσφατη δραστηριότητα": ίδιο look με homeRow (avatar/όνομα/sub) +
@@ -290,18 +290,11 @@ function homeStoppedLogging(skipIds){
     .filter(Boolean)
     .sort(function(a,b){return b.gap-a.gap;});
 }
-// Μήκος σερί "καλών" ημερών που ΤΕΛΕΙΩΝΕΙ στο endKey — ίδιο κριτήριο "good" ημέρας με το ckStreak
-// (Dietologist.html), απλώς αγκυρωμένο σε συγκεκριμένη ημερομηνία αντί για το σήμερα.
+// Μήκος σερί "καλών" ημερών (ckIsGoodDay, Dietologist.html) που ΤΕΛΕΙΩΝΕΙ στο endKey — όπως το
+// ckStreak, απλώς αγκυρωμένο σε συγκεκριμένη ημερομηνία αντί για το σήμερα.
 function homeRunEndingAt(byDate,endKey){
-  function good(k){
-    var r=byDate[k]; if(!r) return false;
-    if(r.meals_total && r.meals_done<r.meals_total) return false;
-    if(r.supps_total && r.supps_done<r.supps_total) return false;
-    if(r.water_goal && r.water_glasses<r.water_goal) return false;
-    return true;
-  }
   var n=0, d=new Date(endKey+'T00:00:00'), guard=0;
-  while(good(ckDayKey(d))){ n++; d.setDate(d.getDate()-1); if(++guard>400) break; }
+  while(ckIsGoodDay(byDate[ckDayKey(d)])){ n++; d.setDate(d.getDate()-1); if(++guard>400) break; }
   return n;
 }
 function homeStoppedLoggingRow(x){
@@ -1058,8 +1051,12 @@ function renderHome(){
     +(_avgAdh==null?'':(
       '<div class="hm-stat" title="Μέσος όρος σκορ τήρησης portal αυτή την εβδομάδα, από πελάτες με σύνδεσμο">'
       +'<div class="hm-stat-num">'+_avgAdh+'%</div><div class="hm-stat-lbl">Μ.Ο. τήρησης (εβδ.)</div>'
-      +(_adhWow==null?'':'<div class="hm-stat-wow '+(_adhWow>=3?'up':(_adhWow<=-3?'dn':'flat'))+'">'
-        +(_adhWow>0?'▲ +'+_adhWow:(_adhWow<0?'▼ '+_adhWow:'→ ίδιο'))+' vs προηγ.</div>')
+      +(_adhWow==null?'':(function(){
+        var big=Math.abs(_adhWow)>=CK_TREND_MIN_PP;
+        var cls=!big?'flat':(_adhWow>0?'up':'dn');
+        var txt=!big?'≈ ίδιο':(_adhWow>0?'▲ +'+_adhWow:'▼ '+_adhWow);
+        return '<div class="hm-stat-wow '+cls+'">'+txt+' vs προηγ.</div>';
+      })())
       +'</div>'
     ))
     +'</div>';
