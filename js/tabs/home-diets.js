@@ -202,20 +202,49 @@ function homePortalActivity(){
   return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;})
     .map(function(c){
       var rows=window.Cloud.checkinsFor(c);
-      var score=rows.length?ckWeekScore(ckRowsByDate(rows),0):null;
+      var byDate=rows.length?ckRowsByDate(rows):{};
+      var score=rows.length?ckWeekScore(byDate,0):null;
+      var prevScore=rows.length?ckWeekScore(byDate,-1):null;
+      var pillars=rows.length?ckPillarStats(ckWeekDates(0).map(function(k){return byDate[k];}).filter(Boolean)):null;
       var hasNote=(typeof clientHasNewClientNote==='function') && clientHasNewClientNote(c);
       var pfLatest=(window.Cloud.planFeedbackFor?window.Cloud.planFeedbackFor(c)[0]:null);
       var hasFeedback=!!(pfLatest && pfLatest.week_start===wkStart);
-      return {c:c, rows:rows, gap:ckDaysSinceLast(rows), score:score, hasNote:hasNote, hasFeedback:hasFeedback};
+      return {c:c, rows:rows, gap:ckDaysSinceLast(rows), score:score, prevScore:prevScore, pillars:pillars, hasNote:hasNote, hasFeedback:hasFeedback};
     })
     .filter(function(x){return x.rows.length && isFinite(x.gap);})
     .sort(function(a,b){return a.gap-b.gap;});
 }
 // Χρωματιστό chip σκορ εβδομάδας (ίδιες ζώνες με pctStatusColor: ≥66 καλό, 33-65 μέτριο, <33 κακό).
-function homeActivityScoreChipHtml(score){
+// Στο hover ανοίγει tooltip με ανάλυση ανά πυλώνα (ckPillarStats: γεύματα/νερό/συμπληρώματα).
+function homeActivityScoreChipHtml(score,pillars){
   if(score==null) return '';
   var band=score>=66?'good':(score>=33?'warn':'bad');
-  return '<span class="hm-act-score hm-act-score-'+band+'" title="Σκορ τήρησης αυτής της εβδομάδας">'+score+'%</span>';
+  return '<span class="hm-act-score hm-act-score-'+band+'" title="Σκορ τήρησης αυτής της εβδομάδας — hover για ανάλυση">'
+    +score+'%'+homeActivityPillarsHtml(pillars)+'</span>';
+}
+// Tooltip περιεχόμενο: μία στήλη ανά πυλώνα με δεδομένα (ημέρες που τηρήθηκε πλήρως / ημέρες με
+// καταγραφή). Ο πιο αδύναμος πυλώνας (<60%) βάφεται κόκκινος ώστε να ξεχωρίζει με μια ματιά ΤΙ χάνει.
+function homeActivityPillarsHtml(ps){
+  if(!ps || !ps.anyData) return '';
+  var parts=[];
+  function seg(icon,done,tot){
+    if(!tot) return;
+    var cls=(done/tot)<0.6?' class="hm-pill-lo"':'';
+    parts.push('<span'+cls+'>'+icon+' '+done+'/'+tot+'</span>');
+  }
+  seg('🍽',ps.dietDone,ps.dietTot);
+  seg('💧',ps.watDone,ps.watTot);
+  seg('💊',ps.supDone,ps.supTot);
+  return parts.length?'<span class="hm-pillars">'+parts.join(' · ')+'</span>':'';
+}
+// Βέλος τάσης vs προηγούμενη εβδομάδα — μόνο όταν η μεταβολή είναι ουσιαστική (≥5 μονάδες),
+// αλλιώς η γραμμή γεμίζει θόρυβο από φυσιολογικές μικροδιακυμάνσεις.
+function homeActivityTrendHtml(score,prev){
+  if(score==null || prev==null) return '';
+  var d=score-prev;
+  if(d>=5) return '<span class="hm-act-trend hm-act-trend-up" title="από '+prev+'% την περασμένη εβδομάδα">▲</span>';
+  if(d<=-5) return '<span class="hm-act-trend hm-act-trend-down" title="από '+prev+'% την περασμένη εβδομάδα">▼</span>';
+  return '';
 }
 // Γραμμή της κάρτας "📱 Πρόσφατη δραστηριότητα": ίδιο look με homeRow (avatar/όνομα/sub) +
 // σκορ % + 💬/⭐ σήματα, και κλικ που πάει ΚΑΤΕΥΘΕΙΑΝ στο tab "📝 Ραντεβού" (εκεί ζει το
@@ -229,9 +258,63 @@ function homeActivityRow(x,sub){
     +'<div class="hm-avatar hm-avatar-teal">'+initials(c.name)+'</div>'
     +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
     +sig
-    +homeActivityScoreChipHtml(x.score)
+    +homeActivityScoreChipHtml(x.score,x.pillars)
+    +homeActivityTrendHtml(x.score,x.prevScore)
     +'<span class="hm-act-goto">→ Ραντεβού</span>'
     +'<span class="hm-row-sub">'+sub+'</span>'
+    +'</div>';
+}
+
+// Πελάτες που ΗΤΑΝ σταθερά ενεργοί στο portal (σκορ σε προηγούμενη εβδομάδα ή/και μεγάλο σερί) και
+// έχουν σιωπήσει ≥ CHURN_SILENCE_DAYS ημέρες — early warning για πελάτη που "χάνεται" χωρίς να το πει.
+// Ξεχωριστό, πιο αυστηρό σήμα από το tier-3 του homeClientsNeedingAttention (κατώφλι 2 ημ., χωρίς
+// απαίτηση προηγούμενης συνέπειας): εδώ μπαίνει ΜΟΝΟ όποιος πραγματικά κατέγραφε τακτικά. skipIds =
+// πελάτες που ήδη φαίνονται στη λίστα προσοχής (🚩/😕/💬) ώστε να μη διπλοεμφανίζονται.
+function homeStoppedLogging(skipIds){
+  if(!window.Cloud || typeof window.Cloud.checkinsFor!=='function') return [];
+  var CHURN_SILENCE_DAYS=6;
+  return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;})
+    .filter(function(c){return !(skipIds && skipIds[c.id]);})
+    .map(function(c){
+      var rows=window.Cloud.checkinsFor(c);
+      if(!rows.length) return null;
+      var byDate=ckRowsByDate(rows);
+      var gap=ckDaysSinceLast(rows);
+      if(!isFinite(gap) || gap<CHURN_SILENCE_DAYS) return null;
+      var prev1=ckWeekScore(byDate,-1), prev2=ckWeekScore(byDate,-2);
+      var wasConsistent=(rows.length>=6) && (prev1!=null || prev2!=null);
+      if(!wasConsistent) return null;
+      return {c:c, gap:gap, hadScore:(prev1!=null?prev1:prev2),
+        run:homeRunEndingAt(byDate, rows[rows.length-1].date)};
+    })
+    .filter(Boolean)
+    .sort(function(a,b){return b.gap-a.gap;});
+}
+// Μήκος σερί "καλών" ημερών που ΤΕΛΕΙΩΝΕΙ στο endKey — ίδιο κριτήριο "good" ημέρας με το ckStreak
+// (Dietologist.html), απλώς αγκυρωμένο σε συγκεκριμένη ημερομηνία αντί για το σήμερα.
+function homeRunEndingAt(byDate,endKey){
+  function good(k){
+    var r=byDate[k]; if(!r) return false;
+    if(r.meals_total && r.meals_done<r.meals_total) return false;
+    if(r.supps_total && r.supps_done<r.supps_total) return false;
+    if(r.water_goal && r.water_glasses<r.water_goal) return false;
+    return true;
+  }
+  var n=0, d=new Date(endKey+'T00:00:00'), guard=0;
+  while(good(ckDayKey(d))){ n++; d.setDate(d.getDate()-1); if(++guard>400) break; }
+  return n;
+}
+function homeStoppedLoggingRow(x){
+  var c=x.c;
+  var had=x.hadScore!=null
+    ? '<span class="hm-churn-had" title="Σκορ εβδομάδας πριν σταματήσει">ήταν '+x.hadScore+'%</span>' : '';
+  var runTxt=x.run>=3?' · έχασε 🔥 '+x.run:'';
+  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS)">'
+    +'<div class="hm-avatar hm-avatar-teal">'+initials(c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +had
+    +'<span class="hm-row-sub"><span class="hm-churn-sub">σιωπή '+x.gap+' ημέρες</span>'+runTxt+'</span>'
+    +'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendActivityNudge(\''+c.id+'\')">🔔 Υπενθύμιση</button>'
     +'</div>';
 }
 
@@ -798,6 +881,7 @@ function renderHome(){
     var sub=x.gap===0?'σήμερα':(x.gap===1?'χθες':'πριν '+x.gap+' ημέρες');
     return homeActivityRow(x,sub);
   });
+  var stoppedLoggingRows=homeStoppedLogging(attentionIds).map(homeStoppedLoggingRow);
   var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
   var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
   var reminderRows=homeClientsNeedingFeedbackReminder().map(function(c){
@@ -861,6 +945,7 @@ function renderHome(){
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
     homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
     homeCard(staleCardTitle, staleRows, 'ακόμα', 'warning'),
+    homeCard('📉 Σταμάτησαν να καταγράφουν', stoppedLoggingRows, 'ακόμα', 'warning'),
     isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info'):'',
     groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
     tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):'',

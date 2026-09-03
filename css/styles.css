@@ -307,6 +307,23 @@ body.dark-mode .hm-act-score-bad{background:#3a1a1a;color:#f09595}
 .hm-act-goto{display:none;font-size:9.5px;color:var(--teal);white-space:nowrap;flex-shrink:0}
 .hm-row:hover .hm-act-goto,.hm-row:focus-within .hm-act-goto{display:inline}
 body.dark-mode .hm-act-goto{color:#5dcaa5}
+/* τάση σκορ vs προηγούμενη εβδομάδα (▲/▼) */
+.hm-act-trend{font-size:10px;font-weight:800;flex-shrink:0;margin-left:-3px;line-height:1}
+.hm-act-trend-up{color:#1E5E24}
+.hm-act-trend-down{color:#E24B4A}
+body.dark-mode .hm-act-trend-up{color:#8bc98f}
+body.dark-mode .hm-act-trend-down{color:#f09595}
+/* ανάλυση ανά πυλώνα στο hover του chip (🍽/💧/💊) */
+.hm-act-score{position:relative}
+.hm-act-score .hm-pillars{position:absolute;left:50%;top:calc(100% + 6px);transform:translateX(-50%);background:var(--card-bg);border:1px solid var(--border-light);border-radius:8px;padding:5px 9px;font-size:10px;font-weight:600;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.16);display:none;z-index:6;letter-spacing:.02em}
+.hm-act-score:hover .hm-pillars{display:block}
+.hm-pill-lo{color:#E24B4A}
+body.dark-mode .hm-pill-lo{color:#f09595}
+/* "📉 Σταμάτησαν να καταγράφουν" — σκορ πριν σβήσει + μέρες σιωπής */
+.hm-churn-had{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:999px;background:var(--panel-bg);color:#6b6b6b;white-space:nowrap;flex-shrink:0}
+body.dark-mode .hm-churn-had{color:#9a9a9a}
+.hm-churn-sub{color:#E24B4A;font-weight:600}
+body.dark-mode .hm-churn-sub{color:#f09595}
 .hm-plan-action-badge{background:var(--pa-color,#025857);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;flex-shrink:0}
 .hm-empty{font-size:11.5px;color:#6b6b6b;padding:8px 4px;font-style:italic}
 .hm-more{font-size:10.5px;color:var(--teal);text-align:center;padding-top:6px;font-weight:600}
