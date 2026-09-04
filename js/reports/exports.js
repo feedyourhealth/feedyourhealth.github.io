@@ -1164,15 +1164,24 @@ function sendLipometriaReport(channel){
   var fname=(c.name||'').split(' ')[0]||'σου';
   var d=clientMsgDict(c);
   var msg=d.lipoForm(fname);
+  // Έλεγχος στοιχείων επικοινωνίας ΠΡΙΝ ανοίξουμε οτιδήποτε.
+  var phone=null;
   if(channel==='wa'){
-    var phone=normalizePhoneIntl(c.phone);
+    phone=normalizePhoneIntl(c.phone);
     if(!phone){showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.');return;}
-    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
   } else {
     if(!c.email){showErrorToast('Δεν υπάρχει email για τον/την '+(c.name||'πελάτη')+'.');return;}
+  }
+  // ⚠️ Το PDF πρέπει να ανοίξει ΠΡΩΤΟ: ο browser επιτρέπει το «έμπιστο» πρώτο pop-up ανά κλικ και
+  // μπλοκάρει σιωπηλά τα επόμενα. Αν το wa.me/mailto έβγαινε πρώτο (όπως πριν), το window.open του
+  // exportLipometriaPDF έπεφτε στο μπλόκο pop-up και ο διαιτολόγος έβλεπε μόνο το μήνυμα, χωρίς το
+  // έντυπο λιπομέτρησης να ανοίξει.
+  exportLipometriaPDF();
+  if(channel==='wa'){
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  } else {
     location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.lipoFormSubj)+'&body='+encodeURIComponent(msg);
   }
-  exportLipometriaPDF();
   showSuccessToast('Άνοιξε το PDF για αποθήκευση — επισύναψέ το στο μήνυμα που άνοιξε.');
 }
 
