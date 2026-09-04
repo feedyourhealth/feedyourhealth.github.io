@@ -405,8 +405,9 @@ setTimeout(function(){
 <script src="js/tabs/messages.js"></script>
 <script src="js/tabs/recipes.js"></script>
 <script src="js/tabs/tips.js"></script>
-<!-- ✅ CHARTS LIBRARY — self-hosted (vendor/), pinned Chart.js 4.5.1 UMD -->
-<script src="vendor/chart.umd.min.js"></script>
+<!-- Chart.js 4.5.1 UMD (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ μέσω ensureChart()
+     (js/lib/helpers.js) — το χρησιμοποιούν μόνο οι trend-γραφικές της καρτέλας πελάτη
+     (initTrendCharts / renderPlanCharts). Έμενε ~200KB στο boot path. -->
 
 <!-- ✅ PHASE 4: UNDO/REDO SYSTEM -->
 <script src="js/11-undo-redo.js"></script>

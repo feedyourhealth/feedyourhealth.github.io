@@ -355,6 +355,8 @@ function buildTrackerHtml(c){
 // ✅ TREND LINES CHARTS - Weight & Body Fat %
 function initTrendCharts(c){
   if(!c || !c.weightLog || c.weightLog.length<2) return;
+  // Chart.js φορτώνεται κατ' απαίτηση (βγήκε από το boot path) — φέρ' το και ξανακάλεσε.
+  if(typeof Chart==='undefined'){ ensureChart().then(function(){ initTrendCharts(c); }, function(e){ console.warn('[chart] ', e && e.message); }); return; }
 
   var sorted=c.weightLog.slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
   var dates=sorted.map(function(e){return e.date.substring(5);});

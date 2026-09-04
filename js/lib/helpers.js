@@ -363,3 +363,23 @@ function checkGestationalWeightGain(c){
   return {gained:gained, range:range, bmi:+bmi.toFixed(1), week:week, status:status};
 }
 
+// Chart.js (~200KB) το χρησιμοποιούν ΜΟΝΟ οι trend-γραφικές της καρτέλας πελάτη
+// (initTrendCharts στο tracker.js — Παρακολούθηση, renderPlanCharts στο diet-panels.js —
+// Ιστορικό πλάνων). Δεν το θέλει η Αρχική ούτε καμία άλλη οθόνη, οπότε βγήκε από το boot
+// path και το τραβάμε την πρώτη φορά που μια γραφική το ζητάει πραγματικά. Το promise +
+// το <script> μπαίνουν μία φορά (cache). Οι δύο consumers κάνουν guard `typeof Chart` και
+// ξανακαλούν τον εαυτό τους αφού λύσει (είναι idempotent — ξαναδιαβάζουν την κατάσταση).
+var _chartJsPromise=null;
+function ensureChart(){
+  if(typeof Chart!=='undefined') return Promise.resolve();
+  if(_chartJsPromise) return _chartJsPromise;
+  _chartJsPromise=new Promise(function(resolve,reject){
+    var s=document.createElement('script');
+    s.src='vendor/chart.umd.min.js';
+    s.onload=function(){ (typeof Chart!=='undefined') ? resolve() : reject(new Error('Chart.js loaded but global missing')); };
+    s.onerror=function(){ _chartJsPromise=null; reject(new Error('Chart.js failed to load')); };
+    document.head.appendChild(s);
+  });
+  return _chartJsPromise;
+}
+

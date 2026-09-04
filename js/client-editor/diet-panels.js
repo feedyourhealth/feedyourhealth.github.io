@@ -336,6 +336,8 @@ function doSavePlan(){
 
 function renderPlanCharts(c){
   if(!c.savedPlans||c.savedPlans.length===0)return;
+  // Chart.js φορτώνεται κατ' απαίτηση (βγήκε από το boot path) — φέρ' το και ξανακάλεσε.
+  if(typeof Chart==='undefined'){ ensureChart().then(function(){ renderPlanCharts(c); }, function(e){ console.warn('[chart] ', e && e.message); }); return; }
   for(var i=0;i<c.savedPlans.length;i++){
     var plan=c.savedPlans[i];
     var chartElem=document.getElementById('plan-chart-'+plan.id);
