@@ -18,8 +18,9 @@
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
 <link rel="stylesheet" href="css/styles.css">
-<!-- Self-hosted (vendor/) — pinned JSZip 3.10.1 -->
-<script src="vendor/jszip.min.js"></script>
+<!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
+     μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
+     δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
 </head>
 <body>
 <!-- Autosave indicator -->
@@ -2903,7 +2904,7 @@ function saveFoodExclusions(){
         this.sb.auth.getSession().then(function(res){
           if(self._recovery || isRecovery){ self._showNewPassword(); return; }  // μη μπεις στην app — όρισε κωδικό πρώτα
           var session = (res && res.data) ? res.data.session : null;
-          if(session && session.user){ self.user = session.user; self.load().then(function(){ self._enterApp(); }); }
+          if(session && session.user){ self.user = session.user; self._loadThenEnter(); }
           else { self._showLogin(); }
         }).catch(function(e){ console.error('[CLOUD] getSession', e); self._showLogin(); });
       }catch(e){ console.error('[CLOUD] init', e); this._fallback(); }
@@ -2922,6 +2923,37 @@ function saveFoodExclusions(){
     },
 
     _enterApp:function(){ if(typeof goToApp==='function') goToApp(); if(typeof initOnboarding==='function') initOnboarding(); },
+
+    // Μετά από επιτυχές login/session: αν υπάρχει ήδη τοπικό cache πελατών, μπες ΑΜΕΣΩΣ
+    // στην εφαρμογή δείχνοντάς το και τράβα το cloud blob στο παρασκήνιο — μόλις έρθει,
+    // ξανα-ζωγράφισε ό,τι άλλαξε. Χωρίς cache (πρώτη φορά σε αυτόν τον browser / νέος
+    // λογαριασμός) κρατάμε την παλιά σειρά: περίμενε το load() πριν δείξεις κάτι, αλλιώς
+    // ο χρήστης βλέπει άδεια λίστα που «γεμίζει» ένα κλάσμα του δευτερολέπτου μετά.
+    _loadThenEnter:function(){
+      var self=this;
+      var haveCache=false;
+      try{
+        var cc=JSON.parse(localStorage.getItem('fyh_clients')||'null');
+        haveCache=Array.isArray(cc)&&cc.length>0;
+      }catch(e){}
+      if(!haveCache){ this.load().then(function(){ self._enterApp(); }); return; }
+      this._enterApp();
+      this.load({background:true}).then(function(){ self._afterBackgroundLoad(); });
+    },
+
+    // Το cloud blob ήρθε αφού ο χρήστης έβλεπε ήδη το cache — συγχρόνισε την οθόνη.
+    _afterBackgroundLoad:function(){
+      try{
+        if(typeof renderSB==='function') renderSB();
+        if(typeof renderHome==='function') renderHome();
+        // Αν είναι ανοιχτή καρτέλα πελάτη, ξαναφτιάξ' την — ΕΚΤΟΣ αν ο χρήστης
+        // πληκτρολογεί εκείνη τη στιγμή σε πεδίο του #main (μη του «κόψεις» την επεξεργασία·
+        // το load() έχει ήδη κρατήσει τα τοπικά σε αυτή την περίπτωση — βλ. guard εκεί).
+        var ae=document.activeElement;
+        var typing=!!(ae && ae.closest && ae.closest('#main') && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName||''));
+        if(typeof curId!=='undefined' && curId && typeof renderMain==='function' && !typing) renderMain();
+      }catch(e){ console.warn('[CLOUD] afterBackgroundLoad', e && e.message); }
+    },
 
     _msg:function(text,isError){
       var el=document.getElementById('cloud-login-msg');
@@ -3532,7 +3564,7 @@ function saveFoodExclusions(){
       this._setAuthBusy(true);
       this.sb.auth.signUp({email:email,password:pw}).then(function(res){
         if(res.error){ self._setAuthBusy(false); self._msg(self._translateError(res.error.message),true); return; }
-        if(res.data && res.data.session){ self.user=res.data.user; self._msg(''); self.load().then(function(){ self._enterApp(); }); }
+        if(res.data && res.data.session){ self.user=res.data.user; self._msg(''); self._loadThenEnter(); }
         else { self._setAuthBusy(false); self._msg('✅ Έλεγξε το email σου για επιβεβαίωση και μετά πάτα «Σύνδεση».'); }
       }).catch(function(e){ self._setAuthBusy(false); self._msg(self._translateError(e&&e.message), true); });
     },
@@ -3552,7 +3584,7 @@ function saveFoodExclusions(){
           return;
         }
         self.user=res.data.user; self._msg('');
-        self.load().then(function(){ self._enterApp(); });
+        self._loadThenEnter();
       }).catch(function(e){ self._setAuthBusy(false); self._msg(self._translateError(e&&e.message), true); });
     },
 
@@ -3603,7 +3635,7 @@ function saveFoodExclusions(){
         if(res.error){ rmsg(self._translateError(res.error.message),true); return; }
         rmsg('✅ Ο κωδικός άλλαξε! Μπαίνεις...');
         try{ history.replaceState(null,'',location.origin+location.pathname); }catch(e){}
-        if(res.data && res.data.user){ self.user=res.data.user; self.load().then(function(){ self._enterApp(); }); }
+        if(res.data && res.data.user){ self.user=res.data.user; self._loadThenEnter(); }
         else { setTimeout(function(){ location.reload(); }, 900); }
       }).catch(function(e){ rmsg(self._translateError(e&&e.message), true); });
     },
@@ -3622,8 +3654,9 @@ function saveFoodExclusions(){
       return 'Σφάλμα: ' + msg;
     },
 
-    load:function(){
+    load:function(opts){
       var self=this;
+      var _bg = !!(opts && opts.background);
       return new Promise(function(resolve){
         if(!self.user){ resolve(); return; }
         self.sb.from('user_data').select('data, version').eq('user_id',self.user.id).maybeSingle().then(function(res){
@@ -3634,6 +3667,20 @@ function saveFoodExclusions(){
           // write from another tab/device instead of blindly overwriting it.
           self._version = (row && typeof row.version==='number') ? row.version : 0;
           if(d && d.clients && d.clients.length){
+            // 🛡️ Background load (μπήκαμε ήδη με cache): αν ο χρήστης πληκτρολογεί/επεξεργάζεται
+            // τη στιγμή που έφτασε το blob, μην πατήσεις πάνω στα τοπικά — κράτα τα και ανέβασέ
+            // τα (optimistic-locked, self._version είναι ήδη σωστό). Ο επόμενος reload φέρνει
+            // το cloud κανονικά. Πανσπάνιο: edit μέσα στο 1ο ~δευτερόλεπτο μετά το login.
+            if(_bg && window.clients && window.clients.length){
+              var _ae=document.activeElement;
+              var _editingNow=!!(_ae && _ae.closest && _ae.closest('#main') && /^(INPUT|TEXTAREA|SELECT)$/.test(_ae.tagName||''));
+              if(_editingNow){
+                console.warn('[CLOUD] Ο χρήστης επεξεργάζεται τη στιγμή που ήρθε το cloud blob — κρατάω τα τοπικά.');
+                self._loaded=true;
+                self._pushNow().then(function(){ self._loadCustomRecipes().then(resolve); });
+                return;
+              }
+            }
             // 🛡️ Μην αντικαταστήσεις τοπικά δεδομένα που είναι πιο πρόσφατα από το cloud —
             // π.χ. αν το προηγούμενο push (δουλεύει με καθυστέρηση/debounce) δεν πρόλαβε να
             // ολοκληρωθεί πριν κλείσει/ανανεωθεί η σελίδα. Χωρίς αυτό, ένα stale cloud read

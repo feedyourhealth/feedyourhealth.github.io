@@ -16,6 +16,23 @@ function shopRound(g){if(g<100)return Math.ceil(g/10)*10;if(g<500)return Math.ce
 // keeps the original always-'g' behavior (exportWord has no language toggle at all).
 function shopDisp(g,gramLabel){if(g>=1000)return(Math.round(g/100)/10).toFixed(1)+' kg';return g+(gramLabel||'g');}
 
+// JSZip χρειάζεται ΜΟΝΟ το exportGoogleDocs() (μαζικό .docx zip) — ~95KB. Αντί να μπαίνει
+// στο boot path της εφαρμογής, τραβάμε το vendor/jszip.min.js την πρώτη φορά που μια
+// εξαγωγή το ζητάει πραγματικά. Το promise + το <script> μπαίνουν μία φορά (cache).
+var _jsZipPromise=null;
+function ensureJSZip(){
+  if(typeof JSZip!=='undefined') return Promise.resolve();
+  if(_jsZipPromise) return _jsZipPromise;
+  _jsZipPromise=new Promise(function(resolve,reject){
+    var s=document.createElement('script');
+    s.src='vendor/jszip.min.js';
+    s.onload=function(){ (typeof JSZip!=='undefined') ? resolve() : reject(new Error('JSZip loaded but global missing')); };
+    s.onerror=function(){ _jsZipPromise=null; reject(new Error('JSZip failed to load')); };
+    document.head.appendChild(s);
+  });
+  return _jsZipPromise;
+}
+
 function exportPDF(lang){
   var isEn=lang==='en';
   var c=getC();
@@ -1630,7 +1647,12 @@ function exportWord(){
 function exportGoogleDocs(){
   var c=getC();
   if(!c||!Object.keys(c.weekPlan||{}).length){showErrorToast('Πρώτα δημιούργησε πλάνο!');return;}
-  if(typeof JSZip==='undefined'){showErrorToast('Η βιβλιοθήκη JSZip δεν φορτώθηκε. Έλεγξε τη σύνδεση internet.');return;}
+  if(typeof JSZip==='undefined'){
+    // Πρώτη εξαγωγή αυτής της συνεδρίας — φόρτωσε τη βιβλιοθήκη και ξανακάλεσε (η συνάρτηση
+    // είναι idempotent: ξαναδιαβάζει την τρέχουσα κατάσταση πελάτη).
+    ensureJSZip().then(exportGoogleDocs, function(){ showErrorToast('Η βιβλιοθήκη JSZip δεν φορτώθηκε. Έλεγξε τη σύνδεση internet.'); });
+    return;
+  }
   var t=calcTDEE(c);
   // Calculate weekly average target for MET-based accuracy
   var avgTarget=t.target;
