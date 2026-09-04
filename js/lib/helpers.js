@@ -165,7 +165,9 @@ var CLIENT_MSG_DICTS={
     bodyComp:function(fn){return 'Γεια σου '+fn+'! Σου στέλνω το ιστορικό μετρήσεών σου (βάρος, σύσταση σώματος) σε PDF 📎';},
     bodyCompSubj:'Το ιστορικό μετρήσεών σου — Feed Your Health',
     lipoForm:function(fn){return 'Γεια σου '+fn+'! Σου στέλνω το έντυπο λιπομέτρησής σου (σύσταση σώματος, δερματοπτυχές, περιφέρειες) σε PDF 📎';},
-    lipoFormSubj:'Το έντυπο λιπομέτρησής σου — Feed Your Health'
+    lipoFormSubj:'Το έντυπο λιπομέτρησής σου — Feed Your Health',
+    lipoLink:function(fn,url){return 'Γεια σου '+fn+'! Οι μετρήσεις σου είναι έτοιμες — δες σύσταση σώματος, ρυθμό προόδου & ιστορικό εδώ: '+url+' 📊 Ενημερώνεται μόνο του σε κάθε νέα μέτρηση.';},
+    lipoLinkSubj:'Οι μετρήσεις σου — Feed Your Health'
   },
   en:{
     fbReminder:function(fn,url){return 'Hi '+fn+'! Before I build next week’s plan, tell me quickly how this one went — 30 seconds, on the Progress tab: '+url;},
@@ -184,7 +186,9 @@ var CLIENT_MSG_DICTS={
     bodyComp:function(fn){return 'Hi '+fn+'! Sending you your measurement history (weight, body composition) as a PDF 📎';},
     bodyCompSubj:'Your measurement history — Feed Your Health',
     lipoForm:function(fn){return 'Hi '+fn+'! Sending you your body-composition report (body composition, skinfolds, girths) as a PDF 📎';},
-    lipoFormSubj:'Your body-composition report — Feed Your Health'
+    lipoFormSubj:'Your body-composition report — Feed Your Health',
+    lipoLink:function(fn,url){return 'Hi '+fn+'! Your measurements are ready — see body composition, rate of progress & history here: '+url+' 📊 It updates itself with every new measurement.';},
+    lipoLinkSubj:'Your measurements — Feed Your Health'
   },
   ru:{
     fbReminder:function(fn,url){return 'Привет, '+fn+'! Прежде чем я составлю план на следующую неделю, расскажи коротко, как прошла эта — 30 секунд, во вкладке «Прогресс»: '+url;},
@@ -203,7 +207,9 @@ var CLIENT_MSG_DICTS={
     bodyComp:function(fn){return 'Привет, '+fn+'! Отправляю тебе историю измерений (вес, состав тела) в PDF 📎';},
     bodyCompSubj:'История твоих измерений — Feed Your Health',
     lipoForm:function(fn){return 'Привет, '+fn+'! Отправляю тебе отчёт по составу тела (состав тела, кожные складки, обхваты) в PDF 📎';},
-    lipoFormSubj:'Отчёт по составу тела — Feed Your Health'
+    lipoFormSubj:'Отчёт по составу тела — Feed Your Health',
+    lipoLink:function(fn,url){return 'Привет, '+fn+'! Твои измерения готовы — состав тела, темп прогресса и история здесь: '+url+' 📊 Обновляется само при каждом новом измерении.';},
+    lipoLinkSubj:'Твои измерения — Feed Your Health'
   },
   tr:{
     fbReminder:function(fn,url){return 'Merhaba '+fn+'! Gelecek haftanın planını hazırlamadan önce bu haftanın nasıl geçtiğini kısaca söyle — 30 saniye, İlerleme sekmesinde: '+url;},
@@ -222,7 +228,9 @@ var CLIENT_MSG_DICTS={
     bodyComp:function(fn){return 'Merhaba '+fn+'! Ölçüm geçmişini (kilo, vücut kompozisyonu) PDF olarak gönderiyorum 📎';},
     bodyCompSubj:'Ölçüm geçmişin — Feed Your Health',
     lipoForm:function(fn){return 'Merhaba '+fn+'! Vücut kompozisyonu raporunu (vücut kompozisyonu, deri kıvrımları, çevre ölçümleri) PDF olarak gönderiyorum 📎';},
-    lipoFormSubj:'Vücut kompozisyonu raporun — Feed Your Health'
+    lipoFormSubj:'Vücut kompozisyonu raporun — Feed Your Health',
+    lipoLink:function(fn,url){return 'Merhaba '+fn+'! Ölçümlerin hazır — vücut kompozisyonu, ilerleme hızı ve geçmişi burada: '+url+' 📊 Her yeni ölçümde kendiliğinden güncellenir.';},
+    lipoLinkSubj:'Ölçümlerin — Feed Your Health'
   }
 };
 // Το λεξικό hand-off μηνυμάτων στη γλώσσα του πελάτη — fallback στα ελληνικά για κενό/άγνωστο c.lang.

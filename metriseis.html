@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#025857">
+<title>Feed Your Health — Οι μετρήσεις σου</title>
+<!-- Προσωπικό link (μετρήσεις υγείας) — να μη γίνεται indexed/preview-fetched με τρόπο που
+     διαρρέει νούμερα (unfurlers όπως WhatsApp/iMessage βλέπουν μόνο αυτά τα ουδέτερα tags). -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta property="og:title" content="Feed Your Health">
+<meta property="og:description" content="Προσωπικός σύνδεσμος μετρήσεων.">
+<!-- Defense-in-depth CSP, ίδιο μοτίβο με intake.html/plan.html. Χωρίς frame-ancestors: δεν
+     επιβάλλεται μέσα από <meta> ούτως ή άλλως, και ρίχνει console error στο Chromium — αυτό
+     ακριβώς έσπαγε το CI "Smoke test" στο Dietologist.html (βλ. commit 9271b33). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Μετρήσεις">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<script src="vendor/supabase-js.min.js"></script>
+<style>
+  :root{
+    --teal:#025857; --teal-d:#014545; --teal-l:#037070;
+    --tint:#E2EEE5; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
+    --bg:#f4f8f6; --card:#ffffff; --danger:#b71c1c; --warn:#a15c00;
+    --lean:#1565C0; --fat:#e65100;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --teal:#3aa8a6; --teal-d:#8fd4d2; --teal-l:#4bb8b6;
+      --tint:#173230; --bord:#2c413e; --bord-l:#1c302e;
+      --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --ok:#68bf6c;
+      --bg:#111917; --card:#18211f; --danger:#e0715f; --warn:#d6a24d;
+      --lean:#5b9be0; --fat:#ff8a3d;
+    }
+  }
+  *{box-sizing:border-box}
+  /* .langbar{display:flex} below has the same specificity as the UA default [hidden]{display:none}
+     and comes later in the cascade, so it would silently win and make #langbar ignore its `hidden`
+     attribute (found live: the EL/EN pills stayed visible on the error state). Force it back. */
+  [hidden]{display:none!important}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; font-size:16px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:620px; margin:0 auto; padding:0 16px 64px}
+  header{display:flex; align-items:center; gap:10px; padding:16px 4px 6px}
+  .mark{width:30px;height:30px;border-radius:8px;flex:0 0 auto;background:linear-gradient(135deg,var(--teal),var(--teal-d))}
+  header b{font-size:.82rem;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+  .langbar{display:flex;gap:6px;margin-left:auto}
+  .langbar button{font:inherit;font-size:.74rem;font-weight:700;padding:4px 9px;border-radius:7px;border:1px solid var(--bord);background:var(--card);color:var(--faint);cursor:pointer}
+  .langbar button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+
+  .who{padding:6px 4px 4px}
+  .who h1{font-family:Georgia,"Times New Roman",serif;font-size:1.45rem;margin:0 0 3px;color:var(--teal-d)}
+  .upd{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--faint)}
+  .pulse{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 20%,transparent)}
+
+  .ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 4px 4px}
+  .ctrls select{font:inherit;font-size:.78rem;font-weight:600;color:var(--teal-d);background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:6px 8px}
+  .ctrls label{font-size:.76rem;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:5px}
+  .pdfbtn{margin-left:auto;font:inherit;font-size:.78rem;font-weight:700;background:var(--tint);color:var(--teal-d);border:1px solid var(--bord);border-radius:8px;padding:6px 11px;cursor:pointer}
+  .printonly{display:none}
+
+  .card{background:var(--card);border:1px solid var(--bord);border-radius:14px;padding:15px 16px;margin:11px 4px}
+  .card h2{font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--teal-d);margin:0 0 10px}
+  .card h2 .s{font-weight:500;color:var(--faint);text-transform:none;letter-spacing:0}
+  .row2{display:grid;grid-template-columns:1fr 1.25fr;gap:11px}
+  @media (max-width:420px){.row2{grid-template-columns:1fr}}
+
+  .donut{text-align:center}
+  .dlgd{display:flex;justify-content:center;gap:14px;margin-top:4px;font-size:.82rem;font-weight:600}
+  .dlgd i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:4px}
+
+  .rb{margin-bottom:12px}
+  .rb:last-child{margin-bottom:0}
+  .rbt{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:4px;gap:8px}
+  .rbt b{font-weight:600}
+  .rbtrack{height:8px;border-radius:5px;position:relative}
+  .rbcur{position:absolute;top:-3px;width:2px;height:14px;background:var(--ink)}
+  .rbgoal{position:absolute;top:-9px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--teal-d)}
+  .method{font-size:.74rem;color:var(--faint);margin-top:8px}
+  .glo{font-size:.7rem;color:var(--faint);margin-top:5px;line-height:1.5}
+  .dn{color:var(--ok)}.up{color:var(--danger)}.fl{color:var(--faint)}
+
+  .rateg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .rc-l{font-size:.76rem;color:var(--muted);font-weight:600}
+  .rc-b{font-size:1.05rem;color:var(--teal-d);font-weight:600}
+  .rc-b span{font-size:.7rem;color:var(--faint);font-weight:400}
+  .zone{margin-top:6px;height:16px;border-radius:5px;position:relative;
+    background:linear-gradient(90deg,var(--bord-l) 0 26%,color-mix(in srgb,var(--ok) 28%,transparent) 26% 62%,color-mix(in srgb,var(--warn) 26%,transparent) 62% 100%);
+    border:1px solid var(--bord)}
+  .zone .l{position:absolute;top:2px;font-size:.6rem;color:var(--faint)}
+  .zone .l.a{left:4px}.zone .l.b{right:4px}
+  .zone .mk{position:absolute;top:-3px;width:2px;height:22px;background:var(--ink)}
+  .zone .mk::after{content:"";position:absolute;top:-4px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--ink)}
+  .verdict{margin-top:8px;font-size:.82rem;font-weight:700;color:var(--ok)}
+  .verdict.warn{color:var(--warn)}
+
+  .leanrow{display:flex;gap:11px;align-items:center}
+  .leanbar{flex:0 0 84px;height:34px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--bord)}
+  .leanbar i{display:block}
+  .leanbar .f{background:var(--fat)}.leanbar .l{background:var(--lean)}
+  .leantxt{font-size:.8rem;color:var(--muted);line-height:1.5}
+  .leantxt b{color:var(--ink);font-weight:600}
+  .leanflag{font-size:.78rem;font-weight:700;color:var(--ok);margin-top:4px}
+  .leanflag.warn{color:var(--danger)}
+
+  .sugg{background:color-mix(in srgb,var(--warn) 8%,var(--card));border-color:color-mix(in srgb,var(--warn) 35%,var(--bord))}
+  .sugg h2{color:var(--warn)}
+  .sugg p{margin:0;font-size:.86rem;color:var(--ink);line-height:1.55}
+  .sugg .pr{color:var(--warn);font-weight:600}
+
+  .sparks{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
+  .spark{text-align:center}
+  .spark svg{width:100%;height:38px;display:block}
+  .spark .sl{font-size:.72rem;color:var(--faint);margin-top:3px;font-weight:600}
+  .spark .sv{font-size:.9rem;font-weight:800;color:var(--ink)}
+
+  .scrfoot{padding:18px 16px 4px;text-align:center;font-size:.78rem;color:var(--faint);line-height:1.6}
+  .scrfoot .lock{display:inline-flex;align-items:center;gap:5px;margin-top:6px;color:var(--faint)}
+
+  .state{text-align:center;padding:48px 18px;max-width:420px;margin:0 auto}
+  .state .big{width:60px;height:60px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;font-size:1.7rem;background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+  .state .big.err{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+  .state h1{font-family:Georgia,serif;margin-bottom:8px;color:var(--teal-d)}
+  .state p{color:var(--muted);font-size:.95rem}
+  .spin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite;margin:70px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+  .flag{display:inline-block;font-size:.74rem;font-weight:700;color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent);border-radius:6px;padding:4px 9px;margin:0 4px 4px}
+
+  @media print{
+    .noprint{display:none!important}
+    .printonly{display:inline!important}
+    body{background:#fff}
+    .wrap{max-width:100%;padding:0 6mm}
+    .card{border:1px solid #ddd;box-shadow:none;break-inside:avoid}
+    * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mark"></span><b>Feed Your Health</b>
+    <div class="langbar noprint" id="langbar" hidden>
+      <button type="button" data-l="el" onclick="setLang('el')">EL</button>
+      <button type="button" data-l="en" onclick="setLang('en')">EN</button>
+    </div>
+  </header>
+  <div id="root"><div class="spin" role="status" aria-label="Loading"></div></div>
+</div>
+
+<script>
+'use strict';
+const SUPABASE_URL='https://vqmzrmotdqqoswlgfgrn.supabase.co';
+const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+
+function tokenParam(){ const p=new URLSearchParams(location.search); return p.get('t')||p.get('token')||''; }
+const TOK=tokenParam();
+let sb=null, L='el', WRAP=null, SNAP=null, BASELINE='first';
+
+/* ── i18n (el/en only for v1 — ru/tr clients fall back to el; the WhatsApp/email MESSAGE
+   that carries this link is already translated in all 4 languages, see clientMsgDict) ── */
+const TXT={
+  el:{
+    greet:function(n){return (n?n+', ':'')+'οι μετρήσεις σου';},
+    updated:function(d){return 'Τελευταία ενημέρωση: '+d;}, auto:'ενημερώνεται αυτόματα',
+    compareLbl:'Σύγκριση με:', cmpFirst:'1η μέτρηση', cmpPrev:'προηγούμενη μέτρηση', cmpPlan:'έναρξη τρέχοντος πλάνου',
+    pdf:'🖨️ PDF',
+    compTitle:'Σύσταση βάρους', compTotal:'kg ΣΥΝΟΛΟ', lean:'Άλιπη', fat:'Λίπος',
+    whereTitle:'Πού βρίσκεσαι', goalLegend:'▲ στόχος',
+    bmi:'ΔΜΣ', ffmi:'FFMI (άλιπη μάζα)', bfPct:'% Λίπους',
+    method:'Μέθοδος', ffmiGlo:'FFMI = δείκτης άλιπης μάζας — δείχνει αν το ΔΜΣ οφείλεται σε μυ ή λίπος. Τα όρια %λίπους είναι στατιστικά, όχι διάγνωση.',
+    bmiUnder:'ελλιποβαρές', bmiNorm:'φυσιολογικό', bmiOver:'υπέρβαρο', bmiObese1:'παχυσαρκία Ι', bmiObese2:'παχυσαρκία ΙΙ', bmiObese3:'παχυσαρκία ΙΙΙ',
+    ffLow:'χαμηλή μυϊκή μάζα', ffNorm:'φυσιολογική μυϊκή μάζα', ffAbove:'αυξημένη μυϊκή μάζα', ffHigh:'υψηλή μυϊκή μάζα',
+    rateTitle:'Ρυθμός μεταβολής', rateSpan:function(w){return '· '+w+' εβδ.';},
+    rateBf:'% Λίπους', rateWt:'Βάρος', ptsWk:'μον./εβδ.', pctWk:'%ΣΒ/εβδ.', stalled:'στάσιμο', aggressive:'επιθετικό',
+    rateOK:'✅ Υγιής ρυθμός — καμία αλλαγή θερμίδων απαραίτητη.',
+    rateWarn:'⚠ Ρυθμός εκτός ιδανικού εύρους — δες προσλαμβανόμενες θερμίδες.',
+    leanTitle:'Διατήρηση άλιπης μάζας',
+    leanTxt:function(w,f,l,p){return 'Απώλεια <b>'+w+' kg</b> = <b>'+f+' kg</b> λίπος + <b>'+l+' kg</b> άλιπη. <b>'+p+'%</b> της απώλειας από άλιπη μάζα.';},
+    leanOK:'✅ Εντός αποδεκτού (κάτω από 30%).',
+    leanWarn:'⚠ Λίγο υψηλό — δώσε προσοχή στην πρωτεΐνη αυτή την περίοδο.',
+    suggTitle:'Η πρότασή μας', noBF:'Χρειάζεται μέτρηση % λίπους για αυτόματη πρόταση.',
+    sugGoodDrop:function(v){return 'Καλή πορεία — το % λίπους μειώθηκε κατά '+v+' μονάδες από τη βάση σύγκρισης.';},
+    sugRise:function(v){return 'Το % λίπους αυξήθηκε κατά '+v+' μονάδες από τη βάση — αξίζει επανεξέταση προσλαμβανόμενων θερμίδων.';},
+    sugStable:'Το % λίπους παρέμεινε σταθερό από τη βάση σύγκρισης.',
+    sugAggr:'Ο ρυθμός απώλειας είναι επιθετικός — μίλησε με τη διαιτολόγο σου για το έλλειμμα θερμίδων.',
+    sugStall:'Ο ρυθμός απώλειας έχει επιβραδυνθεί — αν έχει σταματήσει η πρόοδος, μίλησε με τη διαιτολόγο σου.',
+    sugHealthy:'Ο ρυθμός απώλειας είναι μέσα σε υγιές εύρος.',
+    sugToGo:function(kg){return 'Απομένουν ~'+kg+' kg λιπώδης μάζα για τον στόχο %BF.';},
+    sugAtGoal:'Το %BF είναι ήδη εντός στόχου — στόχος πλέον η διατήρηση.',
+    sugProtPlan:function(g,pk){return 'Κράτα την πρωτεΐνη στον στόχο του πλάνου σου (~'+g+' g/ημ. · '+pk+' g/kg) για προστασία της άλιπης μάζας.';},
+    sugProtGen:'Κράτα επαρκή πρωτεΐνη (~1.6–2.2 g/kg) για προστασία της άλιπης μάζας.',
+    histTitle:'Ιστορικό', histSpan:function(n){return '· '+n+' μετρήσεις';},
+    weight:'Βάρος', bfPctLbl:'% Λίπους', leanMass:'Άλιπη μάζα', sfSum:'Άθροισμα δερματοπτυχών',
+    footQ:'Ερωτήσεις; στείλε μήνυμα στη διαιτολόγο σου', lock:'προσωπικό link — μη το προωθείς',
+    profileFlag:'⚠ Στοιχεία προφίλ — καμία μέτρηση tracker ακόμα',
+    needMoreTitle:'Δεν υπάρχουν μετρήσεις ακόμα', needMoreBody:'Η σελίδα θα ενημερωθεί μόλις η διαιτολόγος σου καταγράψει την πρώτη σου μέτρηση.',
+    invalidTitle:'Μη έγκυρος σύνδεσμος', invalidBody:'Ο σύνδεσμος δεν βρέθηκε. Ζήτησε καινούριο από τη διαιτολόγο σου.',
+    netTitle:'Κάτι πήγε στραβά', netErr:'Πρόβλημα σύνδεσης. Έλεγξε το internet και δοκίμασε ξανά σε λίγο.',
+    healthy:'Υγιές', below:'Κάτω από το υγιές', overfat:'Υπέρβαρο', obese:'Παχυσαρκία',
+    essential:'Απαραίτητο', athletic:'Αθλητικό', fit:'Φυσιολογικό', acceptable:'Αποδεκτό'
+  },
+  en:{
+    greet:function(n){return (n?n+', ':'')+'your measurements';},
+    updated:function(d){return 'Last updated: '+d;}, auto:'updates automatically',
+    compareLbl:'Compare with:', cmpFirst:'first measurement', cmpPrev:'previous measurement', cmpPlan:'current plan start',
+    pdf:'🖨️ PDF',
+    compTitle:'Body composition', compTotal:'kg TOTAL', lean:'Lean', fat:'Fat',
+    whereTitle:'Where you stand', goalLegend:'▲ goal',
+    bmi:'BMI', ffmi:'FFMI (lean mass)', bfPct:'% Body fat',
+    method:'Method', ffmiGlo:'FFMI = fat-free mass index — shows whether BMI is driven by muscle or fat. %BF categories are statistical, not a diagnosis.',
+    bmiUnder:'underweight', bmiNorm:'normal', bmiOver:'overweight', bmiObese1:'obesity I', bmiObese2:'obesity II', bmiObese3:'obesity III',
+    ffLow:'low muscle mass', ffNorm:'normal muscle mass', ffAbove:'above-average muscle', ffHigh:'high muscle mass',
+    rateTitle:'Rate of change', rateSpan:function(w){return '· '+w+' wk';},
+    rateBf:'% Body fat', rateWt:'Weight', ptsWk:'pts/wk', pctWk:'%BW/wk', stalled:'stalled', aggressive:'aggressive',
+    rateOK:'✅ Healthy rate of change — no calorie change needed.',
+    rateWarn:'⚠ Rate outside the ideal range — review calorie intake.',
+    leanTitle:'Lean-mass retention',
+    leanTxt:function(w,f,l,p){return 'Loss <b>'+w+' kg</b> = <b>'+f+' kg</b> fat + <b>'+l+' kg</b> lean. <b>'+p+'%</b> of the loss from lean mass.';},
+    leanOK:'✅ Within acceptable (under 30%).',
+    leanWarn:'⚠ A bit high — watch your protein this period.',
+    suggTitle:'Our suggestion', noBF:'Needs a %BF measurement for an automatic suggestion.',
+    sugGoodDrop:function(v){return 'Good progress — body fat % dropped '+v+' points from the baseline.';},
+    sugRise:function(v){return 'Body fat % rose '+v+' points from the baseline — worth reviewing calorie intake.';},
+    sugStable:'Body fat % held steady from the baseline.',
+    sugAggr:'The rate of loss is aggressive — talk to your dietitian about the calorie deficit.',
+    sugStall:'The rate of loss has slowed — if progress has stalled, talk to your dietitian.',
+    sugHealthy:'The rate of loss is within a healthy range.',
+    sugToGo:function(kg){return '~'+kg+' kg fat mass to go for the %BF goal.';},
+    sugAtGoal:'%BF is already at goal — the aim now is maintenance.',
+    sugProtPlan:function(g,pk){return 'Keep protein at your plan target (~'+g+' g/day · '+pk+' g/kg) to protect lean mass.';},
+    sugProtGen:'Keep protein adequate (~1.6–2.2 g/kg) to protect lean mass.',
+    histTitle:'History', histSpan:function(n){return '· '+n+' measurements';},
+    weight:'Weight', bfPctLbl:'% Body fat', leanMass:'Lean mass', sfSum:'Skinfold sum',
+    footQ:'Questions? Message your dietitian', lock:'personal link — don’t forward it',
+    profileFlag:'⚠ Profile data — no tracker measurement yet',
+    needMoreTitle:'No measurements yet', needMoreBody:'This page will update as soon as your dietitian logs your first measurement.',
+    invalidTitle:'Invalid link', invalidBody:'This link was not found. Ask your dietitian for a new one.',
+    netTitle:'Something went wrong', netErr:'Connection problem. Check your internet and try again in a moment.',
+    healthy:'Healthy', below:'Below healthy', overfat:'Overweight', obese:'Obesity',
+    essential:'Essential', athletic:'Athletic', fit:'Fitness', acceptable:'Acceptable'
+  }
+};
+function T(k){ const v=(TXT[L]&&TXT[L][k]!=null)?TXT[L][k]:TXT.el[k]; return v; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
+function el(id){ return document.getElementById(id); }
+
+/* ── %BF reference bands — MIRROR of js/lib/bf-norms.js (BF_BANDS) / bfHealthByAge, same
+   numbers as the main app and plan.html. Standalone file, no shared script scope, so this
+   is a deliberate duplicate — keep values in sync if the source ever changes. ── */
+function bfBands(sex){
+  return sex==='F'
+    ?[{lo:10,hi:13,col:'#1565C0'},{lo:14,hi:20,col:'var(--ok)'},{lo:21,hi:24,col:'#558b2f'},{lo:25,hi:31,col:'#f57c00'},{lo:32,hi:60,col:'#c62828'}]
+    :[{lo:2,hi:5,col:'#1565C0'},{lo:6,hi:13,col:'var(--ok)'},{lo:14,hi:17,col:'#558b2f'},{lo:18,hi:24,col:'#f57c00'},{lo:25,hi:60,col:'#c62828'}];
+}
+const GALLAGHER_BF={
+  M:[{aLo:20,aHi:39,h:[8,19],o:25},{aLo:40,aHi:59,h:[11,21],o:28},{aLo:60,aHi:79,h:[13,24],o:30}],
+  F:[{aLo:20,aHi:39,h:[21,32],o:39},{aLo:40,aHi:59,h:[23,33],o:40},{aLo:60,aHi:79,h:[24,35],o:42}]
+};
+function bfGalRow(sex,age){
+  if(!(age>0))return null;
+  const rows=GALLAGHER_BF[sex==='F'?'F':'M'];
+  const a=age<20?20:(age>79?79:age);
+  return rows.find(r=>a>=r.aLo&&a<=r.aHi)||rows[rows.length-1];
+}
+function bfHealthByAge(bf,sex,age){
+  const row=bfGalRow(sex,age);
+  if(!(bf>0)||!row)return null;
+  let key; if(bf<row.h[0])key='low'; else if(bf<=row.h[1])key='healthy'; else if(bf<row.o)key='overfat'; else key='obese';
+  const col={low:'#1565C0',healthy:'var(--ok)',overfat:'#f57c00',obese:'#c62828'}[key];
+  return {key,col,healthy:row.h.slice(),obeseLo:row.o,ageBand:row.aLo+'–'+row.aHi};
+}
+
+/* ── range-bar helpers — same logic as exportLipometriaPDF() / plan.html's rangeBar ── */
+function rbPct(v,min,max){return Math.max(0,Math.min(100,(v-min)/(max-min)*100));}
+function rbGradient(boundaries,max){
+  const stops=[];
+  boundaries.forEach((b,i)=>{
+    const startPct=rbPct(b.v,boundaries[0].v,max);
+    stops.push(b.col+' '+startPct.toFixed(0)+'%');
+    if(i<boundaries.length-1){const endPct=rbPct(boundaries[i+1].v,boundaries[0].v,max);stops.push(b.col+' '+endPct.toFixed(0)+'%');}
+  });
+  return 'linear-gradient(90deg,'+stops.join(',')+')';
+}
+function rangeBar(label,valTxt,valCol,catTxt,boundaries,max,curVal,goalVal){
+  if(!boundaries){
+    return '<div class="rb"><div class="rbt"><span>'+label+'</span><b style="color:'+valCol+'">'+valTxt+'</b></div></div>';
+  }
+  const curPct=curVal!=null?rbPct(curVal,boundaries[0].v,max):null;
+  const goalPct=goalVal!=null?rbPct(goalVal,boundaries[0].v,max):null;
+  return '<div class="rb"><div class="rbt"><span>'+label+'</span><b style="color:'+valCol+'">'+valTxt+(catTxt?' · '+catTxt:'')+'</b></div>'
+    +'<div class="rbtrack" style="background:'+rbGradient(boundaries,max)+'">'
+    +(curPct!=null?'<span class="rbcur" style="left:'+curPct.toFixed(1)+'%"></span>':'')
+    +(goalPct!=null?'<span class="rbgoal" style="left:'+goalPct.toFixed(1)+'%"></span>':'')
+    +'</div></div>';
+}
+function deltaSpan(delta,decimals,goodDir){
+  if(delta==null||isNaN(delta))return '';
+  const eps=decimals===0?0.5:(decimals===2?0.005:0.05);
+  const flat=Math.abs(delta)<eps;
+  const improving=goodDir==='down'?delta<0:delta>0;
+  const cls=flat?'fl':(improving?'dn':'up');
+  const arrow=flat?'—':(delta>0?'▲':'▼');
+  return ' <span class="'+cls+'">'+arrow+Math.abs(delta).toFixed(decimals)+'</span>';
+}
+function sparkline(vals,color){
+  const v=vals.filter(x=>x!=null);
+  if(v.length<2)return '';
+  const min=Math.min(...v),max=Math.max(...v),range=(max-min)||1,n=v.length;
+  const pts=v.map((x,i)=>(2+i/(n-1)*94).toFixed(1)+','+(4+(1-(x-min)/range)*24).toFixed(1)).join(' ');
+  const last=pts.split(' ').pop().split(',');
+  return '<svg viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true">'
+    +'<polygon points="'+pts+' '+last[0]+',34 2,34" fill="'+color+'22"/>'
+    +'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.2"/>'
+    +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="2.6" fill="'+color+'"/></svg>';
+}
+function sfSumOf(entry){
+  if(!entry||!entry.sfFields)return null;
+  const v=Object.keys(entry.sfFields).map(k=>entry.sfFields[k]);
+  return v.length?v.reduce((s,x)=>s+x,0):null;
+}
+function fmtDate(iso){
+  if(!iso)return '';
+  const d=new Date(iso); if(isNaN(d))return '';
+  const MON=L==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                     :['Ιαν','Φεβ','Μαρ','Απρ','Μαϊ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  return L==='en' ? (MON[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()) : (d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear());
+}
+
+/* ── boot ─────────────────────────────────────────────────────────────── */
+(async function boot(){
+  if(!TOK){ return renderState('err','invalidTitle','invalidBody'); }
+  try{
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+      auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
+    });
+  }catch(e){ return renderState('err','netTitle','netErr'); }
+  let data,error;
+  try{
+    ({data,error}=await sb.rpc('get_lipo_snapshot',{p_token:TOK}));
+  }catch(e){ return renderState('err','netTitle','netErr'); }
+  if(error){ console.error('[metriseis] get_lipo_snapshot',error); return renderState('err','netTitle','netErr'); }
+  if(!data || !data.snapshot){ return renderState('err','invalidTitle','invalidBody'); }
+  WRAP=data; SNAP=data.snapshot;
+  L=(data.lang==='en')?'en':'el';
+  const lb=el('langbar'); if(lb) lb.hidden=false; syncLangBar();
+  if(!SNAP.log || !SNAP.log.length){ return renderState('ok','needMoreTitle','needMoreBody'); }
+  render();
+})();
+
+function setLang(l){ L=l; syncLangBar(); render(); }
+function syncLangBar(){
+  document.querySelectorAll('#langbar button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===L)));
+}
+
+function renderState(kind,titleKey,bodyKey){
+  const r=el('root'); if(!r)return;
+  const icon=kind==='err'?'✕':(kind==='ok'?'⏳':'✓');
+  r.innerHTML='<div class="state"><div class="big'+(kind==='err'?' err':'')+'">'+icon+'</div>'
+    +'<h1>'+esc(T(titleKey))+'</h1><p>'+esc(T(bodyKey))+'</p></div>';
+}
+
+/* ── compute everything for the chosen baseline (client-side — the full history already
+   sits in SNAP.log, so switching "Compare with" needs no server round-trip) ── */
+function computeView(){
+  const log=SNAP.log;
+  const entry=log[log.length-1];
+  let baseline=null;
+  if(log.length>1){
+    if(BASELINE==='prev') baseline=log[log.length-2];
+    else if(BASELINE==='plan' && SNAP.planGeneratedAt){
+      const planDay=new Date(SNAP.planGeneratedAt).toISOString().slice(0,10);
+      let best=null; log.forEach(e=>{ if(e!==entry && e.date<=planDay) best=e; });
+      baseline=best||log[0];
+    } else baseline=log[0];
+  }
+  const weight=entry.kg, bf=entry.bf;
+  const lbm=(bf&&weight)?+(weight*(1-bf/100)).toFixed(1):null;
+  const fm=(bf&&weight)?+(weight*bf/100).toFixed(1):null;
+  const h=SNAP.height||0, age=SNAP.age, sex=SNAP.sex||'M', isFem=sex==='F';
+  const isMinor=(age!=null&&age>0&&age<18);
+  const bmi=(h>0&&weight)?+(weight/((h/100)*(h/100))).toFixed(1):null;
+  const bmiCat=(bmi!=null&&!isMinor)?(bmi<18.5?T('bmiUnder'):bmi<25?T('bmiNorm'):bmi<30?T('bmiOver'):bmi<35?T('bmiObese1'):bmi<40?T('bmiObese2'):T('bmiObese3')):null;
+  const bmiCol=(bmi!=null&&!isMinor)?(bmi<18.5?'#1565C0':bmi<25?'var(--ok)':bmi<30?'#f57c00':'#c62828'):'var(--faint)';
+  const ffmi=(lbm&&h>0)?+(lbm/((h/100)*(h/100))).toFixed(1):null;
+  const ffLo=isFem?15:18, ffMid=isFem?18:20, ffHi=isFem?21:23;
+  const ffmiCat=(ffmi&&!isMinor)?(ffmi<ffLo?T('ffLow'):ffmi<ffMid?T('ffNorm'):ffmi<ffHi?T('ffAbove'):T('ffHigh')):null;
+  const ffmiCol=(ffmi&&!isMinor)?(ffmi<ffLo?'#1565C0':ffmi<ffHi?'var(--ok)':'#f57c00'):'var(--faint)';
+
+  const bfBandsNow=bfBands(sex);
+  const bfGv=bf?bfHealthByAge(bf,sex,age):null;
+  let bfCat=null,bfCol='var(--faint)',bfBounds=null;
+  const GLN={low:T('below'),healthy:T('healthy'),overfat:T('overfat'),obese:T('obese')};
+  if(bfGv){
+    bfCat=GLN[bfGv.key]+' ('+bfGv.ageBand+')'; bfCol=bfGv.col;
+    bfBounds=[{v:isFem?5:0,col:'#1565C0'},{v:bfGv.healthy[0],col:'var(--ok)'},{v:bfGv.healthy[1]+1,col:'#f57c00'},{v:bfGv.obeseLo,col:'#c62828'}];
+  } else if(bf){
+    const lbl=[T('essential'),T('athletic'),T('fit'),T('acceptable'),T('obese')];
+    bfBandsNow.forEach((b,i)=>{ if(bf>=b.lo){bfCat=lbl[i];bfCol=b.col;} });
+    bfBounds=[{v:isFem?5:0,col:bfBandsNow[0].col},{v:bfBandsNow[1].lo,col:bfBandsNow[1].col},{v:bfBandsNow[2].lo,col:bfBandsNow[2].col},{v:bfBandsNow[3].lo,col:bfBandsNow[3].col},{v:bfBandsNow[4].lo,col:bfBandsNow[4].col}];
+  }
+  const bfGoal=SNAP.goalBF||(bfGv?bfGv.healthy[1]:(bfBandsNow[2]&&bfBandsNow[2].hi));
+  const bfMax=bfGv?bfGv.obeseLo+8:(isFem?45:35);
+
+  const METHOD_INFO={
+    caliper:{l:(L==='en'?'skinfolds':'δερματοπτυχές')+(entry.sfProtocol?' · '+({jp4:'JP4',jp3:'JP3',jp7:'JP7',slaughter:'Slaughter'}[entry.sfProtocol]||entry.sfProtocol):''),e:'±3–5%'},
+    bia:{l:'BIA',e:'±3–5%'},
+    dexa:{l:'DEXA',e:'±1–2%'},
+    estimate:{l:(L==='en'?'estimate':'εκτίμηση'),e:'±5–8%'}
+  };
+  const bfm=entry.bfMethod||(entry.sfProtocol?'caliper':'');
+  const methodInfo=METHOD_INFO[bfm]||null;
+  const bfMethodLbl=methodInfo?(methodInfo.l+' · '+methodInfo.e):'';
+
+  const wDelta=(baseline&&baseline.kg!=null&&weight!=null)?+(weight-baseline.kg).toFixed(1):null;
+  const prevBf=(baseline&&baseline.bf>0)?baseline.bf:null;
+  const bfDelta=(bf&&prevBf)?+(bf-prevBf).toFixed(1):null;
+  const prevLbm=(baseline&&prevBf&&baseline.kg)?+(baseline.kg*(1-prevBf/100)).toFixed(1):null;
+  const lbmDelta=(lbm&&prevLbm)?+(lbm-prevLbm).toFixed(1):null;
+
+  const spanDays=(baseline&&baseline.date&&entry.date)?Math.max(1,Math.round((new Date(entry.date)-new Date(baseline.date))/86400000)):null;
+  const spanWk=spanDays?+(spanDays/7).toFixed(1):null;
+  const bfRateWk=(bfDelta!=null&&spanWk)?+(bfDelta/spanWk).toFixed(2):null;
+  const wtRateWk=(wDelta!=null&&spanWk&&baseline&&baseline.kg)?+((wDelta/baseline.kg*100)/spanWk).toFixed(2):null;
+  function rz(v,lo,hi){const a=Math.abs(v||0);return a<lo?0:a<=hi?1:2;}
+  const bfRateZone=bfRateWk!=null?rz(bfRateWk,0.1,0.6):null;
+  const wtRateZone=wtRateWk!=null?rz(wtRateWk,0.25,1.0):null;
+  const rateOK=(bfRateZone==null||bfRateZone<2)&&(wtRateZone==null||wtRateZone<2);
+
+  const wLost=(wDelta!=null&&wDelta<0)?+(-wDelta).toFixed(1):null;
+  const lbmLost=(lbmDelta!=null)?+Math.max(0,-lbmDelta).toFixed(1):null;
+  const leanSharePct=(wLost&&lbmLost!=null&&wLost>0)?Math.round(lbmLost/wLost*100):null;
+  const leanOK=(leanSharePct==null)||leanSharePct<=30;
+
+  const sSum=sfSumOf(entry), prevSum=baseline?sfSumOf(baseline):null;
+  const sSumDelta=(sSum!=null&&prevSum!=null)?Math.round(sSum-prevSum):null;
+
+  return {entry,baseline,weight,bf,lbm,fm,h,age,sex,isFem,isMinor,bmi,bmiCat,bmiCol,ffmi,ffLo,ffMid,ffHi,ffmiCat,ffmiCol,
+    bfCat,bfCol,bfBounds,bfGoal,bfMax,bfMethodLbl,wDelta,bfDelta,lbmDelta,spanWk,bfRateWk,wtRateWk,bfRateZone,wtRateZone,rateOK,
+    wLost,lbmLost,leanSharePct,leanOK,sSum,sSumDelta};
+}
+
+function buildSuggestion(v){
+  if(!v.bf) return T('noBF');
+  const parts=[];
+  if(v.bfDelta!=null){
+    if(v.bfDelta<0) parts.push(T('sugGoodDrop')(Math.abs(v.bfDelta).toFixed(1)));
+    else if(v.bfDelta>0) parts.push(T('sugRise')(v.bfDelta.toFixed(1)));
+    else parts.push(T('sugStable'));
+  }
+  if(v.bfRateWk!=null && v.bfRateWk<0){
+    if(v.bfRateZone===2) parts.push(T('sugAggr'));
+    else if(v.bfRateZone===0) parts.push(T('sugStall'));
+    else parts.push(T('sugHealthy'));
+  }
+  if(v.bf>v.bfGoal){
+    const fmGoalKg=+(v.weight*(v.bf-v.bfGoal)/100).toFixed(1);
+    parts.push(T('sugToGo')(fmGoalKg));
+  } else {
+    parts.push(T('sugAtGoal'));
+  }
+  if(SNAP.planProtG){
+    const perKg=+(SNAP.planProtG/v.weight).toFixed(1);
+    parts.push(T('sugProtPlan')(SNAP.planProtG,perKg));
+  } else {
+    parts.push(T('sugProtGen'));
+  }
+  return parts.join(' ');
+}
+
+function render(){
+  const v=computeView();
+  const log=SNAP.log, hist=log.slice(-8);
+  const fname=(SNAP.name||'').split(' ')[0]||'';
+
+  let h='';
+  h+='<div class="who"><h1>'+esc(T('greet')(fname))+'</h1>'
+    +'<div class="upd"><span class="pulse"></span>'+esc(T('updated')(fmtDate(WRAP.updated_at)))+' · '+esc(T('auto'))+'</div></div>';
+
+  if(SNAP.profileOnly){
+    h+='<div style="margin:6px 4px"><span class="flag">'+esc(T('profileFlag'))+'</span></div>';
+  }
+
+  h+='<div class="ctrls noprint">';
+  if(log.length>1){
+    h+='<label>'+esc(T('compareLbl'))+' <select id="baselineSel" onchange="BASELINE=this.value;render()">'
+      +'<option value="first"'+(BASELINE==='first'?' selected':'')+'>'+esc(T('cmpFirst'))+'</option>'
+      +'<option value="prev"'+(BASELINE==='prev'?' selected':'')+'>'+esc(T('cmpPrev'))+'</option>'
+      +(SNAP.planGeneratedAt?'<option value="plan"'+(BASELINE==='plan'?' selected':'')+'>'+esc(T('cmpPlan'))+'</option>':'')
+      +'</select></label>';
+  }
+  h+='<button type="button" class="pdfbtn" onclick="window.print()">'+esc(T('pdf'))+'</button></div>';
+  if(log.length>1 && v.baseline){
+    h+='<div class="printonly" style="font-size:.78rem;color:var(--faint);margin:4px 4px 0">'+esc(T('compareLbl'))+' '
+      +esc(BASELINE==='prev'?T('cmpPrev'):BASELINE==='plan'?T('cmpPlan'):T('cmpFirst'))+' ('+esc(fmtDate(v.baseline.date))+')</div>';
+  }
+
+  // donut + where-you-stand
+  h+='<div class="row2">';
+  h+='<div class="card donut"><h2>'+esc(T('compTitle'))+'</h2>';
+  if(v.weight&&v.lbm!=null&&v.fm!=null){
+    const lbmFrac=v.lbm/v.weight, fatFrac=v.fm/v.weight;
+    h+='<svg viewBox="0 0 140 140" width="118" height="118" style="margin:2px auto 0;display:block" role="img" aria-label="'+v.weight+' kg">'
+      +'<circle cx="70" cy="70" r="52" fill="none" stroke="var(--bord-l)" stroke-width="16"/>'
+      +'<circle cx="70" cy="70" r="52" fill="none" stroke="#1565C0" stroke-width="16" stroke-dasharray="'+(326.7*lbmFrac).toFixed(1)+' 326.7" transform="rotate(-90 70 70)"/>'
+      +'<circle cx="70" cy="70" r="52" fill="none" stroke="#e65100" stroke-width="16" stroke-dasharray="'+(326.7*fatFrac).toFixed(1)+' 326.7" stroke-dashoffset="-'+(326.7*lbmFrac).toFixed(1)+'" transform="rotate(-90 70 70)"/>'
+      +'<text x="70" y="66" text-anchor="middle" font-size="19" font-weight="800" fill="var(--teal-d)">'+v.weight+'</text>'
+      +'<text x="70" y="80" text-anchor="middle" font-size="7" fill="var(--faint)">'+esc(T('compTotal'))+'</text>'
+      +(v.wDelta!=null?'<text x="70" y="93" text-anchor="middle" font-size="7.5" font-weight="800" fill="'+(v.wDelta<0?'var(--ok)':v.wDelta>0?'#c62828':'var(--faint)')+'">'+(v.wDelta<0?'▼':v.wDelta>0?'▲':'—')+' '+Math.abs(v.wDelta).toFixed(1)+'kg</text>':'')
+      +'</svg><div class="dlgd"><span><i style="background:#1565C0"></i>'+esc(T('lean'))+' '+v.lbm+'kg</span><span><i style="background:#e65100"></i>'+esc(T('fat'))+' '+v.fm+'kg</span></div>';
+  } else {
+    h+='<div style="padding:30px 0;color:var(--faint);font-size:.85rem">—</div>';
+  }
+  h+='</div>';
+
+  h+='<div class="card"><h2>'+esc(T('whereTitle'))+' <span class="s">· '+esc(T('goalLegend'))+'</span></h2>';
+  if(v.bmi!=null) h+=rangeBar(T('bmi'),String(v.bmi),v.bmiCol,v.isMinor?null:v.bmiCat,v.isMinor?null:[{v:15,col:'#1565C0'},{v:18.5,col:'var(--ok)'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,v.bmi,24.9);
+  if(v.ffmi!=null) h+=rangeBar(T('ffmi'),String(v.ffmi),v.ffmiCol,v.isMinor?null:v.ffmiCat,v.isMinor?null:[{v:v.ffLo-4,col:'#1565C0'},{v:v.ffLo,col:'var(--ok)'},{v:v.ffMid,col:'#43a047'},{v:v.ffHi,col:'#f57c00'}],v.ffHi+5,v.ffmi,null);
+  if(v.bf) h+=rangeBar(T('bfPct'),v.bf+'%'+deltaSpan(v.bfDelta,1,'down'),v.bfCol,v.bfCat,v.bfBounds,v.bfMax,v.bf,v.bfGoal);
+  if(v.bfMethodLbl) h+='<div class="method">'+esc(T('method'))+': '+esc(v.bfMethodLbl)+'</div>';
+  if(v.ffmi!=null) h+='<div class="glo">'+esc(T('ffmiGlo'))+'</div>';
+  h+='</div></div>';
+
+  // rate of change
+  if(v.spanWk && (v.bfRateWk!=null||v.wtRateWk!=null)){
+    h+='<div class="card"><h2>'+esc(T('rateTitle'))+' <span class="s">'+esc(T('rateSpan')(v.spanWk))+'</span></h2>'
+      +'<div class="rateg">';
+    function rateCell(label,val,unit,zone){
+      const mk=zone===0?14:zone===1?50:86;
+      return '<div><div class="rc-l">'+esc(label)+'</div><div class="rc-b">'+(val>0?'+':'')+val+' <span>'+esc(unit)+'</span></div>'
+        +'<div class="zone"><span class="l a">'+esc(T('stalled'))+'</span><span class="l b">'+esc(T('aggressive'))+'</span><span class="mk" style="left:'+mk+'%"></span></div></div>';
+    }
+    if(v.bfRateWk!=null) h+=rateCell(T('rateBf'),v.bfRateWk,T('ptsWk'),v.bfRateZone);
+    if(v.wtRateWk!=null) h+=rateCell(T('rateWt'),v.wtRateWk,T('pctWk'),v.wtRateZone);
+    h+='</div><div class="verdict'+(v.rateOK?'':' warn')+'">'+esc(v.rateOK?T('rateOK'):T('rateWarn'))+'</div></div>';
+  }
+
+  // lean-mass retention
+  if(v.leanSharePct!=null){
+    h+='<div class="card"><h2>'+esc(T('leanTitle'))+'</h2><div class="leanrow">'
+      +'<div class="leanbar" role="img" aria-label="lean vs fat share of weight lost"><i class="f" style="flex:'+Math.max(0,100-v.leanSharePct)+'"></i><i class="l" style="flex:'+v.leanSharePct+'"></i></div>'
+      +'<div><div class="leantxt">'+T('leanTxt')(v.wLost.toFixed(1),(v.wLost-v.lbmLost).toFixed(1),v.lbmLost.toFixed(1),v.leanSharePct)+'</div>'
+      +'<div class="leanflag'+(v.leanOK?'':' warn')+'">'+esc(v.leanOK?T('leanOK'):T('leanWarn'))+'</div></div>'
+      +'</div></div>';
+  }
+
+  // suggestion
+  h+='<div class="card sugg"><h2>'+esc(T('suggTitle'))+'</h2><p>'+esc(buildSuggestion(v))+'</p></div>';
+
+  // history
+  if(hist.length>1){
+    const hw=hist.map(e=>e.kg), hb=hist.map(e=>e.bf>0?e.bf:null);
+    const hl=hist.map(e=>e.bf>0?+(e.kg*(1-e.bf/100)).toFixed(1):null);
+    const hs=hist.map(e=>sfSumOf(e));
+    const anySf=hs.some(x=>x!=null);
+    h+='<div class="card"><h2>'+esc(T('histTitle'))+' <span class="s">'+esc(T('histSpan')(hist.length))+'</span></h2><div class="sparks">'
+      +'<div class="spark">'+sparkline(hw,'#1565C0')+'<div class="sl">'+esc(T('weight'))+'</div><div class="sv" style="color:#1565C0">'+v.weight+' kg'+deltaSpan(v.wDelta,1,'down')+'</div></div>'
+      +'<div class="spark">'+sparkline(hb,'#c62828')+'<div class="sl">'+esc(T('bfPctLbl'))+'</div><div class="sv" style="color:#c62828">'+(v.bf?v.bf+'%':'—')+deltaSpan(v.bfDelta,1,'down')+'</div></div>'
+      +'<div class="spark">'+sparkline(hl,'var(--ok)')+'<div class="sl">'+esc(T('leanMass'))+'</div><div class="sv" style="color:var(--ok)">'+(v.lbm||'—')+' kg'+deltaSpan(v.lbmDelta,1,'up')+'</div></div>'
+      +(anySf?'<div class="spark">'+sparkline(hs,'#8a5a00')+'<div class="sl">'+esc(T('sfSum'))+'</div><div class="sv" style="color:#8a5a00">'+(v.sSum!=null?Math.round(v.sSum)+' mm':'—')+deltaSpan(v.sSumDelta,0,'down')+'</div></div>':'')
+      +'</div></div>';
+  }
+
+  h+='<div class="scrfoot">Feed Your Health · '+esc(T('footQ'))+'<br><span class="lock">🔒 '+esc(T('lock'))+'</span></div>';
+
+  el('root').innerHTML=h;
+}
+</script>
+</body>
+</html>

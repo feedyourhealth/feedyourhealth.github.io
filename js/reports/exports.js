@@ -1278,30 +1278,87 @@ function exportBodyCompPDF(){
 // το PDF που μόλις αποθήκευσε. Δεν γίνεται αυτόματη επισύναψη: τα wa.me/mailto links δεν το
 // υποστηρίζουν (browser security), ίδιος περιορισμός όπως στο sendFeedbackReminder. Δουλεύει και
 // χωρίς εγγραφές tracker — το έντυπο πέφτει πίσω στα στοιχεία της καρτέλας (c.weight/c.bf).
+// ── Σύνδεσμος Μετρήσεων (metriseis.html) ────────────────────────────────────
+// Αντικαθιστά το παλιό «άνοιξε PDF + WhatsApp/Email, επισύναψε το χειροκίνητα» flow: δημοσιεύει/
+// ανανεώνει το lipo snapshot στο cloud (Cloud.publishLipoSnapshot, js/app-part7.js) και δείχνει ένα
+// modal με έτοιμο link — ο διαιτολόγος πατάει ο ίδιος το κουμπί WhatsApp/Email (πραγματικό <a>, όχι
+// window.open() μετά από async resolve, που θα μπλοκαριζόταν από το popup blocker — ίδιο μάθημα με
+// το παλιό ordering bug εδώ, βλ. commit cc871f5). Ίδιο μοτίβο με openPublishModal() του πλάνου
+// (js/plan-gen/publish-modal.js). Το κλασικό κλινικό PDF μένει διαθέσιμο ξεχωριστά από το κουμπί
+// «🖨️ Έντυπο Λιπομέτρησης» → exportLipometriaPDF(), για φάκελο/γιατρό/offline.
 function sendLipometriaReport(channel){
   var c=getC();if(!c)return;
-  var fname=(c.name||'').split(' ')[0]||'σου';
-  var d=clientMsgDict(c);
-  var msg=d.lipoForm(fname);
-  // Έλεγχος στοιχείων επικοινωνίας ΠΡΙΝ ανοίξουμε οτιδήποτε.
-  var phone=null;
   if(channel==='wa'){
-    phone=normalizePhoneIntl(c.phone);
-    if(!phone){showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.');return;}
+    if(!normalizePhoneIntl(c.phone)){showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.');return;}
   } else {
     if(!c.email){showErrorToast('Δεν υπάρχει email για τον/την '+(c.name||'πελάτη')+'.');return;}
   }
-  // ⚠️ Το PDF πρέπει να ανοίξει ΠΡΩΤΟ: ο browser επιτρέπει το «έμπιστο» πρώτο pop-up ανά κλικ και
-  // μπλοκάρει σιωπηλά τα επόμενα. Αν το wa.me/mailto έβγαινε πρώτο (όπως πριν), το window.open του
-  // exportLipometriaPDF έπεφτε στο μπλόκο pop-up και ο διαιτολόγος έβλεπε μόνο το μήνυμα, χωρίς το
-  // έντυπο λιπομέτρησης να ανοίξει.
-  exportLipometriaPDF();
-  if(channel==='wa'){
-    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
-  } else {
-    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.lipoFormSubj)+'&body='+encodeURIComponent(msg);
+  if(!window.Cloud || !window.Cloud.enabled || !window.Cloud.user){
+    showErrorToast('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις σύνδεσμο μετρήσεων.\n(Κάνε αποσύνδεση και ξανασυνδέσου με email/κωδικό.)');
+    return;
   }
-  showSuccessToast('Άνοιξε το PDF για αποθήκευση — επισύναψέ το στο μήνυμα που άνοιξε.');
+  var ov=document.getElementById('lipo-link-overlay');
+  if(ov) ov.remove();
+  ov=document.createElement('div');
+  ov.id='lipo-link-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML='<div style="background:var(--card-bg);border-radius:16px;max-width:380px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:24px">📐</span><div style="font-size:18px;font-weight:700;color:#014545">Σύνδεσμος μετρήσεων</div></div>'
+    +'<div style="font-size:13px;color:#5a8a82;margin-bottom:16px">Ζωντανή σελίδα σωματικής σύνθεσης για τον/την <b>'+esc(c.name||'πελάτη')+'</b> — ενημερώνεται μόνη της σε κάθε νέα μέτρηση, χωρίς re-send.</div>'
+    +'<div id="lipo-link-body" style="text-align:center;padding:14px 0"><div style="display:inline-block;width:30px;height:30px;border:3px solid #c5ddd8;border-top-color:#025857;border-radius:50%;animation:fyhspin 1s linear infinite"></div><div style="font-size:13px;color:#5a8a82;margin-top:10px">Δημοσίευση…</div></div>'
+    +'<div style="text-align:right;margin-top:8px"><button class="btn" onclick="document.getElementById(\'lipo-link-overlay\').remove()">Κλείσιμο</button></div>'
+    +'</div>';
+  document.body.appendChild(ov);
+  if(!document.getElementById('fyhspin-style')){
+    var st=document.createElement('style'); st.id='fyhspin-style'; st.textContent='@keyframes fyhspin{to{transform:rotate(360deg)}}'; document.head.appendChild(st);
+  }
+
+  window.Cloud.publishLipoSnapshot(c).then(function(res){
+    var url=res.url;
+    var body=document.getElementById('lipo-link-body');
+    if(!body)return;
+    var d=clientMsgDict(c);
+    var fname=(c.name||'').split(' ')[0]||'σου';
+    var msg=d.lipoLink(fname,url);
+    body.style.textAlign='left';
+    var actionHtml;
+    if(channel==='wa'){
+      var phone=normalizePhoneIntl(c.phone);
+      var wa='https://wa.me/'+phone+'?text='+encodeURIComponent(msg);
+      actionHtml='<a href="'+esc(wa)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:10px">📱 Άνοιγμα WhatsApp ('+esc(c.phone)+')</a>';
+    } else {
+      var subj=d.lipoLinkSubj;
+      var mailto='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(msg);
+      // Gmail-compose fallback: το mailto: δεν κάνει τίποτα ορατό χωρίς προεπιλεγμένο πρόγραμμα
+      // email (π.χ. Gmail μόνο στον browser) — ίδιο audit fix με το openPublishModal.
+      var gmailUrl='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(c.email)+'&su='+encodeURIComponent(subj)+'&body='+encodeURIComponent(msg);
+      actionHtml='<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:6px">📧 Πρόγραμμα Email ('+esc(c.email)+')</a>'
+        +'<a href="'+esc(gmailUrl)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#c2483a;color:#fff;padding:11px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:10px">✉️ Gmail στον browser</a>';
+    }
+    body.innerHTML='<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος μετρήσεων</div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:14px"><input id="lipo-link-url" value="'+esc(url)+'" readonly style="flex:1;font-size:12px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;background:#f4f8f6;color:#014545" onclick="this.select()">'
+      +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="var i=document.getElementById(\'lipo-link-url\');i.select();if(navigator.clipboard)navigator.clipboard.writeText(i.value).then(function(){},function(){});showSuccessToast(\'✓ Αντιγράφηκε\')">Αντιγραφή</button></div>'
+      +actionHtml
+      +'<button id="lipo-link-rotate" type="button" class="btn" style="width:100%;background:var(--card-bg);color:#c0392b;border:1px solid #f0c2c2;font-size:12px">🔄 Καθαρισμός &amp; νέο link</button>'
+      +'<div style="font-size:11px;color:#9fb5b0;line-height:1.4;margin-top:4px">Ο σύνδεσμος δεν λήγει — κάθε νέα μέτρηση εμφανίζεται μόνη της, χωρίς να ξαναστείλεις τίποτα.</div>';
+    var rotateBtn=document.getElementById('lipo-link-rotate');
+    if(rotateBtn){ rotateBtn.onclick=function(){
+      showConfirmDialog('Θα δημιουργηθεί ΝΕΟΣ σύνδεσμος μετρήσεων για τον/την «'+esc(c.name||'πελάτη')+'». Ο ΠΑΛΙΟΣ σταματάει να δουλεύει αμέσως.\n\nΣυνέχεια;', function(){
+        rotateBtn.disabled=true; rotateBtn.textContent='Γίνεται καθαρισμός…';
+        window.Cloud.rotateLipoLink(c).then(function(){
+          showSuccessToast('Δημιουργήθηκε νέος σύνδεσμος.');
+          sendLipometriaReport(channel);
+        }).catch(function(e){
+          rotateBtn.disabled=false; rotateBtn.textContent='🔄 Καθαρισμός & νέο link';
+          showErrorToast('Σφάλμα: '+(e.message||''));
+        });
+      }, {confirmLabel:'Καθαρισμός', icon:'🔄'});
+    };}
+  }).catch(function(e){
+    var body=document.getElementById('lipo-link-body');
+    if(body) body.innerHTML='<div style="color:#c0392b;font-size:13px;padding:10px 0">'+esc(e.message||'Σφάλμα δημοσίευσης.')+'</div>';
+  });
 }
 
 /* ── Debug Panel / Error Reporting ──────────────────────────────────────────── */

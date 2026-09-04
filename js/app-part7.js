@@ -230,6 +230,108 @@
       });
     },
 
+    // ── 📐 ΣΥΝΔΕΣΜΟΣ ΜΕΤΡΗΣΕΩΝ (metriseis.html) ─────────────────────────────
+    // Ανεξάρτητο live link μόνο για τη σωματική σύνθεση — δικό του token (c.lipoToken),
+    // δικός του μικρός πίνακας (lipo_snapshots, sql/2026-09-04_lipo_snapshots.sql), ΧΩΡΙΣ
+    // λήξη (σε αντίθεση με το shared_plans/50 μέρες — η ιδέα είναι να μη χρειάζεται ποτέ
+    // re-send: κάθε νέα μέτρηση απλώς ξαναδημοσιεύει στο ίδιο link). Δουλεύει ακόμα κι αν
+    // ο πελάτης δεν έχει καθόλου πλάνο. Βλ. [[dietologist-lipometria-report-redesign]].
+    LIPO_BASE:'https://feedyourhealth.github.io/metriseis.html',
+
+    publishLipoSnapshot:function(c){
+      var self=this;
+      if(!this.enabled || !this.user){ return Promise.reject(new Error('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις σύνδεσμο μετρήσεων.')); }
+      if(!c){ return Promise.reject(new Error('Δεν υπάρχει επιλεγμένος πελάτης.')); }
+      var snap;
+      try{ snap=this._buildLipoSnapshot(c); }catch(e){ return Promise.reject(e); }
+      return this.sb.auth.getSession().then(function(res){
+        var session=(res&&res.data)?res.data.session:null;
+        if(!session || !session.user){
+          self.user=null; self._showLogin();
+          throw new Error('Η σύνδεσή σου στο cloud έχει λήξει. Συνδέσου ξανά και ξαναπροσπάθησε.');
+        }
+        self.user=session.user;
+        var lang=(['en','ru','tr'].indexOf(c.lang)>-1)?c.lang:'el';
+        var doWrite=function(tok,isRetry){
+          var row={token:tok, dietitian_id:session.user.id, client_id:c.id||'', client_name:c.name||'', lang:lang, snapshot:snap, updated_at:new Date().toISOString()};
+          return self.sb.from('lipo_snapshots').upsert(row,{onConflict:'token'}).then(function(res2){
+            if(res2.error){
+              var isRlsErr=/row-level security/i.test(res2.error.message||'');
+              // Ίδιο fallback με το publishPlan: token από παλιά/ξένη γραμμή → δοκίμασε με ΝΕΟ token.
+              if(isRlsErr && !isRetry){
+                var newTok=genSecureToken();
+                c.lipoToken=newTok;
+                return doWrite(newTok,true);
+              }
+              if(isRlsErr){
+                var detail=[res2.error.code,res2.error.details,res2.error.hint].filter(Boolean).join(' — ');
+                throw new Error('Δεν επιτρέπεται η αποθήκευση του συνδέσμου μετρήσεων (κανόνας ασφαλείας της βάσης). Χρειάζεται έλεγχος στο Supabase.'+(detail?' ['+detail+']':''));
+              }
+              throw new Error('Απέτυχε η δημοσίευση των μετρήσεων. Δοκίμασε ξανά.'+(res2.error.message?' ['+res2.error.message+']':''));
+            }
+            try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το lipoToken στο cloud
+            return {url:self.LIPO_BASE+'?t='+tok};
+          });
+        };
+        var tok=c.lipoToken;
+        if(!tok){ tok=genSecureToken(); c.lipoToken=tok; }
+        return doWrite(tok,false);
+      });
+    },
+
+    // "🔄 Νέο link": σβήνει την τρέχουσα γραμμή και το token — η επόμενη sendLipoLink φτιάχνει
+    // καθαρό, καινούριο link (ο παλιός σταματάει να δουλεύει αμέσως). Ανεξάρτητο από
+    // unpublishPlan/shareToken.
+    rotateLipoLink:function(c){
+      if(!this.enabled || !this.user || !c || !c.lipoToken) return Promise.resolve();
+      var tok=c.lipoToken;
+      return this.sb.from('lipo_snapshots').delete().eq('token',tok).then(function(res){
+        if(res.error) throw res.error;
+        delete c.lipoToken;
+        try{ if(typeof save==='function') save(); }catch(e){}
+      });
+    },
+
+    // Μικρό, αυτοτελές payload — ό,τι χρειάζεται το metriseis.html και ΤΙΠΟΤΑ άλλο (χωρίς
+    // εβδομαδιαίο πλάνο, λίστα ψώνια ή μηνύματα — βλ. σχόλιο πίνακα στο sql/). Λίγα KB ακόμα
+    // και για πολυετή πελάτη.
+    _buildLipoSnapshot:function(c){
+      var wl=(c.weightLog||[]).slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+      var log=wl.map(function(e){
+        return {date:e.date, kg:e.weight, bf:(e.bf>0?e.bf:null), bfMethod:e.bfMethod||null, sfProtocol:e.sfProtocol||null, sfFields:e.sfFields||null};
+      });
+      // Χωρίς καμία καταχώρηση tracker: ίδιο fallback με το exportLipometriaPDF — ένα στιγμιότυπο
+      // από τα στοιχεία της καρτέλας (c.weight/c.bf) ώστε το link να μη δείχνει κενό, με flag
+      // profileOnly ώστε το metriseis.html να το επισημάνει (⚠ στοιχεία προφίλ, όχι μέτρηση).
+      var profileOnly=false;
+      if(!log.length && (c.weight||c.bf)){
+        log=[{date:new Date().toISOString().slice(0,10), kg:c.weight||null, bf:(c.bf>0?c.bf:null), bfMethod:null, sfProtocol:null, sfFields:null}];
+        profileOnly=true;
+      }
+      // Μέση ημερήσια πρωτεΐνη του πλάνου — ίδιος υπολογισμός με το buildSuggestion() του
+      // exportLipometriaPDF (js/reports/exports.js) — υπολογισμένη εδώ γιατί το metriseis.html
+      // δεν έχει πρόσβαση στα FOODS/cm().
+      var planProtG=null;
+      if(c.weekPlan && typeof cm==='function'){
+        var pT=0,pN=0;
+        for(var pd=0;pd<7;pd++){
+          var dm=c.weekPlan[pd]; if(!dm||!dm.length) continue;
+          var dp=0; dm.forEach(function(m){ (m.foods||[]).forEach(function(f){ dp+=cm(f.n,f.g).p; }); });
+          pT+=dp; pN++;
+        }
+        if(pN) planProtG=Math.round(pT/pN);
+      }
+      return {
+        v:1,
+        name:c.name||'', sex:c.sex||'M', age:c.age||null, height:c.height||null,
+        goalBF:(typeof bfGoalTarget==='function')?bfGoalTarget(c):(c.goalBF||null),
+        planProtG:planProtG,
+        planGeneratedAt:c.planGeneratedAt||null,
+        log:log,
+        profileOnly:profileOnly
+      };
+    },
+
     // ── 📋 ΕΡΩΤΗΜΑΤΟΛΟΓΙΟ ΕΙΣΑΓΩΓΗΣ (intake.html) ──────────────────────────
     // Ξεχωριστός πίνακας client_intake (μία γραμμή ανά αποστολή, μοτίβο custom_recipes):
     // ο διαιτολόγος διαβάζει/γράφει τις δικές του γραμμές απευθείας (RLS)· ο πελάτης
