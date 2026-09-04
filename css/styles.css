@@ -389,24 +389,12 @@ body.dark-mode .hm-card-title{color:#4fc3f7}
 body.dark-mode .hm-row{border-color:#333}
 body.dark-mode .hm-row:hover{background:#2a2a2a}
 body.dark-mode .hm-row-name{color:#e0e0e0}
-/* ── Αρχική upgrades 2026-09: today strip · filter eyebrow · metric clusters · quick-find · sparkline ── */
+/* ── Αρχική upgrades 2026-09: filter eyebrow · metric clusters · quick-find ── */
 .hm-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .hm-title-find{margin-left:auto;display:flex}
 .hm-title-find input{font-family:inherit;font-size:12px;font-weight:400;color:#333;background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:6px 10px;min-width:200px}
 .hm-title-find input:focus{outline:none;border-color:var(--teal)}
 body.dark-mode .hm-title-find input{background:#1a1a1a;border-color:#444;color:#e0e0e0}
-.hm-today{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap;background:var(--teal-tint);border:1px solid #c5ddd8;border-left:4px solid var(--teal);border-radius:12px;padding:10px 14px;margin-bottom:18px}
-.hm-today-h{font-size:12px;font-weight:800;color:var(--teal);white-space:nowrap}
-.hm-today-grp{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px}
-.hm-today-grp>b{font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:9.5px;color:#6b6b6b}
-.hm-today-grp.od>b{color:#b71c1c}
-.hm-today-grp.td>b{color:var(--teal)}
-.hm-today-name{font-family:inherit;font-size:11.5px;font-weight:600;color:var(--teal);background:#fff;border:1px solid #c5ddd8;border-radius:999px;padding:2px 9px;cursor:pointer;white-space:nowrap}
-.hm-today-name:hover{background:#f0f7f7}
-body.dark-mode .hm-today{background:#0f2a24;border-color:#2f4a48}
-body.dark-mode .hm-today-grp>b{color:#9a9a9a}
-body.dark-mode .hm-today-grp.od>b{color:#f09595}
-body.dark-mode .hm-today-name{background:#1a1a1a;border-color:#2f4a48;color:#5dcaa5}
 .hm-filter-eyebrow{font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6b6b6b;margin:0 0 8px}
 body.dark-mode .hm-filter-eyebrow{color:#aaa}
 .hm-clusters{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
@@ -415,9 +403,6 @@ body.dark-mode .hm-filter-eyebrow{color:#aaa}
 .hm-cluster .hm-stats{margin-bottom:0}
 body.dark-mode .hm-cluster{border-color:#2f4a48}
 body.dark-mode .hm-cluster-h{color:#aaa}
-.hm-spark-wrap{margin-top:4px;color:var(--teal);line-height:0}
-.hm-spark{display:block;margin:0 auto}
-body.dark-mode .hm-spark-wrap{color:#4fc3f7}
 .rcp-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
 .rcp-toolbar .rcp-search{flex:2;min-width:200px;margin-bottom:0}
 .rcp-toolbar .clients-toolbar-select{flex:1;min-width:150px}

@@ -949,90 +949,9 @@ function homeBulkRepublish(btn){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// ΑΡΧΙΚΗ upgrades 2026-09 — today strip · forward KPIs · per-reason snooze · quick-find
+// ΑΡΧΙΚΗ upgrades 2026-09 — «πλάνα λήγουν» KPI · per-reason snooze · quick-find
 // ═══════════════════════════════════════════════════════════════
 
-// Τοπικός υπολογισμός "ημέρες μέχρι" μια ISO ημερομηνία (χωρίς εξάρτηση από daysUntilEvent, που
-// ζει σε άλλο module) — αρνητικό = πέρασε, null = άκυρη είσοδος.
-function _homeDaysUntil(iso){
-  if(!iso) return null;
-  var d=new Date(iso+'T00:00:00'); if(isNaN(d.getTime())) return null;
-  var t=new Date(); t.setHours(0,0,0,0);
-  return Math.round((d-t)/86400000);
-}
-
-// [1] «📅 Επόμενα ραντεβού» — πελάτες με προγραμματισμένο c.nextAppointmentDate (setNextAppointmentDate,
-// js/appointments) μέσα στις επόμενες HOME_APPT_WINDOW_DAYS μέρες ή που έχει ήδη περάσει. Το μοντέλο
-// δεδομένων κρατά μόνο ημέρα, όχι ώρα — γι' αυτό ομαδοποιούμε σε σήμερα/αύριο/έως-7-ημ./πέρασε.
-var HOME_APPT_WINDOW_DAYS=7;
-function homeUpcomingAppointments(){
-  var out=[];
-  clients.filter(function(c){return !c.deleted && !c.archived && c.nextAppointmentDate;}).forEach(function(c){
-    var dl=_homeDaysUntil(c.nextAppointmentDate);
-    if(dl==null || dl>HOME_APPT_WINDOW_DAYS) return;
-    out.push({c:c, daysLeft:dl});
-  });
-  out.sort(function(a,b){ return a.daysLeft-b.daysLeft; });
-  return out;
-}
-function homeApptStripHtml(list){
-  if(!list.length) return '';
-  function grp(label,items,cls){
-    if(!items.length) return '';
-    var names=items.map(function(x){
-      return '<button type="button" class="hm-today-name" onclick="selectClient(\''+x.c.id+'\');swTab(TAB_APPOINTMENTS)">'+esc((x.c.name||'—').split(' ')[0])+'</button>';
-    }).join('');
-    return '<span class="hm-today-grp '+cls+'"><b>'+label+'</b>'+names+'</span>';
-  }
-  return '<div class="hm-today">'
-    +'<span class="hm-today-h">📅 Επόμενα ραντεβού</span>'
-    +grp('πέρασε', list.filter(function(x){return x.daysLeft<0;}), 'od')
-    +grp('σήμερα', list.filter(function(x){return x.daysLeft===0;}), 'td')
-    +grp('αύριο', list.filter(function(x){return x.daysLeft===1;}), 'tm')
-    +grp('έως 7 ημ.', list.filter(function(x){return x.daysLeft>1;}), 'wk')
-    +'</div>';
-}
-
-// [4] Νέοι πελάτες αυτόν τον ημερολογιακό μήνα — αντλείται από το id ('c'+Date.now(), βλ. addClient
-// στο js/core/state). Πελάτες με άλλο σχήμα id (παλιοί / cloud import) απλά δεν μετρώνται — δεν σκάει.
-function _homeClientCreatedMs(c){
-  var m=/^c(\d{13})$/.exec(c && c.id || '');
-  return m ? parseInt(m[1],10) : null;
-}
-function homeNewClientsThisMonth(){
-  var now=new Date(), y=now.getFullYear(), mo=now.getMonth();
-  return clients.filter(function(c){
-    if(c.deleted||c.archived) return false;
-    var ms=_homeClientCreatedMs(c); if(ms==null) return false;
-    var d=new Date(ms); return d.getFullYear()===y && d.getMonth()===mo;
-  }).length;
-}
-// 6-μηνο ιστορικό νέων πελατών/μήνα (παλαιότερος → νεότερος) για το sparkline.
-function homeNewClientsSeries(months){
-  var n=months||6, now=new Date(), out=[];
-  for(var i=n-1;i>=0;i--){
-    var d=new Date(now.getFullYear(), now.getMonth()-i, 1), y=d.getFullYear(), mo=d.getMonth();
-    out.push(clients.filter(function(c){
-      if(c.deleted||c.archived) return false;
-      var ms=_homeClientCreatedMs(c); if(ms==null) return false;
-      var cd=new Date(ms); return cd.getFullYear()===y && cd.getMonth()===mo;
-    }).length);
-  }
-  return out;
-}
-function homeSparklineSvg(vals){
-  if(!vals || vals.length<2) return '';
-  var w=72,h=20,pad=2,mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals),rng=(mx-mn)||1;
-  var pts=vals.map(function(v,i){
-    var x=pad+i*(w-2*pad)/(vals.length-1);
-    var y=h-pad-(v-mn)/rng*(h-2*pad);
-    return x.toFixed(1)+','+y.toFixed(1);
-  });
-  var last=pts[pts.length-1].split(',');
-  return '<svg class="hm-spark" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'
-    +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
-    +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="2.1" fill="currentColor"/></svg>';
-}
 // [4] Πλάνα που λήγουν (ή έχουν ήδη λήξει) μέσα στις επόμενες `days` ημέρες — ίδιο κατώφλι
 // ανανέωσης με το homeApproachingRenewal (c.renewalDays ή PLAN_RENEWAL_DAYS).
 function homePlansExpiringSoon(days){
@@ -1139,8 +1058,6 @@ function renderHome(){
     +'<span class="hm-title-find"><input type="text" list="hm-find-list" placeholder="🔍 Βρες πελάτη…" aria-label="Γρήγορη αναζήτηση πελάτη" '
     +'onchange="homeQuickFind(this.value)" onkeydown="if(event.key===\'Enter\')homeQuickFind(this.value)">'
     +'<datalist id="hm-find-list">'+_visibleClients.map(function(c){return '<option value="'+esc(c.name||'')+'">';}).join('')+'</datalist></span></div>';
-  // [1] Λωρίδα «📅 Επόμενα ραντεβού» — κρύβεται μόνη της αν κανείς δεν έχει προγραμματισμένο ραντεβού.
-  html+=homeApptStripHtml(homeUpcomingAppointments());
 
   var buckets=homeAttentionBuckets(_attn, staleClients);
   // Προεπιλογή κόκκινο· αλλά αν το κόκκινο είναι άδειο ενώ υπάρχουν μπαγιάτικα, ξεκίνα στο κίτρινο —
@@ -1182,16 +1099,13 @@ function renderHome(){
   }
   var _avgAdh=_avgWk(0), _avgAdhPrev=_avgWk(-1);
   var _adhWow=(_avgAdh!=null&&_avgAdhPrev!=null)?(_avgAdh-_avgAdhPrev):null;
-  // [4] Προβλεπτικά νούμερα: νέοι πελάτες αυτόν τον μήνα (+ sparkline 6μήνου) & πλάνα που λήγουν σε 7 ημ.
-  var _newMo=homeNewClientsThisMonth();
-  var _newSpark=homeSparklineSvg(homeNewClientsSeries(6));
+  // [4] Πλάνα που λήγουν σε 7 ημ. — μπροστινή ματιά για ποιανού πρέπει να ετοιμάσεις νέο πλάνο.
   var _expSoon=homePlansExpiringSoon(7);
   // [3] Δύο ομάδες με ετικέτα περιόδου αντί για μία επίπεδη σειρά που ανακατεύει σύνολα & εβδομαδιαίους ρυθμούς.
   html+='<div class="hm-clusters">';
   html+='<div class="hm-cluster"><div class="hm-cluster-h">Πρακτική</div><div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Δες όλους τους πελάτες"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'active\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'active\')" role="button" tabindex="0" title="Δες πελάτες με ενεργό πλάνο"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
-    +'<div class="hm-stat" title="Νέοι πελάτες που καταχωρήθηκαν αυτόν τον ημερολογιακό μήνα (τάση 6 μηνών)"><div class="hm-stat-num">'+(_newMo>0?'+':'')+_newMo+'</div><div class="hm-stat-lbl">Νέοι (μήνα)</div>'+(_newSpark?'<div class="hm-spark-wrap">'+_newSpark+'</div>':'')+'</div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="swTab(5)" onkeydown="if(event.key===\'Enter\')swTab(5)" role="button" tabindex="0" title="Πλάνα που λήγουν ή έχουν ήδη λήξει μέσα σε 7 ημέρες — άνοιγμα Διατροφές"><div class="hm-stat-num">'+_expSoon+'</div><div class="hm-stat-lbl">Πλάνα λήγουν (7 ημ.)</div></div>'
     +'</div></div>';
   html+='<div class="hm-cluster"><div class="hm-cluster-h">Αυτή την εβδομάδα</div><div class="hm-stats">'
