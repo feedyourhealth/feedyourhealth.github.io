@@ -38,7 +38,9 @@
 <script>
 /* ─── WAVE MANIFEST ───────────────────────────────────────────────────────────
    Η σειρά φόρτωσης των modules. Ενημέρωσέ το σε ΚΑΘΕ wave, ίδια με το
-   Dietologist.html. chart.js (CDN) παραλείπεται — δεν το αγγίζει το harness.        */
+   Dietologist.html. Το chart.js / jszip φορτώνονται πλέον lazy (ensureChart /
+   ensureJSZip) — δεν τα αγγίζει το harness. Τα app-part5/6/7.js ήταν inline μέσα
+   στο Dietologist.html μέχρι τη μετατροπή σε defer (2026-09-04).                    */
 window.__MANIFEST__ = [
   '../js/data/foods.js',
   '../js/data/portions.js',
@@ -98,7 +100,10 @@ window.__MANIFEST__ = [
   '../js/tabs/messages.js',
   '../js/tabs/recipes.js',
   '../js/tabs/tips.js',
-  '../js/11-undo-redo.js'
+  '../js/11-undo-redo.js',
+  '../js/app-part5.js',
+  '../js/app-part6.js',
+  '../js/app-part7.js'
 ];
 window.__LOAD_ERRORS__ = [];
 window.addEventListener('error', function(e){
