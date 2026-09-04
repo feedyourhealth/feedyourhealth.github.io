@@ -30,7 +30,7 @@ function homeClientsNeedingAttention(){
     var flaggedAppt=(c.appointments||[]).slice().reverse().find(function(a){return a.flagged;});
     if(flaggedAppt){
       var flaggedIdx=c.appointments.indexOf(flaggedAppt);
-      out.push({c:c,tier:-1,gap:0,label:'🚩 σημειωμένο για παρακολούθηση (ραντεβού '+flaggedAppt.date+')',
+      out.push({c:c,tier:-1,gap:0,reason:'flag',label:'🚩 σημειωμένο για παρακολούθηση (ραντεβού '+flaggedAppt.date+')',
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες ραντεβού</button>'
           +'<button type="button" class="hm-action-btn" style="background:#eaf3de;color:#27500a" onclick="event.stopPropagation();homeResolveAppointmentFlag(\''+c.id+'\','+flaggedIdx+')" title="Σήμανση ως διευθετημένο">✅</button>'});
       return;
@@ -40,7 +40,7 @@ function homeClientsNeedingAttention(){
       var npsTxt=latestPf.continue_likelihood!=null?(latestPf.continue_likelihood+'/10 πιθανότητα συνέχισης'):'χαμηλή βαθμολογία σε γεύμα';
       // ✅ 2026-08-01: swTab(3) ήταν η Ανθρωπομετρία, όπου παλιά ζούσε το plan-feedback panel — μετά
       // τη μεταφορά του στο Ραντεβού tab, το κουμπί έδειχνε σε άδεια σελίδα. Διορθώθηκε σε TAB_APPOINTMENTS.
-      out.push({c:c,tier:-1,gap:0,label:'😕 χαμηλή ικανοποίηση πλάνου ('+npsTxt+', εβδ. '+latestPf.week_start+')',
+      out.push({c:c,tier:-1,gap:0,reason:'lowfeedback',label:'😕 χαμηλή ικανοποίηση πλάνου ('+npsTxt+', εβδ. '+latestPf.week_start+')',
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();replyToPlanFeedback(\''+c.id+'\',\''+latestPf.week_start+'\',null)">↩️ Απάντησε</button>'});
       return;
     }
@@ -49,7 +49,7 @@ function homeClientsNeedingAttention(){
     // να ανοίξει κάθε πελάτη για να το δει. Ίδιο tier -1 με 🚩/😕, ίδιο μοτίβο.
     if(typeof clientHasNewClientNote==='function' && clientHasNewClientNote(c)){
       var latestLog=window.Cloud.allClientLogsFor(c)[0];
-      out.push({c:c,tier:-1,gap:0,label:'💬 νέα σημείωση πελάτη ('+esc(latestLog.date)+')',
+      out.push({c:c,tier:-1,gap:0,reason:'note',label:'💬 νέα σημείωση πελάτη ('+esc(latestLog.date)+')',
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες σημείωση</button>'});
       return;
     }
@@ -60,20 +60,20 @@ function homeClientsNeedingAttention(){
     if(c.intakeToken && c.intakeStatus==='sent' && c.intakeSentAt){
       var intakeGap=Math.floor((now-new Date(c.intakeSentAt))/86400000);
       if(intakeGap>=INTAKE_PENDING_DAYS){
-        out.push({c:c,tier:0,gap:intakeGap,label:'📋 ερωτηματολόγιο εισαγωγής εκκρεμεί '+intakeGap+' ημέρες',
+        out.push({c:c,tier:0,gap:intakeGap,reason:'intake',label:'📋 ερωτηματολόγιο εισαγωγής εκκρεμεί '+intakeGap+' ημέρες',
           action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeResendIntake(\''+c.id+'\')">Ξαναστείλε</button>'});
         return;
       }
     }
     var hasPlan=(typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
     if(!hasPlan){
-      out.push({c:c,tier:0,gap:0,label:'χωρίς πλάνο ακόμα',
+      out.push({c:c,tier:0,gap:0,reason:'noplan',label:'χωρίς πλάνο ακόμα',
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>'});
       return;
     }
     if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)){
       var daysOld=Math.floor((now-c.planGeneratedAt)/86400000);
-      out.push({c:c,tier:1,gap:daysOld,label:'το πλάνο έγινε πριν '+daysOld+' ημέρες',
+      out.push({c:c,tier:1,gap:daysOld,reason:'renewal',label:'το πλάνο έγινε πριν '+daysOld+' ημέρες',
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>'});
       return;
     }
@@ -81,20 +81,27 @@ function homeClientsNeedingAttention(){
     var last=wl.length?wl[wl.length-1].date:null;
     var gapDays=last?Math.round((now-new Date(last+'T00:00:00'))/86400000):Infinity;
     if(gapDays>=WEIGHT_GAP_DAYS){
-      out.push({c:c,tier:2,gap:gapDays,label:isFinite(gapDays)?(gapDays+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα'});
+      out.push({c:c,tier:2,gap:gapDays,reason:'weightgap',label:isFinite(gapDays)?(gapDays+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα'});
       return;
     }
     if(c.shareToken && window.Cloud && window.Cloud.checkinsFor){
       var rows=window.Cloud.checkinsFor(c);
       var ckGap=rows.length?ckDaysSinceLast(rows):Infinity;
       if(rows.length && ckGap>=CHECKIN_GAP_DAYS){
-        out.push({c:c,tier:3,gap:ckGap,label:'χωρίς check-in στο portal '+ckGap+' ημέρες',
+        out.push({c:c,tier:3,gap:ckGap,reason:'checkingap',label:'χωρίς check-in στο portal '+ckGap+' ημέρες',
           action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendActivityNudge(\''+c.id+'\')">🔔 Υπενθύμιση</button>'});
       }
     }
   });
+  // [6] Per-reason snooze: κρύψε τις γραμμές που ο διαιτολόγος «σίγασε» μόνο για το συγκεκριμένο σήμα.
+  out=out.filter(function(x){ return !_homeReasonSnoozed(x.c, x.reason); });
   out.forEach(function(x){
-    x.action=(x.action||'')+'<button type="button" class="hm-action-btn" style="background:#F1EFE8;color:#5F5E5A" onclick="event.stopPropagation();homeSnoozeClient(\''+x.c.id+'\')" title="Απόκρυψη από τη λίστα για 7 ημέρες">🔕</button>';
+    var snz='style="background:#F1EFE8;color:#5F5E5A"';
+    var perReason=x.reason
+      ? '<button type="button" class="hm-action-btn" '+snz+' onclick="event.stopPropagation();homeSnoozeReason(\''+x.c.id+'\',\''+x.reason+'\')" title="Απόκρυψη ΑΥΤΟΥ του σήματος για 7 ημέρες">🔕 αυτό</button>'
+      : '';
+    x.action=(x.action||'')+perReason
+      +'<button type="button" class="hm-action-btn" '+snz+' onclick="event.stopPropagation();homeSnoozeClient(\''+x.c.id+'\')" title="Απόκρυψη του πελάτη από ΚΑΘΕ σήμα για 7 ημέρες">🔕 όλα</button>';
   });
   out.sort(function(a,b){ return a.tier!==b.tier ? a.tier-b.tier : b.gap-a.gap; });
   return out;
@@ -542,8 +549,8 @@ function sendActivityNudge(clientId){
 // η παλιά ξεχωριστή ⚠️ κάρτα στο grid έδειχνε ακριβώς τους ίδιους πελάτες (union red+amber) και
 // αφαιρέθηκε: επανέλαβε το ίδιο σήμα και ανακάτευε επείγον (tier ≤1) με μπαγιάτικο (tier 2/3) χωρίς
 // διαχωρισμό, ενώ εδώ κόκκινο/κίτρινο είναι ήδη χωριστά πλακίδια με δικό τους μέτρημα.
-function homeAttentionBuckets(){
-  var attn=homeClientsNeedingAttention();
+function homeAttentionBuckets(attn, stale){
+  attn=attn||homeClientsNeedingAttention();
   var red=[],amber=[],redIds={};
   // Ξεχωριστός φακός πάνω στα ίδια tier -1 στοιχεία (🚩/😕/💬) — επίτηδες μετράει ΚΑΙ εδώ ΚΑΙ στο
   // red bucket παρακάτω, ώστε το πλακίδιο "Νέα από πελάτες" να δείχνει μόνο ό,τι ήρθε από τον ίδιο
@@ -556,7 +563,7 @@ function homeAttentionBuckets(){
     if(x.tier<=1){ if(!redIds[x.c.id]){redIds[x.c.id]=true;red.push({c:x.c,label:x.label,action:x.action});} }
     else { amber.push({c:x.c,label:x.label,action:x.action}); }
   });
-  homeStaleLinks().forEach(function(c){
+  (stale||homeStaleLinks()).forEach(function(c){
     if(!redIds[c.id]){redIds[c.id]=true;red.push({c:c,label:'ο σύνδεσμος δείχνει παλιό πλάνο',
       action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>'});}
   });
@@ -882,11 +889,12 @@ function homeRow(c,sub,accent,actionHtml){
 
 // Επιστρέφει '' όταν δεν υπάρχει τίποτα να δείξει — οι κάρτες της Αρχικής εμφανίζονται μόνο όταν έχουν
 // πραγματική εκκρεμότητα, αντί να γεμίζουν τη σελίδα με μόνιμα "όλα εντάξει 👍" καρτέλες.
-function homeCard(title,items,moreLabel,variant){
+function homeCard(title,items,moreLabel,variant,maxRows){
   if(!items.length) return '';
+  var lim=maxRows||8;
   var html='<div class="hm-card hm-card-'+variant+'"><div class="hm-card-title">'+title+'</div>';
-  items.slice(0,8).forEach(function(row){ html+=row; });
-  if(items.length>8) html+='<div class="hm-more">+'+(items.length-8)+' '+moreLabel+'</div>';
+  items.slice(0,lim).forEach(function(row){ html+=row; });
+  if(items.length>lim) html+='<div class="hm-more">+'+(items.length-lim)+' '+moreLabel+'</div>';
   html+='</div>';
   return html;
 }
@@ -940,6 +948,132 @@ function homeBulkRepublish(btn){
   next();
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ΑΡΧΙΚΗ upgrades 2026-09 — today strip · forward KPIs · per-reason snooze · quick-find
+// ═══════════════════════════════════════════════════════════════
+
+// Τοπικός υπολογισμός "ημέρες μέχρι" μια ISO ημερομηνία (χωρίς εξάρτηση από daysUntilEvent, που
+// ζει σε άλλο module) — αρνητικό = πέρασε, null = άκυρη είσοδος.
+function _homeDaysUntil(iso){
+  if(!iso) return null;
+  var d=new Date(iso+'T00:00:00'); if(isNaN(d.getTime())) return null;
+  var t=new Date(); t.setHours(0,0,0,0);
+  return Math.round((d-t)/86400000);
+}
+
+// [1] «📅 Επόμενα ραντεβού» — πελάτες με προγραμματισμένο c.nextAppointmentDate (setNextAppointmentDate,
+// js/appointments) μέσα στις επόμενες HOME_APPT_WINDOW_DAYS μέρες ή που έχει ήδη περάσει. Το μοντέλο
+// δεδομένων κρατά μόνο ημέρα, όχι ώρα — γι' αυτό ομαδοποιούμε σε σήμερα/αύριο/έως-7-ημ./πέρασε.
+var HOME_APPT_WINDOW_DAYS=7;
+function homeUpcomingAppointments(){
+  var out=[];
+  clients.filter(function(c){return !c.deleted && !c.archived && c.nextAppointmentDate;}).forEach(function(c){
+    var dl=_homeDaysUntil(c.nextAppointmentDate);
+    if(dl==null || dl>HOME_APPT_WINDOW_DAYS) return;
+    out.push({c:c, daysLeft:dl});
+  });
+  out.sort(function(a,b){ return a.daysLeft-b.daysLeft; });
+  return out;
+}
+function homeApptStripHtml(list){
+  if(!list.length) return '';
+  function grp(label,items,cls){
+    if(!items.length) return '';
+    var names=items.map(function(x){
+      return '<button type="button" class="hm-today-name" onclick="selectClient(\''+x.c.id+'\');swTab(TAB_APPOINTMENTS)">'+esc((x.c.name||'—').split(' ')[0])+'</button>';
+    }).join('');
+    return '<span class="hm-today-grp '+cls+'"><b>'+label+'</b>'+names+'</span>';
+  }
+  return '<div class="hm-today">'
+    +'<span class="hm-today-h">📅 Επόμενα ραντεβού</span>'
+    +grp('πέρασε', list.filter(function(x){return x.daysLeft<0;}), 'od')
+    +grp('σήμερα', list.filter(function(x){return x.daysLeft===0;}), 'td')
+    +grp('αύριο', list.filter(function(x){return x.daysLeft===1;}), 'tm')
+    +grp('έως 7 ημ.', list.filter(function(x){return x.daysLeft>1;}), 'wk')
+    +'</div>';
+}
+
+// [4] Νέοι πελάτες αυτόν τον ημερολογιακό μήνα — αντλείται από το id ('c'+Date.now(), βλ. addClient
+// στο js/core/state). Πελάτες με άλλο σχήμα id (παλιοί / cloud import) απλά δεν μετρώνται — δεν σκάει.
+function _homeClientCreatedMs(c){
+  var m=/^c(\d{13})$/.exec(c && c.id || '');
+  return m ? parseInt(m[1],10) : null;
+}
+function homeNewClientsThisMonth(){
+  var now=new Date(), y=now.getFullYear(), mo=now.getMonth();
+  return clients.filter(function(c){
+    if(c.deleted||c.archived) return false;
+    var ms=_homeClientCreatedMs(c); if(ms==null) return false;
+    var d=new Date(ms); return d.getFullYear()===y && d.getMonth()===mo;
+  }).length;
+}
+// 6-μηνο ιστορικό νέων πελατών/μήνα (παλαιότερος → νεότερος) για το sparkline.
+function homeNewClientsSeries(months){
+  var n=months||6, now=new Date(), out=[];
+  for(var i=n-1;i>=0;i--){
+    var d=new Date(now.getFullYear(), now.getMonth()-i, 1), y=d.getFullYear(), mo=d.getMonth();
+    out.push(clients.filter(function(c){
+      if(c.deleted||c.archived) return false;
+      var ms=_homeClientCreatedMs(c); if(ms==null) return false;
+      var cd=new Date(ms); return cd.getFullYear()===y && cd.getMonth()===mo;
+    }).length);
+  }
+  return out;
+}
+function homeSparklineSvg(vals){
+  if(!vals || vals.length<2) return '';
+  var w=72,h=20,pad=2,mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals),rng=(mx-mn)||1;
+  var pts=vals.map(function(v,i){
+    var x=pad+i*(w-2*pad)/(vals.length-1);
+    var y=h-pad-(v-mn)/rng*(h-2*pad);
+    return x.toFixed(1)+','+y.toFixed(1);
+  });
+  var last=pts[pts.length-1].split(',');
+  return '<svg class="hm-spark" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'
+    +'<polyline points="'+pts.join(' ')+'" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
+    +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="2.1" fill="currentColor"/></svg>';
+}
+// [4] Πλάνα που λήγουν (ή έχουν ήδη λήξει) μέσα στις επόμενες `days` ημέρες — ίδιο κατώφλι
+// ανανέωσης με το homeApproachingRenewal (c.renewalDays ή PLAN_RENEWAL_DAYS).
+function homePlansExpiringSoon(days){
+  var lim=days||7, now=Date.now(), n=0;
+  clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+    if(!c.planGeneratedAt || !dietsHasPlan(c)) return;
+    var threshold=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;
+    if(threshold-Math.floor((now-c.planGeneratedAt)/86400000) <= lim) n++;
+  });
+  return n;
+}
+
+// [6] Snooze ανά λόγο — κρύβει ΜΟΝΟ το συγκεκριμένο σήμα (reason key) για 7 μέρες, σε αντίθεση με
+// το homeSnoozeClient που κρύβει τον πελάτη από ΚΑΘΕ σήμα. Το reason το κουβαλάει κάθε γραμμή του
+// homeClientsNeedingAttention ({reason:'...'}). Κενό reason -> fallback στο καθολικό snooze.
+function homeSnoozeReason(clientId, reason){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  if(!reason){ return homeSnoozeClient(clientId); }
+  if(!c.attentionSnoozeReasons || typeof c.attentionSnoozeReasons!=='object') c.attentionSnoozeReasons={};
+  c.attentionSnoozeReasons[reason]=Date.now()+7*86400000;
+  save();
+  if(document.getElementById('hm-bucket-list')) renderHome(); else renderDiets();
+}
+function _homeReasonSnoozed(c, reason){
+  if(!reason || !c) return false;
+  var m=c.attentionSnoozeReasons;
+  return !!(m && m[reason] && Date.now()<m[reason]);
+}
+
+// [7] Γρήγορη αναζήτηση πελάτη από την Αρχική — άνοιγμα καρτέλας χωρίς να περάσεις από το tab
+// Πελάτες. Ακριβές match στο όνομα πρώτα, αλλιώς το πρώτο υποσυμβολοσειρά-match.
+function homeQuickFind(val){
+  var q=(val||'').toLowerCase().trim();
+  if(!q) return;
+  var pool=clients.filter(function(c){return !c.deleted && !c.archived;});
+  var hit=pool.find(function(c){return (c.name||'').toLowerCase()===q;})
+        ||pool.find(function(c){return (c.name||'').toLowerCase().indexOf(q)>=0;});
+  if(hit) selectClient(hit.id);
+}
+
 function renderHome(){
   curId=null;
   var main=document.getElementById('main');
@@ -964,9 +1098,13 @@ function renderHome(){
   // attentionIds τροφοδοτεί μόνο το homePendingPlanActions() πιο κάτω (εξαιρεί πελάτες που ήδη
   // φαίνονται στη λίστα προσοχής). Οι ίδιες οι γραμμές "χρειάζονται προσοχή" ζωγραφίζονται πλέον
   // αποκλειστικά από τη λίστα πλακιδίων (homeAttentionBuckets), όχι από ξεχωριστή ⚠️ κάρτα.
-  var attentionIds={};
-  homeClientsNeedingAttention().forEach(function(x){attentionIds[x.c.id]=true;});
+  // [8] Υπολόγισε μία φορά ό,τι πριν ξανατρέχαμε 2-3× μέσα σε ένα render (attention list, portal
+  // activity, stale links) και πέρασέ το ως όρισμα — καμία αλλαγή αποτελέσματος, λιγότερη δουλειά.
+  var _attn=homeClientsNeedingAttention();
+  var _portalAct=homePortalActivity();
   var staleClients=homeStaleLinks();
+  var attentionIds={};
+  _attn.forEach(function(x){attentionIds[x.c.id]=true;});
   var staleRows=staleClients.map(function(c){
     return homeRow(c,'ο σύνδεσμος δείχνει παλιό πλάνο','amber',
       '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>');
@@ -975,7 +1113,7 @@ function renderHome(){
   var staleCardTitle='🔗 Ξεπερασμένοι σύνδεσμοι'+(staleClients.length>1
     ?(' <button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeBulkRepublish(this)">Ξαναδημοσίευσε όλους ('+staleClients.length+')</button>')
     :'');
-  var activityRows=homePortalActivity().map(function(x){
+  var activityRows=_portalAct.map(function(x){
     var sub=x.gap===0?'σήμερα':(x.gap===1?'χθες':'πριν '+x.gap+' ημέρες');
     return homeActivityRow(x,sub);
   });
@@ -996,9 +1134,15 @@ function renderHome(){
   var nameDayRows=homeUpcomingNameDays().map(homeNameDayRow);
 
   var html='<div class="hm-wrap">';
-  html+='<div class="hm-title">🏠 Αρχική</div>';
+  // [7] Γρήγορη αναζήτηση πελάτη μέσα στην κεφαλίδα — native datalist, κλικ/Enter ανοίγει την καρτέλα.
+  html+='<div class="hm-title"><span>🏠 Αρχική</span>'
+    +'<span class="hm-title-find"><input type="text" list="hm-find-list" placeholder="🔍 Βρες πελάτη…" aria-label="Γρήγορη αναζήτηση πελάτη" '
+    +'onchange="homeQuickFind(this.value)" onkeydown="if(event.key===\'Enter\')homeQuickFind(this.value)">'
+    +'<datalist id="hm-find-list">'+_visibleClients.map(function(c){return '<option value="'+esc(c.name||'')+'">';}).join('')+'</datalist></span></div>';
+  // [1] Λωρίδα «📅 Επόμενα ραντεβού» — κρύβεται μόνη της αν κανείς δεν έχει προγραμματισμένο ραντεβού.
+  html+=homeApptStripHtml(homeUpcomingAppointments());
 
-  var buckets=homeAttentionBuckets();
+  var buckets=homeAttentionBuckets(_attn, staleClients);
   // Προεπιλογή κόκκινο· αλλά αν το κόκκινο είναι άδειο ενώ υπάρχουν μπαγιάτικα, ξεκίνα στο κίτρινο —
   // αλλιώς μια άδεια λίστα "χρειάζονται προσοχή" διαβάζεται σαν "τίποτα να κάνω" ενώ υπάρχουν εκκρεμότητες.
   _homeBucketSel=(buckets.red.length===0 && buckets.amber.length>0)?'amber':'red';
@@ -1008,6 +1152,8 @@ function renderHome(){
     return '<div class="hm-tile hm-tile-'+cssColor+(_homeBucketSel===key?' sel':'')+'" id="hm-tile-'+key+'" onclick="homeSelectBucket(\''+key+'\')">'
       +'<div class="hm-tile-num">'+num+'</div><div class="hm-tile-lbl">'+lbl+'</div></div>';
   };
+  // [2] Τα πλακίδια είναι φίλτρο — μία ιεραρχία: πλακίδιο επιλέγει, η λίστα από κάτω δείχνει το επιλεγμένο.
+  html+='<p class="hm-filter-eyebrow">Φίλτρο — διάλεξε πλακίδιο· η λίστα από κάτω δείχνει το επιλεγμένο</p>';
   html+='<div class="hm-tiles">'
     +_hmTile('red','red',buckets.red.length,'🔴 Χρειάζονται προσοχή')
     +_hmTile('amber','amber',buckets.amber.length,'🟡 Μπαγιατεμένα πλάνα')
@@ -1022,7 +1168,7 @@ function renderHome(){
   // που έχουν καν σύνδεσμο portal (c.shareToken) — όσοι δεν έχουν στείλει ποτέ πλάνο δεν έχουν πώς να
   // κάνουν check-in, δεν πρέπει να τραβάνε το ποσοστό προς τα κάτω σαν να αδιαφορούν.
   var _withLink=clients.filter(function(c){return !c.deleted&&!c.archived&&c.shareToken;});
-  var _recentActiveN=homePortalActivity().filter(function(x){return x.gap<=7;}).length;
+  var _recentActiveN=_portalAct.filter(function(x){return x.gap<=7;}).length;
   var _activePct=_withLink.length?Math.round(_recentActiveN/_withLink.length*100):null;
   // «Παλμός πρακτικής»: Μ.Ο. σκορ τήρησης portal αυτή την εβδομάδα + μεταβολή vs προηγούμενη
   // (ckWeekScore 0 vs -1, μόνο πελάτες με δεδομένα). Το «−N» εδώ πιάνει κάτι συστημικό πριν
@@ -1036,9 +1182,19 @@ function renderHome(){
   }
   var _avgAdh=_avgWk(0), _avgAdhPrev=_avgWk(-1);
   var _adhWow=(_avgAdh!=null&&_avgAdhPrev!=null)?(_avgAdh-_avgAdhPrev):null;
-  html+='<div class="hm-stats">'
+  // [4] Προβλεπτικά νούμερα: νέοι πελάτες αυτόν τον μήνα (+ sparkline 6μήνου) & πλάνα που λήγουν σε 7 ημ.
+  var _newMo=homeNewClientsThisMonth();
+  var _newSpark=homeSparklineSvg(homeNewClientsSeries(6));
+  var _expSoon=homePlansExpiringSoon(7);
+  // [3] Δύο ομάδες με ετικέτα περιόδου αντί για μία επίπεδη σειρά που ανακατεύει σύνολα & εβδομαδιαίους ρυθμούς.
+  html+='<div class="hm-clusters">';
+  html+='<div class="hm-cluster"><div class="hm-cluster-h">Πρακτική</div><div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Δες όλους τους πελάτες"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'active\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'active\')" role="button" tabindex="0" title="Δες πελάτες με ενεργό πλάνο"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
+    +'<div class="hm-stat" title="Νέοι πελάτες που καταχωρήθηκαν αυτόν τον ημερολογιακό μήνα (τάση 6 μηνών)"><div class="hm-stat-num">'+(_newMo>0?'+':'')+_newMo+'</div><div class="hm-stat-lbl">Νέοι (μήνα)</div>'+(_newSpark?'<div class="hm-spark-wrap">'+_newSpark+'</div>':'')+'</div>'
+    +'<div class="hm-stat hm-stat-clickable" onclick="swTab(5)" onkeydown="if(event.key===\'Enter\')swTab(5)" role="button" tabindex="0" title="Πλάνα που λήγουν ή έχουν ήδη λήξει μέσα σε 7 ημέρες — άνοιγμα Διατροφές"><div class="hm-stat-num">'+_expSoon+'</div><div class="hm-stat-lbl">Πλάνα λήγουν (7 ημ.)</div></div>'
+    +'</div></div>';
+  html+='<div class="hm-cluster"><div class="hm-cluster-h">Αυτή την εβδομάδα</div><div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="toggleQA(\'qa-quickmeasure\')" onkeydown="if(event.key===\'Enter\')toggleQA(\'qa-quickmeasure\')" role="button" tabindex="0" title="Άνοιγμα γρήγορης μέτρησης"><div class="hm-stat-num">'+measuredToday.length+'</div><div class="hm-stat-lbl">Μετρήσεις σήμερα</div>'
     +(measuredToday.length?'<div class="hm-stat-names">'+measuredToday.map(function(c){return esc(c.name||'');}).join(', ')+'</div>':'')
     +'</div>'
@@ -1059,7 +1215,8 @@ function renderHome(){
       })())
       +'</div>'
     ))
-    +'</div>';
+    +'</div></div>';
+  html+='</div>';
 
   var groupBreakdown=homeGroupBreakdown(buckets);
   var tasteLibraryStatus=homeTasteLibraryStatus();
@@ -1073,11 +1230,13 @@ function renderHome(){
     homeCard(staleCardTitle, staleRows, 'ακόμα', 'warning'),
     homeCard('🔜 Πλησιάζει ανανέωση', approachingRenewalRows, 'ακόμα', 'warning')
   ].filter(Boolean);
+  // [5] Οι κάρτες «Παρακολούθηση» δείχνουν 3 γραμμές + «+N ακόμα» (αντί 8) — η ζώνη έχει τα πιο ήπια
+  // σήματα, δεν χρειάζεται να ανοίγει ολόκληρη κάθε Δευτέρα.
   var zWatch=[
-    homeCard('📉 Σταμάτησαν να καταγράφουν', stoppedLoggingRows, 'ακόμα', 'warning'),
-    homeCard('📊 Χαμηλή τήρηση αυτή την εβδομάδα', lowAdherenceRows, 'ακόμα', 'warning'),
-    isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info'):'',
-    homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info'),
+    homeCard('📉 Σταμάτησαν να καταγράφουν', stoppedLoggingRows, 'ακόμα', 'warning', 3),
+    homeCard('📊 Χαμηλή τήρηση αυτή την εβδομάδα', lowAdherenceRows, 'ακόμα', 'warning', 3),
+    isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info', 3):'',
+    homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info', 3),
     weekdayHeat?homeWeekdayHeatmapHtml(weekdayHeat):'',
     groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
     tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):''
@@ -1090,7 +1249,7 @@ function renderHome(){
 
   if(zActNow.length+zWatch.length+zSoft.length){
     html+=homeZoneHtml('⚠️ Δράση τώρα', zActNow, false)
-        +homeZoneHtml('👁 Παρακολούθηση', zWatch, false)
+        +homeZoneHtml('👁 Παρακολούθηση', zWatch, true)
         +homeZoneHtml('💛 Soft-touch', zSoft, true);
   } else {
     html+='<div class="hm-empty" style="text-align:center;padding:20px 0">Καμία εκκρεμότητα αυτή τη στιγμή — όλοι οι πελάτες είναι εντάξει 👍</div>';
