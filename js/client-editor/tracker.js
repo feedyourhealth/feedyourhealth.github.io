@@ -64,6 +64,9 @@ function buildTrackerHtml(c){
     // ✅ persistent (non-hover) caption for the CSV button — the old title-only tooltip explaining
     // single-file-vs-batch import was invisible until someone hovered over it
     +'<div style="font-size:10px;color:var(--text-muted);margin:-4px 0 8px">📤 CSV: 1 αρχείο = άμεσος έλεγχος στοιχείων &nbsp;·&nbsp; πολλά αρχεία μαζί = μαζική εισαγωγή ιστορικού</div>'
+    // ✅ βάση σύγκρισης για όλα τα Δ / τάσεις / ρυθμό στο Έντυπο Λιπομέτρησης — ο διαιτολόγος το
+    // επιλέγει πριν πατήσει «Έντυπο / WhatsApp / Email». Μόνο με ≥2 μετρήσεις έχει νόημα.
+    +((c.weightLog&&c.weightLog.length>1)?'<div style="font-size:10px;color:var(--text-muted);margin:-2px 0 8px">📅 Σύγκριση εντύπου λιπομέτρησης με: <select id="lipo-baseline" class="tracker-inp" style="font-size:10px;width:auto;padding:1px 4px"><option value="first">1η μέτρηση</option><option value="prev">προηγούμενη μέτρηση</option>'+(c.planGeneratedAt?'<option value="plan">έναρξη τρέχοντος πλάνου</option>':'')+'</select></div>':'')
     // ── Skinfold panel ────────────────────────────────────────────────────────
     +'<div class="sf-panel" id="sf-panel">'
     +'<div class="sf-header" onclick="toggleSkinfoldPanel()">'

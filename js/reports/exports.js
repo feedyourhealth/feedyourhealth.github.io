@@ -705,13 +705,39 @@ function exportLipometriaPDF(){
     var pts=v.map(function(x,i){return (5+i/(n-1)*90).toFixed(1)+','+(5+(1-(x-min)/range)*40).toFixed(1);}).join(' ');
     return '<svg viewBox="0 0 100 50" width="100%" height="42"><polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2"/></svg>';
   }
+  // One cell of the "Ρυθμός μεταβολής" card: a big signed number + a stalled/healthy/aggressive
+  // zone bar with the marker parked in whichever zone `zone` (0/1/2) says.
+  function rateCell(label,val,unit,zone){
+    var mkPct=zone===0?14:zone===1?50:86;
+    return '<div>'
+      +'<div style="font-size:7.5pt;color:#5b6b67">'+label+'</div>'
+      +'<div style="font-family:\'Courier New\',monospace;font-size:12pt;color:#3d4d49">'+(val>0?'+':'')+val+' <span style="font-size:7pt;color:#8a9490">'+unit+'</span></div>'
+      +'<div style="margin-top:5px;height:15px;border-radius:4px;position:relative;background:linear-gradient(90deg,#e7ebe9 0 26%,#cfe6cf 26% 62%,#f6ddc7 62% 100%);border:1px solid #e3ece9">'
+      +'<div style="position:absolute;top:-3px;left:'+mkPct+'%;width:2px;height:21px;background:#111"></div>'
+      +'<span style="position:absolute;left:3px;top:2px;font-size:6pt;color:#7a857f">'+T('στάσιμο','stalled')+'</span>'
+      +'<span style="position:absolute;right:3px;top:2px;font-size:6pt;color:#7a857f">'+T('επιθετικός','aggressive')+'</span>'
+      +'</div></div>';
+  }
 
   // Use latest tracker entry if available, else use client profile
   var entry=null,sorted=null,prevEntry=null;
   if(c.weightLog&&c.weightLog.length){
     sorted=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
     entry=sorted[sorted.length-1];
-    prevEntry=sorted.length>1?sorted[sorted.length-2]:null;
+    // Baseline for every Δ / trend / rate figure below. The dietitian picks it in the tracker
+    // header (#lipo-baseline): the 'first' measurement (default — the "since I started" number
+    // the client cares about), the immediately 'prev'ious one, or the entry on/just before the
+    // current plan's generation date. `prevEntry` stays the variable name so nothing downstream
+    // changes.
+    if(sorted.length>1){
+      var _blMode=(document.getElementById('lipo-baseline')||{}).value||'first';
+      if(_blMode==='prev') prevEntry=sorted[sorted.length-2];
+      else if(_blMode==='plan' && c.planGeneratedAt){
+        var _planDay=new Date(c.planGeneratedAt).toISOString().slice(0,10),_blPlan=null;
+        sorted.forEach(function(e){ if(e!==entry && e.date<=_planDay) _blPlan=e; });
+        prevEntry=_blPlan||sorted[0];
+      } else prevEntry=sorted[0];
+    }
   }
   var today=new Date().toISOString().slice(0,10);
   var entryDate=entry?entry.date:today;
@@ -745,6 +771,42 @@ function exportLipometriaPDF(){
   if(prevEntry&&prevEntry.sfFields){var pv=Object.values(prevEntry.sfFields);if(pv.length)prevSfSum=pv.reduce(function(s,v){return s+v;},0);}
   var sfSumDelta=(sfSum!=null&&prevSfSum!=null)?Math.round(sfSum-prevSfSum):null;
 
+  // FFMI — fat-free-mass index (LBM/height²). Contextualises BMI: a "high" BMI driven by muscle
+  // shows here as a high FFMI, not fat. Number-only for minors, like BMI (adult norms don't apply).
+  var ffmi=(lbm&&h>0)?+(lbm/((h/100)*(h/100))).toFixed(1):null;
+  var ffLo=isFem?15:18, ffMid=isFem?18:20, ffHi=isFem?21:23;
+  var ffmiCat=(ffmi&&!isMinor)?(ffmi<ffLo?T('χαμηλή μυϊκή μάζα','low muscle mass'):ffmi<ffMid?T('φυσιολογική μυϊκή μάζα','normal muscle mass'):ffmi<ffHi?T('αυξημένη μυϊκή μάζα','above-average muscle'):T('υψηλή μυϊκή μάζα','high muscle mass')):null;
+  var ffmiCol=(ffmi&&!isMinor)?(ffmi<ffLo?'#1565C0':ffmi<ffHi?'#2e7d32':'#f57c00'):'#555';
+
+  // How the %BF was obtained + its inherent error band — sets client expectations so a 1-point
+  // wobble between visits doesn't read as failure.
+  var _bfm=(entry&&entry.bfMethod)||(sfProto?'caliper':'');
+  var _bfmInfo=({
+    caliper:{l:T('δερματοπτυχές','skinfolds')+(sfProto?' · '+({jp4:'JP4',jp3:'JP3',jp7:'JP7',slaughter:'Slaughter'}[sfProto]||sfProto):''),e:'±3–5%'},
+    bia:{l:'BIA',e:'±3–5%'},
+    dexa:{l:'DEXA',e:'±1–2%'},
+    estimate:{l:T('εκτίμηση','estimate'),e:'±5–8%'}
+  })[_bfm]||null;
+  var bfMethodLbl=_bfmInfo?(_bfmInfo.l+' · '+_bfmInfo.e):'';
+
+  // Average daily protein target from the client's actual plan (cm() = per-food macros), so the
+  // Suggestion cites a real number instead of a fixed "1.6 g/kg" line.
+  var planProtG=null;
+  if(c.weekPlan){
+    var _pT=0,_pN=0;
+    for(var _pd=0;_pd<7;_pd++){
+      var _dm=c.weekPlan[_pd]; if(!_dm||!_dm.length) continue;
+      var _dp=0; _dm.forEach(function(m){ (m.foods||[]).forEach(function(f){ _dp+=cm(f.n,f.g).p; }); });
+      _pT+=_dp; _pN++;
+    }
+    if(_pN) planProtG=Math.round(_pT/_pN);
+  }
+  var planProtPerKg=(planProtG&&weight)?+(planProtG/weight).toFixed(1):null;
+
+  // Days / weeks between the baseline entry and this one — powers the rate-of-change card.
+  var spanDays=(prevEntry&&entry&&prevEntry.date&&entry.date)?Math.max(1,Math.round((new Date(entry.date)-new Date(prevEntry.date))/86400000)):null;
+  var spanWk=spanDays?+(spanDays/7).toFixed(1):null;
+
   // %BF reference bands — shared model from js/lib/bf-norms.js (BF_BANDS); the
   // language-neutral keys get this exporter's own T() labels here.
   var BF_LBL={essential:T('Απαραίτητο','Essential'),athletic:T('Αθλητικό','Athletic'),fitness:T('Φυσιολογικό','Fitness'),acceptable:T('Αποδεκτό','Acceptable'),obesity:T('Παχυσαρκία','Obesity')};
@@ -773,22 +835,45 @@ function exportLipometriaPDF(){
   var whtrDelta=null;
   if(whtr!=null&&prevEntry&&prevEntry.waist&&h>0){whtrDelta=+(whtr-(prevEntry.waist/h)).toFixed(2);}
 
-  // Auto-generated suggestion (no arbitrary score — grounded in ACSM category + trend)
+  // ── Rate of change vs baseline + lean-mass retention verdict ────────────────
+  var bfRateWk=(bfDelta!=null&&spanWk)?+(bfDelta/spanWk).toFixed(2):null;                                    // %BF points / week
+  var wtRateWk=(wDelta!=null&&spanWk&&prevEntry&&prevEntry.weight)?+((wDelta/prevEntry.weight*100)/spanWk).toFixed(2):null; // % bodyweight / week
+  function _rz(v,lo,hi){var a=Math.abs(v||0);return a<lo?0:a<=hi?1:2;}                                        // 0 στάσιμο · 1 υγιής · 2 επιθετικός
+  var bfRateZone=bfRateWk!=null?_rz(bfRateWk,0.1,0.6):null;
+  var wtRateZone=wtRateWk!=null?_rz(wtRateWk,0.25,1.0):null;
+  var rateOK=(bfRateZone==null||bfRateZone<2)&&(wtRateZone==null||wtRateZone<2);
+  // lean-mass share of any weight LOST (gain / recomp → card is hidden)
+  var wLost=(wDelta!=null&&wDelta<0)?+(-wDelta).toFixed(1):null;
+  var lbmLost=(lbmDelta!=null)?+Math.max(0,-lbmDelta).toFixed(1):null;
+  var leanSharePct=(wLost&&lbmLost!=null&&wLost>0)?Math.round(lbmLost/wLost*100):null;
+  var leanOK=(leanSharePct==null)||leanSharePct<=30;
+
+  // Auto-generated suggestion — grounded in the baseline trend, the observed rate, and the plan's
+  // own protein target (no arbitrary score, no fixed "1.6 g/kg" boilerplate).
   function buildSuggestion(){
     if(!bf)return T('Συμπλήρωσε δερματοπτυχές σε τουλάχιστον μία μέτρηση για αυτόματη πρόταση.','Add skinfold measurements to at least one entry for an automatic suggestion.');
     var parts=[];
     if(bfDelta!=null){
-      if(bfDelta<0)parts.push(T('Καλή πορεία — το % λίπους μειώθηκε κατά '+Math.abs(bfDelta).toFixed(1)+'% από την προηγούμενη μέτρηση.','Good progress — body fat % decreased by '+Math.abs(bfDelta).toFixed(1)+'% since the previous measurement.'));
-      else if(bfDelta>0)parts.push(T('Το % λίπους αυξήθηκε κατά '+bfDelta.toFixed(1)+'% από την προηγούμενη μέτρηση — αξίζει επανεξέταση προσλαμβανόμενων θερμίδων.','Body fat % increased by '+bfDelta.toFixed(1)+'% since the previous measurement — worth reviewing calorie intake.'));
-      else parts.push(T('Το % λίπους παρέμεινε σταθερό από την προηγούμενη μέτρηση.','Body fat % stayed stable since the previous measurement.'));
+      if(bfDelta<0)parts.push(T('Καλή πορεία — το % λίπους μειώθηκε κατά '+Math.abs(bfDelta).toFixed(1)+' μονάδες από τη βάση σύγκρισης.','Good progress — body fat % dropped '+Math.abs(bfDelta).toFixed(1)+' points from the baseline.'));
+      else if(bfDelta>0)parts.push(T('Το % λίπους αυξήθηκε κατά '+bfDelta.toFixed(1)+' μονάδες από τη βάση — αξίζει επανεξέταση προσλαμβανόμενων θερμίδων.','Body fat % rose '+bfDelta.toFixed(1)+' points from the baseline — worth reviewing calorie intake.'));
+      else parts.push(T('Το % λίπους παρέμεινε σταθερό από τη βάση σύγκρισης.','Body fat % held steady from the baseline.'));
+    }
+    if(bfRateWk!=null && bfRateWk<0){
+      if(bfRateZone===2)parts.push(T('Ο ρυθμός απώλειας είναι επιθετικός — μείωσε το έλλειμμα για να προστατέψεις την άλιπη μάζα.','The rate of loss is aggressive — ease the deficit to protect lean mass.'));
+      else if(bfRateZone===0)parts.push(T('Ο ρυθμός απώλειας έχει επιβραδυνθεί — αν έχει σταματήσει η πρόοδος, δες ξανά θερμίδες/δραστηριότητα.','The rate of loss has slowed — if progress has stalled, revisit calories/activity.'));
+      else parts.push(T('Ο ρυθμός απώλειας είναι μέσα σε υγιές εύρος.','The rate of loss is within a healthy range.'));
     }
     if(bf>bfGoal){
       var fmGoalKg=+(weight*(bf-bfGoal)/100).toFixed(1);
-      parts.push(T('Στόχος: %BF εντός φυσιολογικού εύρους (~'+fmGoalKg+'kg λιπώδης μάζα ακόμα).','Goal: %BF within the normal range (~'+fmGoalKg+'kg fat mass to go).'));
+      parts.push(T('Απομένουν ~'+fmGoalKg+' kg λιπώδης μάζα για τον στόχο %BF.','~'+fmGoalKg+' kg fat mass to go for the %BF goal.'));
     } else {
-      parts.push(T('Το %BF είναι ήδη εντός φυσιολογικού εύρους — στόχος διατήρηση.','%BF is already within the normal range — the goal is maintenance.'));
+      parts.push(T('Το %BF είναι ήδη εντός στόχου — στόχος πλέον η διατήρηση.','%BF is already at goal — the aim now is maintenance.'));
     }
-    parts.push(T('Διατήρησε πρωτεϊνική πρόσληψη ~1.6g/kg σωματικού βάρους για προστασία της άλιπης μάζας.','Maintain protein intake at ~1.6g/kg body weight to protect lean mass.'));
+    if(planProtPerKg){
+      parts.push(T('Κράτα την πρωτεΐνη στον στόχο του πλάνου σου (~'+planProtG+' g/ημ. · '+planProtPerKg+' g/kg) για προστασία της άλιπης μάζας.','Keep protein at your plan target (~'+planProtG+' g/day · '+planProtPerKg+' g/kg) to protect lean mass.'));
+    } else {
+      parts.push(T('Κράτα επαρκή πρωτεΐνη (~1.6–2.2 g/kg) για προστασία της άλιπης μάζας.','Keep protein adequate (~1.6–2.2 g/kg) to protect lean mass.'));
+    }
     return parts.join(' ');
   }
 
@@ -844,7 +929,7 @@ function exportLipometriaPDF(){
     +'<div class="hdr">'
     +'<div class="brand">'+(logoSrc?'<img src="'+logoSrc+'" alt="FYH">':'')+'<div><div class="brand-name">'+T('ΑΝΑΛΥΣΗ ΣΩΜΑΤΙΚΗΣ ΣΥΝΘΕΣΗΣ','BODY COMPOSITION ANALYSIS')+'</div><div class="brand-sub">'+esc(c.name||'')+' · '+T(isFem?'Γυναίκα':'Άνδρας',isFem?'Female':'Male')+(c.age?' · '+c.age+T(' ετών',' years old'):'')+(h?' · '+h+' cm':'')+'</div></div></div>'
     +'<div class="doc-date">'+(entry
-      ?(T('Ημερομηνία μέτρησης','Measurement date')+(prevEntry?T(' · προηγούμενη',' · previous'):'')+'<br><b style="color:#3d4d49;font-size:9pt">'+esc(entryDate)+'</b>'+(prevEntry?' <span style="color:#b3bab8">(vs '+esc(prevEntry.date)+')</span>':''))
+      ?(T('Ημερομηνία μέτρησης','Measurement date')+(prevEntry?T(' · σύγκριση με',' · vs baseline'):'')+'<br><b style="color:#3d4d49;font-size:9pt">'+esc(entryDate)+'</b>'+(prevEntry?' <span style="color:#b3bab8">(vs '+esc(prevEntry.date)+(spanWk?' · '+spanWk+T(' εβδ.',' wk'):'')+')</span>':''))
       :('<b style="color:#b26a00;font-size:8.5pt">⚠ '+T('Στοιχεία προφίλ — καμία μέτρηση tracker','Profile data — no tracker measurement')+'</b>'))
     +'</div>'
     +'</div>'
@@ -872,10 +957,37 @@ function exportLipometriaPDF(){
     +'<div class="card">'
     +'<div class="card-lbl">'+T('Συνολική ανάλυση','Overall analysis')+' <span style="font-weight:400;color:#b3bab8;text-transform:none">· ◆ '+T('στόχος','goal')+'</span></div>'
     +rangeBar(T('ΔΜΣ','BMI'),bmi?String(bmi):'—',bmiCol,(bmi&&!isMinor)?bmiCat:null,deltaSpan(bmiDelta,1,'','down'),isMinor?null:[{v:15,col:'#1565C0'},{v:18.5,col:'#2e7d32'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,bmi,24.9)
+    +(ffmi?rangeBar(T('ΔΑΜ (FFMI)','FFMI'),String(ffmi),ffmiCol,isMinor?null:ffmiCat,null,isMinor?null:[{v:ffLo-4,col:'#1565C0'},{v:ffLo,col:'#2e7d32'},{v:ffMid,col:'#43a047'},{v:ffHi,col:'#f57c00'}],ffHi+5,ffmi,null):'')
     +rangeBar(T('% Λίπους','% Body fat'),bf?bf+'%':'—',bfCatCol,bf?bfCatLabel:null,deltaSpan(bfDelta,1,'','down'),bfBoundaries,isFem?45:35,bf,bfGoal)
+    +(bfMethodLbl?'<div style="font-size:6.5pt;color:#8a9490;margin:-5px 0 8px">'+T('Μέθοδος','Method')+': '+esc(bfMethodLbl)+'</div>':'')
     +(whtr!=null?rangeBar('WHtR',String(whtr),whtrCatCol,whtrCatLabel,deltaSpan(whtrDelta,2,'','down'),[{v:0.35,col:'#2e7d32'},{v:0.5,col:'#f57c00'},{v:0.6,col:'#c62828'}],0.75,whtr,0.5):'')
+    +(ffmi?'<div style="font-size:6pt;color:#b3bab8;margin-top:2px">'+T('ΔΑΜ = Δείκτης Άλιπης Μάζας (LBM/ύψος²) — δείχνει αν το ΔΜΣ οφείλεται σε μυ ή λίπος','FFMI = Fat-Free Mass Index (LBM/height²) — shows whether BMI is driven by muscle or fat')+'</div>':'')
     +'</div>'
     +'</div>'
+
+    // Rate of change vs baseline
+    +((bfRateWk!=null||wtRateWk!=null)&&spanWk?(
+      '<div class="card">'
+      +'<div class="card-lbl">'+T('Ρυθμός μεταβολής','Rate of change')+' <span style="font-weight:400;color:#b3bab8;text-transform:none">· '+spanWk+' '+T('εβδ.','wk')+'</span></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+      +(bfRateWk!=null?rateCell(T('% Λίπους','% Body fat'),bfRateWk,T('μον./εβδ.','pts/wk'),bfRateZone):'')
+      +(wtRateWk!=null?rateCell(T('Βάρος','Weight'),wtRateWk,T('%ΣΒ/εβδ.','%BW/wk'),wtRateZone):'')
+      +'</div>'
+      +'<div style="font-size:8pt;font-weight:700;margin-top:7px;color:'+(rateOK?'#2e7d32':'#e07b00')+'">'+(rateOK?'✅ '+T('Υγιής ρυθμός μεταβολής.','Healthy rate of change.'):'⚠ '+T('Ρυθμός εκτός ιδανικού εύρους — δες προσλαμβανόμενες θερμίδες.','Rate outside the ideal range — review calorie intake.'))+'</div>'
+      +'</div>'
+    ):'')
+    // Lean-mass retention (only when weight was actually lost)
+    +(leanSharePct!=null?(
+      '<div class="card">'
+      +'<div class="card-lbl">'+T('Διατήρηση άλιπης μάζας','Lean-mass retention')+'</div>'
+      +'<div style="display:flex;gap:10px;align-items:center">'
+      +'<div style="flex:0 0 90px;height:30px;border-radius:5px;overflow:hidden;display:flex;border:1px solid #e3ece9">'
+      +'<div style="flex:'+Math.max(0,100-leanSharePct)+';background:#e65100"></div><div style="flex:'+leanSharePct+';background:#1565C0"></div>'
+      +'</div>'
+      +'<div style="font-size:8pt;color:#5b6b67;line-height:1.5">'+T('Απώλεια','Loss')+' '+wLost.toFixed(1)+' kg = '+(wLost-lbmLost).toFixed(1)+' kg '+T('λίπος','fat')+' + '+lbmLost.toFixed(1)+' kg '+T('άλιπη','lean')+'. <b>'+leanSharePct+'%</b> '+T('της απώλειας από άλιπη μάζα.','of the loss from lean mass.')
+      +'<br><b style="color:'+(leanOK?'#2e7d32':'#c62828')+'">'+(leanOK?'✅ '+T('Εντός αποδεκτού (κάτω από 30%).','Within acceptable (under 30%).'):'⚠ '+T('Πολύ υψηλό — η δίαιτα ίσως είναι επιθετική.','Too high — the diet may be too aggressive.'))+'</b></div>'
+      +'</div></div>'
+    ):'')
 
     // Suggestion
     +'<div class="card" style="border-color:#f0dcb8;background:#fffaf0">'
@@ -905,11 +1017,18 @@ function exportLipometriaPDF(){
       var hw=hist.map(function(e){return e.weight;});
       var hb=hist.map(function(e){return e.bf>0?e.bf:null;});
       var hl=hist.map(function(e){return e.bf>0?+(e.weight*(1-e.bf/100)).toFixed(1):null;});
-      return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">'
+      // skinfold sum per entry — the direct measurement, without the conversion-equation error
+      var hs=hist.map(function(e){var v=e.sfFields?Object.values(e.sfFields):[];return v.length?v.reduce(function(s,x){return s+x;},0):null;});
+      var hsV=hs.filter(function(x){return x!=null;});
+      var hsDelta=hsV.length>1?Math.round(hsV[hsV.length-1]-hsV[0]):null;
+      var anySf=hsV.length>0;
+      return '<div style="display:grid;grid-template-columns:repeat('+(anySf?4:3)+',1fr);gap:10px">'
         +'<div style="text-align:center">'+sparkline(hw,'#1565C0')+'<div style="font-size:7pt;color:#8a9490">'+T('Βάρος','Weight')+'</div><div style="font-size:9pt;font-weight:700;color:#1565C0">'+(weight||'—')+' kg'+deltaSpan(wDelta,1,'','down')+'</div></div>'
         +'<div style="text-align:center">'+sparkline(hb,'#c62828')+'<div style="font-size:7pt;color:#8a9490">'+T('% Λίπους','% Body fat')+'</div><div style="font-size:9pt;font-weight:700;color:#c62828">'+(bf?bf+'%':'—')+deltaSpan(bfDelta,1,'','down')+'</div></div>'
         +'<div style="text-align:center">'+sparkline(hl,'#2e7d32')+'<div style="font-size:7pt;color:#8a9490">'+T('Άλιπη μάζα','Lean mass')+'</div><div style="font-size:9pt;font-weight:700;color:#2e7d32">'+(lbm||'—')+' kg'+deltaSpan(lbmDelta,1,'','up')+'</div></div>'
-        +'</div>';
+        +(anySf?'<div style="text-align:center">'+sparkline(hs,'#8a5a00')+'<div style="font-size:7pt;color:#8a9490">'+T('Άθροισμα mm','Skinfold sum')+'</div><div style="font-size:9pt;font-weight:700;color:#8a5a00">'+(sfSum!=null?Math.round(sfSum)+' mm':'—')+(hsDelta!=null?deltaSpan(hsDelta,0,'','down'):'')+'</div></div>':'')
+        +'</div>'
+        +(anySf?'<div style="font-size:6pt;color:#b3bab8;text-align:center;margin-top:4px">'+T('Το άθροισμα mm είναι η άμεση μέτρηση — μικρότερο σφάλμα από το μετατρεπόμενο %','The skinfold sum is the direct measurement — less error than the converted %')+'</div>':'');
     })():'<div style="font-size:8pt;color:var(--text-muted);text-align:center;padding:10px 0">'+T('Χρειάζονται τουλάχιστον 2 καταχωρήσεις tracker','At least 2 tracker entries needed')+'</div>')
     +'</div>'
 
@@ -933,8 +1052,8 @@ function exportLipometriaPDF(){
 
     // Footer
     +'<div class="footer">'
-    +'<div class="footer-row"><span>Feed Your Health &mdash; '+T('Ανάλυση Σωματικής Σύνθεσης','Body Composition Analysis')+' &nbsp;|&nbsp; '+bfSrcLbl+'</span><span>'+T('Επόμενο ραντεβού','Next appointment')+': ________________</span></div>'
-    +'<div style="margin-top:2px;color:#b3bab8">'+T('Οι τάσεις (▲▼) συγκρίνουν με την προηγούμενη καταχώρηση tracker. Χωρίς ζυγαριά βιοηλεκτρικής εμπέδησης (BIA) — δεν εμφανίζονται νερό/πρωτεΐνη/οστά/σπλαχνικό λίπος.','Trends (▲▼) compare against the previous tracker entry. No bioelectrical impedance (BIA) scale — water/protein/bone/visceral fat are not shown.')+'</div>'
+    +'<div class="footer-row"><span>Feed Your Health &mdash; '+T('Ανάλυση Σωματικής Σύνθεσης','Body Composition Analysis')+' &nbsp;|&nbsp; '+bfSrcLbl+(bfMethodLbl?' &nbsp;|&nbsp; %BF: '+esc(bfMethodLbl):'')+'</span><span>'+T('Επόμενο ραντεβού','Next appointment')+': ________________</span></div>'
+    +'<div style="margin-top:2px;color:#b3bab8">'+T('Οι τάσεις (▲▼) συγκρίνουν με τη βάση σύγκρισης που επέλεξε ο διαιτολόγος. Χωρίς ζυγαριά βιοηλεκτρικής εμπέδησης (BIA) — δεν εμφανίζονται νερό/πρωτεΐνη/οστά/σπλαχνικό λίπος.','Trends (▲▼) compare against the baseline the dietitian selected. No bioelectrical impedance (BIA) scale — water/protein/bone/visceral fat are not shown.')+'</div>'
     +'<div style="margin-top:2px;color:#b3bab8">'+T('ΔΜΣ = Δείκτης Μάζας Σώματος (kg/m²) · WHtR = Λόγος Περιμέτρου Μέσης προς Ύψος. Οι κατηγορίες %BF είναι στατιστικά όρια αναφοράς, όχι ιατρική διάγνωση.','BMI = Body Mass Index (kg/m²) · WHtR = Waist-to-Height Ratio. %BF categories are statistical reference ranges, not a medical diagnosis.')+'</div>'
     +'</div></body></html>';
 
