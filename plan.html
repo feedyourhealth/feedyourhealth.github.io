@@ -1189,7 +1189,13 @@ function _mealSyncNow(){
 function flushMealSync(){
   if(_mealSyncTimer){clearTimeout(_mealSyncTimer);_mealSyncNow();}
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){flushPushCheckin();flushMealSync();}});
+function flushAllLocalSync(){
+  flushPushCheckin();flushMealSync();
+  if(_waterSyncTimer){clearTimeout(_waterSyncTimer);_waterSyncNow();}
+  if(_suppSyncTimer){clearTimeout(_suppSyncTimer);_suppSyncNow();}
+  if(_shopSyncTimer){clearTimeout(_shopSyncTimer);_shopSyncNow();}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAllLocalSync();});
 
 // Καλείται από boot()/refreshPlan() ΜΕΤΑ το πρώτο render (fire-and-forget, δεν μπλοκάρει το
 // πρώτο paint) — φέρνει το per-meal state από το Supabase και «θεραπεύει» το τοπικό cache.
@@ -1206,10 +1212,102 @@ async function hydrateMealCheckins(){
     Object.keys(local).forEach(dateKey=>{
       if(!(dateKey in merged)){merged[dateKey]=local[dateKey];localOnly=true;}
     });
+    const changed=JSON.stringify(merged)!==JSON.stringify(local);
     localStorage.setItem(lk('meals'),JSON.stringify(merged));
     if(localOnly)Object.keys(local).forEach(dateKey=>{if(!(dateKey in data))syncMealCheckin(dateKey);});
-    return true;
+    return changed;
   }catch(e){console.error('[FYH portal] hydrateMealCheckins failed:',e);return false;}
+}
+
+// ── Ίδιο μοτίβο, 3 ακόμα σημεία που πριν ζούσαν ΜΟΝΟ σε localStorage: νερό,
+// συμπληρώματα, λίστα αγορών (sql/2026-09-05_water_supps_shop_sync.sql) ──
+let _waterSyncTimer=null;
+function syncWaterCheckin(){
+  if(_waterSyncTimer)clearTimeout(_waterSyncTimer);
+  _waterSyncTimer=setTimeout(_waterSyncNow,400);
+}
+function _waterSyncNow(){
+  _waterSyncTimer=null;
+  if(!sb)return;
+  const tok=token(); if(!tok)return;
+  sb.rpc('save_water_checkin',{p_token:tok,p_date:todayKey(),p_glasses:getWater()}).catch(()=>{});
+}
+async function hydrateWaterCheckins(){
+  const tok=token(); if(!tok||!sb)return false;
+  try{
+    const {data,error}=await sb.rpc('get_water_checkins',{p_token:tok});
+    if(error||!data||typeof data!=='object')return false;
+    const local=(()=>{try{return JSON.parse(localStorage.getItem(lk('water'))||'{}')}catch(e){return {}}})();
+    const merged=Object.assign({},data);
+    let localOnly=false;
+    Object.keys(local).forEach(dateKey=>{if(!(dateKey in merged)){merged[dateKey]=local[dateKey];localOnly=true;}});
+    const changed=JSON.stringify(merged)!==JSON.stringify(local);
+    localStorage.setItem(lk('water'),JSON.stringify(merged));
+    if(localOnly)syncWaterCheckin();
+    return changed;
+  }catch(e){console.error('[FYH portal] hydrateWaterCheckins failed:',e);return false;}
+}
+
+// Τα supps είναι ανά ημέρα (όπως τα γεύματα) — ο πελάτης τσεκάρει οποιαδήποτε μέρα
+// της τρέχουσας εβδομάδας, όχι μόνο σήμερα.
+let _suppSyncTimer=null, _suppSyncQueue=new Set();
+function syncSuppCheckin(dateKey){
+  _suppSyncQueue.add(dateKey);
+  if(_suppSyncTimer)clearTimeout(_suppSyncTimer);
+  _suppSyncTimer=setTimeout(_suppSyncNow,400);
+}
+function _suppSyncNow(){
+  _suppSyncTimer=null;
+  if(!sb)return;
+  const tok=token(); if(!tok)return;
+  const dates=[..._suppSyncQueue]; _suppSyncQueue.clear();
+  const log=getSuppLog();
+  dates.forEach(dateKey=>{
+    sb.rpc('save_supp_checkin',{p_token:tok,p_date:dateKey,p_supps_map:log[dateKey]||{}}).catch(()=>{});
+  });
+}
+async function hydrateSuppCheckins(){
+  const tok=token(); if(!tok||!sb)return false;
+  try{
+    const {data,error}=await sb.rpc('get_supp_checkins',{p_token:tok});
+    if(error||!data||typeof data!=='object')return false;
+    const local=(()=>{try{return JSON.parse(localStorage.getItem(lk('supps'))||'{}')}catch(e){return {}}})();
+    const merged=Object.assign({},data);
+    let localOnly=false;
+    Object.keys(local).forEach(dateKey=>{if(!(dateKey in merged)){merged[dateKey]=local[dateKey];localOnly=true;}});
+    const changed=JSON.stringify(merged)!==JSON.stringify(local);
+    localStorage.setItem(lk('supps'),JSON.stringify(merged));
+    if(localOnly)Object.keys(local).forEach(dateKey=>{if(!(dateKey in data))syncSuppCheckin(dateKey);});
+    return changed;
+  }catch(e){console.error('[FYH portal] hydrateSuppCheckins failed:',e);return false;}
+}
+
+// Η λίστα αγορών δεν έχει ημερομηνία — ένα επίπεδο, συνεχές checklist ανά token.
+let _shopSyncTimer=null;
+function syncShopState(){
+  if(_shopSyncTimer)clearTimeout(_shopSyncTimer);
+  _shopSyncTimer=setTimeout(_shopSyncNow,400);
+}
+function _shopSyncNow(){
+  _shopSyncTimer=null;
+  if(!sb)return;
+  const tok=token(); if(!tok)return;
+  sb.rpc('save_shop_state',{p_token:tok,p_checks:getShop()}).catch(()=>{});
+}
+async function hydrateShopState(){
+  const tok=token(); if(!tok||!sb)return false;
+  try{
+    const {data,error}=await sb.rpc('get_shop_state',{p_token:tok});
+    if(error||!data||typeof data!=='object')return false;
+    const local=(()=>{try{return JSON.parse(localStorage.getItem(lk('shop'))||'{}')}catch(e){return {}}})();
+    const merged=Object.assign({},data);
+    let localOnly=false;
+    Object.keys(local).forEach(k=>{if(!(k in merged)&&local[k]){merged[k]=local[k];localOnly=true;}});
+    const changed=JSON.stringify(merged)!==JSON.stringify(local);
+    localStorage.setItem(lk('shop'),JSON.stringify(merged));
+    if(localOnly)syncShopState();
+    return changed;
+  }catch(e){console.error('[FYH portal] hydrateShopState failed:',e);return false;}
 }
 
 // Εναλλάσσει το επιλεγμένο tag πλαισίου ημέρας μέσα στο μήνυμα-composer. Ενημερώνει τα chips
@@ -1494,7 +1592,8 @@ async function boot(){
     render();
     // Fire-and-forget — δεν καθυστερεί το πρώτο paint· αν φέρει κάτι που άλλαξε το τοπικό
     // cache (π.χ. check-off χαμένο από τον browser), ξανασχεδιάζει το τρέχον tab.
-    hydrateMealCheckins().then(changed=>{if(changed)go(curTab());});
+    Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState()])
+      .then(results=>{if(results.some(Boolean))go(curTab());});
   }catch(e){
     // Δεν ξέρουμε ακόμη τη γλώσσα του πελάτη εδώ (το SNAP με το c.lang δεν πρόλαβε να φορτώσει,
     // αφού ακριβώς αυτό απέτυχε) — δείχνουμε το μήνυμα ΚΑΙ στα δύο, αντί να υποθέσουμε ελληνικά
@@ -1525,7 +1624,7 @@ async function refreshPlan(){
       SNAP=data.snapshot; SNAP._updated=data.updated_at;
       LANG=pickLang(SNAP.lang);
       applyLangMeta();
-      await hydrateMealCheckins();
+      await Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState()]);
       const badge=$('#upd-badge'); if(badge)badge.innerHTML=updatedBadge();
       go(curTab());
     }else{console.error('[FYH portal] refreshPlan:',error);}
@@ -2694,7 +2793,7 @@ function viewShop(){
     cat.items.forEach(it=>{
       const r=el('div','slrow'+(checks[it.name]?' done':''));
       r.innerHTML='<span class="chk">'+(checks[it.name]?'<i class="ti ti-check"></i>':'')+'</span><span class="nm">'+esc(it.name)+'</span><span class="amt">'+esc(it.buy)+(it.raw?' <span class="raw">'+esc(it.raw)+'</span>':'')+'</span>';
-      r.onclick=()=>{const ch=getShop();ch[it.name]=!ch[it.name];setShop(ch);go('shop')};
+      r.onclick=()=>{const ch=getShop();ch[it.name]=!ch[it.name];setShop(ch);syncShopState();go('shop')};
       sec.appendChild(r);
     });
     cp.appendChild(sec);
@@ -2747,7 +2846,7 @@ function viewSupps(){
         cell.onclick=()=>{
           const lg=getSuppLog(); if(!lg[k])lg[k]={};
           if(lg[k][su.name])delete lg[k][su.name]; else lg[k][su.name]=true;
-          setSuppLog(lg); if(isTod)pushCheckin(); go('supps');
+          setSuppLog(lg); syncSuppCheckin(k); if(isTod)pushCheckin(); go('supps');
         };
         days.appendChild(cell);
       });
@@ -2818,7 +2917,7 @@ function waterCard(mini){
   for(let i=0;i<totalGlasses;i++){
     const gl=el('span','glass'+(i<have?' on':''),i<have?'':''); // ti-glass-full / ti-glass (use class instead)
     gl.innerHTML=glassSVG(i<have);
-    gl.onclick=()=>{const n=(i<have)?i:i+1;setWater(n);pushCheckin();go(curTab())};
+    gl.onclick=()=>{const n=(i<have)?i:i+1;setWater(n);syncWaterCheckin();pushCheckin();go(curTab())};
     g.appendChild(gl);
   }
   c.appendChild(g);
