@@ -376,14 +376,12 @@ function renderMain(){
     // ✅ SECTION 4b: ΚΑΤΑΝΟΜΗ ΜΑΚΡΟΘΡΕΠΤΙΚΩΝ (macro presets)
     +buildMacroDistributionHtml(c,t)
 
-    // ✅ SECTION 5-7: Moved to Modals (cleaner UI)
-    // ✅ QUICK ACCESS BUTTONS FOR ALL SETTINGS (6 Modal Windows)
+    // ✅ SECTION 5-7: τα 5 πρώην modal (Χρόνοι Γευμάτων / MET / Διατροφή / Ιατρικές /
+    // Συμπληρώματα) ξεδιπλωμένα ως inline collapsible sections — βλ. buildInlineModalSectionsHtml
+    // (js/client-editor/inline-sections.js). Ο wrapper #modal-btns-grid μένει ίδιος ώστε το
+    // swTab() να συνεχίζει να τον κρύβει εκτός tab 1.
     +'<div id="modal-btns-grid" style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;">'
-    +'<button class="btn" onclick="openMealTimesModal()" style="background:var(--card-bg);color:var(--text-strong);padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid var(--border-light);border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'var(--card-bg)\';this.style.borderColor=\'var(--border-light)\'">⏱️ Χρόνοι Γευμάτων</button>'
-    +'<button class="btn" onclick="openMetActivitiesModal()" style="background:var(--card-bg);color:var(--text-strong);padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid var(--border-light);border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'var(--card-bg)\';this.style.borderColor=\'var(--border-light)\'">🏃 Προπονήσεις (MET)</button>'
-    +'<button class="btn" onclick="openDietModal()" style="background:var(--card-bg);color:var(--text-strong);padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid var(--border-light);border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'var(--card-bg)\';this.style.borderColor=\'var(--border-light)\'">🥗 Διατροφή</button>'
-    +'<button class="btn" onclick="openMedicalConditionsModal()" style="background:var(--card-bg);color:var(--text-strong);padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid var(--border-light);border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'var(--card-bg)\';this.style.borderColor=\'var(--border-light)\'">🩺 Ιατρικές Συνθήκες</button>'
-    +'<button class="btn" onclick="openCombinedSupplementsModal()" style="background:var(--card-bg);color:var(--text-strong);padding:12px 14px;border-radius:6px;font-weight:600;text-align:left;border:1px solid var(--border-light);border-left:3px solid #025857;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'#f0f7f7\';this.style.borderColor=\'#c5ddd8\'" onmouseout="this.style.background=\'var(--card-bg)\';this.style.borderColor=\'var(--border-light)\'">💊 Συμπληρώματα</button>'
+    +(typeof buildInlineModalSectionsHtml==='function'?buildInlineModalSectionsHtml(c,t):'')
     +'</div>'
     // ✅ 2x/day training: now handled by adding 2 MET activities on the same day (different times)
     +'<div id="hint-2x-training" style="background:#E8F5E9;padding:8px 12px;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:15px;border-left:3px solid #025857;">💡 Για 2 προπονήσεις την ίδια ημέρα, πρόσθεσε 2 δραστηριότητες στις «🏃 Προπονήσεις (MET)» με διαφορετική ώρα.</div>'

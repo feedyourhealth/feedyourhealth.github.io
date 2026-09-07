@@ -524,7 +524,9 @@ function swTab(n){
   // sec-intake (the "📋 Ερωτηματολόγιο εισαγωγής" card) is a sibling of #s1, not a child,
   // so hiding #s1 doesn't hide it — it was leaking onto tabs 2/3/4 (latent since the card
   // was added) and, more visibly, onto the new 📇 Επισκόπηση tab. List it here like the rest.
-  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','met-section-wrap','sec-daytgt','sec-intake'];
+  // 'met-section-wrap' δεν χρειάζεται πια εδώ — το buildMetHtml() ζωγραφίζεται μέσα στο
+  // #modal-btns-grid (inline-sections.js), που κρύβεται ήδη ολόκληρο εκτός tab 1.
+  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','sec-daytgt','sec-intake'];
   sectionIds.forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.style.display=n===1?'block':'none';
@@ -731,6 +733,13 @@ function getSecState(c){
       quickstart: true,
       macros: (c.macroPreset||'balanced')!=='custom',
       daytgt: true,
+      // ✅ Τα 5 πρώην-modal (js/client-editor/inline-sections.js): κλειστά αφού συμπληρωθούν,
+      // ανοιχτά σε νέο πελάτη ώστε να μη «κρυφτεί» πεδίο που δεν έχει μπει ακόμη.
+      mealtimes: !!(c.mealTimes && c.mealTimes.breakfast),
+      mettrain: !!(c.metActivities && c.metActivities.length),
+      dietsec: true,
+      medical: true,
+      suppsec: true,
       // ✅ Ανθρωπομετρία / Στόχος stay open by default (edited on most visits) —
       // still toggleable like every other section, for when they're not needed.
       anthro: false,

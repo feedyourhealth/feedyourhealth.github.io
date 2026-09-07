@@ -755,5 +755,9 @@ function saveFoodExclusions(){
   if(document.getElementById('dietModal')){
     closeDietModal();
     openDietModal();
+  } else if(typeof renderMain==='function' && document.getElementById('sec-dietsec-body')){
+    // Η Διατροφή είναι πλέον inline section (js/client-editor/inline-sections.js) — ξαναχτίσε
+    // την s1 ώστε να φρεσκάρει ο μετρητής/λίστα αποκλεισμών της.
+    renderMain();
   }
 }

@@ -363,6 +363,10 @@ setTimeout(function(){
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
 <script defer src="js/client-editor/overview.js"></script>
+<!-- client-editor/inline-sections — unfolds the 5 "modal" settings (Χρόνοι Γευμάτων /
+     MET / Διατροφή / Ιατρικές / Συμπληρώματα) into inline collapsible section-cards in
+     s1's #modal-btns-grid. Reuses the existing modal save fns (same input IDs). -->
+<script defer src="js/client-editor/inline-sections.js"></script>
 <!-- client-editor/intake — Upgrades Phase 2: intake-questionnaire card in s1 + send
      modal. Pure fn declarations; needs render-main.js (calls renderMain) at runtime. -->
 <script defer src="js/client-editor/intake.js"></script>
