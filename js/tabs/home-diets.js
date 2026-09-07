@@ -267,7 +267,7 @@ function homeActivityRow(x,sub){
     +sig
     +homeActivityScoreChipHtml(x.score,x.pillars)
     +homeActivityTrendHtml(x.score,x.prevScore)
-    +'<span class="hm-act-goto">→ Ραντεβού</span>'
+    +'<span class="hm-act-goto">→ Παρακολούθηση</span>'
     +'<span class="hm-row-sub">'+sub+'</span>'
     +'</div>';
 }
@@ -1059,6 +1059,22 @@ function renderHome(){
     +'onchange="homeQuickFind(this.value)" onkeydown="if(event.key===\'Enter\')homeQuickFind(this.value)">'
     +'<datalist id="hm-find-list">'+_visibleClients.map(function(c){return '<option value="'+esc(c.name||'')+'">';}).join('')+'</datalist></span></div>';
 
+  // ── 3 κύρια σήματα (πάντα ορατά, πάνω απ' όλα) ────────────────────────────────
+  // Το feedback/μηνύματα, «χρειάζονται νέο πλάνο» και «σταμάτησαν να καταγράφουν» είναι τα 3
+  // πράγματα που ο διαιτολόγος θέλει να πιάνει με μια ματιά κάθε πρωί. Οι ίδιες γραμμές δεν
+  // επαναλαμβάνονται πια στις ζώνες παρακάτω (αφαιρέθηκαν οι αντίστοιχες κάρτες από zActNow/zWatch).
+  var sig1=activityRows;                                             // 💬 feedback + μηνύματα πελατών
+  var sig2=pendingPlanRows.concat(approachingRenewalRows).concat(staleRows); // 📄 νέο πλάνο / ξαναδημοσίευση
+  var sig3=stoppedLoggingRows;                                       // 📉 σταμάτησαν να καταγράφουν
+  var sigHtml=[
+    homeCard('💬 Νέο feedback ή μήνυμα', sig1, 'ακόμα', 'info', 4),
+    homeCard('📄 Χρειάζονται νέο πλάνο', sig2, 'ακόμα', 'warning', 4),
+    homeCard('📉 Σταμάτησαν να καταγράφουν', sig3, 'ακόμα', 'warning', 4)
+  ].filter(Boolean).join('');
+  html+= sigHtml
+    ? '<div class="hm-signals">'+sigHtml+'</div>'
+    : '<div class="hm-empty" style="text-align:center;padding:10px 0;font-size:13px">✅ Κανένα εκκρεμές σήμα — feedback, πλάνα και καταγραφές είναι εντάξει</div>';
+
   var buckets=homeAttentionBuckets(_attn, staleClients);
   // Προεπιλογή κόκκινο· αλλά αν το κόκκινο είναι άδειο ενώ υπάρχουν μπαγιάτικα, ξεκίνα στο κίτρινο —
   // αλλιώς μια άδεια λίστα "χρειάζονται προσοχή" διαβάζεται σαν "τίποτα να κάνω" ενώ υπάρχουν εκκρεμότητες.
@@ -1137,20 +1153,18 @@ function renderHome(){
   // 3 ζώνες αντί για έναν επίπεδο τοίχο ~11 καρτών: «Δράση τώρα» (κόκκινες/warning που θέλουν
   // ενέργεια), «Παρακολούθηση» (portal σήματα + admin), «Soft-touch» (💛, collapsed — δεν είναι
   // εκκρεμότητες). Καμία κάρτα δεν αφαιρείται· η homeCard() επιστρέφει '' όταν είναι άδεια.
+  // ⚠️ «Εκκρεμότητες πλάνου», «Ξεπερασμένοι σύνδεσμοι», «Πλησιάζει ανανέωση» και «Σταμάτησαν να
+  // καταγράφουν» / «Πρόσφατη δραστηριότητα» μετακόμισαν στα 3 κύρια σήματα πάνω-πάνω — δεν
+  // επαναλαμβάνονται εδώ. Η ζώνη «Δράση τώρα» κρατά τα πιο σπάνια/κρίσιμα (τάση βάρους, κύηση).
   var zActNow=[
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
-    homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
-    homeCard('📋 Εκκρεμότητες πλάνου', pendingPlanRows, 'ακόμα', 'warning'),
-    homeCard(staleCardTitle, staleRows, 'ακόμα', 'warning'),
-    homeCard('🔜 Πλησιάζει ανανέωση', approachingRenewalRows, 'ακόμα', 'warning')
+    homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger')
   ].filter(Boolean);
   // [5] Οι κάρτες «Παρακολούθηση» δείχνουν 3 γραμμές + «+N ακόμα» (αντί 8) — η ζώνη έχει τα πιο ήπια
   // σήματα, δεν χρειάζεται να ανοίγει ολόκληρη κάθε Δευτέρα.
   var zWatch=[
-    homeCard('📉 Σταμάτησαν να καταγράφουν', stoppedLoggingRows, 'ακόμα', 'warning', 3),
     homeCard('📊 Χαμηλή τήρηση αυτή την εβδομάδα', lowAdherenceRows, 'ακόμα', 'warning', 3),
     isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info', 3):'',
-    homeCard('📱 Πρόσφατη δραστηριότητα', activityRows, 'ακόμα', 'info', 3),
     weekdayHeat?homeWeekdayHeatmapHtml(weekdayHeat):'',
     groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
     tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):''

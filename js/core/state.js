@@ -502,8 +502,9 @@ function selectClient(id){
     renderSB();
     renderMain();
 
-    // Show first tab (client details)
-    swTab(1);
+    // Land on the "📇 Επισκόπηση" tab (whole-history view) — falls back to tab 1
+    // (Στοιχεία) if overview.js / its TAB_OVERVIEW const isn't loaded yet.
+    swTab(typeof TAB_OVERVIEW!=='undefined'?TAB_OVERVIEW:1);
 
     // Hide FAB menu
     var fabMenu = document.getElementById('fab-menu');

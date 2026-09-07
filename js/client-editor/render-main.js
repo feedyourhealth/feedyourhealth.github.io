@@ -69,6 +69,41 @@ function applyClientPreset(key){
   renderMain();
 }
 
+// 📋 Ζωντανό «τι λείπει για δημιουργία πλάνου» — καθρέφτης του validateClientData(): κάθε
+// υποχρεωτικό πεδίο γίνεται ✓ (πράσινο) ή ! (κόκκινο). Δείχνεται πάνω από το κουμπί «Δημιουργία
+// πλάνου» στην s1. Δεν μπλοκάρει τίποτα — το κουμπί μένει πατήσιμο και το genPlanWithUndo()
+// κρατά το ίδιο μήνυμα+scroll-σε-πεδίο αν όντως λείπει κάτι.
+var GEN_CHK_ITEMS=[['name','Όνομα'],['sex','Φύλο'],['age','Ημ. γέννησης'],['weight','Βάρος'],['height','Ύψος'],['goal','Στόχος'],['activity','Δραστηριότητα'],['formula','Τύπος υπολογισμού']];
+function buildGenChecklistHtml(c){
+  if(!c || typeof validateClientData!=='function') return '';
+  var errs=validateClientData(c);
+  var miss=0;
+  function chip(label,bad){
+    if(bad) miss++;
+    var col=bad?'#b3403f':'#2e7d32';
+    return '<span style="font-size:11.5px;display:inline-flex;align-items:center;gap:5px;color:'+col+(bad?';font-weight:700':'')+'">'
+      +'<span style="width:15px;height:15px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;background:'+col+'">'+(bad?'!':'✓')+'</span>'+esc(label)+'</span>';
+  }
+  var chips=GEN_CHK_ITEMS.map(function(it){ return chip(it[1], errs.some(function(e){return e.indexOf(it[0]+'_')===0;})); });
+  if(errs.indexOf('bf_invalid')>-1)     chips.push(chip('% Λίπος',true));
+  if(errs.indexOf('macros_invalid')>-1) chips.push(chip('Μακροθρεπτικά',true));
+  var head=miss
+    ? '<span style="font-size:11.5px;font-weight:800;color:#b3403f;margin-right:4px">Λείπουν '+miss+' για δημιουργία πλάνου:</span>'
+    : '<span style="font-size:11.5px;font-weight:800;color:#025857;margin-right:4px">✓ Έτοιμο για δημιουργία πλάνου</span>';
+  return '<div id="gen-checklist" style="display:flex;flex-wrap:wrap;gap:7px 14px;align-items:center;background:var(--panel-bg);border:1px solid var(--border-light);border-radius:8px;padding:9px 12px;margin-bottom:8px">'
+    +head+chips.join('')+'</div>';
+}
+// Μερικό re-render μόνο του checklist (το πλήρες renderMain θα έκλεβε το cursor του πεδίου ονόματος).
+function refreshGenChecklist(){
+  var box=document.getElementById('gen-checklist');
+  var c=(typeof getC==='function')?getC():null;
+  if(!box||!c) return;
+  var tmp=document.createElement('div');
+  tmp.innerHTML=buildGenChecklistHtml(c);
+  var fresh=tmp.firstChild;
+  if(fresh) box.replaceWith(fresh);
+}
+
 function renderMain(){
   var c=getC();if(!c)return;
 
@@ -131,7 +166,8 @@ function renderMain(){
     // ✅ 2026-08-22: .stabs-wrap + .stabs-fade — σε κινητό (≤767px) η μπάρα γίνεται οριζόντιο scroll strip
     // αντί να τυλίγεται σε 2-3 σειρές (βλ. css/styles.css, .stabs στο @media(max-width:767px)). Στο desktop
     // ο wrapper δεν αλλάζει τίποτα οπτικά — το ::after fade είναι κρυφό εκεί.
-    +'<div class="stabs-wrap"><div class="stabs"><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t3b" onclick="swTab('+TAB_APPOINTMENTS+')">📝 Ραντεβού</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div></div>'
+    +'<div class="stabs-wrap"><div class="stabs"><button class="stab" id="t0ov" onclick="swTab('+TAB_OVERVIEW+')">📇 Επισκόπηση</button><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t3b" onclick="swTab('+TAB_APPOINTMENTS+')">📈 Παρακολούθηση</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div></div>'
+    +'<div id="s0ov" style="display:none"></div>'
     +'<div id="s1">'
 
     // ✅ QUICK-START PRESETS — προσυμπληρώνουν PAL/τύπο διατροφής/macro split για συνηθισμένους
@@ -366,6 +402,12 @@ function renderMain(){
     // ✅ TEMPLATE SELECTOR - Show available nutrition plan templates
     +buildTmplSelectorHtml(c)
     // ✅ PLAN GENERATION BUTTON ONLY IN S1
+    // 📋 Ζωντανό checklist «τι λείπει» ακριβώς πάνω από το κουμπί — δείχνει από πριν ποια πεδία
+    // εμποδίζουν τη δημιουργία πλάνου, αντί να το μαθαίνει η δ/γείος μόνο πατώντας το κουμπί.
+    // Το κουμπί μένει πατήσιμο: αν λείπει κάτι, το genPlanWithUndo() κάνει ό,τι κι έκανε πριν
+    // (μήνυμα + scroll στο πρώτο προβληματικό πεδίο). Ξαναχτίζεται σε κάθε renderMain (δηλ. σε
+    // κάθε αλλαγή onchange-πεδίου) + χειροκίνητα στο πληκτρολόγιο του ονόματος (refreshGenChecklist).
+    +buildGenChecklistHtml(c)
     // ✅ Quick-actions button lives in this same bar (not a separate floating "+") so there's one
     // bottom action bar instead of two overlapping fixed elements — see swTab() for the paired
     // hide/show of the circular .fab, which only reappears on tabs that don't have this bar.
@@ -454,7 +496,7 @@ function renderMain(){
   var inpPref=document.getElementById('inp-preferences');if(inpPref)inpPref.value=c.preferences||'';
 
   // ✅ ADD EVENT LISTENERS
-  document.getElementById('inp-name').oninput=function(){upd('name',this.value);};
+  document.getElementById('inp-name').oninput=function(){upd('name',this.value);refreshGenChecklist();};
   if(_inpEmail)_inpEmail.oninput=function(){upd('email',this.value.trim());};
   if(_inpPhone)_inpPhone.oninput=function(){upd('phone',this.value.trim());};
   if(_inpLang)_inpLang.onchange=function(){upd('lang',this.value);};

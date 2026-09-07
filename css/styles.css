@@ -290,6 +290,10 @@ details.hm-zone[open]>summary::before{content:"\25BE  "}
 body.dark-mode .hm-zone-h{color:#aaa}
 body.dark-mode .hm-zone-n{background:#242424}
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px}
+/* Τα 3 κύρια σήματα της Αρχικής — πάνω-πάνω, πιο έντονη παρουσία από τις κάρτες των ζωνών. */
+.hm-signals{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin:0 0 24px}
+.hm-signals .hm-card{border-left-width:5px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.hm-signals .hm-card-title{font-size:14px}
 .hm-card{background:#fff;border:1px solid #e0e0e0;border-left:4px solid #e0e0e0;border-radius:14px;padding:14px 16px;container-type:inline-size}
 .hm-card-danger{border-left-color:#E24B4A}
 .hm-card-warning{border-left-color:var(--warn)}

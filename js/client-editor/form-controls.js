@@ -466,6 +466,11 @@ function setupFormEventListeners(){
 // πιασμένα από swTab για global nav) — named constant αντί για γυμνό 100 σε κάθε σημείο
 // που το αναφέρεται, ώστε το επόμενο νέο tab να μην χρειαστεί να μαντέψει γιατί υπάρχει (Ε5).
 var TAB_APPOINTMENTS=100;
+// TAB_OVERVIEW = "📇 Επισκόπηση" client sub-tab (js/client-editor/overview.js). Kept
+// outside the 1-4 numbering for the same reason as TAB_APPOINTMENTS. selectClient()
+// lands here instead of tab 1; rebuilt fresh on every open (buildOverviewHtml reads
+// the async-loading portal caches).
+var TAB_OVERVIEW=101;
 
 function swTab(n){
   if(n===0){ if(typeof renderHome==='function') renderHome(); return; }
@@ -488,6 +493,7 @@ function swTab(n){
   var t3=document.getElementById('t3');if(t3)t3.classList.toggle('active',n===3);
   var t3b=document.getElementById('t3b');if(t3b)t3b.classList.toggle('active',n===TAB_APPOINTMENTS);
   var t4=document.getElementById('t4');if(t4)t4.classList.toggle('active',n===4);
+  var t0ov=document.getElementById('t0ov');if(t0ov)t0ov.classList.toggle('active',n===TAB_OVERVIEW);
 
   // ✅ HIDE ALL PAGES FIRST
   var s1=document.getElementById('s1');if(s1)s1.style.display='none';
@@ -495,8 +501,11 @@ function swTab(n){
   var s3=document.getElementById('s3');if(s3)s3.style.display='none';
   var s3b=document.getElementById('s3b');if(s3b)s3b.style.display='none';
   var s4=document.getElementById('s4');if(s4)s4.style.display='none';
+  var s0ov=document.getElementById('s0ov');if(s0ov)s0ov.style.display='none';
 
   // ✅ THEN SHOW ONLY THE SELECTED PAGE
+  // 📇 Επισκόπηση — rebuilt fresh each open (buildOverviewHtml reads the async portal caches).
+  if(n===TAB_OVERVIEW && s0ov){var _cov=getC();if(_cov)s0ov.innerHTML=buildOverviewHtml(_cov);s0ov.style.display='block';}
   if(n===1 && s1)s1.style.display='block';
   if(n===2 && s2)s2.style.display='block';
   // ✅ Rebuild s3 fresh every time it's opened — the client-logs cache can finish loading
@@ -512,7 +521,10 @@ function swTab(n){
   if(n===4 && s4)s4.style.display='block';
 
   // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1 (Page 1 only - Στοιχεία Πελάτη)
-  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','met-section-wrap','sec-daytgt'];
+  // sec-intake (the "📋 Ερωτηματολόγιο εισαγωγής" card) is a sibling of #s1, not a child,
+  // so hiding #s1 doesn't hide it — it was leaking onto tabs 2/3/4 (latent since the card
+  // was added) and, more visibly, onto the new 📇 Επισκόπηση tab. List it here like the rest.
+  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','met-section-wrap','sec-daytgt','sec-intake'];
   sectionIds.forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.style.display=n===1?'block':'none';
