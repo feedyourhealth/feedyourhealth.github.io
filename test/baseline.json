@@ -641,7 +641,7 @@
       "σογια"
     ],
     "redMeatFoodsList.shape": {
-      "n": 13,
+      "n": 14,
       "hasBeef": true,
       "excludesPoultry": true
     },
@@ -666,6 +666,7 @@
       "Μπριζόλα άπαχη",
       "Συκώτι μοσχαρίσιο (σχάρα/φούρνο)",
       "Χοιρινό (μπριζόλα)",
+      "Χοιρινό σουβλάκι",
       "Χοιρινός κιμάς (μαγ.)"
     ],
     "parsePrefAvoid.cheese_n": 17,
@@ -673,14 +674,14 @@
     "QUICK_EXCL.groupSizes": {
       "🥛 Γαλακτοκομικά": 20,
       "🌾 Γλουτένη": 28,
-      "🥩 Κρέας": 20,
+      "🥩 Κρέας": 21,
       "🐟 Ψάρια/Θαλ.": 17,
       "🫘 Όσπρια": 17,
       "🥚 Αυγά": 2,
       "🌰 Ξηροί καρποί": 9
     },
     "buildClientExclusionList.merged": {
-      "n": 17,
+      "n": 18,
       "banana": true,
       "protocol": true,
       "dislike": true,
@@ -892,7 +893,7 @@
       "porkNonEmpty": true,
       "porkHasChoirino": true,
       "fishGroupFound": true,
-      "redListN": 13,
+      "redListN": 14,
       "dairyListN": 33,
       "planKeys": "dairy,fish,pork,red_meat,vegan,vegetarian",
       "avoidBtnShown": true,
@@ -935,12 +936,12 @@
       "ageAtDate_null": null
     },
     "_fingerprints": {
-      "FOODS_keys": 337,
-      "FOODS_json": 54656,
-      "PORTIONS_keys": 262,
-      "PORTIONS_json": 21545,
-      "FOOD_UNITS_keys": 168,
-      "FOOD_UNITS_json": 6953,
+      "FOODS_keys": 338,
+      "FOODS_json": 54791,
+      "PORTIONS_keys": 263,
+      "PORTIONS_json": 21683,
+      "FOOD_UNITS_keys": 169,
+      "FOOD_UNITS_json": 6993,
       "MEAL_RECIPES_len": 162,
       "MEAL_RECIPES_json": 50502,
       "SNACK_RECIPES_len": 39,
@@ -948,13 +949,13 @@
       "SUPPS_json": 7760,
       "MET_ACTIVITIES_len": 13,
       "MET_ACTIVITIES_json": 8276,
-      "MICRONUTRIENTS_keys": 263,
-      "MICRONUTRIENTS_json": 45338,
+      "MICRONUTRIENTS_keys": 264,
+      "MICRONUTRIENTS_json": 45508,
       "SPORT_PROTOCOLS_keys": 3,
       "SPORT_PROTOCOLS_json": 5901,
       "SPORT_PROFILES_keys": 12,
       "DEFAULT_TMPLS_keys": 26,
-      "DEFAULT_TMPLS_json": 109650,
+      "DEFAULT_TMPLS_json": 109660,
       "spot_FOODS_chicken": {
         "k": 165,
         "p": 31,

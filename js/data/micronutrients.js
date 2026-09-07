@@ -110,6 +110,7 @@ var MICRONUTRIENTS={
   'Κοτόπουλο βραστό':{Fe:0.7,Zn:0.7,Mg:25,Ca:8,B1:0.06,B2:0.09,B3:8.5,B6:0.85,B12:0.3,Folate:3,Omega3:0.04,Omega6:1.3,Iodine:7,Choline:110,DHA:0},
   'Κουνέλι (μαγ.)':{Fe:1.3,Zn:1.7,Mg:23,Ca:19,B1:0.08,B2:0.13,B3:8.9,B6:0.44,B12:6.9,Folate:9,Omega3:0.1,Omega6:0.4,Iodine:2,Choline:78,DHA:0},
   'Χοιρινό (μπριζόλα)':{Fe:0.9,Zn:2.4,Mg:22,Ca:14,B1:0.7,B2:0.3,B3:5.4,B6:0.5,B12:0.7,Folate:5,Omega3:0.06,Omega6:1.0,Iodine:3,Choline:80,DHA:0},
+  'Χοιρινό σουβλάκι':{Fe:1.0,Zn:2.9,Mg:21,Ca:15,B1:0.65,B2:0.3,B3:4.8,B6:0.4,B12:0.7,Folate:5,Omega3:0.07,Omega6:1.3,Iodine:3,Choline:78,DHA:0}, // εκτίμηση: χοιρινός λαιμός/σπάλα, βασισμένη στη μπριζόλα
   'Βοδινά φιλετάκια':{Fe:2.5,Zn:5.8,Mg:21,Ca:9,B1:0.07,B2:0.18,B3:5.2,B6:0.5,B12:2.3,Folate:7,Omega3:0.05,Omega6:0.9,Iodine:3,Choline:83,DHA:0},
   'Βοδινά μπιφτέκια (ψημένα)':{Fe:2.4,Zn:5.3,Mg:20,Ca:16,B1:0.06,B2:0.19,B3:4.7,B6:0.4,B12:2.1,Folate:8,Omega3:0.06,Omega6:1.0,Iodine:3,Choline:80,DHA:0},
   'Μοσχάρι (ψητό)':{Fe:2.6,Zn:5.9,Mg:20,Ca:9,B1:0.07,B2:0.2,B3:6.0,B6:0.45,B12:1.5,Folate:8,Omega3:0.04,Omega6:0.7,Iodine:3,Choline:90,DHA:0},

@@ -18,6 +18,9 @@ var FOODS={
 'Mixed Berry & Granola Yogurt Parfait':{k:461,p:15.2,c:60.3,f:19.2,fi:11,cat:'Συνταγές',ingredients:[{item:'Κατεψυγμένα μούρα (ποικιλία)',qty:'65g',prep:'μικροκύματα 2-3 λεπτά'},{item:'Soy yogurt (χωρίς ζάχαρη)',qty:'130g'},{item:'Vegan granola',qty:'60g',prep:'σπιτική ή αγορασμένη'},{item:'Μπανάνα (φρέσκια)',qty:'½',size:'μέση',prep:'κομμένη σε φέτες'},{item:'Σπόρια λιναριού (αλεσμένα)',qty:'½',unit:'κ.σ.'},{item:'Ταχίνι ή φυστικοβούτυρο (προαιρετικό)',qty:'½',unit:'κ.σ.',prep:'για επιπλέον γεύση'}],time:'5 λεπτά',en:'Mixed Berry & Granola Yogurt Parfait',ru:'Парфе с ягодами, гранолой и йогуртом',tr:'Karışık Meyveli ve Granolalı Yoğurt Parfe'},
 'Κουνέλι (μαγ.)':{k:197,p:29,c:0,f:8,fi:0,cat:'Κρέας',en:'Rabbit (cooked)',ru:'Кролик (варёный)',tr:'Tavşan (pişmiş)'},
 'Χοιρινό (μπριζόλα)':{k:242,p:27,c:0,f:14,fi:0,cat:'Κρέας',en:'Pork Chop',ru:'Свиная отбивная',tr:'Domuz Pirzolası'},
+/* 2026-09-07: Χοιρινό σουβλάκι (καλαμάκι) — ψητό, από χοιρινό λαιμό/σπάλα (τυπική κοπή σουβλακιού,
+   πιο λιπαρή). Μονάδα ανά τεμάχιο 20g· τυπική σούβλα ~10 τεμ. (200g ψητό). */
+'Χοιρινό σουβλάκι':{k:250,p:26,c:0,f:16,fi:0,cat:'Κρέας',en:'Pork Souvlaki',ru:'Свиное сувлаки',tr:'Domuz Souvlaki'},
 'Μπριζόλα άπαχη':{k:165,p:28,c:0,f:5.4,fi:0,cat:'Κρέας',en:'Lean Steak',ru:'Постный стейк',tr:'Yağsız Biftek'},
 'Βοδινό άπαχο (ψητό)':{k:204,p:28,c:0,f:8,fi:0,cat:'Κρέας',en:'Lean Beef (grilled)',ru:'Постная говядина (гриль)',tr:'Yağsız Dana Eti (ızgara)'},
 'Βοδινά φιλετάκια':{k:200,p:28,c:0,f:8,fi:0,cat:'Κρέας',en:'Beef Strips',ru:'Полоски говядины',tr:'Dana Eti Şeritleri'},
