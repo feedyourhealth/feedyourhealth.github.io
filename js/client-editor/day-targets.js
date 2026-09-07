@@ -732,6 +732,16 @@ function updateConditionalVisibility(sportId){
 
   if(!metWrap||!afWrap)return;
 
+  // Το buildMetHtml() ζωγραφίζεται πλέον μέσα στην inline ξεδιπλωμένη ενότητα «Προπονήσεις (MET)»
+  // (#sec-mettrain-body, inline-sections.js). Εκεί η ορατότητα την ελέγχει το toggleSec('mettrain')
+  // μέσω του collapsible header — ΟΧΙ αυτό το παλιό «δείξε μόνο για MET-based sport» gating, που
+  // αλλιώς έκρυβε τον picker (display:none) όποτε ο πελάτης δεν είχε επιλεγμένο MET άθλημα.
+  if(metWrap.closest && metWrap.closest('#sec-mettrain-body')){
+    afWrap.style.display='block';
+    metWrap.style.display='block';
+    return;
+  }
+
   // ✅ ALWAYS SHOW Activity Factor/Goal section (user must be able to select these)
   afWrap.style.display='block';
 
