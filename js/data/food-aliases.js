@@ -242,5 +242,11 @@ var FOOD_ALIASES={
   'Nick\'s Peanut & Caramel Bar':'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα',
   'Nick\'s Peanut & Caramel Ice Cream Bar':'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα',
   'Nicks Παγωτό Μπάρα Φιστίκι Καραμέλα':'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα',
-  'Παγωτό μπάρα φιστίκι καραμέλα':'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα'
+  'Παγωτό μπάρα φιστίκι καραμέλα':'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα',
+  // Hungry Not (SDOUKOS) layered protein bar — added 2026-09-08
+  'Hungry Not Protein Bars with 5 Layered Hazelnut Praline & Milk Chocolate':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
+  'Hungry Not Layered Bars Πραλίνα Φουντουκιού':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
+  'Hungry Not Πραλίνα Φουντουκιού':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
+  'Hungry Not Protein Bar Hazelnut Praline':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
+  'Μπάρα Hungry Not φουντούκι':'Hungry Not Protein Bar Πραλίνα Φουντουκιού'
 };

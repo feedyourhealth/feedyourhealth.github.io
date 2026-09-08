@@ -678,7 +678,7 @@
       "🐟 Ψάρια/Θαλ.": 17,
       "🫘 Όσπρια": 17,
       "🥚 Αυγά": 2,
-      "🌰 Ξηροί καρποί": 9
+      "🌰 Ξηροί καρποί": 10
     },
     "buildClientExclusionList.merged": {
       "n": 18,
@@ -936,12 +936,12 @@
       "ageAtDate_null": null
     },
     "_fingerprints": {
-      "FOODS_keys": 339,
-      "FOODS_json": 55076,
-      "PORTIONS_keys": 264,
-      "PORTIONS_json": 21773,
-      "FOOD_UNITS_keys": 170,
-      "FOOD_UNITS_json": 7055,
+      "FOODS_keys": 340,
+      "FOODS_json": 55413,
+      "PORTIONS_keys": 265,
+      "PORTIONS_json": 21868,
+      "FOOD_UNITS_keys": 171,
+      "FOOD_UNITS_json": 7121,
       "MEAL_RECIPES_len": 162,
       "MEAL_RECIPES_json": 50502,
       "SNACK_RECIPES_len": 39,
@@ -949,8 +949,8 @@
       "SUPPS_json": 7760,
       "MET_ACTIVITIES_len": 13,
       "MET_ACTIVITIES_json": 8276,
-      "MICRONUTRIENTS_keys": 265,
-      "MICRONUTRIENTS_json": 45706,
+      "MICRONUTRIENTS_keys": 266,
+      "MICRONUTRIENTS_json": 45908,
       "SPORT_PROTOCOLS_keys": 3,
       "SPORT_PROTOCOLS_json": 5901,
       "SPORT_PROFILES_keys": 12,
