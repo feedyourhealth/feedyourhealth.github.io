@@ -130,6 +130,7 @@ var FOOD_UNITS={
   'Quark (0%)':{g:240,u:'φλ.'},
   'Ricotta':{g:125,u:'τεμ.'},
   'Kri Kri High Protein Super Spoon Παγωτό Σοκολάτα':{g:150,u:'μερίδ.'},
+  'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα':{g:47,u:'μπάρα'},
 'Moving Mountains Burger':{g:113,u:'patty'},
 'Grillman Chicken Burger':{g:150,u:'τεμ.'},
 'Μπιφτέκι Κοτόπουλο Πηδηχτούλης Κόκορας':{g:300,u:'τεμ.'},
@@ -524,6 +525,7 @@ var PORTIONS={
 'Endurance Bar Σοκολάτα (CrudeSnacks)':[{n:'1 μπάρα',g:40},{n:'2 μπάρες',g:80}],
 'Ultra Bar Φράουλα & Τζίντζερ (CrudeSnacks)':[{n:'1 μπάρα',g:68},{n:'2 μπάρες',g:136}],
 'Ultra Bar Σοκολάτα (CrudeSnacks)':[{n:'1 μπάρα',g:68},{n:'2 μπάρες',g:136}],
+'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα':[{n:'1 μπάρα',g:47},{n:'2 μπάρες',g:94}],
 'Σάλτσα Ντομάτας (FYH)':[{n:'1 κ.σ.',g:15},{n:'2 κ.σ.',g:30},{n:'50ml',g:50},{n:'100ml',g:100}],
 // ════ UNIVERSAL PORTIONS EXPANSION — All remaining foods ════
 // Μπριζόλες / Steaks

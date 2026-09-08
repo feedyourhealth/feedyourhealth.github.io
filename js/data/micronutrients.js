@@ -293,6 +293,8 @@ var MICRONUTRIENTS={
   'Μαρμελάδα φράουλας':{Fe:0.3,Zn:0.05,Mg:4,Ca:12,B1:0,B2:0,B3:0.1,B6:0.01,B12:0,Folate:2,Omega3:0,Omega6:0,Iodine:0,Choline:1,DHA:0},
   'Σάλτσα σόγιας (μειωμένο αλάτι)':{Fe:2.4,Zn:0.3,Mg:40,Ca:20,B1:0.02,B2:0.15,B3:1.3,B6:0.17,B12:0,Folate:19,Omega3:0.02,Omega6:0.1,Iodine:0,Choline:10,DHA:0},
   'Dark Chocolate 70%':{Fe:11.9,Zn:3.3,Mg:228,Ca:73,B1:0.03,B2:0.08,B3:1.1,B6:0.04,B12:0.3,Folate:14,Omega3:0.05,Omega6:0.4,Iodine:0,Choline:15,DHA:0},
+  // Εκτίμηση — η ετικέτα λιανικής έχει μόνο μακροθρεπτικά· μοντέλο σε βάση παγωτού γάλακτος + επικάλυψη σοκολάτας + φιστίκια/καραμέλα
+  'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα':{Fe:0.8,Zn:0.85,Mg:40,Ca:85,B1:0.06,B2:0.2,B3:1.6,B6:0.06,B12:0.3,Folate:18,Omega3:0.05,Omega6:2.5,Iodine:15,Choline:25,DHA:0},
   'Κύβο λαχανικών':{Fe:2.0,Zn:0.5,Mg:20,Ca:100,B1:0.05,B2:0.1,B3:2.0,B6:0.1,B12:0,Folate:10,Omega3:0.05,Omega6:1.0,Iodine:5,Choline:10,DHA:0},
   'Μπούκοβο':{Fe:7.3,Zn:2.5,Mg:150,Ca:148,B1:0.33,B2:0.9,B3:8.7,B6:2.45,B12:0,Folate:106,Omega3:0.5,Omega6:8.0,Iodine:0,Choline:20,DHA:0},
   'Λευκό κρασί':{Fe:0.4,Zn:0.07,Mg:9,Ca:9,B1:0,B2:0.01,B3:0.1,B6:0.05,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:8,DHA:0},
