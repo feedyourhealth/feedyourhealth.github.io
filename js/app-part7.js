@@ -511,6 +511,31 @@
         parseAllergies(c.allergies).forEach(function(a){ if(altExcl.indexOf(a)===-1)altExcl.push(a); });
       }
 
+      // #1 — ομαδοποίηση των auto-αποκλεισμένων μιας κατηγορίας (π.χ. "όχι κόκκινο κρέας" → 14 ονόματα)
+      // σε ΕΝΑ chip, ώστε η κάρτα «Το πλάνο σου, προσαρμοσμένο» στο plan.html να μη δείχνει 16 κόκκινα
+      // chips. Στοιχείο = string (μεμονωμένο) ή {label, items:[...]} (ομάδα ≥3 τροφίμων της κατηγορίας).
+      // Το plan.html δέχεται και τα δύο + παλιά snapshots (καθαρό array με strings).
+      var EXCL_GROUP_DEFS=[
+        {lbl:{el:'Κόκκινο κρέας',en:'Red meat',ru:'Красное мясо',tr:'Kırmızı et'},
+         fn:(typeof redMeatFoodsList==='function'?redMeatFoodsList:null)},
+        {lbl:{el:'Γαλακτοκομικά',en:'Dairy',ru:'Молочные продукты',tr:'Süt ürünleri'},
+         fn:(typeof dairyFoodsList==='function'?dairyFoodsList:null)}
+      ];
+      var groupedExcl=(function(){
+        var out=[], taken={};
+        EXCL_GROUP_DEFS.forEach(function(g){
+          if(!g.fn)return;
+          var glist=[]; try{ glist=g.fn()||[]; }catch(e){ glist=[]; }
+          var hit=altExcl.filter(function(x){ return glist.indexOf(x)>-1 && !taken[x]; });
+          if(hit.length>=3){
+            hit.forEach(function(x){ taken[x]=1; });
+            out.push({label:(g.lbl[lang]||g.lbl.el), items:hit.map(function(x){ return shortName(fName(x)); })});
+          }
+        });
+        altExcl.forEach(function(x){ if(!taken[x]) out.push(shortName(fName(x))); });
+        return out;
+      })();
+
       // ── Ημερήσια πλάνα ──
       var wp=c.weekPlan||{};
       // gLbl/tUnit: μεταφράζουν το "γρ." και τις μονάδες μέτρησης (φλ./τεμ./κ.σ./κ.γ./χούφτα κτλ, μέσω
@@ -739,7 +764,10 @@
         waist:(lastE&&lastE.waist)||null,
         bodyfat:(lastLog&&lastLog.bf)||c.bf||null,
         lbm:(lastLog&&lastLog.lbm)||c.lbm||null,
-        showBFBands: !!c.portalShowBFBands
+        showBFBands: !!c.portalShowBFBands,
+        // #4 — αναλυτικές μετρήσεις (ΔΜΣ/WHtR/ζώνες) στην καρτέλα Πρόοδος του πελάτη. Default OFF:
+        // ο πελάτης βλέπει μόνο βάρος/στόχο/απλή σύνθεση εκτός αν ο διαιτολόγος το ανοίξει ρητά.
+        showAnalysis: !!c.portalShowAnalysis
       };
 
       var hb=t.hydBase||Math.round((c.weight||70)*35);
@@ -768,6 +796,9 @@
         publishedAt:new Date().toISOString(),
         coachNote:(c.portalNote||'').trim(),
         contact:hasContact?{wa:clinic.wa||'',tel:clinic.tel||'',email:clinic.email||''}:null,
+        // #5 — το metriseis.html ανοίγει από την καρτέλα Πρόοδος του πλάνου (ίδιο origin, δικό του
+        // token). null όσο ο διαιτολόγος δεν έχει δημοσιεύσει έντυπο μετρήσεων για τον πελάτη.
+        lipoToken:c.lipoToken||null,
         targets:{kcal:Math.round(t.target||0), p:Math.round(t.p||0), c:Math.round(t.carb||0), f:Math.round(t.f||0)},
         hydration:{baseMl:hb, trainMl:ht, matchMl:hm, glassMl:250},
         days:days,
@@ -775,7 +806,7 @@
         supps:supps,
         fruits:fruits,
         progress:progress,
-        exclusions:altExcl.map(function(x){return shortName(fName(x));}),
+        exclusions:groupedExcl,
         // Βιβλιοθήκη tips (tab "📚 Tips") — μία κοινή λίστα, ίδια για όλους τους πελάτες, οπότε
         // περνάει αυτούσια (όχι φιλτραρισμένη ανά c.*), εκτός από τα tips με visible:false
         // ("Ορατό στους πελάτες" off — π.χ. πρόχειρο υπό συγγραφή), που δεν πρέπει να φτάσουν σε

@@ -172,7 +172,8 @@ function openPublishModal(){
       +'<div style="flex:1"><label style="font-size:11px;color:#5a8a82">Στόχος βάρους (kg)</label><input type="number" id="portal-goalweight" value="'+(c.goalWeight||'')+'" placeholder="π.χ. 75" step="0.1" min="20" max="300" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #c5ddd8;border-radius:8px;font-family:inherit"></div>'
       +'<div style="flex:1"><label style="font-size:11px;color:#5a8a82">Στόχος % λίπους</label><input type="number" id="portal-goalbf" value="'+(c.goalBF||'')+'" placeholder="π.χ. 15" step="0.1" min="3" max="60" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1px solid #c5ddd8;border-radius:8px;font-family:inherit"></div>'
       +'</div>'
-      +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#1a3330;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="portal-showbfbands"'+(c.portalShowBFBands?' checked':'')+'> Εμφάνιση ζωνών αναφοράς λίπους (ACSM) στον πελάτη</label>'
+      +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#1a3330;margin-bottom:6px;cursor:pointer"><input type="checkbox" id="portal-showanalysis"'+(c.portalShowAnalysis?' checked':'')+'> Αναλυτικές μετρήσεις στον πελάτη <span style="color:#9fb5b0">— ΔΜΣ / WHtR / ζώνες· αλλιώς μόνο βάρος &amp; στόχος</span></label>'
+      +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#1a3330;margin-bottom:8px;cursor:pointer"><input type="checkbox" id="portal-showbfbands"'+(c.portalShowBFBands?' checked':'')+'> Εμφάνιση ζωνών αναφοράς λίπους (ACSM) στον πελάτη <span style="color:#9fb5b0">— μόνο με τις αναλυτικές</span></label>'
       +'<button id="portal-note-save" class="btn" style="width:100%;background:#E2EEE5;color:#014545;border:1px solid #c5ddd8">💾 Αποθήκευση ρυθμίσεων</button>'
       +'</div></div>'
       +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος πελάτη</div>'
@@ -211,6 +212,8 @@ function openPublishModal(){
       var gbfRaw=(gbfEl&&gbfEl.value)?parseFloat(gbfEl.value):NaN;
       c.goalBF=!isNaN(gbfRaw)?Math.max(3,Math.min(60,gbfRaw)):null;
       c.portalShowBFBands=!!(bandsEl&&bandsEl.checked);
+      var anEl=document.getElementById('portal-showanalysis');
+      c.portalShowAnalysis=!!(anEl&&anEl.checked);
       noteSave.disabled=true; noteSave.textContent='Αποθήκευση…';
       window.Cloud.publishPlan(c).then(function(){ noteSave.textContent='✓ Αποθηκεύτηκε'; setTimeout(function(){noteSave.disabled=false;noteSave.textContent='💾 Αποθήκευση ρυθμίσεων';},1600); })
         .catch(function(e){ noteSave.disabled=false; noteSave.textContent='💾 Αποθήκευση ρυθμίσεων'; showErrorToast('Σφάλμα αποθήκευσης: '+(e.message||'')); });
