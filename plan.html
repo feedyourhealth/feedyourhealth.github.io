@@ -245,6 +245,15 @@
   .inline-notice .in-btn{background:var(--teal);color:#fff;border:none;border-radius:9px;font-size:12.5px;font-weight:700;padding:7px 12px;margin-top:8px;font-family:inherit;cursor:pointer}
   .inline-notice .in-x{position:absolute;top:8px;right:8px;width:24px;height:24px;border:none;background:none;color:var(--faint);font-size:15px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer}
   .inline-notice .in-x:active{background:var(--bord-l)}
+  .inline-notice.a2hs-notice{cursor:pointer}
+  .inline-notice .in-btn.in-btn-ghost{background:var(--tint);color:var(--teal-d)}
+  .a2hs-do{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--teal);color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:12px}
+  .a2hs-do i{font-size:17px}
+  .a2hs-ol{margin:4px 0 2px;padding-left:20px;font-size:13px;color:var(--ink);line-height:1.7}
+  .a2hs-ol li{margin-bottom:5px}
+  .a2hs-ol i{font-size:15px;vertical-align:-2px}
+  .a2hs-hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .a2hs-hint.a2hs-inapp{padding-top:10px;border-top:.5px solid var(--bord);margin-top:12px}
 
   /* streak-freeze chip on the milestone card */
   .freeze-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--teal-d);background:var(--tint);padding:5px 10px;border-radius:999px;margin-top:10px}
@@ -570,8 +579,11 @@ const I18N={
     obNext:'Επόμενο', obStart:'Ξεκίνα', obSkip:'Παράλειψη',
     installTitle:'Πρόσθεσε το πλάνο σου στην αρχική οθόνη',
     installSubAuto:'Ανοίγει σαν εφαρμογή, χωρίς να ψάχνεις το link στο WhatsApp κάθε φορά.',
-    installSubIOS:'Πάτα <i class="ti ti-share-2"></i> Κοινοποίηση, μετά «Προσθήκη στην Αρχική οθόνη».',
-    installBtn:'Εγκατάσταση', installClose:'Κλείσιμο',
+    installBtn:'Εγκατάσταση', installClose:'Κλείσιμο', a2hsHowBtn:'Πώς;',
+    a2hsStepsIOS:'<ol class="a2hs-ol"><li>Πάτα το <i class="ti ti-share-2"></i> <b>Κοινοποίηση</b> στη μπάρα του Safari.</li><li>Κύλισε κάτω και διάλεξε <b>«Προσθήκη στην Αρχική οθόνη»</b>.</li><li>Πάτα <b>«Προσθήκη»</b> πάνω δεξιά.</li></ol>',
+    a2hsStepsAndroid:'<ol class="a2hs-ol"><li>Πάτα το μενού <b>⋮</b> πάνω δεξιά στο Chrome.</li><li>Διάλεξε <b>«Προσθήκη στην αρχική οθόνη»</b> ή <b>«Εγκατάσταση εφαρμογής»</b>.</li><li>Επιβεβαίωσε με <b>«Προσθήκη»</b>.</li></ol>',
+    a2hsInAppHint:'Άνοιξες το link μέσα στο WhatsApp; Πάτα πρώτα <b>⋮</b> → <b>«Άνοιγμα στο Chrome»</b>.',
+    a2hsIconHint:'Μετά θα βρίσκεις το εικονίδιο «{app}» στην αρχική οθόνη σου.',
     nudgeTitle:'Δεν έχεις τσεκάρει τίποτα σήμερα ακόμα', nudgeSub:'Πάτα ένα γεύμα παρακάτω μόλις το ολοκληρώσεις — έτσι χτίζεις το σερί σου.',
     composerPrompt:'Στείλε κάτι στον/στην διαιτολόγο σου', composerEditing:'Επεξεργασία μηνύματος',
     composerPlaceholder:'π.χ. Πείνασα πολύ σήμερα, το μεσημεριανό μού φάνηκε λίγο', composerSend:'Στείλε',
@@ -677,8 +689,11 @@ const I18N={
     obNext:'Next', obStart:'Start', obSkip:'Skip',
     installTitle:'Add your plan to your home screen',
     installSubAuto:'Opens like an app, no need to dig up the WhatsApp link every time.',
-    installSubIOS:'Tap <i class="ti ti-share-2"></i> Share, then "Add to Home Screen".',
-    installBtn:'Install', installClose:'Close',
+    installBtn:'Install', installClose:'Close', a2hsHowBtn:'How?',
+    a2hsStepsIOS:'<ol class="a2hs-ol"><li>Tap <i class="ti ti-share-2"></i> <b>Share</b> in the Safari toolbar.</li><li>Scroll down and choose <b>"Add to Home Screen"</b>.</li><li>Tap <b>"Add"</b> in the top right.</li></ol>',
+    a2hsStepsAndroid:'<ol class="a2hs-ol"><li>Tap the <b>⋮</b> menu at the top right of Chrome.</li><li>Choose <b>"Add to Home screen"</b> or <b>"Install app"</b>.</li><li>Confirm with <b>"Add"</b>.</li></ol>',
+    a2hsInAppHint:'Opened the link inside WhatsApp? Tap <b>⋮</b> → <b>"Open in Chrome"</b> first.',
+    a2hsIconHint:'You\'ll then find the "{app}" icon on your home screen.',
     nudgeTitle:'You haven\'t checked anything off today yet', nudgeSub:'Tap a meal below once you finish it — that builds your streak.',
     composerPrompt:'Send your dietitian a message', composerEditing:'Editing message',
     composerPlaceholder:'e.g. I was really hungry today, lunch felt a bit small', composerSend:'Send',
@@ -784,8 +799,11 @@ const I18N={
     obNext:'Далее', obStart:'Начать', obSkip:'Пропустить',
     installTitle:'Добавьте свой план на главный экран',
     installSubAuto:'Открывается как приложение — не нужно каждый раз искать ссылку в WhatsApp.',
-    installSubIOS:'Нажмите <i class="ti ti-share-2"></i> «Поделиться», затем «На экран Домой».',
-    installBtn:'Установить', installClose:'Закрыть',
+    installBtn:'Установить', installClose:'Закрыть', a2hsHowBtn:'Как?',
+    a2hsStepsIOS:'<ol class="a2hs-ol"><li>Нажмите <i class="ti ti-share-2"></i> <b>«Поделиться»</b> на панели Safari.</li><li>Пролистайте вниз и выберите <b>«На экран Домой»</b>.</li><li>Нажмите <b>«Добавить»</b> вверху справа.</li></ol>',
+    a2hsStepsAndroid:'<ol class="a2hs-ol"><li>Нажмите меню <b>⋮</b> вверху справа в Chrome.</li><li>Выберите <b>«Добавить на главный экран»</b> или <b>«Установить приложение»</b>.</li><li>Подтвердите — <b>«Добавить»</b>.</li></ol>',
+    a2hsInAppHint:'Открыли ссылку внутри WhatsApp? Сначала нажмите <b>⋮</b> → <b>«Открыть в Chrome»</b>.',
+    a2hsIconHint:'После этого значок «{app}» появится на главном экране.',
     nudgeTitle:'Вы ещё ничего не отметили сегодня', nudgeSub:'Нажмите на приём пищи ниже, когда закончите его — так вы наращиваете серию.',
     composerPrompt:'Отправьте сообщение своему диетологу', composerEditing:'Редактирование сообщения',
     composerPlaceholder:'например: Сегодня я был(а) очень голоден/голодна, обед показался маловат', composerSend:'Отправить',
@@ -891,8 +909,11 @@ const I18N={
     obNext:'İleri', obStart:'Başla', obSkip:'Atla',
     installTitle:'Planını ana ekranına ekle',
     installSubAuto:'Uygulama gibi açılır, her seferinde WhatsApp\'ta linki aramana gerek kalmaz.',
-    installSubIOS:'<i class="ti ti-share-2"></i> Paylaş, sonra "Ana Ekrana Ekle" seçeneğine dokun.',
-    installBtn:'Yükle', installClose:'Kapat',
+    installBtn:'Yükle', installClose:'Kapat', a2hsHowBtn:'Nasıl?',
+    a2hsStepsIOS:'<ol class="a2hs-ol"><li>Safari araç çubuğunda <i class="ti ti-share-2"></i> <b>Paylaş</b>\'a dokun.</li><li>Aşağı kaydır ve <b>"Ana Ekrana Ekle"</b>yi seç.</li><li>Sağ üstte <b>"Ekle"</b>ye dokun.</li></ol>',
+    a2hsStepsAndroid:'<ol class="a2hs-ol"><li>Chrome\'da sağ üstteki <b>⋮</b> menüsüne dokun.</li><li><b>"Ana ekrana ekle"</b> veya <b>"Uygulamayı yükle"</b>yi seç.</li><li><b>"Ekle"</b> ile onayla.</li></ol>',
+    a2hsInAppHint:'Bağlantıyı WhatsApp içinde mi açtın? Önce <b>⋮</b> → <b>"Chrome\'da aç"</b>.',
+    a2hsIconHint:'Ardından ana ekranında "{app}" simgesini bulacaksın.',
     nudgeTitle:'Bugün henüz hiçbir şey işaretlemedin', nudgeSub:'Aşağıdaki bir öğünü bitirdiğinde üzerine dokun — böylece serini oluşturursun.',
     composerPrompt:'Diyetisyenine bir mesaj gönder', composerEditing:'Mesaj düzenleniyor',
     composerPlaceholder:'örn. Bugün çok acıktım, öğle yemeği biraz azdı', composerSend:'Gönder',
@@ -1006,6 +1027,11 @@ window.addEventListener('beforeinstallprompt',e=>{
 });
 function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream}
 function isStandalone(){return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone===true}
+// Το «πρόσθεσε στην αρχική οθόνη» έχει νόημα μόνο σε κινητό — σε desktop το κρύβουμε.
+function isPhoneish(){
+  if(isIOS() || /android/i.test(navigator.userAgent))return true;
+  return (navigator.maxTouchPoints>0) && window.matchMedia('(max-width:900px)').matches;
+}
 
 function $(s){return document.querySelector(s)}
 function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e}
@@ -2047,30 +2073,56 @@ function goalHero(){
     +'<div class="arrow"><i class="ti '+dirIcon+'"></i>'+T('goalHeroArrow',{start:decSep(String(start)),diff:decSep(String(diff))})+'</div>';
   return c;
 }
-// «Πρόσθεσε στην αρχική οθόνη» — δείχνεται μόνο όταν είναι πραγματικά δυνατό (Android/Chrome
-// έστειλε το beforeinstallprompt event, ή iOS Safari όπου δείχνουμε τα χειροκίνητα βήματα),
-// ποτέ αν ο πελάτης το έχει ήδη εγκαταστήσει (standalone) ή το έχει κλείσει μία φορά.
+// «Πρόσθεσε στην αρχική οθόνη» — σε ΚΑΘΕ κινητό (όχι μόνο όταν το Chrome έστειλε το beforeinstallprompt
+// ή σε iOS): οι χειροκίνητες οδηγίες δουλεύουν παντού, ακόμη κι όταν το link ανοίγει μέσα στο WhatsApp.
+// Κρύβεται μόνο σε desktop, αν είναι ήδη εγκατεστημένο (standalone), ή αν ο πελάτης το έκλεισε με το ×.
+// Ολόκληρη η κάρτα ανοίγει bottom-sheet με βήματα ανά πλατφόρμα· όταν υπάρχει native prompt, το «Εγκατάσταση»
+// το πυροδοτεί με ένα άγγιγμα.
 function installBanner(){
   if(isStandalone())return null;
   try{if(localStorage.getItem(lk('installDismissed'))==='1')return null;}catch(e){}
-  const ios=isIOS();
-  if(!deferredInstallPrompt && !ios)return null;
-  const c=el('div','inline-notice');
-  c.innerHTML='<i class="ti ti-download in-ic"></i><div class="in-txt">'
+  if(!isPhoneish())return null;
+  const hasPrompt=!!deferredInstallPrompt;
+  const c=el('div','inline-notice a2hs-notice');
+  c.innerHTML='<i class="ti ti-device-mobile-down in-ic"></i><div class="in-txt">'
     +'<div class="in-t">'+T('installTitle')+'</div>'
-    +'<div class="in-s">'+(deferredInstallPrompt?T('installSubAuto'):T('installSubIOS'))+'</div>'
-    +(deferredInstallPrompt?'<button class="in-btn" type="button">'+T('installBtn')+'</button>':'')
+    +'<div class="in-s">'+T('installSubAuto')+'</div>'
+    +'<button class="in-btn'+(hasPrompt?'':' in-btn-ghost')+'" type="button">'+T(hasPrompt?'installBtn':'a2hsHowBtn')+'</button>'
     +'</div><button class="in-x" type="button" aria-label="'+T('installClose')+'"><i class="ti ti-x"></i></button>';
   const btn=c.querySelector('.in-btn');
-  if(btn)btn.onclick=async()=>{
+  btn.onclick=async(e)=>{
+    e.stopPropagation();
+    if(!deferredInstallPrompt){openA2HSSheet();return;}
+    deferredInstallPrompt.prompt();
+    try{const r=await deferredInstallPrompt.userChoice;if(r&&r.outcome==='accepted')dismissInstallBanner();}catch(err){}
+    deferredInstallPrompt=null;
+    go('home');
+  };
+  // tap οπουδήποτε στην κάρτα (εκτός × / κουμπιού) → οδηγίες
+  c.addEventListener('click',e=>{ if(e.target.closest('.in-x')||e.target.closest('.in-btn'))return; openA2HSSheet(); });
+  c.querySelector('.in-x').onclick=e=>{e.stopPropagation();dismissInstallBanner();go('home');};
+  return c;
+}
+// Bottom-sheet με σαφή βήματα «προσθήκης στην αρχική οθόνη» ανά πλατφόρμα (+ native prompt αν υπάρχει).
+function openA2HSSheet(){
+  const ios=isIOS();
+  const bg=el('div','sheet-bg'); bg.onclick=e=>{if(e.target===bg)bg.remove()};
+  const canPrompt=!!deferredInstallPrompt;
+  bg.innerHTML='<div class="sheet"><h3>'+T('installTitle')+'</h3>'
+    +'<div class="ssub">'+T('installSubAuto')+'</div>'
+    +(canPrompt?'<button class="a2hs-do" type="button"><i class="ti ti-device-mobile-down"></i>'+T('installBtn')+'</button>':'')
+    +T(ios?'a2hsStepsIOS':'a2hsStepsAndroid')
+    +'<div class="a2hs-hint">'+T('a2hsIconHint',{app:planAppName()})+'</div>'
+    +(ios?'':'<div class="a2hs-hint a2hs-inapp">'+T('a2hsInAppHint')+'</div>')
+    +'<button class="close" onclick="this.closest(\'.sheet-bg\').remove()">'+T('installClose')+'</button></div>';
+  const doBtn=bg.querySelector('.a2hs-do');
+  if(doBtn)doBtn.onclick=async()=>{
     if(!deferredInstallPrompt)return;
     deferredInstallPrompt.prompt();
-    try{await deferredInstallPrompt.userChoice;}catch(e){}
+    try{const r=await deferredInstallPrompt.userChoice;if(r&&r.outcome==='accepted'){dismissInstallBanner();bg.remove();go('home');}}catch(err){}
     deferredInstallPrompt=null;
-    dismissInstallBanner();
   };
-  c.querySelector('.in-x').onclick=()=>{dismissInstallBanner();go('home');};
-  return c;
+  document.body.appendChild(bg);
 }
 function dismissInstallBanner(){try{localStorage.setItem(lk('installDismissed'),'1')}catch(e){}}
 
