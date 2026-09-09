@@ -889,12 +889,17 @@ function homeRow(c,sub,accent,actionHtml){
 
 // Επιστρέφει '' όταν δεν υπάρχει τίποτα να δείξει — οι κάρτες της Αρχικής εμφανίζονται μόνο όταν έχουν
 // πραγματική εκκρεμότητα, αντί να γεμίζουν τη σελίδα με μόνιμα "όλα εντάξει 👍" καρτέλες.
+// Όταν οι εγγραφές ξεπερνούν το maxRows, δεν κόβονται με "+N ακόμα" (που δεν πατιόταν) — μπαίνουν
+// όλες μέσα σε scrollable σώμα, με το συνολικό πλήθος ως badge στον τίτλο. moreLabel: αχρησιμοποίητο πλέον.
 function homeCard(title,items,moreLabel,variant,maxRows){
   if(!items.length) return '';
   var lim=maxRows||8;
-  var html='<div class="hm-card hm-card-'+variant+'"><div class="hm-card-title">'+title+'</div>';
-  items.slice(0,lim).forEach(function(row){ html+=row; });
-  if(items.length>lim) html+='<div class="hm-more">+'+(items.length-lim)+' '+moreLabel+'</div>';
+  var scroll=items.length>lim;
+  var html='<div class="hm-card hm-card-'+variant+'"><div class="hm-card-title">'+title
+    +(scroll?' <span class="hm-card-count">'+items.length+'</span>':'')+'</div>';
+  if(scroll) html+='<div class="hm-card-scroll">';
+  items.forEach(function(row){ html+=row; });
+  if(scroll) html+='</div>';
   html+='</div>';
   return html;
 }
