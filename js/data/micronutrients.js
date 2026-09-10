@@ -173,6 +173,8 @@ var MICRONUTRIENTS={
   'Τορτίλια (large)':{Fe:1.9,Zn:0.5,Mg:20,Ca:120,B1:0.25,B2:0.15,B3:2.0,B6:0.05,B12:0,Folate:60,Omega3:0.02,Omega6:1.5,Iodine:5,Choline:12,DHA:0},
   'Τορτίλια ολικής άλεσης (Alphamega)':{Fe:2.3,Zn:0.7,Mg:35,Ca:100,B1:0.3,B2:0.18,B3:2.8,B6:0.08,B12:0,Folate:45,Omega3:0.05,Omega6:2.0,Iodine:5,Choline:14,DHA:0},
   'Ρυζογκοφρέτες':{Fe:0.6,Zn:0.8,Mg:25,Ca:5,B1:0.05,B2:0.02,B3:2.0,B6:0.1,B12:0,Folate:8,Omega3:0.02,Omega6:0.3,Iodine:0,Choline:5,DHA:0},
+  // Εκτίμηση — η ετικέτα έχει μόνο μακροθρεπτικά + αλάτι (καμία ενίσχυση βιταμινών)· μοντέλο σε βάση ραφιναρισμένου ρυζαλεύρου (≈ Ρυζογκοφρέτες)
+  'Ρυζόγαλο στιγμής (VAST)':{Fe:0.5,Zn:0.7,Mg:20,Ca:8,B1:0.05,B2:0.02,B3:1.6,B6:0.1,B12:0,Folate:8,Omega3:0.02,Omega6:0.25,Iodine:0,Choline:5,DHA:0},
   'Μούσλι':{Fe:3.0,Zn:1.5,Mg:60,Ca:40,B1:0.3,B2:0.15,B3:3.0,B6:0.2,B12:0,Folate:30,Omega3:0.2,Omega6:2.5,Iodine:0,Choline:20,DHA:0},
   'Κρίθινο παξιμάδι':{Fe:2.5,Zn:1.2,Mg:50,Ca:30,B1:0.3,B2:0.1,B3:3.5,B6:0.15,B12:0,Folate:25,Omega3:0.1,Omega6:0.8,Iodine:0,Choline:12,DHA:0},
   'Κους κους (βρ.)':{Fe:0.4,Zn:0.4,Mg:8,Ca:6,B1:0.03,B2:0.02,B3:1.0,B6:0.03,B12:0,Folate:11,Omega3:0.01,Omega6:0.06,Iodine:0,Choline:5,DHA:0},

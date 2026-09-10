@@ -248,5 +248,12 @@ var FOOD_ALIASES={
   'Hungry Not Layered Bars Πραλίνα Φουντουκιού':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
   'Hungry Not Πραλίνα Φουντουκιού':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
   'Hungry Not Protein Bar Hazelnut Praline':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
-  'Μπάρα Hungry Not φουντούκι':'Hungry Not Protein Bar Πραλίνα Φουντουκιού'
+  'Μπάρα Hungry Not φουντούκι':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
+  // VAST Instant Rice Pudding 900g — added 2026-09-10
+  'VAST Instant Rice Pudding':'Ρυζόγαλο στιγμής (VAST)',
+  'VAST Instant Rice Pudding 900g':'Ρυζόγαλο στιγμής (VAST)',
+  'Instant Rice Pudding (VAST)':'Ρυζόγαλο στιγμής (VAST)',
+  'VAST Ρυζόγαλο':'Ρυζόγαλο στιγμής (VAST)',
+  'Ρυζόγαλο VAST':'Ρυζόγαλο στιγμής (VAST)',
+  'Ρυζογαλο στιγμης VAST':'Ρυζόγαλο στιγμής (VAST)'
 };

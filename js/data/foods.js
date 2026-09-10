@@ -125,6 +125,8 @@ var FOODS={
 'Τορτίλια (large)':{k:310,p:8,c:52,f:8,fi:3.0,cat:'Δημητριακά',en:'Tortilla (large)',ru:'Тортилья (большая)',tr:'Tortilla (büyük)'},
 'Τορτίλια ολικής άλεσης (Alphamega)':{k:309,p:7.6,c:50,f:7.7,fi:4.7,cat:'Δημητριακά',en:'Whole Wheat Tortilla (Alphamega)',ru:'Тортилья цельнозерновая (Alphamega)',tr:'Tam Buğday Tortilla (Alphamega)'},
 'Ρυζογκοφρέτες':{k:387,p:8,c:83,f:3,fi:4.4,cat:'Δημητριακά',en:'Rice Cakes',ru:'Рисовые хлебцы',tr:'Pirinç Keki'},
+// ✅ 2026-09-10: VAST Instant Rice Pudding 900g — στιγμιαίο ρυζόγαλο σκόνης (μόνο νερό + ανακάτεμα). Per-100g ΞΗΡΟ από ετικέτα (Nährwertangaben): 1527kJ/365kcal, 6.0g πρωτ., 83g υδατ. (0.1g σάκχ.), 1.0g λιπ. (0g κορ.), 0.4g αλάτι. Μερίδα ετικέτας 2 scoops = 36.1g. Ρυζάλευρο-βάση → gluten-free & vegan (χωρίς γάλα — τα σάκχ. 0.1g το επιβεβαιώνουν). fi: εκτίμηση ~1.3g (ραφιναρισμένο ρυζάλευρο). cat 'Δημητριακά' όπως τα υπόλοιπα ξηρά ρυζοπροϊόντα/δημητριακά.
+'Ρυζόγαλο στιγμής (VAST)':{k:365,p:6,c:83,f:1,fi:1.3,cat:'Δημητριακά',en:'Instant Rice Pudding (VAST)',ru:'Рисовый пудинг быстрого приготовления (VAST)',tr:'Hazır Sütlaç (VAST)'},
 'Μούσλι':{k:350,p:10,c:62,f:6,fi:7.7,cat:'Δημητριακά',en:'Muesli',ru:'Мюсли',tr:'Müsli'},
 'Ψωμί ολικής άλεσης':{k:247,p:8.7,c:41,f:3.5,fi:6.8,cat:'Δημητριακά',en:'Whole Wheat Bread',ru:'Цельнозерновой хлеб',tr:'Tam Buğday Ekmeği'},
 'Ψωμί ολικής άλεσης (φρυγανισμένο)':{k:300,p:11,c:50,f:4,fi:8,cat:'Δημητριακά',en:'Whole Wheat Bread (toasted)',ru:'Цельнозерновой хлеб (тост)',tr:'Tam Buğday Ekmeği (kızarmış)'},
