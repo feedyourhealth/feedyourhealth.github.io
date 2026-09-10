@@ -304,6 +304,8 @@ var MICRONUTRIENTS={
   'Λευκό κρασί':{Fe:0.4,Zn:0.07,Mg:9,Ca:9,B1:0,B2:0.01,B3:0.1,B6:0.05,B12:0,Folate:0,Omega3:0,Omega6:0,Iodine:0,Choline:8,DHA:0},
   'Κοκος γάλα light':{Fe:0.8,Zn:0.4,Mg:20,Ca:8,B1:0.02,B2:0,B3:0.4,B6:0.02,B12:0,Folate:8,Omega3:0,Omega6:0.05,Iodine:0,Choline:4,DHA:0},
   'Πορτοκαλάδα φρέσκια':{Fe:0.2,Zn:0.07,Mg:11,Ca:11,B1:0.09,B2:0.02,B3:0.4,B6:0.06,B12:0,Folate:30,Omega3:0.01,Omega6:0.02,Iodine:0,Choline:8,DHA:0},
+  // Εκτίμηση — η ετικέτα έχει μόνο μακροθρεπτικά· μείγμα χυμών από συμπυκνωμένο (παντζάρι/μήλο/πορτοκάλι/καρότο), μοντέλο σε βάση Πορτοκαλάδας φρέσκιας + επιπλέον Fe/Mg/Folate από παντζάρι
+  'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο':{Fe:0.4,Zn:0.1,Mg:14,Ca:14,B1:0.04,B2:0.03,B3:0.3,B6:0.07,B12:0,Folate:35,Omega3:0.01,Omega6:0.02,Iodine:0,Choline:8,DHA:0},
   'Σαρδέλες':{Fe:2.9,Zn:1.3,Mg:39,Ca:382,B1:0.03,B2:0.23,B3:5.2,B6:0.16,B12:8.9,Folate:11,Omega3:1.5,Omega6:0.2,Iodine:35,Choline:75,DHA:500,VitD:5},
   'Πατάτες':{Fe:0.3,Zn:0.3,Mg:20,Ca:8,B1:0.08,B2:0.02,B3:1.1,B6:0.2,B12:0,Folate:8,Omega3:0.002,Omega6:0.03,Iodine:0,Choline:12,DHA:0},
   'Σάλτσα κάρι light':{Fe:0.5,Zn:0.2,Mg:12,Ca:20,B1:0.03,B2:0.05,B3:0.5,B6:0.05,B12:0,Folate:5,Omega3:0.05,Omega6:0.5,Iodine:0,Choline:8,DHA:0}
