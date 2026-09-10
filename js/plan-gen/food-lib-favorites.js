@@ -334,7 +334,8 @@ function balanceMacros(d,mi){
 /* ---- Food library ---- */
 function renderFoodLib(q){
   var el=document.getElementById('lib-list');if(!el)return;
-  q=(q||'').toLowerCase().trim();
+  var _nrm=(typeof normalizeGreekText==='function')?normalizeGreekText:function(s){return (s||'').toLowerCase();};
+  q=_nrm((q||'').trim());
 
   // ── Saved combos section (shown only when not searching) ──
   var comboHtml='';
@@ -365,7 +366,7 @@ function renderFoodLib(q){
 
   var cats={};
   Object.keys(FOODS).forEach(function(n){
-    if(q&&n.toLowerCase().indexOf(q)<0)return;
+    if(q&&_nrm(n).indexOf(q)<0)return;
     var cat=FOODS[n].cat;if(!cats[cat])cats[cat]=[];cats[cat].push(n);
   });
   if(!Object.keys(cats).length){el.innerHTML=comboHtml+'<div style="color:var(--text-muted);font-size:11px;padding:6px">Δεν βρέθηκε</div>';return;}

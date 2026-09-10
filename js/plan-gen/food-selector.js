@@ -116,12 +116,13 @@ function updateFoodSelector(query){
   var list=document.getElementById('food-selector-list');
   if(!list)return;
 
-  var q=(query||'').toLowerCase().trim();
+  var _nrm=(typeof normalizeGreekText==='function')?normalizeGreekText:function(s){return (s||'').toLowerCase();};
+  var q=_nrm((query||'').trim());
   var cats={};
 
-  // Filter foods
+  // Filter foods — accent-insensitive (π.χ. "παντζαρι" βρίσκει "Παντζάρι")
   Object.keys(FOODS).forEach(function(n){
-    if(q&&n.toLowerCase().indexOf(q)<0)return;
+    if(q&&_nrm(n).indexOf(q)<0)return;
     var cat=FOODS[n].cat;
     if(!cats[cat])cats[cat]=[];
     cats[cat].push(n);
@@ -290,9 +291,10 @@ function rankRecipeForMealTime(recipe,targetCategory){
 function updateRecipeSelectorForPlan(query){
   var list=document.getElementById('recipe-selector-list');
   if(!list)return;
-  var q=(query||'').toLowerCase().trim();
+  var _nrm=(typeof normalizeGreekText==='function')?normalizeGreekText:function(s){return (s||'').toLowerCase();};
+  var q=_nrm((query||'').trim());
   var all=(typeof allRecipesForBrowsing==='function')?allRecipesForBrowsing():[];
-  var filtered=all.filter(function(r){return !q||(r.name||'').toLowerCase().indexOf(q)>-1;});
+  var filtered=all.filter(function(r){return !q||_nrm(r.name||'').indexOf(q)>-1;});
 
   // Diet-type φίλτρα (chips) — OR μεταξύ επιλεγμένων (π.χ. Vegan + High Protein = φαίνονται και τα δύο).
   if(_foodSelectorRecipeDietFilters.length && typeof recipeHasDietTag==='function'){
