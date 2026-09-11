@@ -268,5 +268,11 @@ var FOOD_ALIASES={
   'Katsu Curry':'Chicken Katsu Curry (wagamama)',
   'Chicken Katsu':'Chicken Katsu Curry (wagamama)',
   'Κοτόπουλο Katsu Curry':'Chicken Katsu Curry (wagamama)',
-  'Κοτόπουλο κάρι wagamama':'Chicken Katsu Curry (wagamama)'
+  'Κοτόπουλο κάρι wagamama':'Chicken Katsu Curry (wagamama)',
+  // OstroVit Cream of Rice - Natural 1000g — added 2026-09-11
+  'OstroVit Cream of Rice':'Cream of Rice (OstroVit)',
+  'Cream of Rice OstroVit':'Cream of Rice (OstroVit)',
+  'Cream of Rice - Natural (OstroVit)':'Cream of Rice (OstroVit)',
+  'Κρέμα ρυζιού OstroVit':'Cream of Rice (OstroVit)',
+  'Κρέμα ρυζιού':'Cream of Rice (OstroVit)'
 };
