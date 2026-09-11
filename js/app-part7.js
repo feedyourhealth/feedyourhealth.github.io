@@ -1141,20 +1141,34 @@
       var self=this;
       if(!this.enabled || !this.user || !this._loaded) return;
       clearTimeout(this._t);
-      this._t=setTimeout(function(){
-        self._pushNow().then(function(result){
-          if(result && result.ok===false){
-            self._syncFailed=true;
-            if(result.conflict){ self._showConflictError(); } else { self._showSyncError(); }
-            return;
-          }
-          self._syncFailed=false;
-          self._hideSyncError();
-          self._hideConflictError();
-          var t=document.getElementById('cloud-save-toast');
-          if(t){ t.style.opacity='1'; clearTimeout(t._ft); t._ft=setTimeout(function(){ t.style.opacity='0'; },1500); }
-        });
-      },1500);
+      this._t=setTimeout(function(){ self._queuePush(); },1500);
+    },
+
+    // ⚠️ 2026-09-11 fix: πριν, αυτό το .then() ζούσε ανώνυμο μέσα στο save() — δύο αλλαγές
+    // αρκετά κοντά (π.χ. μια χειροκίνητη αποθήκευση ακριβώς τη στιγμή που πέφτει το 30"
+    // autosave interval) σκανδάλιζαν δύο _pushNow() που "πετούσαν" ταυτόχρονα. Το δεύτερο
+    // διάβαζε το self._version ΠΡΙΝ προλάβει να ενημερωθεί από το πρώτο (το network round-trip
+    // δεν έχει επιστρέψει ακόμα) — άρα το optimistic-lock update του απέτυχε σαν "conflict",
+    // δείχνοντας ψευδώς το πορτοκαλί «άλλη συσκευή/tab» μήνυμα ενώ ήταν η ΙΔΙΑ καρτέλα. Το
+    // _pushChain σειριοποιεί: κάθε push περιμένει να ΟΛΟΚΛΗΡΩΘΕΙ (και να ενημερώσει
+    // self._version) το προηγούμενο πριν διαβάσει τη δική του expected τιμή — πραγματικά
+    // ταυτόχρονα conflicts (άλλη συσκευή) εξακολουθούν να ανιχνεύονται κανονικά.
+    _queuePush:function(){
+      var self=this;
+      var chain=self._pushChain || Promise.resolve();
+      self._pushChain=chain.then(function(){ return self._pushNow(); }).then(function(result){
+        if(result && result.ok===false){
+          self._syncFailed=true;
+          if(result.conflict){ self._showConflictError(); } else { self._showSyncError(); }
+          return;
+        }
+        self._syncFailed=false;
+        self._hideSyncError();
+        self._hideConflictError();
+        var t=document.getElementById('cloud-save-toast');
+        if(t){ t.style.opacity='1'; clearTimeout(t._ft); t._ft=setTimeout(function(){ t.style.opacity='0'; },1500); }
+      });
+      return self._pushChain;
     },
 
     // ⚠️ Εμφανίζεται ΜΟΝΙΜΑ (όχι σαν φευγαλέο toast) όσο η τελευταία αποθήκευση στο cloud αποτυγχάνει —
