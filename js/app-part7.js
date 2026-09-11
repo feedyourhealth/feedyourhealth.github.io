@@ -949,7 +949,7 @@
               if(_editingNow){
                 console.warn('[CLOUD] Ο χρήστης επεξεργάζεται τη στιγμή που ήρθε το cloud blob — κρατάω τα τοπικά.');
                 self._loaded=true;
-                self._pushNow().then(function(){ self._loadCustomRecipes().then(resolve); });
+                self._queuePush().then(function(){ self._loadCustomRecipes().then(resolve); });
                 return;
               }
             }
@@ -962,7 +962,7 @@
             if(_localTs && d.updatedAt && _localTs>d.updatedAt && window.clients && window.clients.length){
               console.warn('[CLOUD] Τοπικά δεδομένα ('+_localTs+') πιο πρόσφατα από το cloud ('+d.updatedAt+') — τα διατηρώ και τα ανεβάζω αντί να τα αντικαταστήσω.');
               self._loaded=true;
-              self._pushNow().then(function(){ self._loadCustomRecipes().then(resolve); });
+              self._queuePush().then(function(){ self._loadCustomRecipes().then(resolve); });
               return;
             }
             try{
@@ -1004,7 +1004,7 @@
           } else {
             // Cloud άδειο → πρώτη φορά: ανεβάζουμε τα τοπικά δεδομένα (migration)
             self._loaded=true;
-            if(window.clients && window.clients.length){ self._pushNow().then(function(){ self._loadCustomRecipes().then(resolve); }); }
+            if(window.clients && window.clients.length){ self._queuePush().then(function(){ self._loadCustomRecipes().then(resolve); }); }
             else { self._loadCustomRecipes().then(resolve); }
           }
         }).catch(function(e){ console.error('[CLOUD] load', e); self._loaded=true; resolve(); });
@@ -1429,11 +1429,17 @@
 
   // 🛡️ Αν ο χρήστης κλείσει/αλλάξει καρτέλα ενώ εκκρεμεί debounced save (1.5s),
   // στείλε το push αμέσως αντί να το χάσουμε σιωπηλά (βλ. code review: race condition).
+  // ⚠️ 2026-09-11: καλούσε _pushNow() απευθείας, παρακάμπτοντας το _pushChain — αν ένα
+  // προηγούμενο push ήταν ήδη "στον αέρα" (π.χ. από το προηγούμενο save() που μόλις πυροδότησε),
+  // αυτό διάβαζε self._version πριν ενημερωθεί και ξανάβγαζε το ίδιο ψευδές conflict που
+  // διόρθωσε το _queuePush — μόνο που εδώ, μια αλλαγή καρτέλας/παραθύρου ενώ δουλεύεις είναι
+  // πολύ πιο συχνή από τη σπάνια σύμπτωση χρόνου του αρχικού bug. _queuePush() στέλνει το ίδιο
+  // άμεσα (καμία επιπλέον καθυστέρηση 1.5s) αλλά περνάει από την ίδια ουρά σειριοποίησης.
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState==='hidden' && Cloud._t){
       clearTimeout(Cloud._t);
       Cloud._t=null;
-      Cloud._pushNow();
+      Cloud._queuePush();
     }
   });
 })();

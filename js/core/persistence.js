@@ -151,8 +151,10 @@ window.addEventListener('beforeunload',function(){
   // Cloud.save() (called from _doSave above) only *schedules* a push 1500ms later — that
   // debounce almost never gets to fire before the tab actually tears down, so an edit made
   // right before closing/reloading can silently never reach the cloud (audit finding Ε3).
-  // Bypass the debounce here and push immediately, fire-and-forget.
-  try{ if(window.Cloud && typeof Cloud._pushNow==='function') Cloud._pushNow(); }catch(e){}
+  // Bypass the debounce (not the serialization) here — _queuePush() sends it immediately if
+  // nothing else is in flight, same as calling _pushNow() directly used to, but without racing
+  // an already-in-flight push from moments earlier (2026-09-11 fix, see app-part7.js).
+  try{ if(window.Cloud && typeof Cloud._queuePush==='function') Cloud._queuePush(); }catch(e){}
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════════
