@@ -73,6 +73,18 @@ class UndoRedoManager {
 
 /**
  * CreateClientCommand - Undo/redo for creating a new client
+ *
+ * ⚠️ 2026-09-11 fix: undo() used to hard-remove the client from `clients`
+ * (array splice, no flag, no save()) — a single stray click on the global
+ * ↩ button (undo history is shared across the whole app, not per-client)
+ * silently wiped a just-created client with ZERO trace: not in "Διαγραμμένοι"
+ * (that list is built from `c.deleted`, never set here), not in any local
+ * snapshot/backup taken after the click. Two real clients were lost this way
+ * the same day they were created — one had already had a plan link sent
+ * (only recoverable because `shared_plans` is a separate table the undo
+ * never touched). Now mirrors DeleteClientCommand: soft-delete instead of
+ * removal, so an accidental ↩ always lands safely in "Διαγραμμένοι" with a
+ * one-click "↶ Ανάκτηση", the same as a manual delete would.
  */
 class CreateClientCommand {
   constructor(client) {
@@ -80,21 +92,30 @@ class CreateClientCommand {
   }
 
   execute() {
-    clients.push(this.client);
+    if (!clients.includes(this.client)) clients.push(this.client);
+    this.client.deleted = false;
+    delete this.client.deletedAt;
     selectClient(this.client.id);
+    save();
     renderSB();
     renderMain();
     console.log('✓ Client created:', this.client.name);
   }
 
   undo() {
-    clients = clients.filter(c => c.id !== this.client.id);
+    this.client.deleted = true;
+    this.client.deletedAt = new Date().toISOString();
     if (curId === this.client.id) {
       curId = null;
       if(typeof renderHome==='function') renderHome();
     }
+    save();
     renderSB();
-    console.log('✗ Client deleted (undo):', this.client.name);
+    console.log('✗ Client creation undone (soft-deleted, recoverable):', this.client.name);
+  }
+
+  redo() {
+    this.execute();
   }
 }
 
