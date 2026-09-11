@@ -362,6 +362,103 @@ function restoreFromSnapshot(){
   });
 }
 
+// ── Επαναφορά από αρχείο δίσκου (Layer 2) ────────────────────────────────────────────
+// Το "↩️ Επαναφορά (snapshot)" πάνω σκύβει μόνο στα τελευταία _BACKUP_SNAP_MAX (5)
+// αλλαγές αυτής της καρτέλας — σε μια ενεργή μέρα δουλειάς μπορεί να καλύπτουν μόλις
+// λίγα λεπτά. Ο φάκελος δίσκου (chooseBackupFolder()) όμως κρατάει ΕΝΑ αρχείο ΑΝΑ ΜΕΡΑ
+// για πολλές εβδομάδες πίσω — real ιστορικό βάθος, αλλά μέχρι τώρα δεν υπήρχε κουμπί να
+// το χρησιμοποιήσει κανείς χωρίς να ανοίξει τα .json με το χέρι. Ίδιο UX μοτίβο με το
+// restoreFromSnapshot() (κουμπί-ανά-ημερομηνία, ίδιο confirm βήμα), διαβάζει όμως από
+// τον ήδη-εξουσιοδοτημένο _backupDirHandle αντί από localStorage.
+function restoreFromDiskBackup(){
+  if(!backupFolderSupported()){
+    showErrorToast('Ο browser σας δεν υποστηρίζει αυτόματο backup σε φάκελο.\n\nΧρησιμοποιήστε Chrome/Edge.');
+    return;
+  }
+  if(!_backupDirHandle){
+    showErrorToast('Δεν έχεις συνδέσει φάκελο αυτόματου backup ακόμη.\n\nΠάτα πρώτα «📂 Αυτόματο backup σε φάκελο».');
+    return;
+  }
+  _ensureDirPermission(function(granted){
+    if(!granted){ showErrorToast('Δεν δόθηκε πρόσβαση στον φάκελο backup.'); return; }
+    _listDiskBackupNames(function(names){
+      if(!names.length){ showErrorToast('Δεν βρέθηκαν ημερήσια αρχεία backup στον φάκελο ακόμη.'); return; }
+      _showDiskBackupChooser(names);
+    });
+  });
+}
+
+// Απαριθμεί "Dietologist_Backup_YYYY-MM-DD.json" (αγνοεί το "_latest" — δεν είναι ξεχωριστή
+// ημέρα), πιο πρόσφατο πρώτα. directoryHandle.values() είναι async iterator — οδηγείται
+// χειροκίνητα με .then() (ίδιο idiom με τα υπόλοιπα helpers εδώ), όχι με for-await, ώστε να
+// μη χρειάζεται async function σε ένα αρχείο αλλιώς καθαρά ES5.
+function _listDiskBackupNames(cb){
+  var names=[];
+  try{
+    var it=_backupDirHandle.values();
+    (function step(){
+      it.next().then(function(res){
+        if(res.done){ names.sort().reverse(); cb(names); return; }
+        var entry=res.value;
+        if(entry.kind==='file' && /^Dietologist_Backup_\d{4}-\d{2}-\d{2}\.json$/.test(entry.name)) names.push(entry.name);
+        step();
+      }).catch(function(e){ console.warn('[BACKUP] list disk', e && e.message); names.sort().reverse(); cb(names); });
+    })();
+  }catch(e){ console.warn('[BACKUP] list disk', e && e.message); cb(names); }
+}
+
+function _showDiskBackupChooser(names){
+  var old=document.getElementById('disk-backup-restore-overlay');
+  if(old) old.remove();
+  var ov=document.createElement('div');
+  ov.id='disk-backup-restore-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  var box=document.createElement('div');
+  box.style.cssText='background:#fff;border-radius:14px;max-width:420px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:92vh;overflow:auto';
+  var h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:22px">📂</span>'
+    +'<div style="font-size:17px;font-weight:700;color:#014545">Επαναφορά από αρχείο δίσκου</div></div>'
+    +'<div style="font-size:12.5px;color:#5a8a82;margin-bottom:14px">Ημερήσια αντίγραφα από τον φάκελο backup. Διάλεξε ημερομηνία — θα ζητηθεί επιβεβαίωση πριν αντικατασταθούν τα τρέχοντα δεδομένα.</div>';
+  names.forEach(function(name, i){
+    var m=name.match(/(\d{4}-\d{2}-\d{2})/);
+    h+='<button type="button" data-name="'+name+'" style="display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;'
+      +'background:#f4f8f6;border:1px solid #c5ddd8;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;color:#014545">'
+      +'<b>'+esc(m?m[1]:name)+'</b>'+(i===0?' <span style="color:#5a8a82;font-weight:400">(πιο πρόσφατο)</span>':'')+'</button>';
+  });
+  h+='<div style="text-align:right;margin-top:10px"><button type="button" id="disk-backup-restore-cancel" class="btn" '
+    +'style="background:#eee;color:#555;border:none;border-radius:6px;padding:8px 14px;cursor:pointer">Άκυρο</button></div>';
+  box.innerHTML=h;
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+  box.querySelector('#disk-backup-restore-cancel').onclick=function(){ ov.remove(); };
+  box.querySelectorAll('button[data-name]').forEach(function(b){
+    b.onclick=function(){
+      var name=b.getAttribute('data-name');
+      ov.remove();
+      _confirmAndRestoreFromDisk(name);
+    };
+  });
+}
+
+function _confirmAndRestoreFromDisk(name){
+  var m=name.match(/(\d{4}-\d{2}-\d{2})/);
+  var dateLabel=m?m[1]:name;
+  showConfirmDialog('⚠️ Θα διαβαστεί το αντίγραφο της '+esc(dateLabel)+' και θα αντικαταστήσει ΟΛΑ τα τρέχοντα δεδομένα.\n\nΣυνέχεια;', function(){
+    _backupDirHandle.getFileHandle(name).then(function(fh){ return fh.getFile(); }).then(function(file){ return file.text(); }).then(function(text){
+      var d;
+      try{ d=JSON.parse(text); }catch(e){ showErrorToast('❌ Το αρχείο backup είναι κατεστραμμένο/μη αναγνώσιμο.'); return; }
+      clients=d.clients||[];
+      customTemplates=d.customTemplates||[];
+      if(d.trackingData && typeof TRACKING_DATA!=='undefined') TRACKING_DATA=d.trackingData;
+      _doSave();
+      curId=null;
+      if(typeof renderSB==='function') renderSB();
+      if(typeof renderMain==='function') renderMain();
+      showSuccessToast('✅ Επαναφορά ολοκληρώθηκε από '+esc(dateLabel)+': '+clients.length+' πελάτες.');
+    }).catch(function(e){ console.error('[BACKUP] restore disk', e); showErrorToast('❌ Αποτυχία ανάγνωσης: '+(e&&e.message||'άγνωστο σφάλμα')); });
+  }, {confirmLabel:'Αντικατάσταση'});
+}
+
 // Στοχευμένη ανάκτηση: ψάχνει ΜΟΝΟ τα savedPlans ενός πελάτη μέσα στα τοπικά snapshots
 // και τα προσθέτει πίσω, χωρίς να πειράξει κανέναν άλλο πελάτη ή δεδομένο (σε αντίθεση
 // με το restoreFromSnapshot() που αντικαθιστά τα πάντα).
