@@ -145,6 +145,12 @@ function toggleSuppCheckbox(containerEl){
 }
 
 /* Supplement Suggestions Modal */
+// _lastGapBasedRecs: the gap-based recommendation objects (with .timing, from
+// matchSupplementsToGaps) currently shown in #supp-modal, indexed the same as their
+// checkbox id ('supp_'+idx) — saveSupplementSelection() reads back from here instead of
+// re-parsing the rendered HTML, so timing/dose survive the save (see that function).
+var _lastGapBasedRecs=[];
+
 function openSupplementModal(){
   try {
     var c=getC();
@@ -175,6 +181,7 @@ function openSupplementModal(){
 
     console.log('[DEBUG] openSupplementModal - Calling matchSupplementsToGaps');
     var gapBasedRecs=matchSupplementsToGaps(gaps, SUPPS);
+    _lastGapBasedRecs=gapBasedRecs;
 
     // ═════ COMBINE WITH STATIC RECOMMENDATIONS ═════
     console.log('[DEBUG] openSupplementModal - Calling buildDynamicSupplementHtml');
@@ -224,26 +231,24 @@ function saveSupplementSelection(){
     return;
   }
 
-  // Get all checked checkboxes
-  var checkboxes=document.querySelectorAll('#supp-modal input[type="checkbox"]:checked');
+  // Get all checked checkboxes — read the recommendation straight from _lastGapBasedRecs
+  // (indexed by the 'supp_N' checkbox id) rather than re-parsing the rendered HTML: the
+  // current buildDynamicSupplementHtml markup has no <label>, so the old label-scraping
+  // version below never matched anything and silently saved zero supplements.
+  var checkboxes=document.querySelectorAll('#supp-modal input.supp-checkbox:checked');
   var selectedSupps=[];
 
   checkboxes.forEach(function(cb){
-    var parent=cb.closest('div');
-    var label=parent.querySelector('label');
-    var infoDiv=parent.querySelector('div');
+    var idx=parseInt((cb.id||'').split('_')[1],10);
+    var rec=_lastGapBasedRecs[idx];
+    if(!rec)return;
 
-    if(label && infoDiv){
-      var suppName=label.textContent.split(' - ')[0].trim();
-      var doseText=label.textContent.split(' - ')[1]||'';
-      var infoText=infoDiv.textContent;
-
-      selectedSupps.push({
-        supplement: suppName,
-        dose: doseText,
-        info: infoText
-      });
-    }
+    selectedSupps.push({
+      supplement: rec.supplement,
+      dose: rec.recommendedDose+rec.unit,
+      info: rec.nutrient+' | Ελλείπει: '+rec.gap.toFixed(1)+rec.unit,
+      timing: (rec.timing&&rec.timing.t)||''
+    });
   });
 
   if(selectedSupps.length===0){
@@ -255,12 +260,7 @@ function saveSupplementSelection(){
   // (checked or not, all under #supp-modal input[type=checkbox]), so keep whatever the "already
   // taking" modal (Tab 1, "💊 Συμπληρώματα") saved for names outside that candidate set —
   // otherwise saving here would silently wipe those out of c.selectedSupplements.
-  var allCandidateNames=[];
-  document.querySelectorAll('#supp-modal input[type="checkbox"]').forEach(function(cb){
-    var parent=cb.closest('div');
-    var label=parent.querySelector('label');
-    if(label) allCandidateNames.push(label.textContent.split(' - ')[0].trim());
-  });
+  var allCandidateNames=_lastGapBasedRecs.map(function(rec){return rec.supplement;});
   var keepFromOther=(c.selectedSupplements||[]).filter(function(s){
     return allCandidateNames.indexOf(s.supplement)===-1;
   });

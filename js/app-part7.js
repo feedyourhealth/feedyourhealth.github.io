@@ -739,11 +739,13 @@
         suppSeen[sx.name]=1;
         supps.push({name:(suppSfx&&sx['name'+suppSfx])||sx.name, dose:(suppSfx?(doseTr||sx['dose'+suppSfx]):dose)||sx.dose||'', timing:times.join(', ')});
       });
-      // Step 2: προτεινόμενα από την ανάλυση κενών (δεν υπάρχουν ώρες λήψης εδώ)
+      // Step 2: προτεινόμενα από την ανάλυση κενών — saveSupplementSelection() (client-editor/
+      // modals.js) αποθηκεύει πλέον και su.timing (η ώρα λήψης της σύστασης), μεταφράζεται εδώ
+      // με το ίδιο suppTime() dictionary όπως τα Step 1 supps.
       (c.selectedSupplements||[]).forEach(function(su){
         var nm=su&&su.supplement; if(!nm||suppSeen[nm])return;
         suppSeen[nm]=1;
-        supps.push({name:suppNameByText(nm), dose:(su.dose||su.info||''), timing:''});
+        supps.push({name:suppNameByText(nm), dose:(su.dose||su.info||''), timing:su.timing?suppTime(su.timing):''});
       });
 
       // ── Πρόοδος ──
