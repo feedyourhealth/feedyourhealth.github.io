@@ -159,7 +159,7 @@ function applySuppsInline(){
   var picked=[];
   body.querySelectorAll('input[type="checkbox"][data-supp-idx]:checked').forEach(function(cb){
     var s=list[parseInt(cb.getAttribute('data-supp-idx'),10)];
-    if(s) picked.push({supplement:s.name, dose:s.dosage, info:''});
+    if(s) picked.push({supplement:s.name, dose:s.dosage, info:'', timing:s.timing||''});
   });
   var names=list.map(function(s){return s.name;});
   var keepFromOther=(c.selectedSupplements||[]).filter(function(s){return names.indexOf(s.supplement)===-1;});
