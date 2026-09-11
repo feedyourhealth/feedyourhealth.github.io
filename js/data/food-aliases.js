@@ -262,5 +262,11 @@ var FOOD_ALIASES={
   'Χυμός παντζάρι':'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο',
   'Χυμός παντζαριού':'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο',
   'Χυμός παντζάρι Alambra':'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο',
-  'Beetroot Juice (Alambra)':'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο'
+  'Beetroot Juice (Alambra)':'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο',
+  // Chicken Katsu Curry (wagamama) — added 2026-09-11
+  'Wagamama Chicken Katsu Curry':'Chicken Katsu Curry (wagamama)',
+  'Katsu Curry':'Chicken Katsu Curry (wagamama)',
+  'Chicken Katsu':'Chicken Katsu Curry (wagamama)',
+  'Κοτόπουλο Katsu Curry':'Chicken Katsu Curry (wagamama)',
+  'Κοτόπουλο κάρι wagamama':'Chicken Katsu Curry (wagamama)'
 };

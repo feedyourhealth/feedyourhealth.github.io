@@ -308,5 +308,7 @@ var MICRONUTRIENTS={
   'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο':{Fe:0.4,Zn:0.1,Mg:14,Ca:14,B1:0.04,B2:0.03,B3:0.3,B6:0.07,B12:0,Folate:35,Omega3:0.01,Omega6:0.02,Iodine:0,Choline:8,DHA:0},
   'Σαρδέλες':{Fe:2.9,Zn:1.3,Mg:39,Ca:382,B1:0.03,B2:0.23,B3:5.2,B6:0.16,B12:8.9,Folate:11,Omega3:1.5,Omega6:0.2,Iodine:35,Choline:75,DHA:500,VitD:5},
   'Πατάτες':{Fe:0.3,Zn:0.3,Mg:20,Ca:8,B1:0.08,B2:0.02,B3:1.1,B6:0.2,B12:0,Folate:8,Omega3:0.002,Omega6:0.03,Iodine:0,Choline:12,DHA:0},
-  'Σάλτσα κάρι light':{Fe:0.5,Zn:0.2,Mg:12,Ca:20,B1:0.03,B2:0.05,B3:0.5,B6:0.05,B12:0,Folate:5,Omega3:0.05,Omega6:0.5,Iodine:0,Choline:8,DHA:0}
+  'Σάλτσα κάρι light':{Fe:0.5,Zn:0.2,Mg:12,Ca:20,B1:0.03,B2:0.05,B3:0.5,B6:0.05,B12:0,Folate:5,Omega3:0.05,Omega6:0.5,Iodine:0,Choline:8,DHA:0},
+  // Εκτίμηση — η ετικέτα έχει μόνο μακροθρεπτικά· σύνθετο πιάτο (κοτόπουλο panko/rice/curry sauce), μοντέλο σε βάση κοτόπουλου + λευκού ρυζιού + σάλτσας κάρι
+  'Chicken Katsu Curry (wagamama)':{Fe:0.5,Zn:0.6,Mg:14,Ca:15,B1:0.06,B2:0.06,B3:2.2,B6:0.15,B12:0.15,Folate:6,Omega3:0.03,Omega6:1.0,Iodine:2,Choline:18,DHA:0}
 };
