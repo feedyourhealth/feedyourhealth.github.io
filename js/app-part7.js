@@ -710,9 +710,12 @@
       // ── Συμπληρώματα (ίδια λογική με το PDF: Page 1 c.supps + Page 2 c.selectedSupplements) ──
       // EN_SUPP_TIMING: οι λίγες σταθερές ώρες λήψης (ti.t) που εμφανίζονται σε ΟΛΑ τα SUPPS — δεν
       // υπάρχει ανά-item αγγλική εκδοχή τους στη βάση (μόνο τα ονόματα έχουν nameEn), οπότε μεταφράζονται εδώ.
-      var EN_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Right after training','Βραδινό':'Dinner','Με το πρωινό':'With breakfast','Μεσημεριανό':'Lunch',"Πριν προπόνηση (30')":"Before training (30')",'Πριν το πρωινό':'Before breakfast','Πριν τον ύπνο':'Before bed'};
-      var RU_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Сразу после тренировки','Βραδινό':'Ужин','Με το πρωινό':'С завтраком','Μεσημεριανό':'Обед',"Πριν προπόνηση (30')":'За 30 мин до тренировки','Πριν το πρωινό':'Перед завтраком','Πριν τον ύπνο':'Перед сном'};
-      var TR_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Antrenmandan hemen sonra','Βραδινό':'Akşam yemeği','Με το πρωινό':'Kahvaltıyla birlikte','Μεσημεριανό':'Öğle yemeği',"Πριν προπόνηση (30')":'Antrenmandan 30dk önce','Πριν το πρωινό':'Kahvaltıdan önce','Πριν τον ύπνο':'Yatmadan önce'};
+      // Οι 6 τελευταίες τιμές κάθε dict (πρωί με φαγητό.../μετά την άσκηση) είναι τα ελεύθερα timing
+      // strings του COMMON_SUPPS (js/app-part5.js) — το «ήδη λαμβάνει» Page-1 modal, ξεχωριστό από
+      // τα SUPP_TIMINGS του SUPPS array παραπάνω.
+      var EN_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Right after training','Βραδινό':'Dinner','Με το πρωινό':'With breakfast','Μεσημεριανό':'Lunch',"Πριν προπόνηση (30')":"Before training (30')",'Πριν το πρωινό':'Before breakfast','Πριν τον ύπνο':'Before bed','πρωί με φαγητό':'Morning, with food','με φαγητό':'With food','βράδυ':'Evening','οποιαδήποτε ώρα':'Any time','με γεύμα':'With a meal','μετά την άσκηση':'After training'};
+      var RU_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Сразу после тренировки','Βραδινό':'Ужин','Με το πρωινό':'С завтраком','Μεσημεριανό':'Обед',"Πριν προπόνηση (30')":'За 30 мин до тренировки','Πριν το πρωινό':'Перед завтраком','Πριν τον ύπνο':'Перед сном','πρωί με φαγητό':'Утром, с едой','με φαγητό':'С едой','βράδυ':'Вечером','οποιαδήποτε ώρα':'В любое время','με γεύμα':'Во время еды','μετά την άσκηση':'После тренировки'};
+      var TR_SUPP_TIMING={'Αμέσως μετά προπόνηση':'Antrenmandan hemen sonra','Βραδινό':'Akşam yemeği','Με το πρωινό':'Kahvaltıyla birlikte','Μεσημεριανό':'Öğle yemeği',"Πριν προπόνηση (30')":'Antrenmandan 30dk önce','Πριν το πρωινό':'Kahvaltıdan önce','Πριν τον ύπνο':'Yatmadan önce','πρωί με φαγητό':'Sabah, yemekle birlikte','με φαγητό':'Yemekle birlikte','βράδυ':'Akşam','οποιαδήποτε ώρα':'Günün her saati','με γεύμα':'Bir öğünle birlikte','μετά την άσκηση':'Antrenmandan sonra'};
       var SUPP_TIMING_DICTS={en:EN_SUPP_TIMING,ru:RU_SUPP_TIMING,tr:TR_SUPP_TIMING};
       function suppTime(t){var dict=SUPP_TIMING_DICTS[lang]; return (dict&&dict[t])||t;}
       // nameField/doseField/dField: το SUPPS literal ονομάζει τα μεταφρασμένα πεδία nameEn/nameRu/nameTr

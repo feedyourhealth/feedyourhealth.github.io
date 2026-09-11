@@ -1089,7 +1089,8 @@ function savePage1Supplements() {
       selectedSupps.push({
         supplement: supp.name,
         dose: supp.dosage,
-        info: ''
+        info: '',
+        timing: supp.timing || ''
       });
     }
   });
