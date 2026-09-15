@@ -425,7 +425,7 @@
         if(changed){
           try{ if(typeof save==='function') save(); }catch(e){}
           if(typeof renderSB==='function') renderSB();
-          if(curId===null && typeof renderHome==='function') renderHome();
+          if(curId===null && curTab===0 && typeof renderHome==='function') renderHome();
         }
         return changed;
       }).catch(function(e){ console.error('[CLOUD] refreshIntakeStatuses network', e && e.message); return false; });
@@ -1288,7 +1288,7 @@
       return this.fetchAllCheckins(tokens).then(function(byToken){
         self._checkinsCache=byToken;
         if(typeof renderSB==='function') renderSB();
-        if(curId===null && typeof renderHome==='function') renderHome();
+        if(curId===null && curTab===0 && typeof renderHome==='function') renderHome();
         // ✅ 2026-08-01: το feedback πελάτη (progress/notes/plan-feedback) μετακόμισε στο "📝 Ραντεβού"
         // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
         var s3b=document.getElementById('s3b');
@@ -1327,7 +1327,7 @@
         // cache, οπότε χωρίς αυτό το badge έμενε στο παλιό αποτέλεσμα μέχρι να τρέξει τυχαία κάποιο
         // άλλο re-render.
         if(typeof renderSB==='function') renderSB();
-        if(curId===null && typeof renderHome==='function') renderHome();
+        if(curId===null && curTab===0 && typeof renderHome==='function') renderHome();
         // ✅ 2026-08-01: το feedback πελάτη (progress/notes/plan-feedback) μετακόμισε στο "📝 Ραντεβού"
         // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
         var s3b=document.getElementById('s3b');
@@ -1368,7 +1368,7 @@
         // ✅ 2026-08-01: πριν έλειπε από εδώ (μόνο το refreshCheckinsCache το έκανε) — το 😕 badge
         // στη λίστα πελατών/Αρχική εξαρτάται ΑΚΡΙΒΩΣ από αυτό το cache (clientHasLowPlanFeedback).
         if(typeof renderSB==='function') renderSB();
-        if(curId===null && typeof renderHome==='function') renderHome();
+        if(curId===null && curTab===0 && typeof renderHome==='function') renderHome();
         // ✅ 2026-08-01: το feedback πελάτη (progress/notes/plan-feedback) μετακόμισε στο "📝 Ραντεβού"
         // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
         var s3b=document.getElementById('s3b');

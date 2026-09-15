@@ -481,6 +481,9 @@ var TAB_APPOINTMENTS=100;
 var TAB_OVERVIEW=101;
 
 function swTab(n){
+  // curTab (js/core/state.js) — ενημερώνεται ΠΡΩΤΑ, πριν από όλα τα early-return branches παρακάτω,
+  // ώστε τα background refresh*Cache (js/app-part7.js) να ξέρουν ΠΟΙΟ tab είναι ορατό αυτή τη στιγμή.
+  curTab=n;
   if(n===0){ if(typeof renderHome==='function') renderHome(); return; }
   if(n===5){ if(typeof renderDiets==='function') renderDiets(); return; }
   if(n===6){ if(typeof renderRecipes==='function') renderRecipes(); return; }

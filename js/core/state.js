@@ -10,6 +10,14 @@
 // CreateClientCommand etc. are runtime-only or typeof/window-guarded.
 
 var clients=[],curId=null,currentDD=null;
+// Ποιο top-level tab είναι ΟΡΑΤΟ αυτή τη στιγμή (0=Αρχική, 9=Μηνύματα, 10=Πρόοδος, κ.λπ. — βλ. swTab,
+// js/client-editor/form-controls.js, που το ενημερώνει σε κάθε αλλαγή tab). Σκοπός: τα background
+// refresh*Cache/refreshIntakeStatuses (js/app-part7.js), που τρέχουν κάθε 2' μέσω startPortalPollInterval
+// (js/core/persistence.js) ανεξάρτητα από το ποιο tab βλέπεις, έκαναν "if(curId===null) renderHome()" —
+// σωστό όταν πραγματικά δεν υπάρχει επιλεγμένος πελάτης ΚΑΙ βλέπεις την Αρχική, αλλά λάθος για τα
+// "📈 Πρόοδος"/"💬 Μηνύματα" tabs που ΕΠΙΤΗΔΕΣ έχουν curId=null (cross-client προβολή) — ο διαιτολόγος
+// πεταγόταν πίσω στην Αρχική μερικά λεπτά μετά το άνοιγμα εκείνων των tabs, χωρίς να το ζητήσει.
+var curTab=0;
 
 // ✅ PERFORMANCE: JSON CACHE - Cache parsed JSON to avoid repeated parsing
 var JSON_CACHE={
