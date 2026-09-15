@@ -12,6 +12,9 @@
 // score/streak/πυλώνες, ήδη καλυμμένα από το γράφημα 10 εβδ. λίγο πιο πάνω στην ίδια σελίδα) με
 // progressWeightPanelHtml — βλ. σχόλιο εκεί. Phase 5 (2026-09-15, idea #1 του ίδιου mockup): η
 // γραμμή λίστας (progressRowHtml) ξαναχτίστηκε σε 3 γραμμές αντί όλα σε μία — βλ. σχόλιο εκεί.
+// Phase 6 (idea #5): το ιστορικό πελάτη πλέον scrollable (homeCard) αντί να κόβεται σιωπηλά στα 60.
+// Phase 7 (ideas #2+#3): φίλτρο ομάδας + ταξινόμηση στη λίστα, + μαζική υπενθύμιση όταν είναι ενεργό
+// φίλτρο σημαίας — βλ. σχόλια στο progressFilteredSorted/progressBulkNudge.
 // Loads στο group tabs/, ΜΕΤΑ το appointments/appointments.js (ck* helpers + apptSparkline ζουν εκεί,
 // clientWeightStripHtml στο client-editor/form-controls.js) και το tabs/messages.js
 // (collectAllClientMessages).
@@ -119,30 +122,111 @@ function progressRowMetaLineHtml(x){
   return '<div class="hm-row-sub" style="white-space:normal;margin-top:2px">'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
 }
 
-var _progressFilter='all', _progressSearch='';
+var _progressFilter='all', _progressSearch='', _progressGroupFilter='all', _progressSort='attention';
+// Idea #3 (mockup συζήτησης 2026-09-15): ποιοι πελάτες είναι τσεκαρισμένοι για μαζική ενέργεια —
+// καθαρίζει σε κάθε αλλαγή φίλτρου/αναζήτησης/ταξινόμησης, ώστε να μη μείνει "επιλεγμένος" ένας
+// πελάτης που πλέον δεν φαίνεται καν στη λίστα.
+var _progressSelected={};
 function progressSetSearch(val){
   _progressSearch=(val||'').toLowerCase();
+  _progressSelected={};
   var el=document.getElementById('progress-results');
   if(el) el.innerHTML=progressResultsHtml(progressRosterData());
 }
 function progressSetFilter(key,btn){
   _progressFilter=key;
+  _progressSelected={};
   Array.prototype.forEach.call(document.querySelectorAll('#progress-filters .appt-fchip'),function(ch){ch.classList.toggle('active',ch===btn);});
   var el=document.getElementById('progress-results');
   if(el) el.innerHTML=progressResultsHtml(progressRosterData());
 }
-function progressResultsHtml(all){
-  var shown=all;
-  if(_progressFilter!=='all') shown=shown.filter(function(x){return x.flags.indexOf(_progressFilter)>-1;});
-  var term=_progressSearch.trim();
-  if(term) shown=shown.filter(function(x){return (x.c.name||'').toLowerCase().indexOf(term)>=0;});
-  shown=shown.slice().sort(function(a,b){
+// Idea #2 (mockup συζήτησης 2026-09-15): φίλτρο ομάδας + ταξινόμηση — μέχρι τώρα η λίστα ταξινομούνταν
+// ΜΟΝΟ "προσοχή πρώτα" και δεν υπήρχε τρόπος να δεις μόνο μια ομάδα.
+function progressSetGroupFilter(val){
+  _progressGroupFilter=val;
+  _progressSelected={};
+  var el=document.getElementById('progress-results');
+  if(el) el.innerHTML=progressResultsHtml(progressRosterData());
+}
+var PROGRESS_SORT_LABELS={attention:'Χρειάζονται προσοχή πρώτα', name:'Αλφαβητικά', score_asc:'Χειρότερο σκορ πρώτα', recent:'Πιο πρόσφατη δραστηριότητα'};
+function progressSetSort(val){
+  _progressSort=val;
+  var el=document.getElementById('progress-results');
+  if(el) el.innerHTML=progressResultsHtml(progressRosterData());
+}
+function progressSortComparator(sortKey){
+  if(sortKey==='name') return function(a,b){ return (a.c.name||'').localeCompare(b.c.name||'','el'); };
+  if(sortKey==='score_asc') return function(a,b){ var as=a.score==null?101:a.score, bs=b.score==null?101:b.score; return as-bs; };
+  if(sortKey==='recent') return function(a,b){ var ag=a.gap==null?1e9:a.gap, bg=b.gap==null?1e9:b.gap; return ag-bg; };
+  // 'attention' (προεπιλογή) — ίδια λογική με πριν το idea #2.
+  return function(a,b){
     if(b.weight!==a.weight) return b.weight-a.weight;
     var as=a.score==null?-1:a.score, bs=b.score==null?-1:b.score;
     return as-bs;
+  };
+}
+// Φιλτράρισμα+ταξινόμηση ΧΩΡΙΣ το rendering — ένα σημείο αλήθειας, ώστε το "Επέλεξε όλους" (idea #3)
+// να ξέρει ΑΚΡΙΒΩΣ ποιοι πελάτες είναι ορατοί χωρίς να ξαναγράφει τη λογική του progressResultsHtml.
+function progressFilteredSorted(all){
+  var shown=all;
+  if(_progressGroupFilter!=='all') shown=shown.filter(function(x){return (x.c.group||'')===_progressGroupFilter;});
+  if(_progressFilter!=='all') shown=shown.filter(function(x){return x.flags.indexOf(_progressFilter)>-1;});
+  var term=_progressSearch.trim();
+  if(term) shown=shown.filter(function(x){return (x.c.name||'').toLowerCase().indexOf(term)>=0;});
+  return shown.slice().sort(progressSortComparator(_progressSort));
+}
+// Idea #3: το bulk toolbar εμφανίζεται ΜΟΝΟ όταν είναι ενεργό συγκεκριμένο φίλτρο σημαίας (π.χ. μόνο
+// "📉 Σταμάτησαν") — δεν βγάζει νόημα μαζική υπενθύμιση σε ΟΛΗ την πελατεία μαζί.
+function progressToggleSelect(id,checked){
+  if(checked) _progressSelected[id]=true; else delete _progressSelected[id];
+  var el=document.getElementById('progress-results');
+  if(el) el.innerHTML=progressResultsHtml(progressRosterData());
+}
+function progressSelectAllVisible(){
+  var shown=progressFilteredSorted(progressRosterData());
+  var allSel=shown.length>0 && shown.every(function(x){return _progressSelected[x.c.id];});
+  shown.forEach(function(x){ if(allSel) delete _progressSelected[x.c.id]; else _progressSelected[x.c.id]=true; });
+  var el=document.getElementById('progress-results');
+  if(el) el.innerHTML=progressResultsHtml(progressRosterData());
+}
+// Καλεί το ΙΔΙΟ sendActivityNudge (tabs/home-diets.js) που ήδη χρησιμοποιεί το μεμονωμένο κουμπί
+// υπενθύμισης αλλού στο app — απλά σε βρόχο, αντί να ξαναγράφεται η λογική WhatsApp/email εδώ.
+// Κάθε κλήση ανοίγει δικό της παράθυρο/tab· αν ο browser μπλοκάρει pop-ups μετά το 1ο, ο διαιτολόγος
+// θα το δει από το toast παρακάτω και μπορεί να τα επιτρέψει. Το "sent" μετράει μόνο πελάτες με
+// πραγματικό τηλέφωνο/email — το sendActivityNudge δεν επιστρέφει τίποτα, οπότε ελέγχουμε ΠΡΙΝ την
+// κλήση ό,τι κι αυτό θα ήλεγχε (ίδια συνθήκη), αλλιώς το toast θα έλεγε "άνοιξαν Ν" ενώ στην
+// πραγματικότητα κάποιος πελάτης απλά δεν έχει στοιχεία επικοινωνίας (ήδη δικό του toast σφάλματος).
+function progressBulkNudge(){
+  var ids=Object.keys(_progressSelected);
+  if(!ids.length) return;
+  var sent=0, skipped=0;
+  ids.forEach(function(id){
+    var c=clients.find(function(x){return x.id===id;});
+    var canSend=c && c.shareToken && typeof sendActivityNudge==='function' && (normalizePhoneIntl(c.phone)||c.email);
+    if(!canSend){ skipped++; return; }
+    sendActivityNudge(id);
+    sent++;
   });
-  if(!shown.length) return '<div class="hm-card"><div class="hm-empty">Κανένας πελάτης'+(term?' για "'+esc(_progressSearch.trim())+'"':'')+'.</div></div>';
-  return '<div class="hm-card">'+shown.map(progressRowHtml).join('')+'</div>';
+  _progressSelected={};
+  var el=document.getElementById('progress-results');
+  if(el) el.innerHTML=progressResultsHtml(progressRosterData());
+  var msg='Άνοιξαν '+sent+' μηνύματα υπενθύμισης'+(skipped?(' ('+skipped+' παραλείφθηκαν, χωρίς portal link ή στοιχεία επικοινωνίας).'):'.')+(sent>1?' Αν κάποιο δεν άνοιξε, ο browser ίσως μπλόκαρε pop-ups.':'');
+  if(typeof showSuccessToast==='function') showSuccessToast(msg); else console.log(msg);
+}
+function progressResultsHtml(all){
+  var shown=progressFilteredSorted(all);
+  if(!shown.length) return '<div class="hm-card"><div class="hm-empty">Κανένας πελάτης'+(_progressSearch.trim()?' για "'+esc(_progressSearch.trim())+'"':'')+'.</div></div>';
+  var bulkMode=_progressFilter!=='all';
+  var bulkBarHtml='';
+  if(bulkMode){
+    var selCount=shown.filter(function(x){return _progressSelected[x.c.id];}).length;
+    var allSel=selCount>0 && selCount===shown.length;
+    bulkBarHtml='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;margin-bottom:8px;background:#fff8e6;border:1px solid #f0d998;border-radius:10px;font-size:12px">'
+      +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0"><input type="checkbox"'+(allSel?' checked':'')+' onchange="progressSelectAllVisible()"> Επέλεξε όλους ('+shown.length+')</label>'
+      +(selCount>0?('<b>'+selCount+' επιλεγμένοι</b><button type="button" class="hm-action-btn" style="background:#fff;color:#8a5b00;border:1px solid #f0d998" onclick="progressBulkNudge()">📨 Στείλε υπενθύμιση σε όλους</button>'):'')
+      +'</div>';
+  }
+  return '<div class="hm-card">'+bulkBarHtml+shown.map(function(x){return progressRowHtml(x,bulkMode);}).join('')+'</div>';
 }
 // Πάει κατευθείαν στο "💬 Μηνύματα" ήδη φιλτραρισμένο σε αυτόν τον πελάτη — αντί να ξαναφτιάχνουμε
 // reply/thread UI εδώ, γράφουμε στο ΙΔΙΟ module-level state (_msgSearch, tabs/messages.js) που ήδη
@@ -156,9 +240,11 @@ function progressOpenMessages(name){
 // σκορ (πάντα ίδιο ύψος), 2η ΤΟ πιο επείγον πράγμα με χρώμα (ή τίποτα αν όλα καλά), 3η τα υπόλοιπα σε
 // ουδέτερο γκρι. flex:0 1 auto στο hm-row-name παρακάμπτει το flex:1 της κλάσης (css/styles.css) —
 // εδώ δεν χρειάζεται να «τραβήξει» όλο τον χώρο της σειράς, μοιράζεται τη σειρά με group tag/σκορ/τάση.
-function progressRowHtml(x){
+function progressRowHtml(x,bulkMode){
   var c=x.c;
+  var checkboxHtml=bulkMode?('<input type="checkbox" style="margin-top:7px;flex-shrink:0" onclick="event.stopPropagation()" onchange="progressToggleSelect(\''+c.id+'\',this.checked)"'+(_progressSelected[c.id]?' checked':'')+'>'):'';
   return '<div class="hm-row" style="align-items:flex-start;flex-wrap:wrap" onclick="openProgressClient(\''+c.id+'\')">'
+    +checkboxHtml
     +'<div class="hm-avatar hm-avatar-teal" style="margin-top:1px">'+initials(c.name)+'</div>'
     +'<div style="flex:1;min-width:160px">'
     +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
@@ -188,13 +274,30 @@ function progressSummaryHtml(all){
 
 function renderProgress(){
   curId=null;
+  _progressSelected={};
   var main=document.getElementById('main');
   if(!main) return;
   var all=progressRosterData();
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">📈 Πρόοδος</div>';
   html+=progressSummaryHtml(all);
-  html+='<input type="text" id="progress-search" class="client-search-inp" style="max-width:260px;margin-top:16px" placeholder="🔍 Αναζήτηση πελάτη..." value="'+esc(_progressSearch)+'" oninput="progressSetSearch(this.value)">';
+  // Idea #2 (mockup συζήτησης 2026-09-15): φίλτρο ομάδας + ταξινόμηση, δίπλα στην αναζήτηση. Οι
+  // ομάδες βγαίνουν από τα πραγματικά δεδομένα (c.group) — καμία σκληροκωδικοποιημένη λίστα.
+  var groups=[];
+  all.forEach(function(x){ if(x.c.group && groups.indexOf(x.c.group)<0) groups.push(x.c.group); });
+  groups.sort(function(a,b){return a.localeCompare(b,'el');});
+  html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center">';
+  html+='<input type="text" id="progress-search" class="client-search-inp" style="max-width:260px;margin:0" placeholder="🔍 Αναζήτηση πελάτη..." value="'+esc(_progressSearch)+'" oninput="progressSetSearch(this.value)">';
+  if(groups.length){
+    html+='<select class="clients-toolbar-select" style="max-width:180px;margin:0" onchange="progressSetGroupFilter(this.value)">'
+      +'<option value="all">Όλες οι ομάδες</option>'
+      +groups.map(function(g){return '<option value="'+esc(g)+'"'+(g===_progressGroupFilter?' selected':'')+'>'+esc(g)+'</option>';}).join('')
+      +'</select>';
+  }
+  html+='<select class="clients-toolbar-select" style="max-width:220px;margin:0" onchange="progressSetSort(this.value)">'
+    +Object.keys(PROGRESS_SORT_LABELS).map(function(k){return '<option value="'+k+'"'+(k===_progressSort?' selected':'')+'>'+PROGRESS_SORT_LABELS[k]+'</option>';}).join('')
+    +'</select>';
+  html+='</div>';
   html+='<div id="progress-filters" style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap">'
     +['all','low','gone','new','exp'].map(function(k){
       var label=k==='all'?'Όλοι':PROGRESS_FLAG_LABELS[k];
@@ -340,9 +443,15 @@ function progressBuildTimeline(c){
   items.sort(function(a,b){return a.date<b.date?1:(a.date>b.date?-1:0);});
   return items;
 }
+// Idea #5 (mockup συζήτησης 2026-09-15): έδειχνε σιωπηλά μόνο τα πρώτα 60 γεγονότα — για έναν
+// παλιό πελάτη τα παλιότερα απλά εξαφανίζονταν χωρίς ένδειξη ότι υπάρχουν κι άλλα. Αντί για νέο
+// "Δες παλιότερα" κουμπί, ΕΠΑΝΑΧΡΗΣΙΜΟΠΟΙΕΙ το ήδη υπάρχον homeCard (tabs/home-diets.js) — το ίδιο
+// component που δείχνει τις κάρτες της Αρχικής: πάνω από maxRows, ΟΛΑ τα γεγονότα μπαίνουν σε
+// scrollable σώμα με το συνολικό πλήθος ως badge, αντί να κόβονται. Το δικό του σχόλιο εξηγεί γιατί
+// ΟΧΙ ένα "+N ακόμα"/κουμπί: δοκιμάστηκε παλιότερα στην Αρχική και δεν πατιόταν.
 function progressTimelineHtml(items){
-  if(!items.length) return '<div class="hm-empty">Κανένα καταγεγραμμένο γεγονός ακόμα.</div>';
-  return items.slice(0,60).map(function(e){
+  if(!items.length) return '<div class="hm-card"><div class="hm-card-title">🗂 Ιστορικό</div><div class="hm-empty">Κανένα καταγεγραμμένο γεγονός ακόμα.</div></div>';
+  var rows=items.map(function(e){
     return '<div class="hm-row" style="cursor:default;align-items:flex-start">'
       +'<span style="width:20px;flex-shrink:0">'+e.icon+'</span>'
       +'<span style="flex:1;min-width:0"><b style="font-size:12px">'+e.title+'</b>'
@@ -350,7 +459,8 @@ function progressTimelineHtml(items){
       +'</span>'
       +'<span class="hm-row-sub">'+esc(e.date)+'</span>'
       +'</div>';
-  }).join('');
+  });
+  return (typeof homeCard==='function')?homeCard('🗂 Ιστορικό',rows,null,'info',20):'<div class="hm-card"><div class="hm-card-title">🗂 Ιστορικό</div>'+rows.join('')+'</div>';
 }
 // Χειροκίνητη καταγραφή επικοινωνίας — για επαφή ΕΚΤΟΣ app (τηλεφώνημα, δια ζώσης) που καμία από
 // τις υπάρχουσες WhatsApp/email συναρτήσεις δεν θα καταγράψει μόνη της.
@@ -383,7 +493,7 @@ function openProgressClient(id){
     +'</div></div>';
   html+=progressAdherenceChartPanel(c,rows);
   html+=(typeof progressWeightPanelHtml==='function')?progressWeightPanelHtml(c):'';
-  html+='<div class="hm-card" style="margin-top:14px"><div class="hm-card-title">🗂 Ιστορικό</div>'+progressTimelineHtml(progressBuildTimeline(c))+'</div>';
+  html+='<div style="margin-top:14px">'+progressTimelineHtml(progressBuildTimeline(c))+'</div>';
   html+='</div>';
   main.innerHTML=html;
 }
