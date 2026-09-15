@@ -45,6 +45,10 @@ function progressRosterData(){
     var wl=c.weightLog||[];
     var wDelta=(wl.length>=2)?Math.round((wl[wl.length-1].weight-wl[0].weight)*10)/10:null;
     var expDays=progressDaysUntilExpiry(c);
+    // "Πότε επικοινώνησα ΕΓΩ τελευταία" (c.lastDietologistContact, markDietologistContacted στο
+    // js/lib/helpers.js) — ξεχωριστό από το gap του check-in παραπάνω, που δείχνει πότε κατέγραψε Ο
+    // ΠΕΛΑΤΗΣ. Σκοπός: να μη ξεχνιέται ένας καλός πελάτης που απλά δεν χρειάζεται nudge.
+    var contactDays=c.lastDietologistContact?Math.floor((Date.now()-c.lastDietologistContact)/86400000):null;
 
     var flags=[];
     var isLow = dietsHasPlan(c) && score!=null && isFinite(gap) && gap<=PROGRESS_LOW_FRESH_DAYS && score<PROGRESS_LOW_MAX;
@@ -56,7 +60,7 @@ function progressRosterData(){
     var weight=stoppedIds[c.id]?3:(isLow?2:((expDays!=null&&expDays<=PROGRESS_EXPIRING_DAYS)?1:0));
 
     return {c:c, score:score, prevScore:prevScore, pillars:pillars, streak:streak, gap:gap,
-      wDelta:wDelta, expDays:expDays, flags:flags, weight:weight};
+      wDelta:wDelta, expDays:expDays, flags:flags, weight:weight, contactDays:contactDays};
   });
 }
 
@@ -100,6 +104,7 @@ function progressRowHtml(x){
   var flagsHtml=x.flags.map(function(f){return '<span class="hm-act-score hm-act-score-warn" style="margin-left:4px">'+PROGRESS_FLAG_LABELS[f]+'</span>';}).join('');
   var gapTxt=x.gap==null?'χωρίς check-in':(x.gap===0?'check-in σήμερα':x.gap===1?'check-in χθες':'check-in πριν '+x.gap+' ημ.');
   var wTxt=x.wDelta==null?'':(' · '+(x.wDelta>0?'+':'')+x.wDelta+' kg');
+  var contactTxt=x.contactDays==null?' · 📞 καμία επικοινωνία ακόμα':(' · 📞 '+(x.contactDays===0?'επικοινωνία σήμερα':'πριν '+x.contactDays+' ημ.'));
   return '<div class="hm-row" onclick="openProgressClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-teal">'+initials(c.name)+'</div>'
     +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+(c.group?' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>':'')+'</span>'
@@ -107,7 +112,7 @@ function progressRowHtml(x){
     +homeActivityTrendHtml(x.score,x.prevScore)
     +(x.streak>0?'<span class="hm-row-sub">🔥 '+x.streak+'</span>':'')
     +flagsHtml
-    +'<span class="hm-row-sub">'+gapTxt+wTxt+'</span>'
+    +'<span class="hm-row-sub">'+gapTxt+wTxt+contactTxt+'</span>'
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" title="Άνοιγμα στα Μηνύματα" onclick="event.stopPropagation();progressOpenMessages(\''+escJsAttr(c.name)+'\')">✉️</button>'
     +'</div>';
 }
@@ -272,6 +277,15 @@ function progressTimelineHtml(items){
       +'</div>';
   }).join('');
 }
+// Χειροκίνητη καταγραφή επικοινωνίας — για επαφή ΕΚΤΟΣ app (τηλεφώνημα, δια ζώσης) που καμία από
+// τις υπάρχουσες WhatsApp/email συναρτήσεις δεν θα καταγράψει μόνη της.
+function progressMarkContactedNow(id){
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c) return;
+  markDietologistContacted(c);
+  save();
+  openProgressClient(id);
+}
 function openProgressClient(id){
   var c=clients.find(function(x){return x.id===id;});
   var main=document.getElementById('main');
@@ -279,13 +293,16 @@ function openProgressClient(id){
   var rows=(window.Cloud && window.Cloud.checkinsFor && c.shareToken)?window.Cloud.checkinsFor(c):[];
   var expDays=progressDaysUntilExpiry(c);
   var planTxt=expDays==null?'Χωρίς ενεργό πλάνο':(expDays<0?'Το πλάνο έχει λήξει':'Ενεργό πλάνο · λήγει σε '+expDays+' ημέρες');
+  var contactDays=c.lastDietologistContact?Math.floor((Date.now()-c.lastDietologistContact)/86400000):null;
+  var contactTxt=contactDays==null?'Καμία καταγεγραμμένη επικοινωνία ακόμα':('📞 Τελ. επικοινωνία: '+(contactDays===0?'σήμερα':'πριν '+contactDays+' ημέρες'));
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title"><span onclick="renderProgress()" style="cursor:pointer;color:var(--teal);font-weight:600;font-size:14px">← Πίσω σε όλους</span></div>';
   html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">'
     +'<div class="hm-avatar hm-avatar-teal" style="width:40px;height:40px;font-size:15px">'+initials(c.name)+'</div>'
     +'<div><div style="font-size:17px;font-weight:700">'+esc(c.name||'')+(c.group?' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>':'')+'</div>'
-    +'<div class="hm-row-sub">'+esc(planTxt)+'</div></div>'
-    +'<div style="margin-left:auto;display:flex;gap:8px">'
+    +'<div class="hm-row-sub">'+esc(planTxt)+' · '+esc(contactTxt)+'</div></div>'
+    +'<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" title="Κατέγραψε επικοινωνία εκτός app (τηλέφωνο, δια ζώσης)" onclick="progressMarkContactedNow(\''+c.id+'\')">📞 Σημείωσε επικοινωνία</button>'
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" title="Άνοιγμα στα Μηνύματα" onclick="progressOpenMessages(\''+escJsAttr(c.name)+'\')">✉️ Μηνύματα</button>'
     +'<button type="button" class="hm-action-btn" onclick="selectClient(\''+c.id+'\');swTab(1)">Άνοιγμα πλήρους καρτέλας</button>'
     +'</div></div>';
@@ -294,6 +311,39 @@ function openProgressClient(id){
   html+='<div class="hm-card" style="margin-top:14px"><div class="hm-card-title">🗂 Ιστορικό</div>'+progressTimelineHtml(progressBuildTimeline(c))+'</div>';
   html+='</div>';
   main.innerHTML=html;
+}
+
+// ── Phase 3: μίκρυνση του παλιού per-client panel ───────────────────────────────────────────────
+// Το "📝 Ραντεβού" tab (buildAppointmentsHtml, js/appointments/appointments.js) καλούσε ΑΥΤΟΥΣΙΟ το
+// buildClientProgressHtml εκεί — σκορ/streak/πυλώνες/4-εβδ. μπάρες/14-ημ. sparkline, τα ΙΔΙΑ που
+// τώρα δείχνει πλήρη το tab "📈 Πρόοδος (και σε μεγαλύτερο βάθος, 10 εβδ.). Δύο πλήρη αντίγραφα του
+// ίδιου panel σε δύο tabs δεν προσθέτουν κάτι, απλά διπλασιάζουν τι πρέπει να προσέχεις όταν αλλάζει
+// κάτι εκεί. Αυτό αντικαθιστά εκείνη την κλήση με μια συμπτυγμένη περίληψη (σκορ/trend/streak) +
+// λινκ για το πλήρες ιστορικό — ό,τι είναι ΜΟΝΑΔΙΚΟ στο Ραντεβού (π.χ. "↔️ Από το προηγούμενο
+// ραντεβού", clientLogsPanelHtml/planFeedbackPanelHtml με τα δικά τους reply/resolve κουμπιά) μένει
+// εκεί ανέγγιχτο.
+function progressCompactSummaryHtml(c){
+  if(!c.shareToken) return '';
+  var openLink='<a href="javascript:void(0)" onclick="swTab(10);openProgressClient(\''+c.id+'\')" style="font-size:11px;font-weight:600;color:var(--teal);white-space:nowrap">Πλήρες ιστορικό (γράφημα 10 εβδ., timeline) →</a>';
+  var rows=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
+  if(!rows.length){
+    return '<div class="tracker-section"><div class="tracker-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">'
+      +'<span>📲 Πρόοδος πελάτη (portal)</span>'+openLink+'</div>'
+      +'<div style="font-size:12px;color:#888;padding:6px 0">Ο πελάτης δεν έχει κάνει ακόμα check-in στο πλάνο του.</div></div>';
+  }
+  var byDate=ckRowsByDate(rows);
+  var score=ckWeekScore(byDate,0), prevScore=ckWeekScore(byDate,-1), streak=ckStreak(byDate);
+  var trendChip='';
+  if(score!=null && prevScore!=null){
+    var dS=score-prevScore;
+    if(dS>=CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:var(--good)">▲ +'+dS+'</span>';
+    else if(dS<=-CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:#c62828">▼ '+dS+'</span>';
+  }
+  return '<div class="tracker-section">'
+    +'<div class="tracker-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">'
+    +'<span>📲 Πρόοδος πελάτη (portal)</span>'+openLink+'</div>'
+    +'<div style="font-size:13px"><b style="font-size:20px;color:#025857">'+(score==null?'—':score+'%')+'</b> σκορ εβδομάδας'+trendChip
+    +' &nbsp; 🔥 <b>'+streak+'</b> μέρες σερί</div></div>';
 }
 
 // Badge sidebar "📈 Πρόοδος" — πελάτες με σήμα προσοχής (χαμηλή τήρηση ή σταμάτησαν). Το "🌱 πρώτη

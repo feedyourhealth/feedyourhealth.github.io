@@ -55,6 +55,7 @@ function replyToClientNote(clientId,date,noteRaw){
     return;
   }
   markNoteReplied(c,date);
+  markDietologistContacted(c);
   save();
   var s3b=document.getElementById('s3b');
   if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
@@ -104,6 +105,7 @@ function replyToPlanFeedback(clientId,weekStart,key){
     return;
   }
   markPfReplied(c,weekStart,key);
+  markDietologistContacted(c);
   save();
   var s3b=document.getElementById('s3b');
   if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){

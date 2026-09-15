@@ -516,7 +516,10 @@ function sendWeeklyRecap(clientId){
     location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(clientMsgDict(c).recapSubj)+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
+    return;
   }
+  markDietologistContacted(c);
+  save();
 }
 // Ίδιο μοτίβο με sendFeedbackReminder, αλλά για πελάτες που δεν έχουν κάνει ΚΑΝΕΝΑ check-in στο
 // portal εδώ και μέρες (tier 3 στο homeClientsNeedingAttention) — διαφορετικό μήνυμα, ρωτάει αν
@@ -536,7 +539,10 @@ function sendActivityNudge(clientId){
     location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(d.nudgeSubj)+'&body='+encodeURIComponent(msg);
   } else {
     showErrorToast('Δεν υπάρχει τηλέφωνο ή email για τον/την '+(c.name||'πελάτη')+'.');
+    return;
   }
+  markDietologistContacted(c);
+  save();
 }
 
 // initials() moved to js/app-part1.js — it's called from renderSB() there, which can run

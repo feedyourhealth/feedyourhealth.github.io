@@ -522,7 +522,11 @@ function buildAppointmentsHtml(c){
   // πλάνου) μπήκε εδώ πάνω-πάνω αντί στην Ανθρωπομετρία — εδώ είναι το σημείο απόφασης "νέο πλάνο/
   // προσαρμογή/ίδιο", οπότε έχει νόημα να βλέπεις τι λέει ο πελάτης πριν αποφασίσεις. Κάθε πάνελ
   // επιστρέφει '' μόνο του όταν δεν υπάρχουν δεδομένα (χωρίς shareToken/χωρίς καταχωρήσεις).
-  var portalFeedbackBody=buildClientProgressHtml(c)+clientLogsPanelHtml(c)+planFeedbackPanelHtml(c);
+  // ✅ 2026-09-15 (Phase 3, tab "📈 Πρόοδος"): εδώ ζούσε πλήρες το buildClientProgressHtml
+  // (σκορ/πυλώνες/4-εβδ. μπάρες/14-ημ. sparkline) — τώρα δείχνει πλήρες, σε μεγαλύτερο βάθος (10 εβδ.),
+  // στο tab "📈 Πρόοδος" — εδώ μένει μόνο μια συμπτυγμένη περίληψη + λινκ, ώστε να μη συντηρούνται δύο
+  // αντίγραφα του ίδιου panel (js/tabs/progress.js — progressCompactSummaryHtml).
+  var portalFeedbackBody=(typeof progressCompactSummaryHtml==='function'?progressCompactSummaryHtml(c):buildClientProgressHtml(c))+clientLogsPanelHtml(c)+planFeedbackPanelHtml(c);
   // Το κουμπί ανανέωσης φαίνεται μόνο όταν ο πελάτης έχει portal link (αλλιώς δεν υπάρχει τίποτα να
   // ανανεωθεί) — ακόμα κι όταν δεν έχει στείλει τίποτα ακόμα, χρήσιμο να το δει η διαιτολόγος αμέσως.
   var portalFeedbackHtml=c.shareToken

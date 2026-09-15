@@ -24,6 +24,17 @@ function setMoreNavBadgeCount(key,n){
   el.textContent=total>99?'99+':String(total);
   el.style.display=total>0?'inline-block':'none';
 }
+// Σημειώνει πότε επικοινώνησε ΤΕΛΕΥΤΑΙΑ Ο ΙΔΙΟΣ Ο ΔΙΑΙΤΟΛΟΓΟΣ με τον πελάτη (c.lastDietologistContact)
+// — σε αντίθεση με το πότε έκανε check-in Ο ΠΕΛΑΤΗΣ (ήδη υπολογισμένο αλλού από τα check-ins).
+// Τροφοδοτεί το "📞 τελ. επικοινωνία" στο tab "📈 Πρόοδος" (js/tabs/progress.js). Καλείται από κάθε
+// σημείο που ήδη ανοίγει WhatsApp/email προς πελάτη (sendActivityNudge/sendWeeklyRecap στο
+// tabs/home-diets.js, replyToClientNote/replyToPlanFeedback στο portal-comms/portal-comms.js) — δεν
+// ξέρει αν πάτησε τελικά "αποστολή" μέσα στο WhatsApp, μόνο ότι άνοιξε το compose· αρκετά καλή
+// προσέγγιση για ένα soft-touch υπενθύμισης, όχι ακριβές log επικοινωνίας.
+function markDietologistContacted(c){
+  if(!c) return;
+  c.lastDietologistContact=Date.now();
+}
 // Κυκλικό δαχτυλίδι προόδου 0-100% (.pct-ring, css/styles.css) — μοιράζεται το ίδιο markup σε
 // κάθε σημείο του app που δείχνει ποσοστό. opts: size/thickness σε px, color/track = CSS color
 // string (π.χ. 'var(--teal)' ή αποτέλεσμα του pctStatusColor()), label:false για μικρά badge-size
