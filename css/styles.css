@@ -400,6 +400,16 @@ body.dark-mode .hm-card-title{color:#4fc3f7}
 body.dark-mode .hm-row{border-color:#333}
 body.dark-mode .hm-row:hover{background:#2a2a2a}
 body.dark-mode .hm-row-name{color:#e0e0e0}
+/* "🔇 Σίγαση" popover (Πρόοδος tab, js/tabs/progress.js) — ίδιο dropdown-card ύφος με τα υπόλοιπα
+   hm-* popups παραπάνω, δικές του κλάσεις (αντί για inline styles) ώστε να έχει σωστό dark-mode. */
+.progress-mute-pop{position:absolute;top:30px;right:0;background:#fff;border:1px solid #e0e0e0;border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.14);padding:6px;min-width:190px;z-index:5;text-align:left}
+.progress-mute-opt{display:block;width:100%;text-align:left;padding:7px 9px;border:none;background:none;font-size:11.5px;border-radius:7px;cursor:pointer;font-family:inherit;color:#1a1a1a}
+.progress-mute-opt:hover{background:#fafcfc}
+.progress-mute-opt small{display:block;color:#999;font-weight:400;margin-top:1px}
+body.dark-mode .progress-mute-pop{background:#242424;border-color:#444;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+body.dark-mode .progress-mute-opt{color:#e0e0e0}
+body.dark-mode .progress-mute-opt:hover{background:#2a2a2a}
+body.dark-mode .progress-mute-opt small{color:#888}
 /* ── Αρχική upgrades 2026-09: filter eyebrow · metric clusters · quick-find ── */
 .hm-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .hm-title-find{margin-left:auto;display:flex}

@@ -15,6 +15,8 @@
 // Phase 6 (idea #5): το ιστορικό πελάτη πλέον scrollable (homeCard) αντί να κόβεται σιωπηλά στα 60.
 // Phase 7 (ideas #2+#3): φίλτρο ομάδας + ταξινόμηση στη λίστα, + μαζική υπενθύμιση όταν είναι ενεργό
 // φίλτρο σημαίας — βλ. σχόλια στο progressFilteredSorted/progressBulkNudge.
+// Phase 8 (2026-09-15, μετά από 3ο mockup): "🔇 Σίγαση" πελάτη — για κάποιον που ο διαιτολόγος ξέρει
+// ότι δεν θα συνεχίσει, 30 ημέρες ή μόνιμα, βλ. σχόλια γύρω από progressIsMuted/progressMuteClient.
 // Loads στο group tabs/, ΜΕΤΑ το appointments/appointments.js (ck* helpers + apptSparkline ζουν εκεί,
 // clientWeightStripHtml στο client-editor/form-controls.js) και το tabs/messages.js
 // (collectAllClientMessages).
@@ -25,6 +27,23 @@
 var PROGRESS_LOW_MAX = 45;
 var PROGRESS_LOW_FRESH_DAYS = 3;
 var PROGRESS_EXPIRING_DAYS = 7; // ίδιο παράθυρο με το homePlansExpiringSoon()
+
+// "🔇 Σίγαση" — για πελάτη που ο διαιτολόγος ΞΕΡΕΙ ότι δεν θα συνεχίσει, σε αντίθεση με το
+// homeSnoozeClient/homeSnoozeReason (tabs/home-diets.js) που είναι ένα προσωρινό 7ήμερο "άσε με
+// ήσυχο προς το παρόν" για ένα ΣΗΜΑ. Εδώ ο πελάτης ΔΕΝ κρύβεται από τη λίστα (μόνο απενεργοποιείται
+// η σημαία/βάρος ταξινόμησης) — μένει ορατός, γκριζαρισμένος, με "↩️ Επαναφορά" ανά πάσα στιγμή.
+// c.progressMutedUntil: null=όχι, PROGRESS_MUTE_FOREVER=μόνιμα, αλλιώς epoch ms λήξης.
+var PROGRESS_MUTE_DAYS = 30;
+var PROGRESS_MUTE_FOREVER = 9007199254740991; // Number.MAX_SAFE_INTEGER — JSON-ασφαλές "ποτέ"
+function progressIsMuted(c){
+  return !!(c && c.progressMutedUntil && Date.now() < c.progressMutedUntil);
+}
+function progressMuteLabel(c){
+  if(!c || !c.progressMutedUntil) return '';
+  if(c.progressMutedUntil>=PROGRESS_MUTE_FOREVER) return 'μόνιμα';
+  var days=Math.ceil((c.progressMutedUntil-Date.now())/86400000);
+  return days<=1?'λήγει σήμερα':('λήγει σε '+days+' ημέρες');
+}
 
 // Ημέρες μέχρι να χρειαστεί νέο πλάνο (null αν δεν υπάρχει ενεργό πλάνο) — ίδιος υπολογισμός με το
 // homePlansExpiringSoon(), απλά ανά πελάτη αντί για μόνο το άθροισμα.
@@ -58,25 +77,38 @@ function progressRosterData(){
     // ΠΕΛΑΤΗΣ. Σκοπός: να μη ξεχνιέται ένας καλός πελάτης που απλά δεν χρειάζεται nudge.
     var contactDays=c.lastDietologistContact?Math.floor((Date.now()-c.lastDietologistContact)/86400000):null;
 
+    var isMuted=progressIsMuted(c);
     var flags=[];
-    var isLow = dietsHasPlan(c) && score!=null && isFinite(gap) && gap<=PROGRESS_LOW_FRESH_DAYS && score<PROGRESS_LOW_MAX;
-    if(isLow) flags.push('low');
-    if(stoppedIds[c.id]) flags.push('gone');
-    if(firstWeekIds[c.id]) flags.push('new');
-    if(expDays!=null && expDays<=PROGRESS_EXPIRING_DAYS) flags.push('exp');
-    // Βαρύτητα για την προεπιλεγμένη ταξινόμηση "χρειάζεται προσοχή πρώτα".
-    var weight=stoppedIds[c.id]?3:(isLow?2:((expDays!=null&&expDays<=PROGRESS_EXPIRING_DAYS)?1:0));
+    var isLow=false;
+    // Ενόσω σιγασμένος, ΚΑΜΙΑ από τις σημαίες προσοχής δεν υπολογίζεται πια — αυτό είναι το νόημα
+    // της σίγασης (ο διαιτολόγος ήδη ξέρει, δεν χρειάζεται να ξαναειδοποιείται). Η μόνη σημαία που
+    // μένει είναι το 'muted' — τροφοδοτεί ΔΩΡΕΑΝ το φίλτρο-chip "🔇 Σε σίγαση" μέσω του ήδη υπάρχοντος
+    // μηχανισμού μέτρησης ανά flag στο renderProgress, χωρίς ξεχωριστό μετρητή.
+    if(!isMuted){
+      isLow = dietsHasPlan(c) && score!=null && isFinite(gap) && gap<=PROGRESS_LOW_FRESH_DAYS && score<PROGRESS_LOW_MAX;
+      if(isLow) flags.push('low');
+      if(stoppedIds[c.id]) flags.push('gone');
+      if(firstWeekIds[c.id]) flags.push('new');
+      if(expDays!=null && expDays<=PROGRESS_EXPIRING_DAYS) flags.push('exp');
+    } else {
+      flags.push('muted');
+    }
+    // Βαρύτητα για την προεπιλεγμένη ταξινόμηση "χρειάζεται προσοχή πρώτα" — σιγασμένος πελάτης
+    // βυθίζεται στο τέλος (κάτω κι από το ουδέτερο 0), δεν ανταγωνίζεται ποτέ πια για προσοχή.
+    var weight=isMuted?-1:(stoppedIds[c.id]?3:(isLow?2:((expDays!=null&&expDays<=PROGRESS_EXPIRING_DAYS)?1:0)));
 
     return {c:c, score:score, prevScore:prevScore, pillars:pillars, streak:streak, gap:gap,
       wDelta:wDelta, expDays:expDays, flags:flags, weight:weight, contactDays:contactDays};
   });
 }
 
-var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει'};
+var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει', muted:'🔇 Σε σίγαση'};
 // Σειρά προτεραιότητας όταν ένας πελάτης έχει πάνω από 1 σημαία — ποια εμφανίζεται πρώτη/τονισμένη
 // στη γραμμή λίστας (idea #1, mockup συζήτησης 2026-09-15). Ίδια ιεράρχηση με το βάρος ταξινόμησης
 // στο progressRosterData (gone > low > exp) + το 'new' στο τέλος (πληροφοριακό, όχι προειδοποίηση).
-var PROGRESS_FLAG_PRIORITY=['gone','low','exp','new'];
+// 'muted' δεν συνυπάρχει ποτέ με τις άλλες (progressRosterData τις αποκλείει ενόσω σιγασμένος), αλλά
+// πρέπει να βρίσκεται εδώ αλλιώς progressRowUrgentLineHtml θα έβρισκε 'ordered' άδειο.
+var PROGRESS_FLAG_PRIORITY=['gone','low','exp','new','muted'];
 // Ίδιοι χρωματικοί τόνοι με τα ήδη υπάρχοντα hm-act-score-bad/-warn (css/styles.css) — 'new' παίρνει
 // το ουδέτερο teal του app αντί για κόκκινο/πορτοκαλί, μια πρώτη εβδομάδα δεν είναι πρόβλημα.
 var PROGRESS_FLAG_COLOR={gone:'#791F1F', low:'#791F1F', exp:'#633806', new:'var(--teal)'};
@@ -99,6 +131,12 @@ function progressWeakestPillarTxt(pillars){
 // τραβάνε όλες το ίδιο βλέμμα. Καμία σημαία ⇒ καμία γραμμή (ένας πελάτης που πάει καλά δεν χρειάζεται
 // να διαβεβαιωθεί ρητά ότι είναι εντάξει).
 function progressRowUrgentLineHtml(x){
+  // Ουδέτερη γραμμή (γκρι, όχι κόκκινο/πορτοκαλί) — η σίγαση δεν είναι προειδοποίηση, είναι μια
+  // ενήμερη απόφαση του διαιτολόγου. var(--text-muted) αντί για hardcoded χρώμα ώστε να ακολουθεί
+  // σωστά το dark mode, ίδιο με το .hm-row-sub/.hm-empty.
+  if(x.flags.indexOf('muted')>-1){
+    return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:var(--text-muted)">🔇 Σε σίγαση · '+progressMuteLabel(x.c)+'</div>';
+  }
   if(!x.flags.length) return '';
   var ordered=PROGRESS_FLAG_PRIORITY.filter(function(f){return x.flags.indexOf(f)>-1;});
   var top=ordered[0];
@@ -122,6 +160,55 @@ function progressRowMetaLineHtml(x){
   return '<div class="hm-row-sub" style="white-space:normal;margin-top:2px">'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
 }
 
+// Ποιου πελάτη το popover "🔇 Σίγαση για.../μόνιμα" είναι ανοιχτό αυτή τη στιγμή — ένα τη φορά,
+// καθαρίζει σε κάθε mute/unmute. Το ίδιο state χρησιμοποιείται και στη λίστα (progressRowHtml) και
+// στη λεπτομέρεια πελάτη (openProgressClient) — δουλεύουν πάνω στο ΙΔΙΟ σημείο αλήθειας.
+var _progressMutePopoverId=null;
+function progressToggleMutePopover(id){
+  _progressMutePopoverId=(_progressMutePopoverId===id)?null:id;
+  progressRerenderAfterMuteChange(id);
+}
+function progressMuteClient(id,forever){
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c) return;
+  c.progressMutedUntil=forever?PROGRESS_MUTE_FOREVER:(Date.now()+PROGRESS_MUTE_DAYS*86400000);
+  _progressMutePopoverId=null;
+  save();
+  progressRerenderAfterMuteChange(id);
+}
+function progressUnmuteClient(id){
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c) return;
+  c.progressMutedUntil=null;
+  save();
+  progressRerenderAfterMuteChange(id);
+}
+// Δουλεύει είτε είμαστε στη λίστα (#progress-results υπάρχει) είτε στη λεπτομέρεια ενός πελάτη
+// (openProgressClient) — ίδιο "ξαναζωγράφισε ό,τι είναι ορατό" σαν τα υπόλοιπα handlers του tab.
+function progressRerenderAfterMuteChange(id){
+  var results=document.getElementById('progress-results');
+  if(results){ results.innerHTML=progressResultsHtml(progressRosterData()); return; }
+  if(typeof openProgressClient==='function') openProgressClient(id);
+}
+// Το ίδιο κουμπί+popover ζωγραφίζεται και στη γραμμή λίστας (compact, μόνο εικονίδιο) και στη
+// λεπτομέρεια πελάτη (με ετικέτα) — μία συνάρτηση, ώστε το mute/unmute/popover state να μη
+// μπορεί ποτέ να αποκλίνει ανάμεσα στα δύο σημεία.
+function progressMuteButtonHtml(c,compact){
+  if(progressIsMuted(c)){
+    return '<button type="button" class="hm-action-btn" style="background:#F1EFE8;color:#5F5E5A'+(compact?';margin-top:2px':'')+'" title="Επαναφορά στη λίστα Πρόοδος" onclick="event.stopPropagation();progressUnmuteClient(\''+c.id+'\')">'+(compact?'↩️':'↩️ Επαναφορά')+'</button>';
+  }
+  var open=_progressMutePopoverId===c.id;
+  return '<span style="position:relative;display:inline-block'+(compact?';margin-top:2px':'')+'">'
+    +'<button type="button" class="hm-action-btn" style="background:#F1EFE8;color:#5F5E5A" title="Σίγαση πελάτη από τη λίστα Πρόοδος" onclick="event.stopPropagation();progressToggleMutePopover(\''+c.id+'\')">'+(compact?'🔇':'🔇 Σίγαση')+'</button>'
+    +(open?progressMutePopoverOptionsHtml(c.id):'')
+    +'</span>';
+}
+function progressMutePopoverOptionsHtml(id){
+  return '<div class="progress-mute-pop" onclick="event.stopPropagation()">'
+    +'<button type="button" class="progress-mute-opt" onclick="progressMuteClient(\''+id+'\',false)">Σίγαση για 30 ημέρες<small>Ξαναφαίνεται μόνη της μετά</small></button>'
+    +'<button type="button" class="progress-mute-opt" onclick="progressMuteClient(\''+id+'\',true)">Σίγαση μόνιμα<small>Μέχρι να την αφαιρέσεις</small></button>'
+    +'</div>';
+}
 var _progressFilter='all', _progressSearch='', _progressGroupFilter='all', _progressSort='attention';
 // Idea #3 (mockup συζήτησης 2026-09-15): ποιοι πελάτες είναι τσεκαρισμένοι για μαζική ενέργεια —
 // καθαρίζει σε κάθε αλλαγή φίλτρου/αναζήτησης/ταξινόμησης, ώστε να μη μείνει "επιλεγμένος" ένας
@@ -216,7 +303,9 @@ function progressBulkNudge(){
 function progressResultsHtml(all){
   var shown=progressFilteredSorted(all);
   if(!shown.length) return '<div class="hm-card"><div class="hm-empty">Κανένας πελάτης'+(_progressSearch.trim()?' για "'+esc(_progressSearch.trim())+'"':'')+'.</div></div>';
-  var bulkMode=_progressFilter!=='all';
+  // "🔇 Σε σίγαση" εξαιρείται από το bulk-select/nudge — δεν βγάζει νόημα μαζική υπενθύμιση ΑΚΡΙΒΩΣ
+  // στους πελάτες που ο διαιτολόγος μόλις σήμανε ότι δεν θα συνεχίσουν.
+  var bulkMode=_progressFilter!=='all' && _progressFilter!=='muted';
   var bulkBarHtml='';
   if(bulkMode){
     var selCount=shown.filter(function(x){return _progressSelected[x.c.id];}).length;
@@ -242,11 +331,14 @@ function progressOpenMessages(name){
 // εδώ δεν χρειάζεται να «τραβήξει» όλο τον χώρο της σειράς, μοιράζεται τη σειρά με group tag/σκορ/τάση.
 function progressRowHtml(x,bulkMode){
   var c=x.c;
+  var isMuted=x.flags.indexOf('muted')>-1;
   var checkboxHtml=bulkMode?('<input type="checkbox" style="margin-top:7px;flex-shrink:0" onclick="event.stopPropagation()" onchange="progressToggleSelect(\''+c.id+'\',this.checked)"'+(_progressSelected[c.id]?' checked':'')+'>'):'';
+  // Σιγασμένος: ουδέτερο (μη-teal) avatar + γκριζαρισμένο block ταυτότητας/σκορ — τα κουμπιά ενεργειών
+  // ΕΞΩ από αυτό το block, μένουν πάντα πλήρως ορατά/πατήσιμα.
   return '<div class="hm-row" style="align-items:flex-start;flex-wrap:wrap" onclick="openProgressClient(\''+c.id+'\')">'
     +checkboxHtml
-    +'<div class="hm-avatar hm-avatar-teal" style="margin-top:1px">'+initials(c.name)+'</div>'
-    +'<div style="flex:1;min-width:160px">'
+    +'<div class="hm-avatar'+(isMuted?'':' hm-avatar-teal')+'" style="margin-top:1px">'+initials(c.name)+'</div>'
+    +'<div style="flex:1;min-width:160px'+(isMuted?';opacity:.7':'')+'">'
     +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
     +'<span class="hm-row-name" style="flex:0 1 auto">'+esc(c.name||'Νέος πελάτης')+'</span>'
     +(c.group?'<span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>':'')
@@ -257,6 +349,7 @@ function progressRowHtml(x,bulkMode){
     +progressRowMetaLineHtml(x)
     +'</div>'
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal);margin-top:2px" title="Άνοιγμα στα Μηνύματα" onclick="event.stopPropagation();progressOpenMessages(\''+escJsAttr(c.name)+'\')">✉️</button>'
+    +progressMuteButtonHtml(c,true)
     +'</div>';
 }
 function progressSummaryHtml(all){
@@ -299,7 +392,7 @@ function renderProgress(){
     +'</select>';
   html+='</div>';
   html+='<div id="progress-filters" style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap">'
-    +['all','low','gone','new','exp'].map(function(k){
+    +['all','low','gone','new','exp','muted'].map(function(k){
       var label=k==='all'?'Όλοι':PROGRESS_FLAG_LABELS[k];
       var cnt=k==='all'?all.length:all.filter(function(x){return x.flags.indexOf(k)>-1;}).length;
       return '<span class="appt-fchip'+(k===_progressFilter?' active':'')+'" onclick="progressSetFilter(\''+k+'\',this)">'+label+' ('+cnt+')</span>';
@@ -440,8 +533,37 @@ function progressBuildTimeline(c){
   (c.weightLog||[]).forEach(function(w){
     items.push({date:w.date,icon:'⚖️',title:'Μέτρηση',detail:w.weight+' kg'+(w.bf>0?' · '+w.bf+'% λίπος':'')});
   });
+  // Phase 8, ιδέα #1 (μετά από 3ο mockup): δικές σου σημειώσεις (c.dietologistNotes, βλ.
+  // progressAddNote) — ξεχωριστές από τις 💬 που στέλνει ο πελάτης από το portal, με e.mine=true
+  // ώστε το progressTimelineHtml να τις τονίσει (τεαλ πλαίσιο + ετικέτα "εσύ").
+  (c.dietologistNotes||[]).forEach(function(n){
+    items.push({date:n.date,icon:'📝',title:'Σημείωση διαιτολόγου',detail:esc(n.note),mine:true});
+  });
+  // Phase 8, ιδέα #3: ορόσημο ΤΡΕΧΟΝΤΟΣ πλάνου — δεν υπάρχει πουθενά στο app ιστορικό ΠΑΛΙΟΤΕΡΩΝ
+  // πλάνων (κάθε νέο genPlan αντικαθιστά το c.weekPlan χωρίς backup, μόνο το undo/redo stack το
+  // κρατά και μόνο μέχρι το reload) — οπότε δείχνουμε μία μόνο εγγραφή για το τωρινό πλάνο, με το
+  // ΙΔΙΟ apptCurrentKcalTarget που ήδη δείχνει το "📝 Ραντεβού" (appointments/appointments.js).
+  if(c.planGeneratedAt){
+    var kcalNow=(typeof apptCurrentKcalTarget==='function')?apptCurrentKcalTarget(c):null;
+    items.push({date:new Date(c.planGeneratedAt).toISOString().slice(0,10),icon:'📋',title:'Τρέχον πλάνο δημιουργήθηκε',detail:kcalNow?('🎯 '+kcalNow+' kcal/ημ'):'',milestone:true});
+  }
   items.sort(function(a,b){return a.date<b.date?1:(a.date>b.date?-1:0);});
   return items;
+}
+// Χειροκίνητη προσθήκη σημείωσης ΔΙΑΙΤΟΛΟΓΟΥ στο ιστορικό πελάτη (idea #1) — τοπικό πεδίο,
+// c.dietologistNotes:[{date,note}], ίδιο μοτίβο "guard-init array + push + sort by date" με το
+// c.weightLog/c.appointments (client-editor/tracker.js, appointments/appointments.js). Σαρώνεται
+// στο ίδιο whole-blob save() με τα υπόλοιπα — δεν χρειάζεται ξεχωριστό Cloud-sync, όπως ούτε εκείνα.
+function progressAddNote(id){
+  var input=document.getElementById('progress-note-input');
+  var text=input?input.value.trim():'';
+  if(!text) return;
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c) return;
+  if(!c.dietologistNotes) c.dietologistNotes=[];
+  c.dietologistNotes.push({date:new Date().toISOString().slice(0,10),note:text});
+  save();
+  openProgressClient(id);
 }
 // Idea #5 (mockup συζήτησης 2026-09-15): έδειχνε σιωπηλά μόνο τα πρώτα 60 γεγονότα — για έναν
 // παλιό πελάτη τα παλιότερα απλά εξαφανίζονταν χωρίς ένδειξη ότι υπάρχουν κι άλλα. Αντί για νέο
@@ -449,18 +571,35 @@ function progressBuildTimeline(c){
 // component που δείχνει τις κάρτες της Αρχικής: πάνω από maxRows, ΟΛΑ τα γεγονότα μπαίνουν σε
 // scrollable σώμα με το συνολικό πλήθος ως badge, αντί να κόβονται. Το δικό του σχόλιο εξηγεί γιατί
 // ΟΧΙ ένα "+N ακόμα"/κουμπί: δοκιμάστηκε παλιότερα στην Αρχική και δεν πατιόταν.
-function progressTimelineHtml(items){
-  if(!items.length) return '<div class="hm-card"><div class="hm-card-title">🗂 Ιστορικό</div><div class="hm-empty">Κανένα καταγεγραμμένο γεγονός ακόμα.</div></div>';
+// Idea #1: quick-add πάνω από το ίδιο το ιστορικό — ίδιο σημείο αλήθειας με progressAddNote
+// παραπάνω, ένα input+κουμπί, Enter ή κλικ στέλνουν το ίδιο.
+function progressAddNoteHtml(id){
+  return '<div class="hm-card" style="margin-bottom:10px;display:flex;gap:8px">'
+    +'<input type="text" id="progress-note-input" placeholder="Πρόσθεσε σημείωση (π.χ. τηλεφώνησα, είπε ότι...)" style="flex:1;padding:7px 10px;border:1px solid #e0e0e0;border-radius:10px;font-size:12px;font-family:inherit" onkeydown="if(event.key===\'Enter\')progressAddNote(\''+id+'\')">'
+    +'<button type="button" class="hm-action-btn" style="flex-shrink:0" onclick="progressAddNote(\''+id+'\')">📝 Πρόσθεσε</button>'
+    +'</div>';
+}
+function progressTimelineHtml(items,clientId){
+  // addNoteHtml μπαίνει ΕΞΩ από το homeCard (δεν δέχεται extra περιεχόμενο στον τίτλο του, μόνο
+  // title/rows/moreLabel/variant/maxRows) — ξεχωριστό block ακριβώς πάνω από την κάρτα Ιστορικού.
+  var addNoteHtml=clientId?progressAddNoteHtml(clientId):'';
+  if(!items.length) return addNoteHtml+'<div class="hm-card"><div class="hm-card-title">🗂 Ιστορικό</div><div class="hm-empty">Κανένα καταγεγραμμένο γεγονός ακόμα.</div></div>';
+  // e.mine (Phase 8, ιδέα #1): δικές σου σημειώσεις σε τεαλ πλαίσιο + ετικέτα "εσύ", ξεχωριστές με
+  // την πρώτη ματιά από τα 💬 που στέλνει ο πελάτης. e.milestone (ιδέα #3): ουδέτερο γκρι φόντο,
+  // δεν είναι ούτε δικό σου ούτε του πελάτη — απλά ένα σύστημα-γεγονός (νέο πλάνο).
   var rows=items.map(function(e){
-    return '<div class="hm-row" style="cursor:default;align-items:flex-start">'
+    var rowStyle='cursor:default;align-items:flex-start'
+      +(e.mine?';background:#f0f7f7;border-left:3px solid var(--teal);padding-left:5px;border-radius:6px':'')
+      +(e.milestone?';background:#fafcfc;border-radius:6px':'');
+    return '<div class="hm-row" style="'+rowStyle+'">'
       +'<span style="width:20px;flex-shrink:0">'+e.icon+'</span>'
-      +'<span style="flex:1;min-width:0"><b style="font-size:12px">'+e.title+'</b>'
+      +'<span style="flex:1;min-width:0"><b style="font-size:12px">'+e.title+(e.mine?' <span style="font-size:9px;font-weight:700;color:var(--teal);background:#e2eee5;padding:1px 6px;border-radius:999px;margin-left:4px">εσύ</span>':'')+'</b>'
       +(e.detail?'<div class="hm-row-sub" style="white-space:normal">'+e.detail+'</div>':'')
       +'</span>'
       +'<span class="hm-row-sub">'+esc(e.date)+'</span>'
       +'</div>';
   });
-  return (typeof homeCard==='function')?homeCard('🗂 Ιστορικό',rows,null,'info',20):'<div class="hm-card"><div class="hm-card-title">🗂 Ιστορικό</div>'+rows.join('')+'</div>';
+  return addNoteHtml+((typeof homeCard==='function')?homeCard('🗂 Ιστορικό',rows,null,'info',20):'<div class="hm-card"><div class="hm-card-title">🗂 Ιστορικό</div>'+rows.join('')+'</div>');
 }
 // Χειροκίνητη καταγραφή επικοινωνίας — για επαφή ΕΚΤΟΣ app (τηλεφώνημα, δια ζώσης) που καμία από
 // τις υπάρχουσες WhatsApp/email συναρτήσεις δεν θα καταγράψει μόνη της.
@@ -480,20 +619,22 @@ function openProgressClient(id){
   var planTxt=expDays==null?'Χωρίς ενεργό πλάνο':(expDays<0?'Το πλάνο έχει λήξει':'Ενεργό πλάνο · λήγει σε '+expDays+' ημέρες');
   var contactDays=c.lastDietologistContact?Math.floor((Date.now()-c.lastDietologistContact)/86400000):null;
   var contactTxt=contactDays==null?'Καμία καταγεγραμμένη επικοινωνία ακόμα':('📞 Τελ. επικοινωνία: '+(contactDays===0?'σήμερα':'πριν '+contactDays+' ημέρες'));
+  var isMuted=progressIsMuted(c);
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title"><span onclick="renderProgress()" style="cursor:pointer;color:var(--teal);font-weight:600;font-size:14px">← Πίσω σε όλους</span></div>';
   html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">'
-    +'<div class="hm-avatar hm-avatar-teal" style="width:40px;height:40px;font-size:15px">'+initials(c.name)+'</div>'
+    +'<div class="hm-avatar'+(isMuted?'':' hm-avatar-teal')+'" style="width:40px;height:40px;font-size:15px">'+initials(c.name)+'</div>'
     +'<div><div style="font-size:17px;font-weight:700">'+esc(c.name||'')+(c.group?' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>':'')+'</div>'
-    +'<div class="hm-row-sub">'+esc(planTxt)+' · '+esc(contactTxt)+'</div></div>'
+    +'<div class="hm-row-sub">'+esc(planTxt)+' · '+esc(contactTxt)+(isMuted?' · <span style="color:var(--text-muted)">🔇 Σε σίγαση · '+progressMuteLabel(c)+'</span>':'')+'</div></div>'
     +'<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">'
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" title="Κατέγραψε επικοινωνία εκτός app (τηλέφωνο, δια ζώσης)" onclick="progressMarkContactedNow(\''+c.id+'\')">📞 Σημείωσε επικοινωνία</button>'
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" title="Άνοιγμα στα Μηνύματα" onclick="progressOpenMessages(\''+escJsAttr(c.name)+'\')">✉️ Μηνύματα</button>'
+    +progressMuteButtonHtml(c,false)
     +'<button type="button" class="hm-action-btn" onclick="selectClient(\''+c.id+'\');swTab(1)">Άνοιγμα πλήρους καρτέλας</button>'
     +'</div></div>';
   html+=progressAdherenceChartPanel(c,rows);
   html+=(typeof progressWeightPanelHtml==='function')?progressWeightPanelHtml(c):'';
-  html+='<div style="margin-top:14px">'+progressTimelineHtml(progressBuildTimeline(c))+'</div>';
+  html+='<div style="margin-top:14px">'+progressTimelineHtml(progressBuildTimeline(c),c.id)+'</div>';
   html+='</div>';
   main.innerHTML=html;
 }
@@ -507,15 +648,31 @@ function openProgressClient(id){
 // γράφημα βάρους στον χρόνο χρησιμοποιεί το ΙΔΙΟ γενικό sparkline component (apptSparkline,
 // appointments/appointments.js) που ήδη σχεδιάζει το γράφημα στόχου θερμίδων στο "📝 Ραντεβού" —
 // όχι νέο chart-εργαλείο. buildClientProgressHtml παραμένει άθικτο ως fallback (appointments.js).
+// Phase 8, ιδέα #2 (μετά από 3ο mockup): "πόσο μένει μέχρι τον στόχο" αντί μόνο για το raw Δ βάρους.
+// clientGoalWeightSummary (lib/helpers.js) είναι το ΙΔΙΟ helper με την κάρτα "🎯 Στόχος βάρους" στο
+// "📝 Ραντεβού" (appointments/appointments.js, εξήχθη από εκεί) — ώστε το νούμερο να μην μπορεί ποτέ
+// να αποκλίνει ανάμεσα στα δύο tabs. Κενό όταν δεν υπάρχει c.goalWeight ή καμία μέτρηση ακόμα.
+function progressGoalProgressHtml(c){
+  var s=(typeof clientGoalWeightSummary==='function')?clientGoalWeightSummary(c):null;
+  if(!s) return '';
+  var barHtml=s.goalPct!=null
+    ?'<div style="height:7px;border-radius:99px;background:#E2EEE5;overflow:hidden;margin-top:6px"><div style="height:100%;width:'+s.goalPct+'%;background:'+(s.goalDone?'var(--good)':'var(--teal)')+'"></div></div>'
+    :'';
+  return '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#f0f7f7;border-radius:10px;padding:10px 14px;margin-bottom:10px">'
+    +'<div><div style="font-size:20px;font-weight:700;color:var(--teal)">'+s.lastWeight+' kg</div><div style="font-size:10.5px;color:var(--text-muted)">τελευταία μέτρηση</div></div>'
+    +'<div style="flex:1;min-width:140px">'+barHtml+'<div style="font-size:10px;color:var(--text-muted);margin-top:4px"><b style="color:'+(s.goalDone?'var(--good)':'var(--teal)')+'">'+s.goalTxt+'</b>'+(s.goalPct!=null?' · '+s.goalPct+'% της διαδρομής προς τον στόχο ('+c.goalWeight+' kg)':' · στόχος '+c.goalWeight+' kg')+'</div></div>'
+    +'</div>';
+}
 function progressWeightPanelHtml(c){
   var wl=(c.weightLog||[]).filter(function(w){return w.weight>0;});
   var stripHtml=(typeof clientWeightStripHtml==='function')?clientWeightStripHtml(c):'';
-  if(wl.length<2) return stripHtml?('<div class="tracker-section"><div class="tracker-head">⚖️ Βάρος</div>'+stripHtml+'</div>'):'';
+  var goalHtml=progressGoalProgressHtml(c);
+  if(wl.length<2) return (stripHtml||goalHtml)?('<div class="tracker-section"><div class="tracker-head">⚖️ Βάρος</div>'+goalHtml+stripHtml+'</div>'):'';
   var vals=wl.map(function(w){return w.weight;});
   var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
   if(mn===mx){mn-=1;mx+=1;}
   var chart=(typeof apptSparkline==='function')?apptSparkline(wl,'weight','#025857','Βάρος (kg) — τελευταίες '+wl.length+' μετρήσεις',mn,mx):'';
-  return '<div class="tracker-section"><div class="tracker-head">⚖️ Βάρος</div>'+stripHtml+chart+'</div>';
+  return '<div class="tracker-section"><div class="tracker-head">⚖️ Βάρος</div>'+goalHtml+stripHtml+chart+'</div>';
 }
 
 // ── Phase 3: μίκρυνση του παλιού per-client panel ───────────────────────────────────────────────

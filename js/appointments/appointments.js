@@ -626,19 +626,16 @@ function buildAppointmentsHtml(c){
   }
 
   // ── Νέα κάρτα "Στόχος βάρους": μόνο όταν είναι ορισμένος ο c.goalWeight (ίδιο πεδίο με το portal
-  // του πελάτη) — δείχνει πόσα kg μένουν + προαιρετική μπάρα προόδου όταν έχουμε αφετηρία (1η μέτρηση). ──
+  // του πελάτη) — δείχνει πόσα kg μένουν + προαιρετική μπάρα προόδου όταν έχουμε αφετηρία (1η μέτρηση).
+  // clientGoalWeightSummary (lib/helpers.js) — κοινό με το tracker-section "⚖️ Βάρος" στο "📈 Πρόοδος". ──
   var goalCardHtml='';
-  if(c.goalWeight>0&&lastW){
-    var diffToGoal=+(lastW.weight-c.goalWeight).toFixed(1);
-    var goalDone=Math.abs(diffToGoal)<0.05;
-    var goalTxt=goalDone?'✅ Στόχος!':(Math.abs(diffToGoal)+' kg ακόμα ('+(diffToGoal>0?'απώλεια':'αύξηση')+')');
-    var firstW=wl.length?wl[0]:null;
+  var goalSummary=(typeof clientGoalWeightSummary==='function')?clientGoalWeightSummary(c):null;
+  if(goalSummary){
     var goalBarHtml='';
-    if(firstW&&Math.abs(firstW.weight-c.goalWeight)>0.05){
-      var goalPct=Math.max(0,Math.min(100,Math.round((firstW.weight-lastW.weight)/(firstW.weight-c.goalWeight)*100)));
-      goalBarHtml='<div style="height:5px;border-radius:3px;background:#E2EEE5;overflow:hidden;margin-top:5px"><div style="height:100%;width:'+goalPct+'%;background:'+(goalDone?'var(--good)':'var(--teal)')+'"></div></div>';
+    if(goalSummary.goalPct!=null){
+      goalBarHtml='<div style="height:5px;border-radius:3px;background:#E2EEE5;overflow:hidden;margin-top:5px"><div style="height:100%;width:'+goalSummary.goalPct+'%;background:'+(goalSummary.goalDone?'var(--good)':'var(--teal)')+'"></div></div>';
     }
-    goalCardHtml='<div class="appt-sum-card"><div class="appt-sum-lbl">🎯 Στόχος βάρους</div><div class="appt-sum-val">'+c.goalWeight+' kg</div><div class="appt-sum-sub">'+goalTxt+'</div>'+goalBarHtml+'</div>';
+    goalCardHtml='<div class="appt-sum-card"><div class="appt-sum-lbl">🎯 Στόχος βάρους</div><div class="appt-sum-val">'+c.goalWeight+' kg</div><div class="appt-sum-sub">'+goalSummary.goalTxt+'</div>'+goalBarHtml+'</div>';
   }
 
   // ── Κάρτα 2 extra: τρέχων μέσος στόχος θερμίδων (apptCurrentKcalTarget — ίδιος υπολογισμός με

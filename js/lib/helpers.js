@@ -130,6 +130,21 @@ function clientGoalWeightPct(c){
   if(!lastW||!firstW||Math.abs(firstW.weight-c.goalWeight)<=0.05)return null;
   return Math.max(0,Math.min(100,Math.round((firstW.weight-lastW.weight)/(firstW.weight-c.goalWeight)*100)));
 }
+// Το ίδιο "πόσα kg μένουν" κείμενο+ποσοστό που έδειχνε ΜΟΝΟ η κάρτα "🎯 Στόχος βάρους" του "📝 Ραντεβού"
+// (appointments/appointments.js) — εξάχθηκε εδώ ώστε το tracker-section "⚖️ Βάρος" στο "📈 Πρόοδος"
+// (tabs/progress.js) να δείχνει ΑΚΡΙΒΩΣ το ίδιο νούμερο/κείμενο αντί να ξαναγράφει τη φόρμουλα από την
+// αρχή (goalPct ήδη ήταν κοινό — clientGoalWeightPct από πάνω· εδώ προστίθεται και το diffToGoal/goalTxt
+// κείμενο, που πριν ζούσε μόνο inline στο appointments.js). null με τους ίδιους όρους με clientGoalWeightPct
+// (χωρίς goalWeight ή χωρίς καμία μέτρηση ακόμα).
+function clientGoalWeightSummary(c){
+  var wl=c.weightLog||[];
+  var lastW=wl.length?wl[wl.length-1]:null;
+  if(!(c.goalWeight>0)||!lastW)return null;
+  var diffToGoal=+(lastW.weight-c.goalWeight).toFixed(1);
+  var goalDone=Math.abs(diffToGoal)<0.05;
+  var goalTxt=goalDone?'✅ Στόχος!':(Math.abs(diffToGoal)+' kg ακόμα ('+(diffToGoal>0?'απώλεια':'αύξηση')+')');
+  return {lastWeight:lastW.weight, diffToGoal:diffToGoal, goalDone:goalDone, goalTxt:goalTxt, goalPct:clientGoalWeightPct(c)};
+}
 // Ασφαλές string για μέσα σε onclick="fn('...')": πρώτα escape για το JS string
 // literal (\ και '), μετά escape για το ίδιο το HTML attribute (" < > &) —
 // χωρίς το δεύτερο βήμα, ένα " στο κείμενο του πελάτη σπάει έξω από το onclick="..."
