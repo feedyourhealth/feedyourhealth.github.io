@@ -10,7 +10,8 @@
 // c.lastDietologistContact + μίκρυνση του per-client panel στο "📝 Ραντεβού" (progressCompactSummaryHtml).
 // Phase 4 (2026-09-15, μετά από 2ο mockup): αντικατάσταση του buildClientProgressHtml εδώ (διπλό
 // score/streak/πυλώνες, ήδη καλυμμένα από το γράφημα 10 εβδ. λίγο πιο πάνω στην ίδια σελίδα) με
-// progressWeightPanelHtml — βλ. σχόλιο εκεί.
+// progressWeightPanelHtml — βλ. σχόλιο εκεί. Phase 5 (2026-09-15, idea #1 του ίδιου mockup): η
+// γραμμή λίστας (progressRowHtml) ξαναχτίστηκε σε 3 γραμμές αντί όλα σε μία — βλ. σχόλιο εκεί.
 // Loads στο group tabs/, ΜΕΤΑ το appointments/appointments.js (ck* helpers + apptSparkline ζουν εκεί,
 // clientWeightStripHtml στο client-editor/form-controls.js) και το tabs/messages.js
 // (collectAllClientMessages).
@@ -69,6 +70,54 @@ function progressRosterData(){
 }
 
 var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει'};
+// Σειρά προτεραιότητας όταν ένας πελάτης έχει πάνω από 1 σημαία — ποια εμφανίζεται πρώτη/τονισμένη
+// στη γραμμή λίστας (idea #1, mockup συζήτησης 2026-09-15). Ίδια ιεράρχηση με το βάρος ταξινόμησης
+// στο progressRosterData (gone > low > exp) + το 'new' στο τέλος (πληροφοριακό, όχι προειδοποίηση).
+var PROGRESS_FLAG_PRIORITY=['gone','low','exp','new'];
+// Ίδιοι χρωματικοί τόνοι με τα ήδη υπάρχοντα hm-act-score-bad/-warn (css/styles.css) — 'new' παίρνει
+// το ουδέτερο teal του app αντί για κόκκινο/πορτοκαλί, μια πρώτη εβδομάδα δεν είναι πρόβλημα.
+var PROGRESS_FLAG_COLOR={gone:'#791F1F', low:'#791F1F', exp:'#633806', new:'var(--teal)'};
+// Ο πιο αδύναμος πυλώνας ΑΥΤΗΣ της εβδομάδας για έναν πελάτη — ίδιο κατώφλι-ανεξάρτητη λογική με το
+// progressWeakPillarCalloutHtml (client-detail chart panel), εδώ σε συμπτυγμένη μορφή μιας γραμμής
+// για τη λίστα ρίζας, ώστε το "⚠️ Χαμηλή τήρηση" να μην είναι απλά μια ετικέτα αλλά να λέει ΤΙ.
+function progressWeakestPillarTxt(pillars){
+  if(!pillars) return '';
+  var cands=[];
+  if(pillars.dietTot) cands.push({icon:'🍽',done:pillars.dietDone,tot:pillars.dietTot});
+  if(pillars.watTot) cands.push({icon:'💧',done:pillars.watDone,tot:pillars.watTot});
+  if(pillars.supTot) cands.push({icon:'💊',done:pillars.supDone,tot:pillars.supTot});
+  if(!cands.length) return '';
+  cands.sort(function(a,b){return (a.done/a.tot)-(b.done/b.tot);});
+  var w=cands[0];
+  return w.icon+' '+w.done+'/'+w.tot;
+}
+// 2η γραμμή της κάρτας πελάτη: ΤΟ πιο επείγον πράγμα, χρωματισμένο — οι υπόλοιπες σημαίες (αν
+// υπάρχουν παραπάνω από 1) μένουν σε ουδέτερο γκρι δίπλα, ώστε να μη χαθεί πληροφορία αλλά να μην
+// τραβάνε όλες το ίδιο βλέμμα. Καμία σημαία ⇒ καμία γραμμή (ένας πελάτης που πάει καλά δεν χρειάζεται
+// να διαβεβαιωθεί ρητά ότι είναι εντάξει).
+function progressRowUrgentLineHtml(x){
+  if(!x.flags.length) return '';
+  var ordered=PROGRESS_FLAG_PRIORITY.filter(function(f){return x.flags.indexOf(f)>-1;});
+  var top=ordered[0];
+  var extra='';
+  if(top==='low'){
+    var w=progressWeakestPillarTxt(x.pillars);
+    if(w) extra=' <span style="color:#999;font-weight:400">· '+w+' πιο αδύναμος πυλώνας</span>';
+  }
+  var rest=ordered.slice(1);
+  var restHtml=rest.length?(' <span style="color:#999;font-weight:400">· '+rest.map(function(f){return PROGRESS_FLAG_LABELS[f];}).join(' · ')+'</span>'):'';
+  return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:'+PROGRESS_FLAG_COLOR[top]+'">'+PROGRESS_FLAG_LABELS[top]+extra+restHtml+'</div>';
+}
+// 3η γραμμή: όλα τα υπόλοιπα (σερί/τελ. check-in/Δ βάρους/επικοινωνία) σε ουδέτερο γκρι — δεν
+// ανταγωνίζονται πια με το σκορ/σημαία της 1ης-2ης γραμμής για προσοχή.
+function progressRowMetaLineHtml(x){
+  var parts=[];
+  if(x.streak>0) parts.push('🔥 '+x.streak+' ημ. σερί');
+  parts.push(x.gap==null?'χωρίς check-in':(x.gap===0?'check-in σήμερα':x.gap===1?'check-in χθες':'check-in πριν '+x.gap+' ημ.'));
+  if(x.wDelta!=null) parts.push((x.wDelta>0?'+':'')+x.wDelta+' kg');
+  parts.push(x.contactDays==null?'📞 καμία επικοινωνία ακόμα':('📞 '+(x.contactDays===0?'επικοινωνία σήμερα':'πριν '+x.contactDays+' ημ.')));
+  return '<div class="hm-row-sub" style="white-space:normal;margin-top:2px">'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
+}
 
 var _progressFilter='all', _progressSearch='';
 function progressSetSearch(val){
@@ -103,21 +152,25 @@ function progressOpenMessages(name){
   if(typeof _msgSearch!=='undefined') _msgSearch=(name||'').toLowerCase();
   if(typeof swTab==='function') swTab(9);
 }
+// Idea #1 (mockup συζήτησης 2026-09-15): 3 γραμμές αντί για όλα στοιβαγμένα σε μία — 1η ταυτότητα+
+// σκορ (πάντα ίδιο ύψος), 2η ΤΟ πιο επείγον πράγμα με χρώμα (ή τίποτα αν όλα καλά), 3η τα υπόλοιπα σε
+// ουδέτερο γκρι. flex:0 1 auto στο hm-row-name παρακάμπτει το flex:1 της κλάσης (css/styles.css) —
+// εδώ δεν χρειάζεται να «τραβήξει» όλο τον χώρο της σειράς, μοιράζεται τη σειρά με group tag/σκορ/τάση.
 function progressRowHtml(x){
   var c=x.c;
-  var flagsHtml=x.flags.map(function(f){return '<span class="hm-act-score hm-act-score-warn" style="margin-left:4px">'+PROGRESS_FLAG_LABELS[f]+'</span>';}).join('');
-  var gapTxt=x.gap==null?'χωρίς check-in':(x.gap===0?'check-in σήμερα':x.gap===1?'check-in χθες':'check-in πριν '+x.gap+' ημ.');
-  var wTxt=x.wDelta==null?'':(' · '+(x.wDelta>0?'+':'')+x.wDelta+' kg');
-  var contactTxt=x.contactDays==null?' · 📞 καμία επικοινωνία ακόμα':(' · 📞 '+(x.contactDays===0?'επικοινωνία σήμερα':'πριν '+x.contactDays+' ημ.'));
-  return '<div class="hm-row" onclick="openProgressClient(\''+c.id+'\')">'
-    +'<div class="hm-avatar hm-avatar-teal">'+initials(c.name)+'</div>'
-    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+(c.group?' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>':'')+'</span>'
+  return '<div class="hm-row" style="align-items:flex-start;flex-wrap:wrap" onclick="openProgressClient(\''+c.id+'\')">'
+    +'<div class="hm-avatar hm-avatar-teal" style="margin-top:1px">'+initials(c.name)+'</div>'
+    +'<div style="flex:1;min-width:160px">'
+    +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+    +'<span class="hm-row-name" style="flex:0 1 auto">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +(c.group?'<span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>':'')
     +homeActivityScoreChipHtml(x.score,x.pillars)
     +homeActivityTrendHtml(x.score,x.prevScore)
-    +(x.streak>0?'<span class="hm-row-sub">🔥 '+x.streak+'</span>':'')
-    +flagsHtml
-    +'<span class="hm-row-sub">'+gapTxt+wTxt+contactTxt+'</span>'
-    +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" title="Άνοιγμα στα Μηνύματα" onclick="event.stopPropagation();progressOpenMessages(\''+escJsAttr(c.name)+'\')">✉️</button>'
+    +'</div>'
+    +progressRowUrgentLineHtml(x)
+    +progressRowMetaLineHtml(x)
+    +'</div>'
+    +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal);margin-top:2px" title="Άνοιγμα στα Μηνύματα" onclick="event.stopPropagation();progressOpenMessages(\''+escJsAttr(c.name)+'\')">✉️</button>'
     +'</div>';
 }
 function progressSummaryHtml(all){
