@@ -910,6 +910,20 @@ function homeCard(title,items,moreLabel,variant,maxRows){
   return html;
 }
 
+// Μικρό, πάντα-ορατό pointer προς το "📈 Πρόοδος" tab (js/tabs/progress.js) — αντικαθιστά τις
+// παλιές κάρτες σκορ/τήρησης της Αρχικής (πρώην "💬 Νέο feedback ή μήνυμα" [ουσιαστικά σκορ/τάση
+// ανά πελάτη], "📉 Σταμάτησαν να καταγράφουν", "📊 Χαμηλή τήρηση", "🌱 Πρώτη εβδομάδα") και τα 3
+// στατιστικά τήρησης/check-in/λήξης πλάνου στα clusters — όλα ζουν τώρα πλήρη εκεί, σε μεγαλύτερο
+// βάθος (10 εβδομάδες, φίλτρα, ιστορικό). Δεν δείχνει αριθμό: αν δείχναμε π.χ. το Μ.Ο. τήρησης εδώ
+// θα ήταν ξανά το ίδιο δεδομένο σε 2 σημεία — ο σκοπός αυτής της κάρτας είναι απλά η πόρτα, όχι η
+// προεπισκόπηση.
+function homeProgressPointerCard(){
+  return '<div class="hm-card" style="background:linear-gradient(135deg,var(--teal-tint),var(--card-bg));cursor:pointer" onclick="swTab(10)" onkeydown="if(event.key===\'Enter\')swTab(10)" role="button" tabindex="0">'
+    +'<div class="hm-card-title" style="margin-bottom:4px">📈 Σκορ τήρησης, τάσεις &amp; ιστορικό ανά πελάτη</div>'
+    +'<div style="font-size:11.5px;color:var(--text-muted)">Λίστα όλων, φίλτρα ανά σήμα, γράφημα 10 εβδομάδων — στο tab «Πρόοδος» →</div>'
+    +'</div>';
+}
+
 // Μια ζώνη της Αρχικής: επικεφαλίδα + πλήθος καρτών + το grid τους. collapsed=true -> <details>
 // κλειστό εξ ορισμού (για τα soft-touch, που δεν είναι εκκρεμότητες). Άδεια ζώνη -> ''.
 function homeZoneHtml(label, cards, collapsed){
@@ -1031,7 +1045,6 @@ function renderHome(){
   // [8] Υπολόγισε μία φορά ό,τι πριν ξανατρέχαμε 2-3× μέσα σε ένα render (attention list, portal
   // activity, stale links) και πέρασέ το ως όρισμα — καμία αλλαγή αποτελέσματος, λιγότερη δουλειά.
   var _attn=homeClientsNeedingAttention();
-  var _portalAct=homePortalActivity();
   var staleClients=homeStaleLinks();
   var attentionIds={};
   _attn.forEach(function(x){attentionIds[x.c.id]=true;});
@@ -1043,13 +1056,12 @@ function renderHome(){
   var staleCardTitle='🔗 Ξεπερασμένοι σύνδεσμοι'+(staleClients.length>1
     ?(' <button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeBulkRepublish(this)">Ξαναδημοσίευσε όλους ('+staleClients.length+')</button>')
     :'');
-  var activityRows=_portalAct.map(function(x){
-    var sub=x.gap===0?'σήμερα':(x.gap===1?'χθες':'πριν '+x.gap+' ημέρες');
-    return homeActivityRow(x,sub);
-  });
-  var stoppedLoggingRows=homeStoppedLogging(attentionIds).map(homeStoppedLoggingRow);
-  var lowAdherenceRows=homeLowAdherence(attentionIds).map(homeLowAdherenceRow);
-  var firstWeekRows=homeFirstWeek().map(homeFirstWeekRow);
+  // 2026-09-16: homePortalActivity()/homeStoppedLogging()/homeLowAdherence()/homeFirstWeek() δεν
+  // τροφοδοτούν πια κάρτες εδώ (βλ. homeProgressPointerCard πιο κάτω) — το σκορ/τάση/σερί/streak
+  // ανά πελάτη ζει πλήρες, σε μεγαλύτερο βάθος (10 εβδ., φίλτρα), στο tab "📈 Πρόοδος"
+  // (js/tabs/progress.js), που ήδη τις καλεί ο ίδιος για τις δικές του σημαίες — μία πηγή αλήθειας
+  // αντί για δύο σημεία που θα μπορούσαν να δείχνουν διαφορετικό νούμερο. Οι ίδιες οι συναρτήσεις
+  // ΔΕΝ αφαιρέθηκαν (progress.js εξαρτάται από αυτές).
   var weekdayHeat=homeWeekdayHeatmap();
   var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
   var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
@@ -1070,21 +1082,19 @@ function renderHome(){
     +'onchange="homeQuickFind(this.value)" onkeydown="if(event.key===\'Enter\')homeQuickFind(this.value)">'
     +'<datalist id="hm-find-list">'+_visibleClients.map(function(c){return '<option value="'+esc(c.name||'')+'">';}).join('')+'</datalist></span></div>';
 
-  // ── 3 κύρια σήματα (πάντα ορατά, πάνω απ' όλα) ────────────────────────────────
-  // Το feedback/μηνύματα, «χρειάζονται νέο πλάνο» και «σταμάτησαν να καταγράφουν» είναι τα 3
-  // πράγματα που ο διαιτολόγος θέλει να πιάνει με μια ματιά κάθε πρωί. Οι ίδιες γραμμές δεν
-  // επαναλαμβάνονται πια στις ζώνες παρακάτω (αφαιρέθηκαν οι αντίστοιχες κάρτες από zActNow/zWatch).
-  var sig1=activityRows;                                             // 💬 feedback + μηνύματα πελατών
+  // ── Κύριο σήμα + pointer προς το Πρόοδος (πάντα ορατά, πάνω απ' όλα) ──────────
+  // 2026-09-16: εδώ ζούσαν 3 κάρτες («💬 Νέο feedback ή μήνυμα» = ουσιαστικά σκορ/τάση ανά πελάτη,
+  // «📄 Χρειάζονται νέο πλάνο», «📉 Σταμάτησαν να καταγράφουν») — οι δύο πρώτη/τρίτη αφαιρέθηκαν
+  // (βλ. σχόλιο πιο πάνω) γιατί είναι ήδη πλήρεις, σε μεγαλύτερο βάθος, στο tab "📈 Πρόοδος". Νέες
+  // σημειώσεις/χαμηλό feedback πελάτη συνεχίζουν να φαίνονται εδώ μέσω του tile "🔴 Χρειάζονται
+  // προσοχή" (homeClientsNeedingAttention ήδη τα περιλαμβάνει) — δεν χάθηκε το σήμα, μόνο η
+  // διπλή προβολή του σκορ.
   var sig2=pendingPlanRows.concat(approachingRenewalRows).concat(staleRows); // 📄 νέο πλάνο / ξαναδημοσίευση
-  var sig3=stoppedLoggingRows;                                       // 📉 σταμάτησαν να καταγράφουν
-  var sigHtml=[
-    homeCard('💬 Νέο feedback ή μήνυμα', sig1, 'ακόμα', 'info', 4),
-    homeCard('📄 Χρειάζονται νέο πλάνο', sig2, 'ακόμα', 'warning', 4),
-    homeCard('📉 Σταμάτησαν να καταγράφουν', sig3, 'ακόμα', 'warning', 4)
-  ].filter(Boolean).join('');
-  html+= sigHtml
-    ? '<div class="hm-signals">'+sigHtml+'</div>'
-    : '<div class="hm-empty" style="text-align:center;padding:10px 0;font-size:13px">✅ Κανένα εκκρεμές σήμα — feedback, πλάνα και καταγραφές είναι εντάξει</div>';
+  var sigCardHtml=homeCard('📄 Χρειάζονται νέο πλάνο', sig2, 'ακόμα', 'warning', 4);
+  html+='<div class="hm-signals">'
+    +(sigCardHtml||'<div class="hm-card"><div class="hm-empty" style="text-align:center;padding:10px 0;font-size:13px">✅ Κανένα εκκρεμές σήμα — τα πλάνα είναι εντάξει</div></div>')
+    +homeProgressPointerCard()
+    +'</div>';
 
   var buckets=homeAttentionBuckets(_attn, staleClients);
   // Προεπιλογή κόκκινο· αλλά αν το κόκκινο είναι άδειο ενώ υπάρχουν μπαγιάτικα, ξεκίνα στο κίτρινο —
@@ -1107,55 +1117,19 @@ function renderHome(){
     +'<div class="hm-card" style="margin-bottom:20px" id="hm-bucket-list">'+homeBucketListInnerHtml(buckets)+'</div>';
 
   var measuredToday=homeMeasuredToday();
-  // ✅ Ring "ενεργοί με πρόσφατο check-in" — πάνω στο ΗΔΗ υπάρχον homePortalActivity()/checkinsFor(),
-  // την ίδια πηγή αλήθειας που τροφοδοτεί το tile "💬 Νέα από πελάτες" πιο πάνω. Παρονομαστής: πελάτες
-  // που έχουν καν σύνδεσμο portal (c.shareToken) — όσοι δεν έχουν στείλει ποτέ πλάνο δεν έχουν πώς να
-  // κάνουν check-in, δεν πρέπει να τραβάνε το ποσοστό προς τα κάτω σαν να αδιαφορούν.
-  var _withLink=clients.filter(function(c){return !c.deleted&&!c.archived&&c.shareToken;});
-  var _recentActiveN=_portalAct.filter(function(x){return x.gap<=7;}).length;
-  var _activePct=_withLink.length?Math.round(_recentActiveN/_withLink.length*100):null;
-  // «Παλμός πρακτικής»: Μ.Ο. σκορ τήρησης portal αυτή την εβδομάδα + μεταβολή vs προηγούμενη
-  // (ckWeekScore 0 vs -1, μόνο πελάτες με δεδομένα). Το «−N» εδώ πιάνει κάτι συστημικό πριν
-  // φανεί πελάτη-πελάτη στις κάρτες.
-  function _avgWk(off){
-    var v=_withLink.map(function(c){
-      var r=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
-      return r.length?ckWeekScore(ckRowsByDate(r),off):null;
-    }).filter(function(x){return x!=null;});
-    return v.length?Math.round(v.reduce(function(a,b){return a+b;},0)/v.length):null;
-  }
-  var _avgAdh=_avgWk(0), _avgAdhPrev=_avgWk(-1);
-  var _adhWow=(_avgAdh!=null&&_avgAdhPrev!=null)?(_avgAdh-_avgAdhPrev):null;
-  // [4] Πλάνα που λήγουν σε 7 ημ. — μπροστινή ματιά για ποιανού πρέπει να ετοιμάσεις νέο πλάνο.
-  var _expSoon=homePlansExpiringSoon(7);
-  // [3] Δύο ομάδες με ετικέτα περιόδου αντί για μία επίπεδη σειρά που ανακατεύει σύνολα & εβδομαδιαίους ρυθμούς.
+  // 2026-09-16: το ring "ενεργοί με πρόσφατο check-in" και το «Μ.Ο. τήρησης (εβδ.)» ζούσαν εδώ —
+  // αφαιρέθηκαν μαζί με τους υπολογισμούς τους (ίδιοι με το KPI strip του tab "📈 Πρόοδος", βλ.
+  // homeProgressPointerCard). Το "Πλάνα λήγουν (7 ημ.)" έφυγε για τον ίδιο λόγο (progress.js
+  // υπολογίζει το ίδιο πράγμα ανά πελάτη μέσω progressDaysUntilExpiry).
   html+='<div class="hm-clusters">';
   html+='<div class="hm-cluster"><div class="hm-cluster-h">Πρακτική</div><div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Δες όλους τους πελάτες"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'active\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'active\')" role="button" tabindex="0" title="Δες πελάτες με ενεργό πλάνο"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
-    +'<div class="hm-stat hm-stat-clickable" onclick="swTab(5)" onkeydown="if(event.key===\'Enter\')swTab(5)" role="button" tabindex="0" title="Πλάνα που λήγουν ή έχουν ήδη λήξει μέσα σε 7 ημέρες — άνοιγμα Διατροφές"><div class="hm-stat-num">'+_expSoon+'</div><div class="hm-stat-lbl">Πλάνα λήγουν (7 ημ.)</div></div>'
     +'</div></div>';
   html+='<div class="hm-cluster"><div class="hm-cluster-h">Αυτή την εβδομάδα</div><div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="toggleQA(\'qa-quickmeasure\')" onkeydown="if(event.key===\'Enter\')toggleQA(\'qa-quickmeasure\')" role="button" tabindex="0" title="Άνοιγμα γρήγορης μέτρησης"><div class="hm-stat-num">'+measuredToday.length+'</div><div class="hm-stat-lbl">Μετρήσεις σήμερα</div>'
     +(measuredToday.length?'<div class="hm-stat-names">'+measuredToday.map(function(c){return esc(c.name||'');}).join(', ')+'</div>':'')
     +'</div>'
-    +(_activePct==null?'':(
-      '<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Πελάτες με check-in στις τελευταίες 7 μέρες, από όσους έχουν σύνδεσμο portal" style="display:flex;align-items:center;gap:10px;justify-content:center">'
-      +pctRing(_activePct,{size:48,thickness:6,color:pctStatusColor(_activePct),track:'var(--panel-bg)'})
-      +'<span style="text-align:left"><span class="hm-stat-lbl" style="display:block">Ενεργοί με<br>check-in (7 ημ.)</span></span>'
-      +'</div>'
-    ))
-    +(_avgAdh==null?'':(
-      '<div class="hm-stat" title="Μέσος όρος σκορ τήρησης portal αυτή την εβδομάδα, από πελάτες με σύνδεσμο">'
-      +'<div class="hm-stat-num">'+_avgAdh+'%</div><div class="hm-stat-lbl">Μ.Ο. τήρησης (εβδ.)</div>'
-      +(_adhWow==null?'':(function(){
-        var big=Math.abs(_adhWow)>=CK_TREND_MIN_PP;
-        var cls=!big?'flat':(_adhWow>0?'up':'dn');
-        var txt=!big?'≈ ίδιο':(_adhWow>0?'▲ +'+_adhWow:'▼ '+_adhWow);
-        return '<div class="hm-stat-wow '+cls+'">'+txt+' vs προηγ.</div>';
-      })())
-      +'</div>'
-    ))
     +'</div></div>';
   html+='</div>';
 
@@ -1164,24 +1138,25 @@ function renderHome(){
   // 3 ζώνες αντί για έναν επίπεδο τοίχο ~11 καρτών: «Δράση τώρα» (κόκκινες/warning που θέλουν
   // ενέργεια), «Παρακολούθηση» (portal σήματα + admin), «Soft-touch» (💛, collapsed — δεν είναι
   // εκκρεμότητες). Καμία κάρτα δεν αφαιρείται· η homeCard() επιστρέφει '' όταν είναι άδεια.
-  // ⚠️ «Εκκρεμότητες πλάνου», «Ξεπερασμένοι σύνδεσμοι», «Πλησιάζει ανανέωση» και «Σταμάτησαν να
-  // καταγράφουν» / «Πρόσφατη δραστηριότητα» μετακόμισαν στα 3 κύρια σήματα πάνω-πάνω — δεν
-  // επαναλαμβάνονται εδώ. Η ζώνη «Δράση τώρα» κρατά τα πιο σπάνια/κρίσιμα (τάση βάρους, κύηση).
+  // ⚠️ «Εκκρεμότητες πλάνου», «Ξεπερασμένοι σύνδεσμοι» και «Πλησιάζει ανανέωση» μετακόμισαν στο
+  // κύριο σήμα πάνω-πάνω — δεν επαναλαμβάνονται εδώ. «Σταμάτησαν να καταγράφουν»/«Πρόσφατη
+  // δραστηριότητα» δεν μετακόμισαν πουθενά σε αυτή τη σελίδα — αφαιρέθηκαν εντελώς (2026-09-16),
+  // ζουν πλήρη στο tab "📈 Πρόοδος". Η ζώνη «Δράση τώρα» κρατά τα πιο σπάνια/κρίσιμα (τάση βάρους, κύηση).
   var zActNow=[
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
     homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger')
   ].filter(Boolean);
   // [5] Οι κάρτες «Παρακολούθηση» δείχνουν 3 γραμμές + «+N ακόμα» (αντί 8) — η ζώνη έχει τα πιο ήπια
   // σήματα, δεν χρειάζεται να ανοίγει ολόκληρη κάθε Δευτέρα.
+  // 2026-09-16: «📊 Χαμηλή τήρηση» έφυγε από εδώ — είναι το φίλτρο "⚠️ Χαμηλή τήρηση" στο "📈 Πρόοδος".
   var zWatch=[
-    homeCard('📊 Χαμηλή τήρηση αυτή την εβδομάδα', lowAdherenceRows, 'ακόμα', 'warning', 3),
     isFeedbackReminderWindow()?homeCard('🔔 Υπενθύμιση feedback', reminderRows, 'ακόμα', 'info', 3):'',
     weekdayHeat?homeWeekdayHeatmapHtml(weekdayHeat):'',
     groupBreakdown.length?homeGroupsCardHtml(groupBreakdown):'',
     tasteLibraryStatus?homeTasteLibraryCardHtml(tasteLibraryStatus):''
   ].filter(Boolean);
+  // 2026-09-16: «🌱 Πρώτη εβδομάδα» έφυγε από εδώ — είναι το φίλτρο "🌱 Πρώτη εβδομάδα" στο "📈 Πρόοδος".
   var zSoft=[
-    homeCard('🌱 Πρώτη εβδομάδα', firstWeekRows, 'ακόμα', 'info'),
     homeCard('🎂 Γενέθλια', birthdayRows, 'ακόμα', 'info'),
     homeCard('🥳 Ονομαστικές εορτές', nameDayRows, 'ακόμα', 'info')
   ].filter(Boolean);
