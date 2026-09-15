@@ -281,10 +281,13 @@ function updateMessagesNavBadge(){
   var n=0;
   try{ n=collectAllClientMessages().filter(function(m){return !m.handled;}).length; }catch(e){ n=0; }
   var txt=n>99?'99+':String(n);
-  ['messages-nav-badge','messages-nav-badge-mobile','more-nav-badge-mobile'].forEach(function(id){
+  ['messages-nav-badge','messages-nav-badge-mobile'].forEach(function(id){
     var el=document.getElementById(id);
     if(!el) return;
     el.textContent=txt;
     el.style.display=n>0?'inline-block':'none';
   });
+  // #more-nav-badge-mobile είναι κοινό με άλλα κρυμμένα-στο-"Περισσότερα" tabs (π.χ. Πρόοδος) —
+  // βλ. setMoreNavBadgeCount (js/lib/helpers.js) για το γιατί δεν γράφεται απευθείας εδώ πια.
+  if(typeof setMoreNavBadgeCount==='function') setMoreNavBadgeCount('messages', n);
 }

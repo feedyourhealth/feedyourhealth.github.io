@@ -128,6 +128,7 @@ setTimeout(function(){
   </div>
   <button type="button" class="hm-nav-btn" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική<span id="home-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(9)" aria-label="Μηνύματα">💬 Μηνύματα<span id="messages-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(10)" aria-label="Πρόοδος">📈 Πρόοδος<span id="progress-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(7)" aria-label="Πελάτες">👥 Πελάτες</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(6)" aria-label="Συνταγές">🍽️ Συνταγές</button>
@@ -259,6 +260,10 @@ setTimeout(function(){
   <button type="button" class="more-item" onclick="closeMoreSheet();swTab(9)">
     <span class="ic">💬</span><span class="n">Μηνύματα</span>
     <span id="messages-nav-badge-mobile" class="more-item-badge" style="display:none">0</span>
+  </button>
+  <button type="button" class="more-item" onclick="closeMoreSheet();swTab(10)">
+    <span class="ic">📈</span><span class="n">Πρόοδος</span>
+    <span id="progress-nav-badge-mobile" class="more-item-badge" style="display:none">0</span>
   </button>
   <button type="button" class="more-item" onclick="closeMoreSheet();swTab(7)"><span class="ic">👥</span><span class="n">Πελάτες</span></button>
   <button type="button" class="more-item" onclick="closeMoreSheet();swTab(6)"><span class="ic">🍽️</span><span class="n">Συνταγές</span></button>
@@ -411,6 +416,7 @@ setTimeout(function(){
      Pure fn declarations, no load-time code. -->
 <script defer src="js/tabs/home-diets.js"></script>
 <script defer src="js/tabs/messages.js"></script>
+<script defer src="js/tabs/progress.js"></script>
 <script defer src="js/tabs/recipes.js"></script>
 <script defer src="js/tabs/tips.js"></script>
 <!-- Chart.js 4.5.1 UMD (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ μέσω ensureChart()

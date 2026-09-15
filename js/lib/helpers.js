@@ -9,6 +9,21 @@
 // Global HTML-escape helper — sanitizes user input (client names, notes, etc.)
 // before it is injected into innerHTML. Prevents broken markup / XSS.
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// Κοινό "σύνολο" badge για το κουμπί "Περισσότερα" στο κινητό (#more-nav-badge-mobile) — το
+// στοιχείο αυτό είναι κοινό σε ΟΛΑ τα tabs που κρύβονται εκεί (Μηνύματα, Πρόοδος, ...), οπότε αν
+// κάθε tab έγραφε απευθείας το δικό του μέτρημα εκεί, το τελευταίο που τρέχει θα έσβηνε το
+// προηγούμενο (η ίδια "δύο λίστες αποκλίνουν" οικογένεια bug, εδώ σε μορφή "δύο badges
+// αλληλοσβήνονται"). Κάθε updateXNavBadge() καλεί setMoreNavBadgeCount('x', n) με το ΔΙΚΟ του
+// κλειδί αντί να γράφει απευθείας στο DOM· εδώ αθροίζονται όλα τα κλειδιά.
+var _moreNavBadgeCounts={};
+function setMoreNavBadgeCount(key,n){
+  _moreNavBadgeCounts[key]=n||0;
+  var total=Object.keys(_moreNavBadgeCounts).reduce(function(s,k){return s+_moreNavBadgeCounts[k];},0);
+  var el=document.getElementById('more-nav-badge-mobile');
+  if(!el) return;
+  el.textContent=total>99?'99+':String(total);
+  el.style.display=total>0?'inline-block':'none';
+}
 // Κυκλικό δαχτυλίδι προόδου 0-100% (.pct-ring, css/styles.css) — μοιράζεται το ίδιο markup σε
 // κάθε σημείο του app που δείχνει ποσοστό. opts: size/thickness σε px, color/track = CSS color
 // string (π.χ. 'var(--teal)' ή αποτέλεσμα του pctStatusColor()), label:false για μικρά badge-size
