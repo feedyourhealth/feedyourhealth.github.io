@@ -116,7 +116,35 @@ function setMacroCustom(key,val){
   onClientChange();  // ← TRIGGER CASCADE RECALCULATION
 }
 
-// Πρόοδος πελάτη από το portal (checkins που στέλνει το plan.html στο Supabase).
+// Βάρος: τελευταία δήλωση πελάτη (client_logs.weight_kg) vs τελευταία δική σου μέτρηση (c.weightLog).
+// Ξεχωριστή συνάρτηση (όχι πια inline μέσα στο buildClientProgressHtml) γιατί το "📈 Πρόοδος" tab
+// (progressWeightPanelHtml, js/tabs/progress.js) τη χρειάζεται ΚΙ ΑΥΤΟ μόνη της, χωρίς το υπόλοιπο
+// score/streak/πυλώνες panel που ήδη καλύπτεται εκεί από το γράφημα 10 εβδομάδων — ίδιος υπολογισμός,
+// ένα σημείο αλήθειας, αντί να ξαναγραφτεί το ίδιο κομμάτι σε 2 αρχεία.
+function clientWeightStripHtml(c){
+  function cpDaysAgo(dstr){ if(!dstr) return null; var a=new Date(dstr+'T00:00:00'), b=new Date(); b.setHours(0,0,0,0); return Math.round((b-a)/86400000); }
+  var _logs=(window.Cloud&&window.Cloud.allClientLogsFor)?window.Cloud.allClientLogsFor(c):[];
+  var lastSelfW=null;
+  for(var _li=0; _li<_logs.length; _li++){ if(_logs[_li].weight_kg>0){ lastSelfW=_logs[_li]; break; } }
+  var _wl=c.weightLog||[], lastMeasW=_wl.length?_wl[_wl.length-1]:null;
+  if(!lastSelfW) return '';
+  var _sa=cpDaysAgo(lastSelfW.date), _saTxt=_sa===0?'σήμερα':_sa===1?'χθες':'πριν '+_sa+' μέρες';
+  var _cmp='';
+  if(lastMeasW && lastMeasW.weight>0){
+    var _d=Math.round((lastSelfW.weight_kg-lastMeasW.weight)*10)/10;
+    var _fav=c.goalMain==='loss'?(_d<0):(c.goalMain==='gain'?(_d>0):null);
+    var _col=_fav==null?'#6B756F':(_fav?'var(--good)':'#c62828');
+    _cmp='<span style="color:#6B756F">| δική σου μέτρηση '+lastMeasW.weight+' kg (πριν '+cpDaysAgo(lastMeasW.date)+' μ.)</span> '
+      +'<span style="font-weight:800;color:'+_col+'">→ '+(_d>0?'+':'')+_d+' kg '+(_d>0?'▲':_d<0?'▼':'■')+'</span>';
+  }
+  return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12px;background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:8px 10px;margin-bottom:12px">'
+    +'<span>⚖️ <b style="font-size:14px">'+lastSelfW.weight_kg+' kg</b> <span style="color:#6B756F">δήλωση πελάτη · '+_saTxt+'</span></span>'
+    +_cmp+'</div>';
+}
+
+// Πρόοδος πελάτη από το portal (checkins που στέλνει το plan.html στο Supabase). Παραμένει εδώ ως
+// fallback (βλ. appointments/appointments.js, portalFeedbackBody) — η κανονική οθόνη του πλέον ζει
+// συμπτυγμένη στο "📝 Ραντεβού" (progressCompactSummaryHtml) και πλήρης στο "📈 Πρόοδος".
 function buildClientProgressHtml(c){
   if(!c.shareToken) return '';
   var rows=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
@@ -140,27 +168,7 @@ function buildClientProgressHtml(c){
     else if(dS<=-CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:#c62828" title="από '+prevScore+'% την περασμένη εβδομάδα">▼ '+dS+'</span>';
   }
 
-  // Βάρος: τελευταία δήλωση πελάτη (client_logs.weight_kg) vs τελευταία δική σου μέτρηση (c.weightLog).
-  function cpDaysAgo(dstr){ if(!dstr) return null; var a=new Date(dstr+'T00:00:00'), b=new Date(); b.setHours(0,0,0,0); return Math.round((b-a)/86400000); }
-  var _logs=(window.Cloud&&window.Cloud.allClientLogsFor)?window.Cloud.allClientLogsFor(c):[];
-  var lastSelfW=null;
-  for(var _li=0; _li<_logs.length; _li++){ if(_logs[_li].weight_kg>0){ lastSelfW=_logs[_li]; break; } }
-  var _wl=c.weightLog||[], lastMeasW=_wl.length?_wl[_wl.length-1]:null;
-  var weightStrip='';
-  if(lastSelfW){
-    var _sa=cpDaysAgo(lastSelfW.date), _saTxt=_sa===0?'σήμερα':_sa===1?'χθες':'πριν '+_sa+' μέρες';
-    var _cmp='';
-    if(lastMeasW && lastMeasW.weight>0){
-      var _d=Math.round((lastSelfW.weight_kg-lastMeasW.weight)*10)/10;
-      var _fav=c.goalMain==='loss'?(_d<0):(c.goalMain==='gain'?(_d>0):null);
-      var _col=_fav==null?'#6B756F':(_fav?'var(--good)':'#c62828');
-      _cmp='<span style="color:#6B756F">| δική σου μέτρηση '+lastMeasW.weight+' kg (πριν '+cpDaysAgo(lastMeasW.date)+' μ.)</span> '
-        +'<span style="font-weight:800;color:'+_col+'">→ '+(_d>0?'+':'')+_d+' kg '+(_d>0?'▲':_d<0?'▼':'■')+'</span>';
-    }
-    weightStrip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:12px;background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:8px 10px;margin-bottom:12px">'
-      +'<span>⚖️ <b style="font-size:14px">'+lastSelfW.weight_kg+' kg</b> <span style="color:#6B756F">δήλωση πελάτη · '+_saTxt+'</span></span>'
-      +_cmp+'</div>';
-  }
+  var weightStrip=clientWeightStripHtml(c);
 
   function bar(label,done,tot){
     if(!tot) return '';

@@ -1,15 +1,19 @@
 // js/tabs/progress.js
 // The "📈 Πρόοδος" tab — cross-client roster + per-client history, δίπλα στο "💬 Μηνύματα" στο
 // αριστερό μενού (swTab(10)). Ενοποιεί σήματα που ζούσαν σκόρπια σε Αρχική/Ραντεβού/Μηνύματα σε
-// ΕΝΑ σημείο, χωρίς να τα ξαναϋπολογίζει: buildClientProgressHtml (score/streak/πυλώνες/sparkline
-// — ήδη ζωγραφισμένο στο per-client "📝 Ραντεβού" tab) καλείται ΑΥΤΟΥΣΙΟ εδώ, ώστε το νούμερο να
-// μην μπορεί ποτέ να αποκλίνει ανάμεσα στα δύο σημεία (βλ. "two-lists-diverge" gotcha).
+// ΕΝΑ σημείο, χωρίς να τα ξαναϋπολογίζει: ck* helpers/clientWeightStripHtml/collectAllClientMessages
+// καλούνται ΑΥΤΟΥΣΙΑ εδώ, ώστε ένα νούμερο να μην μπορεί ποτέ να αποκλίνει ανάμεσα σε δύο σημεία
+// (βλ. "two-lists-diverge" gotcha).
 // Phase 1 (2026-09-15, μετά από mockup στη συζήτηση): λίστα πελατών + βασικό ιστορικό ανά πελάτη.
 // Phase 2 (2026-09-15): γράφημα τήρησης 10 εβδομάδων ανά πυλώνα, δείκτες ραντεβού πάνω στο γράφημα,
-// weak-pillar callout, ✉️ shortcut στα Μηνύματα (roster row). Phase 3 (όχι ακόμα):
-// c.lastDietologistContact (νέο πεδίο δεδομένων) + μίκρυνση του παλιού per-client panel.
-// Loads στο group tabs/, ΜΕΤΑ το appointments/appointments.js (ck* helpers, buildClientProgressHtml
-// ζει στο client-editor/form-controls.js) και το tabs/messages.js (collectAllClientMessages).
+// weak-pillar callout, ✉️ shortcut στα Μηνύματα (roster row). Phase 3 (2026-09-15):
+// c.lastDietologistContact + μίκρυνση του per-client panel στο "📝 Ραντεβού" (progressCompactSummaryHtml).
+// Phase 4 (2026-09-15, μετά από 2ο mockup): αντικατάσταση του buildClientProgressHtml εδώ (διπλό
+// score/streak/πυλώνες, ήδη καλυμμένα από το γράφημα 10 εβδ. λίγο πιο πάνω στην ίδια σελίδα) με
+// progressWeightPanelHtml — βλ. σχόλιο εκεί.
+// Loads στο group tabs/, ΜΕΤΑ το appointments/appointments.js (ck* helpers + apptSparkline ζουν εκεί,
+// clientWeightStripHtml στο client-editor/form-controls.js) και το tabs/messages.js
+// (collectAllClientMessages).
 
 // Ίδια κατώφλια με το homeLowAdherence (tabs/home-diets.js) — ΔΕΝ ξαναχρησιμοποιούμε απευθείας
 // εκείνη τη συνάρτηση εδώ γιατί κάνει slice(0,3) για την κάρτα της Αρχικής· η λίστα/badge εδώ
@@ -325,10 +329,30 @@ function openProgressClient(id){
     +'<button type="button" class="hm-action-btn" onclick="selectClient(\''+c.id+'\');swTab(1)">Άνοιγμα πλήρους καρτέλας</button>'
     +'</div></div>';
   html+=progressAdherenceChartPanel(c,rows);
-  html+=(typeof buildClientProgressHtml==='function')?buildClientProgressHtml(c):'';
+  html+=(typeof progressWeightPanelHtml==='function')?progressWeightPanelHtml(c):'';
   html+='<div class="hm-card" style="margin-top:14px"><div class="hm-card-title">🗂 Ιστορικό</div>'+progressTimelineHtml(progressBuildTimeline(c))+'</div>';
   html+='</div>';
   main.innerHTML=html;
+}
+
+// ── Phase 4 (2026-09-15, μετά από mockup συζήτησης): γράφημα βάρους αντί για το διπλό panel ──────
+// Το openProgressClient καλούσε ΑΥΤΟΥΣΙΟ το buildClientProgressHtml εδώ (score/streak/πυλώνες
+// τρέχουσας εβδομάδας/4-εβδ. μπάρες/14-ημ. sparkline) — όλα ήδη καλυμμένα, και σε μεγαλύτερο βάθος
+// χρόνου, από το progressAdherenceChartPanel ΑΠΟ ΠΑΝΩ του στην ίδια σελίδα. Το μόνο πραγματικά
+// μοναδικό κομμάτι ήταν το weightStrip (δήλωση βάρους πελάτη vs δική σου μέτρηση) — τώρα ξεχωριστή
+// συνάρτηση (clientWeightStripHtml, client-editor/form-controls.js) ώστε να μη ξαναγραφτεί εδώ. Το
+// γράφημα βάρους στον χρόνο χρησιμοποιεί το ΙΔΙΟ γενικό sparkline component (apptSparkline,
+// appointments/appointments.js) που ήδη σχεδιάζει το γράφημα στόχου θερμίδων στο "📝 Ραντεβού" —
+// όχι νέο chart-εργαλείο. buildClientProgressHtml παραμένει άθικτο ως fallback (appointments.js).
+function progressWeightPanelHtml(c){
+  var wl=(c.weightLog||[]).filter(function(w){return w.weight>0;});
+  var stripHtml=(typeof clientWeightStripHtml==='function')?clientWeightStripHtml(c):'';
+  if(wl.length<2) return stripHtml?('<div class="tracker-section"><div class="tracker-head">⚖️ Βάρος</div>'+stripHtml+'</div>'):'';
+  var vals=wl.map(function(w){return w.weight;});
+  var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
+  if(mn===mx){mn-=1;mx+=1;}
+  var chart=(typeof apptSparkline==='function')?apptSparkline(wl,'weight','#025857','Βάρος (kg) — τελευταίες '+wl.length+' μετρήσεις',mn,mx):'';
+  return '<div class="tracker-section"><div class="tracker-head">⚖️ Βάρος</div>'+stripHtml+chart+'</div>';
 }
 
 // ── Phase 3: μίκρυνση του παλιού per-client panel ───────────────────────────────────────────────
