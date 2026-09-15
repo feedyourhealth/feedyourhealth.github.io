@@ -148,9 +148,27 @@ function renderProgress(){
   html+='<div id="progress-results">'+progressResultsHtml(all)+'</div>';
   html+='</div>';
   main.innerHTML=html;
-  // Ίδιο μοτίβο με το άνοιγμα του "📝 Ραντεβού" (swTab, TAB_APPOINTMENTS): φέρνει φρέσκα check-ins/
-  // σημειώσεις/feedback στο παρασκήνιο αντί να δείχνει μόνο ό,τι ήδη υπήρχε στη μνήμη από το login.
-  if(typeof refreshClientPortalFeedback==='function') refreshClientPortalFeedback(null);
+}
+// Φέρνει φρέσκα check-ins/σημειώσεις/feedback στο παρασκήνιο — ΞΕΧΩΡΙΣΤΗ συνάρτηση από το
+// renderProgress() (ίδιος διαχωρισμός με renderMessages()/msgRefresh(), tabs/messages.js), όχι
+// ενσωματωμένη μέσα του: αν το renderProgress() έκανε ο ίδιος αυτό το refresh, κάθε ξαναζωγραφισμα
+// θα ξανατριγύριζε ατέρμονα refresh→render→refresh→... Καλείται ΜΙΑ φορά όταν ανοίγει το tab
+// (swTab, js/client-editor/form-controls.js), ίδιο μοτίβο με το άνοιγμα του "📝 Ραντεβού".
+//
+// ΓΙΑΤΙ ΔΕΝ γίνεται μέσω refreshClientPortalFeedback (όπως το Ραντεβού tab): κάθε Cloud.refresh*Cache()
+// (app-part7.js) καταλήγει σε "if(curId===null) renderHome()" — φτιαγμένο για "δεν υπάρχει επιλεγμένος
+// πελάτης ⇒ δείξε Αρχική", ΠΡΙΝ υπάρχει το Πρόοδος. Εδώ το curId ΕΙΝΑΙ επίτηδες null (cross-client
+// προβολή, όπως τα Μηνύματα) — χωρίς αυτό το fix, το φρεσκάρισμα πετάει πίσω στην Αρχική μερικά
+// δευτερόλεπτα μετά το άνοιγμα (βρέθηκε σε live sanity-check, 2026-09-16). Ίδιο αντίδοτο με το
+// msgRefresh: ξαναζωγραφίζουμε ΕΜΕΙΣ μετά, ώστε να «νικήσει» το home fallback.
+function progressRefresh(){
+  if(!window.Cloud) return;
+  Promise.all([
+    typeof Cloud.refreshCheckinsCache==='function'?Cloud.refreshCheckinsCache():Promise.resolve(),
+    typeof Cloud.refreshClientLogsCache==='function'?Cloud.refreshClientLogsCache():Promise.resolve(),
+    typeof Cloud.refreshPlanFeedbackCache==='function'?Cloud.refreshPlanFeedbackCache():Promise.resolve(),
+    typeof Cloud.refreshLinkHealthCache==='function'?Cloud.refreshLinkHealthCache():Promise.resolve()
+  ]).then(function(){ renderProgress(); }).catch(function(){});
 }
 
 // ── Γράφημα τήρησης 10 εβδομάδων (Phase 2) ──────────────────────────────────────────────────

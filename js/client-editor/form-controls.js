@@ -484,9 +484,9 @@ function swTab(n){
   // παρασκήνιο, ώστε ένα μήνυμα που έστειλε ο πελάτης ενώ ο διαιτολόγος είχε ήδη ανοιχτή την
   // εφαρμογή να εμφανιστεί χωρίς να χρειάζεται να το θυμηθεί να πατήσει το κουμπί.
   if(n===9){ if(typeof renderMessages==='function') renderMessages(); if(typeof msgRefresh==='function') msgRefresh(null); return; }
-  // "📈 Πρόοδος" (js/tabs/progress.js) — renderProgress() ήδη τρέχει refreshClientPortalFeedback
-  // στο παρασκήνιο μόνη της (ίδιο μοτίβο με το n===9 παραπάνω), οπότε δεν χρειάζεται δεύτερο call εδώ.
-  if(n===10){ if(typeof renderProgress==='function') renderProgress(); return; }
+  // "📈 Πρόοδος" (js/tabs/progress.js) — ίδιο μοτίβο με το n===9 παραπάνω: renderProgress() ζωγραφίζει
+  // αμέσως από cache, progressRefresh() φέρνει φρέσκα δεδομένα στο παρασκήνιο και ξαναζωγραφίζει.
+  if(n===10){ if(typeof renderProgress==='function') renderProgress(); if(typeof progressRefresh==='function') progressRefresh(); return; }
   // ✅ Remembers the last client-detail tab shown, so the delayed fade-in renderMain()
   // wrapper (Dietologist.html) can re-apply it after its own rebuild — see that wrapper
   // for why this is needed (it defaults back to tab 1 otherwise).
