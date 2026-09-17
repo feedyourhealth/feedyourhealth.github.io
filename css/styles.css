@@ -4,6 +4,7 @@
      #E2EEE5 vs #e2eee5 — that a plain find/replace across the file couldn't have caught). */
   --teal:#025857;
   --teal-dark:#014545;
+  --teal-hover:#037070;
   --teal-tint:#e2eee5;
   --danger:#b71c1c;
   --success-tint:#e8f5e9;
@@ -238,7 +239,7 @@ body.dark-mode .bulk-action-bar{background:#182525;border-color:#2c4a49}
 .qa-btn:hover{background:var(--teal);color:#fff;border-color:var(--teal)}
 .qa-panel{margin:2px 8px 8px;padding:8px;background:#fafcfc;border:1px solid #e0e0e0;border-radius:10px}
 .qa-instant-btn{width:100%;padding:8px;margin-bottom:6px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;text-align:center}
-.qa-instant-btn:hover{background:#037070}
+.qa-instant-btn:hover{background:var(--teal-hover)}
 .qa-panel-or{font-size:9.5px;color:#6b6b6b;text-align:center;margin:2px 0 6px}
 .qa-input{width:100%;padding:6px 8px;border:1px solid #e0e0e0;border-radius:10px;font-size:11px;background:#fff;margin-bottom:6px;font-family:inherit;box-sizing:border-box}
 .qa-input:focus{outline:none;border-color:var(--teal)}
@@ -256,7 +257,7 @@ body.dark-mode .qa-row-sub{color:#888}
 .hm-nav-btn{display:block;width:calc(100% - 16px);margin:8px 8px 4px;padding:9px 12px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;text-align:left}
 .home-nav-badge{background:#E24B4A;color:#fff;font-size:9px;font-weight:700;border-radius:999px;padding:0 5px;min-width:14px;height:14px;line-height:14px;display:inline-block;text-align:center;margin-left:6px;vertical-align:middle}
 .home-nav-badge-mobile{position:absolute;top:2px;right:14px;margin-left:0}
-.hm-nav-btn:hover{background:#037070}
+.hm-nav-btn:hover{background:var(--teal-hover)}
 .hm-nav-btn-alt{background:#f0f7f7;color:var(--teal);border:1px solid #b2d8d8;margin-top:0}
 .hm-nav-btn-alt:hover{background:var(--teal-tint)}
 body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f7}
@@ -347,7 +348,7 @@ body.dark-mode .hm-pill-lo{color:#f09595}
 body.dark-mode .hm-churn-had{color:#9a9a9a}
 .hm-churn-sub{color:#E24B4A;font-weight:600}
 body.dark-mode .hm-churn-sub{color:#f09595}
-.hm-plan-action-badge{background:var(--pa-color,#025857);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;flex-shrink:0}
+.hm-plan-action-badge{background:var(--pa-color,var(--teal));color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;flex-shrink:0}
 .hm-empty{font-size:11.5px;color:#6b6b6b;padding:8px 4px;font-style:italic}
 /* Κάρτα Αρχικής με πολλές εγγραφές: scrollable σώμα αντί για κομμένη λίστα + "+N ακόμα" */
 .hm-card-scroll{max-height:236px;overflow-y:auto;overscroll-behavior:contain;margin:0 -6px;padding:0 6px}
@@ -358,7 +359,7 @@ body.dark-mode .hm-churn-sub{color:#f09595}
 body.dark-mode .hm-card-scroll::-webkit-scrollbar-thumb{background:#444}
 body.dark-mode .hm-card-count{background:#242424;color:#9a9a9a}
 .hm-action-btn{padding:5px 10px;border-radius:10px;border:none;background:var(--teal);color:#fff;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;width:auto}
-.hm-action-btn:hover{background:#037070}
+.hm-action-btn:hover{background:var(--teal-hover)}
 .hm-action-btn:disabled{opacity:.6;cursor:default}
 .hm-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
 .hm-tile{border-radius:14px;padding:16px 18px;cursor:pointer;border:2px solid transparent}
@@ -658,7 +659,7 @@ body.dark-mode .rd-edit-btn:hover{background:#1a2e2e}
 .btn{padding:10px 16px;border-radius:10px;border:1px solid #ddd;cursor:pointer;font-size:12px;font-weight:600;background:#fff;color:#333;min-height:36px}
 .btn:hover{background:#f5f5f5}
 .btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
-.btn.primary:hover{background:#037070;box-shadow:0 4px 12px rgba(2,88,87,.2)}
+.btn.primary:hover{background:var(--teal-hover);box-shadow:0 4px 12px rgba(2,88,87,.2)}
 .btn.info{background:#1565C0;color:#fff;border-color:#1565C0}
 .btn.info:hover{background:#1976D2;box-shadow:0 4px 12px rgba(21,101,192,.2)}
 /* ✅ Secondary buttons (outline style) */
@@ -726,7 +727,7 @@ body.dark-mode .rd-edit-btn:hover{background:#1a2e2e}
 .meal-drag-handle:hover{color:var(--teal)}
 .meal-drag-handle:active{cursor:grabbing}
 /* Το «φάντασμα» που ακολουθεί τον δείκτη κατά το σύρσιμο */
-.meal-drag-ghost{position:fixed;left:0;top:0;z-index:100000;pointer-events:none;background:#025857;color:#fff;font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:nowrap;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
+.meal-drag-ghost{position:fixed;left:0;top:0;z-index:100000;pointer-events:none;background:var(--teal);color:#fff;font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:nowrap;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
 /* ✅ Phase 3: Meal timing hover tooltips */
 .meal-label{position:relative;cursor:help}
 .meal-label:hover::after{content:attr(data-timing-info);position:absolute;background:#333;color:#fff;padding:8px 10px;border-radius:5px;font-size:10px;white-space:nowrap;z-index:1000;bottom:100%;left:0;margin-bottom:4px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
@@ -1259,7 +1260,7 @@ body.dark-mode .tooltip-text {
 .weight-chart-stats{display:flex;gap:16px;font-size:11px;color:#555;margin-top:3px;flex-wrap:wrap}
 .sf-panel{background:#fafefe;border:1px solid #c5ddd8;border-radius:14px;padding:10px 12px;margin-bottom:12px}
 .sf-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:12px;font-weight:700;color:var(--teal);user-select:none}
-.sf-header:hover{color:#037070}
+.sf-header:hover{color:var(--teal-hover)}
 .sf-result-row{background:#f0f9f8;border:1px solid #c5ddd8;border-radius:10px;padding:8px 12px;font-size:11px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 /* Autosave toast */
 #autosave-toast{position:fixed;top:14px;right:16px;background:var(--teal);color:#fff;border-radius:20px;padding:5px 13px;font-size:11px;font-weight:600;opacity:0;transition:opacity .35s;pointer-events:none;z-index:99999;display:flex;align-items:center;gap:5px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
@@ -1281,7 +1282,7 @@ body.dark-mode .tooltip-text {
 .appt-chip.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
 .appt-plan-action-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .appt-plan-action-btn{padding:5px 10px;font-size:11px;border-radius:20px;border:1px solid var(--pa-color,#c5ddd8);background:#fff;color:var(--pa-color,#555);cursor:pointer}
-.appt-plan-action-btn.active{background:var(--pa-color,#025857);border-color:var(--pa-color,#025857);color:#fff;font-weight:600}
+.appt-plan-action-btn.active{background:var(--pa-color,var(--teal));border-color:var(--pa-color,var(--teal));color:#fff;font-weight:600}
 .appt-scale{display:flex;gap:4px}
 .appt-scale-btn{width:28px;height:28px;border-radius:50%;border:1px solid #c5ddd8;background:#fff;color:#555;font-size:11px;cursor:pointer}
 .appt-scale-btn.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}
@@ -1691,7 +1692,7 @@ body.dark-mode .btn.primary {
 }
 
 body.dark-mode .btn.primary:hover {
-  background: #037070;
+  background: var(--teal-hover);
 }
 
 body.dark-mode .btn.info {
@@ -1888,7 +1889,7 @@ body.dark-mode #darkModeToggle {
   left: 170px;
   width: 40px;
   height: 40px;
-  background: #025857;
+  background: var(--teal);
   color: #fff;
   border: none;
   border-radius: 50%;
@@ -2105,6 +2106,7 @@ body.dark-mode .backup-btn:focus-visible {
 body.dark-mode {
   --teal:#1a8f8a;
   --teal-dark:#0f6e56;
+  --teal-hover:#037070;
   --teal-tint:#0f2a24;
   --success-tint:#14301a;
   --danger:#d32f2f;

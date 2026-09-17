@@ -307,7 +307,7 @@ function showErrorToast(message) {
   if(!errorToast) {
     errorToast = document.createElement('div');
     errorToast.id = 'errorToast';
-    errorToast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#c62828;color:white;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:9999;font-weight:600;font-size:14px;animation:slideIn 0.3s ease-out;white-space:pre-line;max-width:320px;';
+    errorToast.style.cssText = 'position:fixed;top:20px;right:20px;background:#c62828;color:white;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:9999;font-weight:600;font-size:14px;animation:slideIn 0.3s ease-out;white-space:pre-line;max-width:320px;';
     document.body.appendChild(errorToast);
   }
 
