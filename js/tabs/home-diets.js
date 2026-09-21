@@ -528,10 +528,17 @@ function sendActivityNudge(clientId){
   var c=clients.find(function(x){return x.id===clientId;});
   if(!c || !c.shareToken) return;
   var base=(window.Cloud&&window.Cloud.PORTAL_BASE)||'https://feedyourhealth.github.io/plan.html';
-  var url=base+'?t='+c.shareToken;
+  // &go=today: το plan.html κάνει scroll κατευθείαν στα «Σημερινά γεύματα» (βλ. applyDeepLink εκεί).
+  var url=base+'?t='+c.shareToken+'&go=today';
   var fname=(c.name||'').split(' ')[0];
   var d=clientMsgDict(c);
-  var msg=d.nudge(fname,url);
+  // Ημέρες σιωπής → «εδώ και N μέρες» στο μήνυμα· χωρίς check-in ακόμα (ή αν αποτύχει) η γενική διατύπωση.
+  var gap=null;
+  try{
+    var rows=(window.Cloud && typeof window.Cloud.checkinsFor==='function')?window.Cloud.checkinsFor(c):[];
+    if(rows.length) gap=ckDaysSinceLast(rows);
+  }catch(e){}
+  var msg=d.nudge(fname,url,gap);
   var phone=normalizePhoneIntl(c.phone);
   if(phone){
     window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');

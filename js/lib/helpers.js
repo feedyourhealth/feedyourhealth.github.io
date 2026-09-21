@@ -188,6 +188,12 @@ function normalizePhoneIntl(raw){
 // (js/portal-comms/portal-comms.js), body-comp report send (js/reports/exports.js).
 // NOTE: the plan-feedback category label (lbl) passed to replyPfRow still comes from the
 // Greek PF_ROW_LABELS map and is not translated yet — only the sentence frame is localised.
+// Ημέρες σιωπής για το μήνυμα υπενθύμισης: 0 = άγνωστο/<2 → τα templates πέφτουν στη γενική διατύπωση
+// ("τελευταία"/"lately"), γιατί το «εδώ και 1 μέρα» ή ένας μη-αριθμός ακούγεται λάθος.
+function nudgeGapDays(gap){
+  var n=Math.round(Number(gap));
+  return (isFinite(n) && n>=2) ? n : 0;
+}
 var CLIENT_MSG_DICTS={
   el:{
     fbReminder:function(fn,url){return 'Γεια σου '+fn+'! Πριν φτιάξω το πλάνο της επόμενης εβδομάδας, πες μου γρήγορα πώς πήγε αυτή — 30 δευτερόλεπτα, στην καρτέλα Πρόοδος: '+url;},
@@ -197,7 +203,7 @@ var CLIENT_MSG_DICTS={
     recapStreak:function(n){return '🔥 '+n+' '+(n===1?'μέρα':'μέρες')+' σερί';},
     recap:function(fn,parts){return 'Καλή Κυριακή '+fn+'! Η εβδομάδα σου: '+parts+' 👏';},
     recapSubj:'Η εβδομάδα σου — Feed Your Health',
-    nudge:function(fn,url){return 'Γεια σου '+fn+'! Είδα ότι δεν έχεις τσεκάρει τίποτα στο πλάνο σου τελευταία — όλα καλά; Το link είναι εδώ αν θες να ρίξεις μια ματιά: '+url;},
+    nudge:function(fn,url,gap){var n=nudgeGapDays(gap);return 'Γεια σου '+fn+'! Είδα ότι δεν έχεις τσεκάρει τίποτα στο πλάνο σου '+(n?'εδώ και '+n+' μέρες':'τελευταία')+' — όλα καλά; Το link είναι εδώ αν θες να ρίξεις μια ματιά: '+url;},
     nudgeSubj:'Πώς πάει; — Feed Your Health',
     replyNote:function(fn,note){return 'Γεια σου '+fn+'! Είδα το μήνυμά σου: «'+note+'» — ';},
     replySubj:'Απάντηση — Feed Your Health',
@@ -218,7 +224,7 @@ var CLIENT_MSG_DICTS={
     recapStreak:function(n){return '🔥 '+n+' '+(n===1?'day':'days')+' streak';},
     recap:function(fn,parts){return 'Happy Sunday '+fn+'! Your week: '+parts+' 👏';},
     recapSubj:'Your week — Feed Your Health',
-    nudge:function(fn,url){return 'Hi '+fn+'! I noticed you haven’t checked anything off in your plan lately — all good? Here’s the link if you want to take a look: '+url;},
+    nudge:function(fn,url,gap){var n=nudgeGapDays(gap);return 'Hi '+fn+'! I noticed you haven’t checked anything off in your plan '+(n?'for '+n+' days':'lately')+' — all good? Here’s the link if you want to take a look: '+url;},
     nudgeSubj:'How’s it going? — Feed Your Health',
     replyNote:function(fn,note){return 'Hi '+fn+'! I saw your message: “'+note+'” — ';},
     replySubj:'Reply — Feed Your Health',
@@ -239,7 +245,7 @@ var CLIENT_MSG_DICTS={
     recapStreak:function(n){var m=n%10,h=n%100;var w=(m===1&&h!==11)?'день':((m>=2&&m<=4)&&(h<10||h>=20)?'дня':'дней');return '🔥 '+n+' '+w+' подряд';},
     recap:function(fn,parts){return 'Хорошего воскресенья, '+fn+'! Твоя неделя: '+parts+' 👏';},
     recapSubj:'Твоя неделя — Feed Your Health',
-    nudge:function(fn,url){return 'Привет, '+fn+'! Я заметил, что ты давно ничего не отмечал в плане — всё в порядке? Вот ссылка, если хочешь заглянуть: '+url;},
+    nudge:function(fn,url,gap){var n=nudgeGapDays(gap);var m10=n%10,m100=n%100;var w=(m10===1&&m100!==11)?'день':((m10>=2&&m10<=4&&(m100<10||m100>=20))?'дня':'дней');return 'Привет, '+fn+'! Я заметил, что ты '+(n?'уже '+n+' '+w:'давно')+' ничего не отмечал в плане — всё в порядке? Вот ссылка, если хочешь заглянуть: '+url;},
     nudgeSubj:'Как дела? — Feed Your Health',
     replyNote:function(fn,note){return 'Привет, '+fn+'! Я видел твоё сообщение: «'+note+'» — ';},
     replySubj:'Ответ — Feed Your Health',
@@ -260,7 +266,7 @@ var CLIENT_MSG_DICTS={
     recapStreak:function(n){return '🔥 '+n+' gün üst üste';},
     recap:function(fn,parts){return 'İyi pazarlar '+fn+'! Haftan: '+parts+' 👏';},
     recapSubj:'Haftan — Feed Your Health',
-    nudge:function(fn,url){return 'Merhaba '+fn+'! Son zamanlarda planında hiçbir şey işaretlemediğini fark ettim — her şey yolunda mı? Bakmak istersen link burada: '+url;},
+    nudge:function(fn,url,gap){var n=nudgeGapDays(gap);return 'Merhaba '+fn+'! '+(n?n+' gündür':'Son zamanlarda')+' planında hiçbir şey işaretlemediğini fark ettim — her şey yolunda mı? Bakmak istersen link burada: '+url;},
     nudgeSubj:'Nasıl gidiyor? — Feed Your Health',
     replyNote:function(fn,note){return 'Merhaba '+fn+'! Mesajını gördüm: “'+note+'” — ';},
     replySubj:'Yanıt — Feed Your Health',

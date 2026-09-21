@@ -71,6 +71,8 @@
   .view.active{display:flex}
 
   .card{background:var(--card);border:.5px solid var(--bord);border-radius:14px;overflow:hidden}
+  #todayMealsCard{transition:box-shadow .4s}
+  #todayMealsCard.deeplink-hl{box-shadow:0 0 0 2px var(--teal-l)}
   .card-pad{padding:12px 14px}
   .card-hdr{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--teal-d);margin-bottom:10px}
   .card-hdr i,.ic{color:var(--teal)}
@@ -1757,7 +1759,31 @@ function render(){
 
   injectManifest();
   go('home');
+  applyDeepLink();
   showOnboarding();
+}
+
+// Link υπενθύμισης του διαιτολόγου: plan.html?t=…&go=today → scroll στα «Σημερινά γεύματα» + σύντομη επισήμανση.
+// Μία φορά ανά φόρτωση· link χωρίς &go= ανοίγει όπως πάντα, στην κορυφή της Αρχικής.
+// Το background hydrate (boot) ξαναχτίζει το tab λίγο μετά — γι' αυτό το go() ξαναεφαρμόζει το deep-link
+// όσο ισχύει το παράθυρο (deepLinkUntil), και σταματά με την πρώτη αγγιγή/scroll του πελάτη.
+let deepLinkDone=false, deepLinkUntil=0;
+function showDeepLink(){
+  const card=$('#todayMealsCard'); if(!card)return;
+  const hdr=$('.hdr'); // sticky header — αλλιώς η κάρτα θα κρυβόταν από κάτω του
+  card.style.scrollMarginTop=((hdr?hdr.offsetHeight:0)+10)+'px';
+  card.scrollIntoView({block:'start'});
+  card.classList.add('deeplink-hl');
+}
+function applyDeepLink(){
+  if(deepLinkDone)return; deepLinkDone=true;
+  let target=null;
+  try{target=new URLSearchParams(location.search).get('go')}catch(e){}
+  if(target!=='today')return;
+  deepLinkUntil=Date.now()+5000;
+  ['touchstart','wheel','keydown'].forEach(ev=>addEventListener(ev,()=>{deepLinkUntil=0},{once:true,passive:true}));
+  setTimeout(showDeepLink,60);
+  setTimeout(()=>{const c=$('#todayMealsCard'); if(c)c.classList.remove('deeplink-hl')},5000);
 }
 
 // Δείχνει πότε ενημερώθηκε τελευταία φορά το πλάνο.
@@ -1846,6 +1872,7 @@ function go(tab){
   const sc=$('#scroll'); sc.scrollTop=0;
   const fn={home:viewHome,plan:viewPlan,prog:viewProg,shop:viewShop,water:viewWater,supps:viewSupps,spices:viewSpices,fruits:viewFruits}[tab];
   sc.innerHTML=''; sc.appendChild(fn());
+  if(tab==='home' && Date.now()<deepLinkUntil)showDeepLink();
   const sub=$('#hdr-sub');
   if(sub){
     const labels={home:dayHeader(defaultDay(),false),plan:T('subPlan'),prog:T('subProg'),shop:T('subShop'),water:T('subWater'),supps:T('subSupps'),spices:T('subSpices'),fruits:T('subFruits')};
@@ -1910,7 +1937,7 @@ function viewHome(){
   const eaten=getMeals();
   let done=0; meals.forEach((m,i)=>{if(eaten[i])done++;});
   const nudge=activityNudge(meals,done); if(nudge)v.appendChild(nudge);
-  const c=el('div','card'); const cp=el('div','card-pad');
+  const c=el('div','card'); c.id='todayMealsCard'; const cp=el('div','card-pad');
   cp.innerHTML='<div class="card-hdr" style="margin-bottom:8px"><i class="ti ti-tools-kitchen-2"></i>'+T('todayMealsHdr')
     +(mi.isMatch?' <span class="log-tag-badge"><i class="ti ti-ball-football"></i>'+T('matchBadge')+' · '+esc(matchTimeLabel(mi.time))+'</span>':'')
     +(meals.length?'<span style="margin-left:auto;font-size:12px;color:var(--teal-l);font-weight:400">'+done+' / '+meals.length+'</span>':'')+'</div>'

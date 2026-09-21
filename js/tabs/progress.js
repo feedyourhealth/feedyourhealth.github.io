@@ -28,6 +28,15 @@ var PROGRESS_LOW_MAX = 45;
 var PROGRESS_LOW_FRESH_DAYS = 3;
 var PROGRESS_EXPIRING_DAYS = 7; // ίδιο παράθυρο με το homePlansExpiringSoon()
 
+// Σημαία 'nudge' «🔔 Χρειάζονται υπενθύμιση» (2026-09-21): πελάτης που ΕΧΕΙ ξεκινήσει να καταγράφει
+// (≥1 check-in) και σιωπά ≥ PROGRESS_NUDGE_MIN_GAP ημέρες. Πιο νωρίς και πιο χαλαρά από το 'gone'
+// («📉 Σταμάτησαν» = 6+ ημέρες ΚΑΙ προηγουμένως συνεπής, βλ. homeStoppedLogging) — σκοπός της είναι να
+// πιάνει τον πελάτη πριν η συνήθεια χαθεί. Μόλις ο διαιτολόγος επικοινωνήσει (markDietologistContacted)
+// βγαίνει από τη λίστα, και ξαναμπαίνει μόνο αν περάσουν PROGRESS_NUDGE_RECONTACT_DAYS χωρίς check-in.
+// Έτσι η λίστα αδειάζει όσο στέλνεις υπενθυμίσεις, χωρίς ξεχωριστό μετρητή «στάλθηκαν».
+var PROGRESS_NUDGE_MIN_GAP = 3;
+var PROGRESS_NUDGE_RECONTACT_DAYS = 7;
+
 // "🔇 Σίγαση" — για πελάτη που ο διαιτολόγος ΞΕΡΕΙ ότι δεν θα συνεχίσει, σε αντίθεση με το
 // homeSnoozeClient/homeSnoozeReason (tabs/home-diets.js) που είναι ένα προσωρινό 7ήμερο "άσε με
 // ήσυχο προς το παρόν" για ένα ΣΗΜΑ. Εδώ ο πελάτης ΔΕΝ κρύβεται από τη λίστα (μόνο απενεργοποιείται
@@ -79,7 +88,7 @@ function progressRosterData(){
 
     var isMuted=progressIsMuted(c);
     var flags=[];
-    var isLow=false;
+    var isLow=false, needsNudge=false;
     // Ενόσω σιγασμένος, ΚΑΜΙΑ από τις σημαίες προσοχής δεν υπολογίζεται πια — αυτό είναι το νόημα
     // της σίγασης (ο διαιτολόγος ήδη ξέρει, δεν χρειάζεται να ξαναειδοποιείται). Η μόνη σημαία που
     // μένει είναι το 'muted' — τροφοδοτεί ΔΩΡΕΑΝ το φίλτρο-chip "🔇 Σε σίγαση" μέσω του ήδη υπάρχοντος
@@ -88,6 +97,11 @@ function progressRosterData(){
       isLow = dietsHasPlan(c) && score!=null && isFinite(gap) && gap<=PROGRESS_LOW_FRESH_DAYS && score<PROGRESS_LOW_MAX;
       if(isLow) flags.push('low');
       if(stoppedIds[c.id]) flags.push('gone');
+      // Ήδη «πέρασε» υπενθύμιση από τον διαιτολόγο μετά το τελευταίο check-in (contactDays<gap) και δεν
+      // έχουν περάσει ακόμα PROGRESS_NUDGE_RECONTACT_DAYS ⇒ δεν ξαναμπαίνει στη λίστα.
+      var nudgedRecently=contactDays!=null && contactDays<gap && contactDays<PROGRESS_NUDGE_RECONTACT_DAYS;
+      needsNudge = rows.length>0 && dietsHasPlan(c) && isFinite(gap) && gap>=PROGRESS_NUDGE_MIN_GAP && !nudgedRecently;
+      if(needsNudge) flags.push('nudge');
       if(firstWeekIds[c.id]) flags.push('new');
       if(expDays!=null && expDays<=PROGRESS_EXPIRING_DAYS) flags.push('exp');
     } else {
@@ -95,23 +109,23 @@ function progressRosterData(){
     }
     // Βαρύτητα για την προεπιλεγμένη ταξινόμηση "χρειάζεται προσοχή πρώτα" — σιγασμένος πελάτης
     // βυθίζεται στο τέλος (κάτω κι από το ουδέτερο 0), δεν ανταγωνίζεται ποτέ πια για προσοχή.
-    var weight=isMuted?-1:(stoppedIds[c.id]?3:(isLow?2:((expDays!=null&&expDays<=PROGRESS_EXPIRING_DAYS)?1:0)));
+    var weight=isMuted?-1:(stoppedIds[c.id]?3:((isLow||needsNudge)?2:((expDays!=null&&expDays<=PROGRESS_EXPIRING_DAYS)?1:0)));
 
     return {c:c, score:score, prevScore:prevScore, pillars:pillars, streak:streak, gap:gap,
       wDelta:wDelta, expDays:expDays, flags:flags, weight:weight, contactDays:contactDays};
   });
 }
 
-var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει', muted:'🔇 Σε σίγαση'};
+var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', nudge:'🔔 Χρειάζονται υπενθύμιση', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει', muted:'🔇 Σε σίγαση'};
 // Σειρά προτεραιότητας όταν ένας πελάτης έχει πάνω από 1 σημαία — ποια εμφανίζεται πρώτη/τονισμένη
 // στη γραμμή λίστας (idea #1, mockup συζήτησης 2026-09-15). Ίδια ιεράρχηση με το βάρος ταξινόμησης
 // στο progressRosterData (gone > low > exp) + το 'new' στο τέλος (πληροφοριακό, όχι προειδοποίηση).
 // 'muted' δεν συνυπάρχει ποτέ με τις άλλες (progressRosterData τις αποκλείει ενόσω σιγασμένος), αλλά
 // πρέπει να βρίσκεται εδώ αλλιώς progressRowUrgentLineHtml θα έβρισκε 'ordered' άδειο.
-var PROGRESS_FLAG_PRIORITY=['gone','low','exp','new','muted'];
+var PROGRESS_FLAG_PRIORITY=['gone','low','nudge','exp','new','muted'];
 // Ίδιοι χρωματικοί τόνοι με τα ήδη υπάρχοντα hm-act-score-bad/-warn (css/styles.css) — 'new' παίρνει
 // το ουδέτερο teal του app αντί για κόκκινο/πορτοκαλί, μια πρώτη εβδομάδα δεν είναι πρόβλημα.
-var PROGRESS_FLAG_COLOR={gone:'#791F1F', low:'#791F1F', exp:'#633806', new:'var(--teal)'};
+var PROGRESS_FLAG_COLOR={gone:'#791F1F', low:'#791F1F', nudge:'#633806', exp:'#633806', new:'var(--teal)'};
 // Ο πιο αδύναμος πυλώνας ΑΥΤΗΣ της εβδομάδας για έναν πελάτη — ίδιο κατώφλι-ανεξάρτητη λογική με το
 // progressWeakPillarCalloutHtml (client-detail chart panel), εδώ σε συμπτυγμένη μορφή μιας γραμμής
 // για τη λίστα ρίζας, ώστε το "⚠️ Χαμηλή τήρηση" να μην είναι απλά μια ετικέτα αλλά να λέει ΤΙ.
@@ -145,7 +159,9 @@ function progressRowUrgentLineHtml(x){
     var w=progressWeakestPillarTxt(x.pillars);
     if(w) extra=' <span style="color:#999;font-weight:400">· '+w+' πιο αδύναμος πυλώνας</span>';
   }
-  var rest=ordered.slice(1);
+  if(top==='nudge' && x.gap!=null) extra=' <span style="color:#999;font-weight:400">· σιωπή '+x.gap+' ημέρες</span>';
+  // 'gone' είναι υποσύνολο του 'nudge' (ίδιος πελάτης, πιο αυστηρό κριτήριο) — δεν ξαναγράφεται ως «υπόλοιπη» σημαία.
+  var rest=ordered.slice(1).filter(function(f){return !(top==='gone' && f==='nudge');});
   var restHtml=rest.length?(' <span style="color:#999;font-weight:400">· '+rest.map(function(f){return PROGRESS_FLAG_LABELS[f];}).join(' · ')+'</span>'):'';
   return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:'+PROGRESS_FLAG_COLOR[top]+'">'+PROGRESS_FLAG_LABELS[top]+extra+restHtml+'</div>';
 }
@@ -294,11 +310,18 @@ function progressBulkNudge(){
     sendActivityNudge(id);
     sent++;
   });
-  _progressSelected={};
-  var el=document.getElementById('progress-results');
-  if(el) el.innerHTML=progressResultsHtml(progressRosterData());
+  // Πλήρες re-render (όχι μόνο η λίστα): οι πελάτες που μόλις ενημερώθηκαν βγαίνουν από το φίλτρο
+  // 🔔 και πρέπει να ενημερωθούν και τα νούμερα στα chips.
+  renderProgress();
   var msg='Άνοιξαν '+sent+' μηνύματα υπενθύμισης'+(skipped?(' ('+skipped+' παραλείφθηκαν, χωρίς portal link ή στοιχεία επικοινωνίας).'):'.')+(sent>1?' Αν κάποιο δεν άνοιξε, ο browser ίσως μπλόκαρε pop-ups.':'');
   if(typeof showSuccessToast==='function') showSuccessToast(msg); else console.log(msg);
+}
+// Υπενθύμιση με ένα κλικ από τη γραμμή πελάτη (σημαία 'nudge') — ίδιο sendActivityNudge, και μετά
+// re-render ώστε ο πελάτης να βγει από το φίλτρο 🔔 (το markDietologistContacted μέσα του τον «ξεμπλοκάρει»).
+function progressSendNudge(id){
+  if(typeof sendActivityNudge!=='function') return;
+  sendActivityNudge(id);
+  renderProgress();
 }
 function progressResultsHtml(all){
   var shown=progressFilteredSorted(all);
@@ -348,6 +371,7 @@ function progressRowHtml(x,bulkMode){
     +progressRowUrgentLineHtml(x)
     +progressRowMetaLineHtml(x)
     +'</div>'
+    +(x.flags.indexOf('nudge')>-1?'<button type="button" class="hm-action-btn" style="margin-top:2px" title="Στείλε υπενθύμιση (WhatsApp/email)" onclick="event.stopPropagation();progressSendNudge(\''+c.id+'\')">🔔 Υπενθύμιση</button>':'')
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal);margin-top:2px" title="Άνοιγμα στα Μηνύματα" onclick="event.stopPropagation();progressOpenMessages(\''+escJsAttr(c.name)+'\')">✉️</button>'
     +progressMuteButtonHtml(c,true)
     +'</div>';
@@ -392,7 +416,7 @@ function renderProgress(){
     +'</select>';
   html+='</div>';
   html+='<div id="progress-filters" style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap">'
-    +['all','low','gone','new','exp','muted'].map(function(k){
+    +['all','nudge','low','gone','new','exp','muted'].map(function(k){
       var label=k==='all'?'Όλοι':PROGRESS_FLAG_LABELS[k];
       var cnt=k==='all'?all.length:all.filter(function(x){return x.flags.indexOf(k)>-1;}).length;
       return '<span class="appt-fchip'+(k===_progressFilter?' active':'')+'" onclick="progressSetFilter(\''+k+'\',this)">'+label+' ('+cnt+')</span>';
