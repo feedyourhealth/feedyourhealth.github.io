@@ -98,6 +98,7 @@
   .goalring-card .txt .t{font-size:13px;font-weight:600;color:var(--ink)}
   .goalring-card .txt .s{font-size:12px;color:var(--muted);margin-top:2px}
   .stat .u.ok{color:var(--ok)}
+  .stat-over .v{color:var(--danger)}
 
   .meal{display:flex;gap:10px;padding:9px 0;border-bottom:.5px solid var(--bord-l)}
   .meal:last-child{border-bottom:none}
@@ -555,7 +556,7 @@ const I18N={
     updatedPrefix:'Ενημερώθηκε',
     nav_home:'Αρχική', nav_plan:'Πλάνο', nav_shop:'Ψώνια', nav_water:'Νερό', nav_supps:'Συμπλ.', nav_prog:'Πρόοδος',
     trainDaySuffix:'ημέρα προπόνησης', matchDaySuffix:'ημέρα αγώνα',
-    statGoal:'Στόχος', statProtein:'Πρωτεΐνη', statCarbs:'Υδατ/κες', statFat:'Λιπαρά',
+    statGoal:'Στόχος', statProtein:'Πρωτεΐνη', statCarbs:'Υδατ/κες', statFat:'Λιπαρά', statOf:'από {t}',
     coachNoteHdr:'Μήνυμα από τη διαιτολόγο σου',
     todayMealsHdr:'Η διατροφή μου σήμερα', matchBadge:'Αγώνας', tapMealHint:'Πάτα ένα γεύμα όταν το ολοκληρώσεις.',
     noMealsToday:'Δεν υπάρχει πλάνο για σήμερα.', mealFallback:'Γεύμα', beforeMatch:'πριν τον αγώνα', afterMatch:'μετά τον αγώνα',
@@ -665,7 +666,7 @@ const I18N={
     updatedPrefix:'Updated',
     nav_home:'Home', nav_plan:'Plan', nav_shop:'Shopping', nav_water:'Water', nav_supps:'Supps', nav_prog:'Progress',
     trainDaySuffix:'training day', matchDaySuffix:'match day',
-    statGoal:'Target', statProtein:'Protein', statCarbs:'Carbs', statFat:'Fat',
+    statGoal:'Target', statProtein:'Protein', statCarbs:'Carbs', statFat:'Fat', statOf:'of {t}',
     coachNoteHdr:'A note from your dietitian',
     todayMealsHdr:'My meals today', matchBadge:'Match', tapMealHint:'Tap a meal once you finish it.',
     noMealsToday:'No plan for today.', mealFallback:'Meal', beforeMatch:'before the match', afterMatch:'after the match',
@@ -775,7 +776,7 @@ const I18N={
     updatedPrefix:'Обновлено',
     nav_home:'Главная', nav_plan:'План', nav_shop:'Покупки', nav_water:'Вода', nav_supps:'Добавки', nav_prog:'Прогресс',
     trainDaySuffix:'день тренировки', matchDaySuffix:'день матча',
-    statGoal:'Цель', statProtein:'Белки', statCarbs:'Углеводы', statFat:'Жиры',
+    statGoal:'Цель', statProtein:'Белки', statCarbs:'Углеводы', statFat:'Жиры', statOf:'из {t}',
     coachNoteHdr:'Сообщение от вашего диетолога',
     todayMealsHdr:'Мой рацион сегодня', matchBadge:'Матч', tapMealHint:'Нажмите на приём пищи, когда закончите его.',
     noMealsToday:'На сегодня плана нет.', mealFallback:'Приём пищи', beforeMatch:'перед матчем', afterMatch:'после матча',
@@ -885,7 +886,7 @@ const I18N={
     updatedPrefix:'Güncellendi',
     nav_home:'Ana Sayfa', nav_plan:'Plan', nav_shop:'Alışveriş', nav_water:'Su', nav_supps:'Takviye', nav_prog:'İlerleme',
     trainDaySuffix:'antrenman günü', matchDaySuffix:'maç günü',
-    statGoal:'Hedef', statProtein:'Protein', statCarbs:'Karbonhidrat', statFat:'Yağ',
+    statGoal:'Hedef', statProtein:'Protein', statCarbs:'Karbonhidrat', statFat:'Yağ', statOf:'{t} içinden',
     coachNoteHdr:'Diyetisyeninizden bir not',
     todayMealsHdr:'Bugünkü beslenmem', matchBadge:'Maç', tapMealHint:'Bir öğünü bitirdiğinde üzerine dokun.',
     noMealsToday:'Bugün için plan yok.', mealFallback:'Öğün', beforeMatch:'maçtan önce', afterMatch:'maçtan sonra',
@@ -1922,21 +1923,32 @@ function viewHome(){
   const mi=matchInfoFor(defaultDay());
 
   const unitG=({el:'γρ',en:'g',ru:'г',tr:'g'})[LANG]||'γρ';
+
+  // today meals — with check-off (υπολογίζεται πρώτα εδώ, ώστε η σειρά στόχων παρακάτω να ξέρει
+  // τι έχει ήδη καταναλωθεί σήμερα)
+  const meals=(day&&day.meals)||[];
+  const eaten=getMeals();
+  let done=0, eatK=0, eatP=0, eatC=0, eatF=0;
+  meals.forEach((m,i)=>{
+    if(!eaten[i])return;
+    done++; eatK+=m.kcal||0;
+    const mm=m.macros||{}; eatP+=mm.p||0; eatC+=mm.c||0; eatF+=mm.f||0;
+  });
+
+  // Στόχος/Πρωτεΐνη/Υδατ/κες/Λιπαρά — δείχνει πόσο έχει ήδη καταναλωθεί σήμερα (άθροισμα των
+  // τσεκαρισμένων γευμάτων, μόνο το βασικό γεύμα κάθε slot — όχι τυχόν εναλλακτική) έναντι του
+  // ημερήσιου στόχου, με μπάρα προόδου· κόκκινο αν ξεπεραστεί ο στόχος.
   const stats=el('div','stats stats-4');
   stats.innerHTML=
-    statBox(T('statGoal'),nfmt(tg.kcal||0),'kcal')
-    +statBox(T('statProtein'),nfmt(tg.p||0),unitG)
-    +statBox(T('statCarbs'),nfmt(tg.c||0),unitG)
-    +statBox(T('statFat'),nfmt(tg.f||0),unitG);
+    homeStat(T('statGoal'),eatK,tg.kcal||0,'kcal')
+    +homeStat(T('statProtein'),eatP,tg.p||0,unitG)
+    +homeStat(T('statCarbs'),eatC,tg.c||0,unitG)
+    +homeStat(T('statFat'),eatF,tg.f||0,unitG);
   v.appendChild(stats);
 
   // 🥤 CHO γύρω από την προπόνηση — μόνο όταν το σήμερα είναι ημέρα προπόνησης με cho block
   const choHome=choCard(day&&day.cho); if(choHome)v.appendChild(choHome);
 
-  // today meals — with check-off
-  const meals=(day&&day.meals)||[];
-  const eaten=getMeals();
-  let done=0; meals.forEach((m,i)=>{if(eaten[i])done++;});
   const nudge=activityNudge(meals,done); if(nudge)v.appendChild(nudge);
   const c=el('div','card'); c.id='todayMealsCard'; const cp=el('div','card-pad');
   cp.innerHTML='<div class="card-hdr" style="margin-bottom:8px"><i class="ti ti-tools-kitchen-2"></i>'+T('todayMealsHdr')
@@ -2053,6 +2065,17 @@ function tipsCard(tips){
   return c;
 }
 function statBox(l,v,u,ok){if(ok===undefined)ok=/^[−-]/.test(u);return '<div class="stat"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="u'+(ok?' ok':'')+'">'+u+'</div></div>'}
+// Όπως statBox, αλλά για τη σειρά στόχων της Αρχικής: δείχνει πόσο καταναλώθηκε έναντι του
+// ημερήσιου στόχου (με μπάρα προόδου) αντί για μόνο τον στόχο — ξεχωριστό function γιατί το
+// statBox() ξαναχρησιμοποιείται και στην κάρτα προόδου βάρους (start/now/goal), όπου δεν βγάζει νόημα.
+function homeStat(l,cons,tgt,u){
+  const t=Math.max(0,tgt||0);
+  const pct=t?Math.max(0,Math.min(100,Math.round(cons/t*100))):0;
+  const over=t>0&&cons>t;
+  return '<div class="stat'+(over?' stat-over':'')+'"><div class="l">'+l+'</div><div class="v">'+nfmt(cons)+'</div>'
+    +'<div class="u">'+T('statOf',{t:nfmt(t)})+' '+u+'</div>'
+    +'<div class="prog" style="margin-top:6px"><div style="width:'+pct+'%'+(over?';background:var(--danger)':'')+'"></div></div></div>';
+}
 function deltaU(p){if(p.start&&p.current){const d=Math.round((p.current-p.start)*10)/10;return (d<=0?'−':'+')+decSep(Math.abs(d).toString())+' kg'}return 'kg'}
 // Ποσοστό προόδου προς τον στόχο βάρους — ΙΔΙΟΣ τύπος με το goalPct της dietologist-side εφαρμογής
 // (js/app-part2.js, "Νέα κάρτα Στόχος βάρους"), ώστε το νούμερο που βλέπει ο πελάτης εδώ να ταιριάζει
