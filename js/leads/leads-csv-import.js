@@ -7,34 +7,73 @@
 // from becoming the "two lists diverge" failure mode the app has hit before (see project notes).
 // Loads after js/leads/leads-tab.js. Fresha has no export API (confirmed) — only a manual CSV
 // download from its dashboard (Clients → Options → Export → CSV).
-// NOTE: exact Fresha column names are unresolved — no real export sample was available while
-// building this. parseFreshaCSVRows() matches header names loosely (case-insensitive
-// name/first+last/email/phone patterns); get a real Fresha export and adjust if it misses columns.
+// Confirmed 2026-09-22 against a real Fresha "client-list" export. Real headers:
+// "Client","Gender","Age","Mobile number","Email","Added on","First appt.","Last appt.",
+// "Loyalty points balance","Loyalty tier","Client source","Referred by" — quoted fields, and the
+// date columns ("Added on"/"First appt."/"Last appt.") contain a literal comma inside the quotes
+// (e.g. "14 Nov 2022, 12:00am"), so a naive split(',') misaligns every column after them. Rows are
+// parsed with a real quote-aware CSV splitter below rather than String.split(',').
 
 function triggerLeadsCSVImport(){
   var inp=document.getElementById('leads-csv-input');
   if(inp) inp.click();
 }
 
+function splitCSVLine(line){
+  var cells=[], cur='', inQuotes=false;
+  for(var i=0;i<line.length;i++){
+    var ch=line[i];
+    if(inQuotes){
+      if(ch==='"'){
+        if(line[i+1]==='"'){ cur+='"'; i++; }
+        else inQuotes=false;
+      } else cur+=ch;
+    } else {
+      if(ch==='"') inQuotes=true;
+      else if(ch===','){ cells.push(cur); cur=''; }
+      else cur+=ch;
+    }
+  }
+  cells.push(cur);
+  return cells.map(function(c){return c.trim();});
+}
+
+// Fresha date cells look like "14 Nov 2022, 12:00am" — parsed by hand (not via `new Date()`,
+// which reinterprets the local midnight through UTC and silently shifts the date by a day).
+var _FRESHA_MONTHS={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+function parseFreshaDateCell(raw){
+  if(!raw) return '';
+  var m=raw.split(',')[0].trim().match(/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})$/);
+  if(!m) return '';
+  var mon=_FRESHA_MONTHS[m[2].toLowerCase()];
+  if(!mon) return '';
+  return m[3]+'-'+mon+'-'+('0'+m[1]).slice(-2);
+}
+
 function parseFreshaCSVRows(text){
   var lines=text.split(/\r\n|\n|\r/).filter(function(l){return l.trim().length>0;});
   if(lines.length<2) return [];
-  var headers=lines[0].split(',').map(function(h){return h.trim();});
+  var headers=splitCSVLine(lines[0]);
   var idxOf=function(re){
     for(var i=0;i<headers.length;i++){ if(re.test(headers[i])) return i; }
     return -1;
   };
-  var iName=idxOf(/^(full\s*name|client\s*name|name)$/i);
+  var iName=idxOf(/^(full\s*name|client\s*name|client|name)$/i);
   var iFirst=idxOf(/^first\s*name$/i);
   var iLast=idxOf(/^last\s*name$/i);
   var iEmail=idxOf(/email/i);
   var iPhone=idxOf(/phone|mobile|tel/i);
+  var iSource=idxOf(/source/i);
+  var iAdded=idxOf(/added\s*on/i);
   return lines.slice(1).map(function(line){
-    var cells=line.split(',').map(function(c){return c.trim();});
+    var cells=splitCSVLine(line);
     var name='';
     if(iName>-1) name=cells[iName]||'';
     else if(iFirst>-1 || iLast>-1) name=((cells[iFirst]||'')+' '+(cells[iLast]||'')).trim();
-    return{name:name, email:iEmail>-1?(cells[iEmail]||''):'', phone:iPhone>-1?(cells[iPhone]||''):''};
+    var row={name:name, email:iEmail>-1?(cells[iEmail]||''):'', phone:iPhone>-1?(cells[iPhone]||''):''};
+    if(iSource>-1 && cells[iSource]) row.freshaSource=cells[iSource];
+    if(iAdded>-1 && cells[iAdded]){ var fc=parseFreshaDateCell(cells[iAdded]); if(fc) row.firstContactDate=fc; }
+    return row;
   }).filter(function(r){return r.name;});
 }
 
@@ -143,7 +182,12 @@ function confirmLeadsImport(){
   if(!_leadsImportPending || !_leadsImportPending.newRows.length){ closeLeadsImportDialog(); return; }
   var n=0;
   _leadsImportPending.newRows.forEach(function(cat){
-    addLead({name:cat.row.name,email:cat.row.email,phone:cat.row.phone,source:'fresha'});
+    var r=cat.row;
+    addLead({
+      name:r.name, email:r.email, phone:r.phone, source:'fresha',
+      firstContactDate:r.firstContactDate,
+      notes:r.freshaSource?('Πηγή (Fresha): '+r.freshaSource):''
+    });
     n++;
   });
   closeLeadsImportDialog();
