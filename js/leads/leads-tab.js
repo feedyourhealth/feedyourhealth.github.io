@@ -27,17 +27,22 @@ function renderLeads(){
   html+='<div class="hm-title">🤝 Leads</div>';
   html+='<div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px">Προοπτικοί πελάτες πριν γίνουν πελάτες — '+active.length+' συνολικά'+(nudgeN?', <b style="color:#c0392b">'+nudgeN+' χρειάζονται follow-up</b>':'')+'</div>';
 
-  html+='<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">'
+  html+='<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">'
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" onclick="toggleQA(\'qa-newlead\')">+ Νέο lead</button>'
     +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal)" onclick="triggerLeadsCSVImport()">📥 Εισαγωγή από Fresha CSV</button>'
+    +'<button type="button" class="hm-action-btn" style="background:#fdf0ee;color:#c0392b" onclick="triggerLeadsCleanupImport()" title="Αφαιρεί leads που στην πραγματικότητα είχαν ήδη ραντεβού στο Fresha, ξαναανεβάζοντας το ίδιο CSV">🧹 Καθαρισμός εισαγωγής</button>'
     +'</div>';
+
+  html+='<input type="text" id="leads-search" class="leads-search" placeholder="🔍 Αναζήτηση με όνομα..." oninput="filterLeadsBoard(this.value)" style="margin-bottom:14px">';
 
   html+='<div class="leads-board">';
   LEAD_STAGES.forEach(function(stage){
     var col=active.filter(function(l){return l.stage===stage;});
     html+='<div class="leads-col">';
     html+='<div class="leads-col-hd">'+esc(LEAD_STAGE_LABELS[stage])+'<span class="leads-col-n">'+col.length+'</span></div>';
+    html+='<div class="leads-col-cards">';
     html+=col.length?col.map(leadCardHtml).join(''):'<div class="leads-col-empty">—</div>';
+    html+='</div>';
     html+='</div>';
   });
   html+='</div>';
@@ -45,6 +50,7 @@ function renderLeads(){
   // Hidden file input for the CSV importer (js/leads/leads-csv-import.js) — lives inside this
   // render's own HTML, same convention as the Ergo CSV input in buildTrackerHtml() (tracker.js).
   html+='<input type="file" id="leads-csv-input" accept=".csv" style="display:none" onchange="handleLeadsCSVFile(event)">';
+  html+='<input type="file" id="leads-cleanup-csv-input" accept=".csv" style="display:none" onchange="handleLeadsCleanupCSVFile(event)">';
   html+='</div>';
   main.innerHTML=html;
 }
@@ -52,7 +58,7 @@ function renderLeads(){
 function leadCardHtml(lead){
   var days=Math.floor((Date.now()-lead.stageChangedAt)/86400000);
   var nudge=leadNeedsNudge(lead);
-  var html='<div class="leads-card'+(nudge?' leads-card-nudge':'')+'">';
+  var html='<div class="leads-card'+(nudge?' leads-card-nudge':'')+'" data-name="'+esc((lead.name||'').toLowerCase())+'">';
   html+='<div class="leads-card-name">'+esc(lead.name||'—')+'</div>';
   html+='<div class="leads-card-sub">'+esc(LEAD_SOURCE_LABELS[lead.source]||lead.source)
        +' · '+(days<=0?'σήμερα':days+'μ')
@@ -83,6 +89,15 @@ function leadCardHtml(lead){
   }
   html+='</div>';
   return html;
+}
+
+// Live filter over the already-rendered board (no re-render, so it doesn't steal focus from the
+// search input while typing) — just toggles card visibility by name.
+function filterLeadsBoard(q){
+  q=(q||'').trim().toLowerCase();
+  document.querySelectorAll('.leads-card').forEach(function(el){
+    el.style.display=(!q || (el.getAttribute('data-name')||'').indexOf(q)>-1)?'':'none';
+  });
 }
 
 function setLeadStageUI(id,stage){
