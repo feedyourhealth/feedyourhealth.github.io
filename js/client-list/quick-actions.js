@@ -10,7 +10,7 @@
 
 /* ===== Γρήγορες ενέργειες πλαϊνής μπάρας: Νέο πλάνο / Γρήγορη μέτρηση ===== */
 function closeAllQA(){
-  ['qa-newplan','qa-quickmeasure','qa-quickappt'].forEach(function(p){
+  ['qa-newplan','qa-quickmeasure','qa-quickappt','qa-newlead'].forEach(function(p){
     var panel=document.getElementById(p);
     var btn=document.getElementById('qa-toggle-'+p.replace('qa-',''));
     if(panel) panel.style.display='none';
@@ -30,7 +30,7 @@ function toggleQA(id){
     if(inp){ inp.value=''; inp.focus(); }
     if(id==='qa-newplan') renderQANewPlan('');
     else if(id==='qa-quickmeasure') renderQAQuickMeasure('');
-    else renderQAQuickAppt('');
+    else if(id==='qa-quickappt') renderQAQuickAppt('');
   }
 }
 

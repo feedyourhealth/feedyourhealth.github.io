@@ -1,0 +1,160 @@
+// js/leads/leads-csv-import.js
+// Manual, on-demand CSV import from a Fresha client/appointment export — run whenever the
+// dietologist wants (no schedule), always preview-then-confirm, never auto-syncs. Matches
+// rows to existing leads/clients by normalized email/phone (NEVER by name — names drift via
+// typos/nicknames/transliteration) and only ever CREATES leads for genuinely new contacts;
+// it never updates an existing lead or client. This is what keeps this manual reconciliation
+// from becoming the "two lists diverge" failure mode the app has hit before (see project notes).
+// Loads after js/leads/leads-tab.js. Fresha has no export API (confirmed) — only a manual CSV
+// download from its dashboard (Clients → Options → Export → CSV).
+// NOTE: exact Fresha column names are unresolved — no real export sample was available while
+// building this. parseFreshaCSVRows() matches header names loosely (case-insensitive
+// name/first+last/email/phone patterns); get a real Fresha export and adjust if it misses columns.
+
+function triggerLeadsCSVImport(){
+  var inp=document.getElementById('leads-csv-input');
+  if(inp) inp.click();
+}
+
+function parseFreshaCSVRows(text){
+  var lines=text.split(/\r\n|\n|\r/).filter(function(l){return l.trim().length>0;});
+  if(lines.length<2) return [];
+  var headers=lines[0].split(',').map(function(h){return h.trim();});
+  var idxOf=function(re){
+    for(var i=0;i<headers.length;i++){ if(re.test(headers[i])) return i; }
+    return -1;
+  };
+  var iName=idxOf(/^(full\s*name|client\s*name|name)$/i);
+  var iFirst=idxOf(/^first\s*name$/i);
+  var iLast=idxOf(/^last\s*name$/i);
+  var iEmail=idxOf(/email/i);
+  var iPhone=idxOf(/phone|mobile|tel/i);
+  return lines.slice(1).map(function(line){
+    var cells=line.split(',').map(function(c){return c.trim();});
+    var name='';
+    if(iName>-1) name=cells[iName]||'';
+    else if(iFirst>-1 || iLast>-1) name=((cells[iFirst]||'')+' '+(cells[iLast]||'')).trim();
+    return{name:name, email:iEmail>-1?(cells[iEmail]||''):'', phone:iPhone>-1?(cells[iPhone]||''):''};
+  }).filter(function(r){return r.name;});
+}
+
+function categorizeImportRow(row){
+  var email=(row.email||'').trim().toLowerCase();
+  var phone=normalizePhoneIntl(row.phone);
+  if(!email && !phone) return{row:row,bucket:'ambiguous',reason:'Χωρίς email/τηλέφωνο'};
+  var clientMatch=clients.find(function(c){
+    return !c.deleted && ((email && (c.email||'').toLowerCase()===email) || (phone && normalizePhoneIntl(c.phone)===phone));
+  });
+  if(clientMatch) return{row:row,bucket:'existing-client',match:clientMatch};
+  var leadMatches=leads.filter(function(l){
+    return !l.deleted && ((email && (l.email||'').toLowerCase()===email) || (phone && normalizePhoneIntl(l.phone)===phone));
+  });
+  if(leadMatches.length===1) return{row:row,bucket:'existing-lead',match:leadMatches[0]};
+  if(leadMatches.length>1) return{row:row,bucket:'ambiguous',reason:'Ταιριάζει με πάνω από ένα lead'};
+  return{row:row,bucket:'new'};
+}
+
+function buildImportPreview(rows){
+  var result={newRows:[],existingLeadRows:[],existingClientRows:[],ambiguousRows:[]};
+  rows.forEach(function(row){
+    var cat=categorizeImportRow(row);
+    if(cat.bucket==='new') result.newRows.push(cat);
+    else if(cat.bucket==='existing-lead') result.existingLeadRows.push(cat);
+    else if(cat.bucket==='existing-client') result.existingClientRows.push(cat);
+    else result.ambiguousRows.push(cat);
+  });
+  return result;
+}
+
+function handleLeadsCSVFile(evt){
+  var files=evt.target.files;
+  if(!files || !files.length) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var rows=parseFreshaCSVRows(e.target.result);
+      if(!rows.length){
+        if(typeof showErrorToast==='function') showErrorToast('❌ Δεν βρέθηκαν αναγνωρίσιμες γραμμές στο CSV.');
+      } else {
+        openLeadsImportDialog(buildImportPreview(rows));
+      }
+    }catch(err){
+      if(typeof showErrorToast==='function') showErrorToast('❌ Σφάλμα ανάγνωσης CSV: '+err.message);
+    }
+    evt.target.value='';
+  };
+  reader.readAsText(files[0]);
+}
+
+var _leadsImportPending=null;
+
+function leadsImportRowLine(cat,note){
+  var r=cat.row;
+  return '<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 2px;font-size:12px;border-top:1px solid #f0f0f0">'
+    +'<span>'+esc(r.name||'—')+'</span>'
+    +'<span style="color:#999;text-align:right">'+esc(note||(r.email||r.phone||''))+'</span>'
+    +'</div>';
+}
+
+function leadsImportBodyHtml(preview){
+  var html='';
+  if(preview.newRows.length){
+    html+='<div style="font-weight:700;color:#025857;font-size:12.5px;margin-top:8px">✅ '+preview.newRows.length+' νέες επαφές θα προστεθούν ως leads</div>';
+    html+=preview.newRows.map(function(cat){return leadsImportRowLine(cat);}).join('');
+  }
+  var existingN=preview.existingClientRows.length+preview.existingLeadRows.length;
+  if(existingN){
+    html+='<div style="font-weight:700;color:#6b6b6b;font-size:12.5px;margin-top:14px">⏭ '+existingN+' υπάρχουν ήδη — παραλείπονται αυτόματα</div>';
+    html+=preview.existingClientRows.map(function(cat){return leadsImportRowLine(cat,'ήδη πελάτης');}).join('');
+    html+=preview.existingLeadRows.map(function(cat){return leadsImportRowLine(cat,'ήδη lead');}).join('');
+  }
+  if(preview.ambiguousRows.length){
+    html+='<div style="font-weight:700;color:#e65100;font-size:12.5px;margin-top:14px">⚠️ '+preview.ambiguousRows.length+' ασαφή — χρειάζονται τον έλεγχό σου</div>';
+    html+=preview.ambiguousRows.map(function(cat){return leadsImportRowLine(cat,cat.reason);}).join('');
+  }
+  return html || '<div style="color:#999;font-size:12.5px;margin-top:8px">Καμία γραμμή προς εμφάνιση.</div>';
+}
+
+function openLeadsImportDialog(preview){
+  _leadsImportPending=preview;
+  var dlg=document.getElementById('leadsImportDialog');
+  if(!dlg) return;
+  var total=preview.newRows.length+preview.existingLeadRows.length+preview.existingClientRows.length+preview.ambiguousRows.length;
+  var summaryEl=document.getElementById('leadsImportSummary');
+  if(summaryEl) summaryEl.textContent=total+' γραμμ'+(total===1?'ή':'ές')+' στο αρχείο — ταίριασμα με βάση email/τηλέφωνο, ποτέ όνομα.';
+  var bodyEl=document.getElementById('leadsImportBody');
+  if(bodyEl) bodyEl.innerHTML=leadsImportBodyHtml(preview);
+  var btn=document.getElementById('leadsImportConfirmBtn');
+  if(btn){
+    btn.disabled=!preview.newRows.length;
+    btn.style.opacity=preview.newRows.length?'1':'.5';
+    btn.textContent='✓ Επιβεβαίωση εισαγωγής ('+preview.newRows.length+')';
+  }
+  dlg.style.display='flex';
+}
+
+function closeLeadsImportDialog(){
+  var dlg=document.getElementById('leadsImportDialog');
+  if(dlg) dlg.style.display='none';
+  _leadsImportPending=null;
+}
+
+function confirmLeadsImport(){
+  if(!_leadsImportPending || !_leadsImportPending.newRows.length){ closeLeadsImportDialog(); return; }
+  var n=0;
+  _leadsImportPending.newRows.forEach(function(cat){
+    addLead({name:cat.row.name,email:cat.row.email,phone:cat.row.phone,source:'fresha'});
+    n++;
+  });
+  closeLeadsImportDialog();
+  if(typeof showSuccessToast==='function') showSuccessToast('✅ Προστέθηκαν '+n+' νέα leads');
+  if(curTab===11 && typeof renderLeads==='function') renderLeads();
+  if(typeof updateLeadsNavBadge==='function') updateLeadsNavBadge();
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){
+    var dlg=document.getElementById('leadsImportDialog');
+    if(dlg && dlg.style.display!=='none') closeLeadsImportDialog();
+  }
+});

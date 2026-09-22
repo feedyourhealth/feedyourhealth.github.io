@@ -498,6 +498,7 @@ function swTab(n){
   // "📈 Πρόοδος" (js/tabs/progress.js) — ίδιο μοτίβο με το n===9 παραπάνω: renderProgress() ζωγραφίζει
   // αμέσως από cache, progressRefresh() φέρνει φρέσκα δεδομένα στο παρασκήνιο και ξαναζωγραφίζει.
   if(n===10){ if(typeof renderProgress==='function') renderProgress(); if(typeof progressRefresh==='function') progressRefresh(); return; }
+  if(n===11){ if(typeof renderLeads==='function') renderLeads(); return; }
   // ✅ Remembers the last client-detail tab shown, so the delayed fade-in renderMain()
   // wrapper (Dietologist.html) can re-apply it after its own rebuild — see that wrapper
   // for why this is needed (it defaults back to tab 1 otherwise).

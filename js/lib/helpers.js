@@ -214,7 +214,9 @@ var CLIENT_MSG_DICTS={
     lipoForm:function(fn){return 'Γεια σου '+fn+'! Σου στέλνω το έντυπο λιπομέτρησής σου (σύσταση σώματος, δερματοπτυχές, περιφέρειες) σε PDF 📎';},
     lipoFormSubj:'Το έντυπο λιπομέτρησής σου — Feed Your Health',
     lipoLink:function(fn,url){return 'Γεια σου '+fn+'! Οι μετρήσεις σου είναι έτοιμες — δες σύσταση σώματος, ρυθμό προόδου & ιστορικό εδώ: '+url+' 📊 Ενημερώνεται μόνο του σε κάθε νέα μέτρηση.';},
-    lipoLinkSubj:'Οι μετρήσεις σου — Feed Your Health'
+    lipoLinkSubj:'Οι μετρήσεις σου — Feed Your Health',
+    leadFollowup:function(fn){return 'Γεια σου '+fn+', είδα ότι επικοινώνησες πριν λίγες μέρες για διατροφική καθοδήγηση. Ήθελα απλά να σου πω ότι είμαι εδώ όποτε θες να το κουβεντιάσουμε — χωρίς καμία πίεση. Αν έχεις κάποια απορία ή θες να κλείσουμε ένα πρώτο ραντεβού, πες μου.';},
+    leadFollowupSubj:'Για τη διατροφική καθοδήγηση — Feed Your Health'
   },
   en:{
     fbReminder:function(fn,url){return 'Hi '+fn+'! Before I build next week’s plan, tell me quickly how this one went — 30 seconds, on the Progress tab: '+url;},
@@ -235,7 +237,9 @@ var CLIENT_MSG_DICTS={
     lipoForm:function(fn){return 'Hi '+fn+'! Sending you your body-composition report (body composition, skinfolds, girths) as a PDF 📎';},
     lipoFormSubj:'Your body-composition report — Feed Your Health',
     lipoLink:function(fn,url){return 'Hi '+fn+'! Your measurements are ready — see body composition, rate of progress & history here: '+url+' 📊 It updates itself with every new measurement.';},
-    lipoLinkSubj:'Your measurements — Feed Your Health'
+    lipoLinkSubj:'Your measurements — Feed Your Health',
+    leadFollowup:function(fn){return 'Hi '+fn+', I saw you reached out a few days ago about nutrition guidance. I just wanted to let you know I’m here whenever you’d like to chat — no pressure at all. If you have any questions or want to book a first appointment, let me know.';},
+    leadFollowupSubj:'About nutrition guidance — Feed Your Health'
   },
   ru:{
     fbReminder:function(fn,url){return 'Привет, '+fn+'! Прежде чем я составлю план на следующую неделю, расскажи коротко, как прошла эта — 30 секунд, во вкладке «Прогресс»: '+url;},
@@ -256,7 +260,9 @@ var CLIENT_MSG_DICTS={
     lipoForm:function(fn){return 'Привет, '+fn+'! Отправляю тебе отчёт по составу тела (состав тела, кожные складки, обхваты) в PDF 📎';},
     lipoFormSubj:'Отчёт по составу тела — Feed Your Health',
     lipoLink:function(fn,url){return 'Привет, '+fn+'! Твои измерения готовы — состав тела, темп прогресса и история здесь: '+url+' 📊 Обновляется само при каждом новом измерении.';},
-    lipoLinkSubj:'Твои измерения — Feed Your Health'
+    lipoLinkSubj:'Твои измерения — Feed Your Health',
+    leadFollowup:function(fn){return 'Привет, '+fn+'! Я видел, что ты недавно писал(а) насчёт консультации по питанию. Я здесь, если захочешь поговорить — без всякого давления. Если есть вопросы или хочешь записаться на первую встречу, дай знать.';},
+    leadFollowupSubj:'О консультации по питанию — Feed Your Health'
   },
   tr:{
     fbReminder:function(fn,url){return 'Merhaba '+fn+'! Gelecek haftanın planını hazırlamadan önce bu haftanın nasıl geçtiğini kısaca söyle — 30 saniye, İlerleme sekmesinde: '+url;},
@@ -277,7 +283,9 @@ var CLIENT_MSG_DICTS={
     lipoForm:function(fn){return 'Merhaba '+fn+'! Vücut kompozisyonu raporunu (vücut kompozisyonu, deri kıvrımları, çevre ölçümleri) PDF olarak gönderiyorum 📎';},
     lipoFormSubj:'Vücut kompozisyonu raporun — Feed Your Health',
     lipoLink:function(fn,url){return 'Merhaba '+fn+'! Ölçümlerin hazır — vücut kompozisyonu, ilerleme hızı ve geçmişi burada: '+url+' 📊 Her yeni ölçümde kendiliğinden güncellenir.';},
-    lipoLinkSubj:'Ölçümlerin — Feed Your Health'
+    lipoLinkSubj:'Ölçümlerin — Feed Your Health',
+    leadFollowup:function(fn){return 'Merhaba '+fn+'! Birkaç gün önce beslenme danışmanlığı için ulaştığını gördüm. Konuşmak istediğinde buradayım demek istedim — hiç baskı yok. Sorun varsa ya da ilk randevuyu ayarlamak istersen haber ver.';},
+    leadFollowupSubj:'Beslenme danışmanlığı hakkında — Feed Your Health'
   }
 };
 // Το λεξικό hand-off μηνυμάτων στη γλώσσα του πελάτη — fallback στα ελληνικά για κενό/άγνωστο c.lang.
