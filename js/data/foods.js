@@ -104,6 +104,8 @@ var FOODS={
 'Χαλλούμι (ωμό)':{k:362,p:21,c:2.0,f:30,fi:0,cat:'Αυγά/Γαλακτ.',en:'Halloumi (raw)',ru:'Халуми (сырой)',tr:'Hellim (çiğ)'},
 'Alambra Λευκό Τυρί Υψηλής Πρωτεΐνης':{k:153,p:24,c:0.7,f:6,fi:0,cat:'Αυγά/Γαλακτ.',en:'Alambra High Protein White Cheese',ru:'Alambra белый сыр высокобелковый',tr:'Alambra Yüksek Proteinli Beyaz Peynir'},
 /* Δημητριακά */
+// ✅ 2026-09-23: Αλεύρι ολικής άλεσης (ωμό) — USDA FDC 168893 (whole-grain wheat flour). Για το FYH Μπανανόψωμο (SNACK_RECIPES).
+'Αλεύρι ολικής άλεσης':{k:340,p:13.2,c:72,f:2.5,fi:10.7,cat:'Δημητριακά',en:'Whole Wheat Flour',ru:'Цельнозерновая мука',tr:'Tam Buğday Unu'},
 'Βρώμη (ωμή)':{k:389,p:17,c:66,f:7,fi:10.6,cat:'Δημητριακά',en:'Oats (raw)',ru:'Овсянка (сырая)',tr:'Yulaf (çiğ)'},
 'Ρύζι άσπρο (βρ.)':{k:130,p:2.4,c:28,f:0.3,fi:0.4,cat:'Δημητριακά',en:'White Rice (cooked)',ru:'Белый рис (варёный)',tr:'Beyaz Pirinç (pişmiş)'},
 'Ρύζι καστανό (βρ.)':{k:123,p:2.6,c:25,f:1,fi:1.8,cat:'Δημητριακά',en:'Brown Rice (cooked)',ru:'Бурый рис (варёный)',tr:'Esmer Pirinç (pişmiş)'},
