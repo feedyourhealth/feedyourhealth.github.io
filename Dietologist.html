@@ -133,7 +133,6 @@ setTimeout(function(){
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(6)" aria-label="Συνταγές">🍽️ Συνταγές</button>
   <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(8)" aria-label="Tips">📚 Tips</button>
-  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(11)" aria-label="Leads">🤝 Leads<span id="leads-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
   <div class="sb-sep"></div>
 
   <!-- Γρήγορες ενέργειες: πάντα διαθέσιμες, ανεξάρτητα από τον επιλεγμένο πελάτη -->
@@ -163,21 +162,6 @@ setTimeout(function(){
     <div class="qa-results" id="qa-quickappt-results"></div>
   </div>
 
-  <button type="button" class="qa-btn" id="qa-toggle-newlead" onclick="toggleQA('qa-newlead')" aria-expanded="false" aria-controls="qa-newlead">
-    <span>🤝 Νέο lead</span><span aria-hidden="true">▾</span>
-  </button>
-  <div class="qa-panel" id="qa-newlead" style="display:none">
-    <input type="text" class="qa-input" id="qa-newlead-input" placeholder="Όνομα..." aria-label="Όνομα lead">
-    <input type="text" class="qa-input" id="qa-newlead-contact" placeholder="Τηλέφωνο ή email..." aria-label="Τηλέφωνο ή email lead" style="margin-top:6px">
-    <select class="qa-input" id="qa-newlead-source" aria-label="Πηγή lead" style="margin-top:6px">
-      <option value="instagram">Instagram</option>
-      <option value="google">Google</option>
-      <option value="referral">Παραπομπή</option>
-      <option value="site">Site</option>
-      <option value="other" selected>Άλλο</option>
-    </select>
-    <button type="button" class="qa-instant-btn" style="margin-top:6px" onclick="qaCreateLead()">+ Προσθήκη lead</button>
-  </div>
   <div class="sb-sep"></div>
 
   <button class="backup-btn" onclick="toggleSettingsPanel()" style="color:#025857;border-color:#025857">⚙️ Ρυθμίσεις</button>
@@ -300,10 +284,6 @@ setTimeout(function(){
   <button type="button" class="more-item" onclick="closeMoreSheet();swTab(6)"><span class="ic">🍽️</span><span class="n">Συνταγές</span></button>
   <button type="button" class="more-item" onclick="closeMoreSheet();swTab(5)"><span class="ic">📊</span><span class="n">Διατροφές</span></button>
   <button type="button" class="more-item" onclick="closeMoreSheet();swTab(8)"><span class="ic">📚</span><span class="n">Tips</span></button>
-  <button type="button" class="more-item" onclick="closeMoreSheet();swTab(11)">
-    <span class="ic">🤝</span><span class="n">Leads</span>
-    <span id="leads-nav-badge-mobile" class="more-item-badge" style="display:none">0</span>
-  </button>
   <div class="more-sep"></div>
   <div class="msheet-qa">
     <button type="button" class="qa-btn" id="msheet-qa-toggle-newplan" onclick="toggleMSheetQA('newplan')" aria-expanded="false" aria-controls="msheet-qa-newplan">
@@ -375,7 +355,6 @@ setTimeout(function(){
 <!-- core/state — client roster/selection (clients/curId/getC), CRUD, JSON_CACHE,
      TOUCH_HANDLERS/MOBILE_VIEWPORT, field validation, toggleSidebar -->
 <script defer src="js/core/state.js"></script>
-<script defer src="js/leads/leads-state.js"></script>
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
@@ -453,8 +432,6 @@ setTimeout(function(){
 <script defer src="js/tabs/home-diets.js"></script>
 <script defer src="js/tabs/messages.js"></script>
 <script defer src="js/tabs/progress.js"></script>
-<script defer src="js/leads/leads-tab.js"></script>
-<script defer src="js/leads/leads-csv-import.js"></script>
 <script defer src="js/tabs/recipes.js"></script>
 <script defer src="js/tabs/tips.js"></script>
 <!-- Chart.js 4.5.1 UMD (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ μέσω ensureChart()
@@ -502,37 +479,6 @@ setTimeout(function(){
     <div style="display:flex;gap:12px;justify-content:center;">
       <button onclick="closePromptDialog()" aria-label="Ακύρωση" style="background:#f0f0f0;color:var(--text-strong);border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">Ακύρωση</button>
       <button id="promptOkBtn" onclick="executePrompt()" aria-label="Επιβεβαίωση" style="background:#025857;color:white;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;min-width:100px;min-height:36px;">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- 📥 Εισαγωγή leads από Fresha CSV — προεπισκόπηση πριν την επιβεβαίωση (js/leads/leads-csv-import.js).
-     Δικό της dialog, όχι confirmDialog/promptDialog, γιατί χρειάζεται πλούσιο περιεχόμενο
-     (κατηγοριοποιημένη λίστα γραμμών), όχι μόνο ένα μήνυμα+input. -->
-<div id="leadsImportDialog" role="dialog" aria-labelledby="leadsImportTitle" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100000;align-items:center;justify-content:center;">
-  <div style="background:var(--card-bg);border-radius:12px;padding:28px;max-width:600px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-    <h3 id="leadsImportTitle" style="color:#025857;font-size:17px;margin:0 0 4px 0;font-weight:700;">📥 Εισαγωγή από Fresha</h3>
-    <div id="leadsImportSummary" style="color:#666;font-size:12.5px;margin-bottom:14px;"></div>
-    <div id="leadsImportBody"></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
-      <button onclick="closeLeadsImportDialog()" aria-label="Ακύρωση" style="background:#f0f0f0;color:var(--text-strong);border:none;padding:9px 18px;border-radius:7px;cursor:pointer;font-weight:600;min-height:36px;">Ακύρωση</button>
-      <button id="leadsImportConfirmBtn" onclick="confirmLeadsImport()" aria-label="Επιβεβαίωση εισαγωγής" style="background:#025857;color:white;border:none;padding:9px 18px;border-radius:7px;cursor:pointer;font-weight:600;min-height:36px;">✓ Επιβεβαίωση εισαγωγής</button>
-    </div>
-  </div>
-</div>
-
-<!-- 🧹 Καθαρισμός λάθος-εισαγμένων Fresha leads — ξαναανεβάζεις το ίδιο CSV export, βρίσκει
-     ΥΠΑΡΧΟΝΤΑ leads (source:'fresha', stage:'new') που στην πραγματικότητα είχαν ήδη ραντεβού
-     στο Fresha (άρα δεν ήταν ποτέ πραγματικά "νέα" leads) και τα αφαιρεί, preview-then-confirm
-     (js/leads/leads-csv-import.js). Ίδιο dialog pattern με το leadsImportDialog παραπάνω. -->
-<div id="leadsCleanupDialog" role="dialog" aria-labelledby="leadsCleanupTitle" aria-modal="true" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:100000;align-items:center;justify-content:center;">
-  <div style="background:var(--card-bg);border-radius:12px;padding:28px;max-width:600px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
-    <h3 id="leadsCleanupTitle" style="color:#025857;font-size:17px;margin:0 0 4px 0;font-weight:700;">🧹 Καθαρισμός λάθος-εισαγμένων leads</h3>
-    <div id="leadsCleanupSummary" style="color:#666;font-size:12.5px;margin-bottom:14px;"></div>
-    <div id="leadsCleanupBody"></div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
-      <button onclick="closeLeadsCleanupDialog()" aria-label="Ακύρωση" style="background:#f0f0f0;color:var(--text-strong);border:none;padding:9px 18px;border-radius:7px;cursor:pointer;font-weight:600;min-height:36px;">Ακύρωση</button>
-      <button id="leadsCleanupConfirmBtn" onclick="confirmLeadsCleanup()" aria-label="Επιβεβαίωση αφαίρεσης" style="background:#c0392b;color:white;border:none;padding:9px 18px;border-radius:7px;cursor:pointer;font-weight:600;min-height:36px;">🗑️ Αφαίρεση</button>
     </div>
   </div>
 </div>

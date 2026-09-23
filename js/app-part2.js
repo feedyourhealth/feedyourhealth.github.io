@@ -264,12 +264,6 @@ function initializeApp(){
     customTemplates = savedTemplates;
   }
 
-  // Load leads from localStorage (js/leads/leads-state.js)
-  var savedLeads = safeStorageGet('fyh_leads', null);
-  if(savedLeads && Array.isArray(savedLeads)){
-    leads = savedLeads;
-  }
-
   // ☁️ CLOUD: το login & η φόρτωση δεδομένων γίνονται μέσω Supabase.
   // Cloud.init() ελέγχει αν υπάρχει ενεργή σύνδεση → φορτώνει cloud → app,
   // αλλιώς δείχνει την οθόνη login. (Τα τοπικά clients μένουν σαν cache.)

@@ -973,14 +973,12 @@
             try{
               if(Array.isArray(d.clients)) window.clients=d.clients;
               if(Array.isArray(window.clients) && typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(window.clients);
-              if(Array.isArray(d.leads)) window.leads=d.leads;
               if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
               if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
               if(d.recipeMeta && typeof saveRecipeMetaAll==='function') saveRecipeMetaAll(d.recipeMeta);
               if(typeof safeStorageSet==='function'){
                 safeStorageSet('fyh_clients', window.clients);
                 safeStorageSet('fyh_custom_tmpls', window.customTemplates);
-                safeStorageSet('fyh_leads', window.leads||[]);
                 // Saved combos live outside `clients` (own localStorage key, shared across
                 // clients) so they need their own restore here — otherwise they never
                 // travel across devices even though they now ride along in the same blob.
@@ -1024,7 +1022,6 @@
         if(!self.user){ resolve(); return; }
         var blob={
           clients: window.clients||[],
-          leads: window.leads||[],
           customTemplates: window.customTemplates||[],
           trackingData: (typeof window.TRACKING_DATA!=='undefined'?window.TRACKING_DATA:null),
           recipeMeta: (typeof getRecipeMeta==='function'?getRecipeMeta():null),
@@ -1234,14 +1231,12 @@
         try{
           if(Array.isArray(d.clients)) window.clients=d.clients;
           if(Array.isArray(window.clients) && typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(window.clients);
-          if(Array.isArray(d.leads)) window.leads=d.leads;
           if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
           if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
           if(d.recipeMeta && typeof saveRecipeMetaAll==='function') saveRecipeMetaAll(d.recipeMeta);
           if(typeof safeStorageSet==='function'){
             safeStorageSet('fyh_clients', window.clients);
             safeStorageSet('fyh_custom_tmpls', window.customTemplates);
-            safeStorageSet('fyh_leads', window.leads||[]);
             if(Array.isArray(d.savedCombos)){
               safeStorageSet('savedCombos', d.savedCombos);
               window._savedCombosCache = d.savedCombos;

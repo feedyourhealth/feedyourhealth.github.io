@@ -21,10 +21,6 @@ function getStorageKey(baseKey) {
   var parsedCt = safeStorageGet('fyh_custom_tmpls', null);
   if(Array.isArray(parsedCt)) customTemplates = parsedCt;
 
-  // Load leads (js/leads/leads-state.js — `var leads=[]` loads before this IIFE)
-  var parsedLeads = safeStorageGet('fyh_leads', null);
-  if(Array.isArray(parsedLeads)) leads = parsedLeads;
-
   // Load clients data
   var d = safeStorageGet('fyh_clients', null);
   if(Array.isArray(d) && d.length){

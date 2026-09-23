@@ -136,7 +136,6 @@ function _doSave(){
   }
   var okClients=safeStorageSet('fyh_clients', clients);
   var okTmpls=safeStorageSet('fyh_custom_tmpls', customTemplates);
-  safeStorageSet('fyh_leads', window.leads||[]);
   try { localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); } catch(e){}
   try { _rollingSnapshot(); } catch(e){ console.warn('[BACKUP] snapshot hook', e && e.message); }
   try { _writeFileBackup(false); } catch(e){ console.warn('[BACKUP] file hook', e && e.message); }
@@ -644,7 +643,6 @@ function exportData(){
     version: '2.0',
     exportedAt: new Date().toISOString(),
     clients: deepClone(clients),  // Deep copy
-    leads: deepClone(window.leads||[]),
     customTemplates: deepClone(customTemplates),
     trackingData: TRACKING_DATA || {},
     savedCombos: deepClone(safeStorageGet('savedCombos', [])),

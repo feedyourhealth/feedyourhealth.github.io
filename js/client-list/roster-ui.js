@@ -486,7 +486,5 @@ function renderSB(){
   if(typeof updateMessagesNavBadge === 'function') updateMessagesNavBadge();
   // Ίδιο σκεπτικό για το badge του "📈 Πρόοδος" (js/tabs/progress.js).
   if(typeof updateProgressNavBadge === 'function') updateProgressNavBadge();
-  // Ίδιο σκεπτικό για το badge του "🤝 Leads" (js/leads/leads-tab.js).
-  if(typeof updateLeadsNavBadge === 'function') updateLeadsNavBadge();
 }
 

@@ -10,7 +10,7 @@
 
 /* ===== Γρήγορες ενέργειες πλαϊνής μπάρας: Νέο πλάνο / Γρήγορη μέτρηση ===== */
 function closeAllQA(){
-  ['qa-newplan','qa-quickmeasure','qa-quickappt','qa-newlead'].forEach(function(p){
+  ['qa-newplan','qa-quickmeasure','qa-quickappt'].forEach(function(p){
     var panel=document.getElementById(p);
     var btn=document.getElementById('qa-toggle-'+p.replace('qa-',''));
     if(panel) panel.style.display='none';
