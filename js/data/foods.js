@@ -110,6 +110,7 @@ var FOODS={
 'Ρύζι άσπρο (βρ.)':{k:130,p:2.4,c:28,f:0.3,fi:0.4,cat:'Δημητριακά',en:'White Rice (cooked)',ru:'Белый рис (варёный)',tr:'Beyaz Pirinç (pişmiş)'},
 'Ρύζι καστανό (βρ.)':{k:123,p:2.6,c:25,f:1,fi:1.8,cat:'Δημητριακά',en:'Brown Rice (cooked)',ru:'Бурый рис (варёный)',tr:'Esmer Pirinç (pişmiş)'},
 'Κινόα (βρ.)':{k:120,p:4.1,c:21,f:1.9,fi:2.8,cat:'Δημητριακά',en:'Quinoa (cooked)',ru:'Киноа (варёная)',tr:'Kinoa (pişmiş)'},
+'Φαγόπυρο (βρ.)':{k:92,p:3.4,c:19.9,f:0.6,fi:2.7,cat:'Δημητριακά',en:'Buckwheat (cooked)',ru:'Гречка (варёная)',tr:'Karabuğday (pişmiş)'},
 'Μακαρόνια (βρ.)':{k:158,p:5.8,c:30,f:0.9,fi:1.8,cat:'Δημητριακά',en:'Pasta (cooked)',ru:'Макароны (варёные)',tr:'Makarna (pişmiş)'},
 'Noodles αυγού (M&S)':{k:132,p:5,c:26.1,f:0.6,fi:1.3,cat:'Δημητριακά',en:'Egg Noodles (M&S)',ru:'Яичная лапша (M&S)',tr:'Yumurtalı Erişte (M&S)'},
 'Κριθαράκι (βρ.)':{k:158,p:5.8,c:31,f:0.9,fi:1.8,cat:'Δημητριακά',en:'Orzo (cooked)',ru:'Критараки (варёное)',tr:'Arpa Şehriye (pişmiş)'},
@@ -633,6 +634,7 @@ var FOOD_PAIRING_EXT={
   // ── ΥΔΑΤΑΝΘΡΑΚΕΣ ──
   'Ρύζι καστανό (βρ.)':{flavor_profile:['nutty','mild'],best_pairings:['Σκόρδο','Κοτόπουλο στήθος (ψητό)','Μπρόκολο','Σάλτσα σόγιας (μειωμένο αλάτι)'],avoid_with:[],texture:'firm',aromatic_herbs:['κολιαντρος'],category:'carb'},
   'Κινόα (βρ.)':{flavor_profile:['nutty','earthy'],best_pairings:['Λεμόνι','Ντοματες','Αγγούρι','Μαϊντανός','Σπανάκι'],avoid_with:[],texture:'fluffy',aromatic_herbs:['μαϊντανός','δυόσμος'],category:'carb'},
+  'Φαγόπυρο (βρ.)':{flavor_profile:['nutty','earthy'],best_pairings:['Μανιτάρια','Κρεμμύδι','Αυγά (ολόκληρα)','Γιαούρτι 2%','Σπανάκι'],avoid_with:[],texture:'tender',aromatic_herbs:['άνηθος','μαϊντανός'],category:'carb'},
   'Μακαρόνια (βρ.)':{flavor_profile:['neutral','mild'],best_pairings:['Ντοματες','Σκόρδο','Βασιλικός','Μανιτάρια','Κιμάς'],avoid_with:[],texture:'tender',aromatic_herbs:['βασιλικό','ρίγανη'],category:'carb'},
   'Σπαγγέτι ολικής (βρ.)':{flavor_profile:['nutty','mild'],best_pairings:['Ντοματες','Σκόρδο','Βασιλικός','Γαρίδες (βραστές)','Ελαιόλαδο'],avoid_with:[],texture:'tender',aromatic_herbs:['βασιλικό'],category:'carb'},
   'Κριθαράκι (βρ.)':{flavor_profile:['neutral','mild'],best_pairings:['Ντοματες','Κοτόπουλο στήθος (ψητό)','Μοσχάρι (ψητό)','Φέτα'],avoid_with:[],texture:'tender',aromatic_herbs:['βασιλικό'],category:'carb'},

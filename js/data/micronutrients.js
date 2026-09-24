@@ -92,6 +92,7 @@ var MICRONUTRIENTS={
   // Grains / Starches (cooked)
   'Γλυκοπατάτα':{Fe:0.69,Zn:0.32,Mg:25,Ca:38,B1:0.11,B2:0.11,B3:1.49,B6:0.29,B12:0,Folate:6,Omega3:0.01,Omega6:0.05,Iodine:0,Choline:13,DHA:0},
   'Κινόα (βρ.)':{Fe:1.49,Zn:1.09,Mg:64,Ca:17,B1:0.107,B2:0.11,B3:0.41,B6:0.12,B12:0,Folate:42,Omega3:0.09,Omega6:1.0,Iodine:0,Choline:23,DHA:0},
+  'Φαγόπυρο (βρ.)':{Fe:0.8,Zn:0.61,Mg:51,Ca:7,B1:0.04,B2:0.039,B3:0.94,B6:0.077,B12:0,Folate:14,Omega3:0.01,Omega6:0.18,Iodine:0,Choline:20,DHA:0},
   'Πλιγούρι (βρ.)':{Fe:0.96,Zn:0.57,Mg:32,Ca:10,B1:0.057,B2:0.028,B3:1.0,B6:0.08,B12:0,Folate:18,Omega3:0.02,Omega6:0.2,Iodine:0,Choline:9,DHA:0},
   'Μακαρόνια (βρ.)':{Fe:0.50,Zn:0.51,Mg:18,Ca:7,B1:0.02,B2:0.02,B3:0.40,B6:0.049,B12:0,Folate:7,Omega3:0.03,Omega6:0.2,Iodine:0,Choline:5,DHA:0},
   'Κριθαράκι (βρ.)':{Fe:0.50,Zn:0.51,Mg:18,Ca:7,B1:0.02,B2:0.02,B3:0.40,B6:0.049,B12:0,Folate:7,Omega3:0.03,Omega6:0.2,Iodine:0,Choline:5,DHA:0},
