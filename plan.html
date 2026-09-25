@@ -2114,7 +2114,9 @@ function deltaGood(p){
 function goalHero(){
   const p=SNAP.progress||{};
   if(getGoalHeroSeen()||!p.goal)return null;
-  const start=p.start||p.current;
+  // «Από X kg» = το ΤΡΕΧΟΝ βάρος (τελευταία μέτρηση), όχι η πρώτη καταγραφή — αλλιώς
+  // η απόσταση/κατεύθυνση προς τον στόχο βγαίνει λάθος όταν το βάρος έχει κινηθεί από τότε.
+  const start=p.current||p.start;
   if(!start||p.goal===start)return null;
   setGoalHeroSeen();
   const diff=Math.round(Math.abs(p.goal-start)*10)/10;
