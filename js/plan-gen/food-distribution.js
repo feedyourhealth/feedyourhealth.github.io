@@ -143,17 +143,17 @@ function validateFoodDistribution(weekPlan) {
 
 // Display food distribution validation results
 function displayFoodDistributionResults(validation) {
-  var html = '<div style="background:#f0f8f7;padding:12px;border-radius:8px;margin:10px 0;border-left:4px solid #025857;">';
+  var html = '<div style="background:var(--teal-tint);color:var(--text-strong);padding:12px;border-radius:8px;margin:10px 0;border-left:4px solid var(--teal);">';
   html += '<strong>📊 Διατροφική Κατανομή Γευμάτων:</strong><br>';
 
   if(validation.passes.length > 0) {
-    html += '<div style="color:#2e7d3e;font-size:11px;line-height:1.6;">' + validation.passes.join('<br>') + '</div>';
+    html += '<div style="color:var(--good);font-size:11px;line-height:1.6;">' + validation.passes.join('<br>') + '</div>';
   }
 
   if(validation.violations.length > 0) {
-    html += '<div style="color:#c62828;font-size:11px;margin-top:6px;line-height:1.6;">' + validation.violations.join('<br>') + '</div>';
+    html += '<div style="color:var(--bad-fg);font-size:11px;margin-top:6px;line-height:1.6;">' + validation.violations.join('<br>') + '</div>';
   } else {
-    html += '<div style="color:#2e7d3e;font-weight:600;margin-top:6px;">✓ Όλα τα κριτήρια ικανοποιούνται!</div>';
+    html += '<div style="color:var(--good);font-weight:600;margin-top:6px;">✓ Όλα τα κριτήρια ικανοποιούνται!</div>';
   }
 
   html += '</div>';

@@ -86,20 +86,20 @@ function calcMedScore(weekPlan){
 function renderMedScore(weekPlan){
   var s=calcMedScore(weekPlan);
   var pct=Math.round(s.score/s.total*100);
-  var scoreColor=pct>=85?'#025857':pct>=57?'#E65100':'#c62828';
+  var scoreColor=pct>=85?'var(--wk-accent-fg)':pct>=57?'var(--mac-k)':'var(--bad-fg)';
   var html='<div id="med-score-bar" style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px">'
     +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
     +'<span style="font-size:18px">🫒</span>'
-    +'<span style="font-size:11px;font-weight:700;color:#555">Μεσογειακή Βαθμολογία</span>'
+    +'<span style="font-size:11px;font-weight:700;color:var(--text-sub)">Μεσογειακή Βαθμολογία</span>'
     +'<span style="font-size:20px;font-weight:800;color:'+scoreColor+'">'+s.score+'/'+s.total+'</span>'
     +'<span style="font-size:11px;color:'+scoreColor+';font-weight:700">'+pct+'%</span>'
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:5px;flex:1">';
   MED_SCORE_RULES.forEach(function(r){
     var ok=s.results[r.id];
-    var bg=ok?'#E2EEE5':'#fce4e4';
-    var fc=ok?'#025857':'#c62828';
-    var border=ok?'#c5ddd8':'#f5c6c6';
+    var bg=ok?'var(--teal-tint)':'var(--bad-bg)';
+    var fc=ok?'var(--wk-accent-fg)':'var(--bad-fg)';
+    var border=ok?'var(--ok-bd)':'var(--bad-bd)';
     html+='<span style="background:'+bg+';color:'+fc+';border:1px solid '+border+';border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600;white-space:nowrap">'
       +r.icon+' '+r.label+(ok?' ✓':' ✗')+'</span>';
   });

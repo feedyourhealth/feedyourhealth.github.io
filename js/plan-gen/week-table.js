@@ -91,26 +91,26 @@ function renderWeekTable(){
   }
   var weekKcalPct=weekTargetK>0?Math.max(0,Math.min(150,Math.round(weekActualK/weekTargetK*100))):null;
   var weekKcalRingHtml=weekKcalPct==null?'':(
-    pctRing(Math.min(100,weekKcalPct),{size:40,thickness:5,color:weekKcalPct>=100?'var(--good)':'#025857',track:'#e2eee5',label:false})
-    +'<span style="font-size:12px;color:#555">'+weekKcalPct+'% μ.ο. στόχου θερμίδων <span style="color:#999">('+weekDaysCounted+' μέρες με γεύματα)</span></span>'
+    pctRing(Math.min(100,weekKcalPct),{size:40,thickness:5,color:weekKcalPct>=100?'var(--good)':'var(--teal)',track:'var(--teal-tint)',label:false})
+    +'<span style="font-size:12px;color:var(--text-sub)">'+weekKcalPct+'% μ.ο. στόχου θερμίδων <span style="color:var(--text-muted)">('+weekDaysCounted+' μέρες με γεύματα)</span></span>'
   );
 
-  var divider='<span style="width:1px;height:16px;background:#e0e0e0"></span>';
+  var divider='<span style="width:1px;height:16px;background:var(--border-light)"></span>';
   var summaryCard = '<div style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:8px 14px;margin-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
-    +'<span style="font-size:13px;font-weight:700;color:#025857">👤 ' + esc(c.name) + '</span>'
+    +'<span style="font-size:13px;font-weight:700;color:var(--wk-accent-fg)">👤 ' + esc(c.name) + '</span>'
     +divider
-    +'<span style="font-size:12px;color:#555">📊 ' + c.weight + 'kg / ' + c.height + 'cm · BMI ' + bmiVal + '</span>'
+    +'<span style="font-size:12px;color:var(--text-sub)">📊 ' + c.weight + 'kg / ' + c.height + 'cm · BMI ' + bmiVal + '</span>'
     +divider
-    +'<span style="font-size:12px;color:#555">🎯 ' + goalLabel + '</span>'
+    +'<span style="font-size:12px;color:var(--text-sub)">🎯 ' + goalLabel + '</span>'
     +divider
     +'<span style="font-size:12px;font-weight:700;color:#e65100">🔥 ' + Math.round(tdeeInfo.target) + ' kcal</span>'
     +divider
-    +'<span style="font-size:12px;color:#555">Π:' + Math.round(tdeeInfo.p) + 'g · Λ:' + Math.round(tdeeInfo.f) + 'g · Υ:' + Math.round(tdeeInfo.carb) + 'g</span>'
+    +'<span style="font-size:12px;color:var(--text-sub)">Π:' + Math.round(tdeeInfo.p) + 'g · Λ:' + Math.round(tdeeInfo.f) + 'g · Υ:' + Math.round(tdeeInfo.carb) + 'g</span>'
     +(weekKcalRingHtml?(divider+'<span style="display:flex;align-items:center;gap:8px">'+weekKcalRingHtml+'</span>'):'')
     +'</div>';
 
   // ✅ Legend για τις χρωματιστές κουκκίδες τροφίμων — ίδια hex codes με getFoodColorHex()
-  var foodDotLegend='<div style="background:var(--panel-bg);border:1px solid var(--border-light);border-radius:6px;padding:6px 10px;margin-bottom:10px;font-size:10px;color:#666;display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
+  var foodDotLegend='<div style="background:var(--panel-bg);border:1px solid var(--border-light);border-radius:6px;padding:6px 10px;margin-bottom:10px;font-size:10px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:10px;align-items:center">'
     +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#5DADE2;margin-right:4px;vertical-align:middle"></span>Πρωτεΐνη</span>'
     +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#F8B739;margin-right:4px;vertical-align:middle"></span>Δημητριακά/Άλλα</span>'
     +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52B788;margin-right:4px;vertical-align:middle"></span>Λαχανικά</span>'
@@ -129,7 +129,7 @@ function renderWeekTable(){
   if(dblDays.length){
     var dblNames=dblDays.map(function(i){return DAYS[i];}).join(', ');
     addMealBar='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">'
-      +'<span style="font-size:11px;color:#025857;background:#e2eee5;border:1px solid #b5dcd6;border-radius:8px;padding:4px 10px">🏋️ Διπλή προπόνηση: <b>'+dblNames+'</b> — πρόσθεσε γεύμα πριν/ανάμεσα στις προπονήσεις</span>'
+      +'<span style="font-size:11px;color:var(--wk-accent-fg);background:var(--teal-tint);border:1px solid #b5dcd6;border-radius:8px;padding:4px 10px">🏋️ Διπλή προπόνηση: <b>'+dblNames+'</b> — πρόσθεσε γεύμα πριν/ανάμεσα στις προπονήσεις</span>'
       +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. πριν/μετά 2ης προπόνησης)" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
       +'</div>';
   }
@@ -137,15 +137,15 @@ function renderWeekTable(){
   DAYS.forEach(function(d,di){
     // ✅ Native title tooltip explains T/R on hover instead of a permanent banner repeating
     // the same explanation once above a table where the badge already appears 7 times.
-    var badge=trainD[di]?'<span title="Ημέρα με άσκηση: περισσότερες θερμίδες για ενέργεια + ανάκαμψη" style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">T</span>':'<span title="Ημέρα ανάπαυσης: λιγότερες θερμίδες λόγω μειωμένης δαπάνης ενέργειας" style="background:#eee;color:var(--text-muted);border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">R</span>';
+    var badge=trainD[di]?'<span title="Ημέρα με άσκηση: περισσότερες θερμίδες για ενέργεια + ανάκαμψη" style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">T</span>':'<span title="Ημέρα ανάπαυσης: λιγότερες θερμίδες λόγω μειωμένης δαπάνης ενέργειας" style="background:var(--wk-rest-bg);color:var(--wk-rest-fg);border-radius:8px;font-size:10px;padding:1px 5px;margin-left:3px;cursor:help">R</span>';
     var timeStr='';
     if(trainD[di]&&trainTimes[di]&&trainTimes[di].length>0){
-      timeStr='<div style="font-size:10px;color:#666;margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';
+      timeStr='<div style="font-size:10px;color:var(--wk-th-sub);margin-top:2px;font-weight:400">🕐 '+trainTimes[di]+'</div>';
     }
     // ✅ Phase 1: Add sport display for training days
     var sportStr='';
     if(trainD[di]&&c.sport){
-      sportStr='<div class="sport-header-dietitian" style="font-size:10px;color:#666;margin-top:2px;font-weight:500">'+c.sport+'</div>';
+      sportStr='<div class="sport-header-dietitian" style="font-size:10px;color:var(--wk-th-sub);margin-top:2px;font-weight:500">'+c.sport+'</div>';
     }
     // 🥤 CHO Training Protocol (Phase 3) — compact pre·during·post strip on training-day headers,
     // mirrors what the client sees. No-op unless the dietitian opted the client in.
@@ -155,7 +155,7 @@ function renderWeekTable(){
       if(_ccr&&(_ccr.isTrainingDay||_ccr.isMatchDay)){
         var _dur=_ccr.during.applicable?(_ccr.during.gramsPerHour+'/h'):'—';
         choStr='<div title="Υδατάνθρακες πριν · κατά · μετά (g) — ίδιο με το πλάνο του πελάτη" '
-          +'style="font-size:9px;font-weight:700;color:#00786f;background:#f2fbf8;border:1px dashed #7fcbbf;'
+          +'style="font-size:9px;font-weight:700;color:var(--wk-accent-fg);background:var(--teal-tint);border:1px dashed #7fcbbf;'
           +'border-radius:6px;padding:1px 4px;margin-top:3px;cursor:help">🥤 '
           +_ccr.pre.grams+'·'+_dur+'·'+_ccr.post.grams+' g</div>';
       }
@@ -188,7 +188,7 @@ function renderWeekTable(){
       ?'<span style="background:#025857;color:#fff;border-radius:8px;font-size:10px;padding:1px 7px;margin-left:8px;font-weight:600" title="'+timingProf.desc+'">'+timingProf.label+'</span>'
       :'';
     html+='<tr style="background:linear-gradient(90deg, #f8f8f8 0%, #f0f0f0 100%);box-shadow:0 2px 4px rgba(0,0,0,0.05)"><td colspan="8" class="meal-section-header" data-timing-info="'+timingInfo+'">'
-      +'<span style="font-weight:700;color:#025857;font-size:12px">'+timingProf.icon+' '+esc(mealNames[mi])+'</span>'
+      +'<span style="font-weight:700;color:var(--wk-accent-fg);font-size:12px">'+timingProf.icon+' '+esc(mealNames[mi])+'</span>'
       +timingBadge
       +'<button onclick="renameMealSlot('+mi+')" title="Μετονομασία γεύματος" aria-label="Μετονομασία γεύματος" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:0.55;margin-left:6px" class="meal-slot-ctl">✏️</button>'
       +'<button onclick="deleteMealSlot('+mi+')" title="Διαγραφή γεύματος (όλες τις ημέρες)" aria-label="Διαγραφή γεύματος (όλες τις ημέρες)" style="background:none;border:none;cursor:pointer;font-size:11px;opacity:0.55" class="meal-slot-ctl">🗑️</button>'
@@ -211,9 +211,9 @@ function renderWeekTable(){
       var _mObj=c.weekPlan[d]&&c.weekPlan[d][mi];
       if(_mObj&&_mObj.dishLabels&&_mObj.dishLabels.length){
         _mObj.dishLabels.forEach(function(_lbl,_li){
-          html+='<div style="display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:#025857;background:#e2eee5;border:1px solid #b5dcd6;border-radius:6px;padding:2px 5px;margin-bottom:3px" title="Έτοιμο γεύμα — ο πελάτης το παραγγέλνει με αυτό το όνομα">'
+          html+='<div style="display:flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--wk-accent-fg);background:var(--teal-tint);border:1px solid #b5dcd6;border-radius:6px;padding:2px 5px;margin-bottom:3px" title="Έτοιμο γεύμα — ο πελάτης το παραγγέλνει με αυτό το όνομα">'
             +'<span style="flex:1;min-width:0">🍽️ '+esc(_lbl)+'</span>'
-            +'<button onclick="removeDishLabel('+d+','+mi+','+_li+')" title="Αφαίρεση τίτλου" aria-label="Αφαίρεση τίτλου" style="background:none;border:none;cursor:pointer;font-size:12px;line-height:1;color:#025857;opacity:.6;flex-shrink:0">&times;</button>'
+            +'<button onclick="removeDishLabel('+d+','+mi+','+_li+')" title="Αφαίρεση τίτλου" aria-label="Αφαίρεση τίτλου" style="background:none;border:none;cursor:pointer;font-size:12px;line-height:1;color:var(--wk-accent-fg);opacity:.6;flex-shrink:0">&times;</button>'
             +'</div>';
         });
       }
@@ -252,10 +252,10 @@ function renderWeekTable(){
         var borderColor=getFoodColorHex(food.n);
         var rvTip=cm(food.n,food.g);
         var macroTip='<div class="chip-macro-tip">'
-          +'<span style="color:#1565C0">Π '+Math.round(rvTip.p)+'</span> '
-          +'<span style="color:#B71C1C">Λ '+Math.round(rvTip.f)+'</span> '
-          +'<span style="color:#2E7D32">Υ '+Math.round(rvTip.c)+'</span> '
-          +'<span style="color:#E65100;font-weight:700">&middot; '+Math.round(rvTip.k)+' kcal</span>'
+          +'<span style="color:var(--mac-p)">Π '+Math.round(rvTip.p)+'</span> '
+          +'<span style="color:var(--mac-f)">Λ '+Math.round(rvTip.f)+'</span> '
+          +'<span style="color:var(--mac-c)">Υ '+Math.round(rvTip.c)+'</span> '
+          +'<span style="color:var(--mac-k);font-weight:700">&middot; '+Math.round(rvTip.k)+' kcal</span>'
           +'</div>';
         html+='<div class="food-chip" data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'" title="Σύρε αυτό το υλικό σε άλλο γεύμα (αντιγραφή)">'
           +macroTip
@@ -308,11 +308,11 @@ function renderWeekTable(){
         var lowProt=!hasFree&&mP2<15&&mP2>0;
         html+='<div class="meal-mac-bar">'
           +(lowProt?'<span class="prot-warn" title="Χαμηλή πρωτεΐνη — στόχος ≥15g/γεύμα για βέλτιστη MPS">⚠️</span>':'')
-          +'<span style="color:#1565C0">Π:'+Math.round(mP2)+'</span> '
-          +'<span style="color:#B71C1C">Λ:'+Math.round(mF2)+'</span> '
-          +'<span style="color:#2E7D32">Υ:'+Math.round(mC2)+'</span>'
-          +(mFi2>=0.5?' <span style="color:#795548" title="Φυτικές ίνες">· 🌾'+mFi2.toFixed(1)+'g</span>':'')
-          +' <span style="color:#E65100;font-weight:700">&middot; '+Math.round(mK2)+' kcal</span></div>';
+          +'<span style="color:var(--mac-p)">Π:'+Math.round(mP2)+'</span> '
+          +'<span style="color:var(--mac-f)">Λ:'+Math.round(mF2)+'</span> '
+          +'<span style="color:var(--mac-c)">Υ:'+Math.round(mC2)+'</span>'
+          +(mFi2>=0.5?' <span style="color:var(--mac-fi)" title="Φυτικές ίνες">· 🌾'+mFi2.toFixed(1)+'g</span>':'')
+          +' <span style="color:var(--mac-k);font-weight:700">&middot; '+Math.round(mK2)+' kcal</span></div>';
       }
       html+='<button class="chip-add" onclick="addF('+d+','+mi+')">+</button>';
       if(foods.length){
@@ -346,35 +346,35 @@ function renderWeekTable(){
     var eff=effTgtArr[d]||{k:tdeeR.target,p:tdeeR.p,f:tdeeR.f,c:tdeeR.carb};
     var kPct=eff.k?Math.round(tK/eff.k*100):100;
     var kCls=kPct<88?'low':kPct>112?'over':'ok';
-    var trainBadge=trainD[d]?'<span style="font-size:9px;font-weight:700;color:#025857"> T</span>':'';
+    var trainBadge=trainD[d]?'<span style="font-size:9px;font-weight:700;color:var(--wk-accent-fg)"> T</span>':'';
     // Macro bar helper
     function mBar(actual,target,color){
       var pctW=target?Math.min(100,Math.round(actual/target*100)):100;
       var barColor=pctW<80?'#e67e22':pctW>115?'#c0392b':color;
       return '<div style="width:'+pctW+'%;background:'+barColor+'" class="macro-bar-fill"></div>';
     }
-    function mVal(actual,target){return actual&&target?(actual/target<0.8?'#e67e22':actual/target>1.15?'#c0392b':'#555'):'#555';}
+    function mVal(actual,target){return actual&&target?(actual/target<0.8?'#e67e22':actual/target>1.15?'#c0392b':'var(--text-sub)'):'var(--text-sub)';}
     var fiPct=fiberDayTgt?tFi/fiberDayTgt:1;
-    var fiValColor=fiPct<0.65?'#B71C1C':fiPct<0.85?'#e67e22':'#5d4037';
+    var fiValColor=fiPct<0.65?'#B71C1C':fiPct<0.85?'#e67e22':'var(--mac-fi)';
     html+='<td>'
       +'<div class="tot-kcal '+kCls+'">'+Math.round(tK)+' / '+eff.k+' kcal '+kPct+'%'+trainBadge+'</div>'
       +'<div class="macro-bar-row">'
-        +'<span class="mbr-label" style="color:#1565C0">Π</span>'
+        +'<span class="mbr-label" style="color:var(--mac-p)">Π</span>'
         +'<div class="macro-bar">'+mBar(tP,eff.p,'#1565C0')+'</div>'
         +'<span class="mbr-val" style="color:'+mVal(tP,eff.p)+'">'+Math.round(tP)+'/'+Math.round(eff.p)+'g</span>'
       +'</div>'
       +'<div class="macro-bar-row">'
-        +'<span class="mbr-label" style="color:#e65100">Λ</span>'
+        +'<span class="mbr-label" style="color:var(--mac-f)">Λ</span>'
         +'<div class="macro-bar">'+mBar(tF,eff.f,'#e65100')+'</div>'
         +'<span class="mbr-val" style="color:'+mVal(tF,eff.f)+'">'+Math.round(tF)+'/'+Math.round(eff.f)+'g</span>'
       +'</div>'
       +'<div class="macro-bar-row">'
-        +'<span class="mbr-label" style="color:#2e7d32">Υ</span>'
+        +'<span class="mbr-label" style="color:var(--mac-c)">Υ</span>'
         +'<div class="macro-bar">'+mBar(tC,eff.c,'#2e7d32')+'</div>'
         +'<span class="mbr-val" style="color:'+mVal(tC,eff.c)+'">'+Math.round(tC)+'/'+Math.round(eff.c)+'g</span>'
       +'</div>'
       +'<div class="macro-bar-row" title="Φυτικές Ίνες — στόχος '+fiberDayTgt+'g/ημ. (DRI)">'
-        +'<span class="mbr-label" style="color:#5d4037">Ί</span>'
+        +'<span class="mbr-label" style="color:var(--mac-fi)">Ί</span>'
         +'<div class="macro-bar">'+mBar(tFi,fiberDayTgt,'#795548')+'</div>'
         +'<span class="mbr-val" style="color:'+fiValColor+'">'+tFi.toFixed(1)+'/'+fiberDayTgt+'g</span>'
       +'</div>'
@@ -409,26 +409,26 @@ function renderWeekTable(){
   }
   var wkFiPct=wkFiTgt?Math.round(wkFiTot/wkFiTgt*100):100;
   var wkFiColor=wkFiPct>=90?'#4CAF50':wkFiPct>=65?'#FF9800':'#F44336';
-  var wkFiTxtColor=wkFiPct>=90?'#1b5e20':wkFiPct>=65?'#E65100':'#B71C1C';
+  var wkFiTxtColor=wkFiPct>=90?'var(--good)':wkFiPct>=65?'var(--mac-k)':'var(--bad-fg)';
   var dotHtml='';
   DAYS.forEach(function(dn,di){
     var dp=wkFiByDay[di],dPct=getFiberTarget(c.age,c.sex)?Math.round(dp/getFiberTarget(c.age,c.sex)*100):100;
     var dc=dPct>=90?'#4CAF50':dPct>=65?'#FF9800':'#F44336';
     dotHtml+='<span title="'+dn+': '+dp.toFixed(1)+'g ('+dPct+'%)" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:default">'
       +'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+dc+'"></span>'
-      +'<span style="font-size:8px;color:#888">'+dn.charAt(0)+'</span>'
+      +'<span style="font-size:8px;color:var(--text-muted)">'+dn.charAt(0)+'</span>'
     +'</span>';
   });
   var fiberBannerHtml='<div style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:8px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
     +'<span style="font-size:15px" title="Φυτικές Ίνες (Dietary Fiber)">🌾</span>'
-    +'<span style="font-size:11px;font-weight:700;color:#555">Φυτικές Ίνες Εβδομάδας</span>'
+    +'<span style="font-size:11px;font-weight:700;color:var(--text-sub)">Φυτικές Ίνες Εβδομάδας</span>'
     +'<span style="font-size:17px;font-weight:800;color:'+wkFiTxtColor+'">'+Math.round(wkFiTot)+'g</span>'
-    +'<span style="font-size:10px;color:#888">/ '+wkFiTgt+'g στόχος &nbsp;·&nbsp; <b style="color:'+wkFiTxtColor+'">'+wkFiPct+'%</b></span>'
-    +'<div style="flex:1;min-width:80px;height:6px;background:#e4e4e4;border-radius:3px;overflow:hidden">'
+    +'<span style="font-size:10px;color:var(--text-muted)">/ '+wkFiTgt+'g στόχος &nbsp;·&nbsp; <b style="color:'+wkFiTxtColor+'">'+wkFiPct+'%</b></span>'
+    +'<div style="flex:1;min-width:80px;height:6px;background:var(--track-bg);border-radius:3px;overflow:hidden">'
       +'<div style="width:'+Math.min(100,wkFiPct)+'%;height:100%;background:'+wkFiColor+';border-radius:3px;transition:width .3s"></div>'
     +'</div>'
     +'<div style="display:flex;gap:5px;align-items:center">'+dotHtml+'</div>'
-    +(wkFiPct<65?'<span style="font-size:10px;color:#B71C1C;font-weight:600">⚠ Χαμηλή πρόσληψη ινών — στόχος '+getFiberTarget(c.age,c.sex)+'g/ημ. (DRI AI)</span>':'')
+    +(wkFiPct<65?'<span style="font-size:10px;color:var(--bad-fg);font-weight:600">⚠ Χαμηλή πρόσληψη ινών — στόχος '+getFiberTarget(c.age,c.sex)+'g/ημ. (DRI AI)</span>':'')
   +'</div>';
   // ✅ VALIDATE FOOD DISTRIBUTION — μαζί με τα άλλα validation widgets (Μεσογειακή βαθμολογία,
   // ίνες) πριν το εβδομαδιαίο grid, όχι μετά από αυτό — οι παραβιάσεις (π.χ. «πρέπει ακριβώς 2
