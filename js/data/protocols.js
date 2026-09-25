@@ -87,7 +87,10 @@ var SPORT_PROTOCOLS={
     recommendedSupplements:[
       {id:'iron',required:false,condition:'if serum ferritin <30µg/L women, <50µg/L men'},
       {id:'vit_d3',required:false,condition:'if deficient'},
-      {id:'magn',required:false,condition:'if deficient'}
+      {id:'magn',required:false,condition:'if deficient'},
+      {id:'carb_gel',required:false,condition:'sessions/races >60-75min'},
+      {id:'electro',required:false,condition:'heat / heavy sweaters / >90min'},
+      {id:'nitrate',required:false,condition:'key sessions & races'}
     ],
     redSAlert:{risk:'Moderate',minCalories:50,details:'Monitor irregular periods (F), hormonal issues, frequent injuries'},
     hydration:{daily:35,training:40,duringEx:'400-800ml/hr',postEx:'150% weight loss / 4hr'},

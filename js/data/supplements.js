@@ -2,10 +2,11 @@
 // Split out of js/data.js (module split wave 1). Pure data, no logic.
 // Contents: SUPP_TIMINGS, EN_SUPP_TIMINGS, SUPPS
 
-var SUPP_TIMINGS=["Πριν το πρωινό","Με το πρωινό","Μεσημεριανό","Πριν προπόνηση (30')","Αμέσως μετά προπόνηση","Βραδινό","Πριν τον ύπνο"];
+var SUPP_TIMINGS=["Πριν το πρωινό","Με το πρωινό","Μεσημεριανό","2-3 ώρες πριν προπόνηση","60' πριν προπόνηση/αγώνα","Πριν προπόνηση (30')","Κατά την προπόνηση","Αμέσως μετά προπόνηση","Βραδινό","Πριν τον ύπνο"];
 var EN_SUPP_TIMINGS={
   "Πριν το πρωινό":"Before breakfast","Με το πρωινό":"With breakfast","Μεσημεριανό":"Lunch",
-  "Πριν προπόνηση (30')":"Before workout (30min)","Αμέσως μετά προπόνηση":"Immediately post-workout",
+  "2-3 ώρες πριν προπόνηση":"2-3h before workout","60' πριν προπόνηση/αγώνα":"60min before workout/race",
+  "Πριν προπόνηση (30')":"Before workout (30min)","Κατά την προπόνηση":"During workout","Αμέσως μετά προπόνηση":"Immediately post-workout",
   "Βραδινό":"Dinner","Πριν τον ύπνο":"Before bed"
 };
 var SUPPS=[
@@ -25,6 +26,9 @@ var SUPPS=[
  {id:'glutamine',name:'Γλουταμίνη',       nameEn:'Glutamine',         nameRu:'Глютамин',                  nameTr:'Glutamin',                  dose:'8-10g',         doseRu:'8-10г',         doseTr:'8-10g',         cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Αμέσως μετά προπόνηση",d:'8-10g',dRu:'8-10г',dTr:'8-10g'}]},
  {id:'whey',   name:'Whey Protein',        nameRu:'Сывороточный протеин (Whey)',nameTr:'Whey Protein',              dose:'0.25-0.40g/kg', doseRu:'0,25-0,40г/кг', doseTr:'0,25-0,40g/kg', cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Αμέσως μετά προπόνηση",d:'0.25-0.40g/kg',dRu:'0,25-0,40г/кг',dTr:'0,25-0,40g/kg'}]},
  {id:'casein', name:'Casein',              nameRu:'Казеин',                     nameTr:'Kazein',                     dose:'',              cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Πριν τον ύπνο",d:''}]},
+ {id:'plant_prot',name:'Φυτική πρωτεΐνη (μπιζέλι/σόγια)',nameEn:'Plant protein (pea/soy)',nameRu:'Растительный протеин (горох/соя)',nameTr:'Bitkisel protein (bezelye/soya)',dose:'0.3-0.4g/kg',doseRu:'0,3-0,4г/кг',doseTr:'0,3-0,4g/kg',cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"Αμέσως μετά προπόνηση",d:'0.3-0.4g/kg',dRu:'0,3-0,4г/кг',dTr:'0,3-0,4g/kg'}]},
+ {id:'collagen',name:'Κολλαγόνο + Βιτ. C', nameEn:'Collagen + Vitamin C',nameRu:'Коллаген + витамин C',   nameTr:'Kolajen + C Vitamini',      dose:'10-15g + 50mg vit C',doseRu:'10-15г + 50мг вит. C',doseTr:'10-15g + 50mg C vit.',cat:'Αμινοξέα & Πρωτεΐνες',timing:[{t:"60' πριν προπόνηση/αγώνα",d:'10-15g + 50mg vit C',dRu:'10-15г + 50мг вит. C',dTr:'10-15g + 50mg C vit.'}]},
+ {id:'recovery',name:'Recovery drink (CHO + πρωτεΐνη)',nameEn:'Recovery drink (carbs + protein)',nameRu:'Восстановительный напиток (углеводы + белок)',nameTr:'Toparlanma içeceği (KH + protein)',dose:'~1g/kg CHO + 20-30g πρωτεΐνη',doseEn:'~1g/kg carbs + 20-30g protein',doseRu:'~1г/кг углеводов + 20-30г белка',doseTr:'~1g/kg KH + 20-30g protein',cat:'Ύπνος & Αποκατάσταση',timing:[{t:"Αμέσως μετά προπόνηση",d:'~1g/kg CHO + 20-30g πρωτεΐνη',dEn:'~1g/kg carbs + 20-30g protein',dRu:'~1г/кг углеводов + 20-30г белка',dTr:'~1g/kg KH + 20-30g protein'}]},
  {id:'b_alanine',name:'Β-Αλανίνη',        nameEn:'Beta-Alanine',      nameRu:'Бета-аланин',               nameTr:'Beta-Alanin',               dose:'4g',            doseRu:'4г',            doseTr:'4g',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:'4g',dRu:'4г',dTr:'4g'}]},
  {id:'caffeine',name:'Καφεΐνη',           nameEn:'Caffeine',          nameRu:'Кофеин',                    nameTr:'Kafein',                    dose:'3-6mg/kg',      doseRu:'3-6мг/кг',      doseTr:'3-6mg/kg',      cat:'Pre-Workout',          timing:[{t:"60' πριν προπόνηση/αγώνα",d:'3-6mg/kg',dRu:'3-6мг/кг',dTr:'3-6mg/kg'}]},
  {id:'citrulline',name:'Κιτρουλλίνη',     nameEn:'Citrulline',        nameRu:'Цитруллин',                 nameTr:'Sitrülin',                  dose:'3g',            doseRu:'3г',            doseTr:'3g',            cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:'3g',dRu:'3г',dTr:'3g'}]},
@@ -33,6 +37,8 @@ var SUPPS=[
  {id:'electro',name:'Ηλεκτρολύτες',       nameEn:'Electrolytes',      nameRu:'Электролиты',               nameTr:'Elektrolitler',             dose:'',              cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
  {id:'carbs_pre',name:'Υδατάνθρακες (pre)',nameEn:'Carbs (pre-workout)',nameRu:'Углеводы (перед тренировкой)',nameTr:'Karbonhidrat (antrenman öncesi)',dose:'',cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
  {id:'isotonic',name:'Υποτονικό/Ισοτονικό',nameEn:'Hypotonic/Isotonic Drink',nameRu:'Гипотонический/изотонический напиток',nameTr:'Hipotonik/İzotonik İçecek',dose:'', cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
+ {id:'nitrate',name:'Νιτρικά (χυμός παντζαριού)',nameEn:'Nitrate (beetroot juice shot)',nameRu:'Нитраты (свекольный сок)',nameTr:'Nitrat (pancar suyu)',dose:'6-8 mmol (~70ml shot)',doseRu:'6-8 ммоль (~70 мл шот)',doseTr:'6-8 mmol (~70ml shot)',cat:'Pre-Workout',          timing:[{t:"2-3 ώρες πριν προπόνηση",d:'6-8 mmol (~70ml shot)',dRu:'6-8 ммоль (~70 мл шот)',dTr:'6-8 mmol (~70ml shot)'}]},
+ {id:'carb_gel',name:'Gel υδατανθράκων',  nameEn:'Carbohydrate gel',  nameRu:'Углеводный гель',           nameTr:'Karbonhidrat jeli',         dose:'30-90g CHO/ώρα',doseEn:'30-90g carbs/hour',doseRu:'30-90г углеводов/час',doseTr:'saatte 30-90g KH',cat:'Pre-Workout',timing:[{t:"Κατά την προπόνηση",d:"1 gel (20-25g) / 20-30'",dEn:'1 gel (20-25g) every 20-30min',dRu:'1 гель (20-25г) каждые 20-30 мин',dTr:"20-30 dk'da bir 1 jel (20-25g)"}]},
  {id:'soda',   name:'Μαγειρική Σόδα',      nameEn:'Baking Soda',       nameRu:'Пищевая сода',              nameTr:'Karbonat',                  dose:'',              cat:'Pre-Workout',          timing:[{t:"Πριν προπόνηση (30')",d:''}]},
  {id:'tribulus',name:'Tribulus',           nameRu:'Трибулус',                   nameTr:'Tribulus',                   dose:'',              cat:'Αναβολικά & Ορμόνες', timing:[{t:"Με το πρωινό",d:''}]},
  {id:'testoboost',name:'Testoboost',       nameRu:'Testoboost',                 nameTr:'Testoboost',                 dose:'D-Ασπ.+Fenugreek',doseEn:'D-Aspartic Acid+Fenugreek',doseRu:'D-Асп.+пажитник',doseTr:'D-Asp.+Çemen otu',cat:'Αναβολικά & Ορμόνες',timing:[{t:"Με το πρωινό",d:''},{t:"Πριν τον ύπνο",d:'D-Ασπαρτικό + Fenugreek',dEn:'D-Aspartic Acid + Fenugreek',dRu:'D-аспарагиновая кислота + пажитник',dTr:'D-Aspartik Asit + Çemen otu'}]},

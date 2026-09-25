@@ -131,7 +131,7 @@ function _inlMedicalSection(c){
 
 // ── Συμπληρώματα ───────────────────────────────────────────────────────────
 function _inlSuppsSection(c){
-  var n=(c.selectedSupplements||[]).length;
+  var n=(c.selectedSupplements||[]).length+(c.supps||[]).length;
   var list=(typeof COMMON_SUPPS!=='undefined')?COMMON_SUPPS:[];
   var rows=list.map(function(s,idx){
     var sel=(c.selectedSupplements||[]).some(function(x){return x.supplement===s.name;});
@@ -144,10 +144,48 @@ function _inlSuppsSection(c){
   return '<div class="section-card" id="sec-suppsec">'
     +_inlSecHd('suppsec','💊','Συμπληρώματα', n?(n+' επιλεγμέν'+(n===1?'ο':'α')):'—')
     +_inlSecBodyOpen('suppsec')
-    +'<div style="background:#E2EEE5;padding:9px 11px;border-radius:6px;margin-bottom:12px;font-size:11.5px;color:#025857">💡 Ό,τι παίρνει ήδη τακτικά. Προτάσεις βάσει πλάνου: «💊» στην καρτέλα «Πλάνο».</div>'
+    +'<div style="background:#E2EEE5;padding:9px 11px;border-radius:6px;margin-bottom:12px;font-size:11.5px;color:#025857">💡 Βασικά συμπληρώματα εδώ· τα αθλητικά (ηλεκτρολύτες, gel, καφεΐνη…) στις ομάδες από κάτω, με ώρες λήψης. Προτάσεις βάσει πλάνου: «💊» στην καρτέλα «Πλάνο».</div>'
     +'<div style="display:grid;gap:8px">'+rows+'</div>'
+    +_inlSuppsGroupsHtml(c)
     +_inlApplyBtn('applySuppsInline()')
     +'</div></div>';
+}
+
+// The full SUPPS catalogue (electrolytes, gels, caffeine, ...) grouped by s.cat, below the
+// fixed COMMON_SUPPS list. These toggle c.supps — the same ids the sport box in render-main.js
+// writes — so they get timings in «Πρωτόκολλο συμπληρωμάτων», the PDF and the 4-lang plan link.
+// Ids already covered by a COMMON_SUPPS row are hidden so nothing can be ticked twice.
+var INL_SUPP_HIDDEN_IDS=['iron','multivit','vit_d3','magn','calc','zinc','omega3','creatine'];
+var INL_SUPP_GROUPS=[
+  {cat:'Pre-Workout',          label:'🏃 Προπόνηση & αγώνας', open:true},
+  {cat:'Αμινοξέα & Πρωτεΐνες', label:'💪 Πρωτεΐνες & αμινοξέα'},
+  {cat:'Ύπνος & Αποκατάσταση', label:'😴 Αποκατάσταση & ύπνος'},
+  {cat:'Βιταμίνες & Μέταλλα',  label:'🧪 Άλλες βιταμίνες'},
+  {cat:'Αναβολικά & Ορμόνες',  label:'⚠️ «Boosters» ορμονών', hint:'χαμηλή τεκμηρίωση · κίνδυνος επιμόλυνσης/doping'}
+];
+function _inlSuppsGroupsHtml(c){
+  if(typeof SUPPS==='undefined') return '';
+  var have=c.supps||[];
+  return INL_SUPP_GROUPS.map(function(g){
+    var items=SUPPS.filter(function(s){return s.cat===g.cat&&INL_SUPP_HIDDEN_IDS.indexOf(s.id)===-1;});
+    if(!items.length) return '';
+    var nSel=items.filter(function(s){return have.indexOf(s.id)>-1;}).length;
+    var rows=items.map(function(s){
+      var sel=have.indexOf(s.id)>-1;
+      var dose=s.dose||((s.timing||[]).filter(function(ti){return ti.d;})[0]||{}).d||'';
+      var times=(s.timing||[]).map(function(ti){return ti.t;}).join(' · ');
+      return '<label style="display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:var(--panel-bg);border-radius:5px;cursor:pointer;border:1.5px solid '+(sel?'#025857':'var(--border-light)')+'">'
+        +'<input type="checkbox" data-supp-id="'+esc(s.id)+'"'+(sel?' checked':'')+' style="width:16px;height:16px;margin-top:2px">'
+        +'<div style="flex:1"><div style="font-weight:600;color:var(--text-strong);font-size:12.5px">'+esc(s.name)+'</div>'
+        +(dose?'<div style="font-size:10.5px;color:#666">📋 '+esc(dose)+'</div>':'')
+        +'<div style="font-size:10.5px;color:var(--text-muted)">⏰ '+esc(times)+'</div></div></label>';
+    }).join('');
+    return '<details'+((g.open||nSel)?' open':'')+' style="margin-top:12px">'
+      +'<summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:#025857;padding:4px 0">'+g.label
+        +(nSel?' <span style="font-weight:600;color:var(--text-muted)">('+nSel+')</span>':'')
+        +(g.hint?' <span style="font-weight:400;font-size:10.5px;color:var(--text-muted)">— '+g.hint+'</span>':'')+'</summary>'
+      +'<div style="display:grid;gap:8px;margin-top:8px">'+rows+'</div></details>';
+  }).join('');
 }
 
 // Faithful copy of savePage1Supplements()'s merge core, scoped to the inline section
@@ -164,6 +202,14 @@ function applySuppsInline(){
   var names=list.map(function(s){return s.name;});
   var keepFromOther=(c.selectedSupplements||[]).filter(function(s){return names.indexOf(s.supplement)===-1;});
   c.selectedSupplements=keepFromOther.concat(picked);
+  // SUPPS catalogue rows → c.supps. Only ids rendered here are touched, so a hidden id the
+  // sport box ticked (e.g. creatine) survives.
+  if(!c.supps) c.supps=[];
+  body.querySelectorAll('input[type="checkbox"][data-supp-id]').forEach(function(cb){
+    var id=cb.getAttribute('data-supp-id'), at=c.supps.indexOf(id);
+    if(cb.checked&&at===-1) c.supps.push(id);
+    else if(!cb.checked&&at>-1) c.supps.splice(at,1);
+  });
   if(typeof save==='function') save();
   if(typeof renderMain==='function') renderMain();
   if(typeof showSuccessToast==='function') showSuccessToast('✓ Συμπληρώματα αποθηκεύτηκαν!');
