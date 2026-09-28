@@ -55,6 +55,8 @@ var MICRONUTRIENTS={
   'Γαρίδες (βραστές)':{Fe:0.5,Zn:1.6,Mg:39,Ca:70,B1:0.03,B2:0.04,B3:2.6,B6:0.16,B12:1.5,Folate:19,Omega3:0.30,Omega6:0.03,Iodine:35,Choline:65,DHA:170},
   // Eggs / Dairy
   'Αυγά (ολόκληρα)':{Fe:1.75,Zn:1.29,Mg:12,Ca:56,B1:0.04,B2:0.457,B3:3.3,B6:0.17,B12:0.89,Folate:47,Omega3:0.036,Omega6:1.53,Iodine:24,Choline:294,DHA:18,VitD:2},
+  // Ca/B12/D2/B6 = εμπλουτισμός Alpro (120mg / 0.38μg / 0.75μg / 0.21mg)· τα υπόλοιπα εκτίμηση βάσει σόγιας
+  'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)':{Fe:0.6,Zn:0.3,Mg:18,Ca:120,B1:0.03,B2:0.03,B3:0.2,B6:0.21,B12:0.38,Folate:10,Omega3:0.15,Omega6:1.1,Iodine:0,Choline:15,DHA:0,VitD:0.75},
   'Γιαούρτι 2%':{Fe:0.04,Zn:0.60,Mg:11,Ca:115,B1:0.044,B2:0.233,B3:0.197,B6:0.055,B12:0.52,Folate:12,Omega3:0.02,Omega6:0.07,Iodine:20,Choline:14,DHA:0},
   'Arla Protein Γιαουρτάκι Σοκολάτα (πουτίγκα)':{Fe:0.10,Zn:0.55,Mg:24,Ca:160,B1:0.04,B2:0.20,B3:0.15,B6:0.05,B12:0.55,Folate:6,Omega3:0.01,Omega6:0.04,Iodine:8,Choline:12,DHA:0},
   'Arla Protein Ρόφημα Σοκολάτα':{Fe:0.05,Zn:0.45,Mg:13,Ca:135,B1:0.04,B2:0.19,B3:0.12,B6:0.04,B12:0.48,Folate:5,Omega3:0.01,Omega6:0.03,Iodine:8,Choline:10,DHA:0},

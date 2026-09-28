@@ -278,5 +278,12 @@ var FOOD_ALIASES={
   'Cream of Rice OstroVit':'Cream of Rice (OstroVit)',
   'Cream of Rice - Natural (OstroVit)':'Cream of Rice (OstroVit)',
   'Κρέμα ρυζιού OstroVit':'Cream of Rice (OstroVit)',
-  'Κρέμα ρυζιού':'Cream of Rice (OstroVit)'
+  'Κρέμα ρυζιού':'Cream of Rice (OstroVit)',
+  // Alpro Natural No Sugars Soya Yogurt — added 2026-09-28
+  'Alpro Natural Unsweetened Soya Yogurt':'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)',
+  'Alpro Natural Unsweetened Soya Yogurt 400 g':'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)',
+  'Alpro Soya Yogurt No Sugars':'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)',
+  'Alpro γιαούρτι σόγιας':'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)',
+  'Γιαούρτι σόγιας Alpro':'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)',
+  'Γιαουρτι σογιας Alpro':'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)'
 };

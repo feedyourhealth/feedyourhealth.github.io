@@ -405,6 +405,8 @@ var FOODS={
 /* ✅ Προστέθηκαν 2026-07-10 — 2 από τα 4 vegan "PickupLimes" υλικά στο FYH_RECIPE_EXPAND που δεν είχαν
    καμία αντιστοίχιση (βλ. FOOD_ALIASES για τα υπόλοιπα, που αντιστοιχήθηκαν σε ήδη υπάρχοντα τρόφιμα) */
 'Nutritional yeast':{k:375,p:50,c:31,f:6,fi:19,cat:'Άλλα',en:'Nutritional Yeast',ru:'Пищевые дрожжи',tr:'Besin Mayası'},
+// ✅ 2026-09-28: Alpro Natural No Sugars Soya Yogurt 400g (Alphamega 896644). Per 100g από ετικέτα: 177kJ/42kcal, 4g πρωτ., 2.3g λιπ. (0.4g κορ.), 0.9g φυτ. ίνες, 0.24g αλάτι. Υδατ. 0g (Alpro «No Sugars» — το site δεν τους δείχνει, ταιριάζει με 4·4+2.3·9+0.9·2≈38.5kcal). Vegan, χωρίς γλουτένη/λακτόζη· εμπλουτισμένο Ca, B12, D2, B6.
+'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)':{k:42,p:4,c:0,f:2.3,fi:0.9,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Alpro Soya Yogurt Plain (no sugars)',ru:'Соевый йогурт Alpro натуральный (без сахара)',tr:'Alpro Sade Soya Yoğurdu (şekersiz)'},
 'Soy yogurt (χωρίς ζάχαρη)':{k:55,p:3.5,c:4,f:2.5,fi:0.5,cat:'Αυγά/Γαλακτ.',plantBased:true,en:'Soy Yogurt (sugar-free)',ru:'Соевый йогурт (без сахара)',tr:'Soya Yoğurdu (şekersiz)'},
 // ✅ Προστέθηκε 2026-08-05 για τα κουπέπια — τιμές αναφοράς τύπου USDA για κονσερβοποιημένα/σε άλμη
 // αμπελόφυλλα (δεν υπήρχε αντίστοιχο προϊόν στη βάση ούτε γενικό alias). Αν έχεις ετικέτα συγκεκριμένου
@@ -629,6 +631,7 @@ var FOOD_PAIRING_EXT={
   // ── ΓΑΛΑΚΤΟΚΟΜΙΚΑ ──
   'Τυρί φέτα':{flavor_profile:['salty','tangy'],best_pairings:['Ντοματες','Αγγούρι','Ελιές','Πιπεριές','Ρίγανη'],avoid_with:['ψάρι'],texture:'crumbly',aromatic_herbs:['ρίγανη','βασιλικό'],category:'protein'},
   'Χαλλούμι (ψητό)':{flavor_profile:['salty','savory'],best_pairings:['Ντοματες','Δυόσμος','Λεμόνι','Πεπόνι','Πιπεριά κόκκινη'],avoid_with:[],texture:'firm',aromatic_herbs:['δυόσμος','ρίγανη'],category:'protein'},
+  'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)':{flavor_profile:['tangy','creamy'],best_pairings:['Μούρα','Βρώμη','Καρύδια','Μπανάνα','Μέλι'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['κανέλα'],category:'protein'},
   'Γιαούρτι 2%':{flavor_profile:['tangy','creamy'],best_pairings:['Μέλι','Μούρα','Βρώμη','Καρύδια','Αγγούρι'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['δυόσμος'],category:'protein'},
   'Cottage cheese':{flavor_profile:['mild','creamy'],best_pairings:['Ντοματες','Αγγούρι','Μούρα','Βρώμη'],avoid_with:[],texture:'creamy',aromatic_herbs:['σχοινόπρασο'],category:'protein'},
   // ── ΥΔΑΤΑΝΘΡΑΚΕΣ ──
