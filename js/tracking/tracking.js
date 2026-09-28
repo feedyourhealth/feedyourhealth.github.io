@@ -433,7 +433,9 @@ function showMealAlternatives(dayIndex, mealIndex){
   var mealName = currentMeal.name || '';
   var currentCalories = 0;
   var currentProtein = 0, currentFat = 0, currentCarbs = 0;
-  var excl = (c.foodExclude || []);
+  // Same full list genPlan() uses (+ «Όχι…» phrases in Προτιμήσεις + medical-protocol avoids),
+  // not just c.foodExclude — otherwise a swap could bring back what the plan itself excluded.
+  var excl = (typeof buildEffectiveExclusionList==='function') ? buildEffectiveExclusionList(c) : (c.foodExclude || []);
   var currentFoodNames = [];
 
   // Calculate current meal macros and remember food names

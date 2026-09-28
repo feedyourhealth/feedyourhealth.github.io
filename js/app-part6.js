@@ -358,6 +358,10 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
   var cats=DIET_TYPE_FORBIDDEN_CATS[dietType];
   if(!cats||!cats.length)return '';
   exceptionDays=exceptionDays||{};
+  var autoN=dietAutoExcludedFoods(dietType).length;
+  var autoNoteHtml='<div style="margin-bottom:12px;padding:8px 10px;background:#E2EEE5;border-radius:6px;font-size:11.5px;color:#025857">'
+    +'🔒 <b>'+esc(DIET_TYPE_LOCK_LBL[dietType]||dietType)+' · '+autoN+' τρόφιμα αποκλείονται αυτόματα</b> ('+esc(cats.join(', '))+')'
+    +' — δεν χρειάζεται να τα επιλέξεις στους αποκλεισμούς. Εφαρμόζονται στο πλάνο και στις εναλλακτικές του λινκ.</div>';
   var feastPresetHtml='';
   if(dietType==='orthodox_fasting'){
     var feastOptions=FASTING_FEAST_PRESETS.map(function(f,i){return '<option value="'+i+'">'+esc(f.name)+'</option>';}).join('');
@@ -392,7 +396,7 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
       }).join('')
       +'</tr>';
   });
-  return '<div style="margin-bottom:20px">'
+  return autoNoteHtml+'<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">📅 Εξαιρέσεις ανά ημέρα:</label>'
     +'<div style="font-size:11px;color:#666;margin-bottom:6px">Τσέκαρε την κατηγορία που επιτρέπεται εκείνη τη μέρα (π.χ. ψάρι σε γιορτή νηστείας) — το πλάνο θα προσπαθήσει να βάλει αντίστοιχο γεύμα αυτόματα εκείνη την ημέρα. Με «Όλες οι μέρες» επιλέγεις μια κατηγορία για όλη την εβδομάδα με ένα κλικ.</div>'
     +feastPresetHtml
@@ -505,7 +509,7 @@ function saveDietSettings(){
   // wipe c.foodExclude — destroying exclusions the user already saved via the picker.
   var pickerBoxes=document.querySelectorAll('[data-food-excl]');
   if(pickerBoxes.length){
-    var selectedExclusions=[];
+    var selectedExclusions=keepUnlistedExclusions(c);
     pickerBoxes.forEach(function(cb){ if(cb.checked) selectedExclusions.push(cb.value); });
     c.foodExclude=selectedExclusions;
   }
@@ -590,6 +594,12 @@ function openFoodPickerModal(){
   }
 
   var hasExceptionTab=!!(DIET_TYPE_FORBIDDEN_CATS[c.dietType]&&DIET_TYPE_FORBIDDEN_CATS[c.dietType].length);
+  // 🔒 Foods the diet type already excludes — read off the (possibly still unsaved) Τύπος διατροφής
+  // select when it's on screen, so picking Χορτοφαγική then opening this shows them locked at once.
+  var dtSel=document.getElementById('dietType-modal');
+  var lockDiet=dtSel?dtSel.value:c.dietType;
+  var lockCats=DIET_TYPE_FORBIDDEN_CATS[lockDiet]||[];
+  var lockLbl=DIET_TYPE_LOCK_LBL[lockDiet]||lockDiet;
 
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002;" id="foodPickerOverlay" onclick="if(event.target===this)closeFoodPickerModal()">'
     +'<div style="background:var(--card-bg);border-radius:12px;padding:20px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
@@ -639,11 +649,23 @@ function openFoodPickerModal(){
   var categories=Object.keys(foodsByCategory).sort();
   var contentHtml='';
   categories.forEach(function(cat){
+    var catLocked=lockCats.indexOf(cat)!==-1;
     contentHtml+='<div style="margin-bottom:20px">'
-      +'<div style="font-weight:700;color:#025857;padding:10px;background:#E2EEE5;border-radius:6px;margin-bottom:10px">📁 '+cat+'</div>'
+      +'<div style="font-weight:700;color:#025857;padding:10px;background:#E2EEE5;border-radius:6px;margin-bottom:10px">📁 '+cat
+      +(catLocked?' <span style="font-weight:600;font-size:11px;color:#666">— 🔒 αποκλείεται αυτόματα ('+esc(lockLbl)+')</span>':'')
+      +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-left:10px">';
 
     foodsByCategory[cat].forEach(function(foodName){
+      if(foodBlockedByDietCats(foodName,lockDiet,lockCats)){
+        // Locked row: no data-food-excl, so it's never written into c.foodExclude (the diet type
+        // enforces it on its own — see dietAutoExcludedFoods).
+        contentHtml+='<label title="Αποκλείεται αυτόματα από τον τύπο διατροφής" style="display:flex;align-items:center;gap:8px;padding:6px;border-radius:4px;opacity:.6;cursor:not-allowed">'
+          +'<input type="checkbox" data-food-locked value="'+esc(foodName)+'" checked disabled style="width:16px;height:16px">'
+          +'<span style="font-size:13px">'+foodName+' <span style="font-size:10px;color:#025857;font-weight:600;white-space:nowrap">🔒 '+esc(lockLbl)+'</span></span>'
+          +'</label>';
+        return;
+      }
       var isSelected=(c.foodExclude||[]).includes(foodName);
       contentHtml+='<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px;border-radius:4px;transition:all 0.2s" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'\'">'
         +'<input type="checkbox" data-food-excl value="'+foodName+'" '+(isSelected?'checked':'')+' style="width:16px;height:16px;cursor:pointer" onchange="updateFoodChips()">'
@@ -678,7 +700,7 @@ function closeFoodPickerModal(){
 }
 
 function filterFoodPicker(query){
-  var checkboxes=document.querySelectorAll('[data-food-excl]');
+  var checkboxes=document.querySelectorAll('[data-food-excl],[data-food-locked]');
   var q=query.toLowerCase();
   checkboxes.forEach(function(cb){
     var label=cb.value.toLowerCase();
@@ -712,10 +734,19 @@ function removeFoodExclusion(foodName){
   updateFoodChips();
 }
 
+// c.foodExclude entries with no tickable checkbox in the picker (a 🔒 diet-locked food the client
+// had also excluded by hand, or a free-text entry not in FOODS) — kept as-is on save, so switching
+// the diet type back to Κανονική later doesn't silently lose a hand-picked exclusion.
+function keepUnlistedExclusions(c){
+  var listed={};
+  document.querySelectorAll('[data-food-excl]').forEach(function(cb){ listed[cb.value]=1; });
+  return (c.foodExclude||[]).filter(function(n){ return !listed[n]; });
+}
+
 function saveFoodExclusions(){
   var c=getC();if(!c)return;
 
-  var selected=[];
+  var selected=keepUnlistedExclusions(c);
   document.querySelectorAll('[data-food-excl]:checked').forEach(function(cb){
     selected.push(cb.value);
   });

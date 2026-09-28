@@ -510,6 +510,23 @@
       if(c.allergies && typeof parseAllergies==='function'){
         parseAllergies(c.allergies).forEach(function(a){ if(altExcl.indexOf(a)===-1)altExcl.push(a); });
       }
+      // Φίλτρο εναλλακτικών = η ΙΔΙΑ πλήρης λίστα που χρησιμοποιεί το genPlan (+ «Όχι…» στις Προτιμήσεις
+      // + ιατρικά πρωτόκολλα). Ξεχωριστή από το altExcl, γιατί εκείνο τροφοδοτεί και τα chips
+      // «Το πλάνο σου, προσαρμοσμένο» — δεν θέλουμε 40 νέα chips από μια φράση «όχι κρέας».
+      var altFilterExcl=altExcl.slice();
+      if(typeof buildEffectiveExclusionList==='function'){
+        buildEffectiveExclusionList(c).forEach(function(x){ if(altFilterExcl.indexOf(x)===-1)altFilterExcl.push(x); });
+      }
+      // + απαγορευμένες κατηγορίες του τύπου διατροφής (ίδιοι κανόνες/εξαιρέσεις ημέρας με το
+      // applyDietTypeCategorySafetyNet) — ώστε ένα πρότυπο με λάθος ετικέτα να μη φτάσει στον πελάτη.
+      var altForbidCats=(typeof DIET_TYPE_FORBIDDEN_CATS!=='undefined'&&DIET_TYPE_FORBIDDEN_CATS[c.dietType])||[];
+      function altBlockedByDiet(foods,d){
+        if(!altForbidCats.length||typeof foodBlockedByDietCats!=='function')return false;
+        var catEx=(c.dietExceptionDays&&(c.dietExceptionDays[d]||c.dietExceptionDays[String(d)]))||[];
+        var foodEx=(c.dietFoodExceptionDays&&(c.dietFoodExceptionDays[d]||c.dietFoodExceptionDays[String(d)]))||[];
+        var dayCats=altForbidCats.filter(function(cat){ return catEx.indexOf(cat)===-1; });
+        return (foods||[]).some(function(f){ return foodEx.indexOf(f.n)===-1 && foodBlockedByDietCats(f.n,c.dietType,dayCats); });
+      }
 
       // #1 — ομαδοποίηση των auto-αποκλεισμένων μιας κατηγορίας (π.χ. "όχι κόκκινο κρέας" → 14 ονόματα)
       // σε ΕΝΑ chip, ώστε η κάρτα «Το πλάνο σου, προσαρμοσμένο» στο plan.html να μη δείχνει 16 κόκκινα
@@ -624,7 +641,9 @@
           var title=foods.map(function(x){return shortName(x.name)+' ('+x.g+' '+gLbl+')';}).slice(0,3).join(', ')+(foods.length>3?'…':'');
           var alternates=[];
           if(typeof findMealAlternates==='function'){
-            findMealAlternates(meal, c.dietType||'normal', c.id, mk, 3, altExcl).forEach(function(a){
+            // Ζητάμε περισσότερες (8) ώστε να μείνουν 3 και αφού κοπούν όσες έχουν απαγορευμένη κατηγορία.
+            findMealAlternates(meal, c.dietType||'normal', c.id, mk, 8, altFilterExcl)
+              .filter(function(a){ return !altBlockedByDiet(a.foods,d); }).slice(0,3).forEach(function(a){
               var af=[], ak=0;
               (a.foods||[]).forEach(function(f){
                 var v=macro(f.n,f.g);

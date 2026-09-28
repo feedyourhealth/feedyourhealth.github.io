@@ -73,7 +73,8 @@ var _INL_DIET_LBL={normal:'Κανονική',vegetarian:'Χορτοφαγική'
 function _inlDietSection(c){
   var dt=c.dietType||'normal';
   var nx=(c.foodExclude||[]).length;
-  var preview=(_INL_DIET_LBL[dt]||dt)+(nx?(' · '+nx+' αποκλεισμ'+(nx===1?'ός':'οί')):'');
+  var nAuto=(typeof dietAutoExcludedFoods==='function')?dietAutoExcludedFoods(dt).length:0;
+  var preview=(_INL_DIET_LBL[dt]||dt)+(nAuto?(' · 🔒 '+nAuto+' αυτόματα'):'')+(nx?(' · '+nx+' αποκλεισμ'+(nx===1?'ός':'οί')):'');
   var opts=_INL_DIET_OPTS.map(function(o){return '<option value="'+o[0]+'"'+(dt===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
   return '<div class="section-card" id="sec-dietsec">'
     +_inlSecHd('dietsec','🥗','Διατροφή &amp; αποφυγές', preview)

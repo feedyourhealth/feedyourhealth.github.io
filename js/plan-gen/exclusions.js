@@ -367,6 +367,26 @@ var DIET_TYPE_FORBIDDEN_CATS={
   // whole week in one click, then untick just the strict ξηροφαγία days).
   'orthodox_fasting':['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Γαλακτοκομικά','Λάδια']
 };
+var DIET_TYPE_LOCK_LBL={vegetarian:'Χορτοφαγική',vegan:'Vegan',orthodox_fasting:'Νηστεία'};
+
+// Is this one food blocked by the diet type (before any per-day exception)? Same rules as
+// applyDietTypeCategorySafetyNet below: forbidden .cat, forbidden containsCats inside a composite
+// dish, or vegan:false for vegans — plantBased items are never blocked.
+function foodBlockedByDietCats(foodName, dietType, forbiddenCats){
+  var fd=FOODS[foodName];
+  if(!fd||fd.plantBased||!forbiddenCats||!forbiddenCats.length)return false;
+  if(forbiddenCats.indexOf(fd.cat)!==-1)return true;
+  if(fd.containsCats&&fd.containsCats.some(function(hc){return forbiddenCats.indexOf(hc)!==-1;}))return true;
+  return dietType==='vegan'&&fd.vegan===false;
+}
+// Every food the diet type excludes automatically (e.g. Χορτοφαγική → all Κρέας + Ψάρια). These
+// never go into c.foodExclude — the diet type itself enforces them (templates + safety net) — so
+// the UI shows them as 🔒 locked instead of ticking them in the picker.
+function dietAutoExcludedFoods(dietType){
+  var cats=DIET_TYPE_FORBIDDEN_CATS[dietType];
+  if(!cats||!cats.length)return [];
+  return Object.keys(FOODS).filter(function(n){return foodBlockedByDietCats(n,dietType,cats);});
+}
 
 // exceptionsByDay: optional {dayIndexString: [category,...]} — categories a specific day is
 // allowed to keep despite dietType's normal ban (e.g. Ψάρια on a fasting feast day). See
