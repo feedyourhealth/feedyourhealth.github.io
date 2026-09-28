@@ -135,35 +135,158 @@ function harvestOwnHistory(c){
 }
 
 // ── MEAL ALTERNATES (client portal swap suggestions) ───────────────────────
-// Given a meal, find up to `count` alternative meals of the same slot+diet
-// from the cross-client taste library, scaled to the meal's own kcal target.
-// `excl` = client's own exclusion/allergy list (lowercased substrings) — a swap
-// suggestion pulled from ANOTHER client's library must never contain something
-// this client avoids or is allergic to, so it's filtered the same way
-// findSavedComboMatch() already filters the main plan generator's candidates.
-function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count, excl){
-  count = count || 3;
-  var mySig = mealSignature(meal.foods);
-  var slot = classifyMealSlot(meal.name);
-  var lib = harvestMealLibrary(excludeClientId);
-  var exclLower = (excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
-  var seen={};
-  var cands = lib.filter(function(x){
-    if(!x.foods || !x.foods.length) return false;
-    var sig = mealSignature(x.foods);
-    if(sig===mySig || seen[sig]) return false;
-    if(x.slot!=='other' && slot!=='other' && x.slot!==slot) return false;
-    if(!comboDietOK(dietType,x.dietType)) return false;
-    if(comboHasExcludedFood(x.foods,exclLower)) return false;
+// Until 2026-09-28 alternates came ONLY from the taste library (⭐ template clients + saved custom
+// templates) of the exact same dietType — so a vegetarian client with no vegetarian template
+// clients got 0-2 alternates, while ~140 built-in vegetarian template meals and 30 tagged recipes
+// sat unused. The pool now pools 5 sources, filtered ONCE per client (buildAlternatesPool), then
+// per meal pickMealAlternates() picks 3 of the right slot with DIFFERENT main protein sources.
+
+// Main protein source of a meal = the food contributing the most protein, bucketed. Composite
+// dishes ('Συνταγές…') fall back to their first containsCats entry.
+function mealProteinGroup(foods){
+  var best=null, bestP=-1;
+  (foods||[]).forEach(function(f){
+    var v=cm(f.n,f.g); if(v.p>bestP){bestP=v.p;best=f.n;}
+  });
+  var fd=best&&FOODS[best]; if(!fd)return 'other';
+  var cat=fd.cat;
+  if((cat==='Συνταγές'||cat==='Συνταγές FYH')&&fd.containsCats&&fd.containsCats.length)cat=fd.containsCats[0];
+  if(cat==='Κρέας')return 'meat';
+  if(cat==='Ψάρια')return 'fish';
+  if(cat==='Όσπρια')return 'legume';
+  if(cat==='Αυγά/Γαλακτ.'||cat==='Γαλακτοκομικά')return /αυγ|ασπραδ/.test(normalizeGreekText(best))?'egg':'dairy';
+  if(fd.plantBased)return 'plant';
+  return 'other';
+}
+
+// Built-in TMPLS keys that fit a diet type (keto templates are historically 'ketogenic_*', same
+// mapping genPlan uses). Plain diets draw from the generic goal/kcal/mediterranean templates.
+function _altTemplateKeys(dietType){
+  if(typeof TMPLS==='undefined')return [];
+  var keys=Object.keys(TMPLS);
+  if(!dietType||dietType==='normal'||dietType==='bodybuilding_clean'){
+    return keys.filter(function(k){ return ['loss','mild','maintain','gain','mediterranean'].indexOf(k)!==-1 || /^kcal\d+$/.test(k); });
+  }
+  var prefix=({keto:'ketogenic'})[dietType]||dietType;
+  return keys.filter(function(k){ return k===dietType || k===prefix || k.indexOf(prefix+'_')===0; });
+}
+
+// Recipe mealTimes category → slot. Untagged MAIN recipes count as lunch/dinner only (a salmon-rice
+// dish is a fine lunch swap, not a breakfast one); SNACK_RECIPES are always snacks.
+var _ALT_MT_SLOT={'Πρωινά':'breakfast','Ενδιάμεσα':'snack','Μεσημεριανά':'lunch','Βραδινά':'dinner'};
+function _altRecipeSlots(r, isSnackDB){
+  if(isSnackDB)return ['snack'];
+  var mt=(typeof getRecipeMealTimes==='function')?getRecipeMealTimes(r):(r.mealTimes||[]);
+  var s=(mt||[]).map(function(x){return _ALT_MT_SLOT[x];}).filter(Boolean);
+  if(s.length)return s;
+  // Untagged but obviously a breakfast dish (e.g. "Oatmeal με Protein Powder", "Protein Pancakes")
+  var txt=normalizeGreekText((r.name||'')+' '+(r.foods||[]).map(function(f){return f.n;}).join(' '));
+  if(/βρωμη|pancake|oatmeal|γκρανολα|granola|δημητριακα πρωινου|πρωιν/.test(txt))return ['breakfast'];
+  return ['lunch','dinner'];
+}
+
+// One-time, per-client candidate pool. `excl` = the client's FULL exclusion list
+// (buildEffectiveExclusionList). Each entry: {foods,kcal,sig,slots,group,src,trust}.
+function buildAlternatesPool(c, excl){
+  var dt=(c&&c.dietType)||'normal';
+  var exclLower=(excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+  var disliked=(c&&c.dislikedRecipeIds)||[];
+  var pool=[], seen={};
+  function add(foods, slots, src, id){
+    if(!foods||!foods.length)return;
+    var sig=mealSignature(foods);
+    if(!sig||seen[sig])return;
+    if(disliked.indexOf(sig)!==-1||(id&&disliked.indexOf(id)!==-1))return;   // 👎 by this client
+    if(comboHasExcludedFood(foods,exclLower))return;
+    var kcal=calculateMealKcal(foods);
+    if(kcal<50)return;
     seen[sig]=true;
+    pool.push({foods:foods, kcal:kcal, sig:sig, slots:slots, src:src,
+      group:mealProteinGroup(foods),
+      trust:(typeof getRecipeTrustScore==='function')?getRecipeTrustScore(id||sig):0.5});
+  }
+  function slotOf(name){ var s=classifyMealSlot(name); return s==='other'?['breakfast','snack','lunch','dinner']:[s]; }
+
+  // 1. This client's own well-followed past meals (harvestOwnHistory's ≥60%-completed rule) —
+  //    added FIRST so a meal they already know wins the dedup + gets the 'own' ranking bonus.
+  if(c) harvestOwnHistory(c).forEach(function(x){ if(comboDietOK(dt,x.dietType)) add(x.foods, slotOf(x.name), 'own', x.id); });
+  // 2. ⭐ template clients + saved custom templates (the previous, only, source)
+  harvestMealLibrary(c&&c.id).forEach(function(x){ if(comboDietOK(dt,x.dietType)) add(x.foods, slotOf(x.name), 'library', x.id); });
+  // 3. Saved combos (shared list)
+  if(typeof getSavedCombos==='function') (getSavedCombos()||[]).forEach(function(x){
+    if(!x||!comboDietOK(dt,x.dietType))return;
+    add(x.foods, (x.slot&&x.slot!=='other')?[x.slot]:slotOf(x.name||''), 'combo', x.id);
+  });
+  // 4. Built-in templates of this diet type
+  _altTemplateKeys(dt).forEach(function(k){
+    (TMPLS[k]||[]).forEach(function(day){ (day||[]).forEach(function(m){ if(m) add(m.foods, slotOf(m.name), 'template', null); }); });
+  });
+  // 5. Recipe library (static + the dietitian's custom recipes), same diet-tag rules as findBestRecipe
+  var tags=RECIPE_DIET_TAGS[dt]||(dt==='mediterranean'?['Mediterranean','Ελληνικό']:null);   // null = any
+  function recipeOK(r, isSnackDB){
+    if(!r||!r.foods)return false;
+    var rt=r.tags||[];
+    if(dt==='keto'){ if(!(rt.indexOf('Keto')!==-1||rt.indexOf('LowCarb')!==-1||(r.macro&&r.macro.c<=10)))return false; }
+    else if(!isSnackDB && tags && dt!=='normal' && !tags.some(function(t){return rt.indexOf(t)!==-1;}))return false;
     return true;
+  }
+  (typeof MEAL_RECIPES!=='undefined'?MEAL_RECIPES:[]).forEach(function(r){ if(recipeOK(r,false)) add(r.foods,_altRecipeSlots(r,false),'recipe',r.id); });
+  (typeof SNACK_RECIPES!=='undefined'?SNACK_RECIPES:[]).forEach(function(r){ if(recipeOK(r,true)) add(r.foods,['snack'],'recipe',r.id); });
+  ((typeof customRecipesForGeneration==='function')?customRecipesForGeneration():[]).forEach(function(r){ if(recipeOK(r,false)) add(r.foods,_altRecipeSlots(r,false),'recipe',r.id); });
+  return pool;
+}
+
+// Pick up to `count` alternates for one meal from a pool built above. `isBlocked(foods)` = extra
+// per-day veto (diet-type forbidden categories honouring that day's exceptions); defaults to the
+// plain diet-type rule. Ranking: calorie closeness, −bonus for the client's own proven meals and
+// for trusted (👍 / rarely-regenerated) meals; then greedy pick so each alternate has a DIFFERENT
+// main protein (e.g. όσπρια / αυγό / γαλακτοκομικό) instead of 3 variants of one dish.
+function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
+  count=count||3;
+  var dt=(c&&c.dietType)||'normal';
+  var slot=classifyMealSlot(meal.name);
+  var mySig=mealSignature(meal.foods);
+  if(!isBlocked){
+    var cats=(typeof DIET_TYPE_FORBIDDEN_CATS!=='undefined'&&DIET_TYPE_FORBIDDEN_CATS[dt])||[];
+    isBlocked=function(foods){ return cats.length&&foods.some(function(f){return foodBlockedByDietCats(f.n,dt,cats);}); };
+  }
+  var tk=targetKcal||1;
+  var cands=pool.filter(function(x){
+    if(x.sig===mySig)return false;
+    if(slot!=='other' && x.slots.indexOf(slot)===-1)return false;
+    // Ολόκληρο πιάτο κρέατος/ψαριού δεν είναι «Ενδιάμεσο» (ίδιος κανόνας με findBestRecipe/findSavedComboMatch)
+    if(slot==='snack' && dt!=='bodybuilding_clean' && (x.group==='meat'||x.group==='fish'))return false;
+    // Βρώμη ΜΟΝΟ σε πρωινό — ίδιος κανόνας με removeOatsFromMainMeals (plan-transform.js)
+    if((slot==='lunch'||slot==='dinner') && x.foods.some(function(f){return (f.n||'').toLowerCase().indexOf('βρώμη')!==-1;}))return false;
+    return !isBlocked(x.foods);
   });
-  cands.sort(function(a,b){ return Math.abs(a.kcal-targetKcal) - Math.abs(b.kcal-targetKcal); });
-  cands = cands.slice(0,count);
-  return cands.map(function(x){
-    var scaled = scalePlan([{name:x.name,foods:x.foods}], null, [{k:targetKcal}])[0];
-    return {name:x.name, foods:scaled.foods};
+  function score(x){
+    var s=Math.abs(x.kcal-tk)/tk;
+    if(x.kcal<tk*0.5||x.kcal>tk*1.8)s+=1;            // would need extreme rescaling — last resort only
+    if(x.src==='own')s-=0.15;
+    s-=((x.trust||0.5)-0.5)*0.2;
+    return s;
+  }
+  cands.forEach(function(x){x._s=score(x);});
+  cands.sort(function(a,b){return a._s-b._s;});
+  var picked=[], used={}, curGroup=mealProteinGroup(meal.foods);
+  function take(x){ picked.push(x); used[x.group]=true; }
+  // 1) new protein group, also different from the current meal's · 2) new group among the picks ·
+  // 3) best remaining, whatever the group (so we still reach `count` when the pool is narrow)
+  cands.forEach(function(x){ if(picked.length<count && !used[x.group] && x.group!==curGroup) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && !used[x.group] && picked.indexOf(x)===-1) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && picked.indexOf(x)===-1) take(x); });
+  return picked.map(function(x){
+    var scaled=scalePlan([{name:meal.name,foods:deepClone(x.foods)}], null, [{k:targetKcal}])[0];
+    return {name:meal.name, foods:scaled.foods, src:x.src};
   });
+}
+
+// Backward-compatible one-shot wrapper (builds the pool each call — prefer buildAlternatesPool +
+// pickMealAlternates when doing a whole week, as _buildSnapshot does).
+function findMealAlternates(meal, dietType, excludeClientId, targetKcal, count, excl){
+  var c={id:excludeClientId, dietType:dietType};
+  return pickMealAlternates(buildAlternatesPool(c, excl), meal, c, targetKcal, count);
 }
 
 // Find the best matching saved combo / library meal for a target.

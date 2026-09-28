@@ -527,6 +527,9 @@
         var dayCats=altForbidCats.filter(function(cat){ return catEx.indexOf(cat)===-1; });
         return (foods||[]).some(function(f){ return foodEx.indexOf(f.n)===-1 && foodBlockedByDietCats(f.n,c.dietType,dayCats); });
       }
+      // Δεξαμενή εναλλακτικών — χτίζεται ΜΙΑ φορά για όλη την εβδομάδα (βλ. buildAlternatesPool).
+      var altPool=null;
+      if(typeof buildAlternatesPool==='function'){ try{ altPool=buildAlternatesPool(c, altFilterExcl); }catch(e){ console.error('[snapshot] alternates pool failed:',e); } }
 
       // #1 — ομαδοποίηση των auto-αποκλεισμένων μιας κατηγορίας (π.χ. "όχι κόκκινο κρέας" → 14 ονόματα)
       // σε ΕΝΑ chip, ώστε η κάρτα «Το πλάνο σου, προσαρμοσμένο» στο plan.html να μη δείχνει 16 κόκκινα
@@ -640,10 +643,8 @@
           // εμφάνισης π.χ. "τεμ."), γι' αυτό x.g εδώ και όχι x.qty.
           var title=foods.map(function(x){return shortName(x.name)+' ('+x.g+' '+gLbl+')';}).slice(0,3).join(', ')+(foods.length>3?'…':'');
           var alternates=[];
-          if(typeof findMealAlternates==='function'){
-            // Ζητάμε περισσότερες (8) ώστε να μείνουν 3 και αφού κοπούν όσες έχουν απαγορευμένη κατηγορία.
-            findMealAlternates(meal, c.dietType||'normal', c.id, mk, 8, altFilterExcl)
-              .filter(function(a){ return !altBlockedByDiet(a.foods,d); }).slice(0,3).forEach(function(a){
+          if(altPool){
+            pickMealAlternates(altPool, meal, c, mk, 3, function(foods){ return altBlockedByDiet(foods,d); }).forEach(function(a){
               var af=[], ak=0;
               (a.foods||[]).forEach(function(f){
                 var v=macro(f.n,f.g);

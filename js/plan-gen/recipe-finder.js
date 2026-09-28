@@ -48,6 +48,18 @@ function getRecipeTrustScore(recipeId){
   return calculateTrustScore(entry);
 }
 
+// Diet type → recipe tags that make a MAIN-meal recipe eligible (snacks are untagged/universal).
+// Shared by findBestRecipe below and buildAlternatesPool (meal-library.js).
+var RECIPE_DIET_TAGS={
+  'normal':['Mediterranean','Ελληνικό','Ψάρι','Κρέας'],
+  'vegan':['Vegan'],
+  'vegetarian':['Vegetarian'],
+  'keto':['Keto','LowCarb'],
+  'orthodox_fasting':['Vegan'],
+  'intermittent_fasting':['Mediterranean'],
+  'bodybuilding_clean':['bodybuilding_clean','high_protein','lean_meat']
+};
+
 // ── Chef-Inspired Recipe Selection ────────────────────────────────────────────
 // Finds the best pre-defined recipe for a meal based on diet type and calories
 function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros, dislikedIds){
@@ -71,15 +83,7 @@ function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros, disl
 
   // For snacks, we don't filter by diet type - snacks are universal
   // For main meals, filter recipes by diet type (look for matching tags)
-  var dietTagMap={
-    'normal':['Mediterranean','Ελληνικό','Ψάρι','Κρέας'],
-    'vegan':['Vegan'],
-    'vegetarian':['Vegetarian'],
-    'keto':['Keto','LowCarb'],
-    'orthodox_fasting':['Vegan'],
-    'intermittent_fasting':['Mediterranean'],
-    'bodybuilding_clean':['bodybuilding_clean','high_protein','lean_meat']
-  };
+  var dietTagMap=RECIPE_DIET_TAGS;
 
   var dietTags = isSnack ? [] : (dietTagMap[dietType]||[]);
 
