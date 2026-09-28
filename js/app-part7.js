@@ -628,6 +628,9 @@
         // by-name, οπότε όλα έπαιρναν την ίδια ώρα (c.mealTimes.snack) στο client link, ενώ το modal
         // «Ώρες Γευμάτων» έχει ξεχωριστά πεδία snack/snack2/snack3. snackSeen μετράει πόσα 'Ενδιάμεσο'/
         // 'Δεκατιανό' έχουμε ήδη περάσει μέσα στην ίδια μέρα ώστε το καθένα να πάρει τη σωστή ώρα.
+        // Όσπρια χωρίς "(βρ.)" στο όνομα (LEGUME_FOODS_LST): οι τιμές τους είναι για βρασμένα, οπότε
+        // το plan.html δείχνει «βρασμένο βάρος» δίπλα στην ποσότητα — αλλιώς ο πελάτης ζυγίζει ξερά (~2,3×).
+        function ckFood(o,n){ if(typeof LEGUME_FOODS_LST!=='undefined'&&LEGUME_FOODS_LST.indexOf(n)>=0)o.ck=1; return o; }
         var snackSeen=0;
         dm.forEach(function(meal){
           var foods=[], mk=0,mp=0,mc=0,mf=0,mfi=0;
@@ -635,7 +638,7 @@
             var v=macro(f.n,f.g);
             mk+=v.k; mp+=v.p; mc+=v.c; mf+=v.f; mfi+=(v.fi||0);
             var q=fmtQ(f);
-            foods.push({name:fName(f.n), qty:q.main, sub:q.sub||'', g:Math.round(f.g)});
+            foods.push(ckFood({name:fName(f.n), qty:q.main, sub:q.sub||'', g:Math.round(f.g)},f.n));
           });
           dayK+=mk; dP+=mp; dC+=mc; dF+=mf; dFi+=mfi;
           // Ε14: δίπλα σε κάθε τρόφιμο στην κάρτα "Η διατροφή μου σήμερα" της Αρχικής, ώστε ο πελάτης
@@ -650,7 +653,7 @@
                 var v=macro(f.n,f.g);
                 ak+=v.k;
                 var q=fmtQ(f);
-                af.push({name:shortName(fName(f.n)), qty:q.main, sub:q.sub||''});
+                af.push(ckFood({name:shortName(fName(f.n)), qty:q.main, sub:q.sub||''},f.n));
               });
               var altTitle=af.map(function(x){return x.name;}).slice(0,3).join(', ')+(af.length>3?'…':'');
               alternates.push({name:altTitle, kcal:Math.round(ak), foods:af});

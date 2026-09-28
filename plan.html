@@ -559,7 +559,7 @@ const I18N={
     statGoal:'Στόχος', statProtein:'Πρωτεΐνη', statCarbs:'Υδατ/κες', statFat:'Λιπαρά', statOf:'από {t}',
     coachNoteHdr:'Μήνυμα από τη διαιτολόγο σου',
     todayMealsHdr:'Η διατροφή μου σήμερα', matchBadge:'Αγώνας', tapMealHint:'Πάτα ένα γεύμα όταν το ολοκληρώσεις.',
-    noMealsToday:'Δεν υπάρχει πλάνο για σήμερα.', mealFallback:'Γεύμα', beforeMatch:'πριν τον αγώνα', afterMatch:'μετά τον αγώνα',
+    noMealsToday:'Δεν υπάρχει πλάνο για σήμερα.', mealFallback:'Γεύμα', cookedW:'βρασμένο βάρος', beforeMatch:'πριν τον αγώνα', afterMatch:'μετά τον αγώνα',
     quickShop:'Λίστα ψώνια', quickSupps:'Συμπληρώματα', quickSpices:'Μπαχαρικά & βότανα', quickSpicesSub:'Οδηγός χρήσης',
     quickFruits:'Φρούτα', quickFruitsSub:'Λίστα ανταλλαγής', suppsNone:'—', suppsProgress:'{d} από {t} σήμερα', shopProgress:'{d} από {t} ✓',
     exclHdr:'Το πλάνο σου, προσαρμοσμένο',
@@ -669,7 +669,7 @@ const I18N={
     statGoal:'Target', statProtein:'Protein', statCarbs:'Carbs', statFat:'Fat', statOf:'of {t}',
     coachNoteHdr:'A note from your dietitian',
     todayMealsHdr:'My meals today', matchBadge:'Match', tapMealHint:'Tap a meal once you finish it.',
-    noMealsToday:'No plan for today.', mealFallback:'Meal', beforeMatch:'before the match', afterMatch:'after the match',
+    noMealsToday:'No plan for today.', mealFallback:'Meal', cookedW:'cooked weight', beforeMatch:'before the match', afterMatch:'after the match',
     quickShop:'Shopping list', quickSupps:'Supplements', quickSpices:'Spices & herbs', quickSpicesSub:'Usage guide',
     quickFruits:'Fruits', quickFruitsSub:'Exchange list', suppsNone:'—', suppsProgress:'{d} of {t} today', shopProgress:'{d} of {t} ✓',
     exclHdr:'Your plan, adjusted',
@@ -779,7 +779,7 @@ const I18N={
     statGoal:'Цель', statProtein:'Белки', statCarbs:'Углеводы', statFat:'Жиры', statOf:'из {t}',
     coachNoteHdr:'Сообщение от вашего диетолога',
     todayMealsHdr:'Мой рацион сегодня', matchBadge:'Матч', tapMealHint:'Нажмите на приём пищи, когда закончите его.',
-    noMealsToday:'На сегодня плана нет.', mealFallback:'Приём пищи', beforeMatch:'перед матчем', afterMatch:'после матча',
+    noMealsToday:'На сегодня плана нет.', mealFallback:'Приём пищи', cookedW:'вес в варёном виде', beforeMatch:'перед матчем', afterMatch:'после матча',
     quickShop:'Список покупок', quickSupps:'Добавки', quickSpices:'Специи и травы', quickSpicesSub:'Руководство по применению',
     quickFruits:'Фрукты', quickFruitsSub:'Список замены', suppsNone:'—', suppsProgress:'{d} из {t} сегодня', shopProgress:'{d} из {t} ✓',
     exclHdr:'Ваш план — с поправками',
@@ -889,7 +889,7 @@ const I18N={
     statGoal:'Hedef', statProtein:'Protein', statCarbs:'Karbonhidrat', statFat:'Yağ', statOf:'{t} içinden',
     coachNoteHdr:'Diyetisyeninizden bir not',
     todayMealsHdr:'Bugünkü beslenmem', matchBadge:'Maç', tapMealHint:'Bir öğünü bitirdiğinde üzerine dokun.',
-    noMealsToday:'Bugün için plan yok.', mealFallback:'Öğün', beforeMatch:'maçtan önce', afterMatch:'maçtan sonra',
+    noMealsToday:'Bugün için plan yok.', mealFallback:'Öğün', cookedW:'haşlanmış ağırlık', beforeMatch:'maçtan önce', afterMatch:'maçtan sonra',
     quickShop:'Alışveriş listesi', quickSupps:'Takviyeler', quickSpices:'Baharat ve otlar', quickSpicesSub:'Kullanım rehberi',
     quickFruits:'Meyveler', quickFruitsSub:'Değişim listesi', suppsNone:'—', suppsProgress:'bugün {t} içinden {d}', shopProgress:'{t} içinden {d} ✓',
     exclHdr:'Planın, sana göre uyarlandı',
@@ -2314,7 +2314,7 @@ function viewPlan(){
         body.appendChild(dl);
       }
       (m.foods||[]).forEach(f=>{
-        body.appendChild(el('div','food','<span>'+esc(f.name)+'</span><span class="q">'+esc(f.qty)+(f.sub?' <span style="color:var(--faint);font-weight:400;font-size:11px">'+esc(f.sub)+'</span>':'')+'</span>'));
+        body.appendChild(el('div','food','<span>'+esc(f.name)+'</span><span class="q">'+esc(f.qty)+(f.sub?' <span style="color:var(--faint);font-weight:400;font-size:11px">'+esc(f.sub)+'</span>':'')+(f.ck?' <span style="color:var(--faint);font-weight:400;font-size:11px">('+esc(T('cookedW'))+')</span>':'')+'</span>'));
       });
       if(m.macros){
         const mc=el('div',null);
@@ -2328,7 +2328,7 @@ function viewPlan(){
         const list=el('div','swap-list');
         m.alternates.forEach(a=>{
           const item=el('div','swap-item');
-          const foodsStr=(a.foods||[]).map(f=>f.name+' '+f.qty).join(', ');
+          const foodsStr=(a.foods||[]).map(f=>f.name+' '+f.qty+(f.ck?' ('+T('cookedW')+')':'')).join(', ');
           item.innerHTML='<span class="nm">'+esc(a.name||'')+'</span><span class="fd">'+esc(foodsStr)+'</span>';
           list.appendChild(item);
         });
@@ -2389,7 +2389,7 @@ function buildPrintHTML(){
       if(meal && meal.foods && meal.foods.length){
         if(meal.dishLabel)cell+='<div class="pfr" style="font-weight:700;color:#025857">🍽️ '+esc(meal.dishLabel)+'</div>';
         meal.foods.forEach(f=>{
-          cell+='<div class="pfr"><span class="pfn">'+esc(f.name)+'</span> <span class="pfg">'+esc(f.qty||'')+'</span>'+(f.sub?' <span class="pfh">'+esc(f.sub)+'</span>':'')+'</div>';
+          cell+='<div class="pfr"><span class="pfn">'+esc(f.name)+'</span> <span class="pfg">'+esc(f.qty||'')+'</span>'+(f.sub?' <span class="pfh">'+esc(f.sub)+'</span>':'')+(f.ck?' <span class="pfh">('+esc(T('cookedW'))+')</span>':'')+'</div>';
         });
         if(meal.kcal)cell+='<div class="pmk">'+nfmt(meal.kcal)+' kcal</div>';
       } else { cell='&nbsp;'; }
