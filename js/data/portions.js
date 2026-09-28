@@ -41,7 +41,7 @@ var QUICK_EXCL={
   // a dietitian clicking this one button to exclude dairy would have unknowingly also excluded the
   // almond/soy/oat milk alternatives their client might actually want. Same root confusion already
   // fixed for the lactose-intolerance protocol's own avoidFoods list (see MEDICAL_PROTOCOLS.lactose).
-  '🥛 Γαλακτοκομικά':['Γιαούρτι 2%','Cottage cheese','Cream cheese','Τυρί φέτα','Μοτσαρέλα','Γάλα πλήρες','Πρωτεΐνη σκόνη (whey)','Στραγγιστό γιαούρτι 0%','Γιαούρτι πλήρες 5%','Ανθότυρο','Μυζήθρα','Γάλα φρέσκο 1.5% Λιπαρά','Γραβιέρα','Κασέρι','Κεφαλοτύρι','Παρμεζάνα','Quark (0%)','Ricotta','Edam light','Σαγανάκι (τηγανητό)'],
+  '🥛 Γαλακτοκομικά':['Γιαούρτι 2%','Cottage cheese','Cream cheese','Τυρί φέτα','Μοτσαρέλα','Γάλα πλήρες','Πρωτεΐνη σκόνη (whey)','Στραγγιστό γιαούρτι 0%','Γιαούρτι πλήρες 5%','Ανθότυρο','Μυζήθρα','Γάλα φρέσκο 1.5% Λιπαρά','Γραβιέρα','Κασέρι','Κεφαλοτύρι','Παρμεζάνα','Quark (0%)','Ricotta','Edam light','Σαγανάκι (τηγανητό)','PhD Smart Bar Σοκολάτα Brownie','PhD Smart Bar Φράουλα & Κρέμα','PhD Smart Bar Μαύρη Σοκολάτα Μόκα','PhD Smart Bar Μαύρη Σοκολάτα & Βατόμουρο','PhD Smart Bar Σοκολάτα Φυστικοβούτυρο','PhD Smart Bar Σοκολάτα Γάλακτος Φουντούκι','PhD Smart Bar Λευκή Σοκολάτα Blondie','PhD Smart Bar Cookies & Cream','PhD Smart Bar Birthday Cake','PhD Smart Bar Μαύρη Σοκολάτα Matcha'],
   // ✅ 2026-08-01: added 'Βρώμη (ωμή)' — plain/non-certified oats are botanically gluten-free but
   // carry a real cross-contamination risk (Celiac Disease Foundation, the celiac protocol's own
   // cited source, explicitly warns regular oats need a "certified gluten-free" label). Confirmed
@@ -51,7 +51,7 @@ var QUICK_EXCL={
   '🐟 Ψάρια/Θαλ.':['Σολομός (ψητός)','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Γαρίδες (βραστές)','Σαρδέλες','Τσιπούρα (ψητή)','Μπακαλιάρος (ψητός)','Σκουμπρί (ψητό)','Χταπόδι (βρ.)','Καλαμάρι (ψητό)','Μύδια (βρ.)','Γαρίδες γίγαντες (βρ.)','Καβούρι (βρ.)','Καλαμαράκια (ψητά)','Σούπιες (βρ.)','Φιδάκι (ψητό)','Κοκκινόψαρο (ψητό)'],
   '🫘 Όσπρια':['Φασόλια','Ρεβίθια','Φακές','Μαυρομάτικα','Φάβα','Γίγαντες (βρ.)','Κουκιά (βρ.)','Αρακάς (βρ.)','Φακές κόκκινες (βρ.)','Λούπινα (βρ.)','Κανελλίνι (βρ.)','Φασόλια μπορλότι (βρ.)','Tofu (φυσικό)','Edamame (βρ.)','Beyond Beef (φυτικός κιμάς)','Ultra Bar Φράουλα & Τζίντζερ (CrudeSnacks)','Ultra Bar Σοκολάτα (CrudeSnacks)'],
   '🥚 Αυγά':['Αυγά (ολόκληρα)','Ασπράδια αυγών'],
-  '🌰 Ξηροί καρποί':['Αμύγδαλα','Καρύδια','Φυστικοβούτυρο','Κάσιους','Ταχίνι','Chia seeds','Αβοκάντο','Ultra Bar Φράουλα & Τζίντζερ (CrudeSnacks)','Ultra Bar Σοκολάτα (CrudeSnacks)','Hungry Not Protein Bar Πραλίνα Φουντουκιού']
+  '🌰 Ξηροί καρποί':['Αμύγδαλα','Καρύδια','Φυστικοβούτυρο','Κάσιους','Ταχίνι','Chia seeds','Αβοκάντο','Ultra Bar Φράουλα & Τζίντζερ (CrudeSnacks)','Ultra Bar Σοκολάτα (CrudeSnacks)','Hungry Not Protein Bar Πραλίνα Φουντουκιού','PhD Smart Bar Σοκολάτα Φυστικοβούτυρο','PhD Smart Bar Σοκολάτα Γάλακτος Φουντούκι']
 };
 var SUBST_ORDER={
   'Κρέας':       ['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Όσπρια'],
@@ -233,6 +233,18 @@ var FOOD_UNITS={
   'Ultra Bar Φράουλα & Τζίντζερ (CrudeSnacks)':{g:68,u:'τεμ.'},
   'Ultra Bar Σοκολάτα (CrudeSnacks)':{g:68,u:'τεμ.'},
   'Hungry Not Protein Bar Πραλίνα Φουντουκιού':{g:50,u:'μπάρα'},
+  'PhD Smart Bar Σοκολάτα Brownie':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Φράουλα & Κρέμα':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Μαύρη Σοκολάτα Μόκα':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Μαύρη Σοκολάτα & Βατόμουρο':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Σοκολάτα Φυστικοβούτυρο':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Σοκολάτα Γάλακτος Φουντούκι':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Λευκή Σοκολάτα Blondie':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Cookies & Cream':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Birthday Cake':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Μαύρη Σοκολάτα Matcha':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Plant Αλατισμένη Καραμέλα':{g:64,u:'μπάρα'},
+  'PhD Smart Bar Plant Βανίλια Fudge':{g:64,u:'μπάρα'},
   'Σάλτσα Ντομάτας (FYH)':{g:15,u:'κ.σ.'},
   // Petretzeakis Breakfast Recipes
   'Breakfast Burrito (Πετρετζίκης)':{g:420,u:'μερίδ.'},
@@ -541,6 +553,18 @@ var PORTIONS={
 'Ultra Bar Σοκολάτα (CrudeSnacks)':[{n:'1 μπάρα',g:68},{n:'2 μπάρες',g:136}],
 'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα':[{n:'1 μπάρα',g:47},{n:'2 μπάρες',g:94}],
 'Hungry Not Protein Bar Πραλίνα Φουντουκιού':[{n:'1 μπάρα',g:50},{n:'2 μπάρες',g:100}],
+'PhD Smart Bar Σοκολάτα Brownie':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Φράουλα & Κρέμα':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Μαύρη Σοκολάτα Μόκα':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Μαύρη Σοκολάτα & Βατόμουρο':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Σοκολάτα Φυστικοβούτυρο':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Σοκολάτα Γάλακτος Φουντούκι':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Λευκή Σοκολάτα Blondie':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Cookies & Cream':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Birthday Cake':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Μαύρη Σοκολάτα Matcha':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Plant Αλατισμένη Καραμέλα':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
+'PhD Smart Bar Plant Βανίλια Fudge':[{n:'½ μπάρα',g:32},{n:'1 μπάρα',g:64},{n:'2 μπάρες',g:128}],
 'Σάλτσα Ντομάτας (FYH)':[{n:'1 κ.σ.',g:15},{n:'2 κ.σ.',g:30},{n:'50ml',g:50},{n:'100ml',g:100}],
 // ════ UNIVERSAL PORTIONS EXPANSION — All remaining foods ════
 // Μπριζόλες / Steaks
