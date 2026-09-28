@@ -127,6 +127,8 @@ var MET_ACTIVITIES=[
   {cat:'🎾 Ρακέτα / Αντισφαίριση',items:[
     {id:'tennis_singles',name:'Τένις singles',met:8.0},
     {id:'tennis_doubles',name:'Τένις doubles',met:6.0},
+    {id:'padel_rec',name:'Padel ερασιτεχνικό',met:6.0},
+    {id:'padel_comp',name:'Padel αγωνιστικό',met:8.0},
     {id:'squash_gen',name:'Squash γενικό',met:7.3},
     {id:'squash_comp',name:'Squash αγωνιστικό',met:12.0},
     {id:'badminton_comp',name:'Badminton αγωνιστικό',met:7.0},
