@@ -339,8 +339,11 @@ function showPortionAdjustToast(o){
     +'background:#025857;color:#fff;padding:10px 10px 10px 16px;border-radius:8px;font-size:12px;z-index:10000;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:flex-start;gap:12px;max-height:70vh;overflow:auto';
   // flex/width ρητά στα κουμπιά: γενικό στυλ button του app τα τέντωνε σε όλο το πλάτος.
   t.innerHTML='<div style="flex:1 1 auto;min-width:0">'+esc(head)+warn+sug+'</div>'
-    +(o.oldPlan?'<button data-end="1" style="flex:0 0 auto;width:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">↩ Αναίρεση</button>'
-               :'<button data-end="1" aria-label="Κλείσιμο" style="flex:0 0 auto;width:auto;background:none;border:0;color:#fff;font-size:16px;cursor:pointer;line-height:1">×</button>');
+    +'<div style="flex:0 0 auto;display:flex;align-items:flex-start;gap:6px">'
+    +(o.oldPlan?'<button data-undo="1" style="flex:0 0 auto;width:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">↩ Αναίρεση</button>':'')
+    // «×» πάντα διαθέσιμο: κλείνει το μήνυμα ΧΩΡΙΣ να αναιρέσει τίποτα.
+    +'<button data-close="1" aria-label="Κλείσιμο" title="Κλείσιμο" style="flex:0 0 auto;width:auto;background:none;border:0;color:#fff;font-size:18px;cursor:pointer;line-height:1;padding:2px 4px">×</button>'
+    +'</div>';
   document.body.appendChild(t);
   var life=sugg.length?25000:misses.length?15000:7000,timer=setTimeout(function(){t.remove();},life);
   // Όσο ο κέρσορας είναι πάνω στο μήνυμα δεν κλείνει — χρόνος να διαβαστούν οι προτάσεις.
@@ -349,9 +352,10 @@ function showPortionAdjustToast(o){
   t.querySelectorAll('button[data-sug]').forEach(function(b){
     b.onclick=function(){clearTimeout(timer);t.remove();applyPortionSuggestion(sugg[+b.getAttribute('data-sug')]);};
   });
-  t.querySelector('button[data-end]').onclick=function(){
+  t.querySelector('button[data-close]').onclick=function(){clearTimeout(timer);t.remove();};
+  var undoBtn=t.querySelector('button[data-undo]');
+  if(undoBtn)undoBtn.onclick=function(){
     clearTimeout(timer);t.remove();
-    if(!o.oldPlan)return;
     var cc=getC();
     if(cc){cc.weekPlan=o.oldPlan;save();renderWeekTable();}
     dietoToast('↩ Η προσαρμογή ποσοτήτων αναιρέθηκε');
