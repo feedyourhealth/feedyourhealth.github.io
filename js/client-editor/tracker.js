@@ -361,7 +361,7 @@ function buildTrackerHtml(c){
       +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:10px">'
       +'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #2e7d32">'
       +'<div style="color:#666">Βάρος</div><div style="font-size:14px;font-weight:700;color:#025857">'+latest.weight+' kg</div></div>'
-      +(latest.bf?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #ff9999"><div style="color:#666">Λίπος</div><div style="font-size:14px;font-weight:700;color:#c62828">'+latest.bf+'%</div></div>':'')
+      +(latest.bf?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #ff9999"><div style="color:#666">Λίπος</div><div style="font-size:14px;font-weight:700;color:#c62828">'+latest.bf+'%</div>'+(latestFM!=null?'<div style="font-size:11px;font-weight:600;color:#d9534f" title="Λιπώδης μάζα = βάρος × %BF">'+latestFM.toFixed(1)+' kg</div>':'')+'</div>':'')
       +(latestLBM?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #1565C0"><div style="color:#666">Lean Mass</div><div style="font-size:14px;font-weight:700;color:#1565C0">'+latestLBM+' kg</div></div>':'')
       +(latestBMI!=null?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid '+latestBMIColor+'">'
       +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+(latestBMIStatus?' ('+latestBMIStatus+')':'')+'</div></div>'
@@ -475,7 +475,7 @@ function buildTrackerHtml(c){
       wHtml+='<tr>'
         +'<td style="white-space:nowrap">'+e.date+'</td>'
         +'<td><b>'+e.weight+' kg</b></td>'
-        +'<td>'+(e.bf?e.bf+'%'+sfBadge+methBadge:'—')+'</td>'
+        +'<td>'+(e.bf?e.bf+'%'+(lbm!=='—'?' <span style="color:#888;font-size:0.92em" title="Λιπώδης μάζα = βάρος × %BF">('+(e.weight-lbm).toFixed(1)+' kg)</span>':'')+sfBadge+methBadge:'—')+'</td>'
         +'<td>'+(lbm!=='—'?lbm+' kg':'—')+'</td>'
         +'<td>'+(e.waist?e.waist+' cm':'—')+'</td>'
         +'<td>'+(e.hip?e.hip+' cm':'—')+'</td>'
