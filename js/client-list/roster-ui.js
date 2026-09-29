@@ -244,6 +244,18 @@ function initials(name){
   if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
   return (parts[0][0]+parts[1][0]).toUpperCase();
 }
+// Σύμπτυξη/ανάπτυξη του block "Χρειάζονται προσοχή" (Πελάτες). Αποθηκεύεται στο localStorage
+// (per-browser προτίμηση) και αλλάζει μόνο class — χωρίς renderSB, ώστε να μη χάνεται το scroll.
+function clientsAttnCollapsed(){
+  try{ return localStorage.getItem('clientsAttnCollapsed')==='1'; }catch(e){ return false; }
+}
+function toggleClientsAttnBlock(btn){
+  var block=btn.closest('.clients-attn-block'); if(!block) return;
+  var collapsed=block.classList.toggle('collapsed');
+  btn.setAttribute('aria-expanded',String(!collapsed));
+  var hint=btn.querySelector('.clients-attn-hint'); if(hint) hint.textContent=collapsed?'εμφάνιση':'σύμπτυξη';
+  try{ localStorage.setItem('clientsAttnCollapsed',collapsed?'1':'0'); }catch(e){}
+}
 // Χτίζει το HTML μιας κάρτας πελάτη. Μοναδική πηγή αλήθειας — τη χρησιμοποιούν τόσο το κανονικό
 // πλέγμα Πελάτες όσο και το block "Χρειάζονται προσοχή" από πάνω του (βλ. renderSB), ώστε μια
 // αλλαγή στην κάρτα (π.χ. νέο badge) να μην ξεχαστεί στο ένα από τα δύο σημεία.
@@ -409,9 +421,13 @@ function renderSB(){
       var attnClients=list.filter(clientNeedsAttention);
       if(attnClients.length){
         attnClients.sort(function(a,b){return (b.lastAccess||0)-(a.lastAccess||0);});
-        html+='<div class="clients-attn-block">'
-          +'<div class="clients-attn-title">🔔 Χρειάζονται προσοχή <span class="clients-attn-count">('+attnClients.length+')</span></div>'
-          +clientCardsOrTable(attnClients)
+        // Συμπτυσσόμενο (βλ. toggleClientsAttnBlock) — η επιλογή θυμάται ανά browser.
+        var _attnCollapsed=clientsAttnCollapsed();
+        html+='<div class="clients-attn-block'+(_attnCollapsed?' collapsed':'')+'">'
+          +'<button type="button" class="clients-attn-title" onclick="toggleClientsAttnBlock(this)" aria-expanded="'+(!_attnCollapsed)+'">'
+          +'<span class="clients-attn-chev">▾</span>🔔 Χρειάζονται προσοχή <span class="clients-attn-count">('+attnClients.length+')</span>'
+          +'<span class="clients-attn-hint">'+(_attnCollapsed?'εμφάνιση':'σύμπτυξη')+'</span></button>'
+          +'<div class="clients-attn-body">'+clientCardsOrTable(attnClients)+'</div>'
           +'</div>';
       }
     }
