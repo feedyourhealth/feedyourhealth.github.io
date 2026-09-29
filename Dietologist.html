@@ -347,6 +347,9 @@ setTimeout(function(){
 <!-- calc/micronutrients — micronutrient adequacy analysis, gap→supplement matching,
      and normalizeGreekText (accent-strip used across plan-gen/*). Pure; callers runtime. -->
 <script defer src="js/calc/micronutrients.js"></script>
+<!-- calc/portion-optimizer — «⚖️ Προσαρμογή ποσοτήτων»: grams-only fit to the day macro targets.
+     Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
+<script defer src="js/calc/portion-optimizer.js"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
 <script defer src="js/core/persistence.js"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA

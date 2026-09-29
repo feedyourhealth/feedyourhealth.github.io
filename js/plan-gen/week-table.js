@@ -168,6 +168,7 @@ function renderWeekTable(){
     var dayMenuDropdown='<div id="'+dayMenuId+'" class="day-menu-dropdown">'
       +'<button onclick="copyDayPrompt(this,'+di+');closeDayMenu(\''+dayMenuId+'\')">📋 Αντιγραφή σε άλλες ημέρες</button>'
       +'<button onclick="regenerateDay('+di+');closeDayMenu(\''+dayMenuId+'\')">🔄 Αναδημιουργία μόνο αυτής</button>'
+      +'<button onclick="adjustPlanPortions('+di+');closeDayMenu(\''+dayMenuId+'\')">⚖️ Προσαρμογή ποσοτήτων ημέρας</button>'
       +'<button onclick="swapDayPrompt(this,'+di+');closeDayMenu(\''+dayMenuId+'\')">🔁 Ανταλλαγή με άλλη ημέρα</button>'
       +'</div>';
     html+='<th style="position:relative">'+d+badge+timeStr+sportStr+choStr+dayMenuBtn+dayMenuDropdown+'</th>';
@@ -480,6 +481,14 @@ function renderWeekTable(){
   valBtn.title='Validate Plan';
   valBtn.onclick=openValidationModal;
   btnContainer.appendChild(valBtn);
+
+  // ⚖️ Προσαρμογή ποσοτήτων όλης της εβδομάδας (calc/portion-optimizer.js) — μόνο γραμμάρια
+  var adjBtn=document.createElement('button');
+  adjBtn.className='plan-tool-btn';
+  adjBtn.innerHTML='⚖️';
+  adjBtn.title='Προσαρμογή ποσοτήτων — φέρνει κάθε ημέρα όσο πιο κοντά γίνεται στους στόχους μακροθρεπτικών, χωρίς αλλαγή τροφίμων';
+  adjBtn.onclick=function(){adjustPlanPortions();};
+  btnContainer.appendChild(adjBtn);
 
   // Attach drag-and-drop + click-to-select to each day-cell
   con.querySelectorAll('.day-cell').forEach(function(cell){
