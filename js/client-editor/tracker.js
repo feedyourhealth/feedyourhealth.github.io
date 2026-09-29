@@ -24,6 +24,186 @@ function weightSelectOptions(selected,opts){
   }).join('');
 }
 
+// ── Body-composition insights (dietitian-only — NOT shown in the portal or the PDFs) ─────────
+// Pure helpers behind the FFMI / target-weight tiles and the «Τι έχασε από τι» / «Ρυθμός» /
+// «Πού χάνει λίπος» blocks in the tracker. Each returns null when the data can't support it,
+// and the caller just omits that block.
+
+// FFMI = LBM / height². Same thresholds as exportLipometriaPDF (exports.js) so the screen and
+// the PDF never disagree. Minors: number only (adult norms don't apply), like BMI.
+function trackerFfmi(lbm,heightCm,sex,isMinor){
+  if(!(lbm>0)||!(heightCm>0))return null;
+  var v=+(lbm/((heightCm/100)*(heightCm/100))).toFixed(1);
+  if(isMinor)return {v:v,cat:'',col:'#555'};
+  var fem=sex==='F',lo=fem?15:18,mid=fem?18:20,hi=fem?21:23;
+  return {v:v,
+    cat:v<lo?'χαμηλή μυϊκή μάζα':v<mid?'φυσιολογική':v<hi?'αυξημένη μυϊκή μάζα':'υψηλή μυϊκή μάζα',
+    col:v<lo?'#1565C0':v<hi?'#2e7d32':'#f57c00'};
+}
+
+// Weight at which the client would sit at a given %BF, holding lean mass constant:
+// LBM / (1 − target%). Targets = the dietitian's c.goalBF (if set) + the Gallagher healthy-range
+// top / middle / bottom for the client's age, keeping only those below the current %BF.
+function trackerTargetWeights(weight,bf,goalBF,sex,age){
+  if(!(weight>0)||!(bf>0))return null;
+  var lbm=weight*(1-bf/100),rows=[],seen={};
+  function add(pct,lbl){
+    pct=Math.round(pct);
+    if(!(pct>0)||pct>=bf-0.5||seen[pct])return;
+    seen[pct]=1;
+    var w=+(lbm/(1-pct/100)).toFixed(1);
+    rows.push({pct:pct,lbl:lbl,w:w,d:+(w-weight).toFixed(1)});
+  }
+  if(goalBF>0)add(goalBF,'στόχος πελάτη');
+  var gv=bfHealthByAge(bf,sex,age);
+  if(gv){
+    add(gv.healthy[1],'πάνω όριο υγιούς');
+    add((gv.healthy[0]+gv.healthy[1])/2,'μέση υγιούς');
+    add(gv.healthy[0],'κάτω όριο υγιούς');
+  }
+  rows.sort(function(a,b){return b.pct-a.pct;});
+  return {rows:rows,healthy:gv?gv.healthy:null};
+}
+
+// Fat vs lean split of the weight change between two measurements that both have %BF.
+function trackerLossSplit(first,last){
+  if(!first||!last||!(first.bf>0)||!(last.bf>0)||first===last)return null;
+  var f0=first.weight*first.bf/100,f1=last.weight*last.bf/100;
+  var l0=first.weight-f0,l1=last.weight-f1;
+  var dW=last.weight-first.weight,dF=f1-f0,dL=l1-l0;
+  var r={f0:+f0.toFixed(1),f1:+f1.toFixed(1),l0:+l0.toFixed(1),l1:+l1.toFixed(1),
+    dW:+dW.toFixed(1),dF:+dF.toFixed(1),dL:+dL.toFixed(1),kind:'stable',share:null};
+  if(dW<=-0.5){ r.kind='loss'; r.share=dL>=0?100:Math.round(dF/dW*100); }
+  else if(dW>=0.5){ r.kind='gain'; r.share=dF<=0?100:Math.round(dL/dW*100); }
+  return r;
+}
+
+// Weekly weight trend: least-squares slope over the last ~8 weeks (falls back to all entries
+// if that window has < 2 points). Needs ≥ 14 days of span. ETA to c.goalWeight when the trend
+// is heading toward it.
+function trackerWeightRate(sorted,goalWeight){
+  if(!sorted||sorted.length<2)return null;
+  var DAY=86400000,last=sorted[sorted.length-1],tLast=new Date(last.date).getTime();
+  var win=sorted.filter(function(e){return tLast-new Date(e.date).getTime()<=56*DAY;});
+  if(win.length<2)win=sorted;
+  var t0=new Date(win[0].date).getTime(),span=(tLast-t0)/DAY;
+  if(span<14)return null;
+  var xs=win.map(function(e){return (new Date(e.date).getTime()-t0)/DAY;}),ys=win.map(function(e){return e.weight;});
+  var n=xs.length,mx=xs.reduce(function(s,v){return s+v;},0)/n,my=ys.reduce(function(s,v){return s+v;},0)/n,num=0,den=0;
+  for(var i=0;i<n;i++){num+=(xs[i]-mx)*(ys[i]-my);den+=(xs[i]-mx)*(xs[i]-mx);}
+  if(!den)return null;
+  var kgWk=num/den*7,pctWk=kgWk/last.weight*100;
+  var r={kgWk:+kgWk.toFixed(2),pctWk:+pctWk.toFixed(2),weeksUsed:Math.round(span/7),n:n,eta:null,etaWeeks:null,goal:null,status:''};
+  var a=Math.abs(pctWk);
+  r.status=Math.abs(kgWk)<0.1?'stable':(kgWk<0?(a>1?'fast-loss':'loss'):(a>0.5?'fast-gain':'gain'));
+  if(goalWeight>0){
+    r.goal=goalWeight;
+    var toGo=goalWeight-last.weight;
+    if(Math.abs(toGo)<0.3)r.status2='reached';
+    else if(Math.abs(kgWk)>=0.05&&(toGo<0)===(kgWk<0)){
+      var wks=toGo/kgWk;
+      if(wks<=104){ r.etaWeeks=Math.round(wks); r.eta=new Date(tLast+wks*7*DAY).toISOString().slice(0,10); }
+      else r.status2='too-slow';
+    } else r.status2='away';
+  }
+  return r;
+}
+
+// Regional skinfold change between the first and last measurements that have skinfold mm.
+// Only sites measured in BOTH are compared (JP4 vs JP7 use different sites).
+var TRACKER_SF_TRUNK=['abdomen','suprailiac','subscapular','chest','midaxillary'];
+var TRACKER_SF_LIMB=['tricep','thigh','calf'];
+var TRACKER_SF_LBL={abdomen:'Κοιλιά',suprailiac:'Υπερλαγόνιο',subscapular:'Υποπλάτιο',chest:'Στήθος',midaxillary:'Μεσομάσχαλο',tricep:'Τρικέφαλος',thigh:'Μηρός',calf:'Γάμπα'};
+function trackerRegionalSf(sorted){
+  var sf=(sorted||[]).filter(function(e){return e.sfFields&&Object.keys(e.sfFields).some(function(k){return e.sfFields[k]>0;});});
+  if(sf.length<2)return null;
+  var a=sf[0].sfFields,b=sf[sf.length-1].sfFields;
+  var keys=Object.keys(TRACKER_SF_LBL).filter(function(k){return a[k]>0&&b[k]>0;});
+  if(!keys.length)return null;
+  function grp(list){
+    var ks=keys.filter(function(k){return list.indexOf(k)>=0;});
+    if(!ks.length)return null;
+    var s0=ks.reduce(function(s,k){return s+a[k];},0),s1=ks.reduce(function(s,k){return s+b[k];},0);
+    return {s0:+s0.toFixed(1),s1:+s1.toFixed(1),pct:Math.round((s1-s0)/s0*100)};
+  }
+  return {from:sf[0].date,to:sf[sf.length-1].date,trunk:grp(TRACKER_SF_TRUNK),limb:grp(TRACKER_SF_LIMB),total:grp(keys),
+    sites:keys.map(function(k){return {k:k,lbl:TRACKER_SF_LBL[k],a:a[k],b:b[k]};})};
+}
+
+function _fmtDateGr(iso){ var p=String(iso||'').split('-'); return p.length===3?(+p[2])+'/'+(+p[1])+'/'+p[0]:iso; }
+function _sgn(v){ return (v>0?'+':'')+v; }
+
+// «Τι έχασε από τι» + «Ρυθμός & πρόβλεψη» + «Πού χάνει λίπος», rendered inside the Σύνοψη
+// προόδου card. `sorted` = weightLog sorted by date ascending.
+function trackerInsightsHtml(c,sorted){
+  var box='background:var(--card-bg);border:1px solid var(--border-light);border-radius:7px;padding:10px 12px;min-width:0';
+  var head=function(t,sub){return '<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:6px">'+t+(sub?' <span style="font-weight:400;color:#9fb5b0">'+sub+'</span>':'')+'</div>';};
+  var out=[];
+
+  // B1 — fat vs lean share of the change, first → last measurement that both have %BF
+  var bfE=sorted.filter(function(e){return e.bf>0;});
+  var sp=bfE.length>=2?trackerLossSplit(bfE[0],bfE[bfE.length-1]):null;
+  if(sp){
+    var mx=Math.max(sp.f0+sp.l0,sp.f1+sp.l1);
+    var bar=function(lbl,l,f){return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="width:38px;font-size:10px;color:#666">'+lbl+'</span>'
+      +'<div style="flex:1;display:flex;height:16px;gap:1px"><div style="width:'+(l/mx*100)+'%;background:#1565C0;border-radius:3px 0 0 3px;color:#fff;font-size:8.5px;font-weight:700;display:flex;align-items:center;padding-left:4px;white-space:nowrap;overflow:hidden">'+l+'</div>'
+      +'<div style="width:'+(f/mx*100)+'%;background:#ff9999;border-radius:0 3px 3px 0;color:#fff;font-size:8.5px;font-weight:700;display:flex;align-items:center;padding-left:3px;white-space:nowrap;overflow:hidden">'+f+'</div></div></div>';};
+    var msg,msgCol='#025857';
+    if(sp.kind==='loss'){
+      if(sp.dL>=0){ msg='Όλη η απώλεια ήταν λίπος'+(sp.dL>0?' — και η άλιπη μάζα αυξήθηκε':'')+'.'; msgCol='var(--good)'; }
+      else if(sp.share>=75){ msg='<b>'+sp.share+'%</b> της απώλειας ήταν λίπος — πολύ καλή ποιότητα απώλειας.'; msgCol='var(--good)'; }
+      else if(sp.share>=60){ msg='<b>'+sp.share+'%</b> της απώλειας ήταν λίπος.'; }
+      else { msg='⚠️ Μόνο <b>'+Math.max(sp.share,0)+'%</b> της απώλειας ήταν λίπος — χάνεται άλιπη μάζα. Έλεγξε πρωτεΐνη, προπόνηση δύναμης, ρυθμό απώλειας.'; msgCol='#e65100'; }
+    } else if(sp.kind==='gain'){
+      if(sp.dF<=0){ msg='Όλο το κέρδος ήταν άλιπη μάζα'+(sp.dF<0?' — και το λίπος μειώθηκε':'')+'.'; msgCol='var(--good)'; }
+      else { msg='<b>'+Math.max(sp.share,0)+'%</b> του κέρδους ήταν άλιπη μάζα, '+(100-Math.max(sp.share,0))+'% λίπος.'; if(sp.share<50)msgCol='#e65100'; }
+    } else {
+      msg=(sp.dF<0&&sp.dL>0)?'Ανασύνθεση: σταθερό βάρος, λιγότερο λίπος και περισσότερη άλιπη μάζα.':'Το βάρος έμεινε σχεδόν σταθερό.';
+      if(sp.dF<0&&sp.dL>0)msgCol='var(--good)';
+    }
+    out.push('<div style="'+box+'">'+head('⚖️ Τι '+({gain:'πήρε',loss:'έχασε'}[sp.kind]||'άλλαξε')+' από τι',_fmtDateGr(bfE[0].date)+' → '+_fmtDateGr(bfE[bfE.length-1].date))
+      +bar('Πριν',sp.l0,sp.f0)+bar('Τώρα',sp.l1,sp.f1)
+      +'<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;margin:4px 0 6px"><span>Βάρος <b>'+_sgn(sp.dW)+' kg</b></span><span style="color:#d9534f">Λίπος <b>'+_sgn(sp.dF)+' kg</b></span><span style="color:#1565C0">Άλιπη <b>'+_sgn(sp.dL)+' kg</b></span></div>'
+      +'<div style="font-size:11px;color:'+msgCol+';line-height:1.4">'+msg+'</div></div>');
+  }
+
+  // B3 — weekly rate + ETA to the weight goal
+  var goalW=c.goalWeight||c.targetWeight||null;
+  var rt=trackerWeightRate(sorted,goalW);
+  if(rt){
+    var stMap={'stable':['σταθερό','#888'],'loss':['ασφαλής ρυθμός','var(--good)'],'fast-loss':['γρήγορος ρυθμός (>1%/εβδ)','#e65100'],'gain':['αύξηση','#1565C0'],'fast-gain':['γρήγορη αύξηση','#e65100']};
+    var st=stMap[rt.status];
+    var eta='';
+    if(rt.goal){
+      if(rt.status2==='reached')eta='🎯 Ο στόχος των <b>'+rt.goal+' kg</b> έχει επιτευχθεί.';
+      else if(rt.eta)eta='Με αυτόν τον ρυθμό, ο στόχος των <b>'+rt.goal+' kg</b> πιάνεται γύρω στις <b>'+_fmtDateGr(rt.eta)+'</b> (~'+rt.etaWeeks+' εβδ.).';
+      else if(rt.status2==='too-slow')eta='Με αυτόν τον ρυθμό ο στόχος των '+rt.goal+' kg θέλει πάνω από 2 χρόνια.';
+      else eta='Η τάση δεν κινείται προς τον στόχο των '+rt.goal+' kg.';
+    } else eta='<span style="color:#9fb5b0">Όρισε στόχο βάρους για να δεις πρόβλεψη ημερομηνίας.</span>';
+    out.push('<div style="'+box+'">'+head('📉 Ρυθμός & πρόβλεψη','τελευταίες ~'+rt.weeksUsed+' εβδ. · '+rt.n+' μετρήσεις')
+      +'<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px"><span style="font-size:18px;font-weight:800;color:#025857">'+_sgn(rt.kgWk)+' kg/εβδ</span>'
+      +'<span style="font-size:11px">'+_sgn(rt.pctWk)+'% βάρους/εβδ</span>'
+      +'<span style="font-size:10px;font-weight:700;color:'+st[1]+'">'+st[0]+'</span></div>'
+      +'<div style="font-size:11px;margin-top:6px;line-height:1.4">'+eta+'</div></div>');
+  }
+
+  // B4 — regional skinfold change (trunk vs limbs)
+  var rg=trackerRegionalSf(sorted);
+  if(rg){
+    var groups=[['Κορμός',rg.trunk],['Άκρα',rg.limb],['Σύνολο',rg.total]].filter(function(g){return g[1];});
+    var mxp=Math.max(10,Math.max.apply(null,groups.map(function(g){return Math.abs(g[1].pct);})));
+    out.push('<div style="'+box+'">'+head('📐 Πού χάνει λίπος',_fmtDateGr(rg.from)+' → '+_fmtDateGr(rg.to))
+      +groups.map(function(g){var p=g[1].pct,col=p<=0?(g[0]==='Σύνολο'?'#78909c':'#00897b'):'#f57c00';
+        return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px" title="'+g[1].s0+' → '+g[1].s1+' mm"><span style="width:48px;font-size:10px;color:#666">'+g[0]+'</span>'
+          +'<div style="flex:1;height:14px"><div style="width:'+(Math.abs(p)/mxp*100)+'%;min-width:2px;height:100%;background:'+col+';border-radius:3px"></div></div>'
+          +'<span style="width:44px;text-align:right;font-size:11px;font-weight:700;color:'+col+'">'+_sgn(p)+'%</span></div>';}).join('')
+      +'<div style="font-size:9.5px;color:#888;margin-top:4px;line-height:1.5">'+rg.sites.map(function(s){return s.lbl+' '+s.a+'→'+s.b;}).join(' · ')+' mm</div></div>');
+  }
+
+  if(!out.length)return '';
+  return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:12px">'+out.join('')+'</div>';
+}
+
 function buildTrackerHtml(c){
   if(!c.weightLog)c.weightLog=[];
   if(!c.consultLog)c.consultLog=[];
@@ -162,6 +342,19 @@ function buildTrackerHtml(c){
       else latestBMIStatus='Παχυσαρκία 🔴';
     }
     var latestBMIColor=(latestBMI==null||isMinorC)?'#999':latestBMI<18.5?'#ff6b35':latestBMI<25?'var(--good)':latestBMI<30?'#ff9800':'#c62828';
+    var ageC=c.birthDate?ageAtDate(c.birthDate):c.age;
+    var ffmiC=trackerFfmi(latestLBM,c.height,c.sex||'M',isMinorC);
+    // adult targets only — Gallagher ranges / a %BF goal don't apply to a growing child
+    var tgtC=isMinorC?null:trackerTargetWeights(latest.weight,latest.bf,c.goalBF,c.sex||'M',ageC);
+    var tgtHtml='';
+    if(tgtC){
+      tgtHtml='<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #00897b;grid-column:1/-1" title="Άλιπη μάζα / (1 − %BF στόχου), με σταθερή άλιπη μάζα — μόνο για τον διαιτολόγο">'
+        +'<div style="color:#666">🎯 Βάρος-στόχος για %BF <span style="color:#9fb5b0">(ίδια άλιπη μάζα)</span></div>'
+        +(tgtC.rows.length
+          ?tgtC.rows.map(function(r){return '<div style="display:flex;gap:8px;align-items:baseline;margin-top:3px;max-width:420px"><span style="min-width:34px;font-weight:700;color:#00695c">'+r.pct+'%</span><span style="font-size:13px;font-weight:700;color:#025857">'+r.w+' kg</span><span style="color:#888">('+(r.d>0?'+':'')+r.d+')</span><span style="color:#9fb5b0;margin-left:auto">'+r.lbl+'</span></div>';}).join('')
+          :'<div style="font-size:11px;color:var(--good);margin-top:3px">Ήδη στο κάτω όριο του υγιούς εύρους'+(tgtC.healthy?' ('+tgtC.healthy[0]+'–'+tgtC.healthy[1]+'%)':'')+' — δεν χρειάζεται μείωση λίπους.</div>')
+        +'</div>';
+    }
 
     wHtml+='<div style="background:#fff8e1;border:1px solid #ffb74d;border-radius:8px;padding:12px;margin-bottom:10px">'
       +'<div style="font-size:10px;color:#e65100;font-weight:700;margin-bottom:8px">📊 Τρέχουσα Κατάσταση ('+latest.date+')</div>'
@@ -177,6 +370,9 @@ function buildTrackerHtml(c){
       :'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #ccc"><div style="color:#666">BMI</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Χρειάζεται ύψος — συμπλήρωσέ το στα Στοιχεία πελάτη</div></div>')
       +(latest.waist?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #9c27b0"><div style="color:#666">Μέση</div><div style="font-size:14px;font-weight:700;color:#9c27b0">'+latest.waist+' cm</div></div>':'')
       +(latest.hip?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #f57c00"><div style="color:#666">Γοφοί</div><div style="font-size:14px;font-weight:700;color:#f57c00">'+latest.hip+' cm</div></div>':'')
+      +(ffmiC?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid '+ffmiC.col+'" title="FFMI = άλιπη μάζα / ύψος² — δείχνει αν το ΔΜΣ οφείλεται σε μυ ή σε λίπος">'
+        +'<div style="color:#666">FFMI</div><div style="font-size:14px;font-weight:700;color:'+ffmiC.col+'">'+ffmiC.v+(ffmiC.cat?' <span style="font-size:10px;font-weight:600">('+ffmiC.cat+')</span>':'')+'</div></div>':'')
+      +tgtHtml
       +'</div>'
       +bfGaugeHtml(latest.bf,c.sex||'M',isMinorC,c.goalBF,(c.birthDate?ageAtDate(c.birthDate):c.age))
       +'</div>';
@@ -250,6 +446,7 @@ function buildTrackerHtml(c){
           +'<span><span style="display:inline-block;width:12px;height:12px;background:#ff9999;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Fat Mass: '+lastFM+' kg ('+last.bf+'%)</span>'
           +'</div>'
           +'</div>':'')
+        +trackerInsightsHtml(c,sorted2)
         +'</div>';
     }
     wHtml+='<div style="overflow-x:auto"><table class="tracker-table"><thead><tr>'
@@ -375,13 +572,21 @@ function initTrendCharts(c){
     // never destroyed. Chart.getChart() (Chart.js 3.7+) finds it regardless of how it got here.
     var existingW=Chart.getChart(wCtx);
     if(existingW)existingW.destroy();
+    // dashed line from the last measurement to the projected goal date (see trackerWeightRate)
+    var wLabels=dates.slice(),wData=weights.slice(),projSets=[];
+    var rtP=trackerWeightRate(sorted,c.goalWeight||c.targetWeight||null);
+    if(rtP&&rtP.eta){
+      wLabels.push('~'+rtP.eta.substring(5)); wData.push(null);
+      var proj=weights.map(function(){return null;}); proj[proj.length-1]=weights[weights.length-1]; proj.push(rtP.goal);
+      projSets.push({label:'Πρόβλεψη',data:proj,borderColor:'#025857',borderDash:[6,4],borderWidth:2,fill:false,pointRadius:proj.map(function(v,i){return i===proj.length-1?5:0;}),pointBackgroundColor:'#fff',pointBorderColor:'#2e7d32',pointBorderWidth:2,spanGaps:true,tension:0});
+    }
     new Chart(wCtx, {
       type: 'line',
       data: {
-        labels: dates,
+        labels: wLabels,
         datasets: [{
           label: 'Βάρος (kg)',
-          data: weights,
+          data: wData,
           borderColor: '#025857',
           backgroundColor: 'rgba(2,88,87,0.1)',
           borderWidth: 2,
@@ -389,7 +594,7 @@ function initTrendCharts(c){
           tension: 0.3,
           pointRadius: 4,
           pointBackgroundColor: '#025857'
-        }]
+        }].concat(projSets)
       },
       options: {
         responsive: true,
