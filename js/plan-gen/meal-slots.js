@@ -27,23 +27,34 @@ function getDoubleTrainingDays(c){
 function openAddMealSlotModal(){
   var c=getC();if(!c||!c.weekPlan||!c.weekPlan[0]){showErrorToast('Δημιούργησε πρώτα πλάνο.');return;}
   var names=(c.weekPlan[0]||[]).map(function(m){return m.name;});
+  // Χωρίς διπλή προπόνηση → προεπιλογή ένα απλό «Ενδιάμεσο» πριν το τελευταίο γεύμα. Το όνομα
+  // ΑΚΡΙΒΩΣ 'Ενδιάμεσο' ώστε το client link να του δώσει την ώρα snack2/snack3 (Ώρες Γευμάτων).
+  var isDbl=getDoubleTrainingDays(c).length>0;
+  var defName=isDbl?'Pre 2ης προπόνησης':'Ενδιάμεσο';
+  var defTiming=isDbl?'pre-workout':'regular';
+  var defPos=isDbl?1:Math.max(1,names.length-1);
   var posOpts='';
   for(var i=0;i<names.length;i++){
-    posOpts+='<option value="'+(i+1)+'">μετά: '+names[i]+'</option>';
+    posOpts+='<option value="'+(i+1)+'"'+((i+1)===defPos?' selected':'')+'>μετά: '+names[i]+'</option>';
   }
-  var presetBtns=[
+  var presets=[{n:'Ενδιάμεσο',t:'regular'}];
+  if(isDbl) presets=presets.concat([
     {n:'Pre 1ης προπόνησης',t:'pre-workout'},
     {n:'Ανάμεσα στις προπονήσεις',t:'post-workout'},
     {n:'Pre 2ης προπόνησης',t:'pre-workout'},
     {n:'Μετά 2ης προπόνησης',t:'recovery'}
-  ].map(function(p){
+  ]); else presets=presets.concat([
+    {n:'Pre προπόνησης',t:'pre-workout'},
+    {n:'Μετά προπόνησης',t:'recovery'}
+  ]);
+  var presetBtns=presets.map(function(p){
     return '<button type="button" onclick="document.getElementById(\'newMealName\').value=\''+p.n+'\';document.getElementById(\'newMealTiming\').value=\''+p.t+'\'" '
       +'style="background:#e8f5e9;border:1px solid #c8e6c9;color:#025857;border-radius:14px;padding:4px 10px;font-size:11px;cursor:pointer;margin:0 4px 4px 0">'+p.n+'</button>';
   }).join('');
   var timingOpts='';
   for(var k in MEAL_TIMING_PROFILES){
     var pr=MEAL_TIMING_PROFILES[k];
-    timingOpts+='<option value="'+k+'"'+(k==='pre-workout'?' selected':'')+'>'+pr.icon+' '+pr.label+'</option>';
+    timingOpts+='<option value="'+k+'"'+(k===defTiming?' selected':'')+'>'+pr.icon+' '+pr.label+'</option>';
   }
   var html='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1002" onclick="if(event.target===this)closeAddMealSlotModal()">'
     +'<div style="background:var(--card-bg);border-radius:12px;padding:20px;max-width:440px;width:90%;box-shadow:0 8px 24px rgba(0,0,0,0.3)">'
@@ -56,7 +67,7 @@ function openAddMealSlotModal(){
     +'<div style="font-size:11px;color:#666;margin-bottom:6px">Γρήγορες επιλογές:</div>'
     +'<div style="margin-bottom:12px">'+presetBtns+'</div>'
     +'<label style="font-weight:600;color:var(--text-strong);font-size:12px;display:block;margin-bottom:4px">Όνομα γεύματος</label>'
-    +'<input id="newMealName" type="text" value="Pre 2ης προπόνησης" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px;margin-bottom:12px;box-sizing:border-box">'
+    +'<input id="newMealName" type="text" value="'+defName+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px;margin-bottom:12px;box-sizing:border-box">'
     +'<label style="font-weight:600;color:var(--text-strong);font-size:12px;display:block;margin-bottom:4px">Τύπος (timing → κατανομή μακρο)</label>'
     +'<select id="newMealTiming" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px;margin-bottom:12px;box-sizing:border-box">'+timingOpts+'</select>'
     +'<label style="font-weight:600;color:var(--text-strong);font-size:12px;display:block;margin-bottom:4px">Θέση στη μέρα</label>'

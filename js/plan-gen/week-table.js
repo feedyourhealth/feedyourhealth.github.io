@@ -122,17 +122,18 @@ function renderWeekTable(){
     +'</div>';
 
   // Build table HTML — show T/R badge in header + training time
-  // Το κουμπί «Προσθήκη γεύματος» εμφανίζεται ΜΟΝΟ όταν υπάρχει ημέρα με 2+ προπονήσεις
-  // (2 MET δραστηριότητες στην ίδια ημέρα) — όχι σε κανονικά πλάνα/πρότυπα.
+  // Το κουμπί «Προσθήκη γεύματος» εμφανίζεται σε ΟΛΑ τα πλάνα (π.χ. ένα έξτρα σνακ). Όταν υπάρχει
+  // ημέρα με 2+ προπονήσεις (2 MET δραστηριότητες στην ίδια ημέρα) προστίθεται και η υπόδειξη.
   var dblDays=getDoubleTrainingDays(c);
-  var addMealBar='';
+  var dblHint='';
   if(dblDays.length){
     var dblNames=dblDays.map(function(i){return DAYS[i];}).join(', ');
-    addMealBar='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">'
-      +'<span style="font-size:11px;color:var(--wk-accent-fg);background:var(--teal-tint);border:1px solid #b5dcd6;border-radius:8px;padding:4px 10px">🏋️ Διπλή προπόνηση: <b>'+dblNames+'</b> — πρόσθεσε γεύμα πριν/ανάμεσα στις προπονήσεις</span>'
-      +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. πριν/μετά 2ης προπόνησης)" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
-      +'</div>';
+    dblHint='<span style="font-size:11px;color:var(--wk-accent-fg);background:var(--teal-tint);border:1px solid #b5dcd6;border-radius:8px;padding:4px 10px">🏋️ Διπλή προπόνηση: <b>'+dblNames+'</b> — πρόσθεσε γεύμα πριν/ανάμεσα στις προπονήσεις</span>';
   }
+  var addMealBar='<div style="display:flex;justify-content:'+(dblHint?'space-between':'flex-end')+';align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">'
+    +dblHint
+    +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. ένα ακόμα ενδιάμεσο/σνακ) σε όλες τις ημέρες" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
+    +'</div>';
   var html=summaryCard+foodDotLegend+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
     // ✅ Native title tooltip explains T/R on hover instead of a permanent banner repeating
