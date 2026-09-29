@@ -397,32 +397,36 @@ function renderProgress(){
   var all=progressRosterData();
   var html='<div class="hm-wrap">';
   html+='<div class="hm-title">📈 Πρόοδος</div>';
-  html+=progressSummaryHtml(all);
+  // Συμπτυσσόμενες ενότητες (collapsibleSectionHtml, js/lib/helpers.js) — ίδια εμφάνιση/μηχανική με
+  // την Αρχική· η επιλογή ανοιχτό/κλειστό θυμάται ανά browser (key 'prSec_'+id).
+  html+=collapsibleSectionHtml({key:'prSec_summary', wrapClass:'hm-zone', btnClass:'hm-zone-h', label:'📊 Σύνοψη', body:progressSummaryHtml(all)});
+  var listHtml='';
   // Idea #2 (mockup συζήτησης 2026-09-15): φίλτρο ομάδας + ταξινόμηση, δίπλα στην αναζήτηση. Οι
   // ομάδες βγαίνουν από τα πραγματικά δεδομένα (c.group) — καμία σκληροκωδικοποιημένη λίστα.
   var groups=[];
   all.forEach(function(x){ if(x.c.group && groups.indexOf(x.c.group)<0) groups.push(x.c.group); });
   groups.sort(function(a,b){return a.localeCompare(b,'el');});
-  html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center">';
-  html+='<input type="text" id="progress-search" class="client-search-inp" style="max-width:260px;margin:0" placeholder="🔍 Αναζήτηση πελάτη..." value="'+esc(_progressSearch)+'" oninput="progressSetSearch(this.value)">';
+  listHtml+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+  listHtml+='<input type="text" id="progress-search" class="client-search-inp" style="max-width:260px;margin:0" placeholder="🔍 Αναζήτηση πελάτη..." value="'+esc(_progressSearch)+'" oninput="progressSetSearch(this.value)">';
   if(groups.length){
-    html+='<select class="clients-toolbar-select" style="max-width:180px;margin:0" onchange="progressSetGroupFilter(this.value)">'
+    listHtml+='<select class="clients-toolbar-select" style="max-width:180px;margin:0" onchange="progressSetGroupFilter(this.value)">'
       +'<option value="all">Όλες οι ομάδες</option>'
       +groups.map(function(g){return '<option value="'+esc(g)+'"'+(g===_progressGroupFilter?' selected':'')+'>'+esc(g)+'</option>';}).join('')
       +'</select>';
   }
-  html+='<select class="clients-toolbar-select" style="max-width:220px;margin:0" onchange="progressSetSort(this.value)">'
+  listHtml+='<select class="clients-toolbar-select" style="max-width:220px;margin:0" onchange="progressSetSort(this.value)">'
     +Object.keys(PROGRESS_SORT_LABELS).map(function(k){return '<option value="'+k+'"'+(k===_progressSort?' selected':'')+'>'+PROGRESS_SORT_LABELS[k]+'</option>';}).join('')
     +'</select>';
-  html+='</div>';
-  html+='<div id="progress-filters" style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap">'
+  listHtml+='</div>';
+  listHtml+='<div id="progress-filters" style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap">'
     +['all','nudge','low','gone','new','exp','muted'].map(function(k){
       var label=k==='all'?'Όλοι':PROGRESS_FLAG_LABELS[k];
       var cnt=k==='all'?all.length:all.filter(function(x){return x.flags.indexOf(k)>-1;}).length;
       return '<span class="appt-fchip'+(k===_progressFilter?' active':'')+'" onclick="progressSetFilter(\''+k+'\',this)">'+label+' ('+cnt+')</span>';
     }).join('')
     +'</div>';
-  html+='<div id="progress-results">'+progressResultsHtml(all)+'</div>';
+  listHtml+='<div id="progress-results">'+progressResultsHtml(all)+'</div>';
+  html+=collapsibleSectionHtml({key:'prSec_clients', wrapClass:'hm-zone', btnClass:'hm-zone-h', label:'👥 Πελάτες', count:all.length, body:listHtml});
   html+='</div>';
   main.innerHTML=html;
 }
