@@ -1,97 +1,167 @@
 // js/calc/portion-optimizer.js
 // «⚖️ Προσαρμογή ποσοτήτων»: φέρνει ένα ΗΔΗ έτοιμο πλάνο όσο πιο κοντά γίνεται στους στόχους
-// kcal/Π/Λ/Υ της ημέρας, αλλάζοντας ΜΟΝΟ γραμμάρια — κανένα τρόφιμο δεν προστίθεται/αφαιρείται.
+// kcal/Π/Λ/Υ κάθε ημέρας, αλλάζοντας ΜΟΝΟ γραμμάρια — κανένα τρόφιμο δεν προστίθεται/αφαιρείται.
 // Διαφορά από τη scalePlan (plan-energy.js): εκείνη τρέχει μόνο στη δημιουργία πλάνου και
 // κλιμακώνει ανά κατηγορία με έναν λόγο (προσεγγιστικά). Εδώ λύνεται ένα μικρό πρόβλημα
 // ελαχίστων τετραγώνων με όρια ανά τρόφιμο, οπότε πιάνει και πλάνα διορθωμένα με το χέρι.
-// Σταθεροί κανόνες (χωρίς ρυθμίσεις στο UI):
-//   • προτεραιότητα θερμίδες (βάρος 1000) > μακροθρεπτικά (10)
+// Σταθεροί κανόνες (χωρίς ρυθμίσεις στο UI — ρητή επιλογή της διαιτολόγου: «ένα κουμπί»):
+//   • προτεραιότητα θερμίδες (βάρος 1000 ≈ υποχρεωτικό) > μακροθρεπτικά (10)
 //   • κάθε τρόφιμο αλλάζει το πολύ ±PO_MAX_CHANGE
 //   • κάθε γεύμα μένει κοντά στις θερμίδες που είχε (όχι «όλοι οι υδατάνθρακες στο βραδινό»)
-//   • WHOLE_UNIT_FOODS αλλάζουν μόνο κατά ολόκληρα τεμάχια (αν ήταν ήδη ακέραια)
+//   • WHOLE_UNIT_FOODS + συσκευασμένα (μπάρα/κύπελλο/…) αλλάζουν μόνο κατά ολόκληρα τεμάχια
 //   • αλλαγές < PO_MIN_CHANGE αγνοούνται (θόρυβος τύπου 180→175g)
-// Deps (runtime): cm, resolveFood, FOODS, FOOD_UNITS, WHOLE_UNIT_FOODS, deepClone,
-// getC, calcTDEE, getDayTgtEff, save, renderWeekTable, DAYS.
+//   • πρωτεΐνη ανά κύριο γεύμα: η κύρια πηγή δεν πέφτει κάτω από ~0.3 g/kg ανά γεύμα
+//     (Schoenfeld & Aragon 2018: 0.4 g/kg × ≥4 γεύματα) ούτε κάτω από πραγματική μερίδα
+//     κρέατος/ψαριού (PO_MEAT_MIN_G)
+//   • ημέρες προπόνησης: οι υδατάνθρακες στα pre/post-workout γεύματα δεν μειώνονται
+//     (Thomas et al. 2016 — ίδιο πλαίσιο με το cho-protocol.js)
+//   • όλη η εβδομάδα: το ίδιο τρόφιμο με την ίδια αρχική μερίδα παίρνει την ίδια νέα μερίδα
+//     σε όλες τις ημέρες (meal prep / λίστα αγορών) — λύνεται ως ΚΟΙΝΗ μεταβλητή
+// Deps (runtime): cm, FOODS, resolveFood, FOOD_UNITS, WHOLE_UNIT_FOODS, classifyMealSlot, deepClone,
+// getC, calcTDEE, getDayTgtEff, save, renderWeekTable, DAYS, esc, dietoToast, showErrorToast.
 
 var PO_MAX_CHANGE=0.5, PO_MIN_CHANGE=0.10, PO_OK_BAND=10; // PO_OK_BAND: ±% πέρα από το οποίο το toast προειδοποιεί (στενότερο = θόρυβος για 106%)
 // PO_W_KCAL πολύ υψηλό = οι θερμίδες λειτουργούν πρακτικά ως υποχρεωτικός στόχος (επιλογή διαιτολόγου:
 // «θερμίδες πρώτα»). Με 60 σε πλάνο με λίπος 192% οι θερμίδες έπεφταν 99%→92% για να κλείσει το λίπος.
 var PO_W_KCAL=1000, PO_W_MACRO=10, PO_W_STAY=0.04, PO_W_MEAL=0.4;
+var PO_PROT_PER_MEAL_GKG=0.3, PO_MEAT_MIN_G=80;
+// Συσκευασμένα προϊόντα: η μονάδα τους είναι μια συσκευασία — «155g» από κύπελλο 150g δεν έχει νόημα.
+var PO_PACK_UNITS={'μπάρα':1,'bar':1,'κύπελλο':1,'μπουκάλι':1,'συσκευασία':1,'scoop':1,'patty':1};
+var PO_NO_TIE_CATS={'Λάδια':1,'Ξηροί καρποί':1};
 
-function _poItems(dayMeals, extraLocks){
-  var items=[];
-  dayMeals.forEach(function(m,mi){(m.foods||[]).forEach(function(f,fi){
-    var v=cm(f.n,100), g0=+f.g||0, id=mi+':'+fi;
-    var fu=FOOD_UNITS[f.n], wholeG=(WHOLE_UNIT_FOODS[f.n]&&fu&&fu.g)?fu.g:0;
-    // Κλειδωμένα: μηδενικές θερμίδες (μπαχαρικά/άγνωστα), μηδενική ποσότητα, ή ακέραιο τρόφιμο
-    // που ΔΕΝ είναι ήδη σε ακέραια τεμάχια (π.χ. ½ πίτα) — αλλιώς θα «στρογγυλευόταν» σε ολόκληρο.
-    var locked=v.k<=0||g0<=0||(extraLocks&&extraLocks[id])||(wholeG&&Math.abs(g0/wholeG-Math.round(g0/wholeG))>0.01);
-    // Κάτω όριο: μόνο το ±PO_MAX_CHANGE (+ ελάχιστο 5g). ΟΧΙ minScaleG — για τρόφιμα με μεγάλη
-    // μονάδα (Αβοκάντο 200g/τεμ. → minScaleG 100g) «κλείδωνε» κάθε μερίδα κάτω από μισό τεμάχιο.
-    var lo=Math.max(g0*(1-PO_MAX_CHANGE),Math.min(5,g0)), hi=g0*(1+PO_MAX_CHANGE);
-    items.push({id:id,n:f.n,g0:g0,g:g0,mi:mi,k:v.k/100,p:v.p/100,f:v.f/100,c:v.c/100,wholeG:wholeG,
-      locked:!!locked,lo:locked?g0:lo,hi:locked?g0:hi});
-  });});
-  return items;
+function _poWholeG(n){
+  var fu=FOOD_UNITS[n];
+  if(!fu||!fu.g)return 0;
+  return (WHOLE_UNIT_FOODS[n]||PO_PACK_UNITS[fu.u])?fu.g:0;
 }
 
-function _poSolve(items, T, mealK0){
-  var R=[{w:PO_W_KCAL,t:1,a:items.map(function(it){return it.k/T.k;})}];
-  ['p','f','c'].forEach(function(x){
-    if(T[x]>0)R.push({w:PO_W_MACRO,t:1,a:items.map(function(it){return it[x]/T[x];})});
+// Χτίζει τις μεταβλητές για τις ημέρες dayIdxs. Κάθε «ομάδα» = μία μεταβλητή γραμμαρίων· τρόφιμα με
+// ίδιο όνομα + ίδια αρχική ποσότητα μοιράζονται ομάδα (ίδια νέα μερίδα παντού).
+function _poBuild(c, dayIdxs, effByDay, extraLocks){
+  var items=[],groups=[],byKey={},days=[];
+  var trainDays=c.trainDays||[];
+  var protFloorMeal=(c.weight>0?c.weight:0)*PO_PROT_PER_MEAL_GKG;
+  dayIdxs.forEach(function(d){
+    var meals=c.weekPlan[d],T=effByDay[d];
+    var mealK0=meals.map(function(m){return (m.foods||[]).reduce(function(s,f){return s+cm(f.n,f.g).k;},0);});
+    days.push({d:d,T:T,mealK0:mealK0});
+    meals.forEach(function(m,mi){
+      var slot=(typeof classifyMealSlot==='function')?classifyMealSlot(m.name):'other';
+      var isMain=slot==='breakfast'||slot==='lunch'||slot==='dinner';
+      var isTrainMeal=!!trainDays[d]&&(m.mealTiming==='pre-workout'||m.mealTiming==='post-workout');
+      var mealItems=[];
+      (m.foods||[]).forEach(function(f,fi){
+        var v=cm(f.n,100),g0=+f.g||0,wholeG=_poWholeG(f.n);
+        var cat=(FOODS[resolveFood(f.n)]||{}).cat||'';
+        // Λάδια/ξηροί καρποί ΔΕΝ δένονται μεταξύ ημερών: είναι το «ρυθμιστικό» του λίπους κάθε ημέρας
+        // και 5g vs 8g λάδι δεν αφορά το meal prep. Δεμένα, το λίπος ανέβαινε 104%→121% σε 3/7 ημέρες.
+        // Το '#'+index είναι σταθερό ανάμεσα στα δύο builds (ίδια σειρά), οπότε δουλεύει και για extraLocks.
+        var key=PO_NO_TIE_CATS[cat]?('#'+items.length):(f.n+'|'+g0);
+        // Κλειδωμένα: μηδενικές θερμίδες (μπαχαρικά/άγνωστα), μηδενική ποσότητα, ή ακέραιο/συσκευασμένο
+        // τρόφιμο που ΔΕΝ είναι ήδη σε ακέραια τεμάχια (π.χ. ½ πίτα) — αλλιώς θα «στρογγυλευόταν» σε ολόκληρο.
+        var locked=v.k<=0||g0<=0||(extraLocks&&extraLocks[key])||(wholeG&&Math.abs(g0/wholeG-Math.round(g0/wholeG))>0.01);
+        // Κάτω όριο: ±PO_MAX_CHANGE (+ ελάχιστο 5g). ΟΧΙ minScaleG — για τρόφιμα με μεγάλη μονάδα
+        // «κλείδωνε» κάθε μερίδα κάτω από μισό τεμάχιο (βλ. MIN_SCALE_G_OVERRIDE στο plan-energy.js).
+        var lo=Math.max(g0*(1-PO_MAX_CHANGE),Math.min(5,g0)),hi=g0*(1+PO_MAX_CHANGE);
+        // Προπόνηση: τρόφιμα με ≥50% θερμίδων από υδατάνθρακες δεν μειώνονται στα pre/post-workout.
+        if(isTrainMeal&&v.k>0&&v.c*4/v.k>=0.5)lo=g0;
+        var tieKey=locked?('#'+items.length):key;
+        var it={d:d,mi:mi,fi:fi,n:f.n,g0:g0,k:v.k/100,p:v.p/100,f:v.f/100,c:v.c/100,wholeG:wholeG,
+          locked:!!locked,lo:lo,hi:hi,key:key,tieKey:tieKey,cat:cat};
+        items.push(it);mealItems.push(it);
+      });
+      // Πρωτεΐνη κύριου γεύματος: η μεγαλύτερη πηγή κρατά το μερίδιό της στο ελάχιστο ανά γεύμα.
+      if(isMain&&protFloorMeal>0){
+        var mealP=mealItems.reduce(function(s,it){return s+it.p*it.g0;},0);
+        var top=mealItems.filter(function(it){return !it.locked&&it.p>0;}).sort(function(a,b){return b.p*b.g0-a.p*a.g0;})[0];
+        if(top&&mealP>0){
+          var need=protFloorMeal*(top.p*top.g0/mealP)/top.p;
+          if(top.cat==='Κρέας'||top.cat==='Ψάρια')need=Math.max(need,PO_MEAT_MIN_G);
+          top.lo=Math.max(top.lo,Math.min(top.g0,need));
+        }
+      }
+    });
   });
-  items.forEach(function(it,i){
-    var s=Math.max(it.g0,20),a=items.map(function(){return 0;});a[i]=1/s;
-    R.push({w:PO_W_STAY,t:it.g0/s,a:a});
+  items.forEach(function(it){
+    var gi=byKey[it.tieKey];
+    if(gi==null){gi=byKey[it.tieKey]=groups.length;groups.push({items:[],g0:it.g0,g:it.g0,lo:it.lo,hi:it.hi,wholeG:it.wholeG,locked:it.locked,key:it.key});}
+    var gr=groups[gi];gr.items.push(it);it.gi=gi;
+    gr.lo=Math.max(gr.lo,it.lo);gr.hi=Math.min(gr.hi,it.hi);
   });
-  mealK0.forEach(function(k0,mi){
-    if(k0>0)R.push({w:PO_W_MEAL,t:1,a:items.map(function(it){return it.mi===mi?it.k/k0:0;})});
+  groups.forEach(function(gr){if(gr.locked){gr.lo=gr.hi=gr.g0;}});
+  return {items:items,groups:groups,days:days};
+}
+
+function _poSolve(M){
+  var items=M.items,groups=M.groups,R=[];
+  function row(w,t,pick){ // pick(it) → συντελεστής του item στη γραμμή
+    var a={};items.forEach(function(it){var v=pick(it);if(v)a[it.gi]=(a[it.gi]||0)+v;});
+    R.push({w:w,t:t,a:a});
+  }
+  M.days.forEach(function(D){
+    var T=D.T;
+    row(PO_W_KCAL,1,function(it){return it.d===D.d?it.k/T.k:0;});
+    ['p','f','c'].forEach(function(x){
+      if(T[x]>0)row(PO_W_MACRO,1,function(it){return it.d===D.d?it[x]/T[x]:0;});
+    });
+    D.mealK0.forEach(function(k0,mi){
+      if(k0>0)row(PO_W_MEAL,1,function(it){return it.d===D.d&&it.mi===mi?it.k/k0:0;});
+    });
   });
+  groups.forEach(function(gr,gi){
+    var s=Math.max(gr.g0,20),a={};a[gi]=1/s;
+    R.push({w:PO_W_STAY*gr.items.length,t:gr.g0/s,a:a});
+  });
+  var colRows=groups.map(function(){return [];});
+  R.forEach(function(r,j){Object.keys(r.a).forEach(function(gi){colRows[gi].push(j);});});
   // Coordinate descent: κάθε μεταβλητή έχει κλειστή λύση (τετραγωνική), μετά clamp στα όρια.
   function pass(){
-    var res=R.map(function(r){return r.a.reduce(function(s,a,i){return s+a*items[i].g;},0)-r.t;});
+    var res=R.map(function(r){var s=-r.t;for(var gi in r.a)s+=r.a[gi]*groups[gi].g;return s;});
     for(var sw=0;sw<800;sw++){
       var moved=0;
-      items.forEach(function(it,i){
-        if(it.locked||it.fixed)return;
+      groups.forEach(function(gr,gi){
+        if(gr.locked||gr.fixed)return;
         var num=0,den=0;
-        R.forEach(function(r,j){var a=r.a[i];if(a){num+=r.w*a*res[j];den+=r.w*a*a;}});
+        colRows[gi].forEach(function(j){var r=R[j],a=r.a[gi];num+=r.w*a*res[j];den+=r.w*a*a;});
         if(!den)return;
-        var ng=Math.min(it.hi,Math.max(it.lo,it.g-num/den)),d=ng-it.g;
-        if(d){R.forEach(function(r,j){if(r.a[i])res[j]+=r.a[i]*d;});it.g=ng;moved+=Math.abs(d);}
+        var ng=Math.min(gr.hi,Math.max(gr.lo,gr.g-num/den)),d=ng-gr.g;
+        if(d){colRows[gi].forEach(function(j){res[j]+=R[j].a[gi]*d;});gr.g=ng;moved+=Math.abs(d);}
       });
       if(moved<0.01)break;
     }
   }
   pass();
-  // Ακέραια τρόφιμα → πλησιέστερο ακέραιο τεμάχιο ΜΕΣΑ στα όρια, και ξανά λύση για τα υπόλοιπα.
-  items.forEach(function(it){
-    if(it.locked||!it.wholeG)return;
-    var minU=Math.max(1,Math.ceil(it.lo/it.wholeG-1e-9)),maxU=Math.floor(it.hi/it.wholeG+1e-9);
-    var u=Math.round(it.g/it.wholeG);
-    it.g=(minU<=maxU)?Math.min(maxU,Math.max(minU,u))*it.wholeG:it.g0;
-    it.fixed=true;
+  // Ακέραια/συσκευασμένα → πλησιέστερο ακέραιο τεμάχιο ΜΕΣΑ στα όρια, και ξανά λύση για τα υπόλοιπα.
+  groups.forEach(function(gr){
+    if(gr.locked||!gr.wholeG)return;
+    var minU=Math.max(1,Math.ceil(gr.lo/gr.wholeG-1e-9)),maxU=Math.floor(gr.hi/gr.wholeG+1e-9);
+    var u=Math.round(gr.g/gr.wholeG);
+    gr.g=(minU<=maxU)?Math.min(maxU,Math.max(minU,u))*gr.wholeG:gr.g0;
+    gr.fixed=true;
   });
   pass();
-  items.forEach(function(it){
-    if(it.locked||it.wholeG)return;
-    var st=it.g<25?1:5;
-    it.g=Math.round(it.g/st)*st;
+  groups.forEach(function(gr){
+    if(gr.locked||gr.wholeG)return;
+    var st=gr.g<25?1:5;
+    gr.g=Math.min(Math.round(gr.hi),Math.max(Math.round(gr.lo),Math.round(gr.g/st)*st));
   });
 }
 
-// Επιστρέφει {meals, changed, before, after} χωρίς να αγγίζει το dayMeals.
-function optimizeDayPortions(dayMeals, T){
-  var mealK0=dayMeals.map(function(m){return (m.foods||[]).reduce(function(s,f){return s+cm(f.n,f.g).k;},0);});
-  var items=_poItems(dayMeals);
-  _poSolve(items,T,mealK0);
+// Επιστρέφει {byDay:{d:meals}, changed, changedDays, touched} χωρίς να αγγίζει το c.weekPlan.
+function optimizePlanPortions(c, dayIdxs, effByDay){
+  var M=_poBuild(c,dayIdxs,effByDay);
+  _poSolve(M);
   // Δεύτερο πέρασμα: ό,τι άλλαξε λιγότερο από PO_MIN_CHANGE μένει όπως ήταν, και ξαναλύνεται.
   var extra={},any=false;
-  items.forEach(function(it){if(!it.locked&&it.g!==it.g0&&Math.abs(it.g/it.g0-1)<PO_MIN_CHANGE){extra[it.id]=1;any=true;}});
-  if(any){items=_poItems(dayMeals,extra);_poSolve(items,T,mealK0);}
-  var out=deepClone(dayMeals),k=0,changed=0;
-  out.forEach(function(m){(m.foods||[]).forEach(function(f){var it=items[k++];if(it.g!==it.g0){f.g=it.g;changed++;}});});
-  return {meals:out,changed:changed,before:_poTot(dayMeals),after:_poTot(out)};
+  M.groups.forEach(function(gr){if(!gr.locked&&gr.g!==gr.g0&&Math.abs(gr.g/gr.g0-1)<PO_MIN_CHANGE){extra[gr.key]=1;any=true;}});
+  if(any){M=_poBuild(c,dayIdxs,effByDay,extra);_poSolve(M);}
+  var byDay={},changed=0,touched={};
+  dayIdxs.forEach(function(d){byDay[d]=deepClone(c.weekPlan[d]);});
+  M.items.forEach(function(it){
+    var g=M.groups[it.gi].g;
+    if(g!==it.g0){byDay[it.d][it.mi].foods[it.fi].g=g;changed++;touched[it.d]=1;}
+  });
+  return {byDay:byDay,changed:changed,changedDays:Object.keys(touched).length,touched:touched};
 }
 
 function _poTot(meals){
@@ -123,21 +193,24 @@ function _poMisses(meals, T){
 function adjustPlanPortions(dayIndex){
   var c=getC();
   if(!c||!c.weekPlan||!Object.keys(c.weekPlan).length){showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
-  var tdee=calcTDEE(c),eff=getDayTgtEff(c,tdee);
-  var days=(typeof dayIndex==='number')?[dayIndex]:[0,1,2,3,4,5,6];
-  var oldPlan=deepClone(c.weekPlan),changed=0,touchedDays=0,misses=[];
-  days.forEach(function(d){
+  var tdee=calcTDEE(c),eff=getDayTgtEff(c,tdee),effByDay={};
+  var days=((typeof dayIndex==='number')?[dayIndex]:[0,1,2,3,4,5,6]).filter(function(d){
     var meals=c.weekPlan[d];
-    if(!meals||!meals.length)return;
+    if(!meals||!meals.length)return false;
     var e=eff[d]||{k:tdee.target,p:tdee.p,f:tdee.f,c:tdee.carb};
-    if(!(e.k>0))return;
-    var r=optimizeDayPortions(meals,e);
-    if(r.changed){c.weekPlan[d]=r.meals;changed+=r.changed;touchedDays++;}
-    var m=_poMisses(r.changed?r.meals:meals,e);
+    if(!(e.k>0))return false;
+    effByDay[d]=e;return true;
+  });
+  if(!days.length){showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
+  var oldPlan=deepClone(c.weekPlan);
+  var r=optimizePlanPortions(c,days,effByDay),misses=[];
+  days.forEach(function(d){
+    if(r.touched[d])c.weekPlan[d]=r.byDay[d];
+    var m=_poMisses(c.weekPlan[d],effByDay[d]);
     if(m.length)misses.push(DAYS[d]+': '+m.join(', '));
   });
-  if(changed){save();renderWeekTable();}
-  showPortionAdjustToast(changed,touchedDays,misses,changed?oldPlan:null,dayIndex);
+  if(r.changed){save();renderWeekTable();}
+  showPortionAdjustToast(r.changed,r.changedDays,misses,r.changed?oldPlan:null,dayIndex);
 }
 
 function showPortionAdjustToast(changed,touchedDays,misses,oldPlan,dayIndex){
