@@ -312,7 +312,15 @@ function calcTDEE(c){
 // Minimum grams a food may be scaled down to.
 // Foods shown in pieces (FOOD_UNITS) get a floor of half a piece, so the
 // generator can't shrink a banana to ~5g while the chip still reads "1 τεμ.".
-function minScaleG(n){var u=FOOD_UNITS[n];return (u&&u.g)?Math.max(5,Math.round(u.g*0.5)):5;}
+// MIN_SCALE_G_OVERRIDE: τρόφιμα όπου το «μισό τεμάχιο» είναι πολύ μεγαλύτερο από τη συνηθισμένη
+// μερίδα στο πλάνο. Αβοκάντο: μονάδα 200g → floor 100g, ενώ τα templates βάζουν 30–50g, οπότε σε
+// scale-down (scaledG → min(floor, origG)) η μερίδα δεν μίκραινε ΠΟΤΕ. 15g = 1 κ.σ. (PORTIONS).
+// Όχι γενικός κανόνας: για γιαούρτια/γάλα το μισό κύπελλο/ποτήρι είναι σωστό κατώτατο όριο.
+var MIN_SCALE_G_OVERRIDE={'Αβοκάντο':15};
+function minScaleG(n){
+  if(MIN_SCALE_G_OVERRIDE[n])return MIN_SCALE_G_OVERRIDE[n];
+  var u=FOOD_UNITS[n];return (u&&u.g)?Math.max(5,Math.round(u.g*0.5)):5;
+}
 
 // Σκαλάρει τα γραμμάρια ενός τροφίμου κατά r, χωρίς να αφήνει το minScaleG floor να ΑΥΞΗΣΕΙ ένα υλικό
 // σε scale-down (πραγματικό bug, βρέθηκε σε QA: 555→300kcal σε μια συνταγή σολομού/ρυζιού/μπρόκολου
