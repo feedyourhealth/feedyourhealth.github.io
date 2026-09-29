@@ -438,3 +438,30 @@ function ensureChart(){
   return _chartJsPromise;
 }
 
+
+// ── Συμπτυσσόμενες ενότητες (Πελάτες + Αρχική) ──────────────────────────────────
+// Κάθε ενότητα: wrapper με data-sec + κουμπί-κεφαλίδα που καλεί toggleSection. Η κατάσταση
+// αποθηκεύεται στο localStorage ανά storeKey (per-browser προτίμηση)· χωρίς αποθηκευμένη τιμή
+// ισχύει το defaultCollapsed. Το toggle αλλάζει μόνο class — χωρίς re-render, ώστε να μη χάνεται
+// το scroll. Το styling ανήκει στον caller (wrapClass/btnClass).
+function sectionCollapsed(storeKey, defaultCollapsed){
+  try{ var v=localStorage.getItem(storeKey); return v===null ? !!defaultCollapsed : v==='1'; }
+  catch(e){ return !!defaultCollapsed; }
+}
+function collapsibleSectionHtml(o){
+  var collapsed=sectionCollapsed(o.key, o.defaultCollapsed);
+  var count=(o.count!=null)?' <span class="sec-count">'+o.count+'</span>':'';
+  return '<div class="sec '+(o.wrapClass||'')+(collapsed?' collapsed':'')+'" data-sec="'+o.key+'">'
+    +'<button type="button" class="sec-toggle '+(o.btnClass||'')+'" onclick="toggleSection(this)" aria-expanded="'+(!collapsed)+'">'
+    +'<span class="sec-chev">▾</span><span class="sec-label">'+o.label+count+'</span>'
+    +'<span class="sec-hint">'+(collapsed?'εμφάνιση':'σύμπτυξη')+'</span></button>'
+    +'<div class="sec-body">'+o.body+'</div>'
+    +'</div>';
+}
+function toggleSection(btn){
+  var block=btn.closest('[data-sec]'); if(!block) return;
+  var collapsed=block.classList.toggle('collapsed');
+  btn.setAttribute('aria-expanded',String(!collapsed));
+  var hint=btn.querySelector('.sec-hint'); if(hint) hint.textContent=collapsed?'εμφάνιση':'σύμπτυξη';
+  try{ localStorage.setItem(block.getAttribute('data-sec'),collapsed?'1':'0'); }catch(e){}
+}

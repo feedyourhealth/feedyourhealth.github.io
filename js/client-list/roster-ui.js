@@ -245,26 +245,10 @@ function initials(name){
   return (parts[0][0]+parts[1][0]).toUpperCase();
 }
 // Συμπτυσσόμενες ενότητες της καρτέλας Πελάτες (Χρειάζονται προσοχή / Όλοι / Αρχειοθετημένοι /
-// Διαγραμμένοι). Η κατάσταση αποθηκεύεται στο localStorage (per-browser προτίμηση) ανά storeKey και το
-// toggle αλλάζει μόνο class — χωρίς renderSB, ώστε να μη χάνεται το scroll.
-function clientsSectionCollapsed(storeKey){
-  try{ return localStorage.getItem(storeKey)==='1'; }catch(e){ return false; }
-}
+// Διαγραμμένοι) — λεπτό wrapper πάνω στο κοινό collapsibleSectionHtml (js/lib/helpers.js).
 function clientsSectionHtml(storeKey, blockClass, titleHtml, count, bodyHtml){
-  var collapsed=clientsSectionCollapsed(storeKey);
-  return '<div class="clients-section '+blockClass+(collapsed?' collapsed':'')+'">'
-    +'<button type="button" class="clients-section-toggle" onclick="toggleClientsSection(this,\''+storeKey+'\')" aria-expanded="'+(!collapsed)+'">'
-    +'<span class="clients-section-chev">▾</span>'+titleHtml+' <span class="clients-section-count">('+count+')</span>'
-    +'<span class="clients-section-hint">'+(collapsed?'εμφάνιση':'σύμπτυξη')+'</span></button>'
-    +'<div class="clients-section-body">'+bodyHtml+'</div>'
-    +'</div>';
-}
-function toggleClientsSection(btn, storeKey){
-  var block=btn.closest('.clients-section'); if(!block) return;
-  var collapsed=block.classList.toggle('collapsed');
-  btn.setAttribute('aria-expanded',String(!collapsed));
-  var hint=btn.querySelector('.clients-section-hint'); if(hint) hint.textContent=collapsed?'εμφάνιση':'σύμπτυξη';
-  try{ localStorage.setItem(storeKey,collapsed?'1':'0'); }catch(e){}
+  return collapsibleSectionHtml({key:storeKey, wrapClass:'clients-section '+blockClass, btnClass:'clients-section-toggle',
+    label:titleHtml+' ('+count+')', body:bodyHtml});
 }
 // Χτίζει το HTML μιας κάρτας πελάτη. Μοναδική πηγή αλήθειας — τη χρησιμοποιούν τόσο το κανονικό
 // πλέγμα Πελάτες όσο και το block "Χρειάζονται προσοχή" από πάνω του (βλ. renderSB), ώστε μια

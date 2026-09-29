@@ -931,15 +931,18 @@ function homeProgressPointerCard(){
     +'</div>';
 }
 
-// Μια ζώνη της Αρχικής: επικεφαλίδα + πλήθος καρτών + το grid τους. collapsed=true -> <details>
-// κλειστό εξ ορισμού (για τα soft-touch, που δεν είναι εκκρεμότητες). Άδεια ζώνη -> ''.
-function homeZoneHtml(label, cards, collapsed){
+// Μια συμπτυσσόμενη ενότητα της Αρχικής (collapsibleSectionHtml, js/lib/helpers.js) — ίδια
+// επικεφαλίδα-με-γραμμή για όλες. Η επιλογή ανοιχτό/κλειστό θυμάται ανά browser (key 'hmSec_'+id)·
+// defaultCollapsed ισχύει μόνο μέχρι την πρώτη φορά που θα την αλλάξει ο χρήστης.
+function homeSectionHtml(id, label, bodyHtml, count, defaultCollapsed){
+  return collapsibleSectionHtml({key:'hmSec_'+id, wrapClass:'hm-zone', btnClass:'hm-zone-h',
+    label:label, count:count, body:bodyHtml, defaultCollapsed:defaultCollapsed});
+}
+// Μια ζώνη καρτών: επικεφαλίδα + πλήθος καρτών + το grid τους. collapsed=true -> κλειστή εξ ορισμού
+// (Παρακολούθηση / Soft-touch, που δεν είναι εκκρεμότητες). Άδεια ζώνη -> ''.
+function homeZoneHtml(id, label, cards, collapsed){
   if(!cards.length) return '';
-  var head=label+' <span class="hm-zone-n">'+cards.length+'</span>';
-  var grid='<div class="hm-grid">'+cards.join('')+'</div>';
-  return collapsed
-    ? '<details class="hm-zone"><summary class="hm-zone-h">'+head+'</summary>'+grid+'</details>'
-    : '<div class="hm-zone"><div class="hm-zone-h">'+head+'</div>'+grid+'</div>';
+  return homeSectionHtml(id, label, '<div class="hm-grid">'+cards.join('')+'</div>', cards.length, collapsed);
 }
 
 // Ξαναδημοσιεύει το πλάνο ενός πελάτη απευθείας από την Αρχική, χωρίς να φύγουμε από τη σελίδα.
@@ -1112,10 +1115,11 @@ function renderHome(){
   // διπλή προβολή του σκορ.
   var sig2=pendingPlanRows.concat(approachingRenewalRows).concat(staleRows); // 📄 νέο πλάνο / ξαναδημοσίευση
   var sigCardHtml=homeCard('📄 Χρειάζονται νέο πλάνο', sig2, 'ακόμα', 'warning', 4);
-  html+='<div class="hm-signals">'
+  // Κάθε κομμάτι της Αρχικής είναι συμπτυσσόμενο (homeSectionHtml) — η επιλογή θυμάται ανά browser.
+  html+=homeSectionHtml('signals','📄 Πλάνα & πρόοδος','<div class="hm-signals">'
     +(sigCardHtml||'<div class="hm-card"><div class="hm-empty" style="text-align:center;padding:10px 0;font-size:13px">✅ Κανένα εκκρεμές σήμα — τα πλάνα είναι εντάξει</div></div>')
     +homeProgressPointerCard()
-    +'</div>';
+    +'</div>', sig2.length||null, false);
 
   var buckets=homeAttentionBuckets(_attn, staleClients);
   // Προεπιλογή κόκκινο· αλλά αν το κόκκινο είναι άδειο ενώ υπάρχουν μπαγιάτικα, ξεκίνα στο κίτρινο —
@@ -1128,31 +1132,33 @@ function renderHome(){
       +'<div class="hm-tile-num">'+num+'</div><div class="hm-tile-lbl">'+lbl+'</div></div>';
   };
   // [2] Τα πλακίδια είναι φίλτρο — μία ιεραρχία: πλακίδιο επιλέγει, η λίστα από κάτω δείχνει το επιλεγμένο.
-  html+='<p class="hm-filter-eyebrow">Φίλτρο — διάλεξε πλακίδιο· η λίστα από κάτω δείχνει το επιλεγμένο</p>';
-  html+='<div class="hm-tiles">'
+  html+=homeSectionHtml('buckets','🎯 Πελάτες ανά κατάσταση',
+    '<p class="hm-filter-eyebrow">Φίλτρο — διάλεξε πλακίδιο· η λίστα από κάτω δείχνει το επιλεγμένο</p>'
+    +'<div class="hm-tiles">'
     +_hmTile('red','red',buckets.red.length,'🔴 Χρειάζονται προσοχή')
     +_hmTile('amber','amber',buckets.amber.length,'🟡 Μπαγιατεμένα πλάνα')
     +_hmTile('green','green',buckets.green.length,'🟢 Ενεργοί, εντάξει')
     +_hmTile('activity','teal',buckets.activity.length,'💬 Νέα από πελάτες')
     +'</div>'
-    +'<div class="hm-card" style="margin-bottom:20px" id="hm-bucket-list">'+homeBucketListInnerHtml(buckets)+'</div>';
+    +'<div class="hm-card" style="margin-bottom:20px" id="hm-bucket-list">'+homeBucketListInnerHtml(buckets)+'</div>', null, false);
 
   var measuredToday=homeMeasuredToday();
   // 2026-09-16: το ring "ενεργοί με πρόσφατο check-in" και το «Μ.Ο. τήρησης (εβδ.)» ζούσαν εδώ —
   // αφαιρέθηκαν μαζί με τους υπολογισμούς τους (ίδιοι με το KPI strip του tab "📈 Πρόοδος", βλ.
   // homeProgressPointerCard). Το "Πλάνα λήγουν (7 ημ.)" έφυγε για τον ίδιο λόγο (progress.js
   // υπολογίζει το ίδιο πράγμα ανά πελάτη μέσω progressDaysUntilExpiry).
-  html+='<div class="hm-clusters">';
-  html+='<div class="hm-cluster"><div class="hm-cluster-h">Πρακτική</div><div class="hm-stats">'
+  var clustersHtml='<div class="hm-clusters">';
+  clustersHtml+='<div class="hm-cluster"><div class="hm-cluster-h">Πρακτική</div><div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'\')" role="button" tabindex="0" title="Δες όλους τους πελάτες"><div class="hm-stat-num">'+metrics.total+'</div><div class="hm-stat-lbl">Πελάτες</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="homeGoToClients(\'active\')" onkeydown="if(event.key===\'Enter\')homeGoToClients(\'active\')" role="button" tabindex="0" title="Δες πελάτες με ενεργό πλάνο"><div class="hm-stat-num">'+metrics.active+'</div><div class="hm-stat-lbl">Ενεργά πλάνα</div></div>'
     +'</div></div>';
-  html+='<div class="hm-cluster"><div class="hm-cluster-h">Αυτή την εβδομάδα</div><div class="hm-stats">'
+  clustersHtml+='<div class="hm-cluster"><div class="hm-cluster-h">Αυτή την εβδομάδα</div><div class="hm-stats">'
     +'<div class="hm-stat hm-stat-clickable" onclick="toggleQA(\'qa-quickmeasure\')" onkeydown="if(event.key===\'Enter\')toggleQA(\'qa-quickmeasure\')" role="button" tabindex="0" title="Άνοιγμα γρήγορης μέτρησης"><div class="hm-stat-num">'+measuredToday.length+'</div><div class="hm-stat-lbl">Μετρήσεις σήμερα</div>'
     +(measuredToday.length?'<div class="hm-stat-names">'+measuredToday.map(function(c){return esc(c.name||'');}).join(', ')+'</div>':'')
     +'</div>'
     +'</div></div>';
-  html+='</div>';
+  clustersHtml+='</div>';
+  html+=homeSectionHtml('stats','📊 Αριθμοί',clustersHtml,null,false);
 
   var groupBreakdown=homeGroupBreakdown(buckets);
   var tasteLibraryStatus=homeTasteLibraryStatus();
@@ -1183,9 +1189,9 @@ function renderHome(){
   ].filter(Boolean);
 
   if(zActNow.length+zWatch.length+zSoft.length){
-    html+=homeZoneHtml('⚠️ Δράση τώρα', zActNow, false)
-        +homeZoneHtml('👁 Παρακολούθηση', zWatch, true)
-        +homeZoneHtml('💛 Soft-touch', zSoft, true);
+    html+=homeZoneHtml('act', '⚠️ Δράση τώρα', zActNow, false)
+        +homeZoneHtml('watch', '👁 Παρακολούθηση', zWatch, true)
+        +homeZoneHtml('soft', '💛 Soft-touch', zSoft, true);
   } else {
     html+='<div class="hm-empty" style="text-align:center;padding:20px 0">Καμία εκκρεμότητα αυτή τη στιγμή — όλοι οι πελάτες είναι εντάξει 👍</div>';
   }

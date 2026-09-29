@@ -196,18 +196,21 @@ body.dark-mode .cr-actions button:hover{background:#2a2a2a}
    της Αρχικής, ώστε το "χρειάζεται προσοχή" να σημαίνει οπτικά το ίδιο πράγμα σε όλο το εργαλείο. */
 .clients-attn-block{border:1px solid #f3dcae;border-left:4px solid var(--warn);border-radius:14px;padding:14px 16px 2px;margin-bottom:22px;background:#FFFBF2}
 .clients-attn-block .clients-grid{margin-bottom:12px}
-/* Συμπτυσσόμενες ενότητες Πελατών (clientsSectionHtml) — κοινό toggle, χρώμα ανά block */
-.clients-section-toggle{font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;text-align:left}
+/* Συμπτυσσόμενες ενότητες (collapsibleSectionHtml, js/lib/helpers.js) — κοινή μηχανική· το χρώμα/
+   μέγεθος του κουμπιού-κεφαλίδας το δίνει η κλάση του caller (clients-section-toggle / hm-zone-h). */
+.sec-toggle{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;padding:0;cursor:pointer;font-family:inherit;text-align:left}
+.sec-chev{display:inline-block;transition:transform .15s}
+.sec-hint{margin-left:auto;font-size:10.5px;font-weight:600;text-transform:none;letter-spacing:0;opacity:.7;white-space:nowrap}
+.sec-toggle:hover .sec-hint{opacity:1;text-decoration:underline}
+.sec.collapsed>.sec-toggle{margin-bottom:0}
+.sec.collapsed>.sec-body{display:none}
+.sec.collapsed>.sec-toggle .sec-chev{transform:rotate(-90deg)}
+/* Πελάτες */
+.clients-section-toggle{font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 .clients-attn-block .clients-section-toggle{color:#633806}
 .clients-main-block .clients-section-toggle{color:var(--text-strong,#1f3b35)}
 .clients-muted-block{margin-top:14px}
 .clients-muted-block .clients-section-toggle{font-size:10px}
-.clients-section-chev{display:inline-block;transition:transform .15s}
-.clients-section-hint{margin-left:auto;font-size:10.5px;font-weight:600;text-transform:none;letter-spacing:0;opacity:.7}
-.clients-section-toggle:hover .clients-section-hint{opacity:1;text-decoration:underline}
-.clients-section.collapsed .clients-section-toggle{margin-bottom:0}
-.clients-section.collapsed .clients-section-body{display:none}
-.clients-section.collapsed .clients-section-chev{transform:rotate(-90deg)}
 .clients-attn-block.collapsed{padding-bottom:14px}
 .clients-main-block.collapsed,.clients-muted-block.collapsed{padding:4px 0 10px;border-bottom:1px solid var(--border-light,#e6e6e6)}
 .client-card{background:#fff;border:1px solid #e0e0e0;border-radius:14px;padding:14px;cursor:pointer;transition:all .2s}
@@ -313,12 +316,13 @@ body.dark-mode .hm-stat-wow.flat{color:#aaa}
 .hm-zone-h{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#6b6b6b;margin:0 0 10px;list-style:none}
 .hm-zone-h::-webkit-details-marker{display:none}
 .hm-zone-h::after{content:"";flex:1;height:1px;background:var(--border-light,#e0e0e0)}
-.hm-zone-n{background:var(--panel-bg,#f5f5f5);border-radius:999px;padding:0 7px;font-size:10px;font-weight:700}
-details.hm-zone>summary{cursor:pointer}
-details.hm-zone>summary::before{content:"\25B8  ";color:#6b6b6b}
-details.hm-zone[open]>summary::before{content:"\25BE  "}
+.hm-zone-n,.hm-zone-h .sec-count{background:var(--panel-bg,#f5f5f5);border-radius:999px;padding:0 7px;font-size:10px;font-weight:700}
+.hm-zone-h.sec-toggle .sec-label{display:flex;align-items:center;gap:10px}
+.hm-zone-h.sec-toggle::after{order:1}
+.hm-zone-h.sec-toggle .sec-hint{order:2;margin-left:0}
+.hm-zone.collapsed{margin-bottom:14px}
 body.dark-mode .hm-zone-h{color:#aaa}
-body.dark-mode .hm-zone-n{background:#242424}
+body.dark-mode .hm-zone-n,body.dark-mode .hm-zone-h .sec-count{background:#242424}
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px}
 /* Τα 3 κύρια σήματα της Αρχικής — πάνω-πάνω, πιο έντονη παρουσία από τις κάρτες των ζωνών. */
 .hm-signals{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin:0 0 24px}
