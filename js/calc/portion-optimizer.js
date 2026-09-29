@@ -18,7 +18,9 @@
 //   • όλη η εβδομάδα: το ίδιο τρόφιμο με την ίδια αρχική μερίδα παίρνει την ίδια νέα μερίδα
 //     σε όλες τις ημέρες (meal prep / λίστα αγορών) — λύνεται ως ΚΟΙΝΗ μεταβλητή
 // Deps (runtime): cm, FOODS, resolveFood, FOOD_UNITS, WHOLE_UNIT_FOODS, classifyMealSlot, deepClone,
-// getC, calcTDEE, getDayTgtEff, save, renderWeekTable, DAYS, esc, dietoToast, showErrorToast.
+// getC, calcTDEE, getDayTgtEff, save, renderWeekTable, DAYS, esc, dietoToast, showErrorToast,
+// buildEffectiveExclusionList, normalizeGreekText, foodIsExcludedByNameOrIngredient, DIET_TYPE_FORBIDDEN_CATS,
+// foodBlockedByDietCats, FYH_RECIPE_EXPAND (προτάσεις αλλαγής τροφίμου — βλ. _poDiagnose).
 
 var PO_MAX_CHANGE=0.5, PO_MIN_CHANGE=0.10, PO_OK_BAND=10; // PO_OK_BAND: ±% πέρα από το οποίο το toast προειδοποιεί (στενότερο = θόρυβος για 106%)
 // PO_W_KCAL πολύ υψηλό = οι θερμίδες λειτουργούν πρακτικά ως υποχρεωτικός στόχος (επιλογή διαιτολόγου:
@@ -170,27 +172,109 @@ function _poTot(meals){
   return t;
 }
 
-// Ποια μακροθρεπτικά ΔΕΝ φτάνουν ±PO_OK_BAND, με τις 2 κύριες πηγές όταν είναι πάνω από τον στόχο.
-function _poMisses(meals, T){
-  var names={p:'πρωτεΐνη',f:'λίπος',c:'υδατάνθρακες'},out=[];
-  ['p','f','c'].forEach(function(x){
-    if(!(T[x]>0))return;
-    var tot=_poTot(meals)[x],pct=Math.round(tot/T[x]*100);
-    if(Math.abs(pct-100)<=PO_OK_BAND)return;
-    var msg=names[x]+' '+pct+'%';
-    if(pct>100){
+// ── Διάγνωση + προτάσεις ─────────────────────────────────────────────────────────────────────────
+// Όταν μια ημέρα δεν φτάνει με ποσότητες, ο λόγος είναι σχεδόν πάντα ΔΟΜΙΚΟΣ: π.χ. λίπος 159% σε
+// ημέρα όπου πρωινό/μεσημεριανό δεν έχουν καθόλου πηγή υδατανθράκων — οι θερμίδες (προτεραιότητα)
+// καλύπτονται αναγκαστικά από λίπος. Στη δοκιμή, «+ ρύζι στο μεσημεριανό» + «μπιφτέκι → στήθος»
+// έριξαν το λίπος 151%→123% και ανέβασαν τους υδατάνθρακες 77%→93%. Οι προτάσεις είναι κουμπιά:
+// τίποτα δεν αλλάζει αν δεν τα πατήσει η διαιτολόγος.
+var PO_STARCH_BY_SLOT={
+  breakfast:[['Ψωμί ολικής άλεσης',35],['Βρώμη (ωμή)',40],['Ψωμί προζύμης',40]],
+  lunch:[['Ρύζι καστανό (βρ.)',150],['Πατάτες',150],['Κινόα (βρ.)',150],['Κριθαράκι (βρ.)',120],['Γλυκοπατάτα',150]],
+  dinner:[['Ρύζι καστανό (βρ.)',150],['Πατάτες',150],['Κινόα (βρ.)',150],['Κριθαράκι (βρ.)',120],['Γλυκοπατάτα',150]]
+};
+// Άπαχες εναλλακτικές για κρέας όταν δεν βρεθεί ίδιο είδος (π.χ. «Κοτόπουλο …»). Ψάρια/λάδια/ξηροί
+// καρποί ΔΕΝ προτείνονται ποτέ για αντικατάσταση — είναι «καλό» λίπος (ω-3, μεσογειακό πρότυπο).
+var PO_LEAN_MEATS=['Κοτόπουλο στήθος (ψητό)','Γαλοπούλα στήθος','Μπριζόλα άπαχη','Βοδινό άπαχο (ψητό)'];
+var PO_SWAP_CATS={'Κρέας':1,'Αυγά/Γαλακτ.':1};
+
+function _poIsStarch(n){var v=cm(n,100);return v.k>0&&v.c>=15&&v.c*4/v.k>=0.5;}
+
+// Επιτρέπεται το τρόφιμο για τον πελάτη; Ίδια λίστα με genPlan (αποκλεισμοί + πρωτόκολλα + αλλεργίες
+// + preferences) + τύπος διατροφής (νηστεία/vegan κ.λπ.).
+function _poAllowedFn(c){
+  var excl=(typeof buildEffectiveExclusionList==='function')?buildEffectiveExclusionList(c):(c.foodExclude||[]);
+  var norm=(typeof normalizeGreekText==='function')?excl.map(function(x){return normalizeGreekText(x);}):[];
+  var cats=(typeof DIET_TYPE_FORBIDDEN_CATS!=='undefined'&&c.dietType)?DIET_TYPE_FORBIDDEN_CATS[c.dietType]:null;
+  return function(n){
+    if(!FOODS[n])return false;
+    if(norm.length&&typeof foodIsExcludedByNameOrIngredient==='function'&&foodIsExcludedByNameOrIngredient(n,norm))return false;
+    if(cats&&cats.length&&typeof foodBlockedByDietCats==='function'&&foodBlockedByDietCats(n,c.dietType,cats))return false;
+    return true;
+  };
+}
+
+function _poDiagnose(c, d, meals, T, allowed){
+  var msgs=[],sugg=[];
+  var tot=_poTot(meals),pct={};
+  ['p','f','c'].forEach(function(x){pct[x]=T[x]>0?Math.round(tot[x]/T[x]*100):100;});
+  var off=function(x){return T[x]>0&&Math.abs(pct[x]-100)>PO_OK_BAND;};
+  var fatKcal=tot.k>0?Math.round(tot.f*9/tot.k*100):0;
+  var noStarch=[];
+  meals.forEach(function(m,mi){
+    var slot=(typeof classifyMealSlot==='function')?classifyMealSlot(m.name):'other';
+    if(!PO_STARCH_BY_SLOT[slot])return;
+    if(!(m.foods||[]).some(function(f){return _poIsStarch(f.n);}))noStarch.push({mi:mi,slot:slot,name:m.name});
+  });
+  var noStarchTxt=noStarch.map(function(x){return x.name;}).join(', ')+' χωρίς πηγή υδατανθράκων';
+  var carbShort=off('c')&&pct.c<100,fatHigh=off('f')&&pct.f>100;
+  if(off('f')){
+    var msg='λίπος '+pct.f+'%';
+    if(fatKcal>=20&&fatKcal<=35)msg+=' (= '+fatKcal+'% των θερμίδων, εντός 20–35%)';
+    if(fatHigh&&carbShort){
+      msg+=' γιατί λείπουν υδατάνθρακες ('+pct.c+'%)';
+      if(noStarch.length)msg+=': '+noStarchTxt;
+    } else if(fatHigh){
       var agg={};
-      meals.forEach(function(m){(m.foods||[]).forEach(function(f){agg[f.n]=(agg[f.n]||0)+cm(f.n,f.g)[x];});});
+      meals.forEach(function(m){(m.foods||[]).forEach(function(f){agg[f.n]=(agg[f.n]||0)+cm(f.n,f.g).f;});});
       var top=Object.keys(agg).sort(function(a,b){return agg[b]-agg[a];}).slice(0,2);
       if(top.length)msg+=' (κυρίως '+top.join(', ')+')';
     }
-    out.push(msg);
-  });
-  return out;
+    msgs.push(msg);
+  }
+  if(off('c')&&!(fatHigh&&carbShort))msgs.push('υδατάνθρακες '+pct.c+'%'+(carbShort&&noStarch.length?(': '+noStarchTxt):''));
+  if(off('p'))msgs.push('πρωτεΐνη '+pct.p+'%');
+
+  // Πρόταση 1: πρόσθεσε υδατάνθρακα στο πρώτο κύριο γεύμα που δεν έχει (μεσημεριανό → βραδινό → πρωινό).
+  if(carbShort&&noStarch.length){
+    var order={lunch:0,dinner:1,breakfast:2};
+    var target=noStarch.slice().sort(function(a,b){return order[a.slot]-order[b.slot];})[0];
+    var inMeal={};(meals[target.mi].foods||[]).forEach(function(f){inMeal[f.n]=1;});
+    var pick=PO_STARCH_BY_SLOT[target.slot].filter(function(x){return !inMeal[x[0]]&&allowed(x[0]);})[0];
+    if(pick)sugg.push({d:d,type:'add',mi:target.mi,n:pick[0],g:pick[1],
+      label:DAYS[d]+': + '+pick[0]+' '+pick[1]+'g στο '+target.name});
+  }
+  // Πρόταση 2: λιπαρή πρωτεΐνη (κρέας/γαλακτοκομικά, ΟΧΙ ψάρια) → πιο άπαχη, ίδια πρωτεΐνη.
+  if(fatHigh){
+    var best=null;
+    meals.forEach(function(m,mi){(m.foods||[]).forEach(function(f,fi){
+      var fd=FOODS[resolveFood(f.n)];
+      if(!fd||!PO_SWAP_CATS[fd.cat]||fd.f<6||!(fd.p>0))return;
+      if(typeof FYH_RECIPE_EXPAND!=='undefined'&&FYH_RECIPE_EXPAND[f.n])return;
+      var fatG=fd.f*f.g/100;
+      if(!best||fatG>best.fatG)best={mi:mi,fi:fi,n:f.n,g:f.g,fd:fd,fatG:fatG};
+    });});
+    if(best){
+      var first=best.n.split(' ')[0];
+      var ok=function(n){var x=FOODS[n];return n!==best.n&&x&&x.cat===best.fd.cat&&x.f<=best.fd.f*0.6&&x.p>=best.fd.p*0.8&&allowed(n)
+        &&!(typeof FYH_RECIPE_EXPAND!=='undefined'&&FYH_RECIPE_EXPAND[n]);};
+      var cands=Object.keys(FOODS).filter(function(n){return n.split(' ')[0]===first&&ok(n);});
+      if(!cands.length&&best.fd.cat==='Κρέας')cands=PO_LEAN_MEATS.filter(ok);
+      cands.sort(function(a,b){return FOODS[a].f-FOODS[b].f;});
+      if(cands.length){
+        var to=cands[0],g=Math.max(5,Math.round(best.fd.p*best.g/FOODS[to].p/5)*5);
+        sugg.push({d:d,type:'swap',mi:best.mi,fi:best.fi,from:best.n,to:to,g:g,
+          label:DAYS[d]+': '+best.n+' → '+to+' '+g+'g'});
+      }
+    }
+  }
+  return {msgs:msgs,sugg:sugg};
 }
 
 // dayIndex: αριθμός → μόνο αυτή η ημέρα· undefined → όλη η εβδομάδα.
-function adjustPlanPortions(dayIndex){
+// undoTo: (εσωτερικό) το πλάνο στο οποίο γυρίζει η Αναίρεση — όταν η προσαρμογή τρέχει μετά από
+// πρόταση, η Αναίρεση επαναφέρει ΚΑΙ την πρόταση (την κατάσταση πριν το κλικ).
+function adjustPlanPortions(dayIndex, undoTo){
   var c=getC();
   if(!c||!c.weekPlan||!Object.keys(c.weekPlan).length){showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
   var tdee=calcTDEE(c),eff=getDayTgtEff(c,tdee),effByDay={};
@@ -202,38 +286,74 @@ function adjustPlanPortions(dayIndex){
     effByDay[d]=e;return true;
   });
   if(!days.length){showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
-  var oldPlan=deepClone(c.weekPlan);
-  var r=optimizePlanPortions(c,days,effByDay),misses=[];
+  var oldPlan=undoTo||deepClone(c.weekPlan);
+  var r=optimizePlanPortions(c,days,effByDay),misses=[],sugg=[];
+  var allowed=_poAllowedFn(c);
   days.forEach(function(d){
     if(r.touched[d])c.weekPlan[d]=r.byDay[d];
-    var m=_poMisses(c.weekPlan[d],effByDay[d]);
-    if(m.length)misses.push(DAYS[d]+': '+m.join(', '));
+    var dg=_poDiagnose(c,d,c.weekPlan[d],effByDay[d],allowed);
+    if(dg.msgs.length)misses.push(DAYS[d]+': '+dg.msgs.join(' · '));
+    sugg=sugg.concat(dg.sugg);
   });
-  if(r.changed){save();renderWeekTable();}
-  showPortionAdjustToast(r.changed,r.changedDays,misses,r.changed?oldPlan:null,dayIndex);
+  if(r.changed||undoTo){save();renderWeekTable();}
+  showPortionAdjustToast({optChanged:r.changed,touchedDays:r.changedDays,misses:misses,
+    oldPlan:(r.changed||undoTo)?oldPlan:null,dayIndex:dayIndex,sugg:sugg.slice(0,3),afterSuggestion:!!undoTo});
 }
 
-function showPortionAdjustToast(changed,touchedDays,misses,oldPlan,dayIndex){
+// Εφαρμόζει μια πρόταση (πρόσθεση υδατάνθρακα / άπαχη αντικατάσταση) και ξανατρέχει την προσαρμογή
+// ΜΟΝΟ για την ημέρα της πρότασης — ένα ξανατρέξιμο όλης της εβδομάδας μετακινούσε και τις ήδη
+// προσαρμοσμένες ημέρες (το ±50% μετριέται από τις νέες ποσότητες). Η Αναίρεση γυρίζει πριν το κλικ.
+function applyPortionSuggestion(s){
+  var c=getC();
+  if(!c||!c.weekPlan||!c.weekPlan[s.d])return;
+  var before=deepClone(c.weekPlan),meal=c.weekPlan[s.d][s.mi];
+  if(!meal)return;
+  if(s.type==='add'){
+    meal.foods=meal.foods||[];meal.foods.push({n:s.n,g:s.g});
+  } else if(s.type==='swap'){
+    var f=meal.foods&&meal.foods[s.fi];
+    if(!f||f.n!==s.from)return;
+    meal.foods[s.fi]={n:s.to,g:s.g};
+  }
+  adjustPlanPortions(s.d,before);
+}
+
+function showPortionAdjustToast(o){
   var existing=document.getElementById('portion-adjust-toast');if(existing)existing.remove();
-  var scope=(typeof dayIndex==='number')?('Προσαρμόστηκε η '+DAYS[dayIndex])
-    :(touchedDays===1?'Προσαρμόστηκε 1 ημέρα':'Προσαρμόστηκαν '+touchedDays+' ημέρες');
-  var head=changed?('✓ '+scope+' · '+changed+(changed===1?' τρόφιμο άλλαξε':' τρόφιμα άλλαξαν')+' ποσότητα')
-                  :'✓ Το πλάνο είναι ήδη όσο πιο κοντά γίνεται στους στόχους';
-  var warn=misses.length?('<div style="margin-top:6px;opacity:.95">⚠️ Δεν φτάνουν μόνο με ποσότητες — σκέψου αλλαγή τροφίμου:<br>'
+  var sugg=o.sugg||[],misses=o.misses||[];
+  var scope=(typeof o.dayIndex==='number')?('Προσαρμόστηκε η '+DAYS[o.dayIndex])
+    :(o.touchedDays===1?'Προσαρμόστηκε 1 ημέρα':'Προσαρμόστηκαν '+o.touchedDays+' ημέρες');
+  var head=o.afterSuggestion?('✓ Η πρόταση εφαρμόστηκε'+(o.optChanged?' και οι ποσότητες προσαρμόστηκαν ξανά':''))
+          :o.optChanged?('✓ '+scope+' · '+o.optChanged+(o.optChanged===1?' τρόφιμο άλλαξε':' τρόφιμα άλλαξαν')+' ποσότητα')
+          :'✓ Το πλάνο είναι ήδη όσο πιο κοντά γίνεται στους στόχους';
+  var btnCss='display:block;width:100%;box-sizing:border-box;text-align:left;margin-top:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer';
+  var warn=misses.length?('<div style="margin-top:6px;opacity:.95">⚠️ Δεν φτάνουν μόνο με ποσότητες:<br>'
     +misses.map(esc).join('<br>')+'</div>'):'';
+  var sug=sugg.length?('<div style="margin-top:6px">💡 Προτάσεις (πάτα για εφαρμογή):'
+    +sugg.map(function(s,i){return '<button data-sug="'+i+'" style="'+btnCss+'">'+esc(s.label)+'</button>';}).join('')+'</div>'):'';
   var t=document.createElement('div');
   t.id='portion-adjust-toast';
-  t.style.cssText='position:fixed;bottom:20px;right:20px;background:#025857;color:#fff;padding:10px 10px 10px 16px;border-radius:8px;font-size:12px;z-index:10000;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:flex-start;gap:12px;max-width:420px';
-  t.innerHTML='<div>'+esc(head)+warn+'</div>'
-    +(oldPlan?'<button style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Αναίρεση</button>'
-             :'<button aria-label="Κλείσιμο" style="background:none;border:0;color:#fff;font-size:16px;cursor:pointer;line-height:1;flex-shrink:0">×</button>');
+  // Σε κινητό (<768px) το κάτω μενού πιάνει ~60px — το toast ανεβαίνει και απλώνεται σε όλο το πλάτος.
+  var narrow=window.innerWidth<768;
+  t.style.cssText='position:fixed;'+(narrow?'bottom:76px;left:12px;right:12px;':'bottom:20px;right:20px;max-width:440px;')
+    +'background:#025857;color:#fff;padding:10px 10px 10px 16px;border-radius:8px;font-size:12px;z-index:10000;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:flex-start;gap:12px;max-height:70vh;overflow:auto';
+  // flex/width ρητά στα κουμπιά: γενικό στυλ button του app τα τέντωνε σε όλο το πλάτος.
+  t.innerHTML='<div style="flex:1 1 auto;min-width:0">'+esc(head)+warn+sug+'</div>'
+    +(o.oldPlan?'<button data-end="1" style="flex:0 0 auto;width:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">↩ Αναίρεση</button>'
+               :'<button data-end="1" aria-label="Κλείσιμο" style="flex:0 0 auto;width:auto;background:none;border:0;color:#fff;font-size:16px;cursor:pointer;line-height:1">×</button>');
   document.body.appendChild(t);
-  var timer=setTimeout(function(){t.remove();},misses.length?15000:7000);
-  t.querySelector('button').onclick=function(){
+  var life=sugg.length?25000:misses.length?15000:7000,timer=setTimeout(function(){t.remove();},life);
+  // Όσο ο κέρσορας είναι πάνω στο μήνυμα δεν κλείνει — χρόνος να διαβαστούν οι προτάσεις.
+  t.onmouseenter=function(){clearTimeout(timer);};
+  t.onmouseleave=function(){clearTimeout(timer);timer=setTimeout(function(){t.remove();},6000);};
+  t.querySelectorAll('button[data-sug]').forEach(function(b){
+    b.onclick=function(){clearTimeout(timer);t.remove();applyPortionSuggestion(sugg[+b.getAttribute('data-sug')]);};
+  });
+  t.querySelector('button[data-end]').onclick=function(){
     clearTimeout(timer);t.remove();
-    if(!oldPlan)return;
+    if(!o.oldPlan)return;
     var cc=getC();
-    if(cc){cc.weekPlan=oldPlan;save();renderWeekTable();}
+    if(cc){cc.weekPlan=o.oldPlan;save();renderWeekTable();}
     dietoToast('↩ Η προσαρμογή ποσοτήτων αναιρέθηκε');
   };
 }
