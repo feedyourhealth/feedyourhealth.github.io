@@ -244,17 +244,27 @@ function initials(name){
   if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
   return (parts[0][0]+parts[1][0]).toUpperCase();
 }
-// Σύμπτυξη/ανάπτυξη του block "Χρειάζονται προσοχή" (Πελάτες). Αποθηκεύεται στο localStorage
-// (per-browser προτίμηση) και αλλάζει μόνο class — χωρίς renderSB, ώστε να μη χάνεται το scroll.
-function clientsAttnCollapsed(){
-  try{ return localStorage.getItem('clientsAttnCollapsed')==='1'; }catch(e){ return false; }
+// Συμπτυσσόμενες ενότητες της καρτέλας Πελάτες (Χρειάζονται προσοχή / Όλοι / Αρχειοθετημένοι /
+// Διαγραμμένοι). Η κατάσταση αποθηκεύεται στο localStorage (per-browser προτίμηση) ανά storeKey και το
+// toggle αλλάζει μόνο class — χωρίς renderSB, ώστε να μη χάνεται το scroll.
+function clientsSectionCollapsed(storeKey){
+  try{ return localStorage.getItem(storeKey)==='1'; }catch(e){ return false; }
 }
-function toggleClientsAttnBlock(btn){
-  var block=btn.closest('.clients-attn-block'); if(!block) return;
+function clientsSectionHtml(storeKey, blockClass, titleHtml, count, bodyHtml){
+  var collapsed=clientsSectionCollapsed(storeKey);
+  return '<div class="clients-section '+blockClass+(collapsed?' collapsed':'')+'">'
+    +'<button type="button" class="clients-section-toggle" onclick="toggleClientsSection(this,\''+storeKey+'\')" aria-expanded="'+(!collapsed)+'">'
+    +'<span class="clients-section-chev">▾</span>'+titleHtml+' <span class="clients-section-count">('+count+')</span>'
+    +'<span class="clients-section-hint">'+(collapsed?'εμφάνιση':'σύμπτυξη')+'</span></button>'
+    +'<div class="clients-section-body">'+bodyHtml+'</div>'
+    +'</div>';
+}
+function toggleClientsSection(btn, storeKey){
+  var block=btn.closest('.clients-section'); if(!block) return;
   var collapsed=block.classList.toggle('collapsed');
   btn.setAttribute('aria-expanded',String(!collapsed));
-  var hint=btn.querySelector('.clients-attn-hint'); if(hint) hint.textContent=collapsed?'εμφάνιση':'σύμπτυξη';
-  try{ localStorage.setItem('clientsAttnCollapsed',collapsed?'1':'0'); }catch(e){}
+  var hint=btn.querySelector('.clients-section-hint'); if(hint) hint.textContent=collapsed?'εμφάνιση':'σύμπτυξη';
+  try{ localStorage.setItem(storeKey,collapsed?'1':'0'); }catch(e){}
 }
 // Χτίζει το HTML μιας κάρτας πελάτη. Μοναδική πηγή αλήθειας — τη χρησιμοποιούν τόσο το κανονικό
 // πλέγμα Πελάτες όσο και το block "Χρειάζονται προσοχή" από πάνω του (βλ. renderSB), ώστε μια
@@ -421,17 +431,14 @@ function renderSB(){
       var attnClients=list.filter(clientNeedsAttention);
       if(attnClients.length){
         attnClients.sort(function(a,b){return (b.lastAccess||0)-(a.lastAccess||0);});
-        // Συμπτυσσόμενο (βλ. toggleClientsAttnBlock) — η επιλογή θυμάται ανά browser.
-        var _attnCollapsed=clientsAttnCollapsed();
-        html+='<div class="clients-attn-block'+(_attnCollapsed?' collapsed':'')+'">'
-          +'<button type="button" class="clients-attn-title" onclick="toggleClientsAttnBlock(this)" aria-expanded="'+(!_attnCollapsed)+'">'
-          +'<span class="clients-attn-chev">▾</span>🔔 Χρειάζονται προσοχή <span class="clients-attn-count">('+attnClients.length+')</span>'
-          +'<span class="clients-attn-hint">'+(_attnCollapsed?'εμφάνιση':'σύμπτυξη')+'</span></button>'
-          +'<div class="clients-attn-body">'+clientCardsOrTable(attnClients)+'</div>'
-          +'</div>';
+        html+=clientsSectionHtml('clientsAttnCollapsed','clients-attn-block','🔔 Χρειάζονται προσοχή',attnClients.length,clientCardsOrTable(attnClients));
       }
     }
-    html+=clientCardsOrTable(list);
+    // Επικεφαλίδα + σύμπτυξη μόνο όταν υπάρχει το block από πάνω (αλλιώς η λίστα είναι το μόνο
+    // περιεχόμενο και ένας τίτλος θα ήταν σκέτος θόρυβος).
+    html+=(!_clientBulkMode && attnClients && attnClients.length)
+      ? clientsSectionHtml('clientsMainCollapsed','clients-main-block','👥 Όλοι οι πελάτες',list.length,clientCardsOrTable(list))
+      : clientCardsOrTable(list);
   }
   if(_clientBulkMode){
     var _bulkSelCount=Object.keys(_clientBulkSelected).filter(function(id){return _clientBulkSelected[id];}).length;
@@ -457,10 +464,9 @@ function renderSB(){
   // ✅ ARCHIVE SECTION: Show archived (but not deleted) clients
   var archivedClients = clients.filter(function(c){return c.archived && !c.deleted;});
   if(archivedClients.length > 0 && !term){
-    html+='<div class="clients-section-title">📦 Αρχειοθετημένοι ('+archivedClients.length+')</div>';
-    html+='<div class="clients-grid">';
+    var _secHtml='<div class="clients-grid">';
     archivedClients.forEach(function(c){
-      html+='<div class="client-card cc-muted">'
+      _secHtml+='<div class="client-card cc-muted">'
         +'<div class="cc-name cc-muted-name">'+esc(c.name||'Νέος πελάτης')+'</div>'
         +'<div class="cc-sub cc-muted-sub">Αρχειοθετήθηκε</div>'
         +'<div class="cc-muted-actions">'
@@ -469,16 +475,16 @@ function renderSB(){
         +'</div>'
         +'</div>';
     });
-    html+='</div>';
+    _secHtml+='</div>';
+    html+=clientsSectionHtml('clientsArchivedCollapsed','clients-muted-block','📦 Αρχειοθετημένοι',archivedClients.length,_secHtml);
   }
 
   // ✅ TRASH SECTION: Show deleted clients
   var deletedClients = clients.filter(function(c){return c.deleted;});
   if(deletedClients.length > 0 && !term){
-    html+='<div class="clients-section-title">🗑️ Διαγραμμένοι ('+deletedClients.length+')</div>';
-    html+='<div class="clients-grid">';
+    var _secHtml='<div class="clients-grid">';
     deletedClients.forEach(function(c){
-      html+='<div class="client-card cc-muted">'
+      _secHtml+='<div class="client-card cc-muted">'
         +'<div class="cc-name cc-muted-name">'+esc(c.name||'Νέος πελάτης')+'</div>'
         +'<div class="cc-sub cc-muted-sub">Διαγράφηκε</div>'
         +'<div class="cc-muted-actions">'
@@ -487,7 +493,8 @@ function renderSB(){
         +'</div>'
         +'</div>';
     });
-    html+='</div>';
+    _secHtml+='</div>';
+    html+=clientsSectionHtml('clientsDeletedCollapsed','clients-muted-block','🗑️ Διαγραμμένοι',deletedClients.length,_secHtml);
   }
 
   var clientListEl=document.getElementById('client-list');
