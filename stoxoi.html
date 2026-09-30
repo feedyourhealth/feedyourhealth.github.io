@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#025857">
+<title>Feed Your Health — Οι στόχοι σου</title>
+<!-- Προσωπικός σύνδεσμος — να μη γίνεται indexed/preview-fetched (ίδιο μοτίβο με metriseis.html). -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta property="og:title" content="Feed Your Health">
+<meta property="og:description" content="Προσωπικός σύνδεσμος διατροφικών στόχων.">
+<!-- Defense-in-depth CSP, ίδιο με metriseis.html (χωρίς frame-ancestors — βλ. commit 9271b33). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Στόχοι">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<script src="vendor/supabase-js.min.js"></script>
+<style>
+  :root{
+    --teal:#025857; --teal-d:#014545; --tint:#E2EEE5; --tint2:#f2fbf8; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --bg:#f4f8f6; --card:#ffffff; --danger:#b71c1c;
+    --p:#1565c0; --c:#2e7d32; --f:#d84315;
+    --pre-bg:#fff4e5; --pre-fg:#8a5200; --post-bg:#e8f5e9; --post-fg:#2e7d32; --mid-bg:#e3f2fd; --mid-fg:#0d47a1;
+    --on:#ffffff; --dbl:#e65100;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --teal:#3aa8a6; --teal-d:#8fd4d2; --tint:#173230; --tint2:#162523; --bord:#2c413e; --bord-l:#1c302e;
+      --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --bg:#111917; --card:#18211f; --danger:#e0715f;
+      --p:#6fa8ea; --c:#7cc47f; --f:#ff8a65;
+      --pre-bg:#3a2c12; --pre-fg:#f0c27a; --post-bg:#16301a; --post-fg:#8fd494; --mid-bg:#14283f; --mid-fg:#9cc6f5;
+      --on:#0d1514; --dbl:#ff8a3d;
+    }
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45;font-size:16px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:620px;margin:0 auto;padding:0 16px 64px}
+  header{display:flex;align-items:center;gap:10px;padding:16px 4px 6px}
+  .mark{width:30px;height:30px;border-radius:8px;flex:0 0 auto;background:var(--teal)}
+  header b{font-size:.82rem;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+  .who{padding:6px 4px 10px}
+  .who h1{font-family:Georgia,"Times New Roman",serif;font-size:1.45rem;margin:0 0 3px;color:var(--teal-d)}
+  .who .upd{font-size:.78rem;color:var(--faint)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+  .tile{background:var(--card);border:1px solid var(--bord-l);border-radius:12px;padding:9px 12px}
+  .tile .l{font-size:.72rem;color:var(--faint)}
+  .tile .v{font-size:1.15rem;font-weight:700;color:var(--teal-d)}
+  .pills{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;margin:0 -2px 6px;-webkit-overflow-scrolling:touch}
+  .dp{flex:1 1 0;min-width:0;border:1px solid var(--bord);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 2px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;text-align:center}
+  .dp small{display:block;font-weight:400;color:var(--faint);font-size:.66rem}
+  .dp[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--on)}
+  .dp[aria-pressed="true"] small{color:var(--on)}
+  .card{background:var(--card);border:1px solid var(--bord-l);border-radius:16px;padding:14px;margin-bottom:12px}
+  .dh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:1.05rem;font-weight:700;color:var(--teal-d)}
+  .dsub{font-size:.8rem;color:var(--muted);margin:2px 0 12px}
+  .pill{font-size:.68rem;padding:2px 8px;border-radius:999px;font-weight:700;white-space:nowrap}
+  .pill.pre{background:var(--pre-bg);color:var(--pre-fg)} .pill.post{background:var(--post-bg);color:var(--post-fg)} .pill.mid{background:var(--mid-bg);color:var(--mid-fg)}
+  .pill.kT{background:var(--teal);color:var(--on)} .pill.kR{background:var(--tint);color:var(--muted)} .pill.kD{background:var(--dbl);color:var(--on)}
+  .ring{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+  .rg{background:var(--tint2);border-radius:12px;padding:9px 4px;text-align:center}
+  .rg .v{font-size:1.1rem;font-weight:700;color:var(--teal-d)}
+  .rg .l{font-size:.64rem;color:var(--faint)}
+  .cp{color:var(--p)!important} .cc{color:var(--c)!important} .cf{color:var(--f)!important}
+  .ml{display:flex;gap:12px;padding:11px 2px;border-bottom:1px solid var(--bord-l);align-items:flex-start}
+  .ml:last-child{border-bottom:none}
+  .ml .tm{font-size:.86rem;font-weight:700;color:var(--teal-d);min-width:46px;font-variant-numeric:tabular-nums}
+  .ml .nm{font-size:.9rem;font-weight:600;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .ml .mc{font-size:.8rem;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+  .ml .mc b{font-weight:700}
+  .ml.tr{background:var(--tint2);border-radius:12px;padding:11px 10px;border-bottom:none;margin:4px 0}
+  .ml.tr .nm{color:var(--teal-d)}
+  h2{font-size:.95rem;margin:0 0 8px;color:var(--teal-d)}
+  .scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:7px 4px;font-size:.78rem;text-align:right;border-bottom:1px solid var(--bord-l);white-space:nowrap;font-variant-numeric:tabular-nums}
+  th{color:var(--faint);font-weight:600;font-size:.7rem}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  td:nth-child(2){white-space:normal}
+  tr.rest td{color:var(--faint)!important}
+  tr.rest td.cp,tr.rest td.cc,tr.rest td.cf{color:var(--faint)!important}
+  tbody tr{cursor:pointer}
+  ul{margin:0;padding-left:18px;font-size:.84rem;line-height:1.6;color:var(--ink)}
+  .state{text-align:center;padding:60px 16px}
+  .state .big{font-size:2rem;color:var(--teal)}
+  .state .big.err{color:var(--danger)}
+  .state h1{font-size:1.1rem;color:var(--teal-d);margin:10px 0 6px}
+  .state p{color:var(--muted);font-size:.9rem;margin:0 0 8px}
+  .spin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite;margin:70px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="mark"></div><b>FEED YOUR HEALTH</b></header>
+  <div id="root"><div class="spin" role="status" aria-label="Loading"></div></div>
+</div>
+
+<script>
+'use strict';
+const SUPABASE_URL='https://vqmzrmotdqqoswlgfgrn.supabase.co';
+const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+
+function tokenParam(){ const p=new URLSearchParams(location.search); return p.get('t')||p.get('token')||''; }
+const TOK=tokenParam();
+let sb=null, SNAP=null, DAY=(new Date().getDay()+6)%7;   // 0=Δευτέρα … 6=Κυριακή
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function num(n){ return String(n==null?'':n).replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+
+/* Τα κείμενα του εντύπου έρχονται έτοιμα (και μεταφρασμένα) μέσα στο snapshot (SNAP.txt) —
+   εδώ υπάρχουν μόνο τα μηνύματα σφάλματος, δίγλωσσα γιατί δεν ξέρουμε ακόμη τη γλώσσα. */
+function fail(tEl,sEl,tEn,sEn){
+  el('root').innerHTML='<div class="state"><div class="big err">✕</div><h1>'+esc(tEl)+'</h1><p>'+esc(sEl)+'</p>'
+    +'<h1 style="margin-top:18px">'+esc(tEn)+'</h1><p>'+esc(sEn)+'</p></div>';
+}
+
+(async function boot(){
+  if(!TOK){ return fail('Λείπει ο σύνδεσμος.','Ζήτησε από τον διαιτολόγο σου το σωστό link.','Link is missing.','Ask your dietitian for the correct link.'); }
+  let data,error;
+  try{
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+    ({data,error}=await sb.rpc('get_shared_plan',{p_token:TOK}).single());
+  }catch(e){
+    return fail('Πρόβλημα σύνδεσης.','Έλεγξε τη σύνδεσή σου στο ίντερνετ και δοκίμασε ξανά.','Connection problem.','Check your internet connection and try again.');
+  }
+  if(error||!data||!data.snapshot||data.snapshot.kind!=='targets'){
+    if(error) console.error('[stoxoi] get_shared_plan',error);
+    return fail('Οι στόχοι δεν βρέθηκαν.','Ο σύνδεσμος μπορεί να έληξε. Ζήτησε νέο link από τον διαιτολόγο σου.','Targets not found.','The link may have expired. Ask your dietitian for a new one.');
+  }
+  if(data.expires_at && new Date(data.expires_at)<new Date()){
+    return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο σου να στείλει νέο link.','This link has expired.','Ask your dietitian to send you a new link.');
+  }
+  SNAP=data.snapshot;
+  document.documentElement.lang=SNAP.lang==='en'?'en':'el';
+  render();
+})();
+
+function setDay(i){ DAY=i; render(); const c=el('daycard'); if(c&&c.scrollIntoView) c.scrollIntoView({block:'nearest'}); }
+
+function render(){
+  const s=SNAP, X=s.txt||{}, d=s.days[DAY]||s.days[0];
+  document.title='Feed Your Health — '+(X.phTitle||'');
+  let h='<div class="who"><h1>'+esc((s.name?s.name+', ':'')+(X.phTitle||'').toLowerCase())+'</h1><div class="upd">'+esc(X.sub||'')+' · '+esc(X.updated||'')+' '+esc(s.date||'')+'</div></div>';
+
+  let tiles='';
+  const tile=(l,v)=>'<div class="tile"><div class="l">'+esc(l)+'</div><div class="v">'+esc(v)+'</div></div>';
+  if(s.weight!=null) tiles+=tile(X.weight,s.weight+' kg');
+  if(s.bf!=null) tiles+=tile(X.bf,s.bf+'%');
+  if(s.lean!=null) tiles+=tile(X.lean,s.lean+' kg');
+  tiles+=tile(X.avgK,num(s.avgK));
+  h+='<div class="tiles">'+tiles+'</div>';
+
+  h+='<div class="pills" role="group">'+s.days.map((x,i)=>
+    '<button class="dp" aria-pressed="'+(i===DAY)+'" onclick="setDay('+i+')">'+esc(x.short)+'<small>'+(x.kind==='R'?'—':x.kind==='D'?'×2':'●')+'</small></button>').join('')+'</div>';
+
+  let sp=0, sc=0, sf=0, list='';
+  d.rows.forEach(r=>{
+    if(r.train){
+      if(r.c) sc+=r.c;
+      list+='<div class="ml tr"><div class="tm">'+esc(r.time)+'</div><div><div class="nm">▶ '+esc(r.name)+'</div>'
+        +(r.note?'<div class="mc">'+esc(r.note)+(r.c?' · <b class="cc">'+esc(X.cS)+' '+r.c+'</b>':'')+'</div>':'')+'</div></div>';
+      return;
+    }
+    sp+=r.p; sc+=r.c; sf+=r.f;
+    list+='<div class="ml"><div class="tm">'+esc(r.time)+'</div><div><div class="nm">'+esc(r.name)+(r.tag?'<span class="pill '+esc(r.tag.cls)+'">'+esc(r.tag.label)+'</span>':'')+'</div>'
+      +'<div class="mc">'+r.k+' kcal · <b class="cp">'+esc(X.pS)+' '+r.p+'</b> · <b class="cc">'+esc(X.cS)+' '+r.c+'</b> · <b class="cf">'+esc(X.fS)+' '+r.f+'</b></div></div></div>';
+  });
+  h+='<div class="card" id="daycard"><div class="dh">'+esc(d.label)+' <span class="pill k'+esc(d.kind)+'">'+esc(d.kindLabel)+'</span></div>'
+    +'<div class="dsub">'+esc(d.sub)+'</div>'
+    +'<div class="ring"><div class="rg"><div class="v">'+num(d.k)+'</div><div class="l">kcal</div></div>'
+    +'<div class="rg"><div class="v cp">'+sp+'</div><div class="l">'+esc(X.protL)+'</div></div>'
+    +'<div class="rg"><div class="v cc">'+sc+'</div><div class="l">'+esc(X.carbL)+'</div></div>'
+    +'<div class="rg"><div class="v cf">'+sf+'</div><div class="l">'+esc(X.fatL)+'</div></div></div>'
+    +list+'</div>';
+
+  h+='<div class="card"><h2>'+esc(X.week)+'</h2><div class="scroll"><table><thead><tr><th>'+esc(X.day)+'</th><th>'+esc(X.training)+'</th><th>kcal</th><th>'+esc(X.pS)+'</th><th>'+esc(X.cS)+'</th><th>'+esc(X.fS)+'</th></tr></thead><tbody>'
+    +s.days.map((x,i)=>'<tr'+(x.kind==='R'?' class="rest"':'')+' onclick="setDay('+i+')"><td>'+esc(x.short)+'</td><td>'+esc(x.trainName)+(x.trainTime&&x.trainTime!=='—'?' · '+esc(x.trainTime):'')+'</td><td>'+num(x.k)+'</td><td class="cp">'+x.p+'</td><td class="cc">'+x.c+'</td><td class="cf">'+x.f+'</td></tr>').join('')
+    +'</tbody></table></div></div>';
+
+  h+='<div class="card"><h2>'+esc(X.howTitle)+'</h2><ul>'+(X.how||[]).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>';
+  el('root').innerHTML=h;
+}
+</script>
+</body>
+</html>

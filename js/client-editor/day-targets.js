@@ -564,7 +564,13 @@ function buildDayTgtHtml(c,t){
     +'</div>'
     +'</div>'
     +choFlagHtml
-    +'<table class="day-tgt-table"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></div>';
+    +'<table class="day-tgt-table"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table>'
+    // 📊 Στόχοι χωρίς πλάνο — στέλνει αυτόν ακριβώς τον πίνακα (+ ώρες/μοιρασιά ανά γεύμα) σε
+    // PDF ή σύνδεσμο, για πελάτες που δεν θέλουν διατροφή. Βλ. js/reports/targets-sheet.js.
+    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px">'
+    +'<button type="button" class="btn secondary" onclick="openTargetsModal()">&#128202; Αποστολή στόχων (χωρίς πλάνο)</button>'
+    +'<span style="font-size:10px;color:var(--text-muted)">PDF ή σύνδεσμος με τα μακροθρεπτικά και τις ώρες κάθε ημέρας — δεν χρειάζεται διατροφικό πλάνο.</span>'
+    +'</div></div>';
 }
 
 /* ── MET Activities UI ───────────────────────────────────────────────────── */
