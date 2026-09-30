@@ -185,6 +185,25 @@ function _altRecipeSlots(r, isSnackDB){
   return ['lunch','dinner'];
 }
 
+// Μερίδιο θερμίδων ανά μακροθρεπτικό ({p,c,f}, άθροισμα 1) — ανεξάρτητο από το μέγεθος της μερίδας,
+// άρα συγκρίσιμο ανάμεσα σε ένα γεύμα και μια εναλλακτική που θα κλιμακωθεί στις θερμίδες του.
+function mealMacroShares(foods){
+  var p=0,ch=0,f=0;
+  (foods||[]).forEach(function(x){ var v=cm(x.n,x.g); p+=v.p||0; ch+=v.c||0; f+=v.f||0; });
+  var k=p*4+ch*4+f*9;
+  return k>0?{p:p*4/k,c:ch*4/k,f:f*9/k}:null;
+}
+// Πόσο απέχει η κατανομή μακροθρεπτικών δύο γευμάτων: 0 = ίδια· μεγαλώνει όσο περισσότερες
+// θερμίδες βρίσκονται σε «λάθος» μακροθρεπτικό. Η πρωτεΐνη μετράει διπλά: είναι το μικρότερο
+// μερίδιο θερμίδων, άρα μια μεγάλη πτώση της (π.χ. ψάρι+ρύζι → ζυμαρικά με σάλτσα) αλλιώς
+// «χάνεται» μέσα στη διαφορά υδατάνθρακα/λίπους.
+function macroShareDistance(a,b){
+  if(!a||!b)return 0;
+  return (2*Math.abs(a.p-b.p)+Math.abs(a.c-b.c)+Math.abs(a.f-b.f))/2;
+}
+var ALT_MACRO_WEIGHT=1.5;   // βάρος της απόστασης μακροθρεπτικών στη βαθμολογία (οι θερμίδες κλιμακώνονται έτσι κι αλλιώς)
+var ALT_MACRO_OK=0.20;      // έως εδώ μια εναλλακτική θεωρείται «ισοδύναμη» και μπορεί να προτιμηθεί για ποικιλία πρωτεΐνης
+
 // One-time, per-client candidate pool. `excl` = the client's FULL exclusion list
 // (buildEffectiveExclusionList). Each entry: {foods,kcal,sig,slots,group,src,trust}.
 function buildAlternatesPool(c, excl){
@@ -202,7 +221,7 @@ function buildAlternatesPool(c, excl){
     if(kcal<50)return;
     seen[sig]=true;
     pool.push({foods:foods, kcal:kcal, sig:sig, slots:slots, src:src,
-      group:mealProteinGroup(foods),
+      group:mealProteinGroup(foods), macro:mealMacroShares(foods),
       trust:(typeof getRecipeTrustScore==='function')?getRecipeTrustScore(id||sig):0.5});
   }
   function slotOf(name){ var s=classifyMealSlot(name); return s==='other'?['breakfast','snack','lunch','dinner']:[s]; }
@@ -239,9 +258,11 @@ function buildAlternatesPool(c, excl){
 
 // Pick up to `count` alternates for one meal from a pool built above. `isBlocked(foods)` = extra
 // per-day veto (diet-type forbidden categories honouring that day's exceptions); defaults to the
-// plain diet-type rule. Ranking: calorie closeness, −bonus for the client's own proven meals and
-// for trusted (👍 / rarely-regenerated) meals; then greedy pick so each alternate has a DIFFERENT
-// main protein (e.g. όσπρια / αυγό / γαλακτοκομικό) instead of 3 variants of one dish.
+// plain diet-type rule. Ranking: macro-distribution closeness to the meal being replaced (so a
+// high-carb pre-run snack isn't "swapped" for eggs + tomato) + calorie closeness, −bonus for the
+// client's own proven meals and for trusted (👍 / rarely-regenerated) meals; then greedy pick so
+// each alternate has a DIFFERENT main protein (e.g. όσπρια / αυγό / γαλακτοκομικό) instead of 3
+// variants of one dish — but variety is only preferred among macro-equivalent candidates.
 function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
   count=count||3;
   var dt=(c&&c.dietType)||'normal';
@@ -265,8 +286,10 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
     if((slot==='lunch'||slot==='dinner') && x.foods.some(function(f){return (f.n||'').toLowerCase().indexOf('βρώμη')!==-1;}))return false;
     return !isBlocked(x.foods);
   });
+  var myMacro=mealMacroShares(meal.foods);
   function score(x){
-    var s=Math.abs(x.kcal-tk)/tk;
+    x._m=macroShareDistance(myMacro, x.macro||(x.macro=mealMacroShares(x.foods)));
+    var s=Math.abs(x.kcal-tk)/tk + ALT_MACRO_WEIGHT*x._m;
     if(x.kcal<tk*0.5||x.kcal>tk*1.8)s+=1;            // would need extreme rescaling — last resort only
     if(x.src==='own')s-=0.15;
     s-=((x.trust||0.5)-0.5)*0.2;
@@ -276,10 +299,11 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
   cands.sort(function(a,b){return a._s-b._s;});
   var picked=[], used={}, curGroup=mealProteinGroup(meal.foods);
   function take(x){ picked.push(x); used[x.group]=true; }
-  // 1) new protein group, also different from the current meal's · 2) new group among the picks ·
-  // 3) best remaining, whatever the group (so we still reach `count` when the pool is narrow)
-  cands.forEach(function(x){ if(picked.length<count && !used[x.group] && x.group!==curGroup) take(x); });
-  cands.forEach(function(x){ if(picked.length<count && !used[x.group] && picked.indexOf(x)===-1) take(x); });
+  // 1) new protein group, also different from the current meal's · 2) new group among the picks —
+  // both only among macro-equivalent candidates · 3) best remaining, whatever the group (so we
+  // still reach `count` when the pool is narrow)
+  cands.forEach(function(x){ if(picked.length<count && x._m<=ALT_MACRO_OK && !used[x.group] && x.group!==curGroup) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && x._m<=ALT_MACRO_OK && !used[x.group] && picked.indexOf(x)===-1) take(x); });
   cands.forEach(function(x){ if(picked.length<count && picked.indexOf(x)===-1) take(x); });
   return picked.map(function(x){
     var scaled=scalePlan([{name:meal.name,foods:deepClone(x.foods)}], null, [{k:targetKcal}])[0];
