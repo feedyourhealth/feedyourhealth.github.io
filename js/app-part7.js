@@ -574,31 +574,31 @@
         el:{title:'Η διατροφή σου γύρω από την προπόνηση',pre:'Πριν',during:'Κατά',post:'Μετά',
           hBefore:'πριν',everyHr:'κάθε ώρα',within:'μέσα σε',mn:'′',perHr:'g/ώρα',approx:'~',
           na:'δεν χρειάζεται (σύντομη συνεδρία)',
-          preEg:'π.χ. μπανάνα + ψωμί με μέλι',durEg:'π.χ. αθλητικό ποτό ή gel + νερό',postEg:'π.χ. ρύζι + κοτόπουλο ή smoothie',
+          durEg:'π.χ. αθλητικό ποτό ή gel + νερό',
           why:'Γεμάτες αποθήκες ενέργειας πριν, σταθερή ενέργεια στη διάρκεια, γρήγορη ανάκαμψη μετά — χωρίς βάρος στο στομάχι.',
-          note:'Οι ποσότητες είναι μέσα στο ημερήσιο σύνολό σου, όχι επιπλέον. Αν η προπόνηση είναι πιο σύντομη ή χαλαρή, μείωσέ τες.',
-          foot:'Ενδεικτικά τρόφιμα — δες το πλήρες πλάνο για τις ακριβείς μερίδες.'},
+          note:'Το «Πριν» και το «Μετά» δεν είναι επιπλέον φαγητό. Είναι οδηγός για το πώς να τοποθετήσεις τα γεύματα του πλάνου σου γύρω από την προπόνηση.',
+          foot:'Το «Κατά» είναι το μόνο που παίρνεις εκτός γευμάτων, και μόνο σε μεγάλη προπόνηση.'},
         en:{title:'Fuelling around your training',pre:'Before',during:'During',post:'After',
           hBefore:'before',everyHr:'every hour',within:'within',mn:' min',perHr:'g/hr',approx:'~',
           na:'not needed (short session)',
-          preEg:'e.g. banana + bread with honey',durEg:'e.g. a sports drink or a gel + water',postEg:'e.g. rice + chicken or a smoothie',
+          durEg:'e.g. a sports drink or a gel + water',
           why:'Full energy stores before you start, steady energy through the session, fast recovery afterwards — without a heavy stomach.',
-          note:'These amounts are part of your daily total, not extra. If the session is shorter or easier, scale them down.',
-          foot:'Example foods — see your full plan for exact portions.'},
+          note:'“Before” and “After” are not extra food. They are a guide for how to place the meals of your plan around your training.',
+          foot:'“During” is the only thing you take outside your meals, and only in a long session.'},
         ru:{title:'Питание вокруг тренировки',pre:'До',during:'Во время',post:'После',
           hBefore:'до',everyHr:'каждый час',within:'в течение',mn:' мин',perHr:'г/час',approx:'~',
           na:'не требуется (короткая сессия)',
-          preEg:'напр. банан + хлеб с мёдом',durEg:'напр. спортивный напиток или гель + вода',postEg:'напр. рис + курица или смузи',
+          durEg:'напр. спортивный напиток или гель + вода',
           why:'Полные запасы энергии до старта, ровная энергия во время, быстрое восстановление после — без тяжести в желудке.',
-          note:'Эти количества входят в дневную норму, а не сверх неё. Если тренировка короче или легче — уменьшите.',
-          foot:'Примерные продукты — точные порции в вашем плане.'},
+          note:'«До» и «После» — это не дополнительная еда. Это ориентир, как распределить приёмы пищи из вашего плана вокруг тренировки.',
+          foot:'«Во время» — единственное, что вы принимаете помимо приёмов пищи, и только на длительной тренировке.'},
         tr:{title:'Antrenman çevresinde beslenme',pre:'Önce',during:'Sırasında',post:'Sonra',
           hBefore:'önce',everyHr:'her saat',within:'içinde',mn:' dk',perHr:'g/saat',approx:'~',
           na:'gerekmez (kısa seans)',
-          preEg:'örn. muz + ballı ekmek',durEg:'örn. spor içeceği veya jel + su',postEg:'örn. pilav + tavuk veya smoothie',
+          durEg:'örn. spor içeceği veya jel + su',
           why:'Başlamadan önce dolu enerji depoları, seans boyunca istikrarlı enerji, sonrasında hızlı toparlanma — mideyi ağırlaştırmadan.',
-          note:'Bu miktarlar günlük toplamının içindedir, ekstra değildir. Seans daha kısa veya hafifse azalt.',
-          foot:'Örnek besinler — kesin porsiyonlar için tam planına bak.'}
+          note:'“Önce” ve “Sonra” ekstra yemek değildir. Planındaki öğünleri antrenmanın çevresine nasıl yerleştireceğini gösteren bir rehberdir.',
+          foot:'“Sırasında” öğünlerin dışında aldığın tek şeydir, o da yalnızca uzun antrenmanda.'}
       };
       var choTxt=CHO_TXT[lang]||CHO_TXT.el;
       function buildDayCho(dayIdx){
@@ -607,14 +607,14 @@
         if(!cr||(!cr.isTrainingDay&&!cr.isMatchDay))return null;
         var leadH=Math.max(1,Math.round((cr.pre.leadMin||120)/60));
         return {
-          title:choTxt.title, sessionStart:cr.sessionStart||'', why:choTxt.why, note:choTxt.note, foot:choTxt.foot,
-          pre:{grams:cr.pre.grams, time:cr.pre.timeLabel||'', label:choTxt.pre, sub:leadH+'h '+choTxt.hBefore, eg:choTxt.preEg},
+          title:choTxt.title, sessionStart:cr.sessionStart||'', why:choTxt.why, note:choTxt.note, foot:cr.during.applicable?choTxt.foot:'',
+          pre:{grams:cr.pre.grams, time:cr.pre.timeLabel||'', label:choTxt.pre, sub:leadH+'h '+choTxt.hBefore},
           during:cr.during.applicable
             ? {applicable:true, perHour:cr.during.gramsPerHour, total:cr.during.totalGrams,
                label:choTxt.during, sub:choTxt.everyHr, unit:choTxt.perHr, approx:choTxt.approx, eg:choTxt.durEg}
             : {applicable:false, label:choTxt.during, sub:choTxt.na, eg:''},
           post:{grams:cr.post.grams, time:cr.post.timeLabel||'', label:choTxt.post,
-                sub:choTxt.within+' '+(cr.post.windowMin||30)+choTxt.mn, eg:choTxt.postEg}
+                sub:choTxt.within+' '+(cr.post.windowMin||30)+choTxt.mn}
         };
       }
 
