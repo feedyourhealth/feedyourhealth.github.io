@@ -1941,7 +1941,7 @@ function viewHome(){
   const stats=el('div','stats stats-4');
   stats.innerHTML=
     homeStat(T('statGoal'),eatK,tg.kcal||0,'kcal')
-    +homeStat(T('statProtein'),eatP,tg.p||0,unitG)
+    +homeStat(T('statProtein'),eatP,tg.p||0,unitG,true)
     +homeStat(T('statCarbs'),eatC,tg.c||0,unitG)
     +homeStat(T('statFat'),eatF,tg.f||0,unitG);
   v.appendChild(stats);
@@ -2068,10 +2068,12 @@ function statBox(l,v,u,ok){if(ok===undefined)ok=/^[−-]/.test(u);return '<div c
 // Όπως statBox, αλλά για τη σειρά στόχων της Αρχικής: δείχνει πόσο καταναλώθηκε έναντι του
 // ημερήσιου στόχου (με μπάρα προόδου) αντί για μόνο τον στόχο — ξεχωριστό function γιατί το
 // statBox() ξαναχρησιμοποιείται και στην κάρτα προόδου βάρους (start/now/goal), όπου δεν βγάζει νόημα.
-function homeStat(l,cons,tgt,u){
+// Κόκκινο μόνο πάνω από +10% του στόχου (μικρές υπερβάσεις δεν είναι πρόβλημα)· noOver=true
+// για την πρωτεΐνη, όπου η υπέρβαση δεν επισημαίνεται ποτέ.
+function homeStat(l,cons,tgt,u,noOver){
   const t=Math.max(0,tgt||0);
   const pct=t?Math.max(0,Math.min(100,Math.round(cons/t*100))):0;
-  const over=t>0&&cons>t;
+  const over=!noOver&&t>0&&cons>t*1.10;
   return '<div class="stat'+(over?' stat-over':'')+'"><div class="l">'+l+'</div><div class="v">'+nfmt(cons)+'</div>'
     +'<div class="u">'+T('statOf',{t:nfmt(t)})+' '+u+'</div>'
     +'<div class="prog" style="margin-top:6px"><div style="width:'+pct+'%'+(over?';background:var(--danger)':'')+'"></div></div></div>';
