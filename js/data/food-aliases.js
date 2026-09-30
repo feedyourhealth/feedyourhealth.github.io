@@ -267,6 +267,13 @@ var FOOD_ALIASES={
   'Χυμός παντζαριού':'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο',
   'Χυμός παντζάρι Alambra':'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο',
   'Beetroot Juice (Alambra)':'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο',
+  // Λανίτης Χυμός Μήλο (Lanitis Natural Apple Juice 4x330 ml) — added 2026-09-30
+  'Lanitis Natural Apple Juice':'Λανίτης Χυμός Μήλο',
+  'Lanitis Natural Apple Juice 4x330 ml':'Λανίτης Χυμός Μήλο',
+  'Lanitis Apple Juice':'Λανίτης Χυμός Μήλο',
+  'Λανίτης Φυσικός Χυμός Μήλο':'Λανίτης Χυμός Μήλο',
+  'Χυμός μήλου':'Λανίτης Χυμός Μήλο',
+  'Χυμός μήλο':'Λανίτης Χυμός Μήλο',
   // Chicken Katsu Curry (wagamama) — added 2026-09-11
   'Wagamama Chicken Katsu Curry':'Chicken Katsu Curry (wagamama)',
   'Katsu Curry':'Chicken Katsu Curry (wagamama)',
