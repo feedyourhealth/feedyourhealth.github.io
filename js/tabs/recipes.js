@@ -401,7 +401,9 @@ function recipeRow(recipe){
     +(isRecipeHidden(recipe)?'<span class="rcp-custom-badge" title="Δεν μπαίνει σε νέα πλάνα ούτε στις εναλλακτικές">κρυμμένη</span>':'')
     +'</div>'
     +'<div class="rcp-row-actions">'
-    +(isRecipeHidden(recipe)?'<button type="button" class="rcp-edit-btn" title="Επαναφορά συνταγής" aria-label="Επαναφορά συνταγής" onclick="toggleRecipeHidden(\''+recipe.id+'\')">👁️</button>':'')
+    +(isRecipeHidden(recipe)
+      ?'<button type="button" class="rcp-edit-btn" title="Επαναφορά συνταγής" aria-label="Επαναφορά συνταγής" onclick="toggleRecipeHidden(\''+recipe.id+'\')">👁️</button>'
+      :'<button type="button" class="rcp-edit-btn" title="Απόκρυψη συνταγής — δεν θα μπαίνει σε νέα πλάνα" aria-label="Απόκρυψη συνταγής" onclick="toggleRecipeHidden(\''+recipe.id+'\')">🙈</button>')
     +(recipe.source==='custom'?'<button type="button" class="rcp-edit-btn" title="Επεξεργασία συνταγής" aria-label="Επεξεργασία συνταγής" onclick="openNewRecipeModal(\''+recipe.id+'\')">✏️</button>':'')
     +'<button type="button" class="rcp-star'+(popular?' active':'')+'" title="Δημοφιλές" onclick="onToggleRecipePopular(\''+recipe.id+'\')">⭐</button>'
     +'</div>'
