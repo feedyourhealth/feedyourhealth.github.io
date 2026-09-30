@@ -849,6 +849,9 @@ function buildMacroDistributionHtml(c,t){
   var preset=c.macroPreset||'balanced';
   var secState=getSecState(c);
   var macroPreview=(MACRO_PRESETS[preset]?MACRO_PRESETS[preset].label:preset)+' · Π'+t.pPct+'% Λ'+t.fPct+'% Υ'+t.cPct+'%';
+  // g per kg of body weight next to each macro (skipped when the client has no weight yet)
+  var wKg=parseFloat(c.weight)||0;
+  function perKg(g){return wKg>0?'&nbsp;&nbsp;·&nbsp;&nbsp;'+(g/wKg).toFixed(1)+' γρ./κιλό':'';}
   var html='<div class="section-card" id="sec-macros" style="margin-top:12px;">'
     +'<div class="section-header sec-collapse-hd" onclick="toggleSec(\'macros\')"><div><span class="section-icon">🎯</span>Κατανομή Μακροθρεπτικών'+(secState.macros?'<div class="sec-collapse-preview">'+esc(macroPreview)+'</div>':'')+'</div><span class="sec-chevron'+(secState.macros?'':' open')+'">▸</span></div>'
     +'<div id="sec-macros-body" style="display:'+(secState.macros?'none':'block')+'">'
@@ -871,9 +874,9 @@ function buildMacroDistributionHtml(c,t){
     +'<span class="macro-split-c" style="width:'+t.cPct+'%">Υ '+t.cPct+'%</span>'
     +'</div>'
     +'<div class="macro-split-vals">'
-    +'<span class="macro-p-val">Πρωτεΐνη: '+t.p+'g&nbsp;&nbsp;('+t.pPct+'%)</span>'
-    +'<span class="macro-f-val">Λιπαρά: '+t.f+'g&nbsp;&nbsp;('+t.fPct+'%)</span>'
-    +'<span class="macro-c-val">Υδατ/κες: '+t.carb+'g&nbsp;&nbsp;('+t.cPct+'%)</span>'
+    +'<span class="macro-p-val">Πρωτεΐνη: '+t.p+'g&nbsp;&nbsp;('+t.pPct+'%)'+perKg(t.p)+'</span>'
+    +'<span class="macro-f-val">Λιπαρά: '+t.f+'g&nbsp;&nbsp;('+t.fPct+'%)'+perKg(t.f)+'</span>'
+    +'<span class="macro-c-val">Υδατ/κες: '+t.carb+'g&nbsp;&nbsp;('+t.cPct+'%)'+perKg(t.carb)+'</span>'
     +'</div>'
     +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Προσαρμόζεται αυτόματα από το άθλημα — αλλάξτε ελεύθερα χειροκίνητα.</div>'
     +buildInsightsPanelHtml(c,t)
