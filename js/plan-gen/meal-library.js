@@ -245,6 +245,10 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
   count=count||3;
   var dt=(c&&c.dietType)||'normal';
   var slot=classifyMealSlot(meal.name);
+  // Ό,τι δεν είναι Πρωινό/Μεσημεριανό/Βραδινό («Pre προπόνησης», «Μετά προπόνησης», «Σνακ», «Γεύμα 2»…)
+  // παίρνει εναλλακτικές σαν Ενδιάμεσο — αλλιώς το 'other' διάλεγε από ΟΛΗ τη δεξαμενή μόνο με βάση
+  // τις θερμίδες και πρότεινε κυρίως πιάτα (π.χ. κοτόπουλο με ρύζι) σε θέση σνακ.
+  if(slot==='other')slot='snack';
   var mySig=mealSignature(meal.foods);
   if(!isBlocked){
     var cats=(typeof DIET_TYPE_FORBIDDEN_CATS!=='undefined'&&DIET_TYPE_FORBIDDEN_CATS[dt])||[];
