@@ -204,6 +204,25 @@ function macroShareDistance(a,b){
 var ALT_MACRO_WEIGHT=1.5;   // βάρος της απόστασης μακροθρεπτικών στη βαθμολογία (οι θερμίδες κλιμακώνονται έτσι κι αλλιώς)
 var ALT_MACRO_OK=0.20;      // έως εδώ μια εναλλακτική θεωρείται «ισοδύναμη» και μπορεί να προτιμηθεί για ποικιλία πρωτεΐνης
 
+// Μοιάζει με κύριο γεύμα; = έχει κρέας/ψάρι/όσπρια/λαχανικά/αυγά, μαγειρεμένο άμυλο «(βρ.)» ή σύνθετο
+// πιάτο. Γιαούρτι με μέλι, φρούτο με ξηρούς καρπούς, μπάρες κτλ. ΔΕΝ μοιάζουν — ώστε να μην
+// προτείνονται ως εναλλακτική Μεσημεριανού/Βραδινού, όποιο κι αν είναι το όνομα/tag της πηγής τους.
+var _ALT_MAIN_CATS={'Κρέας':1,'Ψάρια':1,'Όσπρια':1,'Λαχανικά':1};
+var _ALT_MAIN_FYH={'Αυγολέμονο Κυπριακό':1,'Σαλάτα Φακής Μεσογειακή':1,'Ρύζι-Φακές Stir Fry':1};   // κύρια πιάτα FYH χωρίς containsCats κρέατος/ψαριού
+function mealLooksMain(foods){
+  return (foods||[]).some(function(f){
+    var n=f.n||'';
+    if(typeof FYH_SNACK_NAMES!=='undefined'&&FYH_SNACK_NAMES[n])return false;
+    var fd=FOODS[n]||(typeof resolveFood==='function'?FOODS[resolveFood(n)]:null);
+    if(!fd)return false;
+    if(_ALT_MAIN_CATS[fd.cat]||n.indexOf('(βρ.)')!==-1)return true;
+    if(fd.cat==='Συνταγές')return true;
+    if(fd.cat==='Αυγά/Γαλακτ.')return /αυγ|ασπραδ/.test(normalizeGreekText(n));   // ομελέτα/αυγά = κύριο, γιαούρτι/τυρί μόνα τους όχι
+    if(fd.cat==='Συνταγές FYH')return _ALT_MAIN_FYH[n]||(fd.containsCats||[]).some(function(k){return _ALT_MAIN_CATS[k];});
+    return false;
+  });
+}
+
 // One-time, per-client candidate pool. `excl` = the client's FULL exclusion list
 // (buildEffectiveExclusionList). Each entry: {foods,kcal,sig,slots,group,src,trust}.
 function buildAlternatesPool(c, excl){
@@ -221,7 +240,7 @@ function buildAlternatesPool(c, excl){
     if(kcal<50)return;
     seen[sig]=true;
     pool.push({foods:foods, kcal:kcal, sig:sig, slots:slots, src:src,
-      group:mealProteinGroup(foods), macro:mealMacroShares(foods),
+      group:mealProteinGroup(foods), macro:mealMacroShares(foods), main:mealLooksMain(foods),
       trust:(typeof getRecipeTrustScore==='function')?getRecipeTrustScore(id||sig):0.5});
   }
   function slotOf(name){ var s=classifyMealSlot(name); return s==='other'?['breakfast','snack','lunch','dinner']:[s]; }
@@ -270,7 +289,9 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
   // Ό,τι δεν είναι Πρωινό/Μεσημεριανό/Βραδινό («Pre προπόνησης», «Μετά προπόνησης», «Σνακ», «Γεύμα 2»…)
   // παίρνει εναλλακτικές σαν Ενδιάμεσο — αλλιώς το 'other' διάλεγε από ΟΛΗ τη δεξαμενή μόνο με βάση
   // τις θερμίδες και πρότεινε κυρίως πιάτα (π.χ. κοτόπουλο με ρύζι) σε θέση σνακ.
-  if(slot==='other')slot='snack';
+  // Εξαίρεση: αν το ίδιο το γεύμα είναι κανονικό πιάτο (π.χ. «Μετά προπόνησης» με κοτόπουλο-ρύζι),
+  // παίρνει εναλλακτικές κύριου γεύματος.
+  if(slot==='other')slot=mealLooksMain(meal.foods)?'lunch':'snack';
   var mySig=mealSignature(meal.foods);
   if(!isBlocked){
     var cats=(typeof DIET_TYPE_FORBIDDEN_CATS!=='undefined'&&DIET_TYPE_FORBIDDEN_CATS[dt])||[];
@@ -282,6 +303,8 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
     if(slot!=='other' && x.slots.indexOf(slot)===-1)return false;
     // Ολόκληρο πιάτο κρέατος/ψαριού δεν είναι «Ενδιάμεσο» (ίδιος κανόνας με findBestRecipe/findSavedComboMatch)
     if(slot==='snack' && dt!=='bodybuilding_clean' && (x.group==='meat'||x.group==='fish'))return false;
+    // Κύριο γεύμα ← μόνο κάτι που μοιάζει με κύριο γεύμα (όχι γιαούρτι με μέλι, φρούτο + ξηροί καρποί…)
+    if((slot==='lunch'||slot==='dinner') && !x.main)return false;
     // Βρώμη ΜΟΝΟ σε πρωινό — ίδιος κανόνας με removeOatsFromMainMeals (plan-transform.js)
     if((slot==='lunch'||slot==='dinner') && x.foods.some(function(f){return (f.n||'').toLowerCase().indexOf('βρώμη')!==-1;}))return false;
     return !isBlocked(x.foods);
