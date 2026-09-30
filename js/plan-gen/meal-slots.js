@@ -33,7 +33,8 @@ function openAddMealSlotModal(){
   var defName=isDbl?'Pre 2ης προπόνησης':'Ενδιάμεσο';
   var defTiming=isDbl?'pre-workout':'regular';
   var defPos=isDbl?1:Math.max(1,names.length-1);
-  var posOpts='';
+  // value 0 = πριν το πρώτο γεύμα της ημέρας (π.χ. κάτι πριν το πρωινό / πρωινή προπόνηση)
+  var posOpts=names.length?'<option value="0">πριν: '+names[0]+'</option>':'';
   for(var i=0;i<names.length;i++){
     posOpts+='<option value="'+(i+1)+'"'+((i+1)===defPos?' selected':'')+'>μετά: '+names[i]+'</option>';
   }
@@ -71,7 +72,9 @@ function openAddMealSlotModal(){
     +'<label style="font-weight:600;color:var(--text-strong);font-size:12px;display:block;margin-bottom:4px">Τύπος (timing → κατανομή μακρο)</label>'
     +'<select id="newMealTiming" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px;margin-bottom:12px;box-sizing:border-box">'+timingOpts+'</select>'
     +'<label style="font-weight:600;color:var(--text-strong);font-size:12px;display:block;margin-bottom:4px">Θέση στη μέρα</label>'
-    +'<select id="newMealPos" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px;margin-bottom:18px;box-sizing:border-box">'+posOpts+'</select>'
+    // Πριν το πρώτο γεύμα: ένα slot με όνομα 'Ενδιάμεσο' θα έπαιρνε την ώρα του 1ου ενδιάμεσου στο
+    // client link (snackSeen) και θα μετατόπιζε τις ώρες των υπόλοιπων → δώσε του δικό του όνομα.
+    +'<select id="newMealPos" onchange="var n=document.getElementById(\'newMealName\');if(this.value===\'0\'&&n.value.trim()===\'Ενδιάμεσο\')n.value=\'Πριν το πρωινό\'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px;margin-bottom:18px;box-sizing:border-box">'+posOpts+'</select>'
     +'<div style="display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeAddMealSlotModal()" style="padding:9px 18px;background:#eee;border:none;border-radius:6px;cursor:pointer">Άκυρο</button>'
     +'<button onclick="confirmAddMealSlot()" style="padding:9px 18px;background:#025857;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">✅ Προσθήκη</button>'
