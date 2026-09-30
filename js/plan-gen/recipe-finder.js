@@ -76,6 +76,9 @@ function findBestRecipe(dietType, targetKcal, mealType, excl, targetMacros, disl
   // static recipe; customRecipesForGeneration() just canonicalizes their diet-tag casing first.
   var customPool = (typeof customRecipesForGeneration==='function') ? customRecipesForGeneration() : [];
   if(customPool.length) recipeDB = recipeDB.concat(customPool);
+  // 🙈 Συνταγές που ο διαιτολόγος έκρυψε από τη σελίδα Συνταγές (recipeMeta[id].hidden) δεν προτείνονται.
+  var hiddenIds = (typeof hiddenRecipeIdMap==='function') ? hiddenRecipeIdMap() : {};
+  recipeDB = recipeDB.filter(function(r){ return !hiddenIds[r.id]; });
 
   // Normalize exclusion list (handle both strings and case-sensitivity)
   excl = excl || [];

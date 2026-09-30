@@ -223,8 +223,9 @@ function buildAlternatesPool(c, excl){
   });
   // 5. Recipe library (static + the dietitian's custom recipes), same diet-tag rules as findBestRecipe
   var tags=RECIPE_DIET_TAGS[dt]||(dt==='mediterranean'?['Mediterranean','Ελληνικό']:null);   // null = any
+  var hiddenIds=(typeof hiddenRecipeIdMap==='function')?hiddenRecipeIdMap():{};   // 🙈 κρυμμένες συνταγές
   function recipeOK(r, isSnackDB){
-    if(!r||!r.foods)return false;
+    if(!r||!r.foods||hiddenIds[r.id])return false;
     var rt=r.tags||[];
     if(dt==='keto'){ if(!(rt.indexOf('Keto')!==-1||rt.indexOf('LowCarb')!==-1||(r.macro&&r.macro.c<=10)))return false; }
     else if(!isSnackDB && tags && dt!=='normal' && !tags.some(function(t){return rt.indexOf(t)!==-1;}))return false;

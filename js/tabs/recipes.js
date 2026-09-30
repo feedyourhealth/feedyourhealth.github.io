@@ -98,6 +98,32 @@ function toggleRecipePopular(recipe){
   if(typeof save==='function') save();
 }
 
+// ── Απόκρυψη συνταγής. Οι στατικές MEAL_RECIPES/SNACK_RECIPES δεν διαγράφονται· το recipeMeta[id].hidden
+// τις βγάζει από τη λίστα, από το αυτόματο πλάνο (findBestRecipe) και από τις εναλλακτικές του client
+// link (buildAlternatesPool). Η χειροκίνητη επιλογή συνταγής στο πλάνο και τα ήδη φτιαγμένα πλάνα δεν αλλάζουν.
+function hiddenRecipeIdMap(){
+  var meta=getRecipeMeta(), out={};
+  Object.keys(meta).forEach(function(id){ if(meta[id] && meta[id].hidden===true) out[id]=true; });
+  return out;
+}
+function isRecipeHidden(recipe){
+  var ov=getRecipeMeta()[recipe.id];
+  return !!(ov && ov.hidden===true);
+}
+function toggleRecipeHidden(recipeId){
+  var recipe=findRecipeById(recipeId);
+  if(!recipe) return;
+  var meta=getRecipeMeta();
+  meta[recipeId]=meta[recipeId]||{};
+  var nowHidden=!(meta[recipeId].hidden===true);
+  meta[recipeId].hidden=nowHidden;
+  saveRecipeMetaAll(meta);
+  if(typeof save==='function') save();
+  if(typeof closeRecipeDetailModal==='function') closeRecipeDetailModal();
+  renderRecipesList();
+  if(typeof dietoToast==='function') dietoToast(nowHidden?'🙈 Η συνταγή κρύφτηκε — δεν θα μπαίνει σε νέα πλάνα':'👁️ Η συνταγή επανήλθε');
+}
+
 // ── Επιπλέον κατηγορίες/ετικέτες που όρισε ο διαιτολόγος σε ΥΠΑΡΧΟΥΣΑ συνταγή (στατική ή δική του).
 // Overlay στο recipeMeta[id].extraTags — ίδιο μοτίβο με τα mealTimes· δεν αγγίζει ποτέ τη
 // MEAL_RECIPES/SNACK_RECIPES ούτε το custom_recipes blob, ταξιδεύει στο cloud μέσα στο user_data.
@@ -372,8 +398,10 @@ function recipeRow(recipe){
     +'<button type="button" class="rcp-expand-btn" title="Υλικά" aria-label="Προβολή υλικών" onclick="toggleRecipeExpand(\''+recipe.id+'\')">'+(expanded?'🔼':'🔽')+'</button>'
     +'<button type="button" class="rcp-name rcp-name-link" title="Πλήρης προβολή συνταγής" onclick="showRecipeDetailModal(\''+recipe.id+'\')">'+esc(recipe.name)+'</button>'
     +(recipe.source==='custom'?'<span class="rcp-custom-badge" title="Δική σου συνταγή">δική σου</span>':'')
+    +(isRecipeHidden(recipe)?'<span class="rcp-custom-badge" title="Δεν μπαίνει σε νέα πλάνα ούτε στις εναλλακτικές">κρυμμένη</span>':'')
     +'</div>'
     +'<div class="rcp-row-actions">'
+    +(isRecipeHidden(recipe)?'<button type="button" class="rcp-edit-btn" title="Επαναφορά συνταγής" aria-label="Επαναφορά συνταγής" onclick="toggleRecipeHidden(\''+recipe.id+'\')">👁️</button>':'')
     +(recipe.source==='custom'?'<button type="button" class="rcp-edit-btn" title="Επεξεργασία συνταγής" aria-label="Επεξεργασία συνταγής" onclick="openNewRecipeModal(\''+recipe.id+'\')">✏️</button>':'')
     +'<button type="button" class="rcp-star'+(popular?' active':'')+'" title="Δημοφιλές" onclick="onToggleRecipePopular(\''+recipe.id+'\')">⭐</button>'
     +'</div>'
@@ -390,7 +418,10 @@ function renderRecipesList(){
   var countEl=document.getElementById('rcp-count');
   if(!container) return;
   var q=_recipeSearchTerm;
-  var all=allRecipesForBrowsing();
+  var hiddenMap=hiddenRecipeIdMap();
+  var hiddenCount=allRecipesForBrowsing().filter(function(r){return hiddenMap[r.id];}).length;
+  // Οι κρυμμένες φαίνονται ΜΟΝΟ στο φίλτρο «Κρυμμένες»· όλα τα υπόλοιπα (και οι μετρητές) τις αγνοούν.
+  var all=allRecipesForBrowsing().filter(function(r){ return (_recipeCategoryFilter==='hidden') ? hiddenMap[r.id] : !hiddenMap[r.id]; });
   var filtered=all.filter(function(r){
     if(q){
       var nameMatch=(r.name||'').toLowerCase().indexOf(q)>-1;
@@ -404,7 +435,7 @@ function renderRecipesList(){
     // «Χωρίς κατηγορία»: η κάρτα μένει ορατή όσο είναι ανοιχτά τα 4 κουμπιά της, ώστε να μπουν
     // πάνω από μία κατηγορίες πριν φύγει από τη λίστα (φεύγει στο «✓ Κλείσιμο»).
     if(_recipeCategoryFilter==='none' && getRecipeMealTimes(r).length && !_categoryEditIds[r.id]) return false;
-    if(_recipeCategoryFilter && _recipeCategoryFilter!=='popular' && _recipeCategoryFilter!=='none' && getRecipeMealTimes(r).indexOf(_recipeCategoryFilter)===-1) return false;
+    if(_recipeCategoryFilter && _recipeCategoryFilter!=='popular' && _recipeCategoryFilter!=='none' && _recipeCategoryFilter!=='hidden' && getRecipeMealTimes(r).indexOf(_recipeCategoryFilter)===-1) return false;
     if(_recipeDietFilter && !recipeHasDietTag(r,_recipeDietFilter)) return false;
     if(_recipeTraitFilters.length && !_recipeTraitFilters.every(function(k){return recipeHasTraitTag(r,k);})) return false;
     return true;
@@ -423,7 +454,7 @@ function renderRecipesList(){
   }
   if(countEl){
     var untagged=all.filter(function(r){return getRecipeMealTimes(r).length===0;}).length;
-    countEl.textContent=filtered.length+' / '+all.length+' συνταγές'+(untagged?' · '+untagged+' χωρίς κατηγορία ώρας':'');
+    countEl.textContent=filtered.length+' / '+all.length+' συνταγές'+(untagged?' · '+untagged+' χωρίς κατηγορία ώρας':'')+(hiddenCount&&_recipeCategoryFilter!=='hidden'?' · '+hiddenCount+(hiddenCount===1?' κρυμμένη':' κρυμμένες'):'');
   }
 }
 
@@ -461,6 +492,7 @@ function renderRecipes(){
   });
   html+='<button type="button" class="rcp-filter-chip" data-val="none" onclick="setRecipeCategoryFilter(\'none\')">Χωρίς κατηγορία</button>';
   html+='<button type="button" class="rcp-filter-chip" data-val="popular" onclick="setRecipeCategoryFilter(\'popular\')">⭐ Δημοφιλή</button>';
+  html+='<button type="button" class="rcp-filter-chip" data-val="hidden" onclick="setRecipeCategoryFilter(\'hidden\')">🙈 Κρυμμένες</button>';
   html+='</div>';
   var traitDefs=availableRecipeTraitTags();
   if(traitDefs.length){
@@ -723,6 +755,7 @@ function recipeDetailModalHtml(recipe){
     +'<div id="rd-shop-panel-'+recipe.id+'" class="rd-shop-panel" style="display:none"></div>'
     // Επεξεργασία & διαγραφή μόνο για δικές σου (custom) συνταγές — οι στατικές MEAL_RECIPES/
     // SNACK_RECIPES δεν αλλάζουν ποτέ από εδώ.
+    +'<button type="button" class="rd-edit-btn" onclick="toggleRecipeHidden(\''+recipe.id+'\')">'+(isRecipeHidden(recipe)?'👁️ Επαναφορά συνταγής':'🙈 Απόκρυψη συνταγής (δεν θα μπαίνει σε νέα πλάνα)')+'</button>'
     +(recipe.source==='custom'?'<button type="button" class="rd-edit-btn" onclick="openEditRecipeFromDetail(\''+recipe.id+'\')">✏️ Επεξεργασία συνταγής</button>':'')
     +(recipe.source==='custom'?'<button type="button" class="rd-delete-btn" onclick="confirmDeleteCustomRecipe(\''+recipe.id+'\')">🗑️ Διαγραφή συνταγής</button>':'')
     +'</div>';
