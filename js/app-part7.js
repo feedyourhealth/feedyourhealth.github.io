@@ -642,9 +642,9 @@
           });
           dayK+=mk; dP+=mp; dC+=mc; dF+=mf; dFi+=mfi;
           // Ε14: δίπλα σε κάθε τρόφιμο στην κάρτα "Η διατροφή μου σήμερα" της Αρχικής, ώστε ο πελάτης
-          // να βλέπει τη μερίδα χωρίς να ανοίγει το tab Πλάνο — πάντα σε γραμμάρια (όχι τη μονάδα
-          // εμφάνισης π.χ. "τεμ."), γι' αυτό x.g εδώ και όχι x.qty.
-          var title=foods.map(function(x){return shortName(x.name)+' ('+x.g+' '+gLbl+')';}).slice(0,3).join(', ')+(foods.length>3?'…':'');
+          // να βλέπει τη μερίδα χωρίς να ανοίγει το tab Πλάνο. Τρόφιμα με μονάδα εμφάνισης (τεμ./φέτα/φλ.
+          // — x.sub μη κενό) δείχνουν όπως στο tab Πλάνο: «Αυγά 3 τεμ. (165γρ.)»· τα υπόλοιπα μόνο γραμμάρια.
+          var title=foods.map(function(x){return shortName(x.name)+(x.sub?' '+x.qty+' '+x.sub:' ('+x.g+' '+gLbl+')');}).slice(0,3).join(', ')+(foods.length>3?'…':'');
           var alternates=[];
           if(altPool){
             pickMealAlternates(altPool, meal, c, mk, 3, function(foods){ return altBlockedByDiet(foods,d); }).forEach(function(a){

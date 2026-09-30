@@ -2330,7 +2330,7 @@ function viewPlan(){
         const list=el('div','swap-list');
         m.alternates.forEach(a=>{
           const item=el('div','swap-item');
-          const foodsStr=(a.foods||[]).map(f=>f.name+' '+f.qty+(f.ck?' ('+T('cookedW')+')':'')).join(', ');
+          const foodsStr=(a.foods||[]).map(f=>f.name+' '+f.qty+(f.sub?' '+f.sub:'')+(f.ck?' ('+T('cookedW')+')':'')).join(', ');
           item.innerHTML='<span class="nm">'+esc(a.name||'')+'</span><span class="fd">'+esc(foodsStr)+'</span>';
           list.appendChild(item);
         });
