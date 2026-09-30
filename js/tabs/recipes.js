@@ -401,7 +401,10 @@ function renderRecipesList(){
       if(!nameMatch && !tagMatch && !ingredientMatch) return false;
     }
     if(_recipeCategoryFilter==='popular' && !isRecipePopular(r)) return false;
-    if(_recipeCategoryFilter && _recipeCategoryFilter!=='popular' && getRecipeMealTimes(r).indexOf(_recipeCategoryFilter)===-1) return false;
+    // «Χωρίς κατηγορία»: η κάρτα μένει ορατή όσο είναι ανοιχτά τα 4 κουμπιά της, ώστε να μπουν
+    // πάνω από μία κατηγορίες πριν φύγει από τη λίστα (φεύγει στο «✓ Κλείσιμο»).
+    if(_recipeCategoryFilter==='none' && getRecipeMealTimes(r).length && !_categoryEditIds[r.id]) return false;
+    if(_recipeCategoryFilter && _recipeCategoryFilter!=='popular' && _recipeCategoryFilter!=='none' && getRecipeMealTimes(r).indexOf(_recipeCategoryFilter)===-1) return false;
     if(_recipeDietFilter && !recipeHasDietTag(r,_recipeDietFilter)) return false;
     if(_recipeTraitFilters.length && !_recipeTraitFilters.every(function(k){return recipeHasTraitTag(r,k);})) return false;
     return true;
@@ -456,6 +459,7 @@ function renderRecipes(){
   RECIPE_MEAL_TIME_CATEGORIES.forEach(function(cat){
     html+='<button type="button" class="rcp-filter-chip" data-val="'+cat+'" onclick="setRecipeCategoryFilter(\''+cat+'\')">'+cat+'</button>';
   });
+  html+='<button type="button" class="rcp-filter-chip" data-val="none" onclick="setRecipeCategoryFilter(\'none\')">Χωρίς κατηγορία</button>';
   html+='<button type="button" class="rcp-filter-chip" data-val="popular" onclick="setRecipeCategoryFilter(\'popular\')">⭐ Δημοφιλή</button>';
   html+='</div>';
   var traitDefs=availableRecipeTraitTags();
