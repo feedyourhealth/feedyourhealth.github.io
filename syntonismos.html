@@ -146,11 +146,11 @@ textarea{width:100%;min-height:140px;border:1px solid var(--line);border-radius:
   <div class="mark">FY</div>
   <h1>Συντονισμός</h1>
   <div class="date" style="margin-top:4px">Σύνδεση με τον λογαριασμό του Dietologist</div>
-  <form id="loginForm" novalidate>
+  <form id="loginForm" method="post" action="#" novalidate>
     <label for="em">Email</label>
-    <input id="em" type="email" autocomplete="username" inputmode="email" placeholder="stephanos@feedyourhealth.org">
+    <input id="em" name="email" type="email" autocomplete="username" inputmode="email" placeholder="stephanos@feedyourhealth.org">
     <label for="pw">Κωδικός</label>
-    <input id="pw" type="password" autocomplete="current-password">
+    <input id="pw" name="password" type="password" autocomplete="current-password">
     <button class="act pri" type="submit" id="loginBtn">Σύνδεση</button>
   </form>
   <button class="linkbtn" id="forgotBtn" type="button">Ξέχασα τον κωδικό</button>
@@ -802,7 +802,13 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
   const res=await sb.auth.signInWithPassword({email:em,password:pw});
   btn.disabled=false;btn.textContent='Σύνδεση';
   if(res.error){err.textContent=trErr(res.error.message);return;}
-  USER=res.data.user;showApp();
+  USER=res.data.user;
+  // Το email μένει για την επόμενη φορά. Τον κωδικό τον κρατά ο διαχειριστής κωδικών του κινητού:
+  // στο Chrome/Android του τον δίνουμε ρητά (PasswordCredential)· στο Safari/iOS η πρόταση
+  // «Αποθήκευση κωδικού» βγαίνει όταν η φόρμα με username+password κρύβεται μετά το submit.
+  try{localStorage.setItem('fyh-coord-email',em);}catch(e){}
+  try{if(window.PasswordCredential&&navigator.credentials)await navigator.credentials.store(new PasswordCredential({id:em,password:pw,name:em}));}catch(e){}
+  showApp();
 });
 document.getElementById('forgotBtn').addEventListener('click',async()=>{
   const em=document.getElementById('em').value.trim(),err=document.getElementById('loginErr');
@@ -811,6 +817,7 @@ document.getElementById('forgotBtn').addEventListener('click',async()=>{
   const res=await sb.auth.resetPasswordForEmail(em,{redirectTo:'https://feedyourhealth.github.io/Dietologist.html'});
   err.textContent=res.error?trErr(res.error.message):'Σου στείλαμε email με link για νέο κωδικό. Μετά γύρνα εδώ και συνδέσου.';
 });
+try{const e0=localStorage.getItem('fyh-coord-email');if(e0)document.getElementById('em').value=e0;}catch(e){}
 document.getElementById('em').addEventListener('input',()=>{document.getElementById('loginErr').textContent='';});
 
 (async function boot(){
