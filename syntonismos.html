@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#025857">
+<title>Συντονισμός — Feed Your Health</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<!-- Ίδιο CSP με τις άλλες σελίδες (χωρίς frame-ancestors — βλ. commit 9271b33). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Συντονισμός">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='118' font-family='Georgia,serif' font-size='84' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.min.css">
+<script>try{var t=localStorage.getItem('fyh-coord-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<script src="vendor/supabase-js.min.js"></script>
+<style>
+/* Συντονισμός: σελίδα μόνο για τον διαιτολόγο (login), για το κινητό. Ουρά «Θέλουν εσένα» πρώτα,
+   πελάτες/μηνύματα σε καρτέλες κάτω. Δεν αλλάζει πλάνα — αυτά γίνονται στο Dietologist. */
+:root{
+  --teal:#025857; --teal-d:#014545; --tint:#E2EEE5; --bg:#F3F6F4; --card:#FFFFFF; --soft:#EAF0EC;
+  --ink:#1A2E2B; --muted:#526B66; --faint:#81958F; --line:#DCE5E0; --on:#FFFFFF;
+  --warn:#8A5A0B; --warn-bg:#F8ECD5; --bad:#A12B2B; --bad-bg:#F8E2E0; --good:#1E6B45; --good-bg:#DDEFE3;
+  --info:#24527A; --info-bg:#DFEAF5; --scrim:rgba(8,20,18,.45);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --teal:#4DB6AC; --teal-d:#9AD9D1; --tint:#173230; --bg:#101816; --card:#17211F; --soft:#1F2B28;
+  --ink:#E6EFEC; --muted:#A6BDB7; --faint:#77908A; --line:#2A3A36; --on:#0B1513;
+  --warn:#E9BB66; --warn-bg:#3A2D14; --bad:#F0958F; --bad-bg:#3D2020; --good:#7CCB9C; --good-bg:#183526;
+  --info:#8DB8E3; --info-bg:#1A2C3D; --scrim:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --teal:#4DB6AC; --teal-d:#9AD9D1; --tint:#173230; --bg:#101816; --card:#17211F; --soft:#1F2B28;
+  --ink:#E6EFEC; --muted:#A6BDB7; --faint:#77908A; --line:#2A3A36; --on:#0B1513;
+  --warn:#E9BB66; --warn-bg:#3A2D14; --bad:#F0958F; --bad-bg:#3D2020; --good:#7CCB9C; --good-bg:#183526;
+  --info:#8DB8E3; --info-bg:#1A2C3D; --scrim:rgba(0,0,0,.6); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.app{max-width:460px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(92px + env(safe-area-inset-bottom,0px))}
+.ti{font-size:18px;vertical-align:-3px}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:700;font-size:25px;margin:0;color:var(--teal-d);line-height:1.2}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.date{font-size:13px;color:var(--muted)}
+.iconbtn{background:var(--card);border:1px solid var(--line);border-radius:12px;width:40px;height:40px;display:grid;place-items:center;flex:none}
+.iconbtn.spin .ti{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.upd{font-size:11.5px;color:var(--faint);margin-top:2px}
+.banner{border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
+.banner.warn{background:var(--warn-bg);color:var(--warn)} .banner.bad{background:var(--bad-bg);color:var(--bad)}
+.hero{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:14px}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.big{font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--teal-d);line-height:1}
+.bar{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:12px}
+.bar>i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .3s}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.kpi{background:var(--soft);border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.kpi span{font-size:11.5px;color:var(--muted)}
+.up{color:var(--good);font-size:12px} .down{color:var(--bad);font-size:12px}
+.sec{margin-top:22px}
+.sec-h{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.sec-h .n{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+.sec-sub{font-size:12px;color:var(--faint);margin:-2px 0 7px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-top:1px solid var(--line);flex-wrap:wrap}
+.acts{display:flex;gap:8px;justify-content:flex-end;width:100%;padding-left:48px}
+.acts .act{flex:0 1 auto}
+.row:first-child{border-top:0}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:700;flex:none;border:0;padding:0}
+.k-reply{background:var(--info-bg);color:var(--info)} .k-nudge{background:var(--warn-bg);color:var(--warn)}
+.k-office{background:var(--soft);color:var(--muted)} .k-kudos{background:var(--good-bg);color:var(--good)}
+.mid{flex:1;min-width:0}
+.name{font-weight:700;background:none;border:0;padding:0;text-align:left;color:var(--ink)}
+.why{font-size:12.5px;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.why.wrap{white-space:normal}
+.tag{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--soft);color:var(--muted);margin-left:5px;vertical-align:1px}
+.act{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);white-space:nowrap;text-decoration:none;color:var(--ink)}
+.act .ti{font-size:16px}
+.act.pri{background:var(--teal);border-color:var(--teal);color:var(--on)}
+.act:active{transform:scale(.97)}
+.more{border:0;background:none;color:var(--faint);padding:6px;border-radius:8px;flex:none}
+.empty{padding:16px 14px;text-align:center;color:var(--muted);font-size:13.5px}
+.done-row{opacity:.6}
+.done-row .name{text-decoration:line-through}
+.toggle{background:none;border:0;color:var(--muted);font-size:13px;padding:8px 2px;display:flex;align-items:center;gap:6px}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.chart svg{display:block;width:100%;height:auto}
+.chart-note{font-size:12.5px;color:var(--muted);margin-top:6px}
+.search{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 12px;margin-top:12px}
+.search input{flex:1;border:0;background:none;height:44px;font:inherit;color:var(--ink);min-width:0}
+.search input:focus{outline:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.chip{font-size:12.5px;padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--card)}
+.chip[aria-pressed="true"]{background:var(--teal);color:var(--on);border-color:var(--teal)}
+.pct{font-size:12px;font-weight:700;padding:2px 7px;border-radius:7px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pct.g{background:var(--good-bg);color:var(--good)} .pct.w{background:var(--warn-bg);color:var(--warn)} .pct.b{background:var(--bad-bg);color:var(--bad)} .pct.n{background:var(--soft);color:var(--muted)}
+.msg-text{font-size:13.5px;margin-top:2px;white-space:pre-wrap;word-break:break-word}
+.unseen{width:8px;height:8px;border-radius:50%;background:var(--info);flex:none}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav .in{max-width:460px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+nav button{background:none;border:0;padding:8px 0 10px;font-size:11.5px;color:var(--faint);display:flex;flex-direction:column;align-items:center;gap:1px;position:relative}
+nav button .ti{font-size:22px}
+nav button[aria-current="page"]{color:var(--teal);font-weight:700}
+.badge{position:absolute;top:3px;left:calc(50% + 6px);background:var(--bad);color:#fff;font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:grid;place-items:center;padding:0 4px}
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:90vh;overflow:auto;animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.4}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}.bar>i{transition:none}.iconbtn.spin .ti{animation:none}}
+.grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 10px}
+.sh-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sh-h h2{font-family:Georgia,serif;font-size:20px;margin:0;flex:1;color:var(--teal-d)}
+.x{background:var(--soft);border:0;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;flex:none}
+.quote{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:10px;white-space:pre-wrap;word-break:break-word}
+.quote small{display:block;color:var(--muted);font-size:12px;margin-top:4px;white-space:normal}
+textarea{width:100%;min-height:140px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;font-size:14.5px;background:var(--bg);color:var(--ink);resize:vertical}
+.meta{font-size:12.5px;color:var(--muted);margin:8px 0 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btns .act{flex:1;justify-content:center;padding:12px}
+.opt{width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:14px 4px;display:flex;align-items:center;gap:10px;font-size:15px;color:var(--ink);text-decoration:none}
+.opt:first-of-type{border-top:0}
+.stat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.stat div{background:var(--soft);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--muted)}
+.stat b{display:block;font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--faint);margin-top:10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(78px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);font-size:13.5px;padding:10px 14px;border-radius:12px;display:flex;gap:14px;align-items:center;z-index:30;max-width:calc(100% - 32px)}
+.toast button{background:none;border:0;color:var(--bg);font-weight:700;text-decoration:underline;padding:0}
+.login{max-width:380px;margin:12vh auto 0;padding-inline:16px}
+.login .mark{width:52px;height:52px;border-radius:14px;background:var(--teal);color:var(--tint);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;font-size:22px;margin-bottom:14px}
+.login label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+.login input{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;background:var(--card);color:var(--ink)}
+.login .act{width:100%;justify-content:center;padding:13px;margin-top:16px}
+.linkbtn{background:none;border:0;color:var(--teal);font-weight:600;padding:8px 0}
+.err{color:var(--bad);font-size:13px;margin-top:10px;min-height:1em}
+.skel{height:64px;border-radius:14px;background:var(--soft);margin-top:12px}
+.foot{margin-top:28px;text-align:center;font-size:12.5px;color:var(--faint);display:flex;flex-direction:column;gap:6px;align-items:center}
+.foot a,.foot button{color:var(--muted);background:none;border:0;font-size:12.5px;text-decoration:underline;padding:4px}
+</style>
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <div class="mark">FY</div>
+  <h1>Συντονισμός</h1>
+  <div class="date" style="margin-top:4px">Σύνδεση με τον λογαριασμό του Dietologist</div>
+  <form id="loginForm" novalidate>
+    <label for="em">Email</label>
+    <input id="em" type="email" autocomplete="username" inputmode="email" placeholder="stephanos@feedyourhealth.org">
+    <label for="pw">Κωδικός</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <button class="act pri" type="submit" id="loginBtn">Σύνδεση</button>
+  </form>
+  <button class="linkbtn" id="forgotBtn" type="button">Ξέχασα τον κωδικό</button>
+  <div class="err" id="loginErr" role="alert"></div>
+</div>
+<div id="main" class="app" hidden></div>
+<nav id="nav" aria-label="Ενότητες" hidden><div class="in" id="navIn"></div></nav>
+<div id="layer"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+'use strict';
+const SUPABASE_URL='https://vqmzrmotdqqoswlgfgrn.supabase.co';
+const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+const PORTAL_BASE='https://feedyourhealth.github.io/plan.html';
+const APP_URL='Dietologist.html';
+// Ίδιο createClient χωρίς options με το Dietologist.html → ίδιο storageKey στο ίδιο origin, οπότε
+// αν είσαι ήδη συνδεδεμένος στο Dietologist σε αυτόν τον browser, εδώ μπαίνεις κατευθείαν.
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// ── Κατώφλια: ΙΔΙΑ με το app (js/tabs/progress.js, js/tabs/home-diets.js, js/client-list/roster-ui.js).
+// Αν αλλάξει κάτι εκεί, άλλαξέ το κι εδώ — αλλιώς η λίστα εδώ και η Αρχική/Πρόοδος θα διαφωνούν.
+const NUDGE_MIN_GAP=3, NUDGE_RECONTACT_DAYS=7;          // PROGRESS_NUDGE_*
+const LOW_MAX=45, LOW_FRESH_DAYS=3;                      // PROGRESS_LOW_*
+const EXPIRING_DAYS=7, PLAN_RENEWAL_DAYS=30;             // PROGRESS_EXPIRING_DAYS, PLAN_RENEWAL_DAYS
+const INTAKE_PENDING_DAYS=3;                             // homeClientsNeedingAttention
+const PF_NPS_MAX=4, PF_STAR_MAX=2;                       // PF_ATTENTION_*
+const PF_KEYS=['breakfast','snacks','lunch','dinner','recipes_ease','ingredients_ease','training_energy'];
+const PF_LABELS={breakfast:'πρωινό',snacks:'ενδιάμεσα',lunch:'μεσημεριανό',dinner:'βραδινό',recipes_ease:'ευκολία συνταγών',ingredients_ease:'υλικά',training_energy:'ενέργεια στην προπόνηση'};
+const MSG_WINDOW_DAYS=14;      // σημειώσεις/αξιολογήσεις παλιότερες από αυτό δεν μπαίνουν στην ουρά (υπάρχουν στο «Μηνύματα»)
+const SENT_EXPIRES_DAYS=7;     // υπενθύμιση που στάλθηκε ξαναεμφανίζεται μετά από 7 μέρες αν ο πελάτης σωπαίνει ακόμα
+const CK_WINDOW_DAYS=60;       // πόσες μέρες check-ins φέρνουμε (σερί, κενά, 4 εβδ. ανά ημέρα)
+
+// ── Ημερομηνίες / σκορ τήρησης — αντίγραφο των ck* του js/app-part7.js (ίδια λογική). ──
+const dayKey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today0=()=>{const d=new Date();d.setHours(0,0,0,0);return d;};
+const daysAgoKey=n=>{const d=today0();d.setDate(d.getDate()-n);return dayKey(d);};
+const daysSince=key=>Math.round((today0()-new Date(key+'T00:00:00'))/86400000);
+function weekKeysFor(ref){
+  const base=ref==null?new Date():(typeof ref==='string'?new Date(ref+'T00:00:00'):new Date(ref));
+  const js=base.getDay(),toMon=(js===0?-6:1-js);
+  const mon=new Date(base);mon.setDate(base.getDate()+toMon);mon.setHours(0,0,0,0);
+  const a=[];for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);a.push(dayKey(d));}
+  return a;
+}
+function weekDates(off){const d=new Date();d.setDate(d.getDate()+(off||0)*7);return weekKeysFor(d);}
+function pillarStats(rows){
+  let dD=0,dT=0,sD=0,sT=0,wD=0,wT=0,any=false;
+  (rows||[]).forEach(r=>{
+    if(r.meals_total){dT++;if(r.meals_done>=r.meals_total)dD++;}
+    if(r.supps_total){sT++;if(r.supps_done>=r.supps_total)sD++;}
+    if(r.water_goal){wT++;if(r.water_glasses>=r.water_goal)wD++;}
+    if(r.meals_done>0||r.supps_done>0||r.water_glasses>0)any=true;
+  });
+  return {dD,dT,sD,sT,wD,wT,any};
+}
+function overallScore(st){const p=[];if(st.dT)p.push(st.dD/st.dT);if(st.sT)p.push(st.sD/st.sT);if(st.wT)p.push(st.wD/st.wT);return p.length?Math.round(p.reduce((a,b)=>a+b,0)/p.length*100):null;}
+function weekScore(byDate,off){const st=pillarStats(weekDates(off).map(k=>byDate[k]).filter(Boolean));return st.any?overallScore(st):null;}
+function isGoodDay(r){if(!r)return false;if(r.meals_total&&r.meals_done<r.meals_total)return false;if(r.supps_total&&r.supps_done<r.supps_total)return false;if(r.water_goal&&r.water_glasses<r.water_goal)return false;return true;}
+function streak(byDate){let n=0;const d=today0();if(!isGoodDay(byDate[dayKey(d)]))d.setDate(d.getDate()-1);let g=0;while(isGoodDay(byDate[dayKey(d)])){n++;d.setDate(d.getDate()-1);if(++g>365)break;}return n;}
+
+// ── Μηνύματα στη γλώσσα του πελάτη. nudge/replyNote/replyPf: ΙΔΙΟ κείμενο με CLIENT_MSG_DICTS
+// (js/lib/helpers.js). low/start/streak/weight/hello: μόνο εδώ (το app δεν έχει τέτοια μηνύματα). ──
+function gapN(g){const n=Math.round(Number(g));return(isFinite(n)&&n>=2)?n:0;}
+function ruDays(n){const m=n%10,h=n%100;return(m===1&&h!==11)?'день':((m>=2&&m<=4&&(h<10||h>=20))?'дня':'дней');}
+const MSG={
+  el:{hi:fn=>'Γεια σου '+fn+'! ',
+    nudge:(fn,url,g)=>{const n=gapN(g);return 'Γεια σου '+fn+'! Είδα ότι δεν έχεις τσεκάρει τίποτα στο πλάνο σου '+(n?'εδώ και '+n+' μέρες':'τελευταία')+' — όλα καλά; Το link είναι εδώ αν θες να ρίξεις μια ματιά: '+url;},
+    replyNote:(fn,note)=>'Γεια σου '+fn+'! Είδα το μήνυμά σου: «'+note+'» — ',
+    replyPf:fn=>'Γεια σου '+fn+'! Είδα το feedback σου για το πλάνο αυτής της εβδομάδας — θέλω να το προσαρμόσουμε ώστε να σου ταιριάζει καλύτερα. Πες μου τι σε δυσκόλεψε περισσότερο.',
+    low:fn=>'Γεια σου '+fn+'! Είδα ότι αυτή την εβδομάδα το πλάνο σε δυσκόλεψε λίγο. Τι δεν σου κάθεται καλά; Πες μου να το προσαρμόσουμε ώστε να σε βολεύει.',
+    start:(fn,url)=>'Γεια σου '+fn+'! Σου ξαναστέλνω το πλάνο σου μήπως χάθηκε το μήνυμα. Πάτα τα γεύματα που τρως για να βλέπω πώς πας: '+url,
+    streak:(fn,n)=>fn+', '+n+' μέρες στη σειρά με όλους τους στόχους! Μπράβο σου, αυτή η συνέπεια φέρνει αποτελέσματα 👏',
+    weight:(fn,kg)=>fn+', κοίταξα τις μετρήσεις σου: '+kg+' kg από την αρχή! Συγχαρητήρια, φαίνεται η δουλειά σου 👏',
+    subj:'Feed Your Health'},
+  en:{hi:fn=>'Hi '+fn+'! ',
+    nudge:(fn,url,g)=>{const n=gapN(g);return 'Hi '+fn+'! I noticed you haven’t checked anything off in your plan '+(n?'for '+n+' days':'lately')+' — all good? Here’s the link if you want to take a look: '+url;},
+    replyNote:(fn,note)=>'Hi '+fn+'! I saw your message: “'+note+'” — ',
+    replyPf:fn=>'Hi '+fn+'! I saw your feedback on this week’s plan — I want to adjust it so it fits you better. Tell me what was hardest for you.',
+    low:fn=>'Hi '+fn+'! I noticed the plan was a bit hard to follow this week. What isn’t working for you? Tell me and we’ll adjust it.',
+    start:(fn,url)=>'Hi '+fn+'! Resending your plan in case the message got lost. Tap the meals you eat so I can see how you’re doing: '+url,
+    streak:(fn,n)=>fn+', '+n+' days in a row hitting all your targets! Well done, this consistency pays off 👏',
+    weight:(fn,kg)=>fn+', I checked your measurements: '+kg+' kg since we started! Congratulations, your work shows 👏',
+    subj:'Feed Your Health'},
+  ru:{hi:fn=>'Привет, '+fn+'! ',
+    nudge:(fn,url,g)=>{const n=gapN(g);return 'Привет, '+fn+'! Я заметил, что ты '+(n?'уже '+n+' '+ruDays(n):'давно')+' ничего не отмечал в плане — всё в порядке? Вот ссылка, если хочешь заглянуть: '+url;},
+    replyNote:(fn,note)=>'Привет, '+fn+'! Я видел твоё сообщение: «'+note+'» — ',
+    replyPf:fn=>'Привет, '+fn+'! Я видел твой отзыв о плане на эту неделю — хочу подстроить его под тебя. Скажи, что было сложнее всего.',
+    low:fn=>'Привет, '+fn+'! Вижу, что на этой неделе план давался непросто. Что тебе не подходит? Скажи, и мы его подстроим.',
+    start:(fn,url)=>'Привет, '+fn+'! Отправляю план ещё раз, вдруг сообщение потерялось. Отмечай приёмы пищи, чтобы я видел, как идут дела: '+url,
+    streak:(fn,n)=>fn+', '+n+' '+ruDays(n)+' подряд все цели выполнены! Молодец, такая последовательность даёт результат 👏',
+    weight:(fn,kg)=>fn+', я посмотрел твои измерения: '+kg+' кг с начала! Поздравляю, результат виден 👏',
+    subj:'Feed Your Health'},
+  tr:{hi:fn=>'Merhaba '+fn+'! ',
+    nudge:(fn,url,g)=>{const n=gapN(g);return 'Merhaba '+fn+'! '+(n?n+' gündür':'Son zamanlarda')+' planında hiçbir şey işaretlemediğini fark ettim — her şey yolunda mı? Bakmak istersen link burada: '+url;},
+    replyNote:(fn,note)=>'Merhaba '+fn+'! Mesajını gördüm: “'+note+'” — ',
+    replyPf:fn=>'Merhaba '+fn+'! Bu haftaki plan hakkındaki geri bildirimini gördüm — sana daha iyi uyması için ayarlamak istiyorum. En çok ne zorladı söyle.',
+    low:fn=>'Merhaba '+fn+'! Bu hafta planı uygulamak biraz zor olmuş gibi. Sana ne uymuyor? Söyle, birlikte ayarlayalım.',
+    start:(fn,url)=>'Merhaba '+fn+'! Mesaj kaybolmuş olabilir diye planını tekrar gönderiyorum. Nasıl gittiğini görebilmem için yediğin öğünleri işaretle: '+url,
+    streak:(fn,n)=>fn+', '+n+' gün üst üste tüm hedefler tamam! Tebrikler, bu istikrar sonuç getirir 👏',
+    weight:(fn,kg)=>fn+', ölçümlerine baktım: başlangıçtan beri '+kg+' kg! Tebrikler, emeğin belli oluyor 👏',
+    subj:'Feed Your Health'}
+};
+const LANG_NAME={el:'Ελληνικά',en:'English',ru:'Русский',tr:'Türkçe'};
+const dictFor=c=>MSG[c.lang]||MSG.el;
+const firstName=c=>(c.name||'').trim().split(/\s+/)[0]||'';
+// Ίδιο με normalizePhoneIntl (js/lib/helpers.js).
+function phoneIntl(raw){let p=(raw||'').replace(/[^0-9]/g,'');if(!p)return'';if(p[0]==='0')p=p.replace(/^0+/,'');if(p.indexOf('30')===0&&p.length===12)return p;if(p.indexOf('357')===0&&p.length===11)return p;if(p.length===8)return'357'+p;if(p.length===10)return'30'+p;return p;}
+
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const ini=n=>{const p=(n||'').trim().split(/\s+/).filter(Boolean);if(!p.length)return'?';if(p.length===1)return p[0].slice(0,2).toUpperCase();return(p[0][0]+p[1][0]).toUpperCase();};
+const shortName=n=>{const p=(n||'').trim().split(/\s+/).filter(Boolean);return p.length>1?p[0]+' '+p[p.length-1][0]+'.':(p[0]||'Πελάτης');};
+const nDays=n=>n===1?'1 μέρα':n+' μέρες';
+const ago=key=>{const d=daysSince(key);return d<=0?'σήμερα':d===1?'χθες':'πριν '+d+' μέρες';};
+const pctCls=v=>v==null?'n':v>=66?'g':v>=33?'w':'b';
+
+// ── Κατάσταση ──
+let USER=null, CLIENTS=[], CK={}, LOGS={}, PF={}, LINKS={}, ACTS={}, linksOk=false, actsOk=true, loadErr='', loadedAt=0, loading=false;
+const UI={tab:'today',filter:'all',q:'',showDone:false,day:null};
+try{const s=JSON.parse(localStorage.getItem('fyh-coord-ui')||'null');if(s){UI.tab=s.tab||UI.tab;UI.filter=s.filter||UI.filter;}}catch(e){}
+const saveUI=()=>{try{localStorage.setItem('fyh-coord-ui',JSON.stringify({tab:UI.tab,filter:UI.filter}));}catch(e){}};
+
+// ── Φόρτωση (μόνο ανάγνωση από user_data — δεν γράφουμε ΠΟΤΕ εκεί, βλ. sql/2026-10-02_coord_actions.sql) ──
+async function fetchByTokens(table,cols,tokens,orderCol,sinceCol,since){
+  const out={},CH=60,PAGE=1000;
+  for(let i=0;i<tokens.length;i+=CH){
+    const chunk=tokens.slice(i,i+CH);
+    for(let from=0;;){
+      let q=sb.from(table).select(cols).in('token',chunk);
+      if(sinceCol)q=q.gte(sinceCol,since);
+      const res=await q.order(orderCol,{ascending:true}).order('token',{ascending:true}).range(from,from+PAGE-1);
+      if(res.error)throw res.error;
+      const rows=res.data||[];
+      rows.forEach(r=>{(out[r.token]=out[r.token]||[]).push(r);});
+      if(!rows.length)break;
+      from+=rows.length;
+    }
+  }
+  return out;
+}
+const tokensFor=c=>{const t=(c.prevShareTokens||[]).slice();if(c.shareToken&&t.indexOf(c.shareToken)<0)t.push(c.shareToken);return t;};
+function rowsFor(c){
+  const toks=tokensFor(c);
+  const by={};toks.forEach(t=>(CK[t]||[]).forEach(r=>{by[r.date]=r;}));
+  return Object.keys(by).sort().map(k=>by[k]);
+}
+
+async function loadAll(){
+  if(loading)return;loading=true;loadErr='';spin(true);
+  try{
+    const [blob,acts]=await Promise.all([
+      sb.from('user_data').select('data').eq('user_id',USER.id).maybeSingle(),
+      sb.from('coord_actions').select('item_key,client_id,status,until,updated_at')
+    ]);
+    if(blob.error)throw blob.error;
+    const d=(blob.data&&blob.data.data)||{};
+    CLIENTS=(d.clients||[]).filter(c=>c&&!c.deleted&&!c.archived);
+    if(acts.error){actsOk=false;console.warn('[coord] coord_actions',acts.error);}
+    else{actsOk=true;ACTS={};(acts.data||[]).forEach(a=>{ACTS[a.item_key]=a;});}
+    const all=[];CLIENTS.forEach(c=>tokensFor(c).forEach(t=>all.push(t)));
+    const cur=CLIENTS.map(c=>c.shareToken).filter(Boolean);
+    const r=await Promise.allSettled([
+      all.length?fetchByTokens('checkins','token,date,meals_done,meals_total,water_glasses,water_goal,supps_done,supps_total',all,'date','date',daysAgoKey(CK_WINDOW_DAYS)):{},
+      cur.length?fetchByTokens('client_logs','token,date,weight_kg,note',cur,'date','date',daysAgoKey(45)):{},
+      cur.length?fetchByTokens('plan_feedback','token,week_start,breakfast,snacks,lunch,dinner,recipes_ease,ingredients_ease,training_energy,continue_likelihood,low_rating_reasons',cur,'week_start','week_start',daysAgoKey(42)):{},
+      cur.length?sb.from('shared_plans').select('token,expires_at,updated_at,created_at').in('token',cur):{data:[]}
+    ]);
+    if(r[0].status==='fulfilled')CK=r[0].value;else{console.error(r[0].reason);loadErr='Δεν φορτώθηκαν τα check-ins.';}
+    if(r[1].status==='fulfilled')LOGS=r[1].value;else{console.error(r[1].reason);loadErr='Δεν φορτώθηκαν τα μηνύματα.';}
+    if(r[2].status==='fulfilled')PF=r[2].value;else console.error(r[2].reason);
+    if(r[3].status==='fulfilled'&&!r[3].value.error){LINKS={};(r[3].value.data||[]).forEach(x=>{LINKS[x.token]=x;});linksOk=true;}else linksOk=false;
+    loadedAt=Date.now();
+  }catch(e){
+    console.error('[coord] load',e);
+    loadErr='Δεν φορτώθηκαν τα δεδομένα. Έλεγξε τη σύνδεση και πάτα ανανέωση.';
+  }finally{loading=false;spin(false);render();}
+}
+
+// ── Ενέργειες (coord_actions) ──
+function actState(key){
+  const a=ACTS[key];if(!a)return null;
+  const now=Date.now();
+  if(a.status==='snooze'&&a.until&&new Date(a.until).getTime()<=now)return null;
+  if(a.status==='sent'&&a.until&&new Date(a.until).getTime()<=now)return null;
+  return a;
+}
+function handledToday(a){return a&&(a.status==='snooze'||a.status==='mute'||daysSince(dayKey(new Date(a.updated_at)))===0);}
+async function setAct(item,status,untilDays){
+  const prev=ACTS[item.key];
+  const until=untilDays?new Date(Date.now()+untilDays*86400000).toISOString():null;
+  const row={item_key:item.key,client_id:item.c.id,status,until,updated_at:new Date().toISOString()};
+  ACTS[item.key]=row;render();
+  if(!actsOk){return true;}
+  const res=await sb.from('coord_actions').upsert(row,{onConflict:'user_id,item_key'});
+  if(res.error){
+    console.error('[coord] save',res.error);
+    if(prev)ACTS[item.key]=prev;else delete ACTS[item.key];render();
+    toast('Δεν αποθηκεύτηκε. Δοκίμασε ξανά.');return false;
+  }
+  return true;
+}
+async function clearAct(key){
+  const prev=ACTS[key];delete ACTS[key];render();
+  if(!actsOk||!prev)return;
+  const res=await sb.from('coord_actions').delete().eq('item_key',key);
+  if(res.error){ACTS[key]=prev;render();toast('Δεν έγινε αναίρεση. Δοκίμασε ξανά.');}
+}
+
+// ── Η ουρά: ίδια σήματα με Αρχική / Πρόοδο / Μηνύματα του app ──
+function clientInfo(c){
+  const rows=rowsFor(c),by={};rows.forEach(r=>{by[r.date]=r;});
+  const last=rows.length?rows[rows.length-1].date:null;
+  const hasPlan=!!(c.weekPlan&&Object.keys(c.weekPlan).length);
+  let expDays=null;
+  if(c.planGeneratedAt&&hasPlan){const th=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;expDays=th-Math.floor((Date.now()-c.planGeneratedAt)/86400000);}
+  const wl=(c.weightLog||[]).filter(e=>e&&e.weight);
+  return {rows,by,last,gap:last?daysSince(last):Infinity,hasPlan,expDays,
+    score:rows.length?weekScore(by,0):null,prev:rows.length?weekScore(by,-1):null,
+    streak:rows.length?streak(by):0,wl,
+    muted:!!(c.progressMutedUntil&&Date.now()<c.progressMutedUntil),
+    snoozed:!!(c.attentionSnoozeUntil&&Date.now()<c.attentionSnoozeUntil)};
+}
+const reasonSnoozed=(c,r)=>!!(c.attentionSnoozeReasons&&c.attentionSnoozeReasons[r]&&Date.now()<c.attentionSnoozeReasons[r]);
+const noteText=n=>(n||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
+const noteTag=n=>{const m=/^\[tag:(travel|party|sick)\]/.exec(n||'');return m?{travel:'Ταξίδι',party:'Γιορτή',sick:'Άρρωστος/η'}[m[1]]:null;};
+function pfLow(e){
+  const keys=PF_KEYS.filter(k=>e[k]!=null&&e[k]<=PF_STAR_MAX);
+  const nps=e.continue_likelihood!=null&&e.continue_likelihood<=PF_NPS_MAX;
+  return(keys.length||nps)?{keys,nps}:null;
+}
+const pfHandled=(c,w)=>!!((c.pfSeen&&c.pfSeen[w])||(c.pfReplies&&Object.keys(c.pfReplies).some(k=>k.indexOf(w+'|')===0)));
+function pfWhy(e,low){
+  const parts=low.keys.map(k=>(PF_LABELS[k]||k)+' '+e[k]+'/5');
+  if(low.nps)parts.unshift('συνέχιση '+e.continue_likelihood+'/10');
+  return 'Χαμηλή αξιολόγηση: '+parts.join(', ');
+}
+
+function buildItems(){
+  const items=[];
+  const mk=(c,kind,ref,o)=>Object.assign({c,kind,ref,key:c.id+'|'+kind+'|'+ref},o);
+  CLIENTS.forEach(c=>{
+    const I=clientInfo(c);
+    // A. Θέλουν απάντηση: σημειώσεις & χαμηλές αξιολογήσεις από το λινκ, όσες δεν έχεις απαντήσει/δει στο app
+    if(c.shareToken){
+      (LOGS[c.shareToken]||[]).forEach(e=>{
+        const t=noteText(e.note);
+        if(!t||daysSince(e.date)>MSG_WINDOW_DAYS)return;
+        if((c.noteReplies&&c.noteReplies[e.date])||(c.noteSeen&&c.noteSeen[e.date]))return;
+        items.push(mk(c,'note',e.date,{group:'reply',why:'«'+t+'»',text:t,date:e.date,tag:noteTag(e.note)}));
+      });
+      const pfs=(PF[c.shareToken]||[]).slice().sort((a,b)=>a.week_start<b.week_start?1:-1);
+      const e=pfs[0];
+      if(e&&daysSince(e.week_start)<=MSG_WINDOW_DAYS&&!pfHandled(c,e.week_start)){
+        const low=pfLow(e);
+        if(low)items.push(mk(c,'pf',e.week_start,{group:'reply',why:pfWhy(e,low),text:pfWhy(e,low),date:e.week_start}));
+      }
+    }
+    // B. Χρειάζονται σπρώξιμο (κανόνες Πρόοδος: nudge / low) + λινκ που δεν ξεκίνησε ποτέ
+    if(!I.muted&&I.hasPlan&&c.shareToken){
+      const contactDays=c.lastDietologistContact?Math.floor((Date.now()-c.lastDietologistContact)/86400000):null;
+      const nudgedRecently=contactDays!=null&&contactDays<I.gap&&contactDays<NUDGE_RECONTACT_DAYS;
+      if(I.rows.length&&I.gap>=NUDGE_MIN_GAP&&!nudgedRecently){
+        items.push(mk(c,'nudge',I.last,{group:'nudge',gap:I.gap,why:'Δεν καταγράφει εδώ και '+nDays(I.gap)+(I.prev?' · προηγ. εβδ. '+I.prev+'%':'')}));
+      }else if(I.score!=null&&I.gap<=LOW_FRESH_DAYS&&I.score<LOW_MAX){
+        const d=I.prev!=null?I.score-I.prev:null;
+        items.push(mk(c,'low',weekDates(0)[0],{group:'nudge',why:'Τήρηση '+I.score+'% αυτή την εβδ.'+(d!=null&&d<=-5?' · ▼'+Math.abs(d)+' από την προηγ.':'')}));
+      }else if(!I.rows.length&&linksOk&&LINKS[c.shareToken]){
+        const pub=(LINKS[c.shareToken].updated_at||LINKS[c.shareToken].created_at||'').slice(0,10);
+        const pd=pub?daysSince(pub):0;
+        if(pd>=2&&pd<=21)items.push(mk(c,'start',pub,{group:'nudge',why:'Δεν ξεκίνησε να καταγράφει (λινκ πριν '+nDays(pd)+')'}));
+      }
+    }
+    // C. Για το γραφείο: θέλουν δουλειά στο Dietologist
+    const off=[];   // [ref, why] — ΜΙΑ γραμμή ανά πελάτη, με όλους τους λόγους μαζί
+    if(!I.snoozed){
+      const flagged=(c.appointments||[]).slice().reverse().find(a=>a&&a.flagged);
+      if(flagged&&!reasonSnoozed(c,'flag'))off.push(['flag:'+(flagged.date||'x'),'Σημείωση ραντεβού για παρακολούθηση'+(flagged.date?' ('+flagged.date+')':'')]);
+      if(c.intakeToken&&c.intakeStatus==='sent'&&c.intakeSentAt&&!reasonSnoozed(c,'intake')){
+        const g=Math.floor((Date.now()-new Date(c.intakeSentAt))/86400000);
+        if(g>=INTAKE_PENDING_DAYS)off.push(['intake:'+String(c.intakeSentAt).slice(0,10),'Δεν συμπλήρωσε το ερωτηματολόγιο ('+nDays(g)+')']);
+      }
+      if(c.intakeToken&&c.intakeStatus==='submitted'&&c.intakeSubmittedAt&&!I.hasPlan){
+        off.push(['intakeDone:'+String(c.intakeSubmittedAt).slice(0,10),'Συμπλήρωσε το ερωτηματολόγιο · χρειάζεται πλάνο']);
+      }else if(!I.hasPlan&&!(c.intakeToken&&c.intakeStatus==='sent')&&!reasonSnoozed(c,'noplan')){
+        off.push(['noplan:'+'x','Δεν έχει πλάνο ακόμα']);
+      }
+      if(I.expDays!=null&&I.expDays<=EXPIRING_DAYS&&!reasonSnoozed(c,'renewal')){
+        off.push(['renew:'+String(c.planGeneratedAt),I.expDays<0?'Το πλάνο πέρασε τις '+(c.renewalDays||PLAN_RENEWAL_DAYS)+' μέρες (πριν '+nDays(-I.expDays)+')':I.expDays===0?'Το πλάνο θέλει ανανέωση σήμερα':'Το πλάνο θέλει ανανέωση σε '+nDays(I.expDays)]);
+      }
+      if(c.shareToken&&linksOk){
+        const L=LINKS[c.shareToken];
+        const ex=L&&L.expires_at?Math.floor((new Date(L.expires_at)-Date.now())/86400000):null;
+        if(!L)off.push(['link:'+'missing','Το λινκ του δεν υπάρχει πια · ξαναδημοσίευσε']);
+        else if(ex!=null&&ex<=3)off.push(['link:'+String(L.expires_at).slice(0,10),ex<0?'Το λινκ του έληξε · ξαναδημοσίευσε':'Το λινκ του λήγει σε '+nDays(ex)]);
+      }
+    }
+    // Το ref αλλάζει όταν αλλάξουν οι λόγοι, οπότε ένας ΝΕΟΣ λόγος ξαναφέρνει τον πελάτη στη λίστα.
+    if(off.length)items.push(mk(c,'office',off.map(o=>o[0]).sort().join('+'),{group:'office',why:off.map(o=>o[1]).join(' · ')}));
+    // D. Καλά νέα (ένα ανά πελάτη· το βάρος προηγείται του σερί)
+    let kudo=null;
+    if(I.wl.length>=2&&(c.goalMain==='loss'||c.goalMain==='gain')){
+      const f=I.wl[0],l=I.wl[I.wl.length-1],dl=Math.round((l.weight-f.weight)*10)/10;
+      const good=c.goalMain==='loss'?dl<=-2:dl>=2;
+      const kg=(dl>0?'+':'−')+String(Math.abs(dl)).replace('.',',');
+      if(good&&l.date&&daysSince(l.date)<=14)kudo=mk(c,'weight',l.date,{group:'kudos',kg,why:kg+' kg από την αρχή ('+f.date+')'+(I.streak>=7?' · '+nDays(I.streak)+' σερί':'')});
+    }
+    if(!kudo&&I.streak>=7)kudo=mk(c,'streak',weekDates(0)[0],{group:'kudos',n:I.streak,why:nDays(I.streak)+' σερί με όλους τους στόχους'});
+    if(kudo)items.push(kudo);
+  });
+  return items;
+}
+
+// ── Μήνυμα ανά είδος ──
+function draftFor(it){
+  const c=it.c,d=dictFor(c),fn=firstName(c);
+  const url=c.shareToken?PORTAL_BASE+'?t='+c.shareToken:'';
+  switch(it.kind){
+    case 'note':return d.replyNote(fn,it.text);
+    case 'pf':return d.replyPf(fn);
+    case 'nudge':return d.nudge(fn,url+'&go=today',it.gap);
+    case 'low':return d.low(fn);
+    case 'start':return d.start(fn,url+'&go=today');
+    case 'streak':return d.streak(fn,it.n);
+    case 'weight':return d.weight(fn,it.kg);
+    default:return d.hi(fn);
+  }
+}
+const GROUPS={
+  reply:{h:'Θέλουν απάντηση',icon:'ti-message-circle',cls:'k-reply'},
+  nudge:{h:'Χρειάζονται σπρώξιμο',icon:'ti-bell',cls:'k-nudge'},
+  office:{h:'Για το γραφείο',icon:'ti-briefcase',cls:'k-office',sub:'Θέλουν δουλειά στο Dietologist. Βάλε σημαία για να τα θυμηθείς.'},
+  kudos:{h:'Καλά νέα για συγχαρητήρια',icon:'ti-confetti',cls:'k-kudos'}
+};
+function actionBtns(it){
+  const k=esc(it.key);
+  if(it.group==='reply')return(it.kind==='note'||it.kind==='pf'?'<button class="act" data-a="seen" data-k="'+k+'"><i class="ti ti-eye-check" aria-hidden="true"></i>Είδα</button>':'')
+    +'<button class="act pri" data-a="compose" data-k="'+k+'"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>Απάντηση</button>';
+  if(it.group==='nudge')return '<button class="act" data-a="compose" data-k="'+k+'"><i class="ti ti-'+(it.kind==='start'?'link':'bell')+'" aria-hidden="true"></i>'+(it.kind==='start'?'Ξαναστείλε':'Υπενθύμιση')+'</button>';
+  if(it.group==='office')return '<button class="act" data-a="flag" data-k="'+k+'"><i class="ti ti-flag" aria-hidden="true"></i>Σημαία</button>';
+  return '<button class="act" data-a="compose" data-k="'+k+'"><i class="ti ti-heart" aria-hidden="true"></i>Μπράβο</button>';
+}
+const STATUS_TXT={sent:'Στάλθηκε',seen:'Το είδες',flag:'Σημαία για το γραφείο',snooze:'Αναβλήθηκε',mute:'Δεν θα ξαναεμφανιστεί'};
+function rowHtml(it,done){
+  const c=it.c,G=GROUPS[it.group],a=ACTS[it.key];
+  let why=esc(it.why);
+  if(done&&a)why=STATUS_TXT[a.status]+(a.status==='snooze'&&a.until?' ως '+new Date(a.until).toLocaleDateString('el-GR',{day:'numeric',month:'short'}):'');
+  const lang=c.lang&&c.lang!=='el'?'<span class="tag">'+esc(c.lang.toUpperCase())+'</span>':'';
+  const tag=it.tag?'<span class="tag">'+esc(it.tag)+'</span>':'';
+  return '<div class="row'+(done?' done-row':'')+'">'
+    +'<button class="av '+G.cls+'" data-a="client" data-c="'+esc(c.id)+'" aria-label="Καρτέλα '+esc(c.name)+'">'+esc(ini(c.name))+'</button>'
+    +'<div class="mid"><button class="name" data-a="client" data-c="'+esc(c.id)+'">'+esc(shortName(c.name))+'</button>'+lang+tag
+    +'<div class="why">'+why+((it.kind==='note'||it.kind==='pf')&&!done?' · '+ago(it.date):'')+'</div></div>'
+    +(done?'<button class="act" data-a="undo" data-k="'+esc(it.key)+'">Αναίρεση</button>'
+      :'<button class="more" data-a="more" data-k="'+esc(it.key)+'" aria-label="Περισσότερα"><i class="ti ti-dots" aria-hidden="true"></i></button><div class="acts">'+actionBtns(it)+'</div>')
+    +'</div>';
+}
+
+let ITEMS=[], BYKEY={};
+function computeItems(){ITEMS=buildItems();BYKEY={};ITEMS.forEach(it=>{BYKEY[it.key]=it;});}
+const isOpen=it=>!actState(it.key);
+const ORDER={reply:0,nudge:1,office:2,kudos:3};
+function sortItems(arr){
+  return arr.sort((a,b)=>{
+    if(a.group==='reply'&&b.group==='reply')return a.date<b.date?1:-1;
+    if(a.group==='nudge'&&b.group==='nudge')return (b.gap||0)-(a.gap||0);
+    return 0;
+  });
+}
+
+function section(group){
+  const G=GROUPS[group];
+  const open=sortItems(ITEMS.filter(it=>it.group===group&&isOpen(it)));
+  if(group==='kudos'&&!open.length)return '';
+  return '<section class="sec"><div class="sec-h"><i class="ti '+G.icon+'" aria-hidden="true"></i>'+G.h+'<span class="n">'+open.length+'</span></div>'
+    +(G.sub&&open.length?'<div class="sec-sub">'+G.sub+'</div>':'')
+    +'<div class="list">'+(open.length?open.map(it=>rowHtml(it,false)).join(''):'<div class="empty"><i class="ti ti-check" aria-hidden="true"></i> Τίποτα εδώ.</div>')+'</div></section>';
+}
+
+function weekdayChart(){
+  // Μ.Ο. τήρησης ανά ημέρα της εβδομάδας, 4 εβδομάδες, όλοι οι πελάτες με λινκ (όπως το «🗓 Τήρηση ανά ημέρα» της Αρχικής).
+  const from=weekDates(-3)[0],to=dayKey(new Date());
+  const sum=[0,0,0,0,0,0,0],cnt=[0,0,0,0,0,0,0];
+  CLIENTS.forEach(c=>rowsFor(c).forEach(r=>{
+    if(r.date<from||r.date>to)return;
+    const s=overallScore(pillarStats([r]));if(s==null)return;
+    const js=new Date(r.date+'T00:00:00').getDay(),wd=js===0?6:js-1;
+    sum[wd]+=s;cnt[wd]++;
+  }));
+  const L=['Δευ','Τρί','Τετ','Πέμ','Παρ','Σάβ','Κυρ'],FULL=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+  const vals=sum.map((s,i)=>cnt[i]?Math.round(s/cnt[i]):null);
+  if(vals.every(v=>v==null))return '';
+  const valid=vals.map((v,i)=>({v,i})).filter(x=>x.v!=null);
+  const worst=valid.reduce((a,b)=>b.v<a.v?b:a),best=valid.reduce((a,b)=>b.v>a.v?b:a);
+  const sel=UI.day!=null?UI.day:worst.i;
+  const W=320,H=124,bw=30,gap=(W-7*bw)/6;
+  const col=v=>v>=66?'var(--teal)':v>=33?'var(--warn)':'var(--bad)';
+  const bars=vals.map((v,i)=>{const x=i*(bw+gap),h=v==null?0:Math.max(2,v/100*(H-36)),y=H-20-h,on=i===sel;
+    return '<g data-a="day" data-d="'+i+'" style="cursor:pointer"><rect x="'+x+'" y="0" width="'+bw+'" height="'+H+'" fill="transparent"/>'
+      +(v==null?'':'<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+h+'" rx="5" fill="'+col(v)+'" opacity="'+(on?1:.5)+'"/>'
+      +'<text x="'+(x+bw/2)+'" y="'+(y-5)+'" text-anchor="middle" font-size="10.5" fill="var(--muted)">'+v+'%</text>')
+      +'<text x="'+(x+bw/2)+'" y="'+(H-5)+'" text-anchor="middle" font-size="11" fill="'+(on?'var(--ink)':'var(--muted)')+'" font-weight="'+(on?700:400)+'">'+L[i]+'</text></g>';}).join('');
+  const sv=vals[sel];
+  let note=sv==null?FULL[sel]+': δεν υπάρχουν καταγραφές.':FULL[sel]+': μέση τήρηση '+sv+'% ('+cnt[sel]+' καταγραφές σε 4 εβδομάδες).';
+  if(sel===worst.i&&worst.v<best.v-10)note+=' Είναι η πιο αδύναμη μέρα. Ίσως αξίζει ένα μήνυμα την προηγούμενη μέρα.';
+  if(sel===best.i)note+=' Η καλύτερη μέρα της εβδομάδας.';
+  return '<section class="sec"><div class="sec-h"><i class="ti ti-calendar-stats" aria-hidden="true"></i>Τήρηση ανά ημέρα<span class="n">4 εβδ.</span></div>'
+    +'<div class="chart"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Μέση τήρηση ανά ημέρα της εβδομάδας">'+bars+'</svg><div class="chart-note">'+esc(note)+'</div></div></section>';
+}
+
+function kpis(){
+  let n=0,sum=0,pn=0,psum=0;
+  CLIENTS.forEach(c=>{const I=clientInfo(c);if(I.score!=null){n++;sum+=I.score;}if(I.prev!=null){pn++;psum+=I.prev;}});
+  const avg=n?Math.round(sum/n):null,pavg=pn?Math.round(psum/pn):null;
+  const wow=(avg!=null&&pavg!=null&&Math.abs(avg-pavg)>=3)?(avg>pavg?'<span class="up">▲'+(avg-pavg)+'</span>':'<span class="down">▼'+(pavg-avg)+'</span>'):'';
+  const exp=CLIENTS.filter(c=>{const I=clientInfo(c);return I.expDays!=null&&I.expDays<=EXPIRING_DAYS;}).length;
+  const withPlan=CLIENTS.filter(c=>c.weekPlan&&Object.keys(c.weekPlan).length).length;
+  return '<div class="kpis"><div class="kpi"><b>'+withPlan+'</b><span>Με ενεργό πλάνο</span></div>'
+    +'<div class="kpi"><b>'+(avg==null?'—':avg+'%')+' '+wow+'</b><span>Μ.Ο. τήρησης εβδ.</span></div>'
+    +'<div class="kpi"><b>'+exp+'</b><span>Πλάνα λήγουν σε 7 ημ.</span></div></div>';
+}
+
+// Θέμα: χωρίς επιλογή ακολουθεί το κινητό· το κουμπί κλειδώνει φωτεινό ή σκοτεινό (και θυμάται).
+const isDarkNow=()=>{const t=document.documentElement.getAttribute('data-theme');return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;};
+const themeIcon=()=>isDarkNow()?'ti-sun':'ti-moon';
+const themeLabel=()=>isDarkNow()?'Φωτεινό θέμα':'Σκοτεινό θέμα';
+function toggleTheme(){
+  const next=isDarkNow()?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  try{localStorage.setItem('fyh-coord-theme',next);}catch(e){}
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute('content',next==='dark'?'#101816':'#025857');
+  render();
+}
+function greeting(){const h=new Date().getHours();return h<12?'Καλημέρα':h<18?'Καλό απόγευμα':'Καλησπέρα';}
+function header(title){
+  const dt=new Date().toLocaleDateString('el-GR',{weekday:'long',day:'numeric',month:'long'});
+  const upd=loadedAt?'Ενημέρωση '+new Date(loadedAt).toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'}):'';
+  return '<div class="top"><div><div class="date">'+esc(dt.charAt(0).toUpperCase()+dt.slice(1))+'</div><h1>'+title+'</h1><div class="upd">'+upd+'</div></div>'
+    +'<div style="display:flex;gap:8px"><button class="iconbtn" data-a="theme" aria-label="'+themeLabel()+'" title="'+themeLabel()+'"><i class="ti '+themeIcon()+'" aria-hidden="true"></i></button>'
+    +'<button class="iconbtn'+(loading?' spin':'')+'" id="refreshBtn" data-a="refresh" aria-label="Ανανέωση"><i class="ti ti-refresh" aria-hidden="true"></i></button></div></div>'
+    +(loadErr?'<div class="banner bad">'+esc(loadErr)+'</div>':'')
+    +(!actsOk?'<div class="banner warn">Ο πίνακας <b>coord_actions</b> δεν υπάρχει ακόμα στο Supabase, οπότε τα «Είδα / Στάλθηκε / Αναβολή» δεν θα θυμούνται μετά την ανανέωση. Τρέξε το <b>sql/2026-10-02_coord_actions.sql</b> μία φορά.</div>':'');
+}
+
+function renderToday(){
+  if(!loadedAt)return header(greeting())+'<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+  const core=ITEMS.filter(it=>it.group!=='kudos');
+  const open=core.filter(isOpen).length;
+  const doneToday=ITEMS.filter(it=>!isOpen(it)&&handledToday(ACTS[it.key]));
+  const doneCore=doneToday.filter(it=>it.group!=='kudos').length;
+  const tot=open+doneCore,pct=tot?Math.round(doneCore/tot*100):100;
+  return header(greeting()+' Στέφανε')
+    +'<div class="hero"><div class="hero-top"><div><div class="big">'+open+'</div><div style="font-size:13px;color:var(--muted);margin-top:4px">'+(open?(open===1?'πράγμα θέλει εσένα':'πράγματα θέλουν εσένα'):'Όλα έτοιμα για σήμερα')+'</div></div>'
+    +'<div style="text-align:right;font-size:12.5px;color:var(--muted)">'+doneCore+' έγιναν σήμερα</div></div>'
+    +'<div class="bar"><i style="width:'+pct+'%"></i></div>'+kpis()+'</div>'
+    +section('reply')+section('nudge')+section('office')+weekdayChart()+section('kudos')
+    +(doneToday.length?'<section class="sec"><button class="toggle" data-a="showdone" aria-expanded="'+UI.showDone+'"><i class="ti ti-chevron-'+(UI.showDone?'up':'down')+'" aria-hidden="true"></i>Έγιναν ή αναβλήθηκαν ('+doneToday.length+')</button>'
+      +(UI.showDone?'<div class="list">'+doneToday.map(it=>rowHtml(it,true)).join('')+'</div>':'')+'</section>':'')
+    +'<div class="foot"><a href="'+APP_URL+'">Άνοιγμα Dietologist</a><button data-a="logout">Αποσύνδεση</button></div>';
+}
+
+function clientNeeds(c){return ITEMS.some(it=>it.c===c&&it.group!=='kudos'&&isOpen(it));}
+function sparkSvg(vals,w,h){
+  const pts=vals.map((v,i)=>v==null?null:[(i/(vals.length-1))*(w-4)+2,h-3-v/100*(h-6)]);
+  const seg=pts.filter(Boolean);if(seg.length<2)return '';
+  const line=seg.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' '),l=seg[seg.length-1];
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+line+'" fill="none" stroke="var(--teal)" stroke-width="1.8" vector-effect="non-scaling-stroke"/><circle cx="'+l[0].toFixed(1)+'" cy="'+l[1].toFixed(1)+'" r="2.6" fill="var(--teal)"/></svg>';
+}
+function renderClients(){
+  if(!loadedAt)return header('Πελάτες')+'<div class="skel"></div>';
+  let list=CLIENTS.map(c=>({c,I:clientInfo(c)}));
+  if(UI.filter==='need')list=list.filter(x=>clientNeeds(x.c));
+  if(UI.filter==='good')list=list.filter(x=>x.I.score!=null&&x.I.score>=66);
+  if(UI.filter==='flag')list=list.filter(x=>ITEMS.some(it=>it.c===x.c&&ACTS[it.key]&&ACTS[it.key].status==='flag'));
+  const q=UI.q.trim().toLowerCase();
+  if(q)list=list.filter(x=>(x.c.name||'').toLowerCase().includes(q));
+  list.sort((a,b)=>(a.I.score==null?101:a.I.score)-(b.I.score==null?101:b.I.score)||(a.c.name||'').localeCompare(b.c.name||'','el'));
+  const chip=(k,l)=>'<button class="chip" data-a="filter" data-f="'+k+'" aria-pressed="'+(UI.filter===k)+'">'+l+'</button>';
+  return header('Πελάτες')
+    +'<label class="search"><i class="ti ti-search" aria-hidden="true"></i><input id="q" type="search" placeholder="Αναζήτηση ονόματος" value="'+esc(UI.q)+'" aria-label="Αναζήτηση πελάτη"></label>'
+    +'<div class="chips">'+chip('all','Όλοι ('+CLIENTS.length+')')+chip('need','Θέλουν προσοχή')+chip('good','Πάνε καλά')+chip('flag','Με σημαία')+'</div>'
+    +'<div class="list">'+(list.length?list.map(x=>{const c=x.c,I=x.I,need=clientNeeds(c);
+      const sub=I.hasPlan?(I.last?'Τελ. καταγραφή '+ago(I.last):c.shareToken?'Δεν έχει καταγράψει':'Χωρίς λινκ'):'Χωρίς πλάνο';
+      return '<div class="row"><button class="av '+(need?'k-nudge':'k-office')+'" data-a="client" data-c="'+esc(c.id)+'" aria-label="Καρτέλα '+esc(c.name)+'">'+esc(ini(c.name))+'</button>'
+        +'<div class="mid"><button class="name" data-a="client" data-c="'+esc(c.id)+'">'+esc(c.name||'Πελάτης')+'</button><div class="why">'+esc(sub)+(I.streak>=3?' · σερί '+I.streak:'')+'</div></div>'
+        +'<span class="pct '+pctCls(I.score)+'">'+(I.score==null?'—':I.score+'%')+'</span></div>';}).join(''):'<div class="empty">Κανείς με αυτό το φίλτρο.</div>')+'</div>'
+    +'<div class="note">Το ποσοστό είναι η τήρηση αυτής της εβδομάδας από το λινκ του πελάτη. Χαμηλότερη πρώτα.</div>';
+}
+
+function allMessages(){
+  const out=[];
+  CLIENTS.forEach(c=>{
+    if(!c.shareToken)return;
+    (LOGS[c.shareToken]||[]).forEach(e=>{const t=noteText(e.note);if(!t)return;
+      const key=c.id+'|note|'+e.date;
+      const handled=!!((c.noteReplies&&c.noteReplies[e.date])||(c.noteSeen&&c.noteSeen[e.date])||actState(key));
+      out.push({c,kind:'note',key,date:e.date,text:t,tag:noteTag(e.note),weight:e.weight_kg,handled,group:'reply'});});
+    (PF[c.shareToken]||[]).forEach(e=>{const low=pfLow(e);if(!low)return;
+      const key=c.id+'|pf|'+e.week_start;
+      const handled=!!(pfHandled(c,e.week_start)||actState(key));
+      out.push({c,kind:'pf',key,date:e.week_start,text:pfWhy(e,low),handled,group:'reply'});});
+  });
+  return out.sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
+}
+function renderMsgs(){
+  if(!loadedAt)return header('Μηνύματα')+'<div class="skel"></div>';
+  const msgs=allMessages();
+  return header('Μηνύματα')+'<div class="sec-sub" style="margin-top:8px">Ό,τι έγραψαν οι πελάτες στο λινκ τους τις τελευταίες 6 εβδομάδες.</div>'
+    +'<div class="list" style="margin-top:6px">'+(msgs.length?msgs.map(m=>{const c=m.c;
+      return '<div class="row" style="align-items:flex-start">'+(m.handled?'<span style="width:8px;flex:none"></span>':'<span class="unseen" style="margin-top:7px" title="Αναπάντητο"></span>')
+        +'<div class="mid"><div style="display:flex;justify-content:space-between;gap:8px"><button class="name" data-a="client" data-c="'+esc(c.id)+'">'+esc(shortName(c.name))+'</button><span style="font-size:11.5px;color:var(--faint);white-space:nowrap">'+ago(m.date)+'</span></div>'
+        +'<div class="msg-text">'+(m.tag?'<span class="tag" style="margin:0 6px 0 0">'+esc(m.tag)+'</span>':'')+esc(m.text)+(m.weight?' · <b>'+esc(String(m.weight).replace('.',','))+' kg</b>':'')+'</div>'
+        +(m.handled?'':'<div class="btns" style="margin-top:8px"><button class="act" data-a="seenMsg" data-k="'+esc(m.key)+'"><i class="ti ti-eye-check" aria-hidden="true"></i>Είδα</button><button class="act pri" data-a="composeMsg" data-k="'+esc(m.key)+'"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>Απάντηση</button></div>')
+        +'</div></div>';}).join(''):'<div class="empty">Δεν υπάρχουν μηνύματα από πελάτες.</div>')+'</div>';
+}
+
+function renderNav(){
+  const open=ITEMS.filter(it=>it.group!=='kudos'&&isOpen(it)).length;
+  const un=loadedAt?allMessages().filter(m=>!m.handled).length:0;
+  const b=(k,ic,l,n)=>'<button data-a="tab" data-t="'+k+'"'+(UI.tab===k?' aria-current="page"':'')+'><i class="ti '+ic+'" aria-hidden="true"></i>'+l+(n?'<span class="badge">'+n+'</span>':'')+'</button>';
+  document.getElementById('navIn').innerHTML=b('today','ti-list-check','Σήμερα',open)+b('clients','ti-users','Πελάτες',0)+b('msgs','ti-message-2','Μηνύματα',un);
+}
+function render(){
+  if(!USER)return;
+  if(loadedAt)computeItems();
+  const m=document.getElementById('main');
+  m.innerHTML=UI.tab==='today'?renderToday():UI.tab==='clients'?renderClients():renderMsgs();
+  renderNav();
+  const q=document.getElementById('q');
+  if(q)q.addEventListener('input',e=>{UI.q=e.target.value;const pos=e.target.selectionStart;render();const n=document.getElementById('q');if(n){n.focus();n.setSelectionRange(pos,pos);}});
+}
+function spin(on){const b=document.getElementById('refreshBtn');if(b)b.classList.toggle('spin',on);}
+
+// ── Φύλλα ──
+let toastT,undoFn;
+function toast(msg,undo){
+  const el=document.getElementById('toast');undoFn=undo||null;
+  el.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button data-a="toastUndo">Αναίρεση</button>':'');el.hidden=false;
+  clearTimeout(toastT);toastT=setTimeout(()=>{el.hidden=true;},4500);
+}
+function closeSheet(){document.getElementById('layer').innerHTML='';}
+function sheet(title,body){
+  document.getElementById('layer').innerHTML='<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="grab"></div>'
+    +'<div class="sh-h"><h2>'+esc(title)+'</h2><button class="x" data-a="close" aria-label="Κλείσιμο"><i class="ti ti-x" aria-hidden="true"></i></button></div>'+body+'</div></div>';
+}
+const TITLES={note:'Απάντηση',pf:'Απάντηση',nudge:'Υπενθύμιση',low:'Υπενθύμιση',start:'Ξαναστείλε το λινκ',streak:'Συγχαρητήρια',weight:'Συγχαρητήρια',free:'Μήνυμα'};
+let COMPOSE=null;
+function openCompose(it){
+  const c=it.c,phone=phoneIntl(c.phone);
+  COMPOSE=it;
+  sheet((TITLES[it.kind]||'Μήνυμα')+' · '+shortName(c.name),
+    (it.text&&(it.kind==='note'||it.kind==='pf')?'<div class="quote">'+esc(it.text)+'<small>'+ago(it.date)+'</small></div>':'')
+    +'<textarea id="draft" aria-label="Κείμενο μηνύματος">'+esc(draftFor(it))+'</textarea>'
+    +'<div class="meta"><span class="tag" style="margin:0">'+esc(LANG_NAME[c.lang]||'Ελληνικά')+'</span>'+(phone?'<span>+'+esc(phone)+'</span>':'<span>Δεν έχει τηλέφωνο</span>')+(c.email?'<span>· '+esc(c.email)+'</span>':'')+'</div>'
+    +'<div class="btns">'+(c.email?'<button class="act" data-a="send" data-via="email"><i class="ti ti-mail" aria-hidden="true"></i>Email</button>':'')
+    +(phone?'<button class="act pri" data-a="send" data-via="wa"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp</button>':'')+'</div>'
+    +(!phone&&!c.email?'<div class="banner warn">Ο πελάτης δεν έχει τηλέφωνο ή email στο Dietologist.</div>':'')
+    +'<div class="note">Ανοίγει το WhatsApp με το μήνυμα έτοιμο. Το στέλνεις εσύ από εκεί.</div>');
+}
+async function doSend(via){
+  const it=COMPOSE;if(!it)return;
+  const c=it.c,txt=(document.getElementById('draft')||{}).value||'';
+  if(!txt.trim()){toast('Γράψε πρώτα ένα μήνυμα.');return;}
+  if(via==='wa'){
+    const url='https://wa.me/'+phoneIntl(c.phone)+'?text='+encodeURIComponent(txt);
+    // <a target=_blank> αντί για window.open(…,'noopener'): εκείνο επιστρέφει πάντα null, οπότε
+    // δεν ξέρεις αν άνοιξε. Το κλικ σε link ανοίγει το WhatsApp και στο iOS και στο Android.
+    const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+  }else{
+    location.href='mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?subject='+encodeURIComponent(dictFor(c).subj)+'&body='+encodeURIComponent(txt);
+  }
+  closeSheet();
+  if(it.kind==='free')return;
+  // Υπενθυμίσεις «λήγουν» σε 7 μέρες (όπως το PROGRESS_NUDGE_RECONTACT_DAYS)· απαντήσεις/μπράβο μένουν.
+  const exp=(it.kind==='nudge'||it.kind==='low'||it.kind==='start')?SENT_EXPIRES_DAYS:0;
+  if(await setAct(it,'sent',exp))toast('Σημειώθηκε ως «Στάλθηκε»',()=>clearAct(it.key));
+}
+function openMore(it){
+  sheet(shortName(it.c.name),'<div class="sec-sub">'+esc(it.why)+'</div>'
+    +'<button class="opt" data-a="snooze" data-k="'+esc(it.key)+'" data-d="1"><i class="ti ti-clock" aria-hidden="true"></i>Ξαναδείξε το αύριο</button>'
+    +'<button class="opt" data-a="snooze" data-k="'+esc(it.key)+'" data-d="3"><i class="ti ti-clock" aria-hidden="true"></i>Ξαναδείξε το σε 3 μέρες</button>'
+    +'<button class="opt" data-a="snooze" data-k="'+esc(it.key)+'" data-d="7"><i class="ti ti-clock" aria-hidden="true"></i>Ξαναδείξε το σε μία εβδομάδα</button>'
+    +'<button class="opt" data-a="mute" data-k="'+esc(it.key)+'"><i class="ti ti-bell-off" aria-hidden="true"></i>Μην το ξαναδείξεις για αυτόν τον λόγο</button>'
+    +'<button class="opt" data-a="client" data-c="'+esc(it.c.id)+'"><i class="ti ti-user" aria-hidden="true"></i>Δες την καρτέλα</button>');
+}
+function openClient(id){
+  const c=CLIENTS.find(x=>x.id===id);if(!c)return;
+  const I=clientInfo(c),phone=phoneIntl(c.phone);
+  const days=[];for(let i=13;i>=0;i--){const r=I.by[daysAgoKey(i)];days.push(r?overallScore(pillarStats([r])):null);}
+  const open=ITEMS.filter(it=>it.c===c&&isOpen(it));
+  const msgs=allMessages().filter(m=>m.c===c).slice(0,3);
+  const wl=I.wl,w=wl.length>=2?esc(String(wl[0].weight).replace('.',','))+' → '+esc(String(wl[wl.length-1].weight).replace('.',','))+' kg ('+esc(wl[0].date)+' → '+esc(wl[wl.length-1].date)+')':wl.length?esc(String(wl[0].weight).replace('.',','))+' kg ('+esc(wl[0].date)+')':'Χωρίς μετρήσεις';
+  const exp=I.expDays==null?'—':I.expDays<0?'Έληξε πριν '+nDays(-I.expDays):'Σε '+nDays(I.expDays);
+  sheet(c.name||'Πελάτης',
+    '<div class="meta" style="margin-top:0"><span class="tag" style="margin:0">'+esc((c.lang||'el').toUpperCase())+'</span>'+(phone?'<span>+'+esc(phone)+'</span>':'')+(c.group?'<span>· '+esc(c.group)+'</span>':'')+'</div>'
+    +(I.rows.length?'<div class="chart" style="padding:10px 12px"><div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)"><span>Τήρηση 14 ημερών</span><span class="pct '+pctCls(I.score)+'">'+(I.score==null?'—':I.score+'%')+'</span></div>'+sparkSvg(days,300,56)+'</div>'
+      :'<div class="quote">'+(c.shareToken?'Δεν έχει καταγράψει ακόμα στο λινκ.':'Δεν έχει λινκ πλάνου.')+'</div>')
+    +'<div class="stat"><div><b>'+(I.score==null?'—':I.score+'%')+'</b>αυτή την εβδ.'+(I.prev!=null?' (προηγ. '+I.prev+'%)':'')+'</div>'
+    +'<div><b>'+(I.last?ago(I.last):'—')+'</b>τελευταία καταγραφή</div>'
+    +'<div><b>'+(I.streak||0)+'</b>μέρες σερί</div><div><b>'+exp+'</b>ανανέωση πλάνου</div>'
+    +'<div style="grid-column:1/-1"><b style="font-size:14px">'+w+'</b>βάρος (μετρήσεις γραφείου)</div></div>'
+    +(open.length?'<div class="sec-h" style="margin-top:6px">Εκκρεμεί</div><div class="list" style="margin-bottom:12px">'+open.map(it=>rowHtml(it,false)).join('')+'</div>':'')
+    +(msgs.length?'<div class="sec-h">Τελευταία μηνύματα</div>'+msgs.map(m=>'<div class="quote">'+esc(m.text)+'<small>'+ago(m.date)+'</small></div>').join(''):'')
+    +'<div class="btns" style="margin-top:6px">'+((phone||c.email)?'<button class="act pri" data-a="free" data-c="'+esc(c.id)+'"><i class="ti ti-message" aria-hidden="true"></i>Μήνυμα</button>':'')
+    +'<a class="act" href="'+APP_URL+'"><i class="ti ti-external-link" aria-hidden="true"></i>Άνοιγμα στο app</a></div>');
+}
+
+// ── Συμβάντα ──
+document.addEventListener('click',async e=>{
+  const el=e.target.closest('[data-a]');if(!el)return;
+  const a=el.dataset.a;
+  if(a==='scrim'&&e.target!==el)return;
+  const it=el.dataset.k?(BYKEY[el.dataset.k]||allMessages().find(m=>m.key===el.dataset.k)):null;
+  switch(a){
+    case 'tab':UI.tab=el.dataset.t;saveUI();render();window.scrollTo(0,0);break;
+    case 'refresh':loadAll();break;
+    case 'theme':toggleTheme();break;
+    case 'compose':if(it)openCompose(it);break;
+    case 'composeMsg':if(it)openCompose(it);break;
+    case 'free':{const c=CLIENTS.find(x=>x.id===el.dataset.c);if(c)openCompose({c,kind:'free',key:''});break;}
+    case 'send':doSend(el.dataset.via);break;
+    case 'seen':case 'seenMsg':if(it&&await setAct(it,'seen'))toast('Σημειώθηκε ότι το είδες',()=>clearAct(it.key));break;
+    case 'flag':if(it&&await setAct(it,'flag',14))toast('Σημαία για το γραφείο',()=>clearAct(it.key));break;
+    case 'more':if(it)openMore(it);break;
+    case 'snooze':if(it){closeSheet();const d=+el.dataset.d;if(await setAct(it,'snooze',d))toast(d===1?'Θα το ξαναδείς αύριο':'Θα το ξαναδείς σε '+d+' μέρες',()=>clearAct(it.key));}break;
+    case 'mute':if(it){closeSheet();if(await setAct(it,'mute'))toast('Δεν θα ξαναεμφανιστεί για αυτόν τον λόγο',()=>clearAct(it.key));}break;
+    case 'undo':clearAct(el.dataset.k);break;
+    case 'client':openClient(el.dataset.c);break;
+    case 'filter':UI.filter=el.dataset.f;saveUI();render();break;
+    case 'day':UI.day=+el.dataset.d;render();break;
+    case 'showdone':UI.showDone=!UI.showDone;render();break;
+    case 'close':case 'scrim':closeSheet();break;
+    case 'toastUndo':if(undoFn)undoFn();document.getElementById('toast').hidden=true;break;
+    case 'logout':await sb.auth.signOut();location.reload();break;
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});
+// Γυρνώντας στη σελίδα (π.χ. από το WhatsApp) ανανεώνει αν πέρασαν 2+ λεπτά.
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&USER&&Date.now()-loadedAt>120000)loadAll();});
+
+// ── Σύνδεση ──
+function trErr(m){m=String(m||'');if(/invalid login/i.test(m))return 'Λάθος email ή κωδικός.';if(/email not confirmed/i.test(m))return 'Το email δεν έχει επιβεβαιωθεί.';if(/rate|too many/i.test(m))return 'Πολλές προσπάθειες. Δοκίμασε σε λίγο.';if(/fetch|network/i.test(m))return 'Δεν υπάρχει σύνδεση στο internet.';return m;}
+function showLogin(){document.getElementById('login').hidden=false;document.getElementById('main').hidden=true;document.getElementById('nav').hidden=true;}
+function showApp(){document.getElementById('login').hidden=true;document.getElementById('main').hidden=false;document.getElementById('nav').hidden=false;render();loadAll();}
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const em=document.getElementById('em').value.trim(),pw=document.getElementById('pw').value,err=document.getElementById('loginErr'),btn=document.getElementById('loginBtn');
+  if(!em||!pw){err.textContent='Γράψε email και κωδικό.';return;}
+  err.textContent='';btn.disabled=true;btn.textContent='Σύνδεση…';
+  const res=await sb.auth.signInWithPassword({email:em,password:pw});
+  btn.disabled=false;btn.textContent='Σύνδεση';
+  if(res.error){err.textContent=trErr(res.error.message);return;}
+  USER=res.data.user;showApp();
+});
+document.getElementById('forgotBtn').addEventListener('click',async()=>{
+  const em=document.getElementById('em').value.trim(),err=document.getElementById('loginErr');
+  if(!em){err.textContent='Γράψε πρώτα το email σου.';return;}
+  // Η αλλαγή κωδικού γίνεται στο Dietologist.html (είναι το URL που έχει επιτραπεί στο Supabase).
+  const res=await sb.auth.resetPasswordForEmail(em,{redirectTo:'https://feedyourhealth.github.io/Dietologist.html'});
+  err.textContent=res.error?trErr(res.error.message):'Σου στείλαμε email με link για νέο κωδικό. Μετά γύρνα εδώ και συνδέσου.';
+});
+document.getElementById('em').addEventListener('input',()=>{document.getElementById('loginErr').textContent='';});
+
+(async function boot(){
+  const {data}=await sb.auth.getSession();
+  if(data&&data.session&&data.session.user){USER=data.session.user;showApp();}else showLogin();
+})();
+</script>
+</body>
+</html>
