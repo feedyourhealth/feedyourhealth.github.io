@@ -194,6 +194,7 @@
               // με ΝΕΟ token ώστε να γίνει καθαρή νέα εγγραφή αντί για update πάνω σε ξένη γραμμή.
               if(isRlsErr && !isRetry){
                 var newTok=genSecureToken();
+                self.rememberOldShareToken(c,tok);
                 c.shareToken=newTok;
                 return doWrite(newTok,true);
               }
@@ -223,6 +224,7 @@
       var tok=c.shareToken, self=this;
       return this.sb.from('shared_plans').delete().eq('token',tok).then(function(res){
         if(res.error) throw res.error;
+        self.rememberOldShareToken(c,tok);
         delete c.shareToken;
         delete c._publishedPlanHash;
         delete c._publishedPlanHashVer;
@@ -1306,7 +1308,8 @@
     // Ξαναφορτώνει το cache και ξανασχεδιάζει τη λίστα πελατών (badges).
     refreshCheckinsCache:function(){
       var self=this;
-      var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
+      var tokens=[];
+      (window.clients||[]).forEach(function(c){ if(!c.deleted) tokens=tokens.concat(self.checkinTokensFor(c)); });
       if(!tokens.length) return Promise.resolve();
       return this.fetchAllCheckins(tokens).then(function(byToken){
         self._checkinsCache=byToken;
@@ -1320,9 +1323,32 @@
         }
       });
     },
-    // Τα checkins ενός συγκεκριμένου πελάτη (από το cache — refreshCheckinsCache πρέπει να έχει τρέξει πρώτα).
+    // ── Παλιά λινκ πελάτη (2026-10-02) ──
+    // Τα checkins είναι κλειδωμένα ανά token, όχι ανά πελάτη. Όταν το λινκ αλλάζει («🔄 Καθαρισμός &
+    // νέο σύνδεσμος», μαζική ανανέωση στις Ρυθμίσεις, RLS-retry στο publishPlan) το παλιό token
+    // ξεχνιόταν, και μαζί όλο το ιστορικό τήρησης — οι γραμμές έμεναν στη βάση αλλά αόρατες.
+    // c.prevShareTokens τα κρατά (παλιότερο πρώτο) ώστε το checkinsFor να ενώνει όλο το ιστορικό.
+    // Οι εγγραφές από ΠΡΙΝ από αυτή την αλλαγή δεν ανακτώνται — το παλιό token δεν είχε κρατηθεί πουθενά.
+    rememberOldShareToken:function(c,tok){
+      if(!c || !tok || tok===c.shareToken) return;
+      if(!c.prevShareTokens) c.prevShareTokens=[];
+      if(c.prevShareTokens.indexOf(tok)<0) c.prevShareTokens.push(tok);
+    },
+    checkinTokensFor:function(c){
+      if(!c) return [];
+      var t=(c.prevShareTokens||[]).slice();
+      if(c.shareToken && t.indexOf(c.shareToken)<0) t.push(c.shareToken);
+      return t;
+    },
+    // Τα checkins ενός πελάτη από ΟΛΑ τα λινκ του (από το cache — refreshCheckinsCache πρέπει να έχει
+    // τρέξει πρώτα), ταξινομημένα κατά ημερομηνία. Αν δύο λινκ έχουν την ίδια μέρα (μέρα αλλαγής),
+    // κερδίζει το νεότερο λινκ.
     checkinsFor:function(c){
-      return (c && c.shareToken && this._checkinsCache[c.shareToken]) || [];
+      var self=this, toks=this.checkinTokensFor(c);
+      if(toks.length===1) return this._checkinsCache[toks[0]] || [];
+      var byDate={};
+      toks.forEach(function(t){ (self._checkinsCache[t]||[]).forEach(function(r){ byDate[r.date]=r; }); });
+      return Object.keys(byDate).sort().map(function(k){return byDate[k];});
     },
 
     // ── 📥 ΒΑΡΟΣ & ΣΗΜΕΙΩΣΕΙΣ ΠΕΛΑΤΗ (client_logs — γράφει το plan.html χωρίς login) ──

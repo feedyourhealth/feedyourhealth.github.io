@@ -1281,6 +1281,7 @@ function duplicateClient(){
   // πραγματικός πελάτης στο link του. window.Cloud.publishPlan() φτιάχνει καινούριο token μόνο του
   // την επόμενη φορά που θα δημοσιευτεί (βλ. js/app-part2.js: "if(!c.shareToken) c.shareToken=...").
   newClient.shareToken = null;
+  newClient.prevShareTokens = null;   // το ιστορικό τήρησης παλιών λινκ ανήκει στον αρχικό πελάτη
   clients.push(newClient);
   upd();
   showSuccessToast('📋 Πελάτης αντιγράφηκε!');

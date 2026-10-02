@@ -743,7 +743,8 @@ function openProgressClient(id){
   var main=document.getElementById('main');
   if(!c || !main) return;
   _progressOpenId=id;
-  var rows=(window.Cloud && window.Cloud.checkinsFor && c.shareToken)?window.Cloud.checkinsFor(c):[];
+  // Χωρίς c.shareToken gate: πελάτης με απενεργοποιημένο λινκ κρατά το ιστορικό των παλιών του λινκ.
+  var rows=(window.Cloud && window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
   var expDays=progressDaysUntilExpiry(c);
   var planTxt=expDays==null?'Χωρίς ενεργό πλάνο':(expDays<0?'Το πλάνο έχει λήξει':'Ενεργό πλάνο · λήγει σε '+expDays+' ημέρες');
   var contactDays=c.lastDietologistContact?Math.floor((Date.now()-c.lastDietologistContact)/86400000):null;
