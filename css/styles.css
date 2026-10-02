@@ -429,6 +429,31 @@ body.dark-mode .hm-stat-num{color:#4fc3f7}
 body.dark-mode .hm-stat-lbl{color:#aaa}
 body.dark-mode .hm-stat-names{color:#888}
 body.dark-mode .hm-card{background:#242424;border-color:#444}
+/* 📅 Συνέπεια ανά εβδομάδα — Πρόοδος → πελάτης (js/tabs/progress.js, progressWeeklyConsistencyHtml) */
+.pr-wk-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.pr-wk-tile{background:#f0f7f7;border-radius:10px;padding:8px 10px}
+.pr-wk-tl{font-size:10.5px;color:var(--text-muted)}
+.pr-wk-tv{font-size:19px;font-weight:700;color:var(--teal)}
+.pr-wk-scroll{overflow-x:auto}
+.pr-wk-t{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
+.pr-wk-t th{font-weight:600;font-size:10.5px;color:var(--text-muted);text-align:left;padding:5px 6px;border-bottom:1px solid #e0e0e0;white-space:nowrap}
+.pr-wk-t td{padding:6px;border-bottom:1px solid #eee;vertical-align:middle;white-space:nowrap}
+.pr-wk-empty td{background:#FCEBEB;color:#791F1F}
+.pr-wk-cur{font-size:10px;color:var(--text-muted)}
+.pr-wk-d{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:2px;vertical-align:middle}
+.pr-wk-dg{background:#5DCAA5}.pr-wk-da{background:#FAC775}.pr-wk-dr{background:#F09595}
+.pr-wk-de{background:#f4f4f4;border:1px solid #cfcfcf}
+.pr-wk-df{border:1px dashed #d6d6d6}
+.pr-wk-dx{opacity:0}
+.pr-wk-p{display:inline-block;min-width:38px;text-align:center;padding:2px 6px;border-radius:6px;font-weight:600}
+.pr-wk-pg{background:#E1F5EE;color:#085041}.pr-wk-pa{background:#FAEEDA;color:#633806}.pr-wk-pr{background:#FCEBEB;color:#791F1F}.pr-wk-pn{color:var(--text-muted)}
+.pr-wk-more{background:none;border:none;padding:8px 0 0;font-size:12px;font-weight:600;color:var(--teal);cursor:pointer;font-family:inherit}
+.pr-wk-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--text-muted);margin-top:10px}
+body.dark-mode .pr-wk-tile{background:#1e2b2b}
+body.dark-mode .pr-wk-t th,body.dark-mode .pr-wk-t td{border-color:#3a3a3a}
+body.dark-mode .pr-wk-empty td{background:#3a2020;color:#F7C1C1}
+body.dark-mode .pr-wk-de{background:#2c2c2c;border-color:#555}
+body.dark-mode .pr-wk-df{border-color:#444}
 body.dark-mode .hm-action-btn{background:var(--teal)}
 body.dark-mode .hm-card-title{color:#4fc3f7}
 body.dark-mode .hm-row{border-color:#333}

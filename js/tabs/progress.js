@@ -389,8 +389,12 @@ function progressSummaryHtml(all){
     +'</div></div></div>';
 }
 
+// Ποιος πελάτης είναι ανοιχτός στη λεπτομέρεια (openProgressClient) — null = λίστα όλων. Το
+// progressRefresh το διαβάζει για να ξαναζωγραφίσει ΑΥΤΟ που βλέπεις, όχι πάντα τη λίστα.
+var _progressOpenId=null;
 function renderProgress(){
   curId=null;
+  _progressOpenId=null;
   _progressSelected={};
   var main=document.getElementById('main');
   if(!main) return;
@@ -449,7 +453,14 @@ function progressRefresh(){
     typeof Cloud.refreshClientLogsCache==='function'?Cloud.refreshClientLogsCache():Promise.resolve(),
     typeof Cloud.refreshPlanFeedbackCache==='function'?Cloud.refreshPlanFeedbackCache():Promise.resolve(),
     typeof Cloud.refreshLinkHealthCache==='function'?Cloud.refreshLinkHealthCache():Promise.resolve()
-  ]).then(function(){ renderProgress(); }).catch(function(){});
+  ]).then(function(){
+    // Αν στο μεταξύ άλλαξες tab, μην το πατήσεις. Αν άνοιξες πελάτη (π.χ. «Πλήρες ιστορικό →» από το
+    // Ραντεβού, που κάνει swTab(10) + openProgressClient αμέσως μετά), μείνε σε ΑΥΤΟΝ — πριν, το
+    // renderProgress() εδώ πετούσε πίσω στη λίστα όλων 1-2 δευτερόλεπτα μετά το άνοιγμα.
+    if(curTab!==10) return;
+    if(_progressOpenId) openProgressClient(_progressOpenId);
+    else renderProgress();
+  }).catch(function(){});
 }
 
 // ── Γράφημα τήρησης 10 εβδομάδων (Phase 2) ──────────────────────────────────────────────────
@@ -542,6 +553,95 @@ function progressAdherenceChartPanel(c,rows){
     +progressWeakPillarCalloutHtml(rows)
     +progressAdherenceChartSvg(c,rows)
     +'</div>';
+}
+
+// ── Συνέπεια ανά εβδομάδα (2026-10-02, μετά από mockup) ─────────────────────────────────────
+// Μία γραμμή για ΚΑΘΕ εβδομάδα από την πρώτη καταχώρηση μέχρι σήμερα (το γράφημα πάνω κόβει στις
+// 10 και κρύβει τις άδειες εβδομάδες). Ίδια μαθηματικά με το γράφημα: % πυλώνα = μέρες που τηρήθηκε
+// πλήρως / μέρες με στόχο (progressWeeklyPillarPct), σκορ = ckOverallScore. Αρχή = εβδομάδα πρώτου
+// check-in, γιατί το app δεν κρατά πότε δημιουργήθηκε το λινκ.
+var PROGRESS_GOOD_MIN=70;      // ≥ αυτό = πράσινο· < PROGRESS_LOW_MAX (45) = κόκκινο· ενδιάμεσα πορτοκαλί
+var PROGRESS_WEEKS_VISIBLE=5;  // οι υπόλοιπες πίσω από το «Δες και τις N παλιότερες»
+function progressPctClass(v){
+  return v==null?'n':(v>=PROGRESS_GOOD_MIN?'g':(v<PROGRESS_LOW_MAX?'r':'a'));
+}
+// Χρώμα μιας ΜΕΡΑΣ: πράσινο ΜΟΝΟ όταν τηρήθηκαν όλοι οι στόχοι (ckIsGoodDay — ίδιος ορισμός με το
+// σερί και με το % των πυλώνων, ώστε μια πράσινη μέρα να μετράει πάντα στο ποσοστό). Αλλιώς ο μέσος
+// όρος του πόσο κοντά έφτασε (3/4 γεύματα ≠ 0/4): πορτοκαλί ή κόκκινο. 'e' = καμία καταχώρηση.
+function progressDayClass(r){
+  if(!r || !(r.meals_done>0||r.supps_done>0||r.water_glasses>0)) return 'e';
+  if(ckIsGoodDay(r)) return 'g';
+  var fr=[];
+  if(r.meals_total) fr.push(Math.min(1,r.meals_done/r.meals_total));
+  if(r.supps_total) fr.push(Math.min(1,r.supps_done/r.supps_total));
+  if(r.water_goal) fr.push(Math.min(1,r.water_glasses/r.water_goal));
+  var pct=fr.length?Math.round(fr.reduce(function(a,b){return a+b;},0)/fr.length*100):0;
+  return pct<PROGRESS_LOW_MAX?'r':'a';
+}
+function progressShortDate(key){ var p=key.split('-'); return (+p[2])+'/'+(+p[1]); }
+function progressToggleOlderWeeks(btn){
+  var tb=document.getElementById('pr-wk-older');
+  if(!tb) return;
+  var open=tb.style.display==='none';
+  tb.style.display=open?'':'none';
+  btn.innerHTML=open?'Απόκρυψη παλιότερων ▴':btn.getAttribute('data-label');
+}
+function progressWeeklyConsistencyHtml(c,rows){
+  var head='<div class="hm-card pr-wk" style="margin-bottom:14px"><div class="hm-card-title">📅 Συνέπεια ανά εβδομάδα';
+  if(!rows.length) return head+'</div><div class="hm-empty">Δεν υπάρχουν ακόμα καταγραφές από το portal.</div></div>';
+  var byDate=ckRowsByDate(rows);
+  var todayKey=ckDayKey(new Date());
+  var firstOff=Math.min(0,progressWeekOffsetOf(rows[0].date));
+  var weeks=[], daysWith=0, daysTotal=0, scoreSum=0, scoreN=0, goodWeeks=0, emptyWeeks=0;
+  for(var off=0;off>=firstOff;off--){
+    var keys=ckWeekDates(off);
+    var wkRows=keys.map(function(k){return byDate[k];}).filter(Boolean);
+    var st=ckPillarStats(wkRows);
+    var score=st.anyData?ckOverallScore(st):null;
+    var cells=keys.map(function(k){
+      if(k>todayKey) return 'f';                    // μέρα που δεν ήρθε ακόμα
+      if(k<rows[0].date) return 'x';                // πριν την πρώτη καταχώρηση — δεν μετράει
+      daysTotal++;
+      var cl=progressDayClass(byDate[k]);
+      if(cl!=='e') daysWith++;
+      return cl;
+    });
+    var appts=(c.appointments||[]).filter(function(a){return a.date>=keys[0] && a.date<=keys[6];});
+    var isEmpty=!st.anyData && off<0;               // η τρέχουσα δεν «καταδικάζεται» πριν τελειώσει
+    if(isEmpty) emptyWeeks++;
+    if(score!=null){ scoreSum+=score; scoreN++; if(score>=PROGRESS_GOOD_MIN) goodWeeks++; }
+    weeks.push({off:off,keys:keys,cells:cells,score:score,isEmpty:isEmpty,appts:appts,
+      diet:progressWeeklyPillarPct(byDate,off,'diet'),wat:progressWeeklyPillarPct(byDate,off,'wat'),sup:progressWeeklyPillarPct(byDate,off,'sup')});
+  }
+  function pill(v){ return '<span class="pr-wk-p pr-wk-p'+progressPctClass(v)+'">'+(v==null?'—':v+'%')+'</span>'; }
+  function rowHtml(w){
+    var label=progressShortDate(w.keys[0])+' – '+progressShortDate(w.keys[6])
+      +(w.off===0?' <span class="pr-wk-cur">τρέχ.</span>':'')
+      +w.appts.map(function(a){return ' <span title="Ραντεβού '+esc(a.date)+'">🗓</span>';}).join('');
+    var dots=w.cells.map(function(cl){return '<span class="pr-wk-d pr-wk-d'+cl+'"></span>';}).join('');
+    if(w.isEmpty) return '<tr class="pr-wk-empty"><td>'+label+'</td><td>'+dots+'</td><td colspan="4">Καμία καταχώρηση όλη την εβδομάδα</td></tr>';
+    return '<tr><td>'+label+'</td><td>'+dots+'</td><td>'+pill(w.diet)+'</td><td>'+pill(w.wat)+'</td><td>'+pill(w.sup)+'</td><td>'+pill(w.score)+'</td></tr>';
+  }
+  var visible=weeks.slice(0,PROGRESS_WEEKS_VISIBLE), older=weeks.slice(PROGRESS_WEEKS_VISIBLE);
+  var avg=scoreN?Math.round(scoreSum/scoreN):null;
+  function tile(lbl,val,danger){ return '<div class="pr-wk-tile"><div class="pr-wk-tl">'+lbl+'</div><div class="pr-wk-tv"'+(danger?' style="color:#c62828"':'')+'>'+val+'</div></div>'; }
+  var html=head+'<span style="margin-left:auto;font-weight:400;font-size:10.5px;color:var(--text-muted)">από '+progressShortDate(rows[0].date)+'/'+rows[0].date.slice(0,4)+' · '+weeks.length+' εβδομάδες</span></div>';
+  html+='<div class="pr-wk-tiles">'
+    +tile('Μ.Ο. σκορ',avg==null?'—':avg+'%')
+    +tile('Μέρες με καταχώρηση',daysWith+' / '+daysTotal)
+    +tile('Εβδ. ≥ '+PROGRESS_GOOD_MIN+'%',goodWeeks+' / '+weeks.length)
+    +tile('Εβδ. χωρίς τίποτα',emptyWeeks,emptyWeeks>0)
+    +'</div>';
+  html+='<div class="pr-wk-scroll"><table class="pr-wk-t"><thead><tr><th>Εβδομάδα</th><th>Δε Τρ Τε Πε Πα Σα Κυ</th><th>Διατροφή</th><th>Νερό</th><th>Συμπλ.</th><th>Σκορ</th></tr></thead>'
+    +'<tbody>'+visible.map(rowHtml).join('')+'</tbody>'
+    +(older.length?'<tbody id="pr-wk-older" style="display:none">'+older.map(rowHtml).join('')+'</tbody>':'')
+    +'</table></div>';
+  if(older.length){
+    var lbl='Δες και τις '+older.length+' παλιότερες εβδομάδες ▾';
+    html+='<button type="button" class="pr-wk-more" data-label="'+esc(lbl)+'" onclick="progressToggleOlderWeeks(this)">'+lbl+'</button>';
+  }
+  html+='<div class="pr-wk-legend"><span><span class="pr-wk-d pr-wk-dg"></span>τήρησε όλους τους στόχους</span><span><span class="pr-wk-d pr-wk-da"></span>μερικώς</span><span><span class="pr-wk-d pr-wk-dr"></span>χαμηλή (&lt;'+PROGRESS_LOW_MAX+'%)</span><span><span class="pr-wk-d pr-wk-de"></span>χωρίς καταχώρηση</span><span>🗓 ραντεβού</span><span>— χωρίς στόχο</span></div>';
+  return html+'</div>';
 }
 
 // ── Λεπτομέρεια πελάτη ───────────────────────────────────────────────────────────────────────
@@ -642,6 +742,7 @@ function openProgressClient(id){
   var c=clients.find(function(x){return x.id===id;});
   var main=document.getElementById('main');
   if(!c || !main) return;
+  _progressOpenId=id;
   var rows=(window.Cloud && window.Cloud.checkinsFor && c.shareToken)?window.Cloud.checkinsFor(c):[];
   var expDays=progressDaysUntilExpiry(c);
   var planTxt=expDays==null?'Χωρίς ενεργό πλάνο':(expDays<0?'Το πλάνο έχει λήξει':'Ενεργό πλάνο · λήγει σε '+expDays+' ημέρες');
@@ -661,6 +762,7 @@ function openProgressClient(id){
     +'<button type="button" class="hm-action-btn" onclick="selectClient(\''+c.id+'\');swTab(1)">Άνοιγμα πλήρους καρτέλας</button>'
     +'</div></div>';
   html+=progressAdherenceChartPanel(c,rows);
+  html+=progressWeeklyConsistencyHtml(c,rows);
   html+=(typeof progressWeightPanelHtml==='function')?progressWeightPanelHtml(c):'';
   html+='<div style="margin-top:14px">'+progressTimelineHtml(progressBuildTimeline(c),c.id)+'</div>';
   html+='</div>';
