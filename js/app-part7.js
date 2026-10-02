@@ -222,7 +222,16 @@
     unpublishPlan:function(c){
       if(!this.enabled || !this.user || !c || !c.shareToken) return Promise.resolve();
       var tok=c.shareToken, self=this;
-      return this.sb.from('shared_plans').delete().eq('token',tok).then(function(res){
+      // ✅ 2026-10-02: ΛΗΞΗ αντί για διαγραφή της γραμμής. Η βάση σου δείχνει τα checkins ενός token
+      // μόνο όσο υπάρχει η γραμμή του στο shared_plans (εκεί είναι το dietitian_id) — με delete, όλο το
+      // ιστορικό τήρησης του παλιού λινκ γινόταν αόρατο ακόμα κι αν κρατούσαμε το token. Με expires_at
+      // στο παρελθόν το plan.html δείχνει «Ο σύνδεσμος έληξε» (ίδιο αποτέλεσμα για τον πελάτη), αλλά
+      // τα checkins του μένουν ορατά σε σένα μέσω c.prevShareTokens.
+      var past=new Date(Date.now()-60000).toISOString();
+      return this.sb.from('shared_plans').update({expires_at:past}).eq('token',tok).select('token').then(function(res){
+        if(!res.error && res.data && res.data.length) return res;
+        return self.sb.from('shared_plans').delete().eq('token',tok);   // fallback: η παλιά συμπεριφορά
+      }).then(function(res){
         if(res.error) throw res.error;
         self.rememberOldShareToken(c,tok);
         delete c.shareToken;
@@ -1290,20 +1299,41 @@
       }).catch(function(e){ console.error('[CLOUD] forceReloadFromCloud', e); });
     },
 
+    // ── Ανάγνωση ΟΛΩΝ των γραμμών ενός πίνακα για πολλά tokens (2026-10-02) ──
+    // Το Supabase (PostgREST max-rows) επιστρέφει έως 1000 γραμμές ανά αίτημα και κόβει ΣΙΩΠΗΛΑ τις
+    // υπόλοιπες. Τα fetchAll* παρακάτω ζητούσαν όλους τους πελάτες μαζί με order ascending, οπότε μόλις
+    // το σύνολο ξεπερνούσε τις 1000 χάνονταν οι ΠΙΟ ΠΡΟΣΦΑΤΕΣ μέρες — πελάτες που συμπλήρωναν κανονικά
+    // φαίνονταν «καμία συμμετοχή». Τώρα: tokens σε ομάδες (κρατά το URL του .in() μικρό) και σελίδες των
+    // 1000 μέχρι να έρθει άδεια σελίδα. Επιστρέφει {token:[rows]} ή null αν απέτυχε κάποιο αίτημα
+    // (ώστε ο caller να ΜΗΝ αντικαταστήσει ένα καλό cache με μισά δεδομένα).
+    _PAGE:1000, _TOKEN_CHUNK:60,
+    _fetchAllByToken:function(table,cols,tokens,orderCol,label){
+      var self=this, byToken={}, chunks=[];
+      for(var i=0;i<tokens.length;i+=this._TOKEN_CHUNK) chunks.push(tokens.slice(i,i+this._TOKEN_CHUNK));
+      function page(chunk,from){
+        return self.sb.from(table).select(cols).in('token',chunk)
+          .order(orderCol,{ascending:true}).order('token',{ascending:true})
+          .range(from,from+self._PAGE-1).then(function(res){
+            if(res.error) throw res.error;
+            var rows=res.data||[];
+            rows.forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
+            // Συνεχίζει μέχρι ΑΔΕΙΑ σελίδα (όχι «μικρότερη από 1000»): αν το max-rows του project είναι
+            // ρυθμισμένο χαμηλότερα, μια γεμάτη σελίδα θα έμοιαζε «τελευταία» και θα κόβαμε ξανά.
+            return rows.length?page(chunk,from+rows.length):null;
+          });
+      }
+      return chunks.reduce(function(p,chunk){ return p.then(function(){ return page(chunk,0); }); },Promise.resolve())
+        .then(function(){ return byToken; })
+        .catch(function(e){ console.error('[CLOUD] '+label, e && (e.message||e)); return null; });
+    },
+
     // ── 📈 ΠΡΟΟΔΟΣ ΠΕΛΑΤΗ (διάβασμα των checkins που στέλνει το plan.html) ──
     _checkinsCache:{},
     // Μία κλήση για όλους τους πελάτες μαζί (πιο γρήγορο από μία-μία).
     fetchAllCheckins:function(tokens){
       var self=this;
       if(!this.enabled || !this.user || !tokens || !tokens.length) return Promise.resolve({});
-      return this.sb.from('checkins')
-        .select('token,date,meals_done,meals_total,water_glasses,water_goal,supps_done,supps_total')
-        .in('token',tokens).order('date',{ascending:true}).then(function(res){
-          if(res.error){ console.error('[CLOUD] fetchAllCheckins', res.error); return {}; }
-          var byToken={};
-          (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
-          return byToken;
-        }).catch(function(e){ console.error('[CLOUD] fetchAllCheckins network error', e && e.message); return {}; });
+      return this._fetchAllByToken('checkins','token,date,meals_done,meals_total,water_glasses,water_goal,supps_done,supps_total',tokens,'date','fetchAllCheckins');
     },
     // Ξαναφορτώνει το cache και ξανασχεδιάζει τη λίστα πελατών (badges).
     refreshCheckinsCache:function(){
@@ -1312,6 +1342,7 @@
       (window.clients||[]).forEach(function(c){ if(!c.deleted) tokens=tokens.concat(self.checkinTokensFor(c)); });
       if(!tokens.length) return Promise.resolve();
       return this.fetchAllCheckins(tokens).then(function(byToken){
+        if(!byToken) return;   // αποτυχία — κράτα το προηγούμενο cache αντί για μισά/κενά δεδομένα
         self._checkinsCache=byToken;
         if(typeof renderSB==='function') renderSB();
         if(curId===null && curTab===0 && typeof renderHome==='function') renderHome();
@@ -1356,20 +1387,14 @@
     fetchAllClientLogs:function(tokens){
       var self=this;
       if(!this.enabled || !this.user || !tokens || !tokens.length) return Promise.resolve({});
-      return this.sb.from('client_logs')
-        .select('token,date,weight_kg,note')
-        .in('token',tokens).order('date',{ascending:true}).then(function(res){
-          if(res.error){ console.error('[CLOUD] fetchAllClientLogs', res.error); return {}; }
-          var byToken={};
-          (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
-          return byToken;
-        }).catch(function(e){ console.error('[CLOUD] fetchAllClientLogs network error', e && e.message); return {}; });
+      return this._fetchAllByToken('client_logs','token,date,weight_kg,note',tokens,'date','fetchAllClientLogs');
     },
     refreshClientLogsCache:function(){
       var self=this;
       var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
       if(!tokens.length) return Promise.resolve();
       return this.fetchAllClientLogs(tokens).then(function(byToken){
+        if(!byToken) return;   // αποτυχία — κράτα το προηγούμενο cache αντί για μισά/κενά δεδομένα
         self._clientLogsCache=byToken;
         // ✅ 2026-08-01: πριν έλειπε από εδώ (μόνο το refreshCheckinsCache το έκανε) — το 💬 badge στη
         // λίστα πελατών/Αρχική διαβάζει clientHasNewClientNote() που εξαρτάται ΑΚΡΙΒΩΣ από αυτό το
@@ -1399,20 +1424,14 @@
     fetchAllPlanFeedback:function(tokens){
       var self=this;
       if(!this.enabled || !this.user || !tokens || !tokens.length) return Promise.resolve({});
-      return this.sb.from('plan_feedback')
-        .select('token,week_start,breakfast,snacks,lunch,dinner,recipes_ease,ingredients_ease,training_energy,continue_likelihood,low_rating_reasons')
-        .in('token',tokens).order('week_start',{ascending:true}).then(function(res){
-          if(res.error){ console.error('[CLOUD] fetchAllPlanFeedback', res.error); return {}; }
-          var byToken={};
-          (res.data||[]).forEach(function(r){ (byToken[r.token]=byToken[r.token]||[]).push(r); });
-          return byToken;
-        }).catch(function(e){ console.error('[CLOUD] fetchAllPlanFeedback network error', e && e.message); return {}; });
+      return this._fetchAllByToken('plan_feedback','token,week_start,breakfast,snacks,lunch,dinner,recipes_ease,ingredients_ease,training_energy,continue_likelihood,low_rating_reasons',tokens,'week_start','fetchAllPlanFeedback');
     },
     refreshPlanFeedbackCache:function(){
       var self=this;
       var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
       if(!tokens.length) return Promise.resolve();
       return this.fetchAllPlanFeedback(tokens).then(function(byToken){
+        if(!byToken) return;   // αποτυχία — κράτα το προηγούμενο cache αντί για μισά/κενά δεδομένα
         self._planFeedbackCache=byToken;
         // ✅ 2026-08-01: πριν έλειπε από εδώ (μόνο το refreshCheckinsCache το έκανε) — το 😕 badge
         // στη λίστα πελατών/Αρχική εξαρτάται ΑΚΡΙΒΩΣ από αυτό το cache (clientHasLowPlanFeedback).

@@ -1172,34 +1172,80 @@ function weekDates(){ // Δευτέρα → Κυριακή της τρέχουσ
 // 1/2 συμπληρώματα ενώ ο πελάτης πραγματικά είχε κάνει 2/2. Το debounce μαζεύει διαδοχικά taps σε ΕΝΑ
 // αίτημα που διαβάζει το localStorage στο τέλος (πάντα το πιο πρόσφατο σύνολο), οπότε δεν υπάρχουν πια
 // 2 ταυτόχρονα αιτήματα να παίξουν κούρσα μεταξύ τους.
-let _pushCheckinTimer=null;
-function pushCheckin(){
+// ✅ 2026-10-02: ανά ΗΜΕΡΟΜΗΝΙΑ, όχι μόνο σήμερα. Πριν, ένα τσεκάρισμα για προηγούμενη μέρα (καρτέλα
+// πλάνου, συμπληρώματα της εβδομάδας) έμενε μόνο στο κινητό του πελάτη + στους πίνακες
+// client_meal_log/client_supp_log — ο διαιτολόγος (που διαβάζει ΜΟΝΟ τον πίνακα checkins) έβλεπε 0.
+// Ουρά ημερομηνιών, ίδιο μοτίβο με το syncMealCheckin.
+let _pushCheckinTimer=null, _pushCheckinQueue=new Set();
+function pushCheckin(dateKey){
+  _pushCheckinQueue.add(dateKey||todayKey());
   if(_pushCheckinTimer)clearTimeout(_pushCheckinTimer);
   _pushCheckinTimer=setTimeout(_pushCheckinNow,400);
+}
+// Η σύνοψη μιας μέρας όπως τη βλέπει ο διαιτολόγος — ίδια μαθηματικά με το pillarStats (στόχος νερού
+// ανά μέρα με matchInfoFor(dayIdx,date), ώστε ένα override αγώνα να μη διαρρέει σε άλλες εβδομάδες).
+// null = δεν υπάρχει πλάνο για εκείνη τη μέρα ή είναι μελλοντική.
+function checkinSummaryFor(dateKey){
+  if(dateKey>todayKey())return null;
+  const d=new Date(dateKey+'T12:00:00');
+  const pd=planForDate(d); if(!pd)return null;
+  const s=SNAP, h=s.hydration||{}, per=h.glassMl||250;
+  const mealsN=(pd.meals||[]).length;
+  const eaten=getMealsFor(dateKey); let mDone=0; for(let j=0;j<mealsN;j++)if(eaten[j])mDone++;
+  const supCount=(s.supps||[]).length;
+  const suppDay=(getSuppLog()[dateKey])||{};
+  let sDone=0; (s.supps||[]).forEach(su=>{if(suppDay[su.name])sDone++;});
+  const waterAll=(()=>{try{return JSON.parse(localStorage.getItem(lk('water'))||'{}')}catch(e){return {}}})();
+  const mi=matchInfoFor([6,0,1,2,3,4,5][d.getDay()],d);
+  const goalMl=(mi.isMatch&&h.matchMl)?h.matchMl:(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
+  return {
+    p_meals_done:mDone, p_meals_total:mealsN,
+    p_water_glasses:waterAll[dateKey]||0, p_water_goal:Math.max(6,Math.round(goalMl/per)),
+    p_supps_done:sDone, p_supps_total:supCount
+  };
+}
+// Τι έχει ήδη φτάσει στον διαιτολόγο, ανά μέρα (υπογραφή της σύνοψης) — ώστε το backfill να
+// ξαναστέλνει ΜΟΝΟ ό,τι άλλαξε ή δεν έφτασε ποτέ (αποτυχία δικτύου, κλειστό tab πριν το debounce…).
+function getCkSent(){try{return JSON.parse(localStorage.getItem(lk('ckSent'))||'{}')}catch(e){return {}}}
+function markCkSent(dateKey,sig){try{const m=getCkSent();m[dateKey]=sig;localStorage.setItem(lk('ckSent'),JSON.stringify(m))}catch(e){}}
+function sendCheckinFor(dateKey){
+  const tok=token(); if(!tok||!sb||!SNAP)return Promise.resolve(false);
+  let sum; try{sum=checkinSummaryFor(dateKey);}catch(e){return Promise.resolve(false);}
+  if(!sum)return Promise.resolve(false);
+  const sig=JSON.stringify(sum);
+  return sb.rpc('submit_checkin',Object.assign({p_token:tok,p_date:dateKey},sum))
+    .then(res=>{ if(res&&res.error){console.error('[FYH portal] submit_checkin',dateKey,res.error);return false;} markCkSent(dateKey,sig);return true; })
+    .catch(()=>false);
 }
 function _pushCheckinNow(){
   _pushCheckinTimer=null;
   if(!sb || !SNAP)return;
-  const tok=token(); if(!tok)return;
+  const dates=[..._pushCheckinQueue]; _pushCheckinQueue.clear();
+  dates.forEach(sendCheckinFor);
+}
+// Τρέχει μετά το hydrate στο boot/refreshPlan: για κάθε μέρα των τελευταίων 60 που έχει ΟΠΟΙΑΔΗΠΟΤΕ
+// καταχώρηση (γεύμα/νερό/συμπλήρωμα), αν η σύνοψή της δεν έχει φτάσει ακόμα στον διαιτολόγο, τη στέλνει.
+// Έτσι ανακτώνται και οι μέρες που τσεκαρίστηκαν αναδρομικά ΠΡΙΝ από αυτή τη διόρθωση (το hydrate τις
+// φέρνει πίσω από client_meal_log/client_water_log/client_supp_log, 60 μέρες), και όσες χάθηκαν από
+// αποτυχία δικτύου. Σειριακά, όχι 60 αιτήματα ταυτόχρονα.
+async function backfillCheckins(){
+  if(!sb||!SNAP||!token())return;
   try{
-    const pd=planForDate(new Date()); if(!pd)return;
-    const s=SNAP, h=s.hydration||{}, per=h.glassMl||250;
-    const mealsN=(pd.meals||[]).length;
-    const eaten=getMeals(); let mDone=0; for(let j=0;j<mealsN;j++)if(eaten[j])mDone++;
-    const supCount=(s.supps||[]).length;
-    const todK=dKey(new Date());
-    const suppDay=(getSuppLog()[todK])||{};
-    let sDone=0; (s.supps||[]).forEach(su=>{if(suppDay[su.name])sDone++;});
-    const mi=matchInfoFor(defaultDay());
-    const goalMl=(mi.isMatch&&h.matchMl)?h.matchMl:(pd.isTrain&&h.trainMl)?h.trainMl:(h.baseMl||2000);
-    const waterGoal=Math.max(6,Math.round(goalMl/per));
-    sb.rpc('submit_checkin',{
-      p_token:tok, p_date:todK,
-      p_meals_done:mDone, p_meals_total:mealsN,
-      p_water_glasses:getWater(), p_water_goal:waterGoal,
-      p_supps_done:sDone, p_supps_total:supCount
-    }).then(()=>{}).catch(()=>{});
-  }catch(e){}
+    const read=k=>{try{return JSON.parse(localStorage.getItem(lk(k))||'{}')}catch(e){return {}}};
+    const meals=read('meals'), water=read('water'), supps=getSuppLog();
+    const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-60); const cutK=dKey(cutoff), todK=todayKey();
+    const has=o=>o&&typeof o==='object'&&Object.keys(o).some(k=>o[k]);
+    const keys=new Set();
+    Object.keys(meals).forEach(k=>{if(has(meals[k]))keys.add(k);});
+    Object.keys(water).forEach(k=>{if(water[k]>0)keys.add(k);});
+    Object.keys(supps).forEach(k=>{if(has(supps[k]))keys.add(k);});
+    const sent=getCkSent();
+    const todo=[...keys].filter(k=>k>=cutK&&k<=todK).sort().filter(k=>{
+      let sum=null; try{sum=checkinSummaryFor(k);}catch(e){}
+      return sum && sent[k]!==JSON.stringify(sum);
+    });
+    for(const k of todo){ await sendCheckinFor(k); }
+  }catch(e){console.error('[FYH portal] backfillCheckins failed:',e);}
 }
 // Στέλνει αμέσως ό,τι εκκρεμεί στο debounce (π.χ. πριν κρυφτεί η σελίδα) αντί να χαθεί σιωπηλά.
 function flushPushCheckin(){
@@ -1672,6 +1718,7 @@ async function boot(){
       .then(results=>{
         const shopReset=checkShoppingListFreshness();
         if(results.some(Boolean)||shopReset)go(curTab());
+        backfillCheckins();
       });
   }catch(e){
     // Δεν ξέρουμε ακόμη τη γλώσσα του πελάτη εδώ (το SNAP με το c.lang δεν πρόλαβε να φορτώσει,
@@ -1705,6 +1752,7 @@ async function refreshPlan(){
       applyLangMeta();
       await Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState()]);
       checkShoppingListFreshness();
+      backfillCheckins();
       const badge=$('#upd-badge'); if(badge)badge.innerHTML=updatedBadge();
       go(curTab());
     }else{console.error('[FYH portal] refreshPlan:',error);}
@@ -2279,7 +2327,6 @@ function viewPlan(){
   const planDate=weekDatesOffset(0)[curDay];
   const planDateKey=dKey(planDate);
   const isFuture=planDateKey>todayKey();
-  const isPlanToday=planDateKey===todayKey();
   const eatenHere=getMealsFor(planDateKey);
 
   if(day&&day.meals){
@@ -2303,7 +2350,7 @@ function viewPlan(){
         head.onclick=()=>{
           const e=getMealsFor(planDateKey); e[idx]=!e[idx]; setMealsFor(planDateKey,e);
           syncMealCheckin(planDateKey);
-          if(isPlanToday)pushCheckin();
+          pushCheckin(planDateKey);
           go('plan');
         };
       }
@@ -3035,7 +3082,7 @@ function viewSupps(){
         cell.onclick=()=>{
           const lg=getSuppLog(); if(!lg[k])lg[k]={};
           if(lg[k][su.name])delete lg[k][su.name]; else lg[k][su.name]=true;
-          setSuppLog(lg); syncSuppCheckin(k); if(isTod)pushCheckin(); go('supps');
+          setSuppLog(lg); syncSuppCheckin(k); pushCheckin(k); go('supps');
         };
         days.appendChild(cell);
       });
