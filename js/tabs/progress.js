@@ -452,7 +452,8 @@ function progressRefresh(){
     typeof Cloud.refreshCheckinsCache==='function'?Cloud.refreshCheckinsCache():Promise.resolve(),
     typeof Cloud.refreshClientLogsCache==='function'?Cloud.refreshClientLogsCache():Promise.resolve(),
     typeof Cloud.refreshPlanFeedbackCache==='function'?Cloud.refreshPlanFeedbackCache():Promise.resolve(),
-    typeof Cloud.refreshLinkHealthCache==='function'?Cloud.refreshLinkHealthCache():Promise.resolve()
+    typeof Cloud.refreshLinkHealthCache==='function'?Cloud.refreshLinkHealthCache():Promise.resolve(),
+    typeof Cloud.refreshMealLogCache==='function'?Cloud.refreshMealLogCache():Promise.resolve()
   ]).then(function(){
     // Αν στο μεταξύ άλλαξες tab, μην το πατήσεις. Αν άνοιξες πελάτη (π.χ. «Πλήρες ιστορικό →» από το
     // Ραντεβού, που κάνει swTab(10) + openProgressClient αμέσως μετά), μείνε σε ΑΥΤΟΝ — πριν, το
@@ -644,6 +645,186 @@ function progressWeeklyConsistencyHtml(c,rows){
   return html+'</div>';
 }
 
+// ── 🔄 Αντικαταστάσεις γευμάτων (2026-10-12, μετά από mockup) ────────────────────────────────
+// Ο πελάτης πατά «Αυτό έφαγα» σε μια εναλλακτική στο link (plan.html) → το meals map της ημέρας
+// (client_meal_log, Cloud.mealLogFor) κρατά {a,n,o,s,f} αντί για true. Εδώ: σύνολα, πίνακας
+// ημέρα × γεύμα, ειδοποίηση για γεύμα που αλλάζει συνέχεια και λίστα «παλιό → νέο».
+var PROGRESS_SWAP_FLAG_MIN=3;     // ίδιο γεύμα αντικατεστάθη ≥ τόσες φορές στις 4 εβδ. ⇒ ειδοποίηση
+var PROGRESS_SWAP_DAYS=['Δε','Τρ','Τε','Πε','Πα','Σα','Κυ'];
+var _progressSwapRange='week';    // 'week' | '4w'
+var _progressSwapFlags={};        // clientId → [flag] της τελευταίας σχεδίασης (για τα κουμπιά)
+function progressSwapSetRange(id,r){ _progressSwapRange=r; openProgressClient(id); }
+function progressSwapKey(s,o){ return (s||'')+'|'+(o||''); }
+// Μέρες με ημερομηνία ≤ σήμερα, από `weeks` εβδομάδες πίσω μέχρι την τρέχουσα (Δευ→Κυρ).
+function progressSwapDates(weeks){
+  var today=ckDayKey(new Date()), out=[];
+  for(var off=-(weeks-1);off<=0;off++) ckWeekDates(off).forEach(function(k){ if(k<=today) out.push(k); });
+  return out;
+}
+// Πόσα γεύματα είχε η μέρα: meals_total του check-in, αλλιώς το τρέχον πλάνο εκείνης της ημέρας.
+function progressSwapMealsTotal(c,ck,key){
+  if(ck && ck.meals_total) return ck.meals_total;
+  var wd=(new Date(key+'T00:00:00').getDay()+6)%7;
+  return ((c.weekPlan||{})[wd]||[]).length;
+}
+function progressSwapStats(c,dates,log,ckByDate,firstKey){
+  var st={planned:0,alt:0,missed:0,total:0,swaps:[]};
+  dates.forEach(function(k){
+    if(!firstKey || k<firstKey) return;                 // πριν την πρώτη καταχώρηση — δεν μετράει
+    var tot=progressSwapMealsTotal(c,ckByDate[k],k), m=log[k]||{};
+    st.total+=tot;
+    for(var j=0;j<tot;j++){
+      var v=m[j];
+      if(v && typeof v==='object'){ st.alt++; st.swaps.push({date:k,idx:j,s:v.s||'',o:v.o||'',n:v.n||'',f:v.f||[]}); }
+      else if(v) st.planned++;
+      else st.missed++;
+    }
+  });
+  st.swaps.sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:a.idx-b.idx); });
+  return st;
+}
+// Γεύματα που αντικαθίστανται συχνά (4 εβδ.) — εκτός όσων ο διαιτολόγος «αγνόησε» στο ίδιο ή
+// μικρότερο πλήθος (c.swapFlagDismissed[key]=πλήθος): ξαναεμφανίζονται μόνο αν συνεχίσει να αλλάζει.
+function progressSwapFlags(c,swaps4w){
+  var g={};
+  swaps4w.forEach(function(x){
+    var key=progressSwapKey(x.s,x.o);
+    var e=g[key]||(g[key]={key:key,s:x.s,o:x.o,count:0,to:{}});
+    e.count++;
+    var t=e.to[x.n]||(e.to[x.n]={n:x.n,count:0,f:x.f});
+    t.count++; if(x.f && x.f.length) t.f=x.f;
+  });
+  var dis=c.swapFlagDismissed||{};
+  return Object.keys(g).map(function(k){ return g[k]; })
+    .filter(function(e){ return e.count>=PROGRESS_SWAP_FLAG_MIN && !(dis[e.key]>=e.count); })
+    .map(function(e){
+      var tos=Object.keys(e.to).map(function(n){ return e.to[n]; }).sort(function(a,b){ return b.count-a.count; });
+      e.top=tos[0]; e.others=tos.slice(1);
+      return e;
+    })
+    .sort(function(a,b){ return b.count-a.count; });
+}
+// Γεύματα του τρέχοντος c.weekPlan που είναι ΑΚΡΙΒΩΣ αυτό που αντικαθίσταται (ίδιο slot + ίδιος τίτλος).
+function progressSwapPlanMatches(c,s,o){
+  var hits=[], wp=c.weekPlan||{};
+  for(var d=0;d<7;d++) (wp[d]||[]).forEach(function(m,mi){
+    if(m && (m.name||'')===s && mealShortTitle(m.foods)===o) hits.push({d:d,mi:mi});
+  });
+  return hits;
+}
+function progressSwapApply(id,fi){
+  var c=clients.find(function(x){return x.id===id;});
+  var fl=(_progressSwapFlags[id]||[])[fi];
+  if(!c || !fl || !fl.top || !fl.top.f || !fl.top.f.length) return;
+  var hits=progressSwapPlanMatches(c,fl.s,fl.o);
+  if(!hits.length){ alert('Το γεύμα «'+fl.o+'» δεν υπάρχει πια στο τρέχον πλάνο — μάλλον το έχεις ήδη αλλάξει.'); return; }
+  var dayNames=hits.map(function(h){return PROGRESS_SWAP_DAYS[h.d];}).join(', ');
+  if(!confirm('Το '+fl.s+' «'+fl.o+'» θα γίνει «'+fl.top.n+'» σε '+hits.length+' ημέρα/ες ('+dayNames+'), με τις ίδιες θερμίδες.\n\nΣυνέχεια;')) return;
+  hits.forEach(function(h){
+    var meal=c.weekPlan[h.d][h.mi];
+    var kcal=calculateMealKcal(meal.foods);
+    var foods=fl.top.f.map(function(p){ return {n:p[0], g:p[1]}; });
+    var scaled=scalePlan([{name:meal.name,foods:foods}],null,[{k:kcal}])[0];
+    meal.foods=scaled.foods;
+  });
+  save();
+  if(typeof showSuccessToast==='function') showSuccessToast('Άλλαξε σε '+hits.length+' ημέρα/ες. Ξαναδημοσίευσε το link για να το δει ο πελάτης.');
+  openProgressClient(id);
+}
+function progressSwapNote(id,fi){
+  var c=clients.find(function(x){return x.id===id;});
+  var fl=(_progressSwapFlags[id]||[])[fi];
+  if(!c || !fl) return;
+  if(!c.dietologistNotes) c.dietologistNotes=[];
+  c.dietologistNotes.push({date:new Date().toISOString().slice(0,10),
+    note:'🔄 Αλλάζει συχνά το '+fl.s+' «'+fl.o+'» ('+fl.count+' φορές σε 4 εβδ.)'+(fl.top?', συνήθως με «'+fl.top.n+'»':'')+' — να το συζητήσουμε στο ραντεβού.'});
+  save();
+  if(typeof showSuccessToast==='function') showSuccessToast('Προστέθηκε στο ιστορικό του πελάτη.');
+  openProgressClient(id);
+}
+function progressSwapDismiss(id,fi){
+  var c=clients.find(function(x){return x.id===id;});
+  var fl=(_progressSwapFlags[id]||[])[fi];
+  if(!c || !fl) return;
+  if(!c.swapFlagDismissed) c.swapFlagDismissed={};
+  c.swapFlagDismissed[fl.key]=fl.count;
+  save();
+  openProgressClient(id);
+}
+function progressSwapsHtml(c,ckRows){
+  var head='<div class="hm-card pr-sw" style="margin-bottom:14px"><div class="hm-card-title">🔄 Αντικαταστάσεις γευμάτων';
+  var log=(window.Cloud && window.Cloud.mealLogFor)?window.Cloud.mealLogFor(c):{};
+  var logKeys=Object.keys(log).sort();
+  var firstKey=[ckRows.length?ckRows[0].date:null, logKeys[0]||null].filter(Boolean).sort()[0]||null;
+  if(!firstKey) return head+'</div><div class="hm-empty">Δεν υπάρχουν ακόμα καταγραφές γευμάτων από το link.</div></div>';
+  var ckByDate=ckRowsByDate(ckRows);
+  var st=progressSwapStats(c,progressSwapDates(_progressSwapRange==='4w'?4:1),log,ckByDate,firstKey);
+  var st4=_progressSwapRange==='4w'?st:progressSwapStats(c,progressSwapDates(4),log,ckByDate,firstKey);
+  var flags=progressSwapFlags(c,st4.swaps);
+  _progressSwapFlags[c.id]=flags;
+  var cid=c.id;
+  function rb(r,lbl){ return '<button type="button" class="pr-sw-rb'+(_progressSwapRange===r?' on':'')+'" onclick="progressSwapSetRange(\''+cid+'\',\''+r+'\')">'+lbl+'</button>'; }
+  var html=head+'<span style="margin-left:auto;display:flex;gap:4px">'+rb('week','Αυτή η εβδομάδα')+rb('4w','4 εβδομάδες')+'</span></div>';
+  function pct(n){ return st.total?' <small>· '+Math.round(n/st.total*100)+'%</small>':''; }
+  html+='<div class="pr-wk-tiles">'
+    +'<div class="pr-wk-tile"><div class="pr-wk-tl">Όπως στο πλάνο</div><div class="pr-wk-tv">'+st.planned+' <small>/ '+st.total+'</small></div></div>'
+    +'<div class="pr-wk-tile"><div class="pr-wk-tl">Με εναλλακτική</div><div class="pr-wk-tv" style="color:var(--teal)">'+st.alt+pct(st.alt)+'</div></div>'
+    +'<div class="pr-wk-tile"><div class="pr-wk-tl">Δεν τσεκαρίστηκαν</div><div class="pr-wk-tv"'+(st.missed?' style="color:#8a5b00"':'')+'>'+st.missed+'</div></div>'
+    +'</div>';
+  // Ειδοποιήσεις για γεύματα που αλλάζουν συνέχεια (πάντα με βάση τις 4 εβδ.)
+  flags.slice(0,3).forEach(function(fl,fi){
+    var canApply=fl.top && fl.top.f && fl.top.f.length && progressSwapPlanMatches(c,fl.s,fl.o).length;
+    html+='<div class="pr-sw-flag">'
+      +'<div class="pr-sw-flag-t">⚠️ Το '+esc(fl.s)+' «'+esc(fl.o)+'» αντικαταστάθηκε '+fl.count+' φορές τις τελευταίες 4 εβδομάδες</div>'
+      +(fl.top?'<div class="pr-sw-flag-s">Συνήθως με <b>'+esc(fl.top.n)+'</b> ('+fl.top.count+(fl.top.count===1?' φορά':' φορές')+')'
+        +(fl.others.length?' · '+fl.others.map(function(t){return esc(t.n)+' ('+t.count+')';}).join(', '):'')+'</div>':'')
+      +'<div class="pr-sw-flag-a">'
+      +(canApply?'<button type="button" class="hm-action-btn" onclick="progressSwapApply(\''+cid+'\','+fi+')">Βάλε «'+esc(fl.top.n)+'» στο πλάνο</button>':'')
+      +'<button type="button" class="hm-action-btn" style="background:#fff;color:#8a5b00;border:1px solid #f0d998" onclick="progressSwapNote(\''+cid+'\','+fi+')">📝 Σημείωσέ το για το ραντεβού</button>'
+      +'<button type="button" class="pr-sw-link" onclick="progressSwapDismiss(\''+cid+'\','+fi+')">Αγνόησε</button>'
+      +'</div></div>';
+  });
+  // Πίνακας ημέρα × γεύμα της τρέχουσας εβδομάδας
+  var wk=ckWeekDates(0), today=ckDayKey(new Date());
+  var maxN=0, rowLbl=[];
+  wk.forEach(function(k){ maxN=Math.max(maxN,progressSwapMealsTotal(c,ckByDate[k],k)); });
+  for(var j=0;j<maxN;j++){
+    var lbl='';
+    for(var d=0;d<7 && !lbl;d++){ var m=((c.weekPlan||{})[d]||[])[j]; if(m&&m.name) lbl=m.name; }
+    rowLbl.push(lbl||('Γεύμα '+(j+1)));
+  }
+  if(maxN){
+    html+='<div class="pr-sw-sub">Ποια γεύματα έφαγε αυτή την εβδομάδα</div><div class="pr-wk-scroll"><table class="pr-sw-grid"><thead><tr><th></th>'
+      +PROGRESS_SWAP_DAYS.map(function(d){return '<th>'+d+'</th>';}).join('')+'</tr></thead><tbody>';
+    for(var r=0;r<maxN;r++){
+      html+='<tr><td class="pr-sw-rl">'+esc(rowLbl[r])+'</td>';
+      wk.forEach(function(k){
+        var tot=progressSwapMealsTotal(c,ckByDate[k],k);
+        if(k>today || r>=tot || k<firstKey){ html+='<td><span class="pr-sw-c pr-sw-cf"></span></td>'; return; }
+        var v=(log[k]||{})[r];
+        if(v && typeof v==='object') html+='<td><span class="pr-sw-c pr-sw-ca" title="Εναλλακτική: '+esc(v.n||'')+'">↻</span></td>';
+        else if(v) html+='<td><span class="pr-sw-c pr-sw-cp" title="Όπως στο πλάνο"></span></td>';
+        else html+='<td><span class="pr-sw-c pr-sw-cn" title="Δεν τσεκαρίστηκε"></span></td>';
+      });
+      html+='</tr>';
+    }
+    html+='</tbody></table></div>'
+      +'<div class="pr-wk-legend"><span><span class="pr-sw-c pr-sw-cp"></span>όπως στο πλάνο</span><span><span class="pr-sw-c pr-sw-ca">↻</span>εναλλακτική</span><span><span class="pr-sw-c pr-sw-cn"></span>δεν τσεκαρίστηκε</span></div>';
+  }
+  // Λίστα «παλιό → νέο»
+  html+='<div class="pr-sw-sub">Λίστα αντικαταστάσεων'+(_progressSwapRange==='4w'?' (4 εβδομάδες)':' (αυτή η εβδομάδα)')+'</div>';
+  if(!st.swaps.length){
+    html+='<div class="hm-empty">Καμία αντικατάσταση'+(_progressSwapRange==='4w'?' τις τελευταίες 4 εβδομάδες.':' αυτή την εβδομάδα.')+'</div>';
+  } else {
+    html+=st.swaps.map(function(x){
+      var wd=(new Date(x.date+'T00:00:00').getDay()+6)%7;
+      return '<div class="pr-sw-row"><span class="pr-sw-when">'+PROGRESS_SWAP_DAYS[wd]+' '+progressShortDate(x.date)+' · '+esc(x.s)+'</span>'
+        +'<span class="pr-sw-from">'+esc(x.o)+'</span><span class="pr-sw-arrow">→</span><span class="pr-sw-to">'+esc(x.n)+'</span></div>';
+    }).join('');
+  }
+  return html+'</div>';
+}
+
 // ── Λεπτομέρεια πελάτη ───────────────────────────────────────────────────────────────────────
 // Καθαρά προβολή: για να απαντήσεις σε κάτι (σημείωση/feedback/ραντεβού), πάει στο tab όπου ήδη
 // ζει αυτή η ενέργεια — δεν ξαναγράφουμε reply/resolve εδώ (θα ήταν 2ο σημείο με το ίδιο state).
@@ -764,6 +945,7 @@ function openProgressClient(id){
     +'</div></div>';
   html+=progressAdherenceChartPanel(c,rows);
   html+=progressWeeklyConsistencyHtml(c,rows);
+  html+=progressSwapsHtml(c,rows);
   html+=(typeof progressWeightPanelHtml==='function')?progressWeightPanelHtml(c):'';
   html+='<div style="margin-top:14px">'+progressTimelineHtml(progressBuildTimeline(c),c.id)+'</div>';
   html+='</div>';

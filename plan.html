@@ -127,6 +127,18 @@
   .swap-item .nm{font-size:13px;font-weight:600;color:var(--teal-d)}
   .swap-item .fd{font-size:12px;color:var(--muted)}
   .swap-note{font-size:11px;color:var(--faint);margin-top:8px}
+  /* «Αυτό έφαγα» σε εναλλακτική — ο διαιτολόγος βλέπει ποια επιλέχθηκε (client_meal_log) */
+  .swap-item.pickable{flex-direction:row;align-items:center;gap:10px}
+  .swap-item .tx{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+  .swap-item.on{outline:1.5px solid var(--teal)}
+  .swap-pick{flex-shrink:0;min-height:38px;padding:0 12px;border-radius:9px;border:1px solid var(--teal);background:var(--card);color:var(--teal);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+  .swap-item.on .swap-pick{background:var(--teal);color:#fff}
+  .alt-banner{display:flex;align-items:center;gap:10px;background:var(--tint2);border-radius:10px;padding:8px 10px 8px 12px;margin-top:8px}
+  .alt-banner>i{color:var(--teal);font-size:18px}
+  .alt-banner .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .alt-banner b{font-size:13px;color:var(--teal-d)}
+  .alt-banner span{font-size:12px;color:var(--muted)}
+  .alt-banner button{background:none;border:none;color:var(--teal);font-size:12px;text-decoration:underline;padding:8px 4px;font-family:inherit;cursor:pointer}
 
   .log-inp{width:100%;border:.5px solid var(--bord);border-radius:10px;padding:9px 11px;font-size:16px;font-family:inherit;color:var(--ink);background:var(--card);box-sizing:border-box}
   .log-inp:focus{outline:none;border-color:var(--teal-l)}
@@ -602,7 +614,7 @@ const I18N={
     dayMon:'Δευ',dayTue:'Τρι',dayWed:'Τετ',dayThu:'Πεμ',dayFri:'Παρ',daySat:'Σαβ',daySun:'Κυρ',
     subPlan:'Το εβδομαδιαίο πλάνο μου', subProg:'Η πρόοδός μου', subShop:'Λίστα για ψώνια', subWater:'Ενυδάτωση',
     subSupps:'Τα συμπληρώματά μου', subSpices:'Μπαχαρικά & βότανα', subFruits:'Λίστα ανταλλαγής φρούτων',
-    noMealsForDay:'Δεν υπάρχει πλάνο για αυτή την ημέρα.', alternates:'Εναλλακτικά', alternatesNote:'Ισοδύναμες επιλογές βάσει των προτιμήσεών σου',
+    noMealsForDay:'Δεν υπάρχει πλάνο για αυτή την ημέρα.', alternates:'Εναλλακτικά', alternatesNote:'Ισοδύναμες επιλογές βάσει των προτιμήσεών σου. Αν έφαγες κάποια, πάτα «Αυτό έφαγα».', altAte:'Αυτό έφαγα', altPicked:'✓ Επιλέχθηκε', altAteBanner:'Έφαγες την εναλλακτική', altUndo:'Αναίρεση',
     macroP:'Π', macroC:'Υ', macroF:'Λ',
     shopHdr:'Λίστα για ψώνια', shopEmpty:'Δεν υπάρχει λίστα ακόμη.', shopRawLegend:'Η ποσότητα είναι αυτή που αγοράζεις · σε παρένθεση το ωμό/μη-μαγειρεμένο βάρος όπου διαφέρει.', shopResetBtn:'Καθάρισε όλα',
     waterProtocolHdr:'Πρωτόκολλο ενυδάτωσης', waterProtocolBody:'Στόχος βάσει βάρους · +500 ml τις ημέρες προπόνησης · 1 ποτήρι πριν από κάθε γεύμα.', waterHint:'Πάτα ένα ποτήρι για να καταγράψεις πόσο νερό ήπιες σήμερα.',
@@ -712,7 +724,7 @@ const I18N={
     dayMon:'Mon',dayTue:'Tue',dayWed:'Wed',dayThu:'Thu',dayFri:'Fri',daySat:'Sat',daySun:'Sun',
     subPlan:'My weekly plan', subProg:'My progress', subShop:'Shopping list', subWater:'Hydration',
     subSupps:'My supplements', subSpices:'Spices & herbs', subFruits:'Fruit exchange list',
-    noMealsForDay:'No plan for this day.', alternates:'Alternatives', alternatesNote:'Equivalent options based on your preferences',
+    noMealsForDay:'No plan for this day.', alternates:'Alternatives', alternatesNote:'Equivalent options based on your preferences. If you ate one, tap “I ate this”.', altAte:'I ate this', altPicked:'✓ Selected', altAteBanner:'You ate the alternative', altUndo:'Undo',
     macroP:'P', macroC:'C', macroF:'F',
     shopHdr:'Shopping list', shopEmpty:'No list yet.', shopRawLegend:'The amount shown is what you buy · the raw/uncooked weight is in parentheses where it differs.', shopResetBtn:'Reset all',
     waterProtocolHdr:'Hydration protocol', waterProtocolBody:'Target based on weight · +500 ml on training days · 1 glass before each meal.', waterHint:'Tap a glass to log how much water you drank today.',
@@ -822,7 +834,7 @@ const I18N={
     dayMon:'Пн',dayTue:'Вт',dayWed:'Ср',dayThu:'Чт',dayFri:'Пт',daySat:'Сб',daySun:'Вс',
     subPlan:'Мой недельный план', subProg:'Мой прогресс', subShop:'Список покупок', subWater:'Гидратация',
     subSupps:'Мои добавки', subSpices:'Специи и травы', subFruits:'Список замены фруктов',
-    noMealsForDay:'На этот день плана нет.', alternates:'Альтернативы', alternatesNote:'Равноценные варианты на основе ваших предпочтений',
+    noMealsForDay:'На этот день плана нет.', alternates:'Альтернативы', alternatesNote:'Равноценные варианты на основе ваших предпочтений. Если вы съели один из них, нажмите «Я съел(а) это».', altAte:'Я съел(а) это', altPicked:'✓ Выбрано', altAteBanner:'Вы съели альтернативу', altUndo:'Отменить',
     macroP:'Б', macroC:'У', macroF:'Ж',
     shopHdr:'Список покупок', shopEmpty:'Список пока пуст.', shopRawLegend:'Указано количество для покупки · в скобках — сырой/необработанный вес, если он отличается.', shopResetBtn:'Сбросить всё',
     waterProtocolHdr:'Протокол гидратации', waterProtocolBody:'Цель на основе веса · +500 мл в дни тренировок · 1 стакан перед каждым приёмом пищи.', waterHint:'Нажмите на стакан, чтобы отметить, сколько воды вы выпили сегодня.',
@@ -932,7 +944,7 @@ const I18N={
     dayMon:'Pzt',dayTue:'Sal',dayWed:'Çar',dayThu:'Per',dayFri:'Cum',daySat:'Cmt',daySun:'Paz',
     subPlan:'Haftalık planım', subProg:'İlerlemem', subShop:'Alışveriş listesi', subWater:'Sıvı alımı',
     subSupps:'Takviyelerim', subSpices:'Baharat ve otlar', subFruits:'Meyve değişim listesi',
-    noMealsForDay:'Bu gün için plan yok.', alternates:'Alternatifler', alternatesNote:'Tercihlerine göre eşdeğer seçenekler',
+    noMealsForDay:'Bu gün için plan yok.', alternates:'Alternatifler', alternatesNote:'Tercihlerine göre eşdeğer seçenekler. Birini yediysen “Bunu yedim”e dokun.', altAte:'Bunu yedim', altPicked:'✓ Seçildi', altAteBanner:'Alternatifi yedin', altUndo:'Geri al',
     macroP:'P', macroC:'K', macroF:'Y',
     shopHdr:'Alışveriş listesi', shopEmpty:'Henüz liste yok.', shopRawLegend:'Gösterilen miktar satın alacağın miktardır · farklıysa parantez içinde çiğ/pişmemiş ağırlık verilmiştir.', shopResetBtn:'Tümünü sıfırla',
     waterProtocolHdr:'Sıvı alım protokolü', waterProtocolBody:'Kiloya göre hedef · antrenman günlerinde +500 ml · her öğünden önce 1 bardak.', waterHint:'Bugün ne kadar su içtiğini kaydetmek için bir bardağa dokun.',
@@ -1057,6 +1069,19 @@ function getMealsFor(dateKey){try{const d=JSON.parse(localStorage.getItem(lk('me
 function setMealsFor(dateKey,o){try{const d=JSON.parse(localStorage.getItem(lk('meals'))||'{}');d[dateKey]=o;localStorage.setItem(lk('meals'),JSON.stringify(d))}catch(e){}}
 function getMeals(){return getMealsFor(todayKey())}
 function setMeals(o){setMealsFor(todayKey(),o)}
+// Τιμή ενός γεύματος στο meals map: true = όπως στο πλάνο · {a,n,o,s,f} = έφαγε την εναλλακτική #a
+// (n=όνομα εναλλακτικής ελληνικά, o=τίτλος αρχικού γεύματος ελληνικά, s=slot, f=[[τρόφιμο,γρ.]] — ό,τι
+// χρειάζεται ο διαιτολόγος για να το δει/βάλει στο πλάνο ακόμα κι αν το snapshot αλλάξει μετά).
+// Truthy και στις δύο περιπτώσεις, οπότε όλες οι μετρήσεις «έφαγε / δεν έφαγε» μένουν ως είχαν.
+function pickedAlt(m,v){
+  if(!v||typeof v!=='object')return null;
+  const alt=(m&&m.alternates||[])[v.a];
+  return (alt&&(alt.el||alt.name)===v.n)?alt:{name:v.n,kcal:0};
+}
+function altPickValue(m,k){
+  const a=m.alternates[k];
+  return {a:k, n:a.el||a.name, o:m.elTitle||m.title||'', s:m.slot||m.label||'', f:a.k||[]};
+}
 // supplement adherence: { 'YYYY-MM-DD': { '<supp name>': true } }
 function getSuppLog(){try{return JSON.parse(localStorage.getItem(lk('supps'))||'{}')}catch(e){return {}}}
 function setSuppLog(o){try{localStorage.setItem(lk('supps'),JSON.stringify(o))}catch(e){}}
@@ -1265,13 +1290,16 @@ function syncMealCheckin(dateKey){
   if(_mealSyncTimer)clearTimeout(_mealSyncTimer);
   _mealSyncTimer=setTimeout(_mealSyncNow,400);
 }
+// ⚠️ .then(null,…) και ΟΧΙ .catch(): το sb.rpc() του vendor supabase-js επιστρέφει builder που έχει
+// μόνο then() — το .catch() πετούσε TypeError ΠΡΙΝ σταλεί το αίτημα, οπότε από 2026-09-05 μέχρι
+// 2026-10-12 τα save_meal/water/supp_checkin + save_shop_state δεν έφταναν ποτέ στο Supabase.
 function _mealSyncNow(){
   _mealSyncTimer=null;
   if(!sb)return;
   const tok=token(); if(!tok)return;
   const dates=[..._mealSyncQueue]; _mealSyncQueue.clear();
   dates.forEach(dateKey=>{
-    sb.rpc('save_meal_checkin',{p_token:tok,p_date:dateKey,p_meals_map:getMealsFor(dateKey)}).catch(()=>{});
+    sb.rpc('save_meal_checkin',{p_token:tok,p_date:dateKey,p_meals_map:getMealsFor(dateKey)}).then(null,()=>{});
   });
 }
 function flushMealSync(){
@@ -1318,7 +1346,7 @@ function _waterSyncNow(){
   _waterSyncTimer=null;
   if(!sb)return;
   const tok=token(); if(!tok)return;
-  sb.rpc('save_water_checkin',{p_token:tok,p_date:todayKey(),p_glasses:getWater()}).catch(()=>{});
+  sb.rpc('save_water_checkin',{p_token:tok,p_date:todayKey(),p_glasses:getWater()}).then(null,()=>{});
 }
 async function hydrateWaterCheckins(){
   const tok=token(); if(!tok||!sb)return false;
@@ -1351,7 +1379,7 @@ function _suppSyncNow(){
   const dates=[..._suppSyncQueue]; _suppSyncQueue.clear();
   const log=getSuppLog();
   dates.forEach(dateKey=>{
-    sb.rpc('save_supp_checkin',{p_token:tok,p_date:dateKey,p_supps_map:log[dateKey]||{}}).catch(()=>{});
+    sb.rpc('save_supp_checkin',{p_token:tok,p_date:dateKey,p_supps_map:log[dateKey]||{}}).then(null,()=>{});
   });
 }
 async function hydrateSuppCheckins(){
@@ -1380,7 +1408,7 @@ function _shopSyncNow(){
   _shopSyncTimer=null;
   if(!sb)return;
   const tok=token(); if(!tok)return;
-  sb.rpc('save_shop_state',{p_token:tok,p_checks:getShop()}).catch(()=>{});
+  sb.rpc('save_shop_state',{p_token:tok,p_checks:getShop()}).then(null,()=>{});
 }
 async function hydrateShopState(){
   const tok=token(); if(!tok||!sb)return false;
@@ -1979,8 +2007,10 @@ function viewHome(){
   let done=0, eatK=0, eatP=0, eatC=0, eatF=0;
   meals.forEach((m,i)=>{
     if(!eaten[i])return;
-    done++; eatK+=m.kcal||0;
-    const mm=m.macros||{}; eatP+=mm.p||0; eatC+=mm.c||0; eatF+=mm.f||0;
+    // Αν έφαγε εναλλακτική, μετράμε τις δικές της θερμίδες/μακρο (snapshots πριν το 2026-10-12 δεν τις έχουν → του γεύματος)
+    const pa=pickedAlt(m,eaten[i]);
+    done++; eatK+=(pa&&pa.kcal)||m.kcal||0;
+    const mm=(pa&&pa.macros)||m.macros||{}; eatP+=mm.p||0; eatC+=mm.c||0; eatF+=mm.f||0;
   });
 
   // Στόχος/Πρωτεΐνη/Υδατ/κες/Λιπαρά — δείχνει πόσο έχει ήδη καταναλωθεί σήμερα (άθροισμα των
@@ -2010,7 +2040,7 @@ function viewHome(){
       const relTag=mi.isMatch?matchRelTag(m.time,mi.time):'';
       mm.innerHTML='<span class="mc">'+(eaten[idx]?'<i class="ti ti-check"></i>':'')+'</span>'
         +'<div class="t">'+esc(m.time||'')+'</div>'
-        +'<div style="flex:1"><div class="nm">'+esc(m.title||m.label||T('mealFallback'))+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
+        +'<div style="flex:1"><div class="nm">'+(pickedAlt(m,eaten[idx])?'<i class="ti ti-refresh" style="color:var(--teal);font-size:13px"></i> '+esc(pickedAlt(m,eaten[idx]).name):esc(m.title||m.label||T('mealFallback')))+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
       mm.onclick=()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);syncMealCheckin(todayKey());pushCheckin();go('home');};
       cp.appendChild(mm);
     });
@@ -2371,14 +2401,38 @@ function viewPlan(){
         mc.innerHTML='<span>'+T('macroP')+' '+nfmt(m.macros.p)+'g</span><span>'+T('macroC')+' '+nfmt(m.macros.c)+'g</span><span>'+T('macroF')+' '+nfmt(m.macros.f)+'g</span>';
         body.appendChild(mc);
       }
+      // Εναλλακτική που έφαγε (αν πάτησε «Αυτό έφαγα») — banner πάνω από τη λίστα, με αναίρεση.
+      const picked=eatenHere[idx]&&typeof eatenHere[idx]==='object'?eatenHere[idx]:null;
+      function setPick(val){
+        const e=getMealsFor(planDateKey); e[idx]=val; setMealsFor(planDateKey,e);
+        syncMealCheckin(planDateKey);
+        pushCheckin(planDateKey);
+        go('plan');
+      }
+      if(picked){
+        const pa=pickedAlt(m,picked);
+        const bn=el('div','alt-banner');
+        bn.innerHTML='<i class="ti ti-check"></i><div class="tx"><b>'+esc(T('altAteBanner'))+'</b><span>'+esc(pa.name)+'</span></div>';
+        const ub=el('button',null,T('altUndo')); ub.type='button';
+        ub.onclick=()=>setPick(false);
+        bn.appendChild(ub);
+        body.appendChild(bn);
+      }
       if(m.alternates&&m.alternates.length){
         const btn=el('button','swap-btn');
         btn.innerHTML='<span style="display:flex;align-items:center;gap:6px"><i class="ti ti-refresh"></i>'+T('alternates')+'</span><i class="ti ti-chevron-down chev"></i>';
         const list=el('div','swap-list');
-        m.alternates.forEach(a=>{
-          const item=el('div','swap-item');
+        m.alternates.forEach((a,k)=>{
+          const on=!!(picked&&picked.a===k&&pickedAlt(m,picked)===a);
+          // «Αυτό έφαγα» μόνο για σήμερα ή παλαιότερα — όπως και το απλό check-off.
+          const item=el('div','swap-item'+(isFuture?'':' pickable')+(on?' on':''));
           const foodsStr=(a.foods||[]).map(f=>f.name+' '+f.qty+(f.sub?' '+f.sub:'')+(f.ck?' ('+T('cookedW')+')':'')).join(', ');
-          item.innerHTML='<span class="nm">'+esc(a.name||'')+'</span><span class="fd">'+esc(foodsStr)+'</span>';
+          item.innerHTML='<div class="tx"><span class="nm">'+esc(a.name||'')+'</span><span class="fd">'+esc(foodsStr)+'</span></div>';
+          if(!isFuture){
+            const pb=el('button','swap-pick',on?T('altPicked'):T('altAte')); pb.type='button';
+            pb.onclick=()=>setPick(on?false:altPickValue(m,k));
+            item.appendChild(pb);
+          }
           list.appendChild(item);
         });
         const note=el('div','swap-note',T('alternatesNote'));

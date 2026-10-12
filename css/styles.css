@@ -454,6 +454,41 @@ body.dark-mode .pr-wk-t th,body.dark-mode .pr-wk-t td{border-color:#3a3a3a}
 body.dark-mode .pr-wk-empty td{background:#3a2020;color:#F7C1C1}
 body.dark-mode .pr-wk-de{background:#2c2c2c;border-color:#555}
 body.dark-mode .pr-wk-df{border-color:#444}
+/* 🔄 Αντικαταστάσεις γευμάτων — Πρόοδος → πελάτης (js/tabs/progress.js, progressSwapsHtml) */
+.pr-wk-tv small{font-size:11px;font-weight:500;color:var(--text-muted)}
+.pr-sw-rb{background:#fff;border:1px solid #d5e3e1;border-radius:7px;padding:3px 9px;font-size:11px;font-weight:500;color:#555;cursor:pointer;font-family:inherit}
+.pr-sw-rb.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+.pr-sw-flag{background:#fff8e6;border:1px solid #f0d998;border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.pr-sw-flag-t{font-size:13px;font-weight:700;color:#633806}
+.pr-sw-flag-s{font-size:12px;color:#6b4a22;margin-top:3px}
+.pr-sw-flag-a{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.pr-sw-link{background:none;border:none;padding:4px;font-size:12px;color:#6b4a22;text-decoration:underline;cursor:pointer;font-family:inherit}
+.pr-sw-sub{font-size:12px;font-weight:700;margin:14px 0 6px}
+.pr-sw-grid{border-collapse:separate;border-spacing:4px;font-size:11px;min-width:420px}
+.pr-sw-grid th{font-weight:600;color:var(--text-muted);font-size:10.5px;text-align:center}
+.pr-sw-grid td{padding:0;text-align:center}
+.pr-sw-rl{text-align:left!important;padding-right:8px!important;white-space:nowrap;color:#444;font-weight:500}
+.pr-sw-c{display:inline-flex;align-items:center;justify-content:center;width:34px;height:22px;border-radius:5px;box-sizing:border-box;font-weight:700;font-size:12px;vertical-align:middle}
+.pr-wk-legend .pr-sw-c{width:16px;height:14px;font-size:10px;margin-right:4px}
+.pr-sw-cp{background:#CFE8E2}
+.pr-sw-ca{background:var(--teal);color:#fff}
+.pr-sw-cn{background:#fff;border:1px dashed #b9c7c4}
+.pr-sw-cf{background:transparent}
+.pr-sw-row{display:grid;grid-template-columns:150px minmax(0,1fr) 18px minmax(0,1fr);gap:8px;align-items:center;padding:7px 0;border-top:1px solid #eee;font-size:12px}
+.pr-sw-when{color:var(--text-muted)}
+.pr-sw-from{color:#888;text-decoration:line-through}
+.pr-sw-arrow{color:var(--teal);font-weight:700}
+.pr-sw-to{font-weight:600;color:var(--teal)}
+@media (max-width:600px){.pr-sw-row{grid-template-columns:1fr;gap:2px}.pr-sw-arrow{display:none}}
+body.dark-mode .pr-sw-rb{background:#2a2a2a;border-color:#444;color:#ccc}
+body.dark-mode .pr-sw-rb.on{background:var(--teal);color:#fff}
+body.dark-mode .pr-sw-flag{background:#3a2f1a;border-color:#6b5a2a}
+body.dark-mode .pr-sw-flag-t{color:#F5D7A1}
+body.dark-mode .pr-sw-flag-s,body.dark-mode .pr-sw-link{color:#E0C79A}
+body.dark-mode .pr-sw-rl{color:#ccc}
+body.dark-mode .pr-sw-cp{background:#24453f}
+body.dark-mode .pr-sw-cn{background:transparent;border-color:#555}
+body.dark-mode .pr-sw-row{border-color:#333}
 body.dark-mode .hm-action-btn{background:var(--teal)}
 body.dark-mode .hm-card-title{color:#4fc3f7}
 body.dark-mode .hm-row{border-color:#333}

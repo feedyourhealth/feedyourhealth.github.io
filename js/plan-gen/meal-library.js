@@ -27,6 +27,14 @@ function mealSignature(foods){
   return foods.map(function(f){return f.n||'';}).sort().join('|');
 }
 
+// Σύντομος τίτλος γεύματος με ελληνικά ονόματα τροφίμων (έως 3, χωρίς παρενθέσεις) — ίδιος για
+// το snapshot του link (elTitle / alternates[].el) και για την καρτέλα «Αντικαταστάσεις» της Προόδου,
+// ώστε μια αντικατάσταση που κατέγραψε ο πελάτης να ταιριάζει με το γεύμα του c.weekPlan.
+function mealShortTitle(foods){
+  var names=(foods||[]).map(function(f){ return String(f.n||'').replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim(); });
+  return names.slice(0,3).join(', ')+(names.length>3?'…':'');
+}
+
 // ── CROSS-CLIENT TASTE LIBRARY ─────────────────────────────────────────────
 // Harvest real, dietitian-made meals from two deliberately-curated sources — clients marked as
 // ⭐ "taste templates", and named plan templates saved via "💾 Αποθ. ως πρότυπο" (customTemplates).

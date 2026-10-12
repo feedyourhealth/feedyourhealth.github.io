@@ -659,15 +659,20 @@
           var alternates=[];
           if(altPool){
             pickMealAlternates(altPool, meal, c, mk, 3, function(foods){ return altBlockedByDiet(foods,d); }).forEach(function(a){
-              var af=[], ak=0;
+              var af=[], ak=0, ap=0, ac=0, aF=0;
               (a.foods||[]).forEach(function(f){
                 var v=macro(f.n,f.g);
-                ak+=v.k;
+                ak+=v.k; ap+=v.p; ac+=v.c; aF+=v.f;
                 var q=fmtQ(f);
                 af.push(ckFood({name:shortName(fName(f.n)), qty:q.main, sub:q.sub||''},f.n));
               });
               var altTitle=af.map(function(x){return x.name;}).slice(0,3).join(', ')+(af.length>3?'…':'');
-              alternates.push({name:altTitle, kcal:Math.round(ak), foods:af});
+              // el/k/macros (2026-10-12): για το «Αυτό έφαγα» — el = ελληνικός τίτλος (ό,τι βλέπει ο
+              // διαιτολόγος στην Πρόοδο, ανεξάρτητα από τη γλώσσα του link), k = [[τρόφιμο,γρ.]] ώστε το
+              // «Βάλε στο πλάνο» να ξέρει ακριβώς τι να βάλει, macros = για τα σύνολα της Αρχικής του πελάτη.
+              alternates.push({name:altTitle, el:mealShortTitle(a.foods), kcal:Math.round(ak),
+                macros:{p:Math.round(ap),c:Math.round(ac),f:Math.round(aF)},
+                k:(a.foods||[]).map(function(f){return [f.n,Math.round(f.g)];}), foods:af});
             });
           }
           var mealTime;
@@ -685,6 +690,8 @@
             label:mLabel(meal.name),
             time:mealTime,
             title:title,
+            elTitle:mealShortTitle(meal.foods),   // ελληνικός τίτλος + slot: καταγράφονται με το «Αυτό έφαγα»
+            slot:meal.name||'',
             // Όνομα έτοιμου/branded πιάτου — γραμμή-τίτλος πάνω από τα υλικά ώστε ο πελάτης να το
             // παραγγείλει με το όνομά του. Μένει αυτούσιο σε κάθε γλώσσα (brand name, δεν μεταφράζεται).
             dishLabel:(meal.dishLabels&&meal.dishLabels.length)?meal.dishLabels.join(' + '):'',
@@ -1451,6 +1458,28 @@
       var entries=(this._planFeedbackCache[c.shareToken]||[]).slice();
       entries.sort(function(a,b){return a.week_start<b.week_start?1:-1;});
       return entries;
+    },
+
+    // ── 🔄 ΠΟΙΑ ΓΕΥΜΑΤΑ ΕΦΑΓΕ (client_meal_log — γράφει το plan.html, 2026-10-12) ──
+    // Μέχρι τώρα ο διαιτολόγος διάβαζε μόνο τα ημερήσια σύνολα (checkins: «4/5»). Ο πίνακας αυτός
+    // έχει το ανά-γεύμα map {"0":true,"3":{a,n,o,s,f}} — true = όπως στο πλάνο, αντικείμενο = έφαγε
+    // εναλλακτική. Τροφοδοτεί την ενότητα «🔄 Αντικαταστάσεις» της Προόδου (tabs/progress.js).
+    _mealLogCache:{},
+    refreshMealLogCache:function(){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve();
+      var tokens=[];
+      (window.clients||[]).forEach(function(c){ if(!c.deleted) tokens=tokens.concat(self.checkinTokensFor(c)); });
+      if(!tokens.length) return Promise.resolve();
+      return this._fetchAllByToken('client_meal_log','token,date,meals_map',tokens,'date','fetchAllMealLogs').then(function(byToken){
+        if(byToken) self._mealLogCache=byToken;   // null = σφάλμα — κράτα το προηγούμενο cache
+      });
+    },
+    // {date: meals_map} από ΟΛΑ τα λινκ του πελάτη (νεότερο λινκ κερδίζει την ίδια μέρα, όπως checkinsFor).
+    mealLogFor:function(c){
+      var self=this, byDate={};
+      this.checkinTokensFor(c).forEach(function(t){ (self._mealLogCache[t]||[]).forEach(function(r){ byDate[r.date]=r.meals_map||{}; }); });
+      return byDate;
     },
 
     // ── 🔗 ΥΓΕΙΑ ΣΥΝΔΕΣΜΟΥ PORTAL (2026-08-14) ──────────────────────────────
