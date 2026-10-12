@@ -1302,6 +1302,9 @@ body.dark-mode .tooltip-text {
 .act-cell{font-size:9px;color:var(--teal);vertical-align:top;line-height:1.4}
 .met-del{background:none;border:none;cursor:pointer;color:#6b6b6b;font-size:14px;padding:0 3px;line-height:1;flex-shrink:0}
 .met-del:hover{color:#c62828}
+.met-edit{background:none;border:none;cursor:pointer;font-size:12px;padding:0 3px;line-height:1;flex-shrink:0;opacity:.6}
+.met-edit:hover{opacity:1}
+.met-item-editing{border-color:#ff6b35;box-shadow:0 0 0 2px rgba(255,107,53,.18)}
 .met-total{font-size:11px;color:var(--teal);padding:6px 10px;background:var(--teal-tint);border-radius:10px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .met-total b{color:var(--teal-dark)}
 .met-note{font-size:10px;color:#888;font-style:italic}
@@ -2301,6 +2304,7 @@ body.dark-mode .macro-preset-btn{background:#1a1a1a;border-color:#444;color:#ccc
 body.dark-mode .macro-preset-wrap{background:#1a1a1a;border-color:#444}
 body.dark-mode .met-input-section{background:#1a1a1a;border-color:#444}
 body.dark-mode .met-item{background:#1a1a1a;border-color:#444}
+body.dark-mode .met-item.met-item-editing{border-color:#ff6b35}
 body.dark-mode .met-wrap{background:#1a1a1a;border-color:#444}
 body.dark-mode .plan-export-btn{background:#1a1a1a;border-color:#444;color:#e0e0e0}
 body.dark-mode .plan-export-menu{background:#1a1a1a;border-color:#444}

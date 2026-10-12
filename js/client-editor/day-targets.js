@@ -574,23 +574,41 @@ function buildDayTgtHtml(c,t){
 }
 
 /* ── MET Activities UI ───────────────────────────────────────────────────── */
+// ✏️ Επεξεργασία: ποια δραστηριότητα (πελάτης + θέση) είναι φορτωμένη στη φόρμα. Όσο ισχύει, το
+// buildMetHtml ζωγραφίζει τη φόρμα προ-συμπληρωμένη (επιβιώνει renderMain) και το κουμπί
+// «Προσθήκη» γίνεται «Αποθήκευση αλλαγών» που αντικαθιστά την ίδια εγγραφή.
+var _metEdit=null;
+function _metEditIdx(c){
+  if(!_metEdit||!c||_metEdit.cid!==c.id)return -1;
+  return (c.metActivities&&c.metActivities[_metEdit.idx])?_metEdit.idx:-1;
+}
+function _metCatIdxFor(actId){
+  for(var i=0;i<MET_ACTIVITIES.length;i++){
+    for(var j=0;j<MET_ACTIVITIES[i].items.length;j++){if(MET_ACTIVITIES[i].items[j].id===actId)return i;}
+  }
+  return -1;
+}
+
 function buildMetHtml(c,t){
   if(!c.metActivities)c.metActivities=[];
   var acts=c.metActivities;
+  var editIdx=_metEditIdx(c);
+  var editMa=editIdx>=0?acts[editIdx]:null;
+  var editCat=editMa?_metCatIdxFor(editMa.id):-1;
 
   // Category select (no default - user must choose)
   var catSel='<select class="met-cat-sel" id="met-cat" onchange="metCatChange()">';
   catSel+='<option value="">Επίλεξε κατηγορία</option>';
   MET_ACTIVITIES.forEach(function(g,i){
-    catSel+='<option value="'+i+'">'+g.cat+'</option>';
+    catSel+='<option value="'+i+'"'+(i===editCat?' selected':'')+'>'+g.cat+'</option>';
   });
   catSel+='</select>';
 
   // Activity select (no default selection - user must choose)
   var actSel='<select class="met-act-sel" id="met-act">';
   actSel+='<option value="">Επίλεξε αθλήματα</option>';
-  MET_ACTIVITIES[0].items.forEach(function(a){
-    actSel+='<option value="'+a.id+'">'+a.name+' — '+a.met+' METs</option>';
+  MET_ACTIVITIES[editCat>=0?editCat:0].items.forEach(function(a){
+    actSel+='<option value="'+a.id+'"'+(editMa&&a.id===editMa.id?' selected':'')+'>'+a.name+' — '+a.met+' METs</option>';
   });
   actSel+='</select>';
 
@@ -604,13 +622,14 @@ function buildMetHtml(c,t){
     if(!dList){var n=ma.daysPerWeek||3;dList=[];var td2=c.trainDays||[];for(var x=0;x<7&&dList.length<n;x++){if(td2[x])dList.push(x);}if(!dList.length){for(var x=0;x<n&&x<7;x++)dList.push(x);}}
     var kcalWk=kcalSess*dList.length;
     var dayChips=dList.map(function(d){return '<span class="met-item-day">'+dAbbrM[d]+'</span>';}).join('');
-    listHtml+='<div class="met-item">'
+    listHtml+='<div class="met-item'+(i===editIdx?' met-item-editing':'')+'" id="met-item-'+i+'">'
       +'<span class="met-item-name">'+ma.name+'</span>'
       +'<span class="met-item-met">'+ma.met+' METs</span>'
       +'<span class="met-item-days">'+dayChips+'</span>'
       +(ma.time?'<span class="met-item-time" style="color:#ff6b35;font-weight:600">🕐 '+ma.time+'</span>':'')  // ← Show training time (HH:MM format)
       +'<span class="met-item-detail">'+ma.mins+' λεπτ./φορά</span>'
       +'<span class="met-item-kcal">= '+kcalWk+' kcal/εβδ.</span>'
+      +'<button class="met-edit" onclick="editMetActivity('+i+')" title="Επεξεργασία">✏️</button>'
       +'<button class="met-del" onclick="removeMetActivity('+i+')" title="Αφαίρεση">&#10005;</button>'
       +'</div>';
   });
@@ -626,9 +645,10 @@ function buildMetHtml(c,t){
 
   // Day toggle buttons for the add row
   var dAbbrAdd=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
+  var editDays=editMa?(editMa.days||[]):[];
   var dayToggles='<div class="met-day-row">';
   dAbbrAdd.forEach(function(a,i){
-    dayToggles+='<button type="button" class="met-day-btn" id="met-day-'+i+'" onclick="toggleMetDay('+i+')">'+a+'</button>';
+    dayToggles+='<button type="button" class="met-day-btn'+(editDays.indexOf(i)>=0?' met-day-on':'')+'" id="met-day-'+i+'" onclick="toggleMetDay('+i+')">'+a+'</button>';
   });
   dayToggles+='</div>';
 
@@ -642,7 +662,7 @@ function buildMetHtml(c,t){
     +(useMET?'<div class="met-added-section"><div class="met-added-title">✓ Δραστηριότητες που προστέθηκαν:</div><div class="met-list">'+listHtml+'</div>'+totalStr+'</div>':'')
 
     +'<div class="met-input-section">'
-    +'<div class="met-input-title">Προσθήκη νέας δραστηριότητας:</div>'
+    +'<div class="met-input-title" id="met-form-title">'+(editMa?'✏️ Επεξεργασία: '+editMa.name:'Προσθήκη νέας δραστηριότητας:')+'</div>'
     +'<div class="met-form-group">'
     +'<label>Κατηγορία αθλήματος:</label>'
     +catSel
@@ -650,14 +670,14 @@ function buildMetHtml(c,t){
     +actSel
     +'<label>Διάρκεια:</label>'
     +'<div style="display:flex;gap:6px;align-items:center">'
-    +'<input class="met-mins-inp" type="number" id="met-mins" min="10" max="300" step="5" value="60">'
+    +'<input class="met-mins-inp" type="number" id="met-mins" min="10" max="300" step="5" value="'+(editMa?editMa.mins:60)+'">'
     +'<span style="font-size:12px;color:#666">λεπτά</span>'
     +'</div>'
     +'</div>'
 
     +'<div class="met-form-group">'
     +'<label>⏰ Ώρα Προπόνησης:</label>'
-    +'<input type="time" id="met-time" value="17:00" style="padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:7px;background:var(--card-bg);font-size:14px;font-weight:600;color:#ff6b35;">'
+    +'<input type="time" id="met-time" value="'+(editMa&&editMa.time?editMa.time:'17:00')+'" style="padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:7px;background:var(--card-bg);font-size:14px;font-weight:600;color:#ff6b35;">'
     +'</div>'
 
     +'<div class="met-form-group">'
@@ -666,7 +686,8 @@ function buildMetHtml(c,t){
     +'</div>'
 
     +'<div style="padding-top:8px;border-top:1px solid #e0e0e0;margin-top:8px">'
-    +'<button class="btn primary" style="padding:8px 16px;font-size:12px" onclick="addMetActivity()">+ Προσθήκη δραστηριότητας</button>'
+    +'<button class="btn primary" id="met-submit-btn" style="padding:8px 16px;font-size:12px" onclick="addMetActivity()">'+(editMa?'💾 Αποθήκευση αλλαγών':'+ Προσθήκη δραστηριότητας')+'</button>'
+    +'<button class="btn" id="met-cancel-btn" style="padding:8px 16px;font-size:12px;margin-left:6px;'+(editMa?'':'display:none')+'" onclick="cancelMetEdit()">Ακύρωση</button>'
     +'</div>'
     +'</div>'
 
@@ -712,7 +733,21 @@ function addMetActivity(){
   (MET_ACTIVITIES[catIdx]||MET_ACTIVITIES[0]).items.forEach(function(a){if(a.id===actId)found=a;});
   if(!found)return;
   // ✅ NEW: Store training time with the activity
-  c.metActivities.push({id:found.id,name:found.name,met:found.met,mins:mins,time:trainingTime,days:days});
+  var entry={id:found.id,name:found.name,met:found.met,mins:mins,time:trainingTime,days:days};
+  var editIdx=_metEditIdx(c);
+  if(editIdx>=0){
+    // ✏️ Αποθήκευση αλλαγών: αντικατάσταση στην ίδια θέση + ξαναχτίσιμο ημερών/ωρών από όλες τις
+    // δραστηριότητες (οι μέρες που βγήκαν πρέπει να καθαρίσουν, όπως στο removeMetActivity)
+    c.metActivities[editIdx]=entry;
+    _metEdit=null;
+    _rebuildTrainDaysFromMet(c);
+    c.dayTargets=null;
+    save();
+    onClientChange();
+    if(typeof showSuccessToast==='function')showSuccessToast('✓ Η προπόνηση ενημερώθηκε');
+    return;
+  }
+  c.metActivities.push(entry);
   // Auto-mark days as training days and sync hours
   if(!c.trainDays)c.trainDays=[false,false,false,false,false,false,false];
   if(!c.trainHoursByDay)c.trainHoursByDay=[0,0,0,0,0,0,0];
@@ -823,10 +858,48 @@ function toggleSportSupplement(suppId, isChecked){
   onClientChange(); // Recalculate supplement suggestions
 }
 
-function removeMetActivity(idx){
-  var c=getC();if(!c||!c.metActivities)return;
-  c.metActivities.splice(idx,1);
-  // ✅ Rebuild training-day arrays from remaining activities (MET = single source of truth)
+function editMetActivity(idx){
+  var c=getC();if(!c||!c.metActivities||!c.metActivities[idx])return;
+  var ma=c.metActivities[idx];
+  _metEdit={cid:c.id,idx:idx};
+  // Γέμισμα της φόρμας επί τόπου (χωρίς renderMain)
+  var catIdx=_metCatIdxFor(ma.id);
+  var cat=document.getElementById('met-cat');
+  if(cat){cat.value=catIdx>=0?String(catIdx):'';metCatChange();}
+  var act=document.getElementById('met-act');if(act)act.value=ma.id;
+  var mins=document.getElementById('met-mins');if(mins)mins.value=ma.mins||60;
+  var tm=document.getElementById('met-time');if(tm)tm.value=ma.time||'17:00';
+  var days=ma.days||[];
+  for(var d=0;d<7;d++){var b=document.getElementById('met-day-'+d);if(b)b.classList.toggle('met-day-on',days.indexOf(d)>=0);}
+  _metSetFormMode(ma);
+  var title=document.getElementById('met-form-title');
+  if(title&&title.scrollIntoView)title.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function cancelMetEdit(){
+  _metEdit=null;
+  var cat=document.getElementById('met-cat');if(cat){cat.value='';metCatChange();}
+  var act=document.getElementById('met-act');if(act)act.value='';
+  var mins=document.getElementById('met-mins');if(mins)mins.value=60;
+  var tm=document.getElementById('met-time');if(tm)tm.value='17:00';
+  for(var d=0;d<7;d++){var b=document.getElementById('met-day-'+d);if(b)b.classList.remove('met-day-on');}
+  _metSetFormMode(null);
+}
+
+// Τίτλος / κουμπιά / highlight γραμμής ανάλογα με το αν είμαστε σε επεξεργασία
+function _metSetFormMode(ma){
+  var title=document.getElementById('met-form-title');
+  if(title)title.textContent=ma?'✏️ Επεξεργασία: '+ma.name:'Προσθήκη νέας δραστηριότητας:';
+  var sub=document.getElementById('met-submit-btn');
+  if(sub)sub.textContent=ma?'💾 Αποθήκευση αλλαγών':'+ Προσθήκη δραστηριότητας';
+  var can=document.getElementById('met-cancel-btn');
+  if(can)can.style.display=ma?'':'none';
+  var rows=document.querySelectorAll('.met-item');
+  for(var i=0;i<rows.length;i++)rows[i].classList.toggle('met-item-editing',!!(ma&&_metEdit&&rows[i].id==='met-item-'+_metEdit.idx));
+}
+
+// ✅ Rebuild training-day arrays from the activities (MET = single source of truth)
+function _rebuildTrainDaysFromMet(c){
   c.trainDays=[false,false,false,false,false,false,false];
   c.trainHoursByDay=[0,0,0,0,0,0,0];
   c.trainTimes=[null,null,null,null,null,null,null];
@@ -838,6 +911,17 @@ function removeMetActivity(idx){
       if(ma.time){c.trainTimes[d]=ma.time;c.trainTimesByDay[d]=ma.time;}
     });
   });
+}
+
+function removeMetActivity(idx){
+  var c=getC();if(!c||!c.metActivities)return;
+  c.metActivities.splice(idx,1);
+  // Διαγραφή ενώ κάτι είναι σε επεξεργασία: η θέση του μετακινείται ή χάνεται
+  if(_metEdit&&_metEdit.cid===c.id){
+    if(_metEdit.idx===idx)_metEdit=null;
+    else if(_metEdit.idx>idx)_metEdit.idx--;
+  }
+  _rebuildTrainDaysFromMet(c);
   c.dayTargets=null; // recalculate
   save();
   onClientChange();  // ← TRIGGER CASCADE RECALCULATION
