@@ -2040,7 +2040,7 @@ function viewHome(){
       const relTag=mi.isMatch?matchRelTag(m.time,mi.time):'';
       mm.innerHTML='<span class="mc">'+(eaten[idx]?'<i class="ti ti-check"></i>':'')+'</span>'
         +'<div class="t">'+esc(m.time||'')+'</div>'
-        +'<div style="flex:1"><div class="nm">'+(pickedAlt(m,eaten[idx])?'<i class="ti ti-refresh" style="color:var(--teal);font-size:13px"></i> '+esc(pickedAlt(m,eaten[idx]).name):esc(m.title||m.label||T('mealFallback')))+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
+        +'<div style="flex:1"><div class="nm">'+(pickedAlt(m,eaten[idx])?'<i class="ti ti-refresh" style="color:var(--teal);font-size:13px"></i> '+esc(pickedAlt(m,eaten[idx]).name):esc(mealFoodsLine(m)||m.label||T('mealFallback')))+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
       mm.onclick=()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);syncMealCheckin(todayKey());pushCheckin();go('home');};
       cp.appendChild(mm);
     });
@@ -2081,6 +2081,15 @@ function viewHome(){
   // Συχνές ερωτήσεις — τελευταία στην Αρχική, ώστε να μη σπρώχνει κάτω το σημερινό πλάνο/νερό.
   v.appendChild(faqCard());
   return v;
+}
+// Πλήρης λίστα τροφίμων για την κάρτα «Η διατροφή μου σήμερα». Το m.title του snapshot κόβεται στα
+// 3 πρώτα τρόφιμα + «…» (μένει έτσι για την κεφαλίδα του tab Πλάνο, όπου τα υλικά φαίνονται από κάτω)·
+// εδώ ο πελάτης δεν έχει άλλο σημείο να δει τα υπόλοιπα, οπότε τα χτίζουμε από το m.foods
+// με την ίδια μορφή (ισχύει και για ήδη σταλμένα links).
+function mealFoodsLine(m){
+  if(!m || !m.foods || !m.foods.length) return m && m.title || '';
+  const short=n=>String(n||'').replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim();
+  return m.foods.map(f=>short(f.name)+(f.sub?' '+f.qty+' '+f.sub:' ('+f.qty+')')).join(', ');
 }
 // Βιβλιοθήκη tips του διαιτολόγου (SNAP.tips, χτισμένο στο _buildSnapshot/Dietologist.html) —
 // αντικαθιστά το παλιό στατικό FAQ παρακάτω. Παλιά shared_plans links (πριν αυτό το feature,
