@@ -656,7 +656,7 @@ function buildMetHtml(c,t){
       var ma=acts[i];
       var kcalSess=Math.round(ma.met*3.5*(c.weight||80)/200*ma.mins);
       dayKcal+=kcalSess;
-      return '<div class="met-sess'+(_metBoxEditing(i,d,editIdx)?' met-item-editing':'')+'" data-i="'+i+'" data-d="'+d+'" onclick="editMetActivity('+i+','+d+')" title="Κλικ για επεξεργασία">'
+      return '<div class="met-sess'+(_metBoxEditing(i,d,editIdx)?' met-item-editing':'')+'" data-i="'+i+'" data-d="'+d+'" onclick="editMetActivity('+i+','+d+')" onpointerdown="metSessPointerDown(event,'+i+','+d+')" title="Κλικ για επεξεργασία · σύρε σε άλλη μέρα για μετακίνηση (Ctrl = αντιγραφή)">'
         +'<div class="met-sess-acts">'
         +'<button type="button" class="met-edit" onclick="event.stopPropagation();editMetActivity('+i+','+d+')" title="Επεξεργασία">✏️</button>'
         +'<button type="button" class="met-del" onclick="event.stopPropagation();removeMetActivityDay('+i+','+d+')" title="Αφαίρεση μόνο από '+dAbbrM[d]+'">&#10005;</button>'
@@ -667,7 +667,7 @@ function buildMetHtml(c,t){
         +'<div class="met-sess-kcal">'+kcalSess+' kcal</div>'
         +'</div>';
     }).join('');
-    listHtml+='<div class="met-day-col'+(idxs.length?'':' met-day-rest')+'">'
+    listHtml+='<div class="met-day-col'+(idxs.length?'':' met-day-rest')+'" data-d="'+d+'">'
       +'<div class="met-day-head"><span>'+dAbbrM[d]+'</span>'+(idxs.length>1?'<span class="met-day-multi">'+idxs.length+'×</span>':'')+'</div>'
       +'<div class="met-day-boxes">'+(boxes||'<div class="met-day-rest-lbl">Ξεκούραση</div>')+'</div>'
       +'<button type="button" class="met-day-add" onclick="metAddForDay('+d+')">+ Προσθήκη</button>'
@@ -1023,6 +1023,106 @@ function removeMetActivityDay(idx,day){
   c.dayTargets=null;
   save();
   onClientChange();
+}
+
+/* ── Σύρσιμο κουτιού προπόνησης σε άλλη μέρα ──
+   Custom pointer-drag όπως στο πλέγμα πλάνου (meal-slots.js), όχι HTML5 draggable.
+   Απόθεση = ΜΕΤΑΚΙΝΗΣΗ μόνο αυτής της μέρας (η πηγή βγαίνει από τα days)· με Ctrl
+   (ή ⌘) πατημένο τη στιγμή της απόθεσης = ΑΝΤΙΓΡΑΦΗ (η πηγή μένει). Μόνο ποντίκι/γραφίδα —
+   στο κινητό οι μέρες είναι η μία κάτω από την άλλη και η αλλαγή μέρας γίνεται από το ✏️.
+   Κατώφλι 6px ώστε το απλό κλικ να ανοίγει επεξεργασία. Esc ακυρώνει. */
+var _metDrag=null; // {i, srcD, startX, startY, started, ghost, el}
+
+function metSessPointerDown(e,i,d){
+  if(e.pointerType==='touch')return;
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  if(e.target.closest&&e.target.closest('button'))return;
+  e.preventDefault();
+  _metDrag={i:i,srcD:d,startX:e.clientX,startY:e.clientY,started:false,ghost:null,el:e.currentTarget};
+  document.addEventListener('pointermove',_onMetDragMove,{capture:true,passive:false});
+  document.addEventListener('pointerup',_onMetDragUp,true);
+  document.addEventListener('pointercancel',_cleanupMetDrag,true);
+  document.addEventListener('keydown',_onMetDragKey,true);
+}
+function _onMetDragKey(e){if(e.key==='Escape')_cleanupMetDrag();}
+function _metDragColAt(x,y){
+  var el=document.elementFromPoint(x,y);
+  var col=el&&el.closest?el.closest('.met-week .met-day-col'):null;
+  return col?{col:col,d:parseInt(col.getAttribute('data-d'))}:null;
+}
+function _onMetDragMove(e){
+  var md=_metDrag;if(!md)return;
+  if(!md.started){
+    if(Math.abs(e.clientX-md.startX)+Math.abs(e.clientY-md.startY)<6)return;
+    var c=getC();var ma=c&&c.metActivities&&c.metActivities[md.i];
+    if(!ma){_cleanupMetDrag();return;}
+    md.started=true;
+    md.name=ma.name;
+    document.body.style.userSelect='none';
+    document.body.style.cursor='grabbing';
+    if(md.el)md.el.classList.add('met-sess-dragging');
+    md.ghost=document.createElement('div');
+    md.ghost.className='meal-drag-ghost';
+    document.body.appendChild(md.ghost);
+  }
+  e.preventDefault();
+  var copy=e.ctrlKey||e.metaKey;
+  md.ghost.textContent=(copy?'⧉ Αντιγραφή: ':'↪ Μετακίνηση: ')+(md.name||'');
+  md.ghost.style.left=(e.clientX+14)+'px';md.ghost.style.top=(e.clientY+14)+'px';
+  var prev=document.querySelector('.met-day-col.met-drop-over');
+  if(prev)prev.classList.remove('met-drop-over');
+  var t=_metDragColAt(e.clientX,e.clientY);
+  if(t&&t.d!==md.srcD)t.col.classList.add('met-drop-over');
+}
+function _onMetDragUp(e){
+  var md=_metDrag;
+  var drop=null;
+  if(md&&md.started){
+    var t=_metDragColAt(e.clientX,e.clientY);
+    if(t&&t.d!==md.srcD)drop={i:md.i,src:md.srcD,dst:t.d,copy:!!(e.ctrlKey||e.metaKey)};
+    // κατάπιε το click που ακολουθεί (να μην ανοίξει επεξεργασία το κουτί)
+    var swallow=function(ev){ev.stopPropagation();ev.preventDefault();};
+    document.addEventListener('click',swallow,true);
+    setTimeout(function(){document.removeEventListener('click',swallow,true);},0);
+  }
+  _cleanupMetDrag();
+  if(drop)moveMetActivityDay(drop.i,drop.src,drop.dst,drop.copy);
+}
+function _cleanupMetDrag(){
+  document.removeEventListener('pointermove',_onMetDragMove,{capture:true,passive:false});
+  document.removeEventListener('pointerup',_onMetDragUp,true);
+  document.removeEventListener('pointercancel',_cleanupMetDrag,true);
+  document.removeEventListener('keydown',_onMetDragKey,true);
+  var prev=document.querySelector('.met-day-col.met-drop-over');
+  if(prev)prev.classList.remove('met-drop-over');
+  if(_metDrag){
+    if(_metDrag.ghost)_metDrag.ghost.remove();
+    if(_metDrag.el)_metDrag.el.classList.remove('met-sess-dragging');
+  }
+  document.body.style.userSelect='';
+  document.body.style.cursor='';
+  _metDrag=null;
+}
+
+// Μετακίνηση (ή αντιγραφή) της μέρας src μιας δραστηριότητας στη dst
+function moveMetActivityDay(idx,src,dst,copy){
+  var c=getC();if(!c||!c.metActivities||!c.metActivities[idx]||src===dst)return;
+  var ma=c.metActivities[idx];
+  var days=_metDaysOf(c,ma).slice();
+  if(days.indexOf(dst)>=0){
+    showErrorToast('Η «'+ma.name+'» υπάρχει ήδη την '+MET_DAY_ABBR[dst]);
+    return;
+  }
+  if(!copy)days=days.filter(function(d){return d!==src;});
+  days.push(dst);
+  days.sort(function(a,b){return a-b;});
+  ma.days=days;
+  if(_metEdit&&_metEdit.cid===c.id&&_metEdit.idx===idx)_metEdit=null;
+  _rebuildTrainDaysFromMet(c);
+  c.dayTargets=null;
+  save();
+  onClientChange();
+  if(typeof showSuccessToast==='function')showSuccessToast(copy?'✓ Αντιγράφηκε σε '+MET_DAY_ABBR[dst]:'✓ Μετακινήθηκε '+MET_DAY_ABBR[src]+' → '+MET_DAY_ABBR[dst]);
 }
 
 /* ── Macro Preset UI ─────────────────────────────────────────────────────── */

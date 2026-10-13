@@ -1297,6 +1297,9 @@ body.dark-mode .tooltip-text {
 .met-day-boxes{display:flex;flex-direction:column;gap:4px}
 .met-sess{position:relative;border:1px solid #d6e6e2;border-left:3px solid var(--teal);background:#f8fffe;padding:4px 5px;font-size:10px;line-height:1.3;cursor:pointer;min-width:0}
 .met-sess:hover{background:#eef6f3}
+.met-sess-dragging{opacity:.4}
+.met-day-col.met-drop-over{background:var(--teal-tint);border:2px dashed var(--teal);padding:5px 4px}
+@media(hover:hover) and (pointer:fine){.met-sess{cursor:grab}}
 .met-sess.met-item-editing{border-color:#ff6b35;border-left-color:#ff6b35;background:#fff4ef}
 .met-sess-acts{position:absolute;top:1px;right:1px;display:none;background:inherit}
 .met-sess:hover .met-sess-acts,.met-sess.met-item-editing .met-sess-acts{display:flex}
@@ -2330,6 +2333,7 @@ body.dark-mode .met-input-section{background:#1a1a1a;border-color:#444}
 body.dark-mode .met-day-col{background:#1a1a1a;border-color:#444}
 body.dark-mode .met-sess{background:#222;border-color:#444;border-left-color:#4db6ac}
 body.dark-mode .met-sess:hover{background:#2a2a2a}
+body.dark-mode .met-day-col.met-drop-over{background:#12302f;border-color:#4db6ac}
 body.dark-mode .met-sess.met-item-editing{border-color:#ff6b35;background:#2a1f1a}
 body.dark-mode .met-sess-name{color:#e0e0e0}
 body.dark-mode .met-sess-detail{color:#aaa}
