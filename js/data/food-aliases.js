@@ -247,6 +247,13 @@ var FOOD_ALIASES={
   'Nick\'s Peanut & Caramel Ice Cream Bar':'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα',
   'Nicks Παγωτό Μπάρα Φιστίκι Καραμέλα':'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα',
   'Παγωτό μπάρα φιστίκι καραμέλα':'Nick\'s Παγωτό Μπάρα Φιστίκι & Καραμέλα',
+  // Lindt Excellence 70% — added 2026-10-13
+  'Lindt Excellence 70%':'Lindt Excellence Μαύρη Σοκολάτα 70%',
+  'Lindt 70%':'Lindt Excellence Μαύρη Σοκολάτα 70%',
+  'Lindt Excellence 70% Cocoa Dark Chocolate':'Lindt Excellence Μαύρη Σοκολάτα 70%',
+  'Lindt μαύρη σοκολάτα 70%':'Lindt Excellence Μαύρη Σοκολάτα 70%',
+  'Μαύρη σοκολάτα 70% Lindt':'Lindt Excellence Μαύρη Σοκολάτα 70%',
+  'Lindt Excellence Μαυρη Σοκολατα 70%':'Lindt Excellence Μαύρη Σοκολάτα 70%',
   // Hungry Not (SDOUKOS) layered protein bar — added 2026-09-08
   'Hungry Not Protein Bars with 5 Layered Hazelnut Praline & Milk Chocolate':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
   'Hungry Not Layered Bars Πραλίνα Φουντουκιού':'Hungry Not Protein Bar Πραλίνα Φουντουκιού',
