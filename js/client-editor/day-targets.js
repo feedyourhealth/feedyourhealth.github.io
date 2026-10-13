@@ -577,10 +577,36 @@ function buildDayTgtHtml(c,t){
 // ✏️ Επεξεργασία: ποια δραστηριότητα (πελάτης + θέση) είναι φορτωμένη στη φόρμα. Όσο ισχύει, το
 // buildMetHtml ζωγραφίζει τη φόρμα προ-συμπληρωμένη (επιβιώνει renderMain) και το κουμπί
 // «Προσθήκη» γίνεται «Αποθήκευση αλλαγών» που αντικαθιστά την ίδια εγγραφή.
+// Όταν ξεκινά από κουτί του εβδομαδιαίου πλέγματος, το _metEdit κρατά και day (η μέρα του κουτιού)
+// + scope: 'day' = οι αλλαγές ξεχωρίζουν μόνο αυτή τη μέρα σε δική της εγγραφή, 'all' = όλες οι μέρες.
 var _metEdit=null;
+var MET_DAY_ABBR=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
 function _metEditIdx(c){
   if(!_metEdit||!c||_metEdit.cid!==c.id)return -1;
   return (c.metActivities&&c.metActivities[_metEdit.idx])?_metEdit.idx:-1;
+}
+// Μέρες μιας δραστηριότητας — παλιές εγγραφές χωρίς days: ίδιο fallback με το calcMETkcal
+function _metDaysOf(c,ma){
+  if(ma.days)return ma.days;
+  var n=ma.daysPerWeek||3,dList=[],td=c.trainDays||[];
+  for(var x=0;x<7&&dList.length<n;x++){if(td[x])dList.push(x);}
+  if(!dList.length){for(var y=0;y<n&&y<7;y++)dList.push(y);}
+  return dList;
+}
+function _metBoxEditing(i,d,editIdx){
+  if(i!==editIdx)return false;
+  return _metEdit.scope!=='day'||_metEdit.day===d;
+}
+function _metFormTitle(c,ma){
+  if(!ma)return 'Προσθήκη νέας δραστηριότητας:';
+  return '✏️ Επεξεργασία: '+ma.name+(_metEdit&&_metEdit.scope==='day'?' — μόνο '+MET_DAY_ABBR[_metEdit.day]:'');
+}
+function _metScopeHtml(c,ma){
+  if(!_metEdit||_metEdit.day==null)return '';
+  var all=_metDaysOf(c,ma).map(function(d){return MET_DAY_ABBR[d];}).join(', ');
+  return '<span class="met-scope-lbl">Οι αλλαγές ισχύουν για:</span>'
+    +'<label><input type="radio" name="met-scope" value="day"'+(_metEdit.scope==='day'?' checked':'')+' onchange="metScopeChange(\'day\')"> μόνο '+MET_DAY_ABBR[_metEdit.day]+' <span class="met-note">(ξεχωρίζει)</span></label>'
+    +'<label><input type="radio" name="met-scope" value="all"'+(_metEdit.scope!=='day'?' checked':'')+' onchange="metScopeChange(\'all\')"> όλες τις μέρες ('+all+')</label>';
 }
 function _metCatIdxFor(actId){
   for(var i=0;i<MET_ACTIVITIES.length;i++){
@@ -612,27 +638,43 @@ function buildMetHtml(c,t){
   });
   actSel+='</select>';
 
-  // List of added activities
-  var dAbbrM=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
-  var listHtml='';
+  // Εβδομαδιαίο πλέγμα: μία στήλη ανά ημέρα, ένα κουτί ανά (δραστηριότητα × ημέρα), κατά ώρα.
+  // Κάθε κουτί έχει δικό του ✏️ (επεξεργασία μόνο αυτής της μέρας ή όλων) και ✕ (μόνο αυτή η μέρα).
+  var dAbbrM=MET_DAY_ABBR;
+  var byDay=[[],[],[],[],[],[],[]];
   acts.forEach(function(ma,i){
-    var kcalSess=Math.round(ma.met*3.5*(c.weight||80)/200*ma.mins);
-    // Resolve day list
-    var dList=ma.days;
-    if(!dList){var n=ma.daysPerWeek||3;dList=[];var td2=c.trainDays||[];for(var x=0;x<7&&dList.length<n;x++){if(td2[x])dList.push(x);}if(!dList.length){for(var x=0;x<n&&x<7;x++)dList.push(x);}}
-    var kcalWk=kcalSess*dList.length;
-    var dayChips=dList.map(function(d){return '<span class="met-item-day">'+dAbbrM[d]+'</span>';}).join('');
-    listHtml+='<div class="met-item'+(i===editIdx?' met-item-editing':'')+'" id="met-item-'+i+'">'
-      +'<span class="met-item-name">'+ma.name+'</span>'
-      +'<span class="met-item-met">'+ma.met+' METs</span>'
-      +'<span class="met-item-days">'+dayChips+'</span>'
-      +(ma.time?'<span class="met-item-time" style="color:#ff6b35;font-weight:600">🕐 '+ma.time+'</span>':'')  // ← Show training time (HH:MM format)
-      +'<span class="met-item-detail">'+ma.mins+' λεπτ./φορά</span>'
-      +'<span class="met-item-kcal">= '+kcalWk+' kcal/εβδ.</span>'
-      +'<button class="met-edit" onclick="editMetActivity('+i+')" title="Επεξεργασία">✏️</button>'
-      +'<button class="met-del" onclick="removeMetActivity('+i+')" title="Αφαίρεση">&#10005;</button>'
+    _metDaysOf(c,ma).forEach(function(d){if(d>=0&&d<7)byDay[d].push(i);});
+  });
+  var listHtml='<div class="met-week">';
+  byDay.forEach(function(idxs,d){
+    idxs.sort(function(a,b){
+      var ta=acts[a].time||'99:99',tb=acts[b].time||'99:99';
+      return ta<tb?-1:ta>tb?1:a-b;
+    });
+    var dayKcal=0;
+    var boxes=idxs.map(function(i){
+      var ma=acts[i];
+      var kcalSess=Math.round(ma.met*3.5*(c.weight||80)/200*ma.mins);
+      dayKcal+=kcalSess;
+      return '<div class="met-sess'+(_metBoxEditing(i,d,editIdx)?' met-item-editing':'')+'" data-i="'+i+'" data-d="'+d+'" onclick="editMetActivity('+i+','+d+')" title="Κλικ για επεξεργασία">'
+        +'<div class="met-sess-acts">'
+        +'<button type="button" class="met-edit" onclick="event.stopPropagation();editMetActivity('+i+','+d+')" title="Επεξεργασία">✏️</button>'
+        +'<button type="button" class="met-del" onclick="event.stopPropagation();removeMetActivityDay('+i+','+d+')" title="Αφαίρεση μόνο από '+dAbbrM[d]+'">&#10005;</button>'
+        +'</div>'
+        +(ma.time?'<div class="met-sess-time">🕐 '+ma.time+'</div>':'')
+        +'<div class="met-sess-name">'+ma.name+'</div>'
+        +'<div class="met-sess-detail">'+ma.mins+'′ · '+ma.met+' MET</div>'
+        +'<div class="met-sess-kcal">'+kcalSess+' kcal</div>'
+        +'</div>';
+    }).join('');
+    listHtml+='<div class="met-day-col'+(idxs.length?'':' met-day-rest')+'">'
+      +'<div class="met-day-head"><span>'+dAbbrM[d]+'</span>'+(idxs.length>1?'<span class="met-day-multi">'+idxs.length+'×</span>':'')+'</div>'
+      +'<div class="met-day-boxes">'+(boxes||'<div class="met-day-rest-lbl">Ξεκούραση</div>')+'</div>'
+      +'<button type="button" class="met-day-add" onclick="metAddForDay('+d+')">+ Προσθήκη</button>'
+      +(dayKcal?'<div class="met-day-total">'+dayKcal+' kcal</div>':'')
       +'</div>';
   });
+  listHtml+='</div>';
 
   var useMET=acts.length>0;
   var totalStr='';
@@ -644,8 +686,8 @@ function buildMetHtml(c,t){
   }
 
   // Day toggle buttons for the add row
-  var dAbbrAdd=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
-  var editDays=editMa?(editMa.days||[]):[];
+  var dAbbrAdd=MET_DAY_ABBR;
+  var editDays=editMa?(_metEdit.scope==='day'?[_metEdit.day]:_metDaysOf(c,editMa)):[];
   var dayToggles='<div class="met-day-row">';
   dAbbrAdd.forEach(function(a,i){
     dayToggles+='<button type="button" class="met-day-btn'+(editDays.indexOf(i)>=0?' met-day-on':'')+'" id="met-day-'+i+'" onclick="toggleMetDay('+i+')">'+a+'</button>';
@@ -659,10 +701,11 @@ function buildMetHtml(c,t){
     +'</div>'
 
     // ✅ IMPROVED LAYOUT: Organized sections
-    +(useMET?'<div class="met-added-section"><div class="met-added-title">✓ Δραστηριότητες που προστέθηκαν:</div><div class="met-list">'+listHtml+'</div>'+totalStr+'</div>':'')
+    +(useMET?'<div class="met-added-section"><div class="met-added-title">✓ Εβδομαδιαίο πρόγραμμα προπονήσεων</div>'+listHtml+totalStr+'</div>':'')
 
     +'<div class="met-input-section">'
-    +'<div class="met-input-title" id="met-form-title">'+(editMa?'✏️ Επεξεργασία: '+editMa.name:'Προσθήκη νέας δραστηριότητας:')+'</div>'
+    +'<div class="met-input-title" id="met-form-title">'+_metFormTitle(c,editMa)+'</div>'
+    +'<div class="met-scope" id="met-scope-row"'+(editMa&&_metEdit.day!=null?'':' style="display:none"')+'>'+(editMa?_metScopeHtml(c,editMa):'')+'</div>'
     +'<div class="met-form-group">'
     +'<label>Κατηγορία αθλήματος:</label>'
     +catSel
@@ -737,14 +780,20 @@ function addMetActivity(){
   var editIdx=_metEditIdx(c);
   if(editIdx>=0){
     // ✏️ Αποθήκευση αλλαγών: αντικατάσταση στην ίδια θέση + ξαναχτίσιμο ημερών/ωρών από όλες τις
-    // δραστηριότητες (οι μέρες που βγήκαν πρέπει να καθαρίσουν, όπως στο removeMetActivity)
-    c.metActivities[editIdx]=entry;
+    // δραστηριότητες (οι μέρες που βγήκαν πρέπει να καθαρίσουν, όπως στο removeMetActivity).
+    // scope 'day': οι επιλεγμένες μέρες φεύγουν από την αρχική εγγραφή και γίνονται νέα εγγραφή
+    // ακριβώς από κάτω· η αρχική κρατά τις υπόλοιπες (αν δεν μείνει καμία, απλή αντικατάσταση).
+    var orig=c.metActivities[editIdx];
+    var rest=_metEdit.scope==='day'?_metDaysOf(c,orig).filter(function(d){return days.indexOf(d)<0;}):[];
+    var split=rest.length>0;
+    if(split){orig.days=rest;c.metActivities.splice(editIdx+1,0,entry);}
+    else c.metActivities[editIdx]=entry;
     _metEdit=null;
     _rebuildTrainDaysFromMet(c);
     c.dayTargets=null;
     save();
     onClientChange();
-    if(typeof showSuccessToast==='function')showSuccessToast('✓ Η προπόνηση ενημερώθηκε');
+    if(typeof showSuccessToast==='function')showSuccessToast(split?'✓ Η προπόνηση '+days.map(function(d){return MET_DAY_ABBR[d];}).join(', ')+' ξεχώρισε':'✓ Η προπόνηση ενημερώθηκε');
     return;
   }
   c.metActivities.push(entry);
@@ -858,10 +907,13 @@ function toggleSportSupplement(suppId, isChecked){
   onClientChange(); // Recalculate supplement suggestions
 }
 
-function editMetActivity(idx){
+// day (προαιρετικό) = η μέρα του κουτιού που πατήθηκε· αν η δραστηριότητα έχει >1 μέρες,
+// προεπιλογή «μόνο αυτή τη μέρα» (ξεχωρίζει), με επιλογή «όλες τις μέρες» στη φόρμα.
+function editMetActivity(idx,day){
   var c=getC();if(!c||!c.metActivities||!c.metActivities[idx])return;
   var ma=c.metActivities[idx];
-  _metEdit={cid:c.id,idx:idx};
+  var multi=day!=null&&_metDaysOf(c,ma).length>1;
+  _metEdit={cid:c.id,idx:idx,day:multi?day:null,scope:multi?'day':'all'};
   // Γέμισμα της φόρμας επί τόπου (χωρίς renderMain)
   var catIdx=_metCatIdxFor(ma.id);
   var cat=document.getElementById('met-cat');
@@ -869,11 +921,32 @@ function editMetActivity(idx){
   var act=document.getElementById('met-act');if(act)act.value=ma.id;
   var mins=document.getElementById('met-mins');if(mins)mins.value=ma.mins||60;
   var tm=document.getElementById('met-time');if(tm)tm.value=ma.time||'17:00';
-  var days=ma.days||[];
-  for(var d=0;d<7;d++){var b=document.getElementById('met-day-'+d);if(b)b.classList.toggle('met-day-on',days.indexOf(d)>=0);}
+  _metSetFormDays(_metEdit.scope==='day'?[day]:_metDaysOf(c,ma));
   _metSetFormMode(ma);
   var title=document.getElementById('met-form-title');
   if(title&&title.scrollIntoView)title.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function _metSetFormDays(days){
+  for(var d=0;d<7;d++){var b=document.getElementById('met-day-'+d);if(b)b.classList.toggle('met-day-on',days.indexOf(d)>=0);}
+}
+
+function metScopeChange(scope){
+  var c=getC();var idx=_metEditIdx(c);if(idx<0)return;
+  var ma=c.metActivities[idx];
+  _metEdit.scope=scope;
+  _metSetFormDays(scope==='day'?[_metEdit.day]:_metDaysOf(c,ma));
+  _metSetFormMode(ma);
+}
+
+// «+ Προσθήκη» κάτω από μια μέρα: καθαρή φόρμα με προεπιλεγμένη αυτή τη μέρα
+function metAddForDay(d){
+  cancelMetEdit();
+  _metSetFormDays([d]);
+  var cat=document.getElementById('met-cat');
+  var title=document.getElementById('met-form-title');
+  if(title&&title.scrollIntoView)title.scrollIntoView({behavior:'smooth',block:'center'});
+  if(cat)try{cat.focus({preventScroll:true});}catch(e){}
 }
 
 function cancelMetEdit(){
@@ -888,14 +961,24 @@ function cancelMetEdit(){
 
 // Τίτλος / κουμπιά / highlight γραμμής ανάλογα με το αν είμαστε σε επεξεργασία
 function _metSetFormMode(ma){
+  var c=getC();
   var title=document.getElementById('met-form-title');
-  if(title)title.textContent=ma?'✏️ Επεξεργασία: '+ma.name:'Προσθήκη νέας δραστηριότητας:';
+  if(title)title.textContent=_metFormTitle(c,ma);
+  var scope=document.getElementById('met-scope-row');
+  if(scope){
+    var on=!!(ma&&_metEdit&&_metEdit.day!=null);
+    scope.innerHTML=on?_metScopeHtml(c,ma):'';
+    scope.style.display=on?'':'none';
+  }
   var sub=document.getElementById('met-submit-btn');
   if(sub)sub.textContent=ma?'💾 Αποθήκευση αλλαγών':'+ Προσθήκη δραστηριότητας';
   var can=document.getElementById('met-cancel-btn');
   if(can)can.style.display=ma?'':'none';
-  var rows=document.querySelectorAll('.met-item');
-  for(var i=0;i<rows.length;i++)rows[i].classList.toggle('met-item-editing',!!(ma&&_metEdit&&rows[i].id==='met-item-'+_metEdit.idx));
+  var boxes=document.querySelectorAll('.met-sess');
+  for(var i=0;i<boxes.length;i++){
+    var on2=!!(ma&&_metEdit)&&_metBoxEditing(+boxes[i].getAttribute('data-i'),+boxes[i].getAttribute('data-d'),_metEdit.idx);
+    boxes[i].classList.toggle('met-item-editing',on2);
+  }
 }
 
 // ✅ Rebuild training-day arrays from the activities (MET = single source of truth)
@@ -925,6 +1008,21 @@ function removeMetActivity(idx){
   c.dayTargets=null; // recalculate
   save();
   onClientChange();  // ← TRIGGER CASCADE RECALCULATION
+}
+
+// ✕ σε κουτί του πλέγματος: βγάζει μόνο αυτή τη μέρα από τη δραστηριότητα· αν ήταν η
+// τελευταία της μέρα, η δραστηριότητα διαγράφεται ολόκληρη.
+function removeMetActivityDay(idx,day){
+  var c=getC();if(!c||!c.metActivities||!c.metActivities[idx])return;
+  var ma=c.metActivities[idx];
+  var rest=_metDaysOf(c,ma).filter(function(d){return d!==day;});
+  if(!rest.length){removeMetActivity(idx);return;}
+  ma.days=rest;
+  if(_metEdit&&_metEdit.cid===c.id&&_metEdit.idx===idx)_metEdit=null;
+  _rebuildTrainDaysFromMet(c);
+  c.dayTargets=null;
+  save();
+  onClientChange();
 }
 
 /* ── Macro Preset UI ─────────────────────────────────────────────────────── */
