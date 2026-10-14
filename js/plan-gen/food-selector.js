@@ -17,7 +17,7 @@ function insertPlanItemIntoCell(d,mi,data){
     var cid=data.slice(6);
     var combo=getSavedCombos().filter(function(x){return x.id===cid;})[0];
     if(!combo)return false;
-    var exclLower2=(c2.foodExclude||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+    var exclLower2=(c2.foodExclude||[]).concat((typeof clientAllergyFoods==='function')?clientAllergyFoods(c2):[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
     if(!comboDietOK(c2.dietType, combo.dietType) || comboHasExcludedFood(combo.foods, exclLower2)){
       showErrorToast('⚠️ Ο συνδυασμός δεν ταιριάζει με το diet type / τις εξαιρέσεις τροφίμων αυτού του πελάτη.');
       return false;
@@ -25,6 +25,8 @@ function insertPlanItemIntoCell(d,mi,data){
     combo.foods.forEach(function(f){c2.weekPlan[d][mi].foods.push({n:f.n,g:f.g});});
   } else {
     if(!FOODS[data])return false;
+    var _al=(typeof clientAllergenChecker==='function')?clientAllergenChecker(c2)(data):null;
+    if(_al){ showErrorToast('⛔ Δεν προστέθηκε: ο πελάτης έχει αλλεργία ('+_al.label+').\nΑν είναι λάθος, βγάλε την αλλεργία από «Διατροφή & αποφυγές».'); return false; }
     c2.weekPlan[d][mi].foods.push({n:data,g:100});
   }
   save();

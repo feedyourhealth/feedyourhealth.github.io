@@ -341,7 +341,7 @@ function renderFoodLib(q){
   var comboHtml='';
   if(!q){
     var libC=getC();
-    var libExclLower=((libC&&libC.foodExclude)||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
+    var libExclLower=((libC&&libC.foodExclude)||[]).concat((libC&&typeof clientAllergyFoods==='function')?clientAllergyFoods(libC):[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
     var combos=getSavedCombos().filter(function(combo){
       return comboDietOK(libC&&libC.dietType, combo.dietType) && !comboHasExcludedFood(combo.foods, libExclLower);
     });

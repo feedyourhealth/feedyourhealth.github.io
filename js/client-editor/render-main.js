@@ -220,6 +220,7 @@ function renderMain(){
       +'<span style="font-size:11px;color:#666;font-weight:600">🚫 Αποφυγές</span>'
       +'<span id="header-exclude" style="font-size:13px;font-weight:600;color:#025857">' + esc((c.foodExclude&&c.foodExclude.length)?c.foodExclude.join(', '):'—') + '</span>'
     +'</div>'
+    +'<div id="header-allergy-wrap" style="display:contents">'+((typeof allergyHeaderBoxHtml==='function')?allergyHeaderBoxHtml(c):'')+'</div>'
     // ✅ Αιματολογικές εξετάσεις: χειροκίνητο tri-state κουμπί (δεν πρόκειται περί ανεβάσματος/λήψης
     // αρχείου από τον πελάτη — η δ/γείος απλά σημειώνει τι της έχει σταλεί). Κλικ = επόμενη κατάσταση.
     +'<button type="button" onclick="cycleBloodTestStatus()" title="Πάτα για αλλαγή κατάστασης" style="text-align:left;cursor:pointer;border:none;display:flex;flex-direction:column;gap:2px;padding:8px;background:'+BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].bg+';border-radius:8px;font-family:inherit">'

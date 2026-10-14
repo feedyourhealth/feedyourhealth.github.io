@@ -51,7 +51,7 @@ function genPlanWithUndo(){
   // flags (youth restriction / low EA / weight-cut) render in the day-targets grid flag strip;
   // low-EA also surfaces via calorieConsistencyCheck below. choProtocolCheck() stays defined in
   // js/plan-gen/cho-protocol.js but is not wired into this chain.
-  pregnancyBlockCheck(c, function(){ calorieConsistencyCheck(c, function(){ _genPlanWithUndoProceed(c); }); });
+  allergyGenGuard(c, function(){ pregnancyBlockCheck(c, function(){ calorieConsistencyCheck(c, function(){ _genPlanWithUndoProceed(c); }); }); });
 }
 
 function _genPlanWithUndoProceed(c){
@@ -74,7 +74,9 @@ function _genPlanWithUndoProceed(c){
 // template path already built the full list correctly; both paths now share it so they
 // can't silently diverge again.
 function buildClientExclusionList(c, protocolAvoidFoods){
-  var excl=c.foodExclude||[];
+  // .slice(): πριν, το excl ήταν το ΙΔΙΟ το c.foodExclude, οπότε κάθε «Δημιουργία πλάνου» έγραφε μόνιμα
+  // μέσα στους αποκλεισμούς του πελάτη τα τρόφιμα των πρωτοκόλλων/προτιμήσεων/αλλεργιών (2026-10-14).
+  var excl=(c.foodExclude||[]).slice();
   (protocolAvoidFoods||[]).forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
   if(c.foodExclusions && Array.isArray(c.foodExclusions)){
     c.foodExclusions.forEach(function(food){
@@ -96,6 +98,8 @@ function buildClientExclusionList(c, protocolAvoidFoods){
   (c.foodPrefs||[]).forEach(function(fp){
     if(fp.pref==='dislike'&&excl.indexOf(fp.food)===-1)excl.push(fp.food);
   });
+  // ⚠️ Αλλεργίες (ομάδες) — ισχύουν πάντα, βλ. ALLERGY_GROUP_DEFS στο exclusions.js
+  if(typeof clientAllergyFoods==='function') clientAllergyFoods(c).forEach(function(f){ if(excl.indexOf(f)===-1)excl.push(f); });
   return excl;
 }
 

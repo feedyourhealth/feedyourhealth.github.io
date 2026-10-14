@@ -74,11 +74,13 @@ function _inlDietSection(c){
   var dt=c.dietType||'normal';
   var nx=(c.foodExclude||[]).length;
   var nAuto=(typeof dietAutoExcludedFoods==='function')?dietAutoExcludedFoods(dt).length:0;
-  var preview=(_INL_DIET_LBL[dt]||dt)+(nAuto?(' · 🔒 '+nAuto+' αυτόματα'):'')+(nx?(' · '+nx+' αποκλεισμ'+(nx===1?'ός':'οί')):'');
+  var nAl=(typeof clientAllergyKeys==='function')?clientAllergyKeys(c).length:0;
+  var preview=(nAl?('⚠️ '+nAl+' αλλεργ'+(nAl===1?'ία':'ίες')+' · '):'')+(_INL_DIET_LBL[dt]||dt)+(nAuto?(' · 🔒 '+nAuto+' αυτόματα'):'')+(nx?(' · '+nx+' αποκλεισμ'+(nx===1?'ός':'οί')):'');
   var opts=_INL_DIET_OPTS.map(function(o){return '<option value="'+o[0]+'"'+(dt===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('');
   return '<div class="section-card" id="sec-dietsec">'
     +_inlSecHd('dietsec','🥗','Διατροφή &amp; αποφυγές', preview)
     +_inlSecBodyOpen('dietsec')
+    +((typeof buildAllergyHtml==='function')?buildAllergyHtml(c):'')
     +'<div style="margin-bottom:14px"><label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:6px;font-size:12px">📋 Τύπος διατροφής</label>'
       +'<select id="dietType-modal" onchange="refreshDietExceptionsSection()" style="width:100%;padding:9px;border:1px solid var(--border-light);border-radius:5px;font-size:13px">'+opts+'</select></div>'
     +'<div id="diet-exceptions-section">'+((typeof buildDietExceptionsHtml==='function')?buildDietExceptionsHtml(dt, c.dietExceptionDays):'')+'</div>'

@@ -53,6 +53,7 @@ function renderWeekTable(){
   if(!c||!Object.keys(c.weekPlan).length){con.innerHTML='<div style="padding:20px;color:var(--text-muted);font-size:12px">Δεν υπάρχει πλάνο — πάτα «Δημιουργία πλάνου»</div>';return;}
   // Mediterranean compliance score badge
   var scoreHtml=renderMedScore(c.weekPlan);
+  var _alChk=(typeof clientAllergenChecker==='function')?clientAllergenChecker(c):function(){return null;};
   var mealNames=(c.weekPlan[0]||[]).map(function(m){return m.name;});
   var numMeals=mealNames.length;
 
@@ -259,7 +260,10 @@ function renderWeekTable(){
           +'<span style="color:var(--mac-c)">Υ '+Math.round(rvTip.c)+'</span> '
           +'<span style="color:var(--mac-k);font-weight:700">&middot; '+Math.round(rvTip.k)+' kcal</span>'
           +'</div>';
-        html+='<div class="food-chip" data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'" title="Σύρε αυτό το υλικό σε άλλο γεύμα (αντιγραφή)">'
+        var _al=_alChk(food.n);
+        html+='<div class="food-chip" data-d="'+d+'" data-mi="'+mi+'" data-fi="'+fi+'"'
+          +(_al?(' style="outline:2px solid #c62828;background:#fdecea" title="⛔ ΑΛΛΕΡΓΙΑ πελάτη: '+esc(_al.label)+'"'):' title="Σύρε αυτό το υλικό σε άλλο γεύμα (αντιγραφή)"')+'>'
+          +(_al?('<div style="font-size:9.5px;font-weight:700;color:#c62828;margin-bottom:1px">⛔ Αλλεργία: '+esc(_al.label)+'</div>'):'')
           +macroTip
           +'<div class="chip-r1">'
           +'<span class="food-dot" style="background:'+borderColor+'" title="Ομάδα τροφίμου"></span>'

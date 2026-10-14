@@ -293,13 +293,16 @@ function parsePreferenceAvoidFoods(preferencesText){
 // exactly what a fresh regenerate would exclude, not just the picker's own list.
 function buildEffectiveExclusionList(c){
   var excl=(c.foodExclude||[]).slice();
+  var add=function(f){ if(f && excl.indexOf(f)===-1) excl.push(f); };
   var protocolAvoidFoods=(typeof getProtocolAvoidFoods==='function')?getProtocolAvoidFoods(c):[];
-  protocolAvoidFoods.forEach(function(food){ if(excl.indexOf(food)===-1) excl.push(food); });
-  if(c.allergies){
-    var allergyList=parseAllergies(c.allergies);
-    allergyList.forEach(function(a){ if(excl.indexOf(a)===-1) excl.push(a); });
-  }
-  parsePreferenceAvoidFoods(c.preferences).forEach(function(f){ if(excl.indexOf(f)===-1) excl.push(f); });
+  protocolAvoidFoods.forEach(add);
+  // ίδια στοιχεία με το buildClientExclusionList (gen-plan.js): picker + 👎 από τα Ραντεβού. Πριν έλειπαν
+  // εδώ και «σώζονταν» μόνο επειδή το genPlan τα έγραφε μόνιμα μέσα στο c.foodExclude.
+  if(Array.isArray(c.foodExclusions)) c.foodExclusions.forEach(add);
+  (c.foodPrefs||[]).forEach(function(fp){ if(fp && fp.pref==='dislike') add(fp.food); });
+  if(c.allergies) parseAllergies(c.allergies).forEach(add);
+  clientAllergyFoods(c).forEach(add);   // ⚠️ Αλλεργίες (ομάδες) — βλ. ALLERGY_GROUP_DEFS
+  parsePreferenceAvoidFoods(c.preferences).forEach(add);
   return excl;
 }
 
@@ -623,7 +626,7 @@ function clearAllExcludes(){
 // ομάδας (= είχε πατηθεί το κουμπί), προστίθενται και τα νέα, και αν κάποιο υπάρχει ήδη στο πλάνο
 // αντικαθίσταται (ίδιο scrub με την αποθήκευση αποκλεισμών, js/app-part6.js). Μετά ο διαιτολόγος
 // μπορεί κανονικά να αφαιρέσει όποιο θέλει — δεν ξανατρέχει (c.allergenListsVer).
-var ALLERGEN_LISTS_VER=1;
+var ALLERGEN_LISTS_VER=2;   // 2 = + 🫛 Σόγια, 🫘 Όσπρια (2026-10-14)
 function migrateClientAllergenExcl(c){
   var res={added:[],inPlan:[]};
   if(!c || (c.allergenListsVer||0)>=ALLERGEN_LISTS_VER) return res;
@@ -668,4 +671,256 @@ function runAllergenListMigration(){
       +'\n\nΈλεγξε τα πλάνα τους. Όσοι έχουν ήδη σύνδεσμο, χρειάζεται να τον ξαναστείλεις για να δουν το διορθωμένο πλάνο.',
       function(){}, {title:'Ενημέρωση αλλεργιογόνων', icon:'🛡️', confirmLabel:'Εντάξει'});
   },1200);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// ⚠️ ΑΛΛΕΡΓΙΕΣ ΠΕΛΑΤΗ (2026-10-14)
+// Ξεχωριστά από τους αποκλεισμούς/αντιπάθειες (c.foodExclude): c.allergyGroups = ['nuts','gluten',…]
+// (ίδια κλειδιά με το ερωτηματολόγιο, INTAKE_LBL.allergy). Ισχύουν ΠΑΝΤΑ:
+//   • μπαίνουν στη λίστα αποκλεισμού κάθε δημιουργίας πλάνου / εναλλακτικών / αντικαταστάσεων
+//     (buildClientExclusionList στο gen-plan.js, buildEffectiveExclusionList εδώ),
+//   • όποιο τρόφιμο αλλεργίας βρεθεί στο πλέγμα φαίνεται κόκκινο (renderWeekTable),
+//   • ελέγχονται πριν τη «Δημιουργία πλάνου» και πριν την αποστολή συνδέσμου,
+//   • δεν μπαίνουν ΠΟΤΕ στο c.foodExclude — αφαιρώντας ένα τρόφιμο από τους αποκλεισμούς δεν
+//     «ακυρώνεται» κατά λάθος μια αλλεργία.
+// c.allergies = «Άλλες αλλεργίες» (ελεύθερο κείμενο· το παλιό πεδίο, που δεν είχε πια input).
+// c.intakeAllergyKeys / c.intakeAllergyOther = ό,τι δήλωσε ο πελάτης στο ερωτηματολόγιο
+// (γράφονται από το ensureIntakePayload, js/client-editor/intake.js). c.allergyIgnored = ό,τι
+// δηλωμένο επέλεξε ο διαιτολόγος να ΜΗΝ εφαρμόσει.
+// ═══════════════════════════════════════════════════════════════════════════════════
+var ALLERGY_GROUP_DEFS=[
+  {key:'nuts',    icon:'🌰', label:'Ξηροί καρποί',      group:'🌰 Ξηροί καρποί',  lbl:{en:'Nuts',ru:'Орехи',tr:'Kuruyemiş'}},
+  {key:'gluten',  icon:'🌾', label:'Σιτάρι / γλουτένη', group:'🌾 Γλουτένη',      lbl:{en:'Gluten',ru:'Глютен',tr:'Gluten'}},
+  {key:'milk',    icon:'🥛', label:'Γάλα / λακτόζη',    group:'🥛 Γαλακτοκομικά', lbl:{en:'Milk / dairy',ru:'Молоко',tr:'Süt'}},
+  {key:'egg',     icon:'🥚', label:'Αυγό',              group:'🥚 Αυγά',          lbl:{en:'Egg',ru:'Яйца',tr:'Yumurta'}},
+  {key:'fish',    icon:'🐟', label:'Ψάρι & θαλασσινά',  group:'🐟 Ψάρια/Θαλ.',    lbl:{en:'Fish & seafood',ru:'Рыба и морепродукты',tr:'Balık ve deniz ürünleri'}},
+  {key:'soy',     icon:'🫛', label:'Σόγια',             group:'🫛 Σόγια',         lbl:{en:'Soy',ru:'Соя',tr:'Soya'}},
+  {key:'legumes', icon:'🫘', label:'Όσπρια',            group:'🫘 Όσπρια',        lbl:{en:'Legumes',ru:'Бобовые',tr:'Baklagiller'}}
+];
+var ALLERGY_OTHER_DEF={key:'other', icon:'⚠️', label:'Άλλη αλλεργία', lbl:{en:'Other allergy',ru:'Другая аллергия',tr:'Diğer alerji'}};
+function allergyDef(key){
+  for(var i=0;i<ALLERGY_GROUP_DEFS.length;i++){ if(ALLERGY_GROUP_DEFS[i].key===key) return ALLERGY_GROUP_DEFS[i]; }
+  return null;
+}
+function _alnorm(s){ return (typeof normalizeGreekText==='function')?normalizeGreekText(String(s||'')):String(s||'').toLowerCase(); }
+function clientAllergyKeys(c){
+  return (c && Array.isArray(c.allergyGroups)) ? c.allergyGroups.filter(function(k){ return !!allergyDef(k); }) : [];
+}
+// Όλα τα ονόματα τροφίμων που αποκλείει η αλλεργία του πελάτη (ομάδες).
+function clientAllergyFoods(c){
+  var out=[];
+  clientAllergyKeys(c).forEach(function(k){
+    (QUICK_EXCL[allergyDef(k).group]||[]).forEach(function(n){ if(out.indexOf(n)===-1) out.push(n); });
+  });
+  return out;
+}
+// Επιστρέφει function(όνομα τροφίμου) → def αλλεργίας ή null. Ελέγχει τις ομάδες + το «Άλλες αλλεργίες».
+function clientAllergenChecker(c){
+  var map={};
+  clientAllergyKeys(c).forEach(function(k){
+    var d=allergyDef(k);
+    (QUICK_EXCL[d.group]||[]).forEach(function(n){ if(!map[n]) map[n]=d; });
+  });
+  var other=parseAllergies(c&&c.allergies).map(_alnorm).filter(function(x){ return x.length>=3; });
+  return function(name){
+    if(!name) return null;
+    if(map[name]) return map[name];
+    if(other.length){
+      var nn=_alnorm(name);
+      if(other.some(function(t){ return nn.indexOf(t)!==-1; })) return ALLERGY_OTHER_DEF;
+    }
+    return null;
+  };
+}
+// Τρόφιμα αλλεργίας που βρίσκονται ΗΔΗ στο πλάνο: [{n, def}] (μοναδικά ονόματα).
+function planAllergenHits(c){
+  var out=[], seen={};
+  if(!c || !c.weekPlan) return out;
+  var chk=clientAllergenChecker(c);
+  Object.keys(c.weekPlan).forEach(function(d){
+    (c.weekPlan[d]||[]).forEach(function(meal){
+      (meal.foods||[]).forEach(function(f){
+        if(!f || seen[f.n]) return;
+        var def=chk(f.n);
+        if(def){ seen[f.n]=1; out.push({n:f.n, def:def}); }
+      });
+    });
+  });
+  return out;
+}
+// Αλλεργίες που δήλωσε ο πελάτης στο ερωτηματολόγιο και δεν έχουν ούτε εφαρμοστεί ούτε αγνοηθεί.
+function intakePendingAllergyKeys(c){
+  if(!c) return [];
+  var on=clientAllergyKeys(c), ign=c.allergyIgnored||[];
+  return (c.intakeAllergyKeys||[]).filter(function(k){ return allergyDef(k) && on.indexOf(k)===-1 && ign.indexOf(k)===-1; });
+}
+// «Άλλη αλλεργία» (ελεύθερο κείμενο) του ερωτηματολογίου που δεν έχει περάσει στις «Άλλες αλλεργίες».
+function intakePendingAllergyOther(c){
+  var other=String((c&&c.intakeAllergyOther)||'').trim();
+  if(!other || (c.allergyIgnored||[]).indexOf('other')!==-1) return '';
+  return _alnorm(c.allergies||'').indexOf(_alnorm(other))===-1 ? other : '';
+}
+function intakeAllergiesPending(c){ return intakePendingAllergyKeys(c).length>0 || !!intakePendingAllergyOther(c); }
+// Ομάδες που ταιριάζουν σε ελεύθερο κείμενο (π.χ. «φιστίκια» → 🌰) και δεν είναι ήδη επιλεγμένες.
+function allergyTextSuggestions(text, c){
+  var nt=' '+_alnorm(text)+' ';
+  if(!text || nt.trim().length<3) return [];
+  var on=clientAllergyKeys(c);
+  return ALLERGY_GROUP_DEFS.filter(function(d){
+    if(on.indexOf(d.key)!==-1) return false;
+    var g=(typeof ALLERGEN_GROUPS!=='undefined')?ALLERGEN_GROUPS[d.group]:null;
+    var words=((g&&g.terms)||[]).concat((g&&g.kw)||[]);
+    return words.some(function(w){ return w.trim().length>=3 && nt.indexOf(w)!==-1; });
+  });
+}
+
+// Αφαιρεί από το ΗΔΗ φτιαγμένο πλάνο ό,τι αποκλείεται πλέον (ίδιο scrub με την αποθήκευση αποκλεισμών).
+// Επιστρέφει τα ονόματα αλλεργίας που υπήρχαν στο πλάνο πριν.
+function _allergyRescrub(c){
+  var before=planAllergenHits(c).map(function(h){ return h.n; });
+  if(before.length && c.weekPlan && Object.keys(c.weekPlan).length){
+    scrubExcludedFoodsFromWeekPlan(c.weekPlan, buildEffectiveExclusionList(c));
+  }
+  return before;
+}
+function _allergyAfterChange(c, removed, extraMsg){
+  save();
+  refreshAllergyUI();
+  var msg=extraMsg||'';
+  if(removed && removed.length) msg+=(msg?'\n':'')+'Αντικαταστάθηκαν στο πλάνο: '+removed.join(', ')+'.';
+  if(removed && removed.length && c.shareToken) msg+='\nΟ πελάτης έχει σύνδεσμο — ξαναστείλ\' τον για να δει το διορθωμένο πλάνο.';
+  if(msg && typeof showSuccessToast==='function') showSuccessToast(msg);
+}
+function toggleAllergyGroup(key){
+  var c=getC(); if(!c || !allergyDef(key)) return;
+  var arr=clientAllergyKeys(c).slice();
+  var i=arr.indexOf(key), removed=[];
+  if(i>-1) arr.splice(i,1); else arr.push(key);
+  c.allergyGroups=arr;
+  if(i===-1) removed=_allergyRescrub(c);
+  _allergyAfterChange(c, removed, i===-1?('⚠️ Αλλεργία: '+allergyDef(key).label):'');
+}
+function applyIntakeAllergies(){
+  var c=getC(); if(!c) return;
+  var pending=intakePendingAllergyKeys(c);
+  var arr=clientAllergyKeys(c).slice();
+  pending.forEach(function(k){ if(arr.indexOf(k)===-1) arr.push(k); });
+  c.allergyGroups=arr;
+  var other=(c.intakeAllergyOther||'').trim();
+  if(other && _alnorm(c.allergies||'').indexOf(_alnorm(other))===-1){
+    c.allergies=(c.allergies?(c.allergies.replace(/[,\s]+$/,'')+', '):'')+other;
+  }
+  c.intakeApplied=c.intakeApplied||{}; c.intakeApplied.allergies=true;
+  var removed=_allergyRescrub(c);
+  _allergyAfterChange(c, removed, '✅ Εφαρμόστηκαν οι αλλεργίες του ερωτηματολογίου.');
+}
+function ignoreIntakeAllergy(key){
+  var c=getC(); if(!c) return;
+  c.allergyIgnored=(c.allergyIgnored||[]).concat([key]);
+  save(); refreshAllergyUI();
+}
+// «Άλλες αλλεργίες»: γράφεται όσο πληκτρολογείς (χωρίς ξαναζωγράφισμα, για να μη χάνεται ο κέρσορας)·
+// στο blur γίνεται ο έλεγχος του πλάνου.
+function updateAllergyNote(v){
+  var c=getC(); if(!c) return;
+  c.allergies=v;
+  save();
+  var box=document.getElementById('allergy-suggest');
+  if(box) box.innerHTML=_allergySuggestHtml(c);
+}
+function commitAllergyNote(){
+  var c=getC(); if(!c) return;
+  var removed=_allergyRescrub(c);
+  _allergyAfterChange(c, removed, '');
+}
+function _allergySuggestHtml(c){
+  var sug=allergyTextSuggestions(c.allergies, c);
+  if(!sug.length) return '';
+  return '<span style="font-size:11px;color:#8a1c1c">Μήπως εννοείς: </span>'+sug.map(function(d){
+    return '<button type="button" onclick="toggleAllergyGroup(\''+d.key+'\')" style="margin:2px 4px 0 0;padding:2px 8px;border:1px dashed #c62828;background:#fff;color:#c62828;border-radius:999px;font-size:11px;cursor:pointer">+ '+d.icon+' '+esc(d.label)+'</button>';
+  }).join('');
+}
+function buildAllergyHtml(c){
+  var on=clientAllergyKeys(c);
+  var pending=intakePendingAllergyKeys(c);
+  var chips=ALLERGY_GROUP_DEFS.map(function(d){
+    var act=on.indexOf(d.key)!==-1;
+    var n=(QUICK_EXCL[d.group]||[]).length;
+    return '<button type="button" onclick="toggleAllergyGroup(\''+d.key+'\')" title="'+(act?'Πάτα για αφαίρεση':'Αποκλείει '+n+' τρόφιμα')+'" style="margin:0 6px 6px 0;padding:5px 11px;border-radius:999px;font-size:12px;cursor:pointer;font-weight:'+(act?'700':'500')+';'
+      +(act?'background:#c62828;color:#fff;border:1px solid #c62828':'background:#fff;color:#8a1c1c;border:1px solid #e6b3b3')+'">'
+      +(act?'✓ ':'')+d.icon+' '+esc(d.label)+'</button>';
+  }).join('');
+  var pendOther=intakePendingAllergyOther(c);
+  var pendHtml='';
+  if(pending.length || pendOther){
+    var ignBtn=function(k,txt){ return '<button type="button" onclick="ignoreIntakeAllergy(\''+k+'\')" title="Να μην εφαρμοστεί" style="padding:4px 8px;background:#fff;color:#7a4f00;border:1px solid #f0c36d;border-radius:6px;font-size:11px;cursor:pointer">Όχι '+txt+'</button>'; };
+    pendHtml='<div style="margin:2px 0 8px;padding:8px 10px;background:#fff3cd;border:1px solid #f0c36d;border-radius:8px;font-size:12px;color:#7a4f00">'
+      +'📄 Στο ερωτηματολόγιο δήλωσε αλλεργία σε: <b>'+pending.map(function(k){ var d=allergyDef(k); return d.icon+' '+esc(d.label); }).concat(pendOther?['«'+esc(pendOther)+'»']:[]).join(', ')+'</b>'
+      +'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button type="button" onclick="applyIntakeAllergies()" style="padding:4px 10px;background:#c62828;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">✓ Εφαρμογή</button>'
+      +pending.map(function(k){ return ignBtn(k, allergyDef(k).icon); }).join('')
+      +(pendOther?ignBtn('other','«άλλη»'):'')
+      +'</div></div>';
+  }
+  var hits=planAllergenHits(c);
+  var hitsHtml=hits.length?('<div style="margin:6px 0 0;font-size:12px;color:#c62828;font-weight:600">⛔ Στο τωρινό πλάνο υπάρχουν: '+esc(hits.map(function(h){ return h.n; }).join(', '))
+      +' <button type="button" onclick="commitAllergyNote()" style="margin-left:4px;padding:2px 8px;background:#c62828;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer">Αντικατάσταση τώρα</button></div>'):'';
+  return '<div id="allergy-block" style="margin-bottom:14px;padding:10px 12px;border:2px solid #e6b3b3;background:#fff7f7;border-radius:10px">'
+    +'<div style="font-weight:700;color:#c62828;font-size:13px;margin-bottom:2px">⚠️ Αλλεργίες</div>'
+    +'<div style="font-size:11px;color:#8a1c1c;margin-bottom:8px">Ισχύουν πάντα: δεν μπαίνουν ποτέ στο πλάνο, στις εναλλακτικές ή στις αντικαταστάσεις.</div>'
+    +pendHtml
+    +'<div style="display:flex;flex-wrap:wrap">'+chips+'</div>'
+    +'<label style="display:block;font-size:11.5px;font-weight:600;color:#8a1c1c;margin:4px 0 4px">Άλλες αλλεργίες (π.χ. ακτινίδιο, σέλινο)</label>'
+    +'<input type="text" id="allergy-note" value="'+esc(c.allergies||'')+'" oninput="updateAllergyNote(this.value)" onblur="commitAllergyNote()" placeholder="χωρίζεις με κόμμα" style="width:100%;padding:7px 9px;border:1px solid #e6b3b3;border-radius:6px;font-size:12.5px;box-sizing:border-box">'
+    +'<div id="allergy-suggest" style="margin-top:4px">'+_allergySuggestHtml(c)+'</div>'
+    +hitsHtml
+    +'</div>';
+}
+// Κουτάκι στην κεφαλίδα του πελάτη (μόνο όταν υπάρχει κάτι να δείξει).
+function allergyHeaderBoxHtml(c){
+  var on=clientAllergyKeys(c), pending=intakePendingAllergyKeys(c);
+  if(intakePendingAllergyOther(c)) pending=pending.concat(['other']);
+  var txt=on.map(function(k){ return allergyDef(k).label; });
+  if(c && c.allergies && String(c.allergies).trim()) txt.push(String(c.allergies).trim());
+  if(!txt.length && !pending.length) return '';
+  return '<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:#fdecea;border:1px solid #f2b8b8;border-radius:8px">'
+    +'<span style="font-size:11px;color:#c62828;font-weight:700">⚠️ Αλλεργίες</span>'
+    +'<span style="font-size:13px;font-weight:700;color:#c62828">'+esc(txt.join(', ')||'—')+'</span>'
+    +(pending.length?'<span style="font-size:11px;color:#7a4f00;font-weight:600">📄 '+pending.length+' από ερωτηματολόγιο — δεν εφαρμόστηκαν</span>':'')
+    +'</div>';
+}
+function refreshAllergyUI(){
+  var c=getC(); if(!c) return;
+  var blk=document.getElementById('allergy-block');
+  if(blk){ var tmp=document.createElement('div'); tmp.innerHTML=buildAllergyHtml(c); blk.parentNode.replaceChild(tmp.firstChild, blk); }
+  var hw=document.getElementById('header-allergy-wrap');
+  if(hw) hw.innerHTML=allergyHeaderBoxHtml(c);
+  if(typeof renderWeekTable==='function' && document.getElementById('week-con')) renderWeekTable();
+}
+
+// Πριν τη «Δημιουργία πλάνου»: αλλεργίες από το ερωτηματολόγιο που δεν έχουν εφαρμοστεί.
+function allergyGenGuard(c, proceedFn){
+  var pending=intakePendingAllergyKeys(c), pendOther=intakePendingAllergyOther(c);
+  if((!pending.length && !pendOther) || typeof showConfirmDialog!=='function'){ proceedFn(); return; }
+  var names=pending.map(function(k){ var d=allergyDef(k); return d.icon+' '+d.label; }).concat(pendOther?['«'+pendOther+'»']:[]).join(', ');
+  showConfirmDialog('Ο πελάτης δήλωσε στο ερωτηματολόγιο αλλεργία σε: '+names+'.\nΔεν έχει περαστεί στις «⚠️ Αλλεργίες».',
+    function(){ applyIntakeAllergies(); proceedFn(); },
+    {title:'Αλλεργίες από το ερωτηματολόγιο', icon:'⚠️', confirmLabel:'Εφαρμογή & δημιουργία',
+     secondary:{label:'Δημιουργία χωρίς αυτές', onClick:proceedFn}});
+}
+// Πριν την αποστολή συνδέσμου: τρόφιμα αλλεργίας μέσα στο πλάνο (π.χ. προστέθηκαν με το χέρι).
+// true = καθαρό, συνέχισε. false = εμφανίστηκε διάλογος· στο «Αντικατάσταση» ξανακαλεί το retryFn.
+function allergyPublishGuard(c, retryFn){
+  var hits=planAllergenHits(c);
+  if(!hits.length || typeof showConfirmDialog!=='function') return true;
+  showConfirmDialog('Το πλάνο περιέχει τρόφιμα στα οποία ο πελάτης έχει αλλεργία:\n\n'
+    +hits.map(function(h){ return '• '+h.n+' ('+h.def.label+')'; }).join('\n')
+    +'\n\nΘα αντικατασταθούν αυτόματα πριν σταλεί ο σύνδεσμος.',
+    function(){
+      scrubExcludedFoodsFromWeekPlan(c.weekPlan, buildEffectiveExclusionList(c));
+      save(); refreshAllergyUI();
+      if(planAllergenHits(c).length){ showErrorToast('⛔ Κάποια τρόφιμα αλλεργίας δεν αντικαταστάθηκαν — διόρθωσέ τα με το χέρι πριν την αποστολή.'); return; }
+      if(retryFn) retryFn();
+    }, {title:'Αλλεργία στο πλάνο', icon:'⛔', confirmLabel:'Αντικατάσταση & αποστολή'});
+  return false;
 }

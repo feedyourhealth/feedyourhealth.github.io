@@ -416,7 +416,7 @@ document.write(window.__MANIFEST__.map(function(p){
       fishGroupFound: fishKeys.length>0, redListN: redN, dairyListN: dairyN,
       planKeys: Object.keys(INTAKE_AVOID_PLAN).sort().join(','),
       avoidBtnShown: has(h1,'intakeApplyAvoid()'), medsBtnShown: has(h1,'intakeApplyMeds()'),
-      allergCopyShown: has(h1,'intakeCopyAllergies(this)'), condHint: has(h1,'🩺 Ιατρικές Συνθήκες'),
+      allergCopyShown: has(h1,'applyIntakeAllergies()'), /* 2026-10-14: «Αντιγραφή» → «✓ Εφαρμογή» στις ⚠️ Αλλεργίες */ condHint: has(h1,'🩺 Ιατρικές Συνθήκες'),
       profileApplyShown: has(h1,'intakeApplyProfile()'),
       appliedStateAvoid: has(h2,'✓ Εφαρμόστηκε'), appliedStateMeds: has(h2,'✓ Καταχωρήθηκε') }; });
   // --- Αρχική "ερωτηματολόγιο εκκρεμεί" signal (Upgrades Phase 2d) ---

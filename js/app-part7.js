@@ -577,6 +577,16 @@
       ];
       var groupedExcl=(function(){
         var out=[], taken={};
+        // ⚠️ Αλλεργίες πρώτες, ως ομάδες — δεν βρίσκονται στο altExcl (δεν γράφονται στο c.foodExclude,
+        // βλ. ALLERGY_GROUP_DEFS στο js/plan-gen/exclusions.js).
+        if(typeof clientAllergyKeys==='function'){
+          var ALG_PFX={el:'Αλλεργία: ',en:'Allergy: ',ru:'Аллергия: ',tr:'Alerji: '};
+          clientAllergyKeys(c).forEach(function(k){
+            var ad=allergyDef(k), items=(QUICK_EXCL[ad.group]||[]);
+            items.forEach(function(x){ taken[x]=1; });
+            out.push({label:(ALG_PFX[lang]||ALG_PFX.el)+(lang==='el'?ad.label:(ad.lbl[lang]||ad.label)), items:items.map(function(x){ return shortName(fName(x)); })});
+          });
+        }
         EXCL_GROUP_DEFS.forEach(function(g){
           if(!g.fn)return;
           var glist=[]; try{ glist=g.fn()||[]; }catch(e){ glist=[]; }

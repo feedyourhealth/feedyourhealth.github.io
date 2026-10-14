@@ -104,6 +104,8 @@ function openPublishModal(){
     showErrorToast('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις πλάνο στον πελάτη.\n(Κάνε αποσύνδεση και ξανασυνδέσου με email/κωδικό.)');
     return;
   }
+  // ⛔ Τρόφιμο αλλεργίας μέσα στο πλάνο (π.χ. προστέθηκε με το χέρι) — αντικατάσταση πριν σταλεί.
+  if(typeof allergyPublishGuard==='function' && !allergyPublishGuard(c, openPublishModal)) return;
   // overlay
   var ov=document.getElementById('publish-overlay');
   if(ov) ov.remove();

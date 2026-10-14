@@ -390,6 +390,19 @@ var ALLERGEN_GROUPS={
     not:['ψαρονεφρ'],
     skipPlant:true,
     terms:['ψαρ','fish','θαλασσιν','οστρακ','shellfish','seafood','μαλακοστρακ','καρκινοειδ','γαριδ','shrimp']
+  },
+  // 🫛 Σόγια / 🫘 Όσπρια — 2026-10-14, για τις αλλεργίες του ερωτηματολογίου (soy, legumes). Η σόγια
+  // είναι φυτική, οπότε ΔΕΝ έχει skipPlant. Κενό μπροστά = αρχή λέξης (' αρακ' όχι «μαρακούγια»).
+  '🫛 Σόγια':{
+    kw:['σογι','soy','soja','tofu','τοφου','edamame','ενταμαμε','tempeh','τεμπε','miso','tamari','ταμαρι','textured vegetable protein'],
+    not:[],
+    terms:['σογι','soy','soja']
+  },
+  '🫘 Όσπρια':{
+    kw:['φασολ','ρεβιθ','φακες','φακη','φακων','μαυροματ',' φαβα','γιγαντ',' κουκι',' αρακ','λουπιν','κανελλιν','μπορλοτ','χουμους',
+        'μουτζεντρ','hummus','lentil','chickpea',' bean','falafel','φαλαφελ','lupin'],
+    not:['γαριδες γιγαντ','jelly bean','coffee bean','vanilla bean','cocoa bean'],
+    terms:['οσπρι','legume','pulses','φασολ','ρεβιθ','φακ','lentil','chickpea','λουπιν','lupin']
   }
 };
 function _alNorm(s){

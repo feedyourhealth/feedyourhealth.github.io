@@ -99,8 +99,22 @@ function ensureIntakePayload(c){
   if(!window.Cloud || typeof window.Cloud.fetchIntakePayload!=='function') return Promise.resolve(null);
   return window.Cloud.fetchIntakePayload(c).then(function(p){
     INTAKE_PAYLOAD_CACHE[c.intakeToken] = p || null;
+    intakeRememberAllergies(c, p);
     return INTAKE_PAYLOAD_CACHE[c.intakeToken];
   }).catch(function(){ return null; });
+}
+// Κρατά στην καρτέλα ό,τι δήλωσε ο πελάτης για αλλεργίες, ώστε η ενότητα «⚠️ Αλλεργίες» να δείχνει
+// «δεν εφαρμόστηκαν» και να ελέγχεται πριν τη «Δημιουργία πλάνου» (allergyGenGuard), ακόμα κι όταν
+// οι απαντήσεις δεν είναι φορτωμένες. Γράφει μόνο αν άλλαξε κάτι.
+function intakeRememberAllergies(c, p){
+  if(!c || !p) return;
+  var keys=(p.allergies||[]).filter(function(k){ return k && k!=='none'; });
+  var other=String(p.allergiesOther||'').trim();
+  if(JSON.stringify(keys)===JSON.stringify(c.intakeAllergyKeys||[]) && other===(c.intakeAllergyOther||'')) return;
+  c.intakeAllergyKeys=keys;
+  c.intakeAllergyOther=other;
+  if(typeof save==='function') save();
+  if(typeof getC==='function' && getC()===c && typeof refreshAllergyUI==='function') refreshAllergyUI();
 }
 
 // "τι διαφέρει από την καρτέλα" — profile mismatches + safety-relevant new info.
@@ -291,10 +305,14 @@ function buildIntakeReadbackHtml(c){
   }
 
   var medsBtn = p.meds ? intakeRowBtn('intakeApplyMeds()','✓ Καταχώρηση', applied.meds?'Καταχωρήθηκε':'') : '';
-  var allergBtn = allergTxt ? intakeRowBtn('intakeCopyAllergies(this)','📋 Αντιγραφή', '') : '';
+  // «εκκρεμεί» υπολογίζεται από ΑΥΤΟ το payload (όχι από το c.intakeAllergyKeys, που γράφεται ασύγχρονα)
+  var allergPending = (typeof intakeAllergiesPending==='function') && intakeAllergiesPending({
+    intakeAllergyKeys:allerg.filter(function(k){ return k!=='none'; }), intakeAllergyOther:p.allergiesOther||'',
+    allergyGroups:c.allergyGroups, allergies:c.allergies, allergyIgnored:c.allergyIgnored });
+  var allergBtn = allergTxt ? intakeRowBtn('applyIntakeAllergies();renderMain()','✓ Εφαρμογή', allergPending?'':'Στις ⚠️ Αλλεργίες') : '';
   var avoidBtn = applicableAvoid.length ? intakeRowBtn('intakeApplyAvoid()','✓ Εφαρμογή', applied.avoid?'Εφαρμόστηκε':'') : '';
   var condHint = conds.length ? '<span style="font-size:10.5px;color:#9fb5b0;white-space:nowrap">→ 🩺 Ιατρικές Συνθήκες</span>' : '';
-  var allergNote = allergTxt ? '<div style="font-size:10px;color:#9fb5b0;margin:0 0 2px 136px">Δεν εφαρμόζονται αυτόματα — πέρασέ τες στο πεδίο «Αλλεργίες».</div>' : '';
+  var allergNote = (allergTxt && allergPending) ? '<div style="font-size:10px;color:#c62828;margin:0 0 2px 136px">Δεν έχουν εφαρμοστεί — «✓ Εφαρμογή» τις περνά στις ⚠️ Αλλεργίες (Διατροφή &amp; αποφυγές).</div>' : '';
 
   var body=''
     +intakeReadRow('Στόχος', goalTxt)
