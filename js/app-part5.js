@@ -156,7 +156,6 @@ function updateSettingsPanelStats() {
 
   // Update preferences
   document.getElementById('prefDarkMode').checked = document.body.classList.contains('dark-mode');
-  document.getElementById('prefAutoSave').value = localStorage.getItem('dietologist-autosave-interval') || '30';
 
   document.getElementById('clinicTel').value = localStorage.getItem('fyh-clinic-tel') || '';
   document.getElementById('clinicWa').value = localStorage.getItem('fyh-clinic-wa') || '';

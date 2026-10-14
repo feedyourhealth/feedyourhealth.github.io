@@ -576,17 +576,9 @@ setTimeout(function(){
         </label>
       </div>
 
-      <div style="margin-bottom:16px;">
-        <label style="font-size:14px;color:var(--text-strong);display:block;margin-bottom:6px;font-weight:500;">
-          📱 Χρονικό διάστημα αυτόματης αποθήκευσης
-        </label>
-        <select id="prefAutoSave" style="width:100%;padding:8px 12px;border:1px solid var(--border-light);border-radius:6px;font-size:13px;">
-          <option value="30">Κάθε 30 δευτερόλεπτα (γρήγορο)</option>
-          <option value="60">Κάθε 1 λεπτό</option>
-          <option value="120">Κάθε 2 λεπτά</option>
-          <option value="300">Κάθε 5 λεπτά</option>
-        </select>
-      </div>
+      <!-- ✅ "📱 Χρονικό διάστημα αυτόματης αποθήκευσης" select removed 2026-10-14 — nothing ever
+           saved the choice (the interval was hardcoded to 30s), and saving is now change-driven
+           anyway (_doSave / Cloud.save skip when nothing changed). -->
 
       <!-- ✅ "📏 Μονάδες μέτρησης" (metric/imperial) select removed 2026-08-07 — it had no
            onchange handler and nothing anywhere in js/*.js ever read #prefUnits, so choosing

@@ -70,18 +70,41 @@
     // ο χρήστης βλέπει άδεια λίστα που «γεμίζει» ένα κλάσμα του δευτερολέπτου μετά.
     _loadThenEnter:function(){
       var self=this;
+      // Cache άλλου λογαριασμού σε αυτόν τον browser (π.χ. μετά από σύνδεση σε δοκιμαστικό) — σβήσ' το
+      // ΠΡΙΝ φανεί ή προλάβει να ανέβει. Τα δεδομένα εκείνου του λογαριασμού είναι ασφαλή στο cloud του.
+      var owner=this._ls(this._OWNER_KEY);
+      if(owner && owner!==this.user.id){
+        console.warn('[CLOUD] Το τοπικό cache ανήκει σε άλλο λογαριασμό — καθαρίζεται.');
+        this._wipeLocalCache(false);
+      }
       var haveCache=false;
       try{
         var cc=JSON.parse(localStorage.getItem('fyh_clients')||'null');
         haveCache=Array.isArray(cc)&&cc.length>0;
       }catch(e){}
-      if(!haveCache){ this.load().then(function(){ self._enterApp(); }); return; }
+      if(!haveCache){
+        // Άδειο cache = δικό μας από εδώ και πέρα, ώστε ό,τι γραφτεί πριν τελειώσει το load() να μετρά ως τοπική αλλαγή.
+        if(!owner || owner!==this.user.id){ this._ls(this._OWNER_KEY,this.user.id); this._ls(this._BASE_KEY,0); }
+        this.load().then(function(){ self._afterLoadMigrations(); self._enterApp(); });
+        return;
+      }
+      // Καθαρό cache = ό,τι συγχρονίστηκε τελευταία — βάση για το «άλλαξε κάτι;» όσο φορτώνει το cloud.
+      if(this._cacheIsMine() && !this._isDirty()) this._lastSyncedSig=this._blobSig();
       this._enterApp();
       this.load({background:true}).then(function(){ self._afterBackgroundLoad(); });
     },
 
+    // Εφάπαξ ενημερώσεις δεδομένων που πρέπει να γίνουν πάνω στα ΤΡΕΧΟΝΤΑ δεδομένα του cloud — ποτέ πριν
+    // τελειώσει το load(), ούτε όσο περιμένει απάντηση ο διάλογος «Δύο εκδοχές δεδομένων».
+    _afterLoadMigrations:function(){
+      if(!this._loaded || this._conflictPending) return;
+      try{ if(typeof runAllergenListMigration==='function') runAllergenListMigration(); }
+      catch(e){ console.error('[MIGRATION] allergen lists', e); }
+    },
+
     // Το cloud blob ήρθε αφού ο χρήστης έβλεπε ήδη το cache — συγχρόνισε την οθόνη.
     _afterBackgroundLoad:function(){
+      this._afterLoadMigrations();
       try{
         if(typeof renderSB==='function') renderSB();
         if(typeof renderHome==='function') renderHome();
@@ -972,88 +995,243 @@
       return 'Σφάλμα: ' + msg;
     },
 
+    // ── 🔐 Τοπικό cache ↔ cloud (2026-10-14) ──────────────────────────────────────────
+    // Τρία μικρά κλειδιά στο localStorage αποφασίζουν ποια δεδομένα «κερδίζουν» όταν ανοίγει η εφαρμογή:
+    //   fyh_cache_owner        — σε ποιον λογαριασμό ανήκει το τοπικό cache (πριν: σε κανέναν, οπότε μια
+    //                            σύνδεση με άλλο λογαριασμό στον ίδιο browser ανέβαζε εκεί τους ξένους πελάτες)
+    //   fyh_cache_base_version — σε ποια έκδοση του cloud βασίζεται το cache
+    //   fyh_local_dirty        — '1' όσο υπάρχουν αλλαγές εδώ που ΔΕΝ έχουν ανέβει ακόμα
+    // Αντικαθιστούν τον παλιό έλεγχο ώρας (fyh_local_updated_at > d.updatedAt): το autosave των 30"
+    // ανανέωνε εκείνη την ώρα ακόμα και χωρίς αλλαγές, οπότε ένας υπολογιστής με δεδομένα μιας εβδομάδας
+    // έμοιαζε «νεότερος» και τα ανέβαζε πάνω σε ό,τι είχε γίνει στο μεταξύ από άλλη συσκευή.
+    _OWNER_KEY:'fyh_cache_owner', _BASE_KEY:'fyh_cache_base_version', _DIRTY_KEY:'fyh_local_dirty',
+    _lastSyncedSig:null,   // JSON του blob όπως είναι τώρα στο cloud — ίδιο ⇒ τίποτα να ανέβει
+    _changeSeq:0,          // αυξάνεται σε κάθε πραγματική αλλαγή — για να μη σβηστεί το dirty από push που ξεκίνησε πριν από αυτήν
+    _loadFailCount:0, _loadRetryT:null,
+
+    _ls:function(k,v){
+      try{
+        if(v===undefined) return localStorage.getItem(k);
+        if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,String(v));
+      }catch(e){}
+      return null;
+    },
+    // Μόνο η καρτέλα που κρατά το edit lock (js/core/persistence.js) ανεβάζει ή αγγίζει τα κλειδιά συγχρονισμού.
+    _canWrite:function(){ return (typeof _isLockOwner==='undefined') || !!_isLockOwner; },
+    _cacheIsMine:function(){ return !!(this.user && this._ls(this._OWNER_KEY)===this.user.id); },
+    _isDirty:function(){ return this._cacheIsMine() && this._ls(this._DIRTY_KEY)==='1'; },
+    _markSynced:function(ver){
+      if(!this._canWrite() || !this.user) return;
+      this._ls(this._OWNER_KEY,this.user.id);
+      this._ls(this._BASE_KEY,ver||0);
+      this._ls(this._DIRTY_KEY,null);
+    },
+
+    _blobBody:function(){
+      return {
+        clients: window.clients||[],
+        customTemplates: window.customTemplates||[],
+        trackingData: (typeof window.TRACKING_DATA!=='undefined'?window.TRACKING_DATA:null),
+        recipeMeta: (typeof getRecipeMeta==='function'?getRecipeMeta():null),
+        savedCombos: (typeof safeStorageGet==='function'?safeStorageGet('savedCombos',[]):[]),
+        tipsLibrary: (typeof safeStorageGet==='function'?safeStorageGet('tipsLibrary',[]):[]),
+        // Clinic contact (WhatsApp/phone/email shown to the client in the plan's «Ρώτησέ με»
+        // sheet) used to be localStorage-only, so publishing from another browser/device gave
+        // the client a contact-less link. Rides along in the same blob now; self.CLINIC is
+        // kept in sync by saveClinicContact() and is re-seeded from d.clinicContact on load().
+        clinicContact: {
+          wa:(this.CLINIC&&this.CLINIC.wa)||'',
+          tel:(this.CLINIC&&this.CLINIC.tel)||'',
+          email:(this.CLINIC&&this.CLINIC.email)||''
+        }
+      };
+    },
+    _blobSig:function(){ try{ return JSON.stringify(this._blobBody()); }catch(e){ return null; } },
+
+    // Σβήνει ό,τι έχει μείνει τοπικά από ΑΛΛΟΝ λογαριασμό (μόνο από αυτόν τον browser — ποτέ από το cloud).
+    // keepSnapshots: για παλιό cache χωρίς owner (πριν από αυτή την αλλαγή) κρατάμε τα snapshots,
+    // αφού το πιθανότερο είναι να είναι του ίδιου του χρήστη.
+    _wipeLocalCache:function(keepSnapshots){
+      var keys=['fyh_clients','fyh_custom_tmpls','savedCombos','tipsLibrary','recipeMeta','favoriteMeals',
+        'dietologist_tracking','TRACKING_DATA','fyh-clinic-wa','fyh-clinic-tel','fyh-clinic-email',
+        'fyh_local_updated_at',this._OWNER_KEY,this._BASE_KEY,this._DIRTY_KEY];
+      if(!keepSnapshots) keys.push('fyh_snapshots');
+      keys.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+      window.clients=[];
+      window.customTemplates=[];
+      if(typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA={plans:[],recipes:{},patterns:{},lastUpdated:null};
+      window._savedCombosCache=null;
+      window._tipsLibraryCache=null;
+      if(this.CLINIC){ this.CLINIC.wa=''; this.CLINIC.tel=''; this.CLINIC.email=''; }
+      if(typeof curId!=='undefined') window.curId=null;
+      this._lastSyncedSig=null;
+    },
+
+    // Περνά τα δεδομένα του cloud στη μνήμη + στο τοπικό cache και σημειώνει «συγχρονισμένο στην έκδοση ver».
+    _applyCloudData:function(d,ver){
+      var self=this;
+      d=d||{};
+      try{
+        window.clients=Array.isArray(d.clients)?d.clients:[];
+        if(typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(window.clients);
+        window.customTemplates=Array.isArray(d.customTemplates)?d.customTemplates:[];
+        if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
+        if(d.recipeMeta && typeof saveRecipeMetaAll==='function') saveRecipeMetaAll(d.recipeMeta);
+        if(typeof safeStorageSet==='function'){
+          safeStorageSet('fyh_clients', window.clients);
+          safeStorageSet('fyh_custom_tmpls', window.customTemplates);
+          // Saved combos live outside `clients` (own localStorage key, shared across
+          // clients) so they need their own restore here — otherwise they never
+          // travel across devices even though they now ride along in the same blob.
+          if(Array.isArray(d.savedCombos)){
+            safeStorageSet('savedCombos', d.savedCombos);
+            // getSavedCombos() (js/plan-gen/combos-tips.js) caches this in memory; writing straight
+            // to storage here would otherwise leave stale data behind that cache.
+            window._savedCombosCache = d.savedCombos;
+          }
+          if(Array.isArray(d.tipsLibrary)){
+            safeStorageSet('tipsLibrary', d.tipsLibrary);
+            window._tipsLibraryCache = d.tipsLibrary;
+          }
+        }
+        // Clinic contact — raw localStorage keys (read by loadSettingsPanel + _buildSnapshot
+        // via self.CLINIC) plus the in-memory self.CLINIC object so a publish right after
+        // load already carries it without a page reload.
+        if(d.clinicContact && typeof d.clinicContact==='object'){
+          try{
+            localStorage.setItem('fyh-clinic-wa', d.clinicContact.wa||'');
+            localStorage.setItem('fyh-clinic-tel', d.clinicContact.tel||'');
+            localStorage.setItem('fyh-clinic-email', d.clinicContact.email||'');
+          }catch(e){}
+          if(self.CLINIC){ self.CLINIC.wa=d.clinicContact.wa||''; self.CLINIC.tel=d.clinicContact.tel||''; self.CLINIC.email=d.clinicContact.email||''; }
+        }
+      }catch(e){ console.error('[CLOUD] apply data', e); }
+      self._version=ver||0;
+      self._markSynced(ver);
+      self._lastSyncedSig=self._blobSig();
+      if(typeof curId!=='undefined' && curId && !window.clients.some(function(c){ return c.id===curId; })) window.curId=null;
+    },
+
+    // Και οι δύο πλευρές άλλαξαν (εδώ: αλλαγές που δεν ανέβηκαν· στο cloud: νεότερη έκδοση από άλλη
+    // συσκευή). Ασφαλής προεπιλογή: δείξε τα δεδομένα του cloud, κράτα τα τοπικά σε snapshot + στη μνήμη,
+    // και ρώτα ποια θα μείνουν. Ποτέ σιωπηλή αντικατάσταση προς οποιαδήποτε κατεύθυνση.
+    _resolveLoadConflict:function(d,ver){
+      var self=this;
+      self._conflictPending=true;
+      try{ if(typeof _rollingSnapshot==='function') _rollingSnapshot(); }catch(e){}
+      var local={
+        clients:(typeof deepClone==='function')?deepClone(window.clients||[]):JSON.parse(JSON.stringify(window.clients||[])),
+        customTemplates:(typeof deepClone==='function')?deepClone(window.customTemplates||[]):JSON.parse(JSON.stringify(window.customTemplates||[]))
+      };
+      self._applyCloudData(d,ver);
+      var count=function(arr){ return (arr||[]).filter(function(c){ return c && !c.deleted; }).length; };
+      var nLocal=count(local.clients), nCloud=count(window.clients);
+      setTimeout(function(){
+        if(typeof showConfirmDialog!=='function') return;
+        showConfirmDialog('Σε αυτόν τον υπολογιστή υπήρχαν αλλαγές που δεν είχαν ανέβει στο cloud, ενώ στο μεταξύ τα δεδομένα άλλαξαν και από άλλη συσκευή.\n\n'
+          +'Τώρα βλέπεις τα δεδομένα του cloud ('+nCloud+' πελάτες). Αυτά του υπολογιστή ('+nLocal+' πελάτες) φυλάχτηκαν και σε snapshot (Ρυθμίσεις → Επαναφορά).\n\n'
+          +'Ποια θέλεις να κρατήσεις;', function(){
+          self._conflictPending=false; self._afterLoadMigrations();
+          if(typeof showSuccessToast==='function') showSuccessToast('✅ Κράτησες τα δεδομένα του cloud.');
+        }, {title:'Δύο εκδοχές δεδομένων', icon:'🔀', confirmLabel:'Κράτα του cloud',
+          secondary:{label:'Κράτα αυτού του υπολογιστή', onClick:function(){
+            window.clients=local.clients;
+            window.customTemplates=local.customTemplates;
+            if(typeof curId!=='undefined') window.curId=null;
+            if(typeof saveNow==='function') saveNow();   // → Cloud.save() → push πάνω στην έκδοση που μόλις φορτώθηκε
+            self._conflictPending=false; self._afterLoadMigrations();
+            try{
+              if(typeof renderSB==='function') renderSB();
+              if(typeof renderHome==='function') renderHome();
+            }catch(e){}
+            if(typeof showSuccessToast==='function') showSuccessToast('✅ Κράτησες τα δεδομένα αυτού του υπολογιστή — ανεβαίνουν στο cloud.');
+          }}});
+      },600);
+    },
+
+    // Η ανάγνωση από το cloud απέτυχε: ΠΟΤΕ push όσο δεν ξέρουμε τι υπάρχει εκεί (πριν, η έκδοση έμενε 0
+    // και το επόμενο save έκανε τυφλό upsert του τοπικού cache πάνω στο cloud). Ξαναδοκιμάζει μόνο του.
+    _onLoadFailed:function(err){
+      var self=this;
+      console.error('[CLOUD] load', err);
+      self._loaded=false;
+      self._loadFailCount++;
+      var el=document.getElementById('cloud-load-error');
+      if(!el){
+        el=document.createElement('div');
+        el.id='cloud-load-error';
+        el.style.cssText='position:fixed;bottom:20px;right:20px;background:#c62828;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:300px;line-height:1.4;';
+        el.innerHTML='⚠️ Δεν φορτώθηκαν τα δεδομένα από το cloud. Οι αλλαγές σου μένουν σε αυτόν τον υπολογιστή μέχρι να συνδεθεί — ξαναδοκιμάζω αυτόματα.<br><a href="#" id="cloud-load-retry" style="color:#fff;text-decoration:underline;font-weight:600;">Δοκίμασε τώρα</a>';
+        document.body.appendChild(el);
+        var link=el.querySelector('#cloud-load-retry');
+        if(link) link.addEventListener('click',function(e){ e.preventDefault(); self._retryLoadNow(); });
+      }
+      el.style.display='block';
+      clearTimeout(self._loadRetryT);
+      var delay=Math.min(60, 5*Math.pow(2, Math.min(self._loadFailCount-1, 4)))*1000;   // 5, 10, 20, 40, 60, 60… δευτ.
+      self._loadRetryT=setTimeout(function(){ self._retryLoadNow(); }, delay);
+    },
+    _retryLoadNow:function(){
+      var self=this;
+      clearTimeout(self._loadRetryT);
+      self.load({background:true}).then(function(){ if(self._loaded) self._afterBackgroundLoad(); });
+    },
+    _hideLoadFailed:function(){
+      clearTimeout(this._loadRetryT);
+      this._loadFailCount=0;
+      var el=document.getElementById('cloud-load-error');
+      if(el) el.style.display='none';
+    },
+
     load:function(opts){
       var self=this;
-      var _bg = !!(opts && opts.background);
       return new Promise(function(resolve){
         if(!self.user){ resolve(); return; }
         self.sb.from('user_data').select('data, version').eq('user_id',self.user.id).maybeSingle().then(function(res){
-          if(res.error){ console.error('[CLOUD] load', res.error); }
+          if(res.error){ self._onLoadFailed(res.error); resolve(); return; }
+          self._hideLoadFailed();
           var row=(res && res.data)?res.data:null;
           var d=(row && row.data)?row.data:null;
-          // Remember the version this row is at so _pushNow() can detect a concurrent
-          // write from another tab/device instead of blindly overwriting it.
-          self._version = (row && typeof row.version==='number') ? row.version : 0;
-          if(d && d.clients && d.clients.length){
-            // 🛡️ Background load (μπήκαμε ήδη με cache): αν ο χρήστης πληκτρολογεί/επεξεργάζεται
-            // τη στιγμή που έφτασε το blob, μην πατήσεις πάνω στα τοπικά — κράτα τα και ανέβασέ
-            // τα (optimistic-locked, self._version είναι ήδη σωστό). Ο επόμενος reload φέρνει
-            // το cloud κανονικά. Πανσπάνιο: edit μέσα στο 1ο ~δευτερόλεπτο μετά το login.
-            if(_bg && window.clients && window.clients.length){
-              var _ae=document.activeElement;
-              var _editingNow=!!(_ae && _ae.closest && _ae.closest('#main') && /^(INPUT|TEXTAREA|SELECT)$/.test(_ae.tagName||''));
-              if(_editingNow){
-                console.warn('[CLOUD] Ο χρήστης επεξεργάζεται τη στιγμή που ήρθε το cloud blob — κρατάω τα τοπικά.');
-                self._loaded=true;
-                self._queuePush().then(function(){ self._loadCustomRecipes().then(resolve); });
-                return;
-              }
-            }
-            // 🛡️ Μην αντικαταστήσεις τοπικά δεδομένα που είναι πιο πρόσφατα από το cloud —
-            // π.χ. αν το προηγούμενο push (δουλεύει με καθυστέρηση/debounce) δεν πρόλαβε να
-            // ολοκληρωθεί πριν κλείσει/ανανεωθεί η σελίδα. Χωρίς αυτό, ένα stale cloud read
-            // σβήνει σιωπηλά πρόσφατες τοπικές αλλαγές (π.χ. ένα μόλις αποθηκευμένο πλάνο).
-            var _localTs=null;
-            try{ _localTs=localStorage.getItem('fyh_local_updated_at'); }catch(e){}
-            if(_localTs && d.updatedAt && _localTs>d.updatedAt && window.clients && window.clients.length){
-              console.warn('[CLOUD] Τοπικά δεδομένα ('+_localTs+') πιο πρόσφατα από το cloud ('+d.updatedAt+') — τα διατηρώ και τα ανεβάζω αντί να τα αντικαταστήσω.');
-              self._loaded=true;
-              self._queuePush().then(function(){ self._loadCustomRecipes().then(resolve); });
-              return;
-            }
-            try{
-              if(Array.isArray(d.clients)) window.clients=d.clients;
-              if(Array.isArray(window.clients) && typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(window.clients);
-              if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
-              if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
-              if(d.recipeMeta && typeof saveRecipeMetaAll==='function') saveRecipeMetaAll(d.recipeMeta);
-              if(typeof safeStorageSet==='function'){
-                safeStorageSet('fyh_clients', window.clients);
-                safeStorageSet('fyh_custom_tmpls', window.customTemplates);
-                // Saved combos live outside `clients` (own localStorage key, shared across
-                // clients) so they need their own restore here — otherwise they never
-                // travel across devices even though they now ride along in the same blob.
-                if(Array.isArray(d.savedCombos)){
-                  safeStorageSet('savedCombos', d.savedCombos);
-                  // getSavedCombos() (js/plan-gen/combos-tips.js) caches this in memory; writing straight
-                  // to storage here would otherwise leave stale data behind that cache.
-                  window._savedCombosCache = d.savedCombos;
-                }
-                if(Array.isArray(d.tipsLibrary)){
-                  safeStorageSet('tipsLibrary', d.tipsLibrary);
-                  window._tipsLibraryCache = d.tipsLibrary;
-                }
-              }
-              // Clinic contact — raw localStorage keys (read by loadSettingsPanel + _buildSnapshot
-              // via self.CLINIC) plus the in-memory self.CLINIC object so a publish right after
-              // load already carries it without a page reload.
-              if(d.clinicContact && typeof d.clinicContact==='object'){
-                try{
-                  localStorage.setItem('fyh-clinic-wa', d.clinicContact.wa||'');
-                  localStorage.setItem('fyh-clinic-tel', d.clinicContact.tel||'');
-                  localStorage.setItem('fyh-clinic-email', d.clinicContact.email||'');
-                }catch(e){}
-                if(self.CLINIC){ self.CLINIC.wa=d.clinicContact.wa||''; self.CLINIC.tel=d.clinicContact.tel||''; self.CLINIC.email=d.clinicContact.email||''; }
-              }
-            }catch(e){ console.error('[CLOUD] apply data', e); }
-            self._loaded=true; self._loadCustomRecipes().then(resolve);
-          } else {
-            // Cloud άδειο → πρώτη φορά: ανεβάζουμε τα τοπικά δεδομένα (migration)
-            self._loaded=true;
-            if(window.clients && window.clients.length){ self._queuePush().then(function(){ self._loadCustomRecipes().then(resolve); }); }
-            else { self._loadCustomRecipes().then(resolve); }
+          var cloudVer=(row && typeof row.version==='number')?row.version:0;
+          var owner=self._ls(self._OWNER_KEY);
+          var mine=self._cacheIsMine();
+          var dirty=self._isDirty();
+          var baseVer=mine?(parseInt(self._ls(self._BASE_KEY),10)||0):0;
+          var haveLocal=!!(window.clients && window.clients.length);
+          var cloudHasClients=!!(d && Array.isArray(d.clients) && d.clients.length);
+          var finish=function(){ self._loadCustomRecipes().then(resolve); };
+
+          // Το τοπικό cache δεν είναι αποδεδειγμένα αυτού του λογαριασμού → ποτέ δεν ανεβαίνει.
+          // Ξένο cache σβήνεται· παλιό cache χωρίς owner αντικαθίσταται από το cloud παρακάτω
+          // (σβήνεται μόνο αν το cloud είναι άδειο, ώστε να μη μείνει να φαίνεται/ανέβει σε νέο λογαριασμό).
+          if(haveLocal && !mine){
+            console.warn('[CLOUD] Το τοπικό cache '+(owner?'ανήκει σε άλλο λογαριασμό':'δεν έχει owner (παλιά έκδοση)')+' — δεν ανεβαίνει, παίρνω τα δεδομένα του cloud.');
+            if(owner || !row) self._wipeLocalCache(!owner);
+            haveLocal=false;
           }
-        }).catch(function(e){ console.error('[CLOUD] load', e); self._loaded=true; resolve(); });
+
+          if(!row){
+            // Κανένα blob στο cloud ακόμα (νέος λογαριασμός). Ανεβαίνει μόνο δικό του cache, με insert.
+            self._version=0; self._loaded=true;
+            if(haveLocal){ self._queuePush().then(finish); return; }
+            self._markSynced(0); self._lastSyncedSig=null;
+            finish(); return;
+          }
+          if(dirty && baseVer===cloudVer){
+            // Αλλαγές εδώ πάνω στην ΤΡΕΧΟΥΣΑ έκδοση του cloud — κανείς άλλος δεν έγραψε στο μεταξύ. Ανέβασέ τες.
+            console.warn('[CLOUD] Τοπικές αλλαγές που δεν είχαν ανέβει (έκδοση '+cloudVer+') — τις ανεβάζω.');
+            self._version=cloudVer; self._loaded=true;
+            self._queuePush().then(finish); return;
+          }
+          if(haveLocal && (dirty || !cloudHasClients)){
+            console.warn('[CLOUD] Σύγκρουση: τοπικές αλλαγές βάσει έκδοσης '+baseVer+', cloud στην '+cloudVer+'.');
+            self._resolveLoadConflict(d,cloudVer);
+            self._loaded=true; finish(); return;
+          }
+          // Η συνηθισμένη περίπτωση: τίποτα μη-ανεβασμένο εδώ → τα δεδομένα του cloud είναι τα σωστά.
+          self._applyCloudData(d,cloudVer);
+          self._loaded=true; finish();
+        }).catch(function(e){ self._onLoadFailed(e); resolve(); });
       });
     },
 
@@ -1061,31 +1239,35 @@
       var self=this;
       return new Promise(function(resolve){
         if(!self.user){ resolve(); return; }
-        var blob={
-          clients: window.clients||[],
-          customTemplates: window.customTemplates||[],
-          trackingData: (typeof window.TRACKING_DATA!=='undefined'?window.TRACKING_DATA:null),
-          recipeMeta: (typeof getRecipeMeta==='function'?getRecipeMeta():null),
-          savedCombos: (typeof safeStorageGet==='function'?safeStorageGet('savedCombos',[]):[]),
-          tipsLibrary: (typeof safeStorageGet==='function'?safeStorageGet('tipsLibrary',[]):[]),
-          // Clinic contact (WhatsApp/phone/email shown to the client in the plan's «Ρώτησέ με»
-          // sheet) used to be localStorage-only, so publishing from another browser/device gave
-          // the client a contact-less link. Rides along in the same blob now; self.CLINIC is
-          // kept in sync by saveClinicContact() and is re-seeded from d.clinicContact on load().
-          clinicContact: {
-            wa:(self.CLINIC&&self.CLINIC.wa)||'',
-            tel:(self.CLINIC&&self.CLINIC.tel)||'',
-            email:(self.CLINIC&&self.CLINIC.email)||''
-          },
-          updatedAt: new Date().toISOString()
+        // Ποτέ push πριν μάθουμε τι έχει το cloud, ούτε από καρτέλα μόνο-για-ανάγνωση.
+        if(!self._loaded || !self._canWrite()){ resolve({ok:true,skipped:true}); return; }
+        var body=self._blobBody();
+        var sig=JSON.stringify(body);
+        if(sig===self._lastSyncedSig){ resolve({ok:true,skipped:true}); return; }   // τίποτα καινούριο
+        var seq=self._changeSeq;
+        body.updatedAt=new Date().toISOString();
+        var blob=body;
+        var done=function(ver){
+          self._version=ver;
+          self._lastSyncedSig=sig;
+          if(self._canWrite()){
+            self._ls(self._OWNER_KEY,self.user.id);
+            self._ls(self._BASE_KEY,ver);
+            // Αν έγινε κι άλλη αλλαγή όσο «πετούσε» αυτό το push, μένει dirty για το επόμενο.
+            if(seq===self._changeSeq) self._ls(self._DIRTY_KEY,null);
+          }
+          resolve({ok:true});
         };
         var expected=self._version||0;
         if(!expected){
-          // No cloud row known yet (brand-new dietitian, or first push this session) —
-          // nothing to conflict with, plain upsert starting the version chain at 1.
-          self.sb.from('user_data').upsert({user_id:self.user.id, data:blob, updated_at:new Date().toISOString(), version:1}).then(function(res){
-            if(res.error){ console.error('[CLOUD] push', res.error); resolve({ok:false,error:res.error}); }
-            else { self._version=1; resolve({ok:true}); }
+          // Καμία γραμμή στο cloud (νέος λογαριασμός) — INSERT, όχι upsert: αν στο μεταξύ υπάρχει ήδη
+          // γραμμή, αποτυγχάνει ως σύγκρουση αντί να τη γράψει από πάνω.
+          self.sb.from('user_data').insert({user_id:self.user.id, data:blob, updated_at:new Date().toISOString(), version:1}).then(function(res){
+            if(res.error){
+              if(res.error.code==='23505'){ console.warn('[CLOUD] push conflict — υπάρχει ήδη γραμμή στο cloud.'); resolve({ok:false,conflict:true}); return; }
+              console.error('[CLOUD] push', res.error); resolve({ok:false,error:res.error}); return;
+            }
+            done(1);
           }).catch(function(err){ console.error('[CLOUD] push', err); resolve({ok:false,error:err}); });
           return;
         }
@@ -1103,8 +1285,7 @@
               resolve({ok:false,conflict:true});
               return;
             }
-            self._version=res.data[0].version;
-            resolve({ok:true});
+            done(res.data[0].version);
           }).catch(function(err){ console.error('[CLOUD] push', err); resolve({ok:false,error:err}); });
       });
     },
@@ -1185,7 +1366,17 @@
     // Καλείται από κάθε αποθήκευση. Φρουρά _loaded: ποτέ overwrite πριν φορτώσει το cloud.
     save:function(){
       var self=this;
-      if(!this.enabled || !this.user || !this._loaded) return;
+      if(!this.enabled || !this.user || !this._canWrite()) return;
+      // Ανεβαίνει μόνο ό,τι πραγματικά άλλαξε — πριν, το autosave των 30" έστελνε ολόκληρο το blob
+      // κάθε φορά (~960 εγγραφές σε ένα 8ωρο) και κάθε μία ανέβαζε το version, προκαλώντας ψεύτικες
+      // συγκρούσεις σε δεύτερη ανοιχτή συσκευή.
+      var sig=this._blobSig();
+      if(sig!==null && sig===this._lastSyncedSig) return;
+      this._changeSeq++;
+      // Σημάδι «υπάρχουν αλλαγές εδώ που δεν ανέβηκαν» — επιβιώνει από reload/κλείσιμο, ώστε το
+      // επόμενο load() να ξέρει αν τα τοπικά πρέπει να ανέβουν ή να αντικατασταθούν από το cloud.
+      this._ls(this._DIRTY_KEY,'1');
+      if(!this._loaded) return;   // ανεβαίνουν μόλις τελειώσει το load() (εκείνο αποφασίζει)
       clearTimeout(this._t);
       this._t=setTimeout(function(){ self._queuePush(); },1500);
     },
@@ -1259,7 +1450,8 @@
 
     // Ο διαιτολόγος επέλεξε ρητά να πετάξει τις τοπικές, μη-αποθηκευμένες αλλαγές του και να
     // δει τα πιο πρόσφατα δεδομένα του cloud (μετά από conflict). Σε αντίθεση με load(), εδώ
-    // ΔΕΝ ελέγχουμε fyh_local_updated_at — ο σκοπός είναι ακριβώς να αντικατασταθούν τα τοπικά.
+    // ΔΕΝ ελέγχουμε τοπικές αλλαγές — ο σκοπός είναι ακριβώς να αντικατασταθούν τα τοπικά
+    // (μένουν πρώτα σε snapshot, για κάθε ενδεχόμενο).
     forceReloadFromCloud:function(){
       var self=this;
       this._hideConflictError();
@@ -1267,36 +1459,10 @@
         if(res.error){ console.error('[CLOUD] forceReloadFromCloud', res.error); return; }
         var row=(res && res.data)?res.data:null;
         var d=(row && row.data)?row.data:null;
-        self._version=(row && typeof row.version==='number')?row.version:0;
         if(!d) return;
-        try{
-          if(Array.isArray(d.clients)) window.clients=d.clients;
-          if(Array.isArray(window.clients) && typeof mergeDuplicateGroupNames==='function') mergeDuplicateGroupNames(window.clients);
-          if(Array.isArray(d.customTemplates)) window.customTemplates=d.customTemplates;
-          if(d.trackingData && typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA=d.trackingData;
-          if(d.recipeMeta && typeof saveRecipeMetaAll==='function') saveRecipeMetaAll(d.recipeMeta);
-          if(typeof safeStorageSet==='function'){
-            safeStorageSet('fyh_clients', window.clients);
-            safeStorageSet('fyh_custom_tmpls', window.customTemplates);
-            if(Array.isArray(d.savedCombos)){
-              safeStorageSet('savedCombos', d.savedCombos);
-              window._savedCombosCache = d.savedCombos;
-            }
-            if(Array.isArray(d.tipsLibrary)){
-              safeStorageSet('tipsLibrary', d.tipsLibrary);
-              window._tipsLibraryCache = d.tipsLibrary;
-            }
-          }
-          if(d.clinicContact && typeof d.clinicContact==='object'){
-            try{
-              localStorage.setItem('fyh-clinic-wa', d.clinicContact.wa||'');
-              localStorage.setItem('fyh-clinic-tel', d.clinicContact.tel||'');
-              localStorage.setItem('fyh-clinic-email', d.clinicContact.email||'');
-            }catch(e){}
-            if(self.CLINIC){ self.CLINIC.wa=d.clinicContact.wa||''; self.CLINIC.tel=d.clinicContact.tel||''; self.CLINIC.email=d.clinicContact.email||''; }
-          }
-          try{ localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); }catch(e){}
-        }catch(e){ console.error('[CLOUD] forceReloadFromCloud apply', e); }
+        try{ if(typeof _rollingSnapshot==='function') _rollingSnapshot(); }catch(e){}
+        self._applyCloudData(d, (row && typeof row.version==='number')?row.version:0);
+        self._loaded=true;
         try{
           if(typeof renderSB==='function') renderSB();
           if(typeof renderHome==='function') renderHome();

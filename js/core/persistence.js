@@ -125,6 +125,7 @@ var LOGGER={
    Toast "✓ Αποθηκεύτηκε" εμφανίζεται μετά από κάθε αποθήκευση
 */
 var _saveTimer=null;
+var _lastLocalSaveSig=null; // clients+templates όπως γράφτηκαν τελευταία στο localStorage
 function _doSave(){
   // 🔒 CROSS-TAB LOCK: a tab that doesn't hold the edit lock never writes — see the lock
   // system below (_tabLockTick/_isLockOwner). Silently skipping here (instead of e.g.
@@ -134,9 +135,17 @@ function _doSave(){
     console.warn('[LOCK] save skipped — this tab does not hold the edit lock (see cross-tab banner)');
     return;
   }
+  // Τίποτα δεν άλλαξε (π.χ. το autosave των 30" χωρίς επεξεργασία) → καμία εγγραφή, κανένα snapshot.
+  // Το Cloud.save() καλείται πάντα: κάνει δικό του έλεγχο και πιάνει και combos/tips/στοιχεία επικοινωνίας.
+  var sig=null;
+  try { sig=JSON.stringify(clients)+'\u0000'+JSON.stringify(customTemplates); } catch(e){}
+  if(sig!==null && sig===_lastLocalSaveSig){
+    try { if(window.Cloud) window.Cloud.save(); } catch(e){ console.warn('[CLOUD] save hook', e && e.message); }
+    return;
+  }
   var okClients=safeStorageSet('fyh_clients', clients);
   var okTmpls=safeStorageSet('fyh_custom_tmpls', customTemplates);
-  try { localStorage.setItem('fyh_local_updated_at', new Date().toISOString()); } catch(e){}
+  if(okClients && okTmpls) _lastLocalSaveSig=sig;   // αν απέτυχε (π.χ. γεμάτος χώρος) ξαναδοκιμάζει στο επόμενο
   try { _rollingSnapshot(); } catch(e){ console.warn('[BACKUP] snapshot hook', e && e.message); }
   try { _writeFileBackup(false); } catch(e){ console.warn('[BACKUP] file hook', e && e.message); }
   try { if(window.Cloud) window.Cloud.save(); } catch(e){ console.warn('[CLOUD] save hook', e && e.message); }
