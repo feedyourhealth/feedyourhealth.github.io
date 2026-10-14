@@ -19,6 +19,14 @@ function pregnancyBlockCheck(c, proceedFn){
   var blockFlags=pregFlags.filter(function(f){return f.level==='block';});
   if(blockFlags.length>0){
     var msg='🚫 '+blockFlags.map(function(f){return f.msg;}).join('\n\n')+'\n\nΘέλεις να συνεχίσεις ούτως ή άλλως (π.χ. υπό ιατρική παρακολούθηση);';
+    // Αν κάποιο flag έχει ασφαλή διόρθωση (π.χ. στόχος → Διατήρηση), αυτή γίνεται το κύριο κουμπί και
+    // το «ούτως ή άλλως» δευτερεύον (2026-10-14).
+    var fixFlag=blockFlags.filter(function(f){ return typeof f.fix==='function'; })[0];
+    if(fixFlag){
+      showConfirmDialog(msg, function(){ fixFlag.fix(); proceedFn(); },
+        {icon:'🚫', confirmLabel:fixFlag.fixLabel||'Διόρθωση & συνέχεια', secondary:{label:'Συνέχεια ούτως ή άλλως', onClick:proceedFn}});
+      return;
+    }
     showConfirmDialog(msg, proceedFn, {icon:'🚫', confirmLabel:'Συνέχεια ούτως ή άλλως'});
     return;
   }

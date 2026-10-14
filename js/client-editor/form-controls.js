@@ -464,6 +464,10 @@ function setupFormEventListeners(){
             var pcb=document.getElementById('inp-pregnant');if(pcb)pcb.checked=false;
             var pf=document.getElementById('preg-fields-wrap');if(pf)pf.style.display='none';
           }
+          if(cSex && cSex.lactating){
+            upd('lactating',false);
+            var lw=document.getElementById('lact-fields-wrap');if(lw)lw.style.display='none';
+          }
         }
       }
     };

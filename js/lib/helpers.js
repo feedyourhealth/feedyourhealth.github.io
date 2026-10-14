@@ -392,6 +392,20 @@ function getPregTrimesterLabel(week){
   return ['','(Α\' τρίμηνο)','(Β\' τρίμηνο)','(Γ\' τρίμηνο)'][t];
 }
 
+// 🤱 Θηλασμός (2026-10-14): στάδιο από την ημερομηνία τοκετού (c.deliveryDate, 'YYYY-MM-DD').
+// IOM/DRI 2005: +330 kcal/ημ. τους μήνες 0–6, +400 kcal/ημ. από τον 7ο μήνα (ενέργεια γάλακτος
+// μείον την κινητοποίηση αποθεμάτων λίπους). Χωρίς ημερομηνία → 0–6 μήνες, dateKnown:false.
+function getLactationInfo(c){
+  var d=(c&&c.deliveryDate)?new Date(c.deliveryDate+'T00:00:00'):null;
+  var ok=!!(d && !isNaN(d.getTime()) && d.getTime()<=Date.now());
+  var days=ok?Math.floor((Date.now()-d.getTime())/86400000):null;
+  var weeks=ok?Math.floor(days/7):null;
+  var months=ok?Math.floor(days/30.44):null;
+  var late=ok && months>=6;
+  return {dateKnown:ok, weeks:weeks, months:months, add:late?400:330,
+    label:ok?((late?'7+ μήνες':'0–6 μήνες')+' · εβδ. '+weeks):'0–6 μήνες (χωρίς ημ. τοκετού)'};
+}
+
 // IOM 2009 εύρος συνολικής αύξησης βάρους κύησης ανά κατηγορία ΔΜΣ προ εγκυμοσύνης (verified, βλ. memory).
 function getIOMWeightGainRange(prePregBMI){
   if(prePregBMI<18.5) return {min:12.5,max:18,label:'Λιποβαρής'};

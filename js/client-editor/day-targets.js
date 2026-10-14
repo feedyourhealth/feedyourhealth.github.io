@@ -65,7 +65,9 @@ function makeDayTgtDefaults(c,t){
     // can push the day's target below basal metabolism — clinically unsafe and it
     // also makes an otherwise-balanced plan read as 150-170% on those days.
     // t.bmr = measured RMR when available, otherwise the formula BMR.
-    if(t.bmr && dayKcal < t.bmr) dayKcal = t.bmr;
+    // t.kcalFloor = max(BMR, 1800 σε εγκυμοσύνη/θηλασμό) — ίδιο όριο με το calcTDEE.
+    var _floor=Math.max(t.bmr||0, t.kcalFloor||0);
+    if(_floor && dayKcal < _floor) dayKcal = _floor;
 
     // CRITICAL FIX v2: Recalculate macros based on ACTUAL daily kcal, not average
     // When using MET activities, each day has different kcal so macros must be recalculated

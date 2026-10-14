@@ -31,6 +31,22 @@ function calcMETkcal(c){
   return{weekly:Math.round(weekly),daily:Math.round(weekly/7),perTrainDay:perTrainDay,
     byDay:byDay.map(function(k){return Math.round(k);})};
 }
+// Κατώτατος ημερήσιος θερμιδικός στόχος σε εγκυμοσύνη/θηλασμό (2026-10-14) — ποτέ κάτω από αυτό,
+// ακόμα κι αν ο διαιτολόγος κρατήσει στόχο απώλειας.
+var REPRO_KCAL_FLOOR=1800;
+// Ο στόχος (kcal/ημ. πάνω/κάτω από το TDEE) όπως τον διαβάζει το calcTDEE — αριθμός (-500..+500) ή
+// παλιές τιμές loss/maintain/gain/mild. Ξεχωριστή συνάρτηση ώστε να τη χρησιμοποιούν και οι έλεγχοι
+// ασφαλείας εγκυμοσύνης/θηλασμού (getPregnancySafetyFlags) χωρίς να ξαναγράφουν τη λογική.
+function clientGoalDelta(c){
+  if(!c) return 0;
+  // ✅ NEW: Check if goal is numeric (new format: -500 to +500) — accept both string and number
+  if((typeof c.goal === 'string' || typeof c.goal === 'number') && !isNaN(parseInt(c.goal))) return parseInt(c.goal);
+  // Support for custom clientgoalDelta override (set in client object if needed)
+  if(c.customGoalDelta!=null) return c.customGoalDelta;
+  // Fallback to old format (loss/maintain/gain strings)
+  var def={mild:-250,loss:-500,maintain:0,gain:300};
+  return def[c.goal]||0;
+}
 function calcTDEE(c){
   var bmr;
   var t={}; // Initialize tracking object for BMR method and FFM
@@ -114,6 +130,11 @@ function calcTDEE(c){
   // Α' τρίμηνο +0, Β' +340, Γ' +452 kcal/ημέρα — εφαρμόζεται ΚΑΘΕ ημέρα (όχι μόνο ημέρες ξεκούρασης, σε αντίθεση με το growthAdd)
   var pregTri=c.pregnant?getPregTrimester(c.gestationalWeek):null;
   var pregAdd=pregTri===3?452:(pregTri===2?340:0);
+  // 🤱 Θηλασμός (2026-10-14): +330 kcal (0–6 μήνες) / +400 kcal (7+ μήνες), IOM/DRI — βλ. getLactationInfo.
+  // Δεν συνδυάζεται με την εγκυμοσύνη (αν είναι τσεκαρισμένα και τα δύο, μετρά η εγκυμοσύνη).
+  var lactInfo=(!c.pregnant && c.lactating && typeof getLactationInfo==='function')?getLactationInfo(c):null;
+  var lactAdd=lactInfo?lactInfo.add:0;
+  var reproAdd=pregAdd+lactAdd;
 
   var tdee;
   var metKcal=calcMETkcal(c);
@@ -141,36 +162,22 @@ function calcTDEE(c){
     exerciseKcal=Math.round(Math.max(0,(totalMultiplier-1.2)*bmr));
   }
   tdee=Math.round(tdee);
-  // Goal deltas - Support BOTH old (loss/maintain/gain) and NEW (numeric -500 to +500) formats
-  var def={mild:-250,loss:-500,maintain:0,gain:300};
-  var goalDelta=0;
-
-  // ✅ NEW: Check if goal is numeric (new format: -500 to +500) — accept both string and number
-  if((typeof c.goal === 'string' || typeof c.goal === 'number') && !isNaN(parseInt(c.goal))){
-    goalDelta = parseInt(c.goal);  // Use direct numeric value
-  }
-  // Support for custom clientgoalDelta override (set in client object if needed)
-  else if(c.customGoalDelta!=null){
-    goalDelta = c.customGoalDelta;
-  }
-  // Fallback to old format (loss/maintain/gain strings)
-  else {
-    goalDelta = def[c.goal]||0;
-  }
+  var goalDelta=clientGoalDelta(c);
   // Per-day MET targets: each day gets its own exercise kcal based on assigned activities
   // Growth allowance (DRI requirement for minors) applies every day, training or rest —
   // matches trainTargetByDay/target below, which already include it every day.
+  // reproAdd = εγκυμοσύνη (ανά τρίμηνο) ή θηλασμός — κι αυτά κάθε μέρα.
   var baseTDEE=neat;
-  var restTarget=usedMET?baseTDEE+goalDelta+growthAdd+pregAdd:tdee+goalDelta+growthAdd+pregAdd;
-  var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta+growthAdd+pregAdd:tdee+goalDelta+growthAdd+pregAdd;
+  var restTarget=usedMET?baseTDEE+goalDelta+growthAdd+reproAdd:tdee+goalDelta+growthAdd+reproAdd;
+  var trainTarget=usedMET?baseTDEE+metKcal.perTrainDay+goalDelta+growthAdd+reproAdd:tdee+goalDelta+growthAdd+reproAdd;
   var trainTargetByDay=[];
   for(var tdi=0;tdi<7;tdi++){
     if(usedMET){
       // MET-based: NEAT + per-day exercise + goal + growth (every day)
-      trainTargetByDay.push(Math.round(baseTDEE+metKcal.byDay[tdi]+goalDelta+growthAdd+pregAdd));
+      trainTargetByDay.push(Math.round(baseTDEE+metKcal.byDay[tdi]+goalDelta+growthAdd+reproAdd));
     } else {
       // Activity factor-based: same for all days (TDEE already has avg activity)
-      trainTargetByDay.push(Math.round(tdee+goalDelta+growthAdd+pregAdd));
+      trainTargetByDay.push(Math.round(tdee+goalDelta+growthAdd+reproAdd));
     }
   }
   // 🛡️ SAFETY FLOOR: mirror the per-day floor in makeDayTgtDefaults (js/app-part2.js) HERE too.
@@ -178,8 +185,12 @@ function calcTDEE(c){
   // make this function's own target/restTarget/trainTarget/macros drop below BMR, while the actual
   // generated meal plan (c.dayTargets) is already floored — a dietitian-facing summary that
   // contradicts the plan actually being served. Use the same rounded BMR exposed as t.bmr below.
-  var bmrFloor=Math.round(bmr);
+  // 🤰🤱 Σε εγκυμοσύνη/θηλασμό το κατώτατο όριο είναι τουλάχιστον REPRO_KCAL_FLOOR (2026-10-14).
+  var reproFloor=(c.pregnant||lactInfo)?REPRO_KCAL_FLOOR:0;
+  var bmrFloor=Math.max(Math.round(bmr), reproFloor);
+  var reproFloorApplied=false;
   if(bmrFloor){
+    if(reproFloor && Math.min(restTarget,trainTarget,Math.min.apply(null,trainTargetByDay))<reproFloor && Math.round(bmr)<reproFloor) reproFloorApplied=true;
     restTarget=Math.max(restTarget,bmrFloor);
     trainTarget=Math.max(trainTarget,bmrFloor);
     trainTargetByDay=trainTargetByDay.map(function(v){return Math.max(v,bmrFloor);});
@@ -200,6 +211,8 @@ function calcTDEE(c){
     for(var hxi=0;hxi<7;hxi++){if(c.trainDays&&c.trainDays[hxi]&&(c.trainHoursByDay[hxi]||0)>maxTrainHrs)maxTrainHrs=c.trainHoursByDay[hxi];}
   }
   if(maxTrainHrs===0)maxTrainHrs=c.trainHoursPerDay||1;
+  // 🤱 Θηλασμός: +700 ml/ημ. (περίπου όσο το γάλα που παράγεται — IOM AI νερού 3.8 vs 2.7 L)
+  if(lactInfo) baseHydration+=700;
   var trainHydration=Math.round(baseHydration+maxTrainHrs*500);
   // Macro split from preset (default 25/25/50)
   var pPct=(c.macroP!=null?c.macroP:25)/100;
@@ -296,6 +309,18 @@ function calcTDEE(c){
       warnings.push({type:'alert',msg:'🚫 GDM: υδατάνθρακες '+carbG+'g κάτω από το ελάχιστο ασφαλείας 175g/ημ. (IOM/ADA) — ανέβασε το ποσοστό υδατανθράκων στην Κατανομή Μακροθρεπτικών.'});
     }
   }
+  // 🤱 Θηλασμός: πρωτεΐνη ≥1.3 g/kg (IOM RDA θηλασμού ≈ +25 g/ημ. πάνω από τη βάση)
+  if(lactInfo){
+    if(c.weight>0 && protG/c.weight<1.3){
+      warnings.push({type:'warn',msg:'🤱 Πρωτεΐνη κάτω από τον στόχο θηλασμού: '+protGperKg+'g/kg (ελάχιστο 1.3 g/kg, IOM — περίπου +25 g/ημ.)'});
+    }
+    if(!lactInfo.dateKnown){
+      warnings.push({type:'warn',msg:'🤱 Συμπλήρωσε την ημερομηνία τοκετού — υπολογίζω +330 kcal (0–6 μήνες) μέχρι τότε.'});
+    }
+  }
+  if(reproFloorApplied){
+    warnings.push({type:'warn',msg:(c.pregnant?'🤰':'🤱')+' Ο θερμιδικός στόχος ανέβηκε στο κατώτατο όριο των '+REPRO_KCAL_FLOOR+' kcal για '+(c.pregnant?'εγκυμοσύνη':'θηλασμό')+'.'});
+  }
   return{bmr:Math.round(bmr),tdee:tdee,target:target,
     restTarget:restTarget,trainTarget:trainTarget,trainTargetByDay:trainTargetByDay,
     p:protG,f:fatG,carb:carbG,
@@ -304,7 +329,8 @@ function calcTDEE(c){
     exerciseDaily:exerciseKcal,exerciseWeekly:metKcal.weekly,
     perTrainDay:metKcal.perTrainDay,byDay:metKcal.byDay,usedMET:usedMET,
     isMinor:isMinor,growthAdd:growthAdd,neat:neat,
-    pregTrimester:pregTri,pregAdd:pregAdd,
+    pregTrimester:pregTri,pregAdd:pregAdd,lactAdd:lactAdd,lactInfo:lactInfo,
+    goalDelta:goalDelta,kcalFloor:bmrFloor,
     protGperKg:protGperKg,ea:ea,lbmForEA:lbmForEA,warnings:warnings,
     bmrMethod:t.bmrMethod||'Mifflin-St Jeor',ffmUsed:t.ffmUsed||null,usedRMR:t.usedRMR||false,
     incomplete:!!t.incomplete};

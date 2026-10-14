@@ -266,6 +266,17 @@ function intakeCopyAllergies(btn){
   if(ok && btn){ var o=btn.textContent; btn.textContent='✓ Αντιγράφηκε'; setTimeout(function(){btn.textContent=o;},1600); }
 }
 
+// 🤰/🤱 από το read-back του ερωτηματολογίου (2026-10-14) — ίδιο αποτέλεσμα με τα τικ της φόρμας.
+function intakeSetRepro(which){
+  var c=getC(); if(!c) return;
+  if(c.sex!=='F') c.sex='F';
+  c.pregnant=(which==='pregnant');
+  c.lactating=(which==='lactating');
+  save();
+  if(typeof renderMain==='function') renderMain();
+  if(typeof reproOfferMaintenance==='function') reproOfferMaintenance(c, which==='pregnant'?'την εγκυμοσύνη':'τον θηλασμό');
+}
+
 // small trailing button for a read-back row
 function intakeRowBtn(onclick, label, done){
   if(done) return '<span style="font-size:10.5px;color:#2e7d32;white-space:nowrap">✓ '+esc(done)+'</span>';
@@ -311,13 +322,18 @@ function buildIntakeReadbackHtml(c){
     allergyGroups:c.allergyGroups, allergies:c.allergies, allergyIgnored:c.allergyIgnored });
   var allergBtn = allergTxt ? intakeRowBtn('applyIntakeAllergies();renderMain()','✓ Εφαρμογή', allergPending?'':'Στις ⚠️ Αλλεργίες') : '';
   var avoidBtn = applicableAvoid.length ? intakeRowBtn('intakeApplyAvoid()','✓ Εφαρμογή', applied.avoid?'Εφαρμόστηκε':'') : '';
+  // «Εγκυμοσύνη/θηλασμός: Ναι» είναι μία ερώτηση για δύο καταστάσεις — ο διαιτολόγος διαλέγει ποια.
+  var reproBtns = !p.pregnancyBreastfeeding ? '' :
+    (c.pregnant ? '<span style="font-size:10.5px;color:#2e7d32;white-space:nowrap">✓ 🤰 Έγκυος</span>'
+    : c.lactating ? '<span style="font-size:10.5px;color:#2e7d32;white-space:nowrap">✓ 🤱 Θηλάζει</span>'
+    : (intakeRowBtn("intakeSetRepro('pregnant')",'🤰 Έγκυος','')+' '+intakeRowBtn("intakeSetRepro('lactating')",'🤱 Θηλάζει','')));
   var condHint = conds.length ? '<span style="font-size:10.5px;color:#9fb5b0;white-space:nowrap">→ 🩺 Ιατρικές Συνθήκες</span>' : '';
   var allergNote = (allergTxt && allergPending) ? '<div style="font-size:10px;color:#c62828;margin:0 0 2px 136px">Δεν έχουν εφαρμοστεί — «✓ Εφαρμογή» τις περνά στις ⚠️ Αλλεργίες (Διατροφή &amp; αποφυγές).</div>' : '';
 
   var body=''
     +intakeReadRow('Στόχος', goalTxt)
     +intakeReadRow('Παθήσεις', conds.length?intakeMap('cond',conds):'—', condHint)
-    +intakeReadRow('Εγκυμοσύνη/θηλ.', p.pregnancyBreastfeeding?'Ναι':'Όχι')
+    +intakeReadRow('Εγκυμοσύνη/θηλ.', p.pregnancyBreastfeeding?'Ναι':'Όχι', reproBtns)
     +intakeReadRow('Φάρμακα / συμπλ.', p.meds||'—', medsBtn)
     +intakeReadRow('Αλλεργίες', allergTxt||'—', allergBtn)
     +allergNote

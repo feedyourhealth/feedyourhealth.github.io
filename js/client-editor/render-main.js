@@ -239,7 +239,14 @@ function renderMain(){
     // ✅ Εγκυμοσύνη: ορατό μόνο όταν Φύλο=Γυναίκα, ίδιο conditional-reveal pattern με formula==='cunningham'
     +'<div class="fg" id="preg-toggle-wrap" style="display:'+(c.sex==='F'?'flex':'none')+'">'
     +'<div class="fgrp" style="flex:1"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">'
-    +'<input type="checkbox" id="inp-pregnant" style="width:16px;height:16px;cursor:pointer"'+(c.pregnant?' checked':'')+'>🤰 Η πελάτισσα είναι έγκυος</label></div></div>'
+    +'<input type="checkbox" id="inp-pregnant" style="width:16px;height:16px;cursor:pointer"'+(c.pregnant?' checked':'')+'>🤰 Η πελάτισσα είναι έγκυος</label></div>'
+    +'<div class="fgrp" style="flex:1"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600">'
+    +'<input type="checkbox" id="inp-lactating" style="width:16px;height:16px;cursor:pointer"'+(c.lactating&&!c.pregnant?' checked':'')+'>🤱 Θηλάζει</label></div></div>'
+    // 🤱 Θηλασμός (2026-10-14): ημερομηνία τοκετού → στάδιο (0–6 / 7+ μήνες) → +330/+400 kcal, βλ. getLactationInfo
+    +'<div class="fg" id="lact-fields-wrap" style="display:'+(c.lactating&&!c.pregnant?'flex':'none')+'">'
+    +'<div class="fgrp"><label>Ημερομηνία τοκετού <span id="lact-stage-badge" style="color:#025857;font-weight:600;font-size:11px">'+esc(lactStageBadgeText(c))+'</span></label>'
+    +'<input type="date" id="inp-deliverydate" value="'+esc(c.deliveryDate||'')+'" max="'+new Date().toISOString().slice(0,10)+'"></div>'
+    +'<div class="fgrp" style="justify-content:flex-end"><button type="button" class="btn" onclick="showMedicalProtocol(\'lactation\')" style="background:#025857;color:#fff;border:none;border-radius:6px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;">🤱 Πρωτόκολλο Θηλασμού</button></div></div>'
     +'<div class="fg" id="preg-fields-wrap" style="display:'+(c.pregnant?'flex':'none')+'">'
     +'<div class="fgrp"><label>Εβδομάδα κύησης <span id="preg-tri-badge" style="color:#025857;font-weight:600;font-size:11px">'+esc(getPregTrimesterLabel(c.gestationalWeek))+'</span></label><input type="number" id="inp-gestweek" value="'+(c.gestationalWeek||'')+'" min="1" max="42" placeholder="π.χ. 20"></div>'
     +'<div class="fgrp"><label>Βάρος προ εγκυμοσύνης (kg)</label><input type="number" id="inp-prepregweight" value="'+(c.prePregnancyWeight||'')+'" min="30" max="200" step="0.1" placeholder="π.χ. 63"></div>'
@@ -536,8 +543,34 @@ function renderMain(){
   if(_bdEl)_bdEl.onchange=function(){commitBirthdate(c);};
   var _pregCb=document.getElementById('inp-pregnant');
   if(_pregCb)_pregCb.onchange=function(){
-    upd('pregnant',this.checked);
-    var pf=document.getElementById('preg-fields-wrap');if(pf)pf.style.display=this.checked?'flex':'none';
+    var on=this.checked;
+    // εγκυμοσύνη και θηλασμός δεν ισχύουν μαζί — το ένα ξετσεκάρει το άλλο
+    if(on && c.lactating){
+      c.lactating=false;
+      var lcb=document.getElementById('inp-lactating'); if(lcb) lcb.checked=false;
+      var lw=document.getElementById('lact-fields-wrap'); if(lw) lw.style.display='none';
+    }
+    upd('pregnant',on);
+    var pf=document.getElementById('preg-fields-wrap');if(pf)pf.style.display=on?'flex':'none';
+    if(on) reproOfferMaintenance(c,'την εγκυμοσύνη');
+  };
+  var _lactCb=document.getElementById('inp-lactating');
+  if(_lactCb)_lactCb.onchange=function(){
+    var on=this.checked;
+    if(on && c.pregnant){
+      c.pregnant=false;
+      var pcb=document.getElementById('inp-pregnant'); if(pcb) pcb.checked=false;
+      var pfw=document.getElementById('preg-fields-wrap'); if(pfw) pfw.style.display='none';
+    }
+    var lw=document.getElementById('lact-fields-wrap'); if(lw) lw.style.display=on?'flex':'none';
+    upd('lactating',on);
+    var b=document.getElementById('lact-stage-badge'); if(b) b.textContent=lactStageBadgeText(c);
+    if(on) reproOfferMaintenance(c,'τον θηλασμό');
+  };
+  var _delivInp=document.getElementById('inp-deliverydate');
+  if(_delivInp)_delivInp.onchange=function(){
+    upd('deliveryDate',this.value||'');
+    var b=document.getElementById('lact-stage-badge'); if(b) b.textContent=lactStageBadgeText(c);
   };
   var _gestWeekInp=document.getElementById('inp-gestweek');
   if(_gestWeekInp)_gestWeekInp.oninput=function(){

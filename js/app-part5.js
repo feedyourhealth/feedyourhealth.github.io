@@ -627,8 +627,58 @@ var MEDICAL_PROTOCOLS = {
       { name: 'ODS/NIH — Dietary Supplements and Life Stages: Pregnancy', url: 'https://ods.od.nih.gov/factsheets/Pregnancy-HealthProfessional/', official: true },
       { name: 'ACOG — Physical Activity and Exercise During Pregnancy', url: 'https://www.acog.org/womens-health/faqs/exercise-during-pregnancy', official: true }
     ]
+  },
+
+  // 🤱 Θηλασμός (2026-10-14) — ενεργοποιείται από το c.lactating στη φόρμα πελάτη (όπως η εγκυμοσύνη
+  // από το c.pregnant), όχι από το modal Ιατρικών Συνθηκών. Οι θερμίδες/νερό/κατώτατο όριο εφαρμόζονται
+  // στο calcTDEE· εδώ μόνο συμπληρώματα + καθοδήγηση.
+  lactation: {
+    name: 'Θηλασμός',
+    icon: '🤱',
+    restrictions: {
+      avoidFoods: [],
+      maxCaffeineMg: 300
+    },
+    foodReplacements: {},
+    supplements: ['DHA (200–300 mg/ημ.)', 'Ιώδιο (290 μg/ημ.)', 'Βιταμίνη D (600 IU/ημ.)', 'Χολίνη (550 mg/ημ.)', 'Ασβέστιο (1000 mg/ημ. από τροφή ή συμπλήρωμα)'],
+    notes: 'Ενέργεια: +330 kcal/ημ. τους μήνες 0–6 και +400 kcal/ημ. από τον 7ο μήνα πάνω από το TDEE (IOM/DRI). Ποτέ κάτω από ~1800 kcal/ημ. Απώλεια βάρους: όχι τις πρώτες ~6 εβδομάδες μετά τον τοκετό· μετά, ήπια (έως ~0,5 kg/εβδομάδα) — δεν επηρεάζει την παραγωγή γάλακτος. Πρωτεΐνη ≥1.3 g/kg (≈ +25 g/ημ.). Νερό: +700 ml/ημ. (ένα ποτήρι σε κάθε θηλασμό). Καφεΐνη ≤300 mg/ημ. Αλκοόλ: καλύτερα καθόλου· αν πιει, όχι θηλασμός για ~2 ώρες ανά ποτό. Ψάρια χαμηλού υδραργύρου 2–3 φορές/εβδομάδα για DHA.',
+    sources: [
+      { name: 'National Academies — Nutrition During Pregnancy and Lactation (DRI for Energy)', url: 'https://www.nationalacademies.org/read/25841/chapter/3', official: true },
+      { name: 'CDC — Maternal Diet and Breastfeeding', url: 'https://www.cdc.gov/breastfeeding-special-circumstances/hcp/diet-micronutrients/maternal-diet.html', official: true },
+      { name: 'ACOG — Breastfeeding Your Baby', url: 'https://www.acog.org/womens-health/faqs/breastfeeding-your-baby', official: true },
+      { name: 'ODS/NIH — Dietary Supplements and Life Stages: Lactation', url: 'https://ods.od.nih.gov/factsheets/list-all/', official: true }
+    ]
   }
 };
+
+// Αλλάζει τον στόχο σε Διατήρηση (0 kcal) — από τους ελέγχους εγκυμοσύνης/θηλασμού.
+function reproSetMaintenanceGoal(client){
+  if(!client) return;
+  if(typeof getC==='function' && getC()===client && document.getElementById('goal-display') && typeof setGoalCalories==='function'){ setGoalCalories(0); return; }
+  client.goal='0';
+  if(typeof save==='function') save();
+}
+// Μόλις τσεκαριστεί εγκυμοσύνη/θηλασμός με στόχο απώλειας: πρόταση για Διατήρηση (ο διαιτολόγος
+// μπορεί να το αρνηθεί — τότε θα ξαναρωτηθεί στη «Δημιουργία πλάνου», βλ. getPregnancySafetyFlags).
+function reproOfferMaintenance(client, what){
+  if(!client || typeof showConfirmDialog!=='function') return;
+  var gd=(typeof clientGoalDelta==='function')?clientGoalDelta(client):0;
+  if(gd>=0) return;
+  if(!client.pregnant && client.lactating){
+    var li=(typeof getLactationInfo==='function')?getLactationInfo(client):{dateKnown:false};
+    if(li.dateKnown && li.weeks>=6) return;   // μετά τις 6 εβδομάδες επιτρέπεται ήπια απώλεια
+  }
+  showConfirmDialog('Ο στόχος είναι απώλεια βάρους ('+gd+' kcal/ημ.). Σε '+what+' δεν συστήνεται θερμιδικό έλλειμμα'
+    +(client.pregnant?'.':' τις πρώτες ~6 εβδομάδες μετά τον τοκετό.')+'\n\nΝα γίνει ο στόχος Διατήρηση;',
+    function(){ reproSetMaintenanceGoal(client); },
+    {title:'Στόχος θερμίδων', icon:client.pregnant?'🤰':'🤱', confirmLabel:'Ναι, Διατήρηση'});
+}
+// Κείμενο δίπλα στην «Ημερομηνία τοκετού», π.χ. «(0–6 μήνες · εβδ. 9, +330 kcal)».
+function lactStageBadgeText(client){
+  if(!client || !client.lactating || client.pregnant || typeof getLactationInfo!=='function') return '';
+  var li=getLactationInfo(client);
+  return '('+li.label+', +'+li.add+' kcal)';
+}
 
 // Trimester-specific σημείωση (χρησιμοποιείται στο showMedicalProtocol όταν condition==='pregnancy' και
 // υπάρχει ενεργός πελάτης με gestationalWeek — τα υπόλοιπα πεδία του πρωτοκόλλου παραμένουν σταθερά).
@@ -646,7 +696,28 @@ function getPregnancyTrimesterNote(week){
 // τη δημιουργία πλάνου), 'warn' (εμφανίζεται αλλά δεν μπλοκάρει), 'info' (μόνο στο πρωτόκολλο modal).
 function getPregnancySafetyFlags(client){
   var flags=[];
-  if(!client || !client.pregnant) return flags;
+  if(!client) return flags;
+  var lact=!client.pregnant && !!client.lactating;
+  if(!client.pregnant && !lact) return flags;
+  var gd=(typeof clientGoalDelta==='function')?clientGoalDelta(client):0;
+  var toMaint={fix:function(){ reproSetMaintenanceGoal(client); }, fixLabel:'Στόχος → Διατήρηση & συνέχεια'};
+
+  // 🤰 Στόχος απώλειας σε εγκυμοσύνη (2026-10-14): πριν εφαρμοζόταν σιωπηλά (−500 kcal).
+  if(client.pregnant && gd<0){
+    flags.push(Object.assign({level:'block', msg:'Στόχος απώλειας βάρους ('+gd+' kcal) σε εγκυμοσύνη: δεν συστήνεται (ACOG/IOM) — ακόμα και σε παχυσαρκία η σύσταση είναι μικρότερη αύξηση βάρους, όχι θερμιδικό έλλειμμα, εκτός αν γίνεται υπό ιατρική παρακολούθηση. Ο στόχος δεν θα πέσει ποτέ κάτω από '+REPRO_KCAL_FLOOR+' kcal.'}, toMaint));
+  }
+  if(lact){
+    var li=(typeof getLactationInfo==='function')?getLactationInfo(client):{dateKnown:false};
+    if(gd<0 && (!li.dateKnown || li.weeks<6)){
+      flags.push(Object.assign({level:'block', msg:'Στόχος απώλειας βάρους ('+gd+' kcal) '+(li.dateKnown?('στην '+li.weeks+'η εβδομάδα μετά τον τοκετό'):'χωρίς ημερομηνία τοκετού')+': τις πρώτες ~6 εβδομάδες δεν συστήνεται θερμιδικό έλλειμμα (αποκατάσταση, εγκατάσταση γαλουχίας).'}, toMaint));
+    } else if(gd<0){
+      flags.push({level:'info', msg:'Απώλεια βάρους στον θηλασμό: ήπια, έως ~0,5 kg/εβδομάδα (−500 kcal το πολύ) — δεν επηρεάζει την παραγωγή γάλακτος. Ο στόχος δεν θα πέσει κάτω από '+REPRO_KCAL_FLOOR+' kcal.'});
+    }
+    if(client.dietType==='keto'){
+      flags.push({level:'warn', msg:'Κετογονική δίαιτα + θηλασμός: έχουν αναφερθεί περιστατικά κετοξέωσης γαλουχίας — δεν συστήνεται χωρίς ιατρική παρακολούθηση.'});
+    }
+    return flags;   // τα υπόλοιπα αφορούν μόνο την εγκυμοσύνη
+  }
   var mc=client.medConditions||{};
 
   if(client.dietType==='keto'){
@@ -683,6 +754,9 @@ function getActiveProtocols(client) {
   if(client.pregnant){
     var pregProtocol = getProtocol('pregnancy');
     if(pregProtocol) protocols.push(pregProtocol);
+  } else if(client.lactating){
+    var lactProtocol = getProtocol('lactation');
+    if(lactProtocol) protocols.push(lactProtocol);
   }
   if(!client.medConditions) return protocols;
 
