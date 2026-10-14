@@ -57,7 +57,7 @@ try:
         br = p.chromium.launch()
         def ctx():
             c = br.new_context(bypass_csp=True)
-            c.route('**/vendor/supabase-js.min.js', lambda r: r.fulfill(status=200, content_type='application/javascript', body=FAKE))
+            c.route('**/vendor/supabase-js.min.js*', lambda r: r.fulfill(status=200, content_type='application/javascript', body=FAKE))
             c.route('**/*.supabase.co/**', lambda r: r.abort())
             return c
 

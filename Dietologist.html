@@ -10,14 +10,17 @@
      frame-ancestors is omitted: a <meta> CSP cannot enforce it (needs a real HTTP header),
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
+<!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
+<meta name="fyh-build" content="e1e06e790d65">
+<script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
-<script defer src="vendor/supabase-js.min.js"></script>
+<script defer src="vendor/supabase-js.min.js?v=3e494829a4"></script>
 <script>
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/styles.css?v=e2826968fc">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -314,126 +317,126 @@ setTimeout(function(){
      The smoke harness in test/smoke.html mirrors this list.
      ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- data/* (no dependencies) — split out of the old js/data.js in module-split wave 1 -->
-<script defer src="js/data/foods.js"></script>
-<script defer src="js/data/portions.js"></script>
-<script defer src="js/data/met-activities.js"></script>
-<script defer src="js/data/supplements.js"></script>
-<script defer src="js/data/protocols.js"></script>
-<script defer src="js/data/micronutrients.js"></script>
-<script defer src="js/data/food-aliases.js"></script>
-<script defer src="js/data/templates.js"></script>
-<script defer src="js/data/recipes.js"></script>
-<script defer src="js/data/misc.js"></script>
+<script defer src="js/data/foods.js?v=1a09ff352d"></script>
+<script defer src="js/data/portions.js?v=b8d351dadc"></script>
+<script defer src="js/data/met-activities.js?v=681944b201"></script>
+<script defer src="js/data/supplements.js?v=9dabfbc622"></script>
+<script defer src="js/data/protocols.js?v=24295ac166"></script>
+<script defer src="js/data/micronutrients.js?v=047a1e2374"></script>
+<script defer src="js/data/food-aliases.js?v=1c6b72a939"></script>
+<script defer src="js/data/templates.js?v=1bf4aad8d6"></script>
+<script defer src="js/data/recipes.js?v=6cb8efefc1"></script>
+<script defer src="js/data/misc.js?v=da0dce215b"></script>
 <!-- lib/* — pure leaf helpers (depend only on data/*) -->
-<script defer src="js/lib/bf-norms.js"></script>
-<script defer src="js/lib/helpers.js"></script>
-<script defer src="js/lib/food-resolve.js"></script>
+<script defer src="js/lib/bf-norms.js?v=4d2063a063"></script>
+<script defer src="js/lib/helpers.js?v=8a2f59cff9"></script>
+<script defer src="js/lib/food-resolve.js?v=fff13797ed"></script>
 <!-- calc/* — pure energy & scaling calc (depend on data/* + lib/helpers.js) -->
-<script defer src="js/calc/plan-energy.js"></script>
+<script defer src="js/calc/plan-energy.js?v=9f83ba22fe"></script>
 <!-- calc/macros-recalc — micronutrient targets + the cascade-recalc engine
      (getMicronutrientTargets, onClientChange, recalculateMacros …). Zero load-time
      code; renderMain/genPlan/makeDayTgtDefaults refs resolve at call time. -->
-<script defer src="js/calc/macros-recalc.js"></script>
+<script defer src="js/calc/macros-recalc.js?v=01d98da800"></script>
 <!-- calc/micronutrients — micronutrient adequacy analysis, gap→supplement matching,
      and normalizeGreekText (accent-strip used across plan-gen/*). Pure; callers runtime. -->
-<script defer src="js/calc/micronutrients.js"></script>
+<script defer src="js/calc/micronutrients.js?v=67408a9c0e"></script>
 <!-- calc/portion-optimizer — «⚖️ Προσαρμογή ποσοτήτων»: grams-only fit to the day macro targets.
      Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
-<script defer src="js/calc/portion-optimizer.js"></script>
+<script defer src="js/calc/portion-optimizer.js?v=81b9c75d3c"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
-<script defer src="js/core/persistence.js"></script>
+<script defer src="js/core/persistence.js?v=847a2b3228"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
      (needs snapWholeG, cm, deepClone, DEFAULT_TMPLS — all loaded above) -->
-<script defer src="js/core/templates.js"></script>
+<script defer src="js/core/templates.js?v=4f045a551d"></script>
 <!-- core/state — client roster/selection (clients/curId/getC), CRUD, JSON_CACHE,
      TOUCH_HANDLERS/MOBILE_VIEWPORT, field validation, toggleSidebar -->
-<script defer src="js/core/state.js"></script>
+<script defer src="js/core/state.js?v=d55acfa862"></script>
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
-<script defer src="js/client-list/roster-ui.js"></script>
+<script defer src="js/client-list/roster-ui.js?v=4ba33a183c"></script>
 <!-- client-list/quick-actions — sidebar quick-action sheets + mobile more-sheet
      (toggleQA/renderMSheetQA…), carved out of app-part1.js. All refs runtime. -->
-<script defer src="js/client-list/quick-actions.js"></script>
+<script defer src="js/client-list/quick-actions.js?v=429d283909"></script>
 <!-- client-list/clients-tab — the ΠΕΛΑΤΕΣ browsing page + bulk group-assign +
      SPORT_INFO, carved out of app-part5-home.js. renderClients is runtime. -->
-<script defer src="js/client-list/clients-tab.js"></script>
-<script defer src="js/app-part2.js"></script>
+<script defer src="js/client-list/clients-tab.js?v=064b51ac61"></script>
+<script defer src="js/app-part2.js?v=587d8a101a"></script>
 <!-- appointments/* — the "📝 Ραντεβού" tab, carved out of app-part2.js. Pure fns;
      callers (renderMain/swTab, app-part5 portal refresh) are runtime. -->
-<script defer src="js/appointments/appointments.js"></script>
+<script defer src="js/appointments/appointments.js?v=8e1272a524"></script>
 <!-- portal-comms/* — two-way client-portal messaging (replies, seen-tracking, feedback
      panels), carved out of app-part2.js. All refs runtime/typeof-guarded. -->
-<script defer src="js/portal-comms/portal-comms.js"></script>
+<script defer src="js/portal-comms/portal-comms.js?v=a866490abb"></script>
 <!-- client-editor/* — the client editor's sub-tabs, carved out of app-part2.js.
      tracker.js must precede app-part4.js (its migrateClientSkinfoldBF is called from
      that file's parse-time client-load IIFE). -->
-<script defer src="js/client-editor/tracker.js"></script>
-<script defer src="js/client-editor/day-targets.js"></script>
-<script defer src="js/client-editor/form-controls.js"></script>
-<script defer src="js/client-editor/render-main.js"></script>
+<script defer src="js/client-editor/tracker.js?v=540e311772"></script>
+<script defer src="js/client-editor/day-targets.js?v=7a5388c52f"></script>
+<script defer src="js/client-editor/form-controls.js?v=75997e4360"></script>
+<script defer src="js/client-editor/render-main.js?v=c5b67ff032"></script>
 <!-- client-editor/overview — the "📇 Επισκόπηση" client sub-tab: read-only status
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
-<script defer src="js/client-editor/overview.js"></script>
+<script defer src="js/client-editor/overview.js?v=6a7505affd"></script>
 <!-- client-editor/inline-sections — unfolds the 5 "modal" settings (Χρόνοι Γευμάτων /
      MET / Διατροφή / Ιατρικές / Συμπληρώματα) into inline collapsible section-cards in
      s1's #modal-btns-grid. Reuses the existing modal save fns (same input IDs). -->
-<script defer src="js/client-editor/inline-sections.js"></script>
+<script defer src="js/client-editor/inline-sections.js?v=3eae00e51c"></script>
 <!-- client-editor/intake — Upgrades Phase 2: intake-questionnaire card in s1 + send
      modal. Pure fn declarations; needs render-main.js (calls renderMain) at runtime. -->
-<script defer src="js/client-editor/intake.js"></script>
+<script defer src="js/client-editor/intake.js?v=154e4d06d0"></script>
 <!-- client-editor/diet-panels — template editor + plan history/save/charts, the last
      of the old app-part1.js (now removed). Only `var curTmplGoal` at parse time. -->
-<script defer src="js/client-editor/diet-panels.js"></script>
+<script defer src="js/client-editor/diet-panels.js?v=0727f41a7f"></script>
 <!-- plan-gen/* — the entire meal-plan generation subsystem, carved out of the old
      monolithic app-part3.js (now fully removed). Pure fn declarations + literal
      state vars; every cross-reference resolves at runtime, so load order among
      these is not load-bearing. food-lib-favorites.js carries the one piece of
      load-time code (a window 'load' listener that starts the hourly auto-backup). -->
-<script defer src="js/plan-gen/med-score.js"></script>
-<script defer src="js/plan-gen/red-meat.js"></script>
-<script defer src="js/plan-gen/exclusions.js"></script>
-<script defer src="js/plan-gen/food-distribution.js"></script>
-<script defer src="js/plan-gen/combos-tips.js"></script>
-<script defer src="js/plan-gen/meal-library.js"></script>
-<script defer src="js/plan-gen/recipe-finder.js"></script>
-<script defer src="js/plan-gen/plan-transform.js"></script>
-<script defer src="js/plan-gen/mediterranean.js"></script>
-<script defer src="js/plan-gen/cho-protocol.js"></script>
-<script defer src="js/plan-gen/gen-plan.js"></script>
-<script defer src="js/plan-gen/supplement-recs.js"></script>
-<script defer src="js/plan-gen/week-table.js"></script>
-<script defer src="js/plan-gen/food-selector.js"></script>
-<script defer src="js/plan-gen/meal-slots.js"></script>
-<script defer src="js/plan-gen/micronutrient-html.js"></script>
-<script defer src="js/plan-gen/publish-modal.js"></script>
-<script defer src="js/plan-gen/food-lib-favorites.js"></script>
+<script defer src="js/plan-gen/med-score.js?v=925cb1e4ab"></script>
+<script defer src="js/plan-gen/red-meat.js?v=b1936c8320"></script>
+<script defer src="js/plan-gen/exclusions.js?v=d895a0b9ef"></script>
+<script defer src="js/plan-gen/food-distribution.js?v=6c9a6c536b"></script>
+<script defer src="js/plan-gen/combos-tips.js?v=19757dac10"></script>
+<script defer src="js/plan-gen/meal-library.js?v=12a93a8fa3"></script>
+<script defer src="js/plan-gen/recipe-finder.js?v=ebf95398b4"></script>
+<script defer src="js/plan-gen/plan-transform.js?v=c4dd4387d7"></script>
+<script defer src="js/plan-gen/mediterranean.js?v=fd8edb7252"></script>
+<script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
+<script defer src="js/plan-gen/gen-plan.js?v=da41408d2b"></script>
+<script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
+<script defer src="js/plan-gen/week-table.js?v=ef06dc5fd4"></script>
+<script defer src="js/plan-gen/food-selector.js?v=de432f65e1"></script>
+<script defer src="js/plan-gen/meal-slots.js?v=fbeaed85c9"></script>
+<script defer src="js/plan-gen/micronutrient-html.js?v=53ca272633"></script>
+<script defer src="js/plan-gen/publish-modal.js?v=b6b94de8e1"></script>
+<script defer src="js/plan-gen/food-lib-favorites.js?v=06a8bc3ab7"></script>
 <!-- reports/* — plan & body-comp exports (PDF/Word/GDocs), backup I/O. Pure fns,
      no load-time code; refs resolve at click time. -->
-<script defer src="js/reports/exports.js"></script>
-<script defer src="js/reports/targets-sheet.js"></script>
-<script defer src="js/app-part4.js"></script>
+<script defer src="js/reports/exports.js?v=230b84ded5"></script>
+<script defer src="js/reports/targets-sheet.js?v=dffe24a58d"></script>
+<script defer src="js/app-part4.js?v=9557e5caa3"></script>
 <!-- client-editor/modals — recipe-ingredients / micronutrient / supplement-picker
      modals, carved out of app-part4.js. Pure fns; all refs runtime. -->
-<script defer src="js/client-editor/modals.js"></script>
-<script defer src="js/client-editor/gap-analysis.js"></script>
+<script defer src="js/client-editor/modals.js?v=cc723de17b"></script>
+<script defer src="js/client-editor/gap-analysis.js?v=d819632a7a"></script>
 <!-- tracking/* — behavioural tracking, meal alternatives, analytics dashboard.
      Pure fns; app-part4's window-load handler calls loadTrackingData() after parse. -->
-<script defer src="js/tracking/tracking.js"></script>
+<script defer src="js/tracking/tracking.js?v=1dcc15d626"></script>
 <!-- tabs/* — the standalone nav tabs (Αρχική / Διατροφές / Μηνύματα / Συνταγές / Tips).
      Pure fn declarations, no load-time code. -->
-<script defer src="js/tabs/home-diets.js"></script>
-<script defer src="js/tabs/messages.js"></script>
-<script defer src="js/tabs/progress.js"></script>
-<script defer src="js/tabs/recipes.js"></script>
-<script defer src="js/tabs/tips.js"></script>
+<script defer src="js/tabs/home-diets.js?v=8299632d97"></script>
+<script defer src="js/tabs/messages.js?v=a80cf8552d"></script>
+<script defer src="js/tabs/progress.js?v=a0bb31d35c"></script>
+<script defer src="js/tabs/recipes.js?v=b3bdae9fb5"></script>
+<script defer src="js/tabs/tips.js?v=60eb1e8994"></script>
 <!-- Chart.js 4.5.1 UMD (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ μέσω ensureChart()
      (js/lib/helpers.js) — το χρησιμοποιούν μόνο οι trend-γραφικές της καρτέλας πελάτη
      (initTrendCharts / renderPlanCharts). Έμενε ~200KB στο boot path. -->
 
 <!-- ✅ PHASE 4: UNDO/REDO SYSTEM -->
-<script defer src="js/11-undo-redo.js"></script>
+<script defer src="js/11-undo-redo.js?v=e4dd3def04"></script>
 
 <!-- ✅ PHASE 3: MICRONUTRIENTS MODAL POPUP -->
 <!-- Plan Save Modal -->
@@ -640,7 +643,7 @@ setTimeout(function(){
 <button id="settingsToggle" onclick="toggleSettingsPanel()" style="position:fixed;bottom:20px;left:20px;background:#025857;color:white;border:none;padding:12px 16px;border-radius:6px;cursor:pointer;font-weight:600;z-index:996;display:none;font-size:14px;">⚙️ Ρυθμίσεις</button>
 
 
-<script defer src="js/app-part5.js"></script>
+<script defer src="js/app-part5.js?v=6635f22391"></script>
 
 <!-- VALIDATION MODAL -->
 <div id="validationModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1100;align-items:center;justify-content:center;overflow-y:auto;padding:20px 0;">
@@ -700,7 +703,7 @@ setTimeout(function(){
 </div>
 
 <!-- VALIDATION JAVASCRIPT -->
-<script defer src="js/app-part6.js"></script>
+<script defer src="js/app-part6.js?v=49603749c6"></script>
 
 <!-- ☁️ Ένδειξη αποθήκευσης στο cloud -->
 <div id="cloud-save-toast" style="position:fixed;bottom:20px;right:20px;background:#025857;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;z-index:99999;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.2);">☁️ Αποθηκεύτηκε στο cloud</div>
@@ -710,7 +713,7 @@ setTimeout(function(){
      Κάθε χρήστης έχει ΜΙΑ γραμμή στον πίνακα user_data (ένα jsonb "συρτάρι").
      Όλα τα δεδομένα (clients, templates, tracking) πάνε σαν ένα πακέτο.
      ═══════════════════════════════════════════════════════════════ -->
-<script defer src="js/app-part7.js"></script>
+<script defer src="js/app-part7.js?v=8212e9c7c5"></script>
 
 </body>
 </html>

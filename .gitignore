@@ -20,6 +20,8 @@
 # ...except the module-split smoke-test fixture (no client data — deterministic
 # calc probes + data-constant fingerprints; see test/smoke.html).
 !test/baseline.json
+# ...and the cache-busting build id (scripts/stamp-version.py, js/version-check.js).
+!/version.json
 
 # Photos / screenshots
 *.jpg

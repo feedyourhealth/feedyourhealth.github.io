@@ -28,7 +28,7 @@ try:
     with sync_playwright() as p:
         br = p.chromium.launch()
         ctx = br.new_context(bypass_csp=True, viewport={'width': 1400, 'height': 1000})
-        ctx.route('**/vendor/supabase-js.min.js', lambda r: r.fulfill(status=200, content_type='application/javascript', body=FAKE))
+        ctx.route('**/vendor/supabase-js.min.js*', lambda r: r.fulfill(status=200, content_type='application/javascript', body=FAKE))
         ctx.route('**/*.supabase.co/**', lambda r: r.abort())
         pg = ctx.new_page()
         pg.on('pageerror', lambda e: errors.append(str(e)))

@@ -7,6 +7,7 @@
   allergen_test.py    allergen quick-exclude migration + genPlan never serves a group food
   allergy_ui_test.py  ⚠️ Αλλεργίες section: intake apply, genPlan/insert/publish guards
   repro_test.py       pregnancy / lactation kcal, safety flags, form ticks, genPlan gate
+  version_check_test.py  ?v= stamps up to date + stale page reloads once / banner (scripts/stamp-version.py)
 
 All of them use a fake in-browser Supabase — they never touch real data.
 Run locally with: python tests/run_all.py   (or one file: python tests/sync_test.py)
@@ -15,7 +16,7 @@ import subprocess, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TESTS = ['smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py']
+TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py']
 
 failed = []
 for name in TESTS:
