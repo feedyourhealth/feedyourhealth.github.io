@@ -58,13 +58,8 @@ setTimeout(function(){
 
     <!-- Κανονική σύνδεση -->
     <div id="cloud-login-section">
-      <!-- Καρτέλες: διάλεξε πρώτα τι θες να κάνεις -->
-      <div style="display:flex;background:#eef5f4;border-radius:10px;padding:4px;margin-bottom:18px;">
-        <button id="tab-signin" type="button" onclick="window.Cloud&&window.Cloud.setAuthMode('signin')"
-          style="flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:#025857;box-shadow:0 1px 3px rgba(0,0,0,.12);">Σύνδεση</button>
-        <button id="tab-signup" type="button" onclick="window.Cloud&&window.Cloud.setAuthMode('signup')"
-          style="flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;background:transparent;color:#7aa6a2;">Νέος λογαριασμός</button>
-      </div>
+      <!-- Μόνο σύνδεση: οι νέες εγγραφές είναι κλειστές (Supabase → Authentication → «Allow new users to sign up» = off).
+           Νέος λογαριασμός (π.χ. συνεργάτης) φτιάχνεται μόνο από το Supabase dashboard → Users → Invite. -->
 
       <!-- Πραγματικό <form> (όχι μεμονωμένα inputs) ώστε ο browser να μπορεί να προσφέρει
            αποθήκευση/αυτόματη συμπλήρωση κωδικού — τα SPA-style onclick χωρίς φόρμα δεν το επιτρέπουν αξιόπιστα. -->
@@ -85,11 +80,6 @@ setTimeout(function(){
         </button>
       </form>
 
-      <!-- Βοήθεια για νέους (μόνο στην καρτέλα «Νέος λογαριασμός») -->
-      <div id="signup-hint" style="display:none;text-align:center;margin-top:12px;font-size:12.5px;color:#7aa6a2;line-height:1.4;">
-        Διάλεξε email &amp; κωδικό (6+ χαρακτήρες) — θα μπεις αμέσως, χωρίς επιβεβαίωση.
-      </div>
-
       <!-- Ξέχασα τον κωδικό (μόνο στην καρτέλα «Σύνδεση») -->
       <div id="forgot-row" style="text-align:center;margin-top:14px;">
         <a href="#" onclick="window.Cloud&&window.Cloud.forgotPassword();return false;"
@@ -102,7 +92,7 @@ setTimeout(function(){
     <!-- Ορισμός νέου κωδικού (μετά από reset μέσω email) -->
     <div id="cloud-recovery-section" style="display:none;">
       <p style="text-align:center;color:#025857;font-weight:700;font-size:15px;margin-bottom:14px;">🔑 Όρισε νέο κωδικό</p>
-      <input id="cloud-newpw" type="password" placeholder="Νέος κωδικός (6+ χαρακτήρες)" aria-label="Νέος κωδικός"
+      <input id="cloud-newpw" type="password" placeholder="Νέος κωδικός (10+ χαρακτήρες)" aria-label="Νέος κωδικός"
         style="width:100%;padding:13px;margin-bottom:11px;border:1px solid #dde3e3;border-radius:10px;font-size:15px;background:#fafcfc;">
       <button onclick="window.Cloud&&window.Cloud.setNewPassword(document.getElementById('cloud-newpw').value)"
         style="width:100%;padding:13px;background:#025857;color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;">

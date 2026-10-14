@@ -910,7 +910,7 @@
       var self=this;
       if(!this.enabled){ this._showLoadError(); return; }
       if(!email||!pw){ this._msg('Συμπλήρωσε email και κωδικό.',true); return; }
-      if(pw.length<6){ this._msg('Ο κωδικός θέλει τουλάχιστον 6 χαρακτήρες.',true); return; }
+      if(pw.length<10){ this._msg('Ο κωδικός θέλει τουλάχιστον 10 χαρακτήρες.',true); return; }
       this._msg('Δημιουργία λογαριασμού...');
       this._setAuthBusy(true);
       this.sb.auth.signUp({email:email,password:pw}).then(function(res){
@@ -980,7 +980,7 @@
     setNewPassword:function(pw){
       var self=this;
       var rmsg=function(t,e){ var el=document.getElementById('cloud-recovery-msg'); if(el){ el.textContent=t||''; el.style.color=e?'#c0392b':'#027a48'; } };
-      if(!pw || pw.length<6){ rmsg('Ο κωδικός θέλει τουλάχιστον 6 χαρακτήρες.',true); return; }
+      if(!pw || pw.length<10){ rmsg('Ο κωδικός θέλει τουλάχιστον 10 χαρακτήρες.',true); return; }
       rmsg('Αποθήκευση...');
       this.sb.auth.updateUser({ password: pw }).then(function(res){
         if(res.error){ rmsg(self._translateError(res.error.message),true); return; }
@@ -998,7 +998,7 @@
       if(m.indexOf('invalid login credentials')>=0) return 'Λάθος email ή κωδικός.';
       if(m.indexOf('already registered')>=0 || m.indexOf('already been registered')>=0 || m.indexOf('user already')>=0) return 'Υπάρχει ήδη λογαριασμός με αυτό το email. Πάτα «Σύνδεση».';
       if(m.indexOf('is invalid')>=0 || m.indexOf('invalid email')>=0 || m.indexOf('unable to validate email')>=0) return 'Μη έγκυρο email — έλεγξε ότι το έγραψες σωστά.';
-      if(m.indexOf('password should be at least')>=0 || m.indexOf('at least 6')>=0) return 'Ο κωδικός θέλει τουλάχιστον 6 χαρακτήρες.';
+      if(m.indexOf('password should be at least')>=0 || m.indexOf('at least 6')>=0 || m.indexOf('at least 10')>=0) return 'Ο κωδικός θέλει τουλάχιστον 10 χαρακτήρες.';
       if(m.indexOf('email not confirmed')>=0) return 'Δεν έχεις επιβεβαιώσει το email σου. Έλεγξε τα εισερχόμενά σου.';
       if(m.indexOf('rate limit')>=0 || m.indexOf('too many')>=0) return 'Πολλές προσπάθειες. Περίμενε λίγο και ξαναδοκίμασε.';
       if(m.indexOf('network')>=0 || m.indexOf('failed to fetch')>=0) return 'Πρόβλημα σύνδεσης. Έλεγξε το internet σου.';
