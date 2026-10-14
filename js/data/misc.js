@@ -334,3 +334,104 @@ var FX=[
   {n:'Σταφύλια',   por:'17 ρόγες μικρές',          porEn:'17 small grapes',       porRu:'17 маленьких ягод',            porTr:'17 küçük tane',               g:85},
   {n:'Φράουλες',   por:'10 μικρές ή 1¼ φλιτζάνι', porEn:'10 small or 1¼ cup',    porRu:'10 маленьких или 1¼ чашки',    porTr:'10 küçük veya 1¼ su bardağı', g:190}
 ];
+
+// ═══════════════════════════════════════════════════════════════════════════════════
+// 🛡️ ΑΛΛΕΡΓΙΟΓΟΝΑ — αυτόματη συμπλήρωση των λιστών QUICK_EXCL (2026-10-14)
+// Οι λίστες του QUICK_EXCL (js/data/portions.js) γράφονταν με το χέρι και ξέφευγαν όποτε έμπαινε
+// νέο τρόφιμο: έλειπαν π.χ. Φιστίκια, Φουντούκια, Σουσάμι, Αμυγδαλοβούτυρο (ξηροί καρποί), Τορτίλια
+// και Wraps (γλουτένη), Μαγιονέζα και Αυγολέμονο (αυγά). Εδώ κάθε ομάδα συμπληρώνεται αυτόματα με
+// λέξεις-κλειδιά στο όνομα ΚΑΙ στα συστατικά κάθε τροφίμου/συνταγής — ό,τι προστεθεί στο FOODS στο
+// μέλλον πιάνεται χωρίς να ξαναγραφτεί λίστα. Οι χειροποίητες λίστες μένουν (ό,τι δεν φαίνεται από
+// το όνομα, π.χ. PhD Smart Bar → γάλα).
+//   kw        = λέξεις-κλειδιά (χωρίς τόνους, πεζά, κομμάτι λέξης· με κενό μπροστά = αρχή λέξης, π.χ. ' rye' όχι «fryer»)
+//   not       = φράσεις που αφαιρούνται από το κείμενο πριν τον έλεγχο (π.χ. «γάλα αμυγδάλου» δεν είναι γαλακτοκομικό)
+//   skipPlant = τα φυτικά (plantBased) τρόφιμα δεν μπορεί να ανήκουν στην ομάδα (γάλα/αυγά/ψάρι)
+//   terms     = λέξεις στο ελεύθερο πεδίο «Αλλεργίες» που σημαίνουν ΟΛΗ την ομάδα (parseAllergies,
+//               js/plan-gen/exclusions.js) — π.χ. «ξηροί καρποί» αποκλείει και φιστίκια, φουντούκια, ταχίνι…
+// ═══════════════════════════════════════════════════════════════════════════════════
+var ALLERGEN_GROUPS={
+  '🌰 Ξηροί καρποί':{
+    kw:['αμυγδαλ','καρυδι','φουντουκ','φιστικ','φυστικ','κασιου','πεκαν','μακανταμ','ταχιν','σουσαμ','πραλιν',
+        'ξηροι καρποι','ξηρων καρπων','peanut','almond','hazelnut','cashew','pistachi','walnut','pecan',
+        'macadamia','sesame','tahini','praline','nut butter','mixed nuts','p.b.'],
+    not:['μοσχοκαρυδ','nutmeg'],
+    terms:['ξηροι καρποι','ξηρους καρπους','ξηρων καρπων','ξηροκαρπ','καρποι','καρπους','nuts','tree nut','peanut','αραπικ']
+  },
+  '🌾 Γλουτένη':{
+    kw:['ψωμ','μακαρον','σπαγγετ','πεννε','κριθαρ','κριθιν','πιτα','πιτες','αλευρ','σιμιγδαλ','κους κους','κουσκους','πλιγουρ',
+        'τραχαν','φρυγαν','παξιμαδ','κρακερ','μπισκοτ','κρουασαν','τορτιγ','τορτιλ','λαζαν','παστιτσ','μουσακ','κανελον',
+        'ζυμαρικ','πιτσα','σικαλ','σιταρ','βρωμη','βρωμης','μουσλι','γκρανολα','δημητριακ','μπουγατσ','κουλουρ','μπαγκετ',
+        'κεικ','τοστ','τηγανιτ','βαφλ','σειταν','μπυρα','noodle','wrap','tortilla','bread','toast','cracker','cookie','biscuit',
+        'brioche','bagel','croissant','pasta','pizza',' oat','granola','muesli','cereal','crispbread',' rye','wheat','barley',
+        'muffin','pancake','waffle','cake','seitan','couscous','bulgur','spaghetti','penne','lasagn','beer'],
+    not:['χωρις γλουτενη','gluten free','gluten-free','lettuce wrap','ριζογκοφρετ','rice cake','goat','buckwheat'],
+    terms:['γλουτεν','gluten','κοιλιοκακ','celiac','coeliac','σιταρ','σιτο','wheat']
+  },
+  '🥚 Αυγά':{
+    kw:['αυγ','ομελετ','φριταλ','μαγιονεζ','καρμποναρ','egg','omelet','frittata','mayo','carbonara'],
+    not:['αυγοταραχ','eggplant'],
+    skipPlant:true,
+    terms:['αυγ','egg','ωου','ωα']
+  },
+  '🥛 Γαλακτοκομικά':{
+    kw:['γαλα','γαλακτ','γιαουρτ','τυρι','τυροπιτ','φετα','κασερι','κεφαλοτυρ','γραβιερ','μοτσαρελ','παρμεζαν','ανθοτυρ','μυζηθρ',
+        'χαλλουμ','χαλουμ','ρικοτα','κεφιρ','κρεμα γαλακτ','βουτυρο','παγωτ','σαγανακ','μανουρ','milk','yogurt','yoghurt',
+        'cheese','cottage','ricotta','mozzarella','parmesan','feta','halloumi','kefir','whey','butter','cream','quark','skyr','casein'],
+    not:['γαλα αμυγδαλου','γαλα βρωμης','γαλα καρυδας','γαλα σογιας','γαλα ριζιου','γαλα φουντουκιου','γαλα κασιου','γιαουρτι σογιας',
+         'φυστικοβουτ','φιστικοβουτ','αμυγδαλοβουτ','κακαοβουτ','βουτυρο καρπ','peanut butter','almond butter','nut butter','cocoa butter',
+         'σογια γαλα','κοκος γαλα','γαλακτοπουλ','coconut milk','almond milk','oat milk','soy milk','soy yogurt','cream of rice','butternut'],
+    skipPlant:true,
+    terms:['γαλα','γαλακτ','λακτοζ','dairy','milk','lactose','καζειν','casein','whey']
+  },
+  '🐟 Ψάρια/Θαλ.':{
+    kw:['ψαρ','σολομ','τονος','τονου','τονοσαλατ','σαρδελ','μπακαλιαρ','γαριδ','καλαμαρ','χταπ','μυδια','μυδιων','τσιπουρ','λαβρακ','κοκκινοψαρ',
+        'αντζουγ','σκουμπρ','γαυρ','ξιφι','πεστροφ','τιλαπια','πανγκασ','αυγοταραχ','θαλασσιν','καβουρ','αστακ','σουπιε','σουπια',
+        'salmon','tuna','fish','shrimp','prawn','sushi','sardine','anchov','mackerel','squid','octopus','mussel','crab','lobster','seafood'],
+    not:['ψαρονεφρ'],
+    skipPlant:true,
+    terms:['ψαρ','fish','θαλασσιν','οστρακ','shellfish','seafood','μαλακοστρακ','καρκινοειδ','γαριδ','shrimp']
+  }
+};
+function _alNorm(s){
+  s=String(s||'').toLowerCase();
+  try{ s=s.normalize('NFD').replace(/[̀-ͯ]/g,''); }catch(e){}
+  return s;
+}
+// Τα τρόφιμα του FOODS που ανήκουν σε μια ομάδα αλλεργιογόνων (όνομα + συστατικά + συστατικά συνταγής FYH).
+function allergenFoodsFor(groupKey){
+  var g=ALLERGEN_GROUPS[groupKey];
+  if(!g||typeof FOODS==='undefined') return [];
+  var out=[];
+  Object.keys(FOODS).forEach(function(n){
+    var f=FOODS[n]; if(!f) return;
+    if(g.skipPlant && f.plantBased) return;
+    var parts=[n];
+    (f.ingredients||[]).forEach(function(x){ if(x&&x.item) parts.push(x.item); });
+    if(typeof FYH_RECIPE_EXPAND!=='undefined' && FYH_RECIPE_EXPAND[n] && FYH_RECIPE_EXPAND[n].ing){
+      FYH_RECIPE_EXPAND[n].ing.forEach(function(x){
+        // φυτικό συστατικό (π.χ. «Γάλα αμυγδάλου») δεν βάζει τη συνταγή σε ομάδα γάλα/αυγά/ψάρι
+        if(g.skipPlant && FOODS[x.n] && FOODS[x.n].plantBased) return;
+        parts.push(x.n);
+      });
+    }
+    var hit=parts.some(function(p){
+      var t=' '+_alNorm(p)+' ';
+      (g.not||[]).forEach(function(ph){ t=t.split(ph).join(' '); });
+      return g.kw.some(function(k){ return t.indexOf(k)!==-1; });
+    });
+    if(hit) out.push(n);
+  });
+  return out;
+}
+// Συμπλήρωση των λιστών QUICK_EXCL (μία φορά, στη φόρτωση). Η σειρά και τα ονόματα των κουμπιών δεν αλλάζουν.
+// QUICK_EXCL_BASE = οι χειροποίητες λίστες ΠΡΙΝ τη συμπλήρωση — με αυτές αναγνωρίζεται ποιοι πελάτες είχαν
+// πατήσει ένα κουμπί-ομάδα με την παλιά λίστα (βλ. migrateClientAllergenExcl, js/plan-gen/exclusions.js).
+var QUICK_EXCL_BASE={};
+(function(){
+  if(typeof QUICK_EXCL==='undefined') return;
+  Object.keys(ALLERGEN_GROUPS).forEach(function(key){
+    QUICK_EXCL_BASE[key]=(QUICK_EXCL[key]||[]).slice();
+    var list=QUICK_EXCL[key]||(QUICK_EXCL[key]=[]);
+    allergenFoodsFor(key).forEach(function(n){ if(list.indexOf(n)===-1) list.push(n); });
+  });
+})();

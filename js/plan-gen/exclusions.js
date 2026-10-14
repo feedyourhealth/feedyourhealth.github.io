@@ -615,3 +615,57 @@ function clearAllExcludes(){
   save();renderExclWrap();
 }
 
+// ── 🛡️ Εφάπαξ ενημέρωση αποκλεισμών αλλεργιογόνων (2026-10-14) ──────────────────────────
+// Τα κουμπιά 🌰/🌾/🥚/🥛/🐟 γράφουν στο c.foodExclude τα ΟΝΟΜΑΤΑ της λίστας τη στιγμή του κλικ. Οι
+// λίστες τώρα συμπληρώνονται αυτόματα (ALLERGEN_GROUPS, js/data/misc.js), αλλά όποιος πελάτης είχε
+// πατήσει π.χ. «🌰 Ξηροί καρποί» πριν, έχει ακόμα την παλιά λίστα — χωρίς Φιστίκια, Φουντούκια,
+// Σουσάμι κ.λπ. Εδώ, μία φορά ανά πελάτη: αν το c.foodExclude περιέχει ΟΛΗ την παλιά λίστα μιας
+// ομάδας (= είχε πατηθεί το κουμπί), προστίθενται και τα νέα, και αν κάποιο υπάρχει ήδη στο πλάνο
+// αντικαθίσταται (ίδιο scrub με την αποθήκευση αποκλεισμών, js/app-part6.js). Μετά ο διαιτολόγος
+// μπορεί κανονικά να αφαιρέσει όποιο θέλει — δεν ξανατρέχει (c.allergenListsVer).
+var ALLERGEN_LISTS_VER=1;
+function migrateClientAllergenExcl(c){
+  var res={added:[],inPlan:[]};
+  if(!c || (c.allergenListsVer||0)>=ALLERGEN_LISTS_VER) return res;
+  c.allergenListsVer=ALLERGEN_LISTS_VER;
+  var ex=c.foodExclude;
+  if(!Array.isArray(ex) || !ex.length || typeof QUICK_EXCL_BASE==='undefined') return res;
+  Object.keys(QUICK_EXCL_BASE).forEach(function(k){
+    var base=QUICK_EXCL_BASE[k]||[];
+    if(!base.length || !base.every(function(f){ return ex.indexOf(f)!==-1; })) return;
+    (QUICK_EXCL[k]||[]).forEach(function(f){ if(ex.indexOf(f)===-1){ ex.push(f); res.added.push(f); } });
+  });
+  if(res.added.length && c.weekPlan){
+    Object.keys(c.weekPlan).forEach(function(d){
+      (c.weekPlan[d]||[]).forEach(function(meal){
+        (meal.foods||[]).forEach(function(f){
+          if(res.added.indexOf(f.n)!==-1 && res.inPlan.indexOf(f.n)===-1) res.inPlan.push(f.n);
+        });
+      });
+    });
+    if(res.inPlan.length) scrubExcludedFoodsFromWeekPlan(c.weekPlan, buildEffectiveExclusionList(c));
+  }
+  return res;
+}
+// Τρέχει για όλους τους πελάτες ΜΕΤΑ τη φόρτωση από το cloud (js/app-part7.js) — όχι νωρίτερα, ώστε
+// η αλλαγή να γίνει πάνω στα τρέχοντα δεδομένα και όχι σε παλιό τοπικό cache.
+function runAllergenListMigration(){
+  if(typeof clients==='undefined' || !clients || !clients.length) return;
+  var changed=false, report=[];
+  clients.forEach(function(c){
+    if(!c || (c.allergenListsVer||0)>=ALLERGEN_LISTS_VER) return;
+    var r=migrateClientAllergenExcl(c);
+    changed=true;
+    if(r.inPlan.length && !c.deleted) report.push((c.name||'—')+(c.shareToken?' (έχει σύνδεσμο)':'')+': '+r.inPlan.join(', '));
+  });
+  if(!changed) return;
+  if(typeof save==='function') save();
+  if(!report.length || typeof showConfirmDialog!=='function') return;
+  setTimeout(function(){
+    showConfirmDialog('Οι λίστες αλλεργιογόνων (🌰 Ξηροί καρποί, 🌾 Γλουτένη, 🥚 Αυγά, 🥛 Γαλακτοκομικά, 🐟 Ψάρια) '
+      +'συμπληρώθηκαν με τρόφιμα που έλειπαν. Στους παρακάτω πελάτες τέτοια τρόφιμα ήταν στο πλάνο και αντικαταστάθηκαν:\n\n'
+      +report.join('\n')
+      +'\n\nΈλεγξε τα πλάνα τους. Όσοι έχουν ήδη σύνδεσμο, χρειάζεται να τον ξαναστείλεις για να δουν το διορθωμένο πλάνο.',
+      function(){}, {title:'Ενημέρωση αλλεργιογόνων', icon:'🛡️', confirmLabel:'Εντάξει'});
+  },1200);
+}
