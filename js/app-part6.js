@@ -349,9 +349,49 @@ function saveMedicalConditions(){
   // reproOfferMaintenance). Αν αρνηθεί, θα ξαναρωτηθεί στη «Δημιουργία πλάνου» (getRedsFlags).
   if(menstrualValue==='absent' && prevMenstrual!=='absent' && typeof getRedsFlags==='function'){
     var rf=getRedsFlags(c).filter(function(f){return f.level==='block';})[0];
-    if(rf) showConfirmDialog('🔴 '+rf.msg+'\n\nΝα γίνει ο στόχος Διατήρηση;', rf.fix,
-      {title:'Κίνδυνος RED-S', icon:'🔴', confirmLabel:'Ναι, Διατήρηση'});
+    if(rf){ showConfirmDialog('🔴 '+rf.msg+'\n\nΝα γίνει ο στόχος Διατήρηση;', rf.fix,
+      {title:'Κίνδυνος RED-S', icon:'🔴', confirmLabel:'Ναι, Διατήρηση'}); return; }
   }
+  // 🔄 Άλλαξαν οι συνθήκες και υπάρχει ήδη πλάνο → πρόταση ενημέρωσης (2026-10-15). Πριν, το τρέχον
+  // πλάνο έμενε ως είχε μέχρι να πατηθεί «Δημιουργία πλάνου» — εύκολο να ξεχαστεί.
+  var changedConds=Object.keys(c.medConditions).filter(function(k){ return !!c.medConditions[k]!==!!prevConditions[k]; });
+  if(changedConds.length) offerPlanUpdateAfterConditions(c, changedConds);
+}
+
+// Αν το τρέχον πλάνο έχει τρόφιμα που πλέον αποκλείονται: «Αντικατάσταση μόνο αυτών» (κρατά τις
+// υπόλοιπες χειροκίνητες αλλαγές) ή «Νέο πλάνο». Αλλιώς (π.χ. αφαιρέθηκε συνθήκη): «Νέο πλάνο».
+// Και τα δύο με Αναίρεση (↶ / Ctrl+Z).
+function offerPlanUpdateAfterConditions(c, changedConds){
+  if(!c || !c.weekPlan || !Object.keys(c.weekPlan).length) return;
+  var names=changedConds.map(function(k){
+    var p=(typeof getProtocol==='function')?getProtocol(k):null;
+    return (p?p.icon+' '+p.name:k)+(c.medConditions[k]?'':' (αφαιρέθηκε)');
+  });
+  var excl=buildEffectiveExclusionList(c), exclNorm=excl.map(function(x){return normalizeGreekText(x);});
+  var removed=[];
+  Object.keys(c.weekPlan).forEach(function(d){
+    (c.weekPlan[d]||[]).forEach(function(meal){
+      (meal.foods||[]).forEach(function(f){ if(foodIsExcludedByNameOrIngredient(f.n,exclNorm)) removed.push(f.n); });
+    });
+  });
+  var regen=function(){ if(typeof genPlanWithUndo==='function') genPlanWithUndo(); };
+  if(removed.length){
+    var trial=deepClone(c.weekPlan);
+    scrubExcludedFoodsFromWeekPlan(trial, excl);
+    var uniq=removed.filter(function(n,i){return removed.indexOf(n)===i;});
+    var msg='Άλλαξαν: '+names.join(', ')+'.\n\nΤο τρέχον πλάνο έχει '+removed.length+(removed.length===1?' τρόφιμο που δεν επιτρέπεται':' τρόφιμα που δεν επιτρέπονται')+' πλέον: '
+      +uniq.slice(0,6).join(', ')+(uniq.length>6?'…':'')+'.\n\n«Αντικατάσταση» αλλάζει μόνο αυτά και κρατά τις υπόλοιπες αλλαγές σου· «Νέο πλάνο» το φτιάχνει από την αρχή.';
+    showConfirmDialog(msg, function(){
+      var oldPlan=deepClone(c.weekPlan), newPlan=deepClone(trial);
+      var restore=function(p){ c.weekPlan=deepClone(p); save(); if(typeof renderWeekTable==='function') renderWeekTable(); };
+      if(window.undoRedoManager) window.undoRedoManager.execute({execute:function(){restore(newPlan);},undo:function(){restore(oldPlan);},redo:function(){restore(newPlan);}});
+      else restore(newPlan);
+      showSuccessToast('✅ Αντικαταστάθηκαν '+removed.length+' τρόφιμα — ↶ Αναίρεση για επαναφορά');
+    }, {title:'Ενημέρωση πλάνου', icon:'🔄', confirmLabel:'Αντικατάσταση', secondary:{label:'Νέο πλάνο', onClick:regen}});
+    return;
+  }
+  showConfirmDialog('Άλλαξαν: '+names.join(', ')+'.\n\nΝα ξαναφτιαχτεί το πλάνο με τα νέα πρωτόκολλα; (Αναίρεση με ↶)', regen,
+    {title:'Ενημέρωση πλάνου', icon:'🔄', confirmLabel:'Νέο πλάνο'});
 }
 
 // ✅ MODAL 6: ΔΙΑΤΡΟΦΗ & ΑΠΟΚΛΕΙΣΜΟΙ

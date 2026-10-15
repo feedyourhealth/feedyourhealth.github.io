@@ -27,7 +27,10 @@ ch = dict(base, id='ch', name='Υπέρταση', medConditions={'hypertension':
 cc2 = dict(base, id='cc2', name='Χοληστερόλη 2', medConditions={'cholesterol': True})
 cf = dict(base, id='cf', name='Low-FODMAP', medConditions={'fodmap': True})
 cfm = dict(base, id='cfm', name='FODMAP modal', medConditions={})
-S = {'rows': {U1: {'data': {'clients': [cd, cc, cr, ci, ck, cm, cs, ch, cc2, cf, cfm], 'customTemplates': []}, 'version': 1}}}
+cup = dict(base, id='cup', name='Ενημέρωση πλάνου', medConditions={}, weekPlan={str(d): [
+    {'name': 'Πρωινό', 'foods': [{'n': 'Μήλο', 'g': 150}, {'n': 'Τυρί φέτα', 'g': 30}]},
+    {'name': 'Μεσημεριανό', 'foods': [{'n': 'Φακές', 'g': 200}, {'n': 'Ρύζι άσπρο (βρ.)', 'g': 100}]}] for d in range(7)})
+S = {'rows': {U1: {'data': {'clients': [cd, cc, cr, ci, ck, cm, cs, ch, cc2, cf, cfm, cup], 'customTemplates': []}, 'version': 1}}}
 
 srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PORT), '--directory', str(REPO)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 try:
@@ -192,6 +195,24 @@ try:
         T('selectClient("cfm"); renderMain(); openMedicalConditionsModal();'); pg.wait_for_timeout(300)
         T('document.getElementById("chk-fodmap-modal").checked=true; saveMedicalConditions();'); pg.wait_for_timeout(400); close_dialogs()
         check(T('getC().medConditions.fodmap===true && getActiveProtocols(getC()).some(p=>p.icon==="🌿")'), 'modal checkbox saves fodmap and activates the protocol')
+
+        print('9. Saving conditions offers to update an existing plan')
+        T('selectClient("cup"); renderMain(); openMedicalConditionsModal();'); pg.wait_for_timeout(300)
+        T('saveMedicalConditions();'); pg.wait_for_timeout(400)
+        check(not dlg(), 'no change → no question')
+        T('openMedicalConditionsModal(); document.getElementById("chk-fodmap-modal").checked=true; saveMedicalConditions();'); pg.wait_for_timeout(400)
+        msg = pg.inner_text('#confirmMessage') if dlg() else ''
+        check(dlg() and pg.inner_text('#confirmTitle') == 'Ενημέρωση πλάνου' and '14 τρόφιμα' in msg and 'Μήλο' in msg and 'Φακές' in msg and 'Τυρί φέτα' not in msg,
+              f'ticking Low-FODMAP with a plan → «Αντικατάσταση / Νέο πλάνο», lists apple + lentils only ({msg[:120]!r})')
+        pg.click('#confirmBtn'); pg.wait_for_timeout(500)
+        r = T('getC().weekPlan[0].map(m=>m.foods.map(f=>f.n).join("+"))')
+        check('Μήλο' not in ' '.join(r) and 'Φακές' not in ' '.join(r) and 'Τυρί φέτα' in r[0] and 'Ρύζι άσπρο (βρ.)' in r[1], f'«Αντικατάσταση» swapped only the banned foods ({r})')
+        T('undo()'); pg.wait_for_timeout(400)
+        check(T('getC().weekPlan[0][0].foods[0].n') == 'Μήλο', '↶ Αναίρεση brings the old plan back')
+        T('openMedicalConditionsModal(); document.getElementById("chk-fodmap-modal").checked=false; saveMedicalConditions();'); pg.wait_for_timeout(400)
+        check(dlg() and 'Νέο πλάνο' in pg.inner_text('#confirmBtn') and 'αφαιρέθηκε' in pg.inner_text('#confirmMessage'), 'removing a condition → «Νέο πλάνο» question')
+        pg.click('#confirmBtn'); pg.wait_for_timeout(600); close_dialogs()
+        check(T('Object.keys(getC().weekPlan).length===7 && getC().weekPlan[0][0].foods[0].n!=="Μήλο"'), 'plan regenerated')
         br.close()
 finally:
     srv.terminate()
