@@ -16,6 +16,8 @@
 // στοιχείων, Ctrl+P) ΠΡΕΠΕΙ να περνά από εδώ πρώτα — αλλιώς η προειδοποίηση παρακάμπτεται σιωπηλά.
 function pregnancyBlockCheck(c, proceedFn){
   var pregFlags=(typeof getPregnancySafetyFlags==='function')?getPregnancySafetyFlags(c):[];
+  // 🔴 RED-S (αμηνόρροια/ακανόνιστος κύκλος) περνά από την ίδια πύλη — 2026-10-15.
+  if(typeof getRedsFlags==='function') pregFlags=pregFlags.concat(getRedsFlags(c));
   var blockFlags=pregFlags.filter(function(f){return f.level==='block';});
   if(blockFlags.length>0){
     var msg='🚫 '+blockFlags.map(function(f){return f.msg;}).join('\n\n')+'\n\nΘέλεις να συνεχίσεις ούτως ή άλλως (π.χ. υπό ιατρική παρακολούθηση);';

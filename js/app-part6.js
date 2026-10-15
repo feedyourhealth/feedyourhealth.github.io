@@ -318,6 +318,7 @@ function saveMedicalConditions(){
   c.medConditions.hydration=document.getElementById('chk-hydration-modal').checked;
 
   var menstrualValue=document.querySelector('input[name="menstrual"]:checked').value;
+  var prevMenstrual=c.menstrualCycle;
   c.menstrualCycle=menstrualValue;
 
   var medsEl=document.getElementById('medications-modal');
@@ -338,6 +339,13 @@ function saveMedicalConditions(){
   closeMedicalConditionsModal();
   showSuccessToast(macrosApplied?'✅ Ιατρικές συνθήκες αποθηκεύτηκαν! Τα μακροθρεπτικά ενημερώθηκαν βάσει πρωτοκόλλου.':'✅ Ιατρικές συνθήκες αποθηκεύτηκαν!');
   renderMain();
+  // 🔴 Μόλις σημειωθεί «Απών» κύκλος με στόχο απώλειας: πρόταση για Διατήρηση (ίδιο μοτίβο με
+  // reproOfferMaintenance). Αν αρνηθεί, θα ξαναρωτηθεί στη «Δημιουργία πλάνου» (getRedsFlags).
+  if(menstrualValue==='absent' && prevMenstrual!=='absent' && typeof getRedsFlags==='function'){
+    var rf=getRedsFlags(c).filter(function(f){return f.level==='block';})[0];
+    if(rf) showConfirmDialog('🔴 '+rf.msg+'\n\nΝα γίνει ο στόχος Διατήρηση;', rf.fix,
+      {title:'Κίνδυνος RED-S', icon:'🔴', confirmLabel:'Ναι, Διατήρηση'});
+  }
 }
 
 // ✅ MODAL 6: ΔΙΑΤΡΟΦΗ & ΑΠΟΚΛΕΙΣΜΟΙ

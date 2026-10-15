@@ -181,6 +181,22 @@ function homePregWeightRow(c,wg){
     +'</div>';
 }
 
+// 🔴 Πελάτισσες με σημάδι RED-S από τον κύκλο (getRedsFlags, js/app-part5.js): «Απών» πάντα,
+// «Ακανόνιστος» μόνο μαζί με στόχο απώλειας — 2026-10-15.
+function homeRedsAlerts(){
+  if(typeof getRedsFlags!=='function') return [];
+  return clients.filter(function(c){return !c.deleted && !c.archived && getRedsFlags(c).length;});
+}
+function homeRedsRow(c){
+  var gd=(typeof clientGoalDelta==='function')?clientGoalDelta(c):0;
+  var txt=(c.menstrualCycle==='absent'?'Απών κύκλος':'Ακανόνιστος κύκλος')+(gd<0?' · έλλειμμα '+gd+' kcal':'');
+  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
+    +'<div class="hm-avatar hm-avatar-red">'+initials(c.name)+'</div>'
+    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-trend-badge hm-trend-bad">'+txt+'</span>'
+    +'</div>';
+}
+
 // Πελάτες με δημοσιευμένο σύνδεσμο portal που δείχνει πλέον ξεπερασμένο πλάνο.
 function homeStaleLinks(){
   return clients.filter(function(c){return !c.deleted && !c.archived && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c);});
@@ -1089,6 +1105,7 @@ function renderHome(){
   var weekdayHeat=homeWeekdayHeatmap();
   var trendRows=homeWeightTrendAlerts().map(function(x){ return homeTrendRow(x.c,x.rate); });
   var pregWeightRows=homePregnancyWeightAlerts().map(function(x){ return homePregWeightRow(x.c,x.wg); });
+  var redsRows=homeRedsAlerts().map(homeRedsRow);
   var reminderRows=homeClientsNeedingFeedbackReminder().map(function(c){
     return homeRow(c,'δεν έχει στείλει feedback ακόμα','teal',
       '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendFeedbackReminder(\''+c.id+'\')">🔔 Υπενθύμιση</button>'
@@ -1171,7 +1188,8 @@ function renderHome(){
   // ζουν πλήρη στο tab "📈 Πρόοδος". Η ζώνη «Δράση τώρα» κρατά τα πιο σπάνια/κρίσιμα (τάση βάρους, κύηση).
   var zActNow=[
     homeCard('📈 Τάση βάρους', trendRows, 'ακόμα', 'danger'),
-    homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger')
+    homeCard('🤰 Αύξηση βάρους κύησης', pregWeightRows, 'ακόμα', 'danger'),
+    homeCard('🔴 Κίνδυνος RED-S (κύκλος)', redsRows, 'ακόμα', 'danger')
   ].filter(Boolean);
   // [5] Οι κάρτες «Παρακολούθηση» δείχνουν 3 γραμμές + «+N ακόμα» (αντί 8) — η ζώνη έχει τα πιο ήπια
   // σήματα, δεν χρειάζεται να ανοίγει ολόκληρη κάθε Δευτέρα.

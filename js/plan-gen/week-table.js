@@ -406,7 +406,11 @@ function renderWeekTable(){
   }
 
   // ── Weekly fiber summary banner ────────────────────────────────────────────
-  var wkFiTot=0,wkFiTgt=getFiberTarget(c.age,c.sex)*7;
+  // Με Διαβήτη/Χοληστερόλη ο στόχος γίνεται max(DRI, στόχος πρωτοκόλλου 30g) — 2026-10-15.
+  var protoFi=(typeof getProtocolFiberTarget==='function')?getProtocolFiberTarget(c):null;
+  var fiDayTgt=Math.max(getFiberTarget(c.age,c.sex), protoFi?protoFi.g:0);
+  var fiByProto=!!(protoFi && protoFi.g>=getFiberTarget(c.age,c.sex));
+  var wkFiTot=0,wkFiTgt=fiDayTgt*7;
   var wkFiByDay=[];
   for(var wfd=0;wfd<7;wfd++){
     var dFi=0;
@@ -418,7 +422,7 @@ function renderWeekTable(){
   var wkFiTxtColor=wkFiPct>=90?'var(--good)':wkFiPct>=65?'var(--mac-k)':'var(--bad-fg)';
   var dotHtml='';
   DAYS.forEach(function(dn,di){
-    var dp=wkFiByDay[di],dPct=getFiberTarget(c.age,c.sex)?Math.round(dp/getFiberTarget(c.age,c.sex)*100):100;
+    var dp=wkFiByDay[di],dPct=fiDayTgt?Math.round(dp/fiDayTgt*100):100;
     var dc=dPct>=90?'#4CAF50':dPct>=65?'#FF9800':'#F44336';
     dotHtml+='<span title="'+dn+': '+dp.toFixed(1)+'g ('+dPct+'%)" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:default">'
       +'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+dc+'"></span>'
@@ -429,13 +433,26 @@ function renderWeekTable(){
     +'<span style="font-size:15px" title="Φυτικές Ίνες (Dietary Fiber)">🌾</span>'
     +'<span style="font-size:11px;font-weight:700;color:var(--text-sub)">Φυτικές Ίνες Εβδομάδας</span>'
     +'<span style="font-size:17px;font-weight:800;color:'+wkFiTxtColor+'">'+Math.round(wkFiTot)+'g</span>'
-    +'<span style="font-size:10px;color:var(--text-muted)">/ '+wkFiTgt+'g στόχος &nbsp;·&nbsp; <b style="color:'+wkFiTxtColor+'">'+wkFiPct+'%</b></span>'
+    +'<span style="font-size:10px;color:var(--text-muted)">/ '+wkFiTgt+'g στόχος'+(fiByProto?' ('+fiDayTgt+'g/ημ. · '+esc(protoFi.names.join(', '))+')':'')+' &nbsp;·&nbsp; <b style="color:'+wkFiTxtColor+'">'+wkFiPct+'%</b></span>'
     +'<div style="flex:1;min-width:80px;height:6px;background:var(--track-bg);border-radius:3px;overflow:hidden">'
       +'<div style="width:'+Math.min(100,wkFiPct)+'%;height:100%;background:'+wkFiColor+';border-radius:3px;transition:width .3s"></div>'
     +'</div>'
     +'<div style="display:flex;gap:5px;align-items:center">'+dotHtml+'</div>'
-    +(wkFiPct<65?'<span style="font-size:10px;color:var(--bad-fg);font-weight:600">⚠ Χαμηλή πρόσληψη ινών — στόχος '+getFiberTarget(c.age,c.sex)+'g/ημ. (DRI AI)</span>':'')
+    +(fiByProto&&wkFiPct<90
+      ?'<span style="font-size:10px;color:var(--bad-fg);font-weight:600;flex-basis:100%">⚠ Κάτω από τον στόχο πρωτοκόλλου ('+fiDayTgt+'g/ημ., μ.ό. τώρα '+Math.round(wkFiTot/7)+'g) — πρόσθεσε βρώμη, όσπρια, λαχανικά, φρούτα με φλούδα ή ψωμί/ζυμαρικά ολικής.</span>'
+      :(wkFiPct<65?'<span style="font-size:10px;color:var(--bad-fg);font-weight:600">⚠ Χαμηλή πρόσληψη ινών — στόχος '+fiDayTgt+'g/ημ. (DRI AI)</span>':''))
   +'</div>';
+  // 🔄 Αντικαταστάσεις πρωτοκόλλου (Διαβήτης/Χοληστερόλη) που υπάρχουν τώρα στο πλάνο — 2026-10-15.
+  var protoSwaps=(typeof findProtocolSwapsInPlan==='function')?findProtocolSwapsInPlan(c):[];
+  var swapBannerHtml='';
+  if(protoSwaps.length){
+    var swN=protoSwaps.reduce(function(a,s){return a+s.count;},0);
+    swapBannerHtml='<div style="background:#e3f2fd;border:1px solid #90caf9;border-radius:8px;padding:7px 12px;font-size:11px;color:#0d47a1;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      +'<span>🔄 <b>Αντικαταστάσεις πρωτοκόλλου:</b> '+swN+(swN===1?' τρόφιμο':' τρόφιμα')+' — '
+      +protoSwaps.map(function(s){return esc(s.from)+' → '+esc(s.to);}).join(' · ')+'</span>'
+      +'<button type="button" onclick="applyProtocolSwaps()" style="margin-left:auto;width:auto;background:#1976d2;color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">Εφάρμοσε αντικαταστάσεις</button>'
+      +'</div>';
+  }
   // ✅ VALIDATE FOOD DISTRIBUTION — μαζί με τα άλλα validation widgets (Μεσογειακή βαθμολογία,
   // ίνες) πριν το εβδομαδιαίο grid, όχι μετά από αυτό — οι παραβιάσεις (π.χ. «πρέπει ακριβώς 2
   // ημέρες κόκκινο κρέας») είναι ακριβώς αυτό που χρειάζεται να δει η δ/γείος ΕΝΩ χτίζει το πλάνο,
@@ -444,7 +461,7 @@ function renderWeekTable(){
   var validationHtml = displayFoodDistributionResults(foodValidation);
 
   // Instead of displaying micronutrients inline, add a button to open the modal
-  con.innerHTML=scoreHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
+  con.innerHTML=scoreHtml+swapBannerHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
 
   // Enable drag & drop for meals
   enableMealDragDrop();

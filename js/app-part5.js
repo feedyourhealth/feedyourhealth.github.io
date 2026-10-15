@@ -416,7 +416,10 @@ var MEDICAL_PROTOCOLS = {
       // ✅ 2026-08-01: added 'Μέλι' — concentrated sugar in the same vein as the 4 items already
       // here, but was missing, so raw honey appeared repeatedly (9x/week confirmed live) in
       // diabetic clients' plans unfiltered.
-      avoidFoods: ['Σοκολάτα', 'Γλυκίσματα', 'Αναψυκτικά', 'Γλυκά δημητριακά', 'Μέλι'],
+      // ✅ 2026-10-15: 'Μέλι' → 'Μέλι άβραστο' + 'Σάλτσα σόγιας-μελιού'. Το σκέτο 'Μέλι' ταίριαζε ως
+      // substring και στις 'Μελιτζάνες' (και σε κάθε συνταγή με μελιτζάνα) — έβγαζε μελιτζάνα από
+      // το πλάνο κάθε διαβητικού.
+      avoidFoods: ['Σοκολάτα', 'Γλυκίσματα', 'Αναψυκτικά', 'Γλυκά δημητριακά', 'Μέλι άβραστο', 'Σάλτσα σόγιας-μελιού'],
       reduceCarbs: true,
       carbPercentage: 40,
       increaseProtein: true,
@@ -429,6 +432,14 @@ var MEDICAL_PROTOCOLS = {
       'Ψωμί λευκό': 'Ψωμί ολικής',
       'Ζυμαρικά λευκά': 'Ζυμαρικά ολικής'
     },
+    // 🔄 Ακριβή ονόματα FOODS για το κουμπί «Εφάρμοσε αντικαταστάσεις» πάνω από το πλάνο (βλ.
+    // applyProtocolSwaps) — το foodReplacements πιο πάνω είναι γενικό κείμενο μόνο για την κάρτα.
+    planSwaps: [
+      {from:'Ρύζι άσπρο (βρ.)', to:'Ρύζι καστανό (βρ.)'},
+      {from:'Ψωμί λευκό', to:'Ψωμί ολικής άλεσης'},
+      {from:'Μακαρόνια (βρ.)', to:'Σπαγγέτι ολικής (βρ.)'},
+      {from:'Τορτίλια (large)', to:'Τορτίλια ολικής άλεσης (Alphamega)'}
+    ],
     supplements: ['Μαγνήσιο', 'Χρώμιο', 'Ψευδάργυρος'],
     notes: 'Σταθερή ζάχαρη αίματος. Αποφύγετε γρήγορες αλλαγές γευμάτων.',
     sources: [
@@ -480,6 +491,19 @@ var MEDICAL_PROTOCOLS = {
       'Λευκά δημητριακά': 'Δημητριακά ολικής αλέσεως (βρώμη/κριθάρι)',
       'Σνακ/Πατατάκια': 'Ανάλατοι ξηροί καρποί'
     },
+    // ⚠️ Τα avoidFoods πιο πάνω είναι κατηγορίες-κείμενο και δεν ταιριάζουν με κανένα όνομα FOODS
+    // (ελέγχθηκε 2026-10-15) — δεν αφαιρούν τίποτα από το πλάνο. Το 'Βούτυρο' δεν μπαίνει εκεί γιατί
+    // ως substring θα έβγαζε και το φυστικοβούτυρο. Η πρακτική αλλαγή γίνεται με αυτές τις αντικαταστάσεις.
+    // kcal:true = κρατά τις θερμίδες (βούτυρο 717 → ελαιόλαδο 884 kcal/100g), αλλιώς ίδια γραμμάρια.
+    planSwaps: [
+      {from:'Βούτυρο', to:'Ελαιόλαδο', kcal:true},
+      {from:'Γάλα πλήρες', to:'Γάλα φρέσκο 1.5% Λιπαρά'},
+      {from:'Γιαούρτι πλήρες 5%', to:'Γιαούρτι 2%'},
+      {from:'Βοδινός κιμάς (μαγ.)', to:'Βοδινός κιμάς άπαχος (μαγ.)'},
+      {from:'Μοσχάρι κιμάς (μαγ.)', to:'Βοδινός κιμάς άπαχος (μαγ.)'},
+      {from:'Ψωμί λευκό', to:'Ψωμί ολικής άλεσης'},
+      {from:'Ρύζι άσπρο (βρ.)', to:'Ρύζι καστανό (βρ.)'}
+    ],
     supplements: ['Ω-3 (ιχθυέλαιο)', 'Διαλυτές ίνες / Ψύλλιο', 'Φυτικές στερόλες/στανόλες'],
     notes: 'Κορεσμένα λιπαρά <7% θερμίδων, μηδενικά trans. Αντικαταστήστε κορεσμένα με ακόρεστα (ελαιόλαδο, ξηροί καρποί, λιπαρά ψάρια). 25–30g ίνες/ημέρα με έμφαση σε διαλυτές (βρώμη, ψύλλιο, όσπρια) + ~2g φυτικές στερόλες/ημέρα.',
     sources: [
@@ -741,6 +765,25 @@ function getPregnancySafetyFlags(client){
   return flags;
 }
 
+// 🔴 RED-S από τον μητρικό κύκλο (2026-10-15). Το c.menstrualCycle αποθηκευόταν αλλά δεν έκανε τίποτα.
+// Αμηνόρροια = κύριο κλινικό σημάδι χαμηλής ενεργειακής διαθεσιμότητας (IOC Consensus RED-S 2023):
+// με στόχο απώλειας → 'block' (ίδιος μηχανισμός με την εγκυμοσύνη, pregnancyBlockCheck)· χωρίς έλλειμμα
+// → 'warn'. Ακανόνιστος κύκλος → 'warn' μόνο με έλλειμμα. Δεν αφορά άνδρες ή εγκυμοσύνη/θηλασμό.
+function getRedsFlags(client){
+  if(!client || client.sex==='M' || client.pregnant || client.lactating) return [];
+  var mcy=client.menstrualCycle;
+  if(mcy!=='absent' && mcy!=='irregular') return [];
+  var gd=(typeof clientGoalDelta==='function')?clientGoalDelta(client):0;
+  if(mcy==='absent'){
+    if(gd<0) return [{level:'block', reds:true,
+      msg:'Απουσία περιόδου (αμηνόρροια) + στόχος απώλειας βάρους ('+gd+' kcal): η αμηνόρροια είναι κύριο κλινικό σημάδι χαμηλής ενεργειακής διαθεσιμότητας / RED-S (IOC 2023) — δεν συστήνεται θερμιδικό έλλειμμα. Προτείνεται παραπομπή σε γυναικολόγο/ενδοκρινολόγο.',
+      fix:function(){ reproSetMaintenanceGoal(client); }, fixLabel:'Στόχος → Διατήρηση & συνέχεια'}];
+    return [{level:'warn', reds:true, msg:'Απουσία περιόδου: πιθανό σημάδι RED-S — βεβαιώσου ότι υπάρχει ιατρική αξιολόγηση και ότι η ενέργεια καλύπτει πλήρως την προπόνηση.'}];
+  }
+  if(gd<0) return [{level:'warn', reds:true, msg:'Ακανόνιστος κύκλος + στόχος απώλειας ('+gd+' kcal): παρακολούθησε για RED-S — ήπιο έλλειμμα μόνο, και επανεκτίμηση αν ο κύκλος χαθεί.'}];
+  return [];
+}
+
 // Get protocol for a specific condition
 function getProtocol(condition) {
   return MEDICAL_PROTOCOLS[condition] || null;
@@ -830,6 +873,68 @@ function getProtocolCarbCapPct(client) {
     if (r.carbPercentage != null) candidates.push(r.carbPercentage);
   });
   return candidates.length ? Math.min.apply(null, candidates) : null;
+}
+
+// 🌾 Στόχος ινών/ημ. από ενεργά πρωτόκολλα (Διαβήτης, Χοληστερόλη: 30g) — το μεγαλύτερο κερδίζει.
+// Επιστρέφει {g, names} ή null. Το banner ινών του εβδομαδιαίου πλάνου παίρνει max(DRI, αυτό).
+function getProtocolFiberTarget(client) {
+  var best = 0, names = [];
+  getActiveProtocols(client).forEach(function(protocol) {
+    var m = (protocol.restrictions || {}).minFiberGrams;
+    if (m) { if (m > best) best = m; names.push(protocol.icon + ' ' + protocol.name.replace(/\s*\(.*$/, '')); }
+  });
+  return best ? {g: best, names: names} : null;
+}
+
+// 🔄 Αντικαταστάσεις πρωτοκόλλου που υπάρχουν ΤΩΡΑ στο πλάνο: [{from,to,kcal,count,protocols}].
+// Αν δύο πρωτόκολλα έχουν την ίδια αντικατάσταση (π.χ. λευκό ψωμί), μετριέται μία φορά.
+function findProtocolSwapsInPlan(client) {
+  if (!client || !client.weekPlan) return [];
+  var byFrom = {}, order = [];
+  getActiveProtocols(client).forEach(function(protocol) {
+    (protocol.planSwaps || []).forEach(function(s) {
+      if (typeof FOODS !== 'undefined' && !FOODS[s.to]) return;
+      if (!byFrom[s.from]) { byFrom[s.from] = {from: s.from, to: s.to, kcal: !!s.kcal, count: 0, protocols: []}; order.push(s.from); }
+      if (byFrom[s.from].protocols.indexOf(protocol.icon) === -1) byFrom[s.from].protocols.push(protocol.icon);
+    });
+  });
+  if (!order.length) return [];
+  Object.keys(client.weekPlan).forEach(function(d) {
+    (client.weekPlan[d] || []).forEach(function(meal) {
+      (meal.foods || []).forEach(function(f) { if (byFrom[f.n]) byFrom[f.n].count++; });
+    });
+  });
+  return order.map(function(k) { return byFrom[k]; }).filter(function(s) { return s.count > 0; });
+}
+
+// Εφαρμόζει όλες τις αντικαταστάσεις στο πλάνο (με επιβεβαίωση + Αναίρεση/Ctrl+Z).
+function applyProtocolSwaps() {
+  var c = getC(); if (!c) return;
+  var swaps = findProtocolSwapsInPlan(c);
+  if (!swaps.length) { dietoToast('✓ Δεν υπάρχουν τρόφιμα για αντικατάσταση'); return; }
+  var lines = swaps.map(function(s) {
+    return '• ' + s.from + ' → ' + s.to + ' (×' + s.count + ')' + (s.kcal ? ' · ίδιες θερμίδες' : '');
+  });
+  var msg = lines.join('\n') + '\n\nΟι ποσότητες μένουν ίδιες, εκτός όπου γράφει «ίδιες θερμίδες».';
+  showConfirmDialog(msg, function() {
+    var oldPlan = deepClone(c.weekPlan), n = 0;
+    var map = {}; swaps.forEach(function(s) { map[s.from] = s; });
+    Object.keys(c.weekPlan).forEach(function(d) {
+      (c.weekPlan[d] || []).forEach(function(meal) {
+        (meal.foods || []).forEach(function(f) {
+          var s = map[f.n]; if (!s) return;
+          if (s.kcal && FOODS[f.n] && FOODS[s.to] && FOODS[s.to].k > 0) f.g = Math.max(1, Math.round(f.g * FOODS[f.n].k / FOODS[s.to].k));
+          f.n = s.to; n++;
+        });
+      });
+    });
+    var newPlan = deepClone(c.weekPlan);
+    var restore = function(p) { c.weekPlan = deepClone(p); save(); renderWeekTable(); };
+    // Μπαίνει στο ιστορικό αναίρεσης ώστε να δουλεύει το «↶ Αναίρεση» / Ctrl+Z.
+    if (window.undoRedoManager) window.undoRedoManager.execute({execute: function() { restore(newPlan); }, undo: function() { restore(oldPlan); }, redo: function() { restore(newPlan); }});
+    else restore(newPlan);
+    dietoToast('✓ ' + n + (n === 1 ? ' τρόφιμο αντικαταστάθηκε' : ' τρόφιμα αντικαταστάθηκαν') + ' — ↶ Αναίρεση για επαναφορά');
+  }, {icon: '🔄', title: 'Αντικαταστάσεις πρωτοκόλλου', confirmLabel: 'Εφαρμογή'});
 }
 
 // Show medical protocol details with official sources
