@@ -1,5 +1,5 @@
 """Clinical protocols: diabetes avoid-list (no eggplant), protocol fiber target, protocol swaps, RED-S flags/gate/home card,
-hypertension/cholesterol approved ban + «με μέτρο» lists (exact «=Βούτυρο»), sodium / sat-fat data + banners."""
+hypertension/cholesterol approved ban + «με μέτρο» lists (exact «=Βούτυρο»), sodium / sat-fat data + banners, IBS Low-FODMAP."""
 import json, subprocess, sys, time, urllib.request, io
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -25,7 +25,9 @@ cm = dict(base, id='cm', name='Άνδρας', sex='M', goal='-400', menstrualCyc
 cs = dict(base, id='cs', name='Νέα σημείωση', goal='-300')
 ch = dict(base, id='ch', name='Υπέρταση', medConditions={'hypertension': True})
 cc2 = dict(base, id='cc2', name='Χοληστερόλη 2', medConditions={'cholesterol': True})
-S = {'rows': {U1: {'data': {'clients': [cd, cc, cr, ci, ck, cm, cs, ch, cc2], 'customTemplates': []}, 'version': 1}}}
+cf = dict(base, id='cf', name='Low-FODMAP', medConditions={'fodmap': True})
+cfm = dict(base, id='cfm', name='FODMAP modal', medConditions={})
+S = {'rows': {U1: {'data': {'clients': [cd, cc, cr, ci, ck, cm, cs, ch, cc2, cf, cfm], 'customTemplates': []}, 'version': 1}}}
 
 srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PORT), '--directory', str(REPO)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 try:
@@ -162,6 +164,34 @@ try:
         T('selectClient("cd"); renderMain(); swTab && swTab("plan")'); pg.wait_for_timeout(300); T('renderWeekTable()'); pg.wait_for_timeout(200)
         txt = T('document.getElementById("week-con").innerText')
         check('Νάτριο' not in txt and 'Κορεσμένα' not in txt, 'diabetes-only client: no sodium/sat-fat banner')
+
+        print('8. IBS Low-FODMAP (approved 2026-10-15)')
+        r = T("""(()=>{var c=clients.find(k=>k.id==="cf"), ex=getProtocolAvoidFoods(c).map(normalizeGreekText), f=n=>foodIsExcludedByNameOrIngredient(n,ex);
+          var banned=["Μήλο","Μήλο αποξηραμένο","Λανίτης Χυμός Μήλο","Αχλάδι","Καρπούζι","Φακές","Ρεβίθια","Φασόλια","Γίγαντες (βρ.)","Hummus","Κρεμμύδι","Σκόρδο","Μανιτάρια","Κουνουπίδι","Γάλα πλήρες","Γιαούρτι 2%","Γάλα σόγιας (χωρίς ζάχαρη)","Μέλι άβραστο","Σάλτσα Ντομάτας (FYH)","Κάσιους","Ψωμί σίκαλης","Κους κους (βρ.)"];
+          var allowed=["Φασκόμηλο","Γαρίδες γίγαντες (βρ.)","Φασολάκια","Ψωμί προζύμης","Τυρί φέτα","Μελιτζάνες","Μπανάνα","Πορτοκάλι","Φράουλες","Ρύζι άσπρο (βρ.)","Tofu (φυσικό)","Edamame (βρ.)","Γαλατάκι σοκολάτα delact χωρίς ζάχαρη","Γάλα αμυγδάλου","Zita Super Protein Μούρα","Μούρα","Σπανάκι","Καρότα","Γάλα βρώμης","Ανθότυρο","Κοτόπουλο στήθος (ψητό)","Αβοκάντο"];
+          var lim=[]; getProtocol("fodmap").restrictions.portionLimits.forEach(l=>l.names.forEach(n=>{ if(!FOODS[n]) lim.push(n); }));
+          return {missed:banned.filter(n=>!f(n)), wrong:allowed.filter(f), badLimitNames:lim, all:Object.keys(FOODS).filter(f)};})()""")
+        print('   excluded by Low-FODMAP:', ', '.join(r['all']))
+        check(r['missed'] == [], f"high-FODMAP foods banned ({r['missed']})")
+        check(r['wrong'] == [], f"low-FODMAP foods NOT banned — no name collisions ({r['wrong']})")
+        check(r['badLimitNames'] == [], f"every portion-limit name exists in FOODS ({r['badLimitNames']})")
+        T('selectClient("cf"); renderMain();'); pg.wait_for_timeout(300)
+        T('genPlanWithUndo()'); pg.wait_for_timeout(500); close_dialogs()
+        r = T("""(()=>{var c=getC(), ex=getProtocolAvoidFoods(c).map(normalizeGreekText), bad=[], n=0; Object.keys(c.weekPlan).forEach(d=>c.weekPlan[d].forEach(m=>m.foods.forEach(f=>{n++; if(foodIsExcludedByNameOrIngredient(f.n,ex))bad.push(f.n);}))); return {n:n,bad:bad};})()""")
+        check(r['n'] > 0 and r['bad'] == [], f"Low-FODMAP generated plan has no banned food ({r})")
+        T("""(()=>{var c=getC(); c.weekPlan={0:[{name:"Πρωινό",foods:[{n:"Μπανάνα",g:150},{n:"Αβοκάντο",g:20}]}],1:[{name:"Πρωινό",foods:[{n:"Μπανάνα",g:120},{n:"Ψωμί ολικής άλεσης",g:60}]}]}; })()""")
+        r = T('getProtocolPortionHits(getC()).map(p=>p.hits.map(h=>h.food+":"+h.maxG+">"+h.max+"x"+h.count).join(","))')
+        check(r == ['Μπανάνα:150>100x2,Ψωμί ολικής άλεσης:60>30x1'], f"portion limits flagged, avocado 20g ok ({r})")
+        T('swTab && swTab("plan")'); pg.wait_for_timeout(300); T('renderWeekTable()'); pg.wait_for_timeout(200)
+        txt = T('document.getElementById("week-con").innerText')
+        check('μερίδες πάνω από το όριο' in txt and 'Μπανάνα έως 150g (όριο 100g' in txt, 'portion banner shown above the plan')
+        T('showMedicalProtocol("fodmap")'); pg.wait_for_timeout(200)
+        card = T('document.querySelector("[data-medical-modal]").innerText')
+        check('Επιτρέπονται έως' in card and 'Μπανάνα ≤100g' in card and 'Φάση αποκλεισμού' in card and '=Μήλο' not in card, 'protocol card shows portion limits + elimination-phase note')
+        T('document.querySelector("[data-medical-modal-overlay]").click()')
+        T('selectClient("cfm"); renderMain(); openMedicalConditionsModal();'); pg.wait_for_timeout(300)
+        T('document.getElementById("chk-fodmap-modal").checked=true; saveMedicalConditions();'); pg.wait_for_timeout(400); close_dialogs()
+        check(T('getC().medConditions.fodmap===true && getActiveProtocols(getC()).some(p=>p.icon==="🌿")'), 'modal checkbox saves fodmap and activates the protocol')
         br.close()
 finally:
     srv.terminate()

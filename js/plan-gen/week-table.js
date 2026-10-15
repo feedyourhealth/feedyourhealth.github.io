@@ -520,7 +520,15 @@ function renderWeekTable(){
       +pw.hits.map(function(h){return esc(h.term)+' <b>×'+h.count+'</b>';}).join(' · ')
       +' <span style="opacity:.8">αυτή την εβδομάδα</span></div>';
   }).join('');
-  con.innerHTML=scoreHtml+swapBannerHtml+nutBannerHtml+protoWarnHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
+  // 🌿 Μερίδες πάνω από το όριο πρωτοκόλλου (Low-FODMAP) — 2026-10-15.
+  var protoPortion=(typeof getProtocolPortionHits==='function')?getProtocolPortionHits(c):[];
+  var protoPortionHtml=protoPortion.map(function(pp){
+    return '<div style="background:#fff8e1;border:1px solid #ffd54f;border-radius:8px;padding:7px 12px;font-size:11px;color:#8a6100;margin-bottom:8px">'
+      +pp.icon+' <b>'+esc(pp.name)+' — μερίδες πάνω από το όριο:</b> '
+      +pp.hits.map(function(h){return esc(h.food)+' έως '+h.maxG+'g (όριο '+h.max+'g'+(h.note?', '+esc(h.note):'')+') <b>×'+h.count+'</b>';}).join(' · ')
+      +'</div>';
+  }).join('');
+  con.innerHTML=scoreHtml+swapBannerHtml+nutBannerHtml+protoWarnHtml+protoPortionHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
 
   // Enable drag & drop for meals
   enableMealDragDrop();

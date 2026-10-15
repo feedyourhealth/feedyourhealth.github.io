@@ -245,6 +245,11 @@ function openMedicalConditionsModal(){
     +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ibs\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
+    +'<input type="checkbox" id="chk-fodmap-modal" '+(c.medConditions?.fodmap?'checked':'')+' style="width:18px;height:18px">'
+    +'<span style="font-weight:600">🌿 IBS — Low-FODMAP (φάση αποκλεισμού)</span>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'fodmap\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'</label>'
+    +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-lactose-modal" '+(c.medConditions?.lactose?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🥛 Δυσανεξία Λακτόζης</span>'
     +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
@@ -314,6 +319,7 @@ function saveMedicalConditions(){
   c.medConditions.celiac=document.getElementById('chk-celiac-modal').checked;
   c.medConditions.ibs=document.getElementById('chk-ibs-modal').checked;
   c.medConditions.lactose=document.getElementById('chk-lactose-modal').checked;
+  var fodmapEl=document.getElementById('chk-fodmap-modal'); if(fodmapEl) c.medConditions.fodmap=fodmapEl.checked; // 🌿 2026-10-15
   c.medConditions.ironDeficiency=document.getElementById('chk-ironDeficiency-modal').checked;
   c.medConditions.hydration=document.getElementById('chk-hydration-modal').checked;
 

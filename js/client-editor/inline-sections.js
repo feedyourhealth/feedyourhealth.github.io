@@ -98,7 +98,7 @@ function _inlDietSection(c){
 }
 
 // ── Ιατρικές Συνθήκες ──────────────────────────────────────────────────────
-var _INL_MED_CHK=[['diabetes','🍬 Διαβήτης'],['hypertension','🩸 Υψηλή Πίεση'],['cholesterol','🩸 Υψηλή Χοληστερόλη'],['celiac','🌾 Κοιλιοκάκη'],['ibs','🔄 IBS'],['lactose','🥛 Δυσανεξία Λακτόζης'],['ironDeficiency','🔋 Σιδηροπενία/Αναιμία'],['hydration','💧 Ενυδάτωση & Ηλεκτρολύτες']];
+var _INL_MED_CHK=[['diabetes','🍬 Διαβήτης'],['hypertension','🩸 Υψηλή Πίεση'],['cholesterol','🩸 Υψηλή Χοληστερόλη'],['celiac','🌾 Κοιλιοκάκη'],['ibs','🔄 IBS'],['fodmap','🌿 IBS — Low-FODMAP'],['lactose','🥛 Δυσανεξία Λακτόζης'],['ironDeficiency','🔋 Σιδηροπενία/Αναιμία'],['hydration','💧 Ενυδάτωση & Ηλεκτρολύτες']];
 function _inlMedicalSection(c){
   var mc=c.medConditions||{};
   var active=_INL_MED_CHK.filter(function(x){return mc[x[0]];}).map(function(x){return x[1].replace(/^\S+\s/,'');});

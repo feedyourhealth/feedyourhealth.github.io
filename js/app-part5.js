@@ -574,6 +574,62 @@ var MEDICAL_PROTOCOLS = {
     ]
   },
 
+  // 🌿 IBS — Low-FODMAP, φάση αποκλεισμού (2026-10-15). Λίστες εγκεκριμένες από τον διαιτολόγο (φόρμα,
+  // προεπιλογές Monash/ACG, όσπρια = απαγόρευση). Ξεχωριστό από το 'ibs': τσεκάρεται μόνο για τις 2–6
+  // εβδομάδες αποκλεισμού, μετά επανεισαγωγή. '=' = ακριβές όνομα (exclTermHit): το 'Μήλο' σκέτο θα
+  // έπιανε το Φασκόμηλο, το 'Γίγαντες' τις Γαρίδες γίγαντες. portionLimits = επιτρέπονται ως X g ανά
+  // μερίδα (Monash) — banner πάνω από το πλάνο όταν μια μερίδα το ξεπερνά (getProtocolPortionHits).
+  fodmap: {
+    name: 'IBS — Low-FODMAP (φάση αποκλεισμού)',
+    icon: '🌿',
+    restrictions: {
+      avoidFoods: [
+        // Λαχανικά (φρουκτάνες / μαννιτόλη / GOS)
+        'Κρεμμύδι', 'Σκόρδο', 'Κρεμμυδάκι (φρέσκο)', 'Αγκινάρες', 'Μανιτάρια', 'Κουνουπίδι', 'Σπαράγγια', 'Μπιζέλια', 'Αρακάς', 'Σάλσα κόκκινη',
+        // Φρούτα (φρουκτόζη / σορβιτόλη / φρουκτάνες)
+        '=Μήλο', 'Μήλο αποξηραμένο', 'Λανίτης Χυμός Μήλο', 'Alambra Χυμός Παντζάρι, Μήλο, Πορτοκάλι & Καρότο', 'Αχλάδι', 'Ροδάκινο',
+        'Νεκταρίνι', 'Βερίκοκα', 'Δαμάσκηνα', 'Κεράσια', 'Βύσσινο', 'Καρπούζι', 'Σύκα', 'Χουρμάδες', 'Σταφίδες', 'Μάνγκο αποξηραμένο', 'Ανανάς αποξηραμένος',
+        // Όσπρια (GOS)
+        'Φασόλια', 'Κανελλίνι', 'Ρεβίθια', 'Φακές', 'Μαυρομάτικα', 'Φάβα', '=Γίγαντες (βρ.)', 'Κουκιά', 'Λούπινα', 'Hummus', 'Χούμους',
+        // Δημητριακά / ξηροί καρποί / γλυκά / σάλτσες
+        'Ψωμί σίκαλης', 'Κρίθινο παξιμάδι', 'Κους κους', 'Μούσλι', 'Κάσιους', 'Φιστίκια Αιγίνης', 'Μέλι άβραστο', 'Σάλτσα σόγιας-μελιού',
+        'Παστέλι', 'Μαρμελάδα χωρίς ζάχαρη', 'Κύβο λαχανικών', 'Πέστο', 'Τζατζίκι', 'Σάλτσα ντομάτας', 'Σάλτσα κάρι', 'Chicken Katsu Curry',
+        // Λακτόζη
+        'Γάλα πλήρες', 'Γάλα φρέσκο 1.5% Λιπαρά', 'Γιαούρτι 2%', 'Γιαούρτι πλήρες 5%', 'Γάλα σόγιας'
+      ],
+      portionLimits: [
+        {max: 100, names: ['Μπανάνα'], note: 'σφιχτή, όχι πολύ ώριμη'},
+        {max: 30, names: ['Αβοκάντο']}, {max: 12, names: ['Αμύγδαλα']}, {max: 15, names: ['Φουντούκια', 'Αμυγδαλοβούτυρο']},
+        {max: 65, names: ['Κολοκυθάκια']}, {max: 75, names: ['Γλυκοπατάτα', 'Μπρόκολο', 'Λάχανο']},
+        {max: 40, names: ['Καλαμπόκι (κονσέρβα)', 'Καλαμπόκι (ολόκληρο στον ατμό 200g)', 'Καλαμπόκι (ολόκληρο στον ατμό 400g - Halvatzis)']},
+        {max: 20, names: ['Παντζάρι (βραστό)', 'Παντζάρι (ωμό)']},
+        {max: 30, names: ['Ψωμί λευκό', 'Ψωμί ολικής άλεσης', 'Ψωμί ολικής άλεσης (φρυγανισμένο)'], note: '1 φέτα'},
+        {max: 75, names: ['Μακαρόνια (βρ.)', 'Σπαγγέτι ολικής (βρ.)', 'Κριθαράκι (βρ.)']}, {max: 45, names: ['Πλιγούρι (βρ.)']},
+        {max: 40, names: ['Πίτα αραβική', 'Κυπριακή πίτα', 'Τορτίλια (large)', 'Τορτίλια ολικής άλεσης (Alphamega)']},
+        {max: 20, names: ['Wasa Φρυγανιές Σίκαλης', 'Dark Rye Crispbread (Ryvita)']},
+        {max: 40, names: ['Ρόδι']}, {max: 80, names: ['Γκρέιπφρούτ']}, {max: 13, names: ['Cranberries αποξηραμένα']},
+        {max: 15, names: ['Μπανάνα αποξηραμένη']}, {max: 100, names: ['Γάλα βρώμης', 'Γάλα βρώμης (χωρίς ζάχαρη)']},
+        {max: 125, names: ['Πορτοκαλάδα φρέσκια']},
+        {max: 40, names: ['Ricotta', 'Cottage cheese', 'Ανθότυρο', 'Μυζήθρα', 'Κρέμα γάλακτος', 'Στραγγιστό γιαούρτι 0%']}
+      ],
+      smallFrequentMeals: true
+    },
+    foodReplacements: {
+      'Κρεμμύδι / σκόρδο': 'Πράσινο μέρος φρέσκου κρεμμυδιού, σκορδέλαιο, μυρωδικά',
+      'Μήλο / αχλάδι / καρπούζι': 'Πορτοκάλι, μανταρίνι, φράουλες, ακτινίδιο, σταφύλια, ανανάς',
+      'Γάλα / γιαούρτι': 'Χωρίς λακτόζη (π.χ. Γαλατάκι delact), γάλα αμυγδάλου, σκληρά τυριά',
+      'Όσπρια': 'Tofu, edamame, αυγά, κρέας/ψάρι',
+      'Ψωμί σίκαλης / κους κους': 'Ψωμί προζύμης, ρύζι, κινόα, βρώμη, φαγόπυρο'
+    },
+    supplements: [],
+    notes: 'Φάση αποκλεισμού 2–6 εβδομάδες — ΟΧΙ μόνιμη δίαιτα. Μετά: επανεισαγωγή μία ομάδα FODMAP τη φορά (φρουκτάνες, GOS, λακτόζη, φρουκτόζη, σορβιτόλη, μαννιτόλη) για 3 ημέρες με αυξανόμενη μερίδα, και τελικά εξατομικευμένη δίαιτα με ό,τι ανέχεται. Τα σκληρά τυριά (φέτα, γραβιέρα, κεφαλοτύρι, παρμεζάνα), το ψωμί προζύμης, ρύζι, κινόα, βρώμη, πατάτες, καρότα, κολοκυθάκια (μικρή μερίδα), σπανάκι, ντομάτα, αγγούρι, πορτοκάλι, φράουλες, ακτινίδιο επιτρέπονται. Τα όρια μερίδας του πίνακα είναι ανά γεύμα (Monash). Ιδανικά υπό καθοδήγηση διαιτολόγου εκπαιδευμένου στο FODMAP.',
+    sources: [
+      { name: 'Monash University — The Low FODMAP Diet', url: 'https://www.monashfodmap.com/about-fodmap-and-ibs/', official: true },
+      { name: 'ACG Clinical Guideline: Management of IBS (Lacy et al., 2021)', url: 'https://pubmed.ncbi.nlm.nih.gov/33315591/', official: true },
+      { name: 'BDA — IBS & the low FODMAP diet', url: 'https://www.bda.uk.com/resource/irritable-bowel-syndrome-diet.html', official: true }
+    ]
+  },
+
   lactose: {
     name: 'Δυσανεξία Λακτόζης',
     icon: '🥛',
@@ -933,6 +989,32 @@ function getProtocolWarnHits(client) {
   return out;
 }
 
+// 🌿 Μερίδες πάνω από το όριο (restrictions.portionLimits, π.χ. Low-FODMAP: μπανάνα ≤100g) — ανά
+// εμφάνιση στο πλάνο, ακριβές όνομα. [{icon, name, hits:[{food, max, maxG, count, note}]}]. 2026-10-15.
+function getProtocolPortionHits(client) {
+  if (!client || !client.weekPlan) return [];
+  var out = [];
+  getActiveProtocols(client).forEach(function(protocol) {
+    var lim = (protocol.restrictions || {}).portionLimits || [];
+    if (!lim.length) return;
+    var byName = {};
+    lim.forEach(function(l) { l.names.forEach(function(n) { byName[n] = l; }); });
+    var hits = {};
+    Object.keys(client.weekPlan).forEach(function(d) {
+      (client.weekPlan[d] || []).forEach(function(meal) {
+        (meal.foods || []).forEach(function(f) {
+          var l = byName[f.n]; if (!l || !(f.g > l.max)) return;
+          var h = hits[f.n] || (hits[f.n] = {food: f.n, max: l.max, maxG: 0, count: 0, note: l.note || ''});
+          h.count++; if (f.g > h.maxG) h.maxG = Math.round(f.g);
+        });
+      });
+    });
+    var list = Object.keys(hits).map(function(k) { return hits[k]; }).sort(function(a, b) { return b.count - a.count; });
+    if (list.length) out.push({icon: protocol.icon, name: protocol.name.replace(/\s*\(.*$/, ''), hits: list});
+  });
+  return out;
+}
+
 // 🔄 Αντικαταστάσεις πρωτοκόλλου που υπάρχουν ΤΩΡΑ στο πλάνο: [{from,to,kcal,count,protocols}].
 // Αν δύο πρωτόκολλα έχουν την ίδια αντικατάσταση (π.χ. λευκό ψωμί), μετριέται μία φορά.
 function findProtocolSwapsInPlan(client) {
@@ -1047,6 +1129,14 @@ function showMedicalProtocol(condition) {
   if(protocol.restrictions.warnFoods && protocol.restrictions.warnFoods.length > 0) {
     html += '<div style="margin-bottom:15px;"><strong style="color:#e65100;">⚠️ Με μέτρο (' + esc(protocol.restrictions.warnLabel || '') + '):</strong>';
     html += '<div style="margin:6px 0;color:var(--text-strong);line-height:1.6;">' + protocol.restrictions.warnFoods.map(esc).join(' · ') + '</div></div>';
+  }
+
+  // ΟΡΙΟ ΜΕΡΙΔΑΣ (portionLimits) — επιτρέπονται έως X g ανά μερίδα
+  if(protocol.restrictions.portionLimits && protocol.restrictions.portionLimits.length > 0) {
+    html += '<div style="margin-bottom:15px;"><strong style="color:#e65100;">📏 Επιτρέπονται έως (ανά μερίδα):</strong>';
+    html += '<div style="margin:6px 0;color:var(--text-strong);line-height:1.6;">' + protocol.restrictions.portionLimits.map(function(l) {
+      return esc(l.names.join(' / ')) + ' ≤' + l.max + 'g' + (l.note ? ' (' + esc(l.note) + ')' : '');
+    }).join(' · ') + '</div></div>';
   }
 
   // FOOD REPLACEMENTS
