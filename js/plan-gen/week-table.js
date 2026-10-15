@@ -461,6 +461,56 @@ function renderWeekTable(){
   var validationHtml = displayFoodDistributionResults(foodValidation);
 
   // Instead of displaying micronutrients inline, add a button to open the modal
+  // 🧂 Νάτριο (Υπέρταση) / 🩸 κορεσμένα (Χοληστερόλη) ανά ημέρα — μόνο όταν ενεργό πρωτόκολλο ορίζει
+  // όριο. Τιμές από NA_SF μέσω cm(); το αλάτι μαγειρικής δεν μετριέται. 2026-10-15.
+  var nutLim=(typeof getProtocolNutrientLimits==='function')?getProtocolNutrientLimits(c):null;
+  var nutBannerHtml='';
+  if(nutLim){
+    var nDay=[],sDay=[],kDay=[];
+    for(var nd=0;nd<7;nd++){
+      var na=0,sf=0,kk=0;
+      (c.weekPlan[nd]||[]).forEach(function(m){(m.foods||[]).forEach(function(ff){var v=cm(ff.n,ff.g);na+=v.na||0;sf+=v.sf||0;kk+=v.k||0;});});
+      nDay.push(na);sDay.push(sf);kDay.push(kk);
+    }
+    var nutDots=function(vals,bad,warn,fmt){
+      return '<div style="display:flex;gap:5px;align-items:center">'+DAYS.map(function(dn,di){
+        var v=vals[di], col=v>bad?'#F44336':(v>warn?'#FF9800':'#4CAF50');
+        return '<span title="'+dn+': '+fmt(v)+'" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:default">'
+          +'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+col+'"></span>'
+          +'<span style="font-size:8px;color:var(--text-muted)">'+dn.charAt(0)+'</span></span>';
+      }).join('')+'</div>';
+    };
+    var nutRow=function(icon,title,val,unit,sub,col,dots,msg){
+      return '<div style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:8px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+        +'<span style="font-size:15px">'+icon+'</span>'
+        +'<span style="font-size:11px;font-weight:700;color:var(--text-sub)">'+title+'</span>'
+        +'<span style="font-size:17px;font-weight:800;color:'+col+'">'+val+unit+'</span>'
+        +'<span style="font-size:10px;color:var(--text-muted)">'+sub+'</span>'
+        +'<span style="flex:1"></span>'+dots
+        +(msg?'<span style="font-size:10px;color:'+col+';font-weight:600;flex-basis:100%">'+msg+'</span>':'')
+        +'</div>';
+    };
+    var daysWithFood=kDay.filter(function(k){return k>0;}).length||1;
+    if(nutLim.na!=null){
+      var naAvg=Math.round(nDay.reduce(function(a,b){return a+b;},0)/daysWithFood), naOver=nDay.filter(function(v){return v>nutLim.na;}).length;
+      var naWarnAt=Math.round(nutLim.na*0.65); // ~1500 mg: χώρος για το αλάτι μαγειρικής πριν το όριο
+      var naCol=(naAvg>nutLim.na||naOver)?'var(--bad-fg)':(naAvg>naWarnAt?'var(--mac-k)':'var(--good)');
+      var naMsg=naOver?('⚠ '+naOver+(naOver===1?' ημέρα':' ημέρες')+' πάνω από '+nutLim.na+' mg — λιγότερα τυριά/ελιές/αλλαντικά/ψωμί, ή αντικατάσταση με φρέσκα τρόφιμα.')
+        :(naAvg>naWarnAt?'Κοντά στο όριο — μαζί με το αλάτι μαγειρικής μπορεί να το ξεπεράσει.':'');
+      nutBannerHtml+=nutRow('🧂','Νάτριο ('+esc(nutLim.naNames.join(', '))+')',naAvg.toLocaleString('el-GR'),' mg/ημ.',
+        '/ όριο '+nutLim.na+' mg · χωρίς αλάτι μαγειρικής',naCol,nutDots(nDay,nutLim.na,naWarnAt,function(v){return Math.round(v)+' mg';}),naMsg);
+    }
+    if(nutLim.sfPct!=null){
+      var sfTot=sDay.reduce(function(a,b){return a+b;},0), kTot=kDay.reduce(function(a,b){return a+b;},0);
+      var sfPct=kTot?+(sfTot*9/kTot*100).toFixed(1):0;
+      var sfPctDay=sDay.map(function(s,i){return kDay[i]?s*9/kDay[i]*100:0;});
+      var sfCol=sfPct>nutLim.sfPct?'var(--bad-fg)':(sfPct>nutLim.sfPct-1?'var(--mac-k)':'var(--good)');
+      var sfMsg=sfPct>nutLim.sfPct?('⚠ Πάνω από '+nutLim.sfPct+'% των θερμίδων — λιγότερα κίτρινα τυριά/βούτυρο/λιπαρό κρέας, περισσότερο ελαιόλαδο/ψάρι/όσπρια.'):'';
+      nutBannerHtml+=nutRow('🩸','Κορεσμένα ('+esc(nutLim.sfNames.join(', '))+')',sfPct.toLocaleString('el-GR'),'%',
+        '/ όριο '+nutLim.sfPct+'% θερμίδων · μ.ό. '+Math.round(sfTot/daysWithFood)+' g/ημ.',sfCol,
+        nutDots(sfPctDay,nutLim.sfPct,nutLim.sfPct-1,function(v){return v.toFixed(1)+'%';}),sfMsg);
+    }
+  }
   // ⚠️ «Με μέτρο» τρόφιμα πρωτοκόλλου (Υπέρταση: νάτριο, Χοληστερόλη: κορεσμένα) — επιτρέπονται,
   // απλώς φαίνεται πόσες φορές μπαίνουν αυτή την εβδομάδα. 2026-10-15.
   var protoWarn=(typeof getProtocolWarnHits==='function')?getProtocolWarnHits(c):[];
@@ -470,7 +520,7 @@ function renderWeekTable(){
       +pw.hits.map(function(h){return esc(h.term)+' <b>×'+h.count+'</b>';}).join(' · ')
       +' <span style="opacity:.8">αυτή την εβδομάδα</span></div>';
   }).join('');
-  con.innerHTML=scoreHtml+swapBannerHtml+protoWarnHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
+  con.innerHTML=scoreHtml+swapBannerHtml+nutBannerHtml+protoWarnHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
 
   // Enable drag & drop for meals
   enableMealDragDrop();

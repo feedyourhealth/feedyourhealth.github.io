@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="1e800a2340d0">
+<meta name="fyh-build" content="4deca058df8a">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -327,10 +327,11 @@ setTimeout(function(){
 <script defer src="js/data/templates.js?v=1bf4aad8d6"></script>
 <script defer src="js/data/recipes.js?v=976134ab66"></script>
 <script defer src="js/data/misc.js?v=da0dce215b"></script>
+<script defer src="js/data/sodium-satfat.js?v=85ee6610c4"></script>
 <!-- lib/* — pure leaf helpers (depend only on data/*) -->
 <script defer src="js/lib/bf-norms.js?v=4d2063a063"></script>
 <script defer src="js/lib/helpers.js?v=8a2f59cff9"></script>
-<script defer src="js/lib/food-resolve.js?v=fff13797ed"></script>
+<script defer src="js/lib/food-resolve.js?v=b326dbdffa"></script>
 <!-- calc/* — pure energy & scaling calc (depend on data/* + lib/helpers.js) -->
 <script defer src="js/calc/plan-energy.js?v=9f83ba22fe"></script>
 <!-- calc/macros-recalc — micronutrient targets + the cascade-recalc engine
@@ -406,7 +407,7 @@ setTimeout(function(){
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
 <script defer src="js/plan-gen/gen-plan.js?v=86c16c5797"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
-<script defer src="js/plan-gen/week-table.js?v=d1ac34bcc2"></script>
+<script defer src="js/plan-gen/week-table.js?v=e248f5cda5"></script>
 <script defer src="js/plan-gen/food-selector.js?v=de432f65e1"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=fbeaed85c9"></script>
 <script defer src="js/plan-gen/micronutrient-html.js?v=53ca272633"></script>
@@ -643,7 +644,7 @@ setTimeout(function(){
 <button id="settingsToggle" onclick="toggleSettingsPanel()" style="position:fixed;bottom:20px;left:20px;background:#025857;color:white;border:none;padding:12px 16px;border-radius:6px;cursor:pointer;font-weight:600;z-index:996;display:none;font-size:14px;">⚙️ Ρυθμίσεις</button>
 
 
-<script defer src="js/app-part5.js?v=b786aeaa5a"></script>
+<script defer src="js/app-part5.js?v=af5fd74d05"></script>
 
 <!-- VALIDATION MODAL -->
 <div id="validationModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1100;align-items:center;justify-content:center;overflow-y:auto;padding:20px 0;">

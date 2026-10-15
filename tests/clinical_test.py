@@ -1,5 +1,5 @@
 """Clinical protocols: diabetes avoid-list (no eggplant), protocol fiber target, protocol swaps, RED-S flags/gate/home card,
-hypertension/cholesterol approved ban + «με μέτρο» lists (exact «=Βούτυρο»)."""
+hypertension/cholesterol approved ban + «με μέτρο» lists (exact «=Βούτυρο»), sodium / sat-fat data + banners."""
 import json, subprocess, sys, time, urllib.request, io
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -138,6 +138,30 @@ try:
         T('showMedicalProtocol("cholesterol")'); pg.wait_for_timeout(200)
         card = T('document.querySelector("[data-medical-modal]").innerText')
         check('Με μέτρο' in card and '=Βούτυρο' not in card and 'Βούτυρο' in card, 'protocol card lists «Με μέτρο» and shows butter without «=»')
+
+        print('7. Sodium / saturated-fat data + banners (step 2β)')
+        r = T("""(()=>{var miss=Object.keys(FOODS).filter(n=>!NA_SF[n] && !(FYH_RECIPE_EXPAND[n]&&FYH_RECIPE_EXPAND[n].ing.every(i=>FOODS[resolveFood(i.n)])));
+          var rx=Object.keys(FYH_RECIPE_EXPAND).find(n=>FYH_RECIPE_EXPAND[n].ing.every(i=>FOODS[resolveFood(i.n)]));
+          var parts=FYH_RECIPE_EXPAND[rx].ing.reduce((a,i)=>a+cm(i.n,i.g).na,0);
+          return {miss:miss, feta:cm("Τυρί φέτα",100), butter:cm("Βούτυρο",10).sf, rxNa:cm(rx,FYH_RECIPE_EXPAND[rx].base).na, rxParts:parts, unknown:cm("Δεν υπάρχει",100).na};})()""")
+        check(r['miss'] == [], f"every FOODS item has sodium/sat-fat data ({r['miss'][:5]})")
+        check(r['feta']['na'] == 1116 and r['feta']['sf'] == 15 and r['butter'] == 5.1, f"cm() returns na/sf (feta {r['feta']}, 10g butter sf {r['butter']})")
+        check(abs(r['rxNa'] - r['rxParts']) <= 2, f"FYH recipe sodium = sum of its ingredients ({r['rxNa']} vs {r['rxParts']})")
+        check(r['unknown'] == 0, 'unknown food → 0 (no crash)')
+        T('selectClient("ch"); renderMain(); swTab && swTab("plan")'); pg.wait_for_timeout(300); T('renderWeekTable()'); pg.wait_for_timeout(200)
+        txt = T('document.getElementById("week-con").innerText')
+        check('Νάτριο' in txt and 'όριο 2300 mg' in txt and 'χωρίς αλάτι μαγειρικής' in txt, 'hypertension plan shows the sodium banner')
+        check('Κορεσμένα' not in txt, 'no sat-fat banner without the cholesterol protocol')
+        T("""(()=>{var c=getC(); for(var d=0;d<7;d++) c.weekPlan[d]=[{name:"Πρωινό",foods:[{n:"Τυρί φέτα",g:150},{n:"Ψωμί λευκό",g:150},{n:"Ελιές πράσινες",g:50}]}]; renderWeekTable();})()"""); pg.wait_for_timeout(200)
+        txt = T('document.getElementById("week-con").innerText')
+        check('7 ημέρες πάνω από 2300 mg' in txt, 'salty plan → «7 ημέρες πάνω από 2300 mg»')
+        T('selectClient("cc2"); renderMain(); swTab && swTab("plan")'); pg.wait_for_timeout(300)
+        T("""(()=>{var c=getC(); for(var d=0;d<7;d++) c.weekPlan[d]=[{name:"Πρωινό",foods:[{n:"Κεφαλοτύρι",g:80},{n:"Ψωμί ολικής άλεσης",g:80}]},{name:"Μεσημεριανό",foods:[{n:"Κοτόπουλο στήθος (ψητό)",g:150},{n:"Ρύζι καστανό (βρ.)",g:150}]}]; renderWeekTable();})()"""); pg.wait_for_timeout(200)
+        txt = T('document.getElementById("week-con").innerText')
+        check('Κορεσμένα' in txt and 'όριο 7% θερμίδων' in txt and 'Πάνω από 7%' in txt, 'cholesterol plan heavy in hard cheese → sat-fat over 7% warning')
+        T('selectClient("cd"); renderMain(); swTab && swTab("plan")'); pg.wait_for_timeout(300); T('renderWeekTable()'); pg.wait_for_timeout(200)
+        txt = T('document.getElementById("week-con").innerText')
+        check('Νάτριο' not in txt and 'Κορεσμένα' not in txt, 'diabetes-only client: no sodium/sat-fat banner')
         br.close()
 finally:
     srv.terminate()

@@ -898,6 +898,18 @@ function getProtocolFiberTarget(client) {
   return best ? {g: best, names: names} : null;
 }
 
+// 🧂/🩸 Όρια νατρίου (maxSodium, mg/ημ.) και κορεσμένων (maxSaturatedFatPercentage, % θερμίδων) από τα
+// ενεργά πρωτόκολλα — το αυστηρότερο κερδίζει. {na, naNames, sfPct, sfNames} ή null. 2026-10-15.
+function getProtocolNutrientLimits(client) {
+  var o = {na: null, naNames: [], sfPct: null, sfNames: []};
+  getActiveProtocols(client).forEach(function(protocol) {
+    var r = protocol.restrictions || {}, nm = protocol.icon + ' ' + protocol.name.replace(/\s*\(.*$/, '');
+    if (r.maxSodium) { o.na = o.na == null ? r.maxSodium : Math.min(o.na, r.maxSodium); o.naNames.push(nm); }
+    if (r.maxSaturatedFatPercentage) { o.sfPct = o.sfPct == null ? r.maxSaturatedFatPercentage : Math.min(o.sfPct, r.maxSaturatedFatPercentage); o.sfNames.push(nm); }
+  });
+  return (o.na != null || o.sfPct != null) ? o : null;
+}
+
 // ⚠️ «Προειδοποίηση» τρόφιμα (restrictions.warnFoods) που υπάρχουν τώρα στο πλάνο — μετριούνται ανά
 // όρο (κάθε φαγητό που τον έχει στο όνομα ή στα υλικά του), ανά πρωτόκολλο. 2026-10-15.
 // Επιστρέφει [{icon, name, label, hits:[{term,count}]}] μόνο για πρωτόκολλα με ≥1 εύρημα.
