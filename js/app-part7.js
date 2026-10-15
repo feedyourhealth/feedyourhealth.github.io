@@ -1065,8 +1065,9 @@
       var keys=['fyh_clients','fyh_custom_tmpls','savedCombos','tipsLibrary','recipeMeta','favoriteMeals',
         'dietologist_tracking','TRACKING_DATA','fyh-clinic-wa','fyh-clinic-tel','fyh-clinic-email',
         'fyh_local_updated_at',this._OWNER_KEY,this._BASE_KEY,this._DIRTY_KEY];
-      if(!keepSnapshots) keys.push('fyh_snapshots');
       keys.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+      // Τα snapshots ζουν στο IndexedDB (js/core/persistence.js) — σβήνονται από εκεί και από το παλιό κλειδί.
+      if(!keepSnapshots && typeof _clearAllSnapshots==='function') _clearAllSnapshots();
       window.clients=[];
       window.customTemplates=[];
       if(typeof window.TRACKING_DATA!=='undefined') window.TRACKING_DATA={plans:[],recipes:{},patterns:{},lastUpdated:null};

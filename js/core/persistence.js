@@ -39,6 +39,20 @@ function safeStorageGet(key, defaultVal) {
   }
 }
 
+var _quotaToastShown = false;
+
+// Κλειδιά που δεν διαβάζει πια κανείς και απλώς πιάνουν χώρο στο localStorage:
+//   fyh_leads           — η σελίδα «🤝 Leads» αφαιρέθηκε (2026-09-23)
+//   cloud_<user>_<key>  — getStorageKey() (app-part4.js) δεν βάζει πια πρόθεμα (cloudUsername πάντα null)
+(function _dropDeadStorageKeys(){
+  try{
+    var dead = /^cloud_.+_(fyh_clients|fyh_custom_tmpls|dietologist_tracking|savedCombos|tipsLibrary|recipeMeta|favoriteMeals)$/;
+    Object.keys(localStorage).forEach(function(k){
+      if(k === 'fyh_leads' || dead.test(k)) localStorage.removeItem(k);
+    });
+  }catch(e){}
+})();
+
 function safeStorageSet(key, val) {
   try {
     localStorage.setItem(getStorageKey(key), JSON.stringify(val));
@@ -48,7 +62,12 @@ function safeStorageSet(key, val) {
 
     // ✅ PHASE 1: QUOTA EXCEEDED HANDLING
     if(e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-      showErrorToast('❌ Χώρος αποθήκευσης ανεπαρκής. Διαγράψτε παλιά δεδομένα.');
+      // Μία φορά ανά φόρτωση: το autosave των 30" ξαναδοκιμάζει, και το ίδιο μήνυμα κάθε 30"
+      // δεν λέει τίποτα καινούριο. Τα δεδομένα συνεχίζουν να ανεβαίνουν στο cloud από τη μνήμη.
+      if(!_quotaToastShown){
+        _quotaToastShown = true;
+        showErrorToast('❌ Ο τοπικός χώρος αποθήκευσης του browser γέμισε.\nΟι αλλαγές συνεχίζουν να αποθηκεύονται στο cloud.');
+      }
       console.error('💾 localStorage quota exceeded. Current size:',
         Object.keys(localStorage).reduce(function(sum, key) {
           return sum + (localStorage.getItem(key) || '').length;
@@ -293,32 +312,145 @@ function _dataSignature(){
 }
 
 // ── Layer 1: Rolling in-app snapshots ──────────────────────────────────────────────
+// 2026-10-15: τα snapshots ζουν πλέον στο IndexedDB, όχι στο localStorage. Κάθε snapshot είναι
+// ένα πλήρες αντίγραφο (πελάτες+templates+tracking ≈ 2,4 MB σε πραγματικό λογαριασμό) και το
+// localStorage έχει όριο ~5 MB για όλο το site: χωρούσε μόνο 1 snapshot και αυτό έτρωγε τον χώρο
+// του ίδιου του fyh_clients → «Χώρος αποθήκευσης ανεπαρκής» σε κάθε autosave. Το IndexedDB έχει
+// όριο εκατοντάδων MB. Αν δεν είναι διαθέσιμο (π.χ. ιδιωτική περιήγηση σε παλιό Safari) πέφτουμε
+// πίσω στο localStorage όπως πριν. Όλες οι πράξεις περνούν από μία ουρά (_snapQueue) ώστε η
+// μεταφορά των παλιών snapshots να ολοκληρώνεται πριν από οποιαδήποτε νέα εγγραφή/ανάγνωση.
 var _BACKUP_SNAP_KEY = 'fyh_snapshots';
 var _BACKUP_SNAP_MAX = 5;
+var _SNAP_DB = 'fyh_snapshots_db';
 var _lastSnapSig = null;
+var _snapQueue = Promise.resolve();
+
+function _snapEnqueue(fn){
+  _snapQueue = _snapQueue.then(fn).catch(function(e){ console.warn('[BACKUP] snapshot queue', e && e.message); });
+  return _snapQueue;
+}
+
+function _snapDbOpen(){
+  return new Promise(function(resolve, reject){
+    try{
+      if(typeof indexedDB === 'undefined' || !indexedDB){ reject(new Error('no indexedDB')); return; }
+      var req = indexedDB.open(_SNAP_DB, 1);
+      req.onupgradeneeded = function(){ req.result.createObjectStore('s'); };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(req.error || new Error('indexedDB open failed')); };
+      req.onblocked = function(){ reject(new Error('indexedDB open blocked')); };
+    }catch(e){ reject(e); }
+  });
+}
+
+function _snapIdbGet(){
+  return _snapDbOpen().then(function(db){
+    return new Promise(function(resolve, reject){
+      var g = db.transaction('s','readonly').objectStore('s').get('snaps');
+      g.onsuccess = function(){ db.close(); resolve(Array.isArray(g.result) ? g.result : []); };
+      g.onerror = function(){ db.close(); reject(g.error); };
+    });
+  });
+}
+
+function _snapIdbPut(snaps){
+  return _snapDbOpen().then(function(db){
+    return new Promise(function(resolve, reject){
+      var tx = db.transaction('s','readwrite');
+      tx.objectStore('s').put(snaps, 'snaps');
+      tx.oncomplete = function(){ db.close(); resolve(); };
+      tx.onerror = tx.onabort = function(){ db.close(); reject(tx.error || new Error('indexedDB write failed')); };
+    });
+  });
+}
+
+function _snapLegacyGet(){
+  try { return JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY)) || []; } catch(e){ return []; }
+}
+
+// Παλιός τρόπος (localStorage) — μόνο όταν το IndexedDB δεν λειτουργεί.
+function _snapLegacyPut(snaps){
+  snaps = snaps.slice();
+  while(snaps.length){
+    try { localStorage.setItem(_BACKUP_SNAP_KEY, JSON.stringify(snaps)); return; }
+    catch(e){ snaps.shift(); }
+  }
+}
+
+// Διαβάζει τα snapshots (παλιότερο πρώτο). cb(snaps)
+function _snapRead(cb){
+  _snapEnqueue(function(){
+    return _snapIdbGet().then(function(s){ cb(s); }, function(){ cb(_snapLegacyGet()); });
+  });
+}
+
+// Μία φορά ανά φόρτωση: όσα snapshots έχουν μείνει στο localStorage περνούν στο IndexedDB.
+// Το παλιό κλειδί σβήνεται ΜΟΝΟ αφού το IndexedDB ξαναδιαβαστεί και περιέχει κάθε ένα από αυτά.
+function _migrateLegacySnapshots(){
+  _snapEnqueue(function(){
+    var legacy = _snapLegacyGet();
+    if(!legacy.length) return;
+    return _snapIdbGet().then(function(existing){
+      var seen = {};
+      existing.forEach(function(s){ seen[s.ts] = true; });
+      var merged = legacy.filter(function(s){ return s && !seen[s.ts]; }).concat(existing);
+      merged.sort(function(a,b){ return String(a.ts).localeCompare(String(b.ts)); });
+      while(merged.length > _BACKUP_SNAP_MAX) merged.shift();
+      return _snapIdbPut(merged).then(_snapIdbGet).then(function(check){
+        var have = {};
+        check.forEach(function(s){ have[s.ts] = true; });
+        var keptAll = merged.every(function(s){ return have[s.ts]; });
+        if(!keptAll){ console.warn('[BACKUP] snapshot migration not verified — legacy copy kept'); return; }
+        try { localStorage.removeItem(_BACKUP_SNAP_KEY); } catch(e){}
+        console.log('[BACKUP] ' + legacy.length + ' snapshot(s) moved from localStorage to IndexedDB');
+      });
+    }, function(e){ console.warn('[BACKUP] IndexedDB unavailable — snapshots stay in localStorage', e && e.message); });
+  });
+}
+_migrateLegacySnapshots();
+
+// Σβήνει όλα τα snapshots αυτού του browser (αλλαγή λογαριασμού — βλ. Cloud._wipeLocalCache).
+function _clearAllSnapshots(){
+  _lastSnapSig = null;
+  try { localStorage.removeItem(_BACKUP_SNAP_KEY); } catch(e){}
+  _snapEnqueue(function(){ return _snapIdbPut([]).catch(function(){}); });
+}
 
 function _rollingSnapshot(){
   try {
     var sig = _dataSignature();
     if(sig === _lastSnapSig) return;             // nothing changed since last snapshot
     if(!clients || clients.length === 0) return; // never overwrite good snapshots with empty data
-    var snaps = [];
-    try { snaps = JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY)) || []; } catch(e){ snaps = []; }
-    snaps.push({ ts: new Date().toISOString(), count: clients.length, sig: sig, data: _buildBackupObj() });
-    while(snaps.length > _BACKUP_SNAP_MAX) snaps.shift();
-    // Quota-safe write: if it doesn't fit, drop the oldest snapshot and retry.
-    var ok = false;
-    while(snaps.length && !ok){
-      try { localStorage.setItem(_BACKUP_SNAP_KEY, JSON.stringify(snaps)); ok = true; }
-      catch(e){ snaps.shift(); }
-    }
+    // Το αντίγραφο παίρνεται ΤΩΡΑ (σύγχρονα): π.χ. το _resolveLoadConflict αμέσως μετά αντικαθιστά
+    // τα clients με του cloud, οπότε η async εγγραφή δεν πρέπει να διαβάσει την τρέχουσα κατάσταση.
+    var entry = { ts: new Date().toISOString(), count: clients.length, sig: sig, data: deepClone(_buildBackupObj()) };
     _lastSnapSig = sig;
+    _snapEnqueue(function(){
+      return _snapIdbGet().then(function(snaps){
+        snaps.push(entry);
+        while(snaps.length > _BACKUP_SNAP_MAX) snaps.shift();
+        // Αν δεν χωράει (πολύ απίθανο στο IndexedDB), πετάμε το παλιότερο και ξαναδοκιμάζουμε.
+        function attempt(){
+          return _snapIdbPut(snaps).catch(function(e){
+            if(snaps.length > 1){ snaps.shift(); return attempt(); }
+            throw e;
+          });
+        }
+        return attempt();
+      }, function(){
+        var snaps = _snapLegacyGet();
+        snaps.push(entry);
+        while(snaps.length > _BACKUP_SNAP_MAX) snaps.shift();
+        _snapLegacyPut(snaps);
+      });
+    });
   } catch(e){ console.warn('[BACKUP] snapshot failed', e && e.message); }
 }
 
 function restoreFromSnapshot(){
-  var snaps = [];
-  try { snaps = JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY)) || []; } catch(e){ snaps = []; }
+  _snapRead(_restoreFromSnapshotList);
+}
+function _restoreFromSnapshotList(snaps){
   if(!snaps.length){ showErrorToast('Δεν υπάρχουν διαθέσιμα snapshots ακόμη.\nΘα δημιουργηθούν αυτόματα καθώς δουλεύετε.'); return; }
   var rev = snaps.slice().reverse(); // newest first
 
@@ -474,8 +606,9 @@ function _confirmAndRestoreFromDisk(name){
 // και τα προσθέτει πίσω, χωρίς να πειράξει κανέναν άλλο πελάτη ή δεδομένο (σε αντίθεση
 // με το restoreFromSnapshot() που αντικαθιστά τα πάντα).
 function recoverSavedPlansFor(clientId){
-  var snaps=[];
-  try{ snaps=JSON.parse(localStorage.getItem(_BACKUP_SNAP_KEY))||[]; }catch(e){ snaps=[]; }
+  _snapRead(function(snaps){ _recoverSavedPlansFrom(clientId, snaps); });
+}
+function _recoverSavedPlansFrom(clientId, snaps){
   if(!snaps.length){ showErrorToast('Δεν βρέθηκαν τοπικά snapshots σε αυτόν τον υπολογιστή/browser.'); return; }
   var rev=snaps.slice().reverse(); // πιο πρόσφατο πρώτα
   var found=null;

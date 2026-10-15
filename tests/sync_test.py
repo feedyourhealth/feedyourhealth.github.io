@@ -137,7 +137,9 @@ try:
         S['rows'][U2] = {'data': blob([]), 'version': 4}; S['writes'] = 0
         cF = ctx(); pg = open_page(cF, S, U2, seed=legacy); wait_loaded(pg); pg.wait_for_timeout(2000)
         check(names(pg) == [] and (server(pg).get('writes') or 0) == 0, f'legacy cache not pushed into other account ({names(pg)})')
-        check(pg.evaluate('!!localStorage.getItem("fyh_snapshots")') == ('fyh_snapshots' in legacy), 'legacy snapshots kept'); cF.close()
+        # Snapshots live in IndexedDB now: legacy localStorage ones get moved there on open (snapshot_storage_test.py)
+        n_snaps = pg.evaluate('new Promise(r=>_snapRead(s=>r(s.length)))')
+        check((n_snaps > 0) == ('fyh_snapshots' in legacy), f'legacy snapshots kept ({n_snaps})'); cF.close()
 
         print('F2. Legacy cache, SAME account with data -> cloud wins quietly (upgrade path)')
         S['writes'] = 0

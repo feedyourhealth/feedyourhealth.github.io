@@ -4,6 +4,7 @@
   smoke_test.py       app opens, add client -> genPlan -> delete, no console errors
   smoke_html_test.py  test/smoke.html: core functions/constants/calc probes exist and run
   sync_test.py        cloud sync: stale/dirty cache, conflicts, other account, failed load
+  snapshot_storage_test.py  snapshots in IndexedDB (not localStorage), legacy move, quota toast once
   allergen_test.py    allergen quick-exclude migration + genPlan never serves a group food
   allergy_ui_test.py  ⚠️ Αλλεργίες section: intake apply, genPlan/insert/publish guards
   repro_test.py       pregnancy / lactation kcal, safety flags, form ticks, genPlan gate
@@ -16,7 +17,7 @@ import subprocess, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py']
+TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py']
 
 failed = []
 for name in TESTS:
