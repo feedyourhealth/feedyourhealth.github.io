@@ -18,8 +18,10 @@ function buildKitchenSnapshot(c){
     // κοινά γεύματα: ομαδοποίηση με hhKey, μόνο όσα έχουν ≥2 μέλη
     var groups={}, order=[];
     members.forEach(function(x){
+      var seenKey={};   // ίδιο κλειδί 2 φορές στην ίδια μέρα (σύρσιμο/αντιγραφή γεύματος) → ένα πιάτο
       (x.weekPlan[d]||[]).forEach(function(meal, mi){
-        if(!meal||!meal.hhKey||!meal.foods||!meal.foods.length) return;
+        if(!meal||!meal.hhKey||!meal.foods||!meal.foods.length||seenKey[meal.hhKey]) return;
+        seenKey[meal.hhKey]=1;
         if(!groups[meal.hhKey]){ groups[meal.hhKey]={slot:meal.name, pos:mi, dish:'', plates:[]}; order.push(meal.hhKey); }
         var gr=groups[meal.hhKey];
         if(!gr.dish && meal.dishLabels&&meal.dishLabels.length) gr.dish=meal.dishLabels.join(' + ');
@@ -60,11 +62,12 @@ function buildKitchenSnapshot(c){
     Object.keys(sd).forEach(function(n){ sd[n]=Math.round(sd[n]); });
     shopDays.push(sd);
   }
-  // Προειδοποιήσεις για όλο το τραπέζι — ποτέ με όνομα μέλους.
+  // Προειδοποιήσεις για όλο το τραπέζι — ποτέ με όνομα μέλους, και ΜΟΝΟ οι ομάδες τροφίμων
+  // (κουτάκια ⚠️ Αλλεργίες). Το ελεύθερο κείμενο «Άλλες αλλεργίες» μπορεί να έχει ιατρικά
+  // στοιχεία (π.χ. φάρμακα) που δεν πρέπει να φαίνονται σε link όλου του σπιτιού.
   var warn=[];
   members.forEach(function(x){
     if(typeof clientAllergyKeys==='function') clientAllergyKeys(x).forEach(function(k){ var df=allergyDef(k); if(df&&warn.indexOf(df.label)===-1) warn.push(df.label); });
-    if(x.allergies&&typeof parseAllergies==='function') parseAllergies(x.allergies).forEach(function(a){ a=String(a||'').trim(); if(a&&warn.indexOf(a)===-1) warn.push(a); });
   });
   return {
     kind:'kitchen', v:1,

@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="722486064e82">
+<meta name="fyh-build" content="66e705d890a7">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -351,7 +351,7 @@ setTimeout(function(){
 <script defer src="js/core/templates.js?v=4f045a551d"></script>
 <!-- core/state — client roster/selection (clients/curId/getC), CRUD, JSON_CACHE,
      TOUCH_HANDLERS/MOBILE_VIEWPORT, field validation, toggleSidebar -->
-<script defer src="js/core/state.js?v=d55acfa862"></script>
+<script defer src="js/core/state.js?v=105d671015"></script>
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
@@ -407,8 +407,8 @@ setTimeout(function(){
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
 <script defer src="js/plan-gen/gen-plan.js?v=86c16c5797"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
-<script defer src="js/plan-gen/week-table.js?v=df704da98a"></script>
-<script defer src="js/plan-gen/household.js?v=f05be5abe0"></script>
+<script defer src="js/plan-gen/week-table.js?v=c792be720e"></script>
+<script defer src="js/plan-gen/household.js?v=25f04de6bd"></script>
 <script defer src="js/plan-gen/food-selector.js?v=de432f65e1"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=fbeaed85c9"></script>
 <script defer src="js/plan-gen/micronutrient-html.js?v=53ca272633"></script>
@@ -418,7 +418,7 @@ setTimeout(function(){
      no load-time code; refs resolve at click time. -->
 <script defer src="js/reports/exports.js?v=230b84ded5"></script>
 <script defer src="js/reports/targets-sheet.js?v=dffe24a58d"></script>
-<script defer src="js/reports/kitchen-link.js?v=41215ce620"></script>
+<script defer src="js/reports/kitchen-link.js?v=26975cd35b"></script>
 <script defer src="js/app-part4.js?v=9557e5caa3"></script>
 <!-- client-editor/modals — recipe-ingredients / micronutrient / supplement-picker
      modals, carved out of app-part4.js. Pure fns; all refs runtime. -->
@@ -439,7 +439,7 @@ setTimeout(function(){
      (initTrendCharts / renderPlanCharts). Έμενε ~200KB στο boot path. -->
 
 <!-- ✅ PHASE 4: UNDO/REDO SYSTEM -->
-<script defer src="js/11-undo-redo.js?v=e4dd3def04"></script>
+<script defer src="js/11-undo-redo.js?v=1606330891"></script>
 
 <!-- ✅ PHASE 3: MICRONUTRIENTS MODAL POPUP -->
 <!-- Plan Save Modal -->

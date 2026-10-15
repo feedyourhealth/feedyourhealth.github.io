@@ -139,6 +139,7 @@ class DeleteClientCommand {
       curId = null;
       if(typeof renderHome==='function') renderHome();
     }
+    if(typeof hhAfterMemberRemoved==='function') hhAfterMemberRemoved(this.client);   // 🏠 link κουζίνας
     save();
     renderSB();
     console.log('✗ Client deleted:', this.client.name);

@@ -55,6 +55,7 @@ function renderWeekTable(){
   var scoreHtml=renderMedScore(c.weekPlan);
   var _alChk=(typeof clientAllergenChecker==='function')?clientAllergenChecker(c):function(){return null;};
   var mealNames=(c.weekPlan[0]||[]).map(function(m){return m.name;});
+  var _hhOn=hhOthers(c).length>0;   // 🏠 νοικοκυριό με άλλο (μη διαγραμμένο) μέλος
   var numMeals=mealNames.length;
 
   var trainD=c.trainDays||[false,false,false,false,false,false,false];
@@ -172,7 +173,7 @@ function renderWeekTable(){
       +'<button onclick="regenerateDay('+di+');closeDayMenu(\''+dayMenuId+'\')">🔄 Αναδημιουργία μόνο αυτής</button>'
       +'<button onclick="adjustPlanPortions('+di+');closeDayMenu(\''+dayMenuId+'\')">⚖️ Προσαρμογή ποσοτήτων ημέρας</button>'
       +'<button onclick="swapDayPrompt(this,'+di+');closeDayMenu(\''+dayMenuId+'\')">🔁 Ανταλλαγή με άλλη ημέρα</button>'
-      +(c.householdId?'<button onclick="openHouseholdApply(\'day\','+di+');closeDayMenu(\''+dayMenuId+'\')">↔️ Εφαρμογή ημέρας σε…</button>':'')
+      +(_hhOn?'<button onclick="openHouseholdApply(\'day\','+di+');closeDayMenu(\''+dayMenuId+'\')">↔️ Εφαρμογή ημέρας σε…</button>':'')
       +'</div>';
     html+='<th style="position:relative">'+d+badge+timeStr+sportStr+choStr+dayMenuBtn+dayMenuDropdown+'</th>';
   });
@@ -211,7 +212,7 @@ function renderWeekTable(){
         html+='<span class="meal-drag-handle" title="Σύρε ΟΛΟΚΛΗΡΟ το γεύμα σε άλλη ημέρα/γεύμα (αντιγραφή)" aria-label="Σύρε ολόκληρο το γεύμα (αντιγραφή)">&#10303;</span>';
       }
       html+=mealSourceBadge(c.weekPlan[d]&&c.weekPlan[d][mi]);
-      if(hhIsShared(c,c.weekPlan[d]&&c.weekPlan[d][mi])) html+='<span class="meal-source-badge" style="display:block;font-size:10px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:3px;background:#E2EEE5;color:#014545;width:fit-content" title="Κοινό γεύμα νοικοκυριού — εμφανίζεται στο link κουζίνας">🏠 Κοινό</span>';
+      if(hhIsShared(c,c.weekPlan[d]&&c.weekPlan[d][mi],d)) html+='<span class="meal-source-badge" style="display:block;font-size:10px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:3px;background:#E2EEE5;color:#014545;width:fit-content" title="Κοινό γεύμα νοικοκυριού — εμφανίζεται στο link κουζίνας">🏠 Κοινό</span>';
       // Γραμμή-τίτλος έτοιμου/branded γεύματος — ό,τι βλέπει κι ο πελάτης στο link/PDF, με κουμπί × για αφαίρεση.
       var _mObj=c.weekPlan[d]&&c.weekPlan[d][mi];
       if(_mObj&&_mObj.dishLabels&&_mObj.dishLabels.length){
@@ -332,8 +333,8 @@ function renderWeekTable(){
           +'<button onclick="saveCombo('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:var(--text-strong);font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">💾 Αποθήκευση</button>'
           +'<button onclick="balanceMacros('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:var(--text-strong);font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">⚖️ Ισορροπία</button>'
           +'<button onclick="copyMealToClipboard('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:var(--text-strong);font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">❐ Αντιγραφή</button>'
-          +(c.householdId?'<button onclick="openHouseholdApply(\'meal\','+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:var(--text-strong);font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">↔️ Εφαρμογή σε…</button>'
-            +(hhIsShared(c,c.weekPlan[d][mi])?'<button onclick="hhUnshareMeal('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:var(--text-strong);font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">✂️ Όχι πια κοινό</button>':''):'')
+          +(_hhOn?'<button onclick="openHouseholdApply(\'meal\','+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:var(--text-strong);font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">↔️ Εφαρμογή σε…</button>'
+            +(hhIsShared(c,c.weekPlan[d][mi],d)?'<button onclick="hhUnshareMeal('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:var(--text-strong);font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">✂️ Όχι πια κοινό</button>':''):'')
           +'<hr style="margin:4px 0;border:none;border-top:1px solid #eee;">'
           +'<button onclick="rateMeal('+d+','+mi+',1);closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:var(--text-strong);font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">👍 Μου άρεσε</button>'
           +'<button onclick="rateMeal('+d+','+mi+',-1);showMealAlternatives('+d+','+mi+');closeMealMenu(\''+menuId+'\')" style="display:block;width:100%;text-align:left;padding:10px 12px;background:none;border:none;cursor:pointer;color:#ff6b35;font-size:12px;white-space:nowrap;transition:background 0.2s;" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'none\'">👎 Δεν μου άρεσε</button>'

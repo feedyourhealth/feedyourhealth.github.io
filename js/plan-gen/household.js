@@ -31,8 +31,9 @@ function hhAddMember(otherId){
   if(!c||!o) return;
   if(o.householdId){ showErrorToast('Ο/Η '+(o.name||'πελάτης')+' ανήκει ήδη σε άλλο νοικοκυριό.'); return; }
   if(c.householdId && hhMembers(c).length>=HH_MAX_MEMBERS){ showErrorToast('Ένα νοικοκυριό έχει έως '+HH_MAX_MEMBERS+' μέλη.'); return; }
-  if(!c.householdId){
-    c.householdId='h'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  if(c.householdId && !hhOthers(c).length){ delete c.householdName; }   // απομεινάρι (τα άλλα μέλη διαγράφηκαν)
+  if(!c.householdId) c.householdId='h'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  if(!c.householdName){
     var sn=hhSurname(c)||hhSurname(o);
     c.householdName=sn?('Οικογένεια '+sn):(hhFirstName(c)+' & '+hhFirstName(o));
   }
@@ -82,6 +83,7 @@ function hhRename(){
 // Ενότητα στα στοιχεία πελάτη (κάτω από «🏷️ Ομάδα»).
 function buildHouseholdSectionHtml(c){
   var members=hhMembers(c);
+  if(members.length<2) members=[];   // μόνος του (τα άλλα μέλη διαγράφηκαν) = χωρίς νοικοκυριό
   var chipCss='display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12px;border:1px solid var(--border-light,#c5ddd8);background:var(--card-bg,#fff);color:var(--text-strong,#014545)';
   var h='<div class="fg"><div class="fgrp"><label>🏠 Νοικοκυριό <span style="color:#9fb5b0;font-weight:400;font-size:11px">(τρώνε μαζί: ζευγάρι, αδέρφια, οικογένεια)</span></label>';
   if(members.length){
@@ -278,15 +280,27 @@ function hhUnshareMeal(d, mi){
   var c=getC(); var m=c&&c.weekPlan[d]&&c.weekPlan[d][mi]; if(!m||!m.hhKey) return;
   var key=m.hhKey;
   hhMembers(c).concat([c]).forEach(function(x){
-    Object.keys(x.weekPlan||{}).forEach(function(dd){ (x.weekPlan[dd]||[]).forEach(function(mm){ if(mm&&mm.hhKey===key) delete mm.hhKey; }); });
+    (x.weekPlan&&x.weekPlan[d]||[]).forEach(function(mm){ if(mm&&mm.hhKey===key) delete mm.hhKey; });
   });
   save(); renderWeekTable();
   dietoToast('Το γεύμα δεν είναι πια κοινό (τα τρόφιμα έμειναν ίδια)');
 }
-// Υπάρχει ακόμη αντίγραφο σε άλλο μέλος; (αλλιώς η σήμανση «κοινό» δεν έχει νόημα)
-function hhIsShared(c, meal){
+// Κοινό = το ίδιο κλειδί υπάρχει ΤΗΝ ΙΔΙΑ ΗΜΕΡΑ και σε άλλο μέλος. Η «Αντιγραφή σε άλλες ημέρες»,
+// η «Ανταλλαγή ημέρας» και το σύρσιμο γεύματος αντιγράφουν/μετακινούν και το hhKey· χωρίς τον
+// έλεγχο ημέρας, ένα γεύμα που οι άλλοι τρώνε Δευτέρα θα έδειχνε «Κοινό» και την Παρασκευή.
+function hhIsShared(c, meal, d){
   if(!meal||!meal.hhKey||!c||!c.householdId) return false;
   return hhOthers(c).some(function(x){
-    return Object.keys(x.weekPlan||{}).some(function(dd){ return (x.weekPlan[dd]||[]).some(function(mm){ return mm&&mm.hhKey===meal.hhKey; }); });
+    return (x.weekPlan&&x.weekPlan[d]||[]).some(function(mm){ return mm&&mm.hhKey===meal.hhKey; });
   });
+}
+
+// Διαγραφή πελάτη (κάδος): κρατά το householdId του διαγραμμένου (αν γίνει ανάκτηση, ξαναμπαίνει),
+// αλλά το link κουζίνας δεν πρέπει να τον δείχνει: ξαναδημοσιεύεται χωρίς αυτόν ή λήγει αν μένει
+// ένα μόνο μέλος. Καλείται από deleteClient() και DeleteClientCommand.execute().
+function hhAfterMemberRemoved(x){
+  if(!x||!x.householdId) return;
+  var rest=clients.filter(function(y){ return !y.deleted && y.householdId===x.householdId; });
+  var tok=x.kitchenToken||(rest.filter(function(y){ return y.kitchenToken; })[0]||{}).kitchenToken;
+  if(tok && typeof kitchenLinkAfterLeave==='function') kitchenLinkAfterLeave(tok, rest.length>=2?rest:[]);
 }

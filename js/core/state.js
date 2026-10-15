@@ -373,6 +373,7 @@ function deleteClient(id){
     // ✅ SOFT DELETE: Mark as deleted instead of removing
     clientToDelete.deleted = true;
     clientToDelete.deletedAt = new Date().toISOString();
+    if(typeof hhAfterMemberRemoved==='function') hhAfterMemberRemoved(clientToDelete);
 
     if(curId===id){
       curId=null;
