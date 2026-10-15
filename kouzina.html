@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#025857">
+<title>Feed Your Health — Η κουζίνα της εβδομάδας</title>
+<!-- Προσωπικός σύνδεσμος — να μη γίνεται indexed/preview-fetched (ίδιο μοτίβο με stoxoi.html). -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta property="og:title" content="Feed Your Health">
+<meta property="og:description" content="Τα κοινά γεύματα και τα ψώνια της εβδομάδας.">
+<!-- Defense-in-depth CSP, ίδιο με stoxoi.html (χωρίς frame-ancestors — βλ. commit 9271b33). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Κουζίνα">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<script src="vendor/supabase-js.min.js"></script>
+<style>
+  :root{
+    --teal:#025857; --teal-d:#014545; --tint:#E2EEE5; --tint2:#f2fbf8; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --bg:#f4f8f6; --card:#ffffff; --danger:#b71c1c;
+    --warn-bg:#fff4e5; --warn-fg:#8a5200; --on:#ffffff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --teal:#3aa8a6; --teal-d:#8fd4d2; --tint:#173230; --tint2:#162523; --bord:#2c413e; --bord-l:#1c302e;
+      --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --bg:#111917; --card:#18211f; --danger:#e0715f;
+      --warn-bg:#3a2c12; --warn-fg:#f0c27a; --on:#0d1514;
+    }
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45;font-size:16px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:620px;margin:0 auto;padding:0 16px 64px}
+  header{display:flex;align-items:center;gap:10px;padding:16px 4px 6px}
+  .mark{width:30px;height:30px;border-radius:8px;flex:0 0 auto;background:var(--teal)}
+  header b{font-size:.82rem;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+  .who{padding:6px 4px 10px}
+  .who h1{font-family:Georgia,"Times New Roman",serif;font-size:1.4rem;margin:0 0 3px;color:var(--teal-d)}
+  .who .upd{font-size:.8rem;color:var(--faint)}
+  .tabs{display:flex;gap:6px;margin:4px 0 12px}
+  .tab{flex:1;border:1px solid var(--bord);background:var(--card);color:var(--ink);border-radius:12px;padding:9px 4px;font:inherit;font-size:.86rem;font-weight:700;cursor:pointer}
+  .tab[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--on)}
+  .pills{display:flex;gap:6px;padding:2px 0 8px;margin-bottom:6px}
+  .dp{flex:1 1 0;min-width:0;border:1px solid var(--bord);background:var(--card);color:var(--ink);border-radius:12px;padding:8px 2px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer;text-align:center}
+  .dp small{display:block;font-weight:400;color:var(--faint);font-size:.66rem}
+  .dp[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--on)}
+  .dp[aria-pressed="true"] small{color:var(--on)}
+  .card{background:var(--card);border:1px solid var(--bord-l);border-radius:16px;padding:14px;margin-bottom:12px}
+  .warn{background:var(--warn-bg);color:var(--warn-fg);border-radius:12px;padding:9px 12px;font-size:.85rem;margin-bottom:12px}
+  .mh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .mh .slot{font-size:.78rem;font-weight:700;color:var(--faint);text-transform:none}
+  .dish{font-size:1.02rem;font-weight:700;color:var(--teal-d);margin:2px 0 10px}
+  .lbl{font-size:.74rem;font-weight:700;color:var(--faint);margin:10px 0 4px}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:.9rem;border-bottom:1px solid var(--bord-l)}
+  .row:last-child{border-bottom:none}
+  .row .q{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .row .q small{display:block;color:var(--faint);font-size:.72rem}
+  .tot{background:var(--tint2);border-radius:12px;padding:6px 10px}
+  .plate{border-top:1px solid var(--bord-l);padding-top:8px;margin-top:8px}
+  .plate .pw{font-weight:700;font-size:.9rem;margin-bottom:2px}
+  .wk{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--bord-l);cursor:pointer}
+  .wk:last-child{border-bottom:none}
+  .wk .d{min-width:44px;font-weight:700;color:var(--teal-d)}
+  .wk .m{font-size:.88rem}
+  .wk .m span{color:var(--faint)}
+  .seg{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .seg button{border:1px solid var(--bord);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--on)}
+  h2{font-size:.95rem;margin:12px 0 4px;color:var(--teal-d)}
+  .chk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bord-l);cursor:pointer;font-size:.92rem}
+  .chk input{width:20px;height:20px;accent-color:var(--teal);flex:0 0 auto}
+  .chk .n{flex:1}
+  .chk .b{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .chk .b small{display:block;color:var(--faint);font-size:.72rem}
+  .chk.done .n,.chk.done .b{text-decoration:line-through;color:var(--faint)}
+  .foot{font-size:.76rem;color:var(--faint);text-align:center;margin-top:16px;line-height:1.5}
+  .empty{color:var(--muted);font-size:.9rem;text-align:center;padding:18px 6px}
+  .state{text-align:center;padding:60px 16px}
+  .state .big{font-size:2rem;color:var(--teal)}
+  .state .big.err{color:var(--danger)}
+  .state h1{font-size:1.1rem;color:var(--teal-d);margin:10px 0 6px}
+  .state p{color:var(--muted);font-size:.9rem;margin:0 0 8px}
+  .spin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite;margin:70px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="mark"></div><b>FEED YOUR HEALTH</b></header>
+  <div id="root"><div class="spin" role="status" aria-label="Φόρτωση"></div></div>
+</div>
+
+<script>
+'use strict';
+const SUPABASE_URL='https://vqmzrmotdqqoswlgfgrn.supabase.co';
+const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+
+function tokenParam(){ const p=new URLSearchParams(location.search); return p.get('t')||p.get('token')||''; }
+const TOK=tokenParam();
+const DAYS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+const DSHORT=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
+// Ψώνια: όλη η εβδομάδα ή 2 ψώνια (Δευ–Τετ / Πεμ–Κυρ) — τα αλλοιώσιμα δεν αγοράζονται 7 μέρες πριν.
+const SHOP_RANGES={all:[0,1,2,3,4,5,6], a:[0,1,2], b:[3,4,5,6]};
+const SHOP_LABELS={all:'Όλη η εβδομάδα', a:'1ο ψώνιο · Δευ–Τετ', b:'2ο ψώνιο · Πεμ–Κυρ'};
+const CATS=['Κρέας','Ψάρια','Αυγά/Γαλακτ.','Γαλακτοκομικά','Δημητριακά','Όσπρια','Λαχανικά','Φρούτα','Ξηροί καρποί','Λάδια','Συνταγές FYH','Άλλα'];
+const CAT_ICON={'Κρέας':'🥩','Ψάρια':'🐟','Αυγά/Γαλακτ.':'🥚','Γαλακτοκομικά':'🥛','Δημητριακά':'🌾','Όσπρια':'🫘','Λαχανικά':'🥦','Φρούτα':'🍎','Ξηροί καρποί':'🥜','Λάδια':'🫒','Συνταγές FYH':'🍲','Άλλα':'🛒'};
+let sb=null, SNAP=null, VIEW='today', DAY=(new Date().getDay()+6)%7, SHOP='all';
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function lsKey(){ return 'fyh_kitchen_'+TOK.slice(0,16)+'_'+SHOP+'_'+((SNAP&&SNAP.updated)||''); }
+function getChecks(){ try{ return JSON.parse(localStorage.getItem(lsKey())||'{}'); }catch(e){ return {}; } }
+function setChecks(o){ try{ localStorage.setItem(lsKey(),JSON.stringify(o)); }catch(e){} }
+
+function fail(t,s){
+  el('root').innerHTML='<div class="state"><div class="big err">✕</div><h1>'+esc(t)+'</h1><p>'+esc(s)+'</p></div>';
+}
+
+(async function boot(){
+  if(!TOK){ return fail('Λείπει ο σύνδεσμος.','Ζήτησε από τον διαιτολόγο το σωστό link.'); }
+  let data,error;
+  try{
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+    ({data,error}=await sb.rpc('get_shared_plan',{p_token:TOK}).single());
+  }catch(e){
+    return fail('Πρόβλημα σύνδεσης.','Έλεγξε τη σύνδεσή σου στο ίντερνετ και δοκίμασε ξανά.');
+  }
+  if(error||!data||!data.snapshot||data.snapshot.kind!=='kitchen'){
+    if(error) console.error('[kouzina] get_shared_plan',error);
+    return fail('Δεν βρέθηκε.','Ο σύνδεσμος μπορεί να έληξε. Ζήτησε νέο link από τον διαιτολόγο.');
+  }
+  if(data.expires_at && new Date(data.expires_at)<new Date()){
+    return fail('Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο να στείλει νέο link.');
+  }
+  SNAP=data.snapshot;
+  render();
+})();
+
+function setView(v){ VIEW=v; render(); window.scrollTo(0,0); }
+function setDay(i){ DAY=i; VIEW='today'; render(); }
+function setShop(s){ SHOP=s; render(); }
+function toggleItem(k){ const o=getChecks(); if(o[k]) delete o[k]; else o[k]=1; setChecks(o); render(); }
+function resetChecks(){ setChecks({}); render(); }
+
+function qtyHtml(main,sub){ return '<div class="q">'+esc(main)+(sub?'<small>'+esc(sub)+'</small>':'')+'</div>'; }
+
+function mealCard(m){
+  let h='<div class="card"><div class="mh"><span class="slot">'+esc(m.slot)+'</span></div>'
+    +'<div class="dish">'+esc(m.dish)+'</div>'
+    +'<div class="lbl">Μαγειρέψτε συνολικά</div><div class="tot">'
+    +m.total.map(t=>'<div class="row"><span>'+esc(t.n)+'</span>'+qtyHtml(t.g+' γρ.',(t.main&&t.main.indexOf('γρ.')<0)?'≈ '+t.main:'')+'</div>').join('')
+    +'</div><div class="lbl">Μοιράστε στα πιάτα</div>';
+  m.plates.forEach(p=>{
+    h+='<div class="plate"><div class="pw">'+esc(p.who)+'</div>'
+      +p.items.map(i=>'<div class="row"><span>'+esc(i.n)+'</span>'+qtyHtml(i.main,i.sub)+'</div>').join('')+'</div>';
+  });
+  return h+'</div>';
+}
+
+function viewToday(){
+  const d=SNAP.days[DAY]||{meals:[]};
+  let h='<div class="pills">'+DSHORT.map((x,i)=>{
+    const n=(SNAP.days[i]&&SNAP.days[i].meals.length)||0;
+    return '<button class="dp" aria-pressed="'+(i===DAY)+'" onclick="setDay('+i+')">'+x+'<small>'+(n?n+' κοινά':'—')+'</small></button>';
+  }).join('')+'</div>';
+  h+='<h2 style="margin-top:0">'+esc(DAYS[DAY])+'</h2>';
+  if(!d.meals.length) h+='<div class="card empty">Καμία κοινή μέρα σήμερα — ο καθένας έχει το δικό του πλάνο.</div>';
+  else h+=d.meals.map(mealCard).join('');
+  return h;
+}
+
+function viewWeek(){
+  let h='<div class="card">';
+  SNAP.days.forEach((d,i)=>{
+    h+='<div class="wk" onclick="setDay('+i+')"><div class="d">'+DSHORT[i]+'</div><div class="m">'
+      +(d.meals.length?d.meals.map(m=>'<div><span>'+esc(m.slot)+':</span> '+esc(m.dish)+'</div>').join(''):'<span>Χωρίς κοινά γεύματα</span>')
+      +'</div></div>';
+  });
+  return h+'</div>';
+}
+
+function shopRound(g){ if(g<100)return Math.ceil(g/10)*10; if(g<500)return Math.ceil(g/25)*25; if(g<1000)return Math.ceil(g/50)*50; return Math.ceil(g/100)*100; }
+function shopDisp(g){ return g>=1000?String((Math.round(g/100)/10).toFixed(1)).replace('.',',')+' kg':g+' g'; }
+
+function viewShop(){
+  const tot={};
+  SHOP_RANGES[SHOP].forEach(d=>{ const sd=SNAP.shopDays[d]||{}; Object.keys(sd).forEach(n=>{ tot[n]=(tot[n]||0)+sd[n]; }); });
+  const byCat={};
+  Object.keys(tot).forEach(n=>{
+    const m=SNAP.foods[n]||{name:n,cat:'Άλλα'}, g=Math.round(tot[n]);
+    let buy, sub='';
+    if(m.egg){ buy=Math.ceil(g/55)+' τεμ.'; }
+    else if(m.f){ buy=shopDisp(shopRound(g*m.f)); sub=m.lbl||''; }
+    else buy=shopDisp(shopRound(g));
+    const cat=CATS.indexOf(m.cat)>=0?m.cat:'Άλλα';
+    (byCat[cat]=byCat[cat]||[]).push({k:n,name:m.name,buy:buy,sub:sub});
+  });
+  const checks=getChecks();
+  let total=0, done=0;
+  let h='<div class="seg">'+Object.keys(SHOP_RANGES).map(k=>'<button aria-pressed="'+(k===SHOP)+'" onclick="setShop(\''+k+'\')">'+esc(SHOP_LABELS[k])+'</button>').join('')+'</div>';
+  let body='';
+  CATS.forEach(cat=>{
+    const items=(byCat[cat]||[]).sort((a,b)=>a.name.localeCompare(b.name,'el'));
+    if(!items.length) return;
+    body+='<h2>'+(CAT_ICON[cat]||'')+' '+esc(cat)+'</h2>';
+    items.forEach(it=>{
+      total++; const on=!!checks[it.k]; if(on) done++;
+      body+='<label class="chk'+(on?' done':'')+'"><input type="checkbox"'+(on?' checked':'')+' onchange="toggleItem(\''+esc(it.k.replace(/\\/g,'\\\\').replace(/'/g,"\\'"))+'\')">'
+        +'<span class="n">'+esc(it.name)+'</span><span class="b">'+esc(it.buy)+(it.sub?'<small>'+esc(it.sub)+'</small>':'')+'</span></label>';
+    });
+  });
+  if(!total) return h+'<div class="card empty">Δεν υπάρχει λίστα ακόμη.</div>';
+  return h+'<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem;color:var(--muted)"><span>'+done+' από '+total+' ✓</span>'
+    +(done?'<button class="seg" style="border:none;background:none;color:var(--teal);font:inherit;font-weight:700;cursor:pointer;padding:0;margin:0" onclick="resetChecks()">Καθάρισε όλα</button>':'')+'</div>'
+    +body+'<div class="foot">Όλα τα τρόφιμα του σπιτιού για τις ημέρες που επέλεξες, και τα ατομικά γεύματα. Η ποσότητα είναι αυτή που αγοράζεις· όπου γράφει «ωμό/ξερά», είναι το βάρος πριν το μαγείρεμα.</div></div>';
+}
+
+function render(){
+  const s=SNAP;
+  const upd=s.updated?new Date(s.updated).toLocaleDateString('el-GR',{day:'numeric',month:'long'}):'';
+  let h='<div class="who"><h1>'+esc(s.name)+'</h1><div class="upd">'+esc((s.members||[]).join(' · '))+(upd?' · ενημέρωση '+esc(upd):'')+'</div></div>';
+  h+='<div class="tabs">'
+    +'<button class="tab" aria-pressed="'+(VIEW==='today')+'" onclick="setView(\'today\')">Ημέρα</button>'
+    +'<button class="tab" aria-pressed="'+(VIEW==='week')+'" onclick="setView(\'week\')">Εβδομάδα</button>'
+    +'<button class="tab" aria-pressed="'+(VIEW==='shop')+'" onclick="setView(\'shop\')">Ψώνια</button></div>';
+  if(VIEW!=='shop' && s.allergyWarn && s.allergyWarn.length){
+    h+='<div class="warn">⚠️ Αλλεργίες στο σπίτι: <b>'+esc(s.allergyWarn.join(', '))+'</b>. Προσοχή στα κοινά σκεύη και στα υλικά.</div>';
+  }
+  h+=VIEW==='week'?viewWeek():VIEW==='shop'?viewShop():viewToday();
+  h+='<div class="foot">🔒 Εδώ φαίνονται μόνο φαγητό και ποσότητες. Ο καθένας έχει και το δικό του, προσωπικό link.</div>';
+  el('root').innerHTML=h;
+}
+</script>
+</body>
+</html>

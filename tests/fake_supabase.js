@@ -20,6 +20,11 @@
   Q.prototype._exec=function(){
     var S=window.__SERVER;
     S.calls=S.calls||[]; S.calls.push(this.t+':'+this.op);
+    if(this.t==='shared_plans'){   // κρατά ό,τι δημοσιεύεται, για το get_shared_plan παρακάτω
+      S.shared=S.shared||{};
+      if(this.op==='upsert'&&this.p&&this.p.token) S.shared[this.p.token]=clone(this.p);
+      if(this.op==='update'&&this.f.token&&S.shared[this.f.token]) Object.assign(S.shared[this.f.token],clone(this.p));
+    }
     if(this.t!=='user_data') return {data:this.single?null:[], error:null};
     var uid=this.f.user_id || (this.p&&this.p.user_id);
     S.rows=S.rows||{};
@@ -47,7 +52,12 @@
   window.supabase={createClient:function(){
     return {
       from:function(t){ return new Q(t); },
-      rpc:function(){ return Promise.resolve({data:null,error:null}); },
+      rpc:function(name,args){
+        var S=window.__SERVER||{}, row=(name==='get_shared_plan'&&S.shared&&args)?S.shared[args.p_token]:null;
+        var p=Promise.resolve({data:row?{snapshot:clone(row.snapshot),updated_at:row.updated_at,expires_at:row.expires_at}:null,error:null});
+        p.single=function(){ return p; };
+        return p;
+      },
       auth:{
         onAuthStateChange:function(){ return {data:{subscription:{unsubscribe:function(){}}}}; },
         getSession:function(){ return Promise.resolve({data:{session:{user:{id:window.__UID,email:'test@example.test'}}}}); },

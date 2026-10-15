@@ -9,6 +9,7 @@
   allergy_ui_test.py  ⚠️ Αλλεργίες section: intake apply, genPlan/insert/publish guards
   repro_test.py       pregnancy / lactation kcal, safety flags, form ticks, genPlan gate
   clinical_test.py    diabetes avoid-list, protocol fiber target + swaps, RED-S gate / home card
+  household_test.py   🏠 household link/leave, «Εφαρμογή σε…» scaling + allergies, kitchen link + kouzina.html
   version_check_test.py  ?v= stamps up to date + stale page reloads once / banner (scripts/stamp-version.py)
 
 All of them use a fake in-browser Supabase — they never touch real data.
@@ -18,7 +19,7 @@ import subprocess, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py']
+TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py']
 
 failed = []
 for name in TESTS:

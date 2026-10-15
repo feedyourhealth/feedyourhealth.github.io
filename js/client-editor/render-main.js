@@ -261,6 +261,7 @@ function renderMain(){
     +'<button type="button" class="btn" id="inp-group-new-confirm" style="padding:9px 12px;font-size:12px;background:#025857;color:#fff;border:none;border-radius:8px;cursor:pointer;">✓ Προσθήκη</button>'
     +'<button type="button" class="btn" id="inp-group-new-cancel" style="padding:9px 12px;font-size:12px;background:#eee;color:#555;border:none;border-radius:8px;cursor:pointer;">Άκυρο</button>'
     +'</div></div></div>'
+    +buildHouseholdSectionHtml(c)
     +'</div>'
     +'</div>'
 
