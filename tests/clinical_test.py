@@ -1,4 +1,5 @@
-"""Clinical protocols: diabetes avoid-list (no eggplant), protocol fiber target, protocol swaps, RED-S flags/gate/home card."""
+"""Clinical protocols: diabetes avoid-list (no eggplant), protocol fiber target, protocol swaps, RED-S flags/gate/home card,
+hypertension/cholesterol approved ban + «με μέτρο» lists (exact «=Βούτυρο»)."""
 import json, subprocess, sys, time, urllib.request, io
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -22,7 +23,9 @@ ci = dict(base, id='ci', name='Ακανόνιστος', goal='-300', menstrualCy
 ck = dict(base, id='ck', name='Ακανόνιστος χωρίς έλλειμμα', goal='0', menstrualCycle='irregular')
 cm = dict(base, id='cm', name='Άνδρας', sex='M', goal='-400', menstrualCycle='absent')
 cs = dict(base, id='cs', name='Νέα σημείωση', goal='-300')
-S = {'rows': {U1: {'data': {'clients': [cd, cc, cr, ci, ck, cm, cs], 'customTemplates': []}, 'version': 1}}}
+ch = dict(base, id='ch', name='Υπέρταση', medConditions={'hypertension': True})
+cc2 = dict(base, id='cc2', name='Χοληστερόλη 2', medConditions={'cholesterol': True})
+S = {'rows': {U1: {'data': {'clients': [cd, cc, cr, ci, ck, cm, cs, ch, cc2], 'customTemplates': []}, 'version': 1}}}
 
 srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PORT), '--directory', str(REPO)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 try:
@@ -101,6 +104,40 @@ try:
         check(dlg() and 'Κίνδυνος RED-S' in pg.inner_text('#confirmTitle'), 'saving «Απών» with a loss goal offers Διατήρηση')
         pg.click('#confirmBtn'); pg.wait_for_timeout(400)
         check(T('getC().goal') == '0', 'accepted → goal 0')
+
+        print('6. Hypertension / cholesterol lists (approved 2026-10-15)')
+        r = T("""(()=>{var o={}; [["ch",["Αμπελόφυλλα (τουρσί)","Λούτζα","Κύβο λαχανικών","Σάλτσα σόγιας-μελιού","Σάλτσα σόγιας (μειωμένο αλάτι)","Αλάτι"],["Τυρί φέτα","Ελιές","Χαλλούμι (ψητό)"]],
+          ["cc2",["Βούτυρο","Κρέμα γάλακτος","Cream cheese","Σαγανάκι (τηγανητό)","Λούτζα"],["Φυστικοβούτυρο","Αμυγδαλοβούτυρο","Τυρί φέτα","Αρνί (ψητό)","Βοδινός κιμάς (μαγ.)"]]].forEach(function(x){
+            var c=clients.find(k=>k.id===x[0]); var ex=getProtocolAvoidFoods(c).map(normalizeGreekText);
+            o[x[0]+"_banned_missed"]=x[1].filter(n=>!foodIsExcludedByNameOrIngredient(n,ex));
+            o[x[0]+"_allowed_hit"]=x[2].filter(n=>foodIsExcludedByNameOrIngredient(n,ex)); });
+          var ex2=getProtocolAvoidFoods(clients.find(k=>k.id==="cc2")).map(normalizeGreekText);
+          var ing=n=>JSON.stringify((FOODS[n]&&FOODS[n].ingredients)||[])+JSON.stringify((typeof FYH_RECIPE_EXPAND!=="undefined"&&FYH_RECIPE_EXPAND[n])||{});
+          var cc2=clients.find(k=>k.id==="cc2");
+          o.butterRecipes=getRecipeExclusionConflicts({foods:[{n:"Αβοκάντο",g:80},{n:"Βούτυρο",g:12}]},cc2).map(f=>f.n).join();
+          o.pbRecipesHit=getRecipeExclusionConflicts({foods:[{n:"Βρώμη (ωμή)",g:50},{n:"Φυστικοβούτυρο",g:15},{n:"Αμυγδαλοβούτυρο",g:15}]},cc2).map(f=>f.n);
+          o.comboPB=comboHasExcludedFood([{n:"Φυστικοβούτυρο"}],["=βούτυρο"]); o.comboB=comboHasExcludedFood([{n:"Βούτυρο"}],["=βούτυρο"]);
+          return o;})()""")
+        check(r['ch_banned_missed'] == [] and r['ch_allowed_hit'] == [], f"hypertension: bans hit, feta/olives/halloumi allowed ({r['ch_banned_missed']} / {r['ch_allowed_hit']})")
+        check(r['cc2_banned_missed'] == [] and r['cc2_allowed_hit'] == [], f"cholesterol: bans hit, peanut/almond butter + red meat allowed ({r['cc2_banned_missed']} / {r['cc2_allowed_hit']})")
+        check(r['butterRecipes'] == 'Βούτυρο' and r['pbRecipesHit'] == [], f"recipes with butter excluded ({r['butterRecipes']}), peanut-butter recipes kept ({r['pbRecipesHit']})")
+        check(r['comboB'] and not r['comboPB'], 'saved-combo matcher honours exact «=Βούτυρο»')
+        for cid in ['ch', 'cc2']:
+            T(f'selectClient("{cid}"); renderMain();'); pg.wait_for_timeout(300)
+            T('genPlanWithUndo()'); pg.wait_for_timeout(500); close_dialogs()
+            r = T("""(()=>{var c=getC(), ex=getProtocolAvoidFoods(c).map(normalizeGreekText), bad=[], n=0; Object.keys(c.weekPlan).forEach(d=>c.weekPlan[d].forEach(m=>m.foods.forEach(f=>{n++; if(foodIsExcludedByNameOrIngredient(f.n,ex))bad.push(f.n);}))); return {n:n,bad:bad};})()""")
+            check(r['n'] > 0 and r['bad'] == [], f"{cid}: generated plan has no banned food ({r})")
+        r = T("""(()=>{var c=clients.find(k=>k.id==="cc2"); c.weekPlan={0:[{name:"Πρωινό",foods:[{n:"Βούτυρο",g:10},{n:"Φυστικοβούτυρο",g:15},{n:"Τυρί φέτα",g:30}]}],1:[{name:"Πρωινό",foods:[{n:"Τυρί φέτα",g:30},{n:"Αρνί (ψητό)",g:150}]}]};
+          var w=getProtocolWarnHits(c); scrubExcludedFoodsFromWeekPlan(c.weekPlan, buildEffectiveExclusionList(c));
+          return {w:w.map(x=>x.hits.map(h=>h.term+"x"+h.count).join(",")), after:c.weekPlan[0][0].foods.map(f=>f.n)};})()""")
+        check(r['w'] == ['Τυρί φέταx2,Αρνί (ψητό)x1'], f"warn hits counted ({r['w']})")
+        check('Βούτυρο' not in r['after'] and 'Φυστικοβούτυρο' in r['after'], f"scrub removes butter, keeps peanut butter ({r['after']})")
+        T('selectClient("cc2"); renderMain(); swTab && swTab("plan")'); pg.wait_for_timeout(300); T('renderWeekTable()'); pg.wait_for_timeout(200)
+        txt = T('document.getElementById("week-con").innerText')
+        check('πολλά κορεσμένα' in txt and 'Τυρί φέτα ×2' in txt, 'warn banner shown above the plan')
+        T('showMedicalProtocol("cholesterol")'); pg.wait_for_timeout(200)
+        card = T('document.querySelector("[data-medical-modal]").innerText')
+        check('Με μέτρο' in card and '=Βούτυρο' not in card and 'Βούτυρο' in card, 'protocol card lists «Με μέτρο» and shows butter without «=»')
         br.close()
 finally:
     srv.terminate()

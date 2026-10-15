@@ -41,18 +41,23 @@ function isFoodAllergy(foodName, allergyList) {
 // με αποκλεισμένο συστατικό γλιστράει απαρατήρητο από όλα αυτά. Confirmed live 2026-07-30: πελάτης
 // με "Αυγά (ολόκληρα)" στη λίστα αποκλεισμού συνέχιζε να παίρνει "High Protein Ομελέτα Wrap"
 // (περιέχει "Αυγά" ως συστατικό) σε κάθε διαδρομή δημιουργίας πλάνου.
+// Όρος αποκλεισμού που ξεκινά με '=' ταιριάζει μόνο με ΑΚΡΙΒΕΣ όνομα (π.χ. '=Βούτυρο' στο πρωτόκολλο
+// Χοληστερόλης — χωρίς το '=' θα έπιανε ως substring και το Φυστικοβούτυρο/Αμυγδαλοβούτυρο). 2026-10-15.
+function exclTermHit(textNorm,term){
+  return term.charAt(0)==='='?textNorm===term.slice(1):textNorm.indexOf(term)!==-1;
+}
 function foodIsExcludedByNameOrIngredient(foodName,exclNormalized){
   if(!foodName||!exclNormalized||!exclNormalized.length)return false;
   var nameNorm=normalizeGreekText(foodName);
   for(var i=0;i<exclNormalized.length;i++){
-    if(nameNorm.indexOf(exclNormalized[i])!==-1)return true;
+    if(exclTermHit(nameNorm,exclNormalized[i]))return true;
   }
   var fd=FOODS[foodName];
   if(fd&&fd.ingredients&&fd.ingredients.length){
     for(var j=0;j<fd.ingredients.length;j++){
       var ingNorm=normalizeGreekText(fd.ingredients[j].item||'');
       for(var k=0;k<exclNormalized.length;k++){
-        if(ingNorm.indexOf(exclNormalized[k])!==-1)return true;
+        if(exclTermHit(ingNorm,exclNormalized[k]))return true;
       }
     }
   }
@@ -61,7 +66,7 @@ function foodIsExcludedByNameOrIngredient(foodName,exclNormalized){
     for(var m=0;m<rx.length;m++){
       var rxNorm=normalizeGreekText(rx[m].n||'');
       for(var n=0;n<exclNormalized.length;n++){
-        if(rxNorm.indexOf(exclNormalized[n])!==-1)return true;
+        if(exclTermHit(rxNorm,exclNormalized[n]))return true;
       }
     }
   }

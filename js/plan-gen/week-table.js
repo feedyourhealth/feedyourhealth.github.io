@@ -461,7 +461,16 @@ function renderWeekTable(){
   var validationHtml = displayFoodDistributionResults(foodValidation);
 
   // Instead of displaying micronutrients inline, add a button to open the modal
-  con.innerHTML=scoreHtml+swapBannerHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
+  // ⚠️ «Με μέτρο» τρόφιμα πρωτοκόλλου (Υπέρταση: νάτριο, Χοληστερόλη: κορεσμένα) — επιτρέπονται,
+  // απλώς φαίνεται πόσες φορές μπαίνουν αυτή την εβδομάδα. 2026-10-15.
+  var protoWarn=(typeof getProtocolWarnHits==='function')?getProtocolWarnHits(c):[];
+  var protoWarnHtml=protoWarn.map(function(pw){
+    return '<div style="background:#fff8e1;border:1px solid #ffd54f;border-radius:8px;padding:7px 12px;font-size:11px;color:#8a6100;margin-bottom:8px">'
+      +pw.icon+' <b>'+esc(pw.name)+' — '+esc(pw.label)+':</b> '
+      +pw.hits.map(function(h){return esc(h.term)+' <b>×'+h.count+'</b>';}).join(' · ')
+      +' <span style="opacity:.8">αυτή την εβδομάδα</span></div>';
+  }).join('');
+  con.innerHTML=scoreHtml+swapBannerHtml+protoWarnHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
 
   // Enable drag & drop for meals
   enableMealDragDrop();

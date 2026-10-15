@@ -454,7 +454,13 @@ var MEDICAL_PROTOCOLS = {
     icon: '❤️',
     restrictions: {
       maxSodium: 2300,
-      avoidFoods: ['Αλάτι', 'Παστράμι', 'Ζαμπόν', 'Διάφορα ξηρά'],
+      // ✅ 2026-10-15: λίστες εγκεκριμένες από τον διαιτολόγο. avoidFoods = απαγόρευση (substring σε όνομα
+      // + υλικά συνταγών — το 'Σάλτσα σόγιας' πιάνει και τις δύο σάλτσες σόγιας). 'Παστράμι'/'Ζαμπόν' δεν
+      // υπάρχουν σήμερα στη FOODS — μένουν για μελλοντικές προσθήκες. warnFoods = επιτρέπονται, αλλά
+      // μετριούνται σε banner πάνω από το πλάνο (getProtocolWarnHits) — φέτα/ελιές είναι σε 78/44 συνταγές.
+      avoidFoods: ['Αλάτι', 'Κύβο λαχανικών', 'Σάλτσα σόγιας', 'Αμπελόφυλλα (τουρσί)', 'Λούτζα', 'Παστράμι', 'Ζαμπόν'],
+      warnFoods: ['Χαλλούμι', 'Ελιές', 'Τυρί φέτα', 'Κεφαλοτύρι', 'Παρμεζάνα', 'Κασέρι', 'Γραβιέρα', 'Σαγανάκι (τηγανητό)', 'Πέστο βασιλικού'],
+      warnLabel: 'υψηλό νάτριο — μικρές μερίδες',
       increaseKalium: true,
       minKaliumFoods: ['Μπανάνα', 'Ντομάτα', 'Σπανάκι', 'Σέλινο']
     },
@@ -475,7 +481,13 @@ var MEDICAL_PROTOCOLS = {
     name: 'Υψηλή Χοληστερόλη (Υπερχοληστερολαιμία)',
     icon: '🩸',
     restrictions: {
-      avoidFoods: ['Κόκκινο κρέας', 'Επεξεργασμένα αλλαντικά (μπέικον, ζαμπόν, λουκάνικα)', 'Βούτυρο & κρέμα', 'Πλήρη γαλακτοκομικά', 'Φοινικέλαιο/Καρυδέλαιο', 'Τηγανητά & βιομηχανική ζαχαροπλαστική (trans λιπαρά)'],
+      // ✅ 2026-10-15: πριν ήταν κατηγορίες-κείμενο ('Κόκκινο κρέας', 'Βούτυρο & κρέμα'…) που δεν ταίριαζαν
+      // με ΚΑΝΕΝΑ τρόφιμο — δεν αφαιρούσαν τίποτα. Τώρα πραγματικά ονόματα, εγκεκριμένα από τον διαιτολόγο.
+      // '=Βούτυρο' = ακριβές όνομα (exclTermHit) ώστε να μην πιάνει Φυστικοβούτυρο/Αμυγδαλοβούτυρο.
+      // Κόκκινο κρέας: περιορισμός, όχι απαγόρευση (AHA/TLC) → swap σε άπαχο κιμά + warnFoods.
+      avoidFoods: ['=Βούτυρο', 'Κρέμα γάλακτος', 'Cream cheese', 'Σαγανάκι (τηγανητό)', 'Λούτζα'],
+      warnFoods: ['Γάλα καρύδας', 'Κεφαλοτύρι', 'Γραβιέρα', 'Κασέρι', 'Παρμεζάνα', 'Χαλλούμι', 'Τυρί φέτα', 'Dark Chocolate 70%', 'Lindt Excellence Μαύρη Σοκολάτα 70%', 'Χοιρινός κιμάς (μαγ.)', 'Αρνί (ψητό)'],
+      warnLabel: 'πολλά κορεσμένα — μικρές μερίδες / όχι συχνά',
       maxSaturatedFatPercentage: 7,
       avoidTransFat: true,
       preferUnsaturatedFat: true,
@@ -886,6 +898,29 @@ function getProtocolFiberTarget(client) {
   return best ? {g: best, names: names} : null;
 }
 
+// ⚠️ «Προειδοποίηση» τρόφιμα (restrictions.warnFoods) που υπάρχουν τώρα στο πλάνο — μετριούνται ανά
+// όρο (κάθε φαγητό που τον έχει στο όνομα ή στα υλικά του), ανά πρωτόκολλο. 2026-10-15.
+// Επιστρέφει [{icon, name, label, hits:[{term,count}]}] μόνο για πρωτόκολλα με ≥1 εύρημα.
+function getProtocolWarnHits(client) {
+  if (!client || !client.weekPlan || typeof foodIsExcludedByNameOrIngredient !== 'function') return [];
+  var out = [];
+  getActiveProtocols(client).forEach(function(protocol) {
+    var terms = (protocol.restrictions || {}).warnFoods || [];
+    if (!terms.length) return;
+    var hits = terms.map(function(t) {
+      var norm = [normalizeGreekText(t)], n = 0;
+      Object.keys(client.weekPlan).forEach(function(d) {
+        (client.weekPlan[d] || []).forEach(function(meal) {
+          (meal.foods || []).forEach(function(f) { if (foodIsExcludedByNameOrIngredient(f.n, norm)) n++; });
+        });
+      });
+      return {term: t, count: n};
+    }).filter(function(h) { return h.count > 0; }).sort(function(a, b) { return b.count - a.count; });
+    if (hits.length) out.push({icon: protocol.icon, name: protocol.name.replace(/\s*\(.*$/, ''), label: protocol.restrictions.warnLabel || '', hits: hits});
+  });
+  return out;
+}
+
 // 🔄 Αντικαταστάσεις πρωτοκόλλου που υπάρχουν ΤΩΡΑ στο πλάνο: [{from,to,kcal,count,protocols}].
 // Αν δύο πρωτόκολλα έχουν την ίδια αντικατάσταση (π.χ. λευκό ψωμί), μετριέται μία φορά.
 function findProtocolSwapsInPlan(client) {
@@ -991,9 +1026,15 @@ function showMedicalProtocol(condition) {
     html += '<div style="margin-bottom:15px;"><strong style="color:#d32f2f;">🚫 Αποφύγετε:</strong>';
     html += '<ul style="margin:8px 0;color:var(--text-strong);">';
     protocol.restrictions.avoidFoods.forEach(function(food) {
-      html += '<li style="margin:4px 0;">' + food + '</li>';
+      html += '<li style="margin:4px 0;">' + food.replace(/^=/, '') + '</li>';
     });
     html += '</ul></div>';
+  }
+
+  // ΜΕ ΜΕΤΡΟ (warnFoods) — επιτρέπονται, μετριούνται σε banner πάνω από το πλάνο
+  if(protocol.restrictions.warnFoods && protocol.restrictions.warnFoods.length > 0) {
+    html += '<div style="margin-bottom:15px;"><strong style="color:#e65100;">⚠️ Με μέτρο (' + esc(protocol.restrictions.warnLabel || '') + '):</strong>';
+    html += '<div style="margin:6px 0;color:var(--text-strong);line-height:1.6;">' + protocol.restrictions.warnFoods.map(esc).join(' · ') + '</div></div>';
   }
 
   // FOOD REPLACEMENTS

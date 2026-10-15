@@ -43,7 +43,7 @@ function comboHasExcludedFood(foods, exclLower){
   if(!exclLower || !exclLower.length || !foods) return false;
   return foods.some(function(food){
     var nameLower=(food.n||'').toLowerCase();
-    return exclLower.some(function(excluded){ return excluded && nameLower.indexOf(excluded)!==-1; });
+    return exclLower.some(function(excluded){ return excluded && (excluded.charAt(0)==='='?nameLower===excluded.slice(1):nameLower.indexOf(excluded)!==-1); }); // '=' = ακριβές όνομα (βλ. exclTermHit)
   });
 }
 // Merge two saved-combo lists, deduping by id (id-less entries can't be matched against

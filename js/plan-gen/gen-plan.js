@@ -201,7 +201,7 @@ function genPlan(){
               if(meal.foods&&meal.foods.length>0){
                 meal.foods=meal.foods.filter(function(food){
                   var foodName=food.n||'';
-                  return excl.indexOf(foodName)===-1 && excl.indexOf(foodName.toLowerCase())===-1;
+                  return excl.indexOf(foodName)===-1 && excl.indexOf(foodName.toLowerCase())===-1 && excl.indexOf('='+foodName)===-1;
                 });
               }
             }
