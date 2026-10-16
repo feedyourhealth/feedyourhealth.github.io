@@ -81,8 +81,11 @@
   .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
   .tile{background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:10px 9px;min-width:0;text-align:center}
   .tile .tl{font-size:.74rem;font-weight:700;color:var(--muted)}
-  .tile .tv{font-size:1.15rem;font-weight:800;color:var(--teal-d);margin:1px 0 4px;white-space:nowrap}
+  .tile{display:flex;flex-direction:column;align-items:center}
+  .tile .tv{font-size:1.15rem;font-weight:800;color:var(--teal-d);margin:1px 0 4px;line-height:1.25;flex:1}
   .tile .tv span{font-size:.72rem;font-weight:600;color:var(--faint)}
+  .tile .tv b{white-space:nowrap;font-weight:inherit}
+  .tile .tv .pc{display:inline-block;font-size:.74rem;font-weight:700;color:var(--muted)}
   .chip{display:inline-block;font-size:.7rem;font-weight:700;padding:1px 8px;border-radius:9px;white-space:nowrap;background:var(--bord-l);color:var(--faint)}
   .chip.good{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
   .chip.soft{background:color-mix(in srgb,var(--warn) 13%,transparent);color:var(--warn)}
@@ -208,7 +211,7 @@ const TXT={
     firstLbl:'Πρώτη μέτρηση',
     sFirst:'Αυτή είναι η αφετηρία μας — από την επόμενη μέτρηση θα βλέπεις εδώ την πρόοδό σου.',
     fromStart:function(d){return 'Από την αρχή ('+d+'):';},
-    tWeight:'Βάρος', tBf:'Λίπος %', tMuscle:'Μύες', muscleHint:'άλιπη μάζα: μύες, οστά, νερό',
+    tWeight:'Βάρος', tBf:'Λίπος', tMuscle:'Μύες', muscleHint:'άλιπη μάζα: μύες, οστά, νερό',
     stable:'σταθερό', otherM:'άλλη μέθοδος',
     goalTitle:'🎯 Πορεία προς τον στόχο', gStart:'Αρχή', gNow:'Τώρα', gGoal:'Στόχος',
     gLeft:function(x){return 'Απομένουν <b>'+x+' kg</b> ως τον στόχο.';}, gDone:'🎯 Ο στόχος επιτεύχθηκε!',
@@ -266,7 +269,7 @@ const TXT={
     firstLbl:'First measurement',
     sFirst:'This is our starting point — from your next measurement you’ll see your progress here.',
     fromStart:function(d){return 'Since the start ('+d+'):';},
-    tWeight:'Weight', tBf:'Body fat %', tMuscle:'Muscle', muscleHint:'lean mass: muscle, bone, water',
+    tWeight:'Weight', tBf:'Fat', tMuscle:'Muscle', muscleHint:'lean mass: muscle, bone, water',
     stable:'steady', otherM:'other method',
     goalTitle:'🎯 Progress to your goal', gStart:'Start', gNow:'Now', gGoal:'Goal',
     gLeft:function(x){return '<b>'+x+' kg</b> to go.';}, gDone:'🎯 Goal reached!',
@@ -467,13 +470,15 @@ function heroHtml(m){
 
 /* ── 3. three tiles ── */
 function tilesHtml(m){
-  const t=function(lbl,val,u,ch,title){
-    return '<div class="tile"'+(title?' title="'+esc(title)+'"':'')+'><div class="tl">'+esc(lbl)+'</div><div class="tv">'+val+(val!=='—'?' <span>'+u+'</span>':'')+'</div>'+ch+'</div>';
+  const t=function(lbl,val,u,ch,title,extra){
+    return '<div class="tile"'+(title?' title="'+esc(title)+'"':'')+'><div class="tl">'+esc(lbl)+'</div><div class="tv"><b>'+val+(val!=='—'?' <span>'+u+'</span>':'')+'</b>'+(extra||'')+'</div>'+ch+'</div>';
   };
   const other='<span class="chip">'+esc(T('otherM'))+'</span>';
   return '<div class="tiles">'
     +t(T('tWeight'),m.wL?f1(m.wL.kg):'—',esc(T('kg')),m.wB?chip(m.dW,NOISE.kg,m.dir,''):'')
-    +t(T('tBf'),m.Lbf?f1(m.Lbf.bf):'—','%',m.bfB?chip(m.dBf,NOISE.bf,'lower',''):(m.bfOther?other:''))
+    // fat in kg with the % in brackets (Stephanos' choice); the chip stays grey while Δ%BF is
+    // within caliper noise — same reliability rule as the hero
+    +t(T('tBf'),m.Lbf?f1(fatKg(m.Lbf)):'—',esc(T('kg')),m.bfB?chip(m.dFat,Math.abs(m.dBf)<NOISE.bf?Infinity:NOISE.mass,'lower',''):(m.bfOther?other:''),'',m.Lbf?' <span class="pc">('+f1(m.Lbf.bf)+'%)</span>':'')
     +t(T('tMuscle'),m.Lbf?f1(leanKg(m.Lbf)):'—',esc(T('kg')),m.bfB?chip(m.dLean,NOISE.mass,'higher',''):(m.bfOther?other:''),T('muscleHint'))
     +'</div>';
 }
