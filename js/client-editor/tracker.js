@@ -213,6 +213,7 @@ function buildTrackerHtml(c){
   // instead of starting blank; addWeightEntry() checks _weightEditIdx to know whether to push a
   // new entry or replace this one in place.
   var ee=(_weightEditIdx>=0 && c.weightLog[_weightEditIdx])?c.weightLog[_weightEditIdx]:null;
+  var P=_trackerPresent&&c.weightLog.length>0; // «Λειτουργία παρουσίασης» (tracker-results.js)
 
   // Weight / body composition section
   var isMinorC=(c.age!=null && c.age>0 && c.age<18); // don't coerce a not-yet-entered age to 0 and misclassify as a minor
@@ -230,7 +231,10 @@ function buildTrackerHtml(c){
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     +'<div class="tracker-head" style="margin-bottom:0">📐 Ανθρωπομετρία &amp; Σωματική Σύνθεση</div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
-    +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV (εργομετρικά)</button>'
+    // ✅ «Λειτουργία παρουσίασης» — κρύβει φόρμα, σημειώσεις και ημερολόγιο συμβουλευτικής ώστε να
+    // δείχνεις στον πελάτη μόνο τα αποτελέσματα. Σε παρουσίαση μένει μόνο το κουμπί εξόδου.
+    +(c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:'+(P?'#e65100':'#5c6bc0')+';color:#fff;border:none" title="Δείξε στον πελάτη μόνο τα αποτελέσματα — κρύβει φόρμα, σημειώσεις και ημερολόγιο συμβουλευτικής" onclick="toggleTrackerPresent()">'+(P?'✕ Έξοδος παρουσίασης':'🖥️ Παρουσίαση')+'</button>':'')
+    +(P?'':'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV (εργομετρικά)</button>'
     +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">'
     +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Κλινικό PDF στιγμιότυπου — για φάκελο/γιατρό/εκτύπωση. Για τον πελάτη χρησιμοποίησε τα κουμπιά WhatsApp/Email δεξιά (ζωντανό link)." onclick="exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης</button>'
     // ── αποστολή του εντύπου λιπομέτρησης στον πελάτη (WhatsApp / Email) ────────
@@ -238,9 +242,11 @@ function buildTrackerHtml(c){
     // μόνο όταν λείπει τηλέφωνο / email από την καρτέλα.
     +(c.phone?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#25D366;color:#fff;border:none" title="Δημοσίευση ζωντανού συνδέσμου μετρήσεων (metriseis.html) + WhatsApp με έτοιμο μήνυμα — ενημερώνεται μόνος του σε κάθε νέα μέτρηση, χωρίς re-send" onclick="sendLipometriaReport(\'wa\')">📱 WhatsApp</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:var(--text-muted);border:none;cursor:not-allowed" title="Λείπει τηλέφωνο από την καρτέλα του πελάτη — συμπλήρωσέ το στην καρτέλα «Στοιχεία»">📱 WhatsApp</button>')
     +(c.email?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Δημοσίευση ζωντανού συνδέσμου μετρήσεων (metriseis.html) + Email με έτοιμο μήνυμα — ενημερώνεται μόνος του σε κάθε νέα μέτρηση, χωρίς re-send" onclick="sendLipometriaReport(\'mail\')">📧 Email</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:var(--text-muted);border:none;cursor:not-allowed" title="Λείπει email από την καρτέλα του πελάτη — συμπλήρωσέ το στην καρτέλα «Στοιχεία»">📧 Email</button>')
-    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Αποθήκευση/εκτύπωση του ιστορικού μετρήσεων" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':'')
+    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Αποθήκευση/εκτύπωση του ιστορικού μετρήσεων" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':''))
     +'</div>'
     +'</div>'
+    // entry form — kept in the DOM (edit-prefill timers look up its ids) but hidden in presentation mode
+    +'<div'+(P?' style="display:none"':'')+'>'
     // ✅ persistent (non-hover) caption for the CSV button — the old title-only tooltip explaining
     // single-file-vs-batch import was invisible until someone hovered over it
     +'<div style="font-size:10px;color:var(--text-muted);margin:-4px 0 8px">📤 CSV: 1 αρχείο = άμεσος έλεγχος στοιχείων &nbsp;·&nbsp; πολλά αρχεία μαζί = μαζική εισαγωγή ιστορικού</div>'
@@ -324,26 +330,13 @@ function buildTrackerHtml(c){
     +'<input type="text" id="tr-notes" placeholder="Σημειώσεις..." class="tracker-inp" style="flex:1;min-width:120px" value="'+(ee?esc(ee.notes||''):'')+'">'
     +(ee?'<button class="btn" style="padding:5px 11px;font-size:11px;background:#888;color:#fff;border:none" onclick="cancelWeightEdit()">Άκυρο</button>':'')
     +'<button class="btn" style="padding:5px 11px;font-size:11px" onclick="addWeightEntry()">'+(ee?'✓ Αποθήκευση αλλαγών':'+ Προσθήκη')+'</button>'
+    +'</div>'
     +'</div>';
   if(c.weightLog.length>0){
-    // ✅ Current Status Card (latest measurement)
-    var latest=c.weightLog[c.weightLog.length-1];
-    var latestLBM=latest.bf>0?+(latest.weight*(1-latest.bf/100)).toFixed(1):null;
-    var latestFM=latest.bf>0?+(latest.weight-latestLBM).toFixed(1):null;
-    var latestBMI=c.height>0?+(latest.weight/((c.height/100)*(c.height/100))).toFixed(1):null; // no height yet — don't divide by 0
-    // ⚠️ Τα σταθερά όρια (18.5/25/30) είναι κατηγοριοποίηση ενηλίκων (WHO) — δεν ισχύουν κλινικά
-    // για ανήλικους (χρειάζεται BMI-for-age percentile). Για ανήλικους δείχνουμε μόνο τον αριθμό,
-    // χωρίς χαρακτηρισμό/χρωματισμό που θα ήταν παραπλανητικός.
-    var latestBMIStatus='';
-    if(latestBMI!=null && !isMinorC){
-      if(latestBMI<18.5)latestBMIStatus='Λιποβαρής ℹ️';
-      else if(latestBMI<25)latestBMIStatus='Φυσιολογικό ✓';
-      else if(latestBMI<30)latestBMIStatus='Υπέρβαρος ⚠️';
-      else latestBMIStatus='Παχυσαρκία 🔴';
-    }
-    var latestBMIColor=(latestBMI==null||isMinorC)?'#999':latestBMI<18.5?'#ff6b35':latestBMI<25?'var(--good)':latestBMI<30?'#ff9800':'#c62828';
+    // ✅ Current state = the results dashboard (tracker-results.js): tiles + Δ + sparklines,
+    // summary, goal bar, %BF zone bar, milestones, infographics, before/after card.
+    var latest=trSorted(c)[c.weightLog.length-1];
     var ageC=c.birthDate?ageAtDate(c.birthDate):c.age;
-    var ffmiC=trackerFfmi(latestLBM,c.height,c.sex||'M',isMinorC);
     // adult targets only — Gallagher ranges / a %BF goal don't apply to a growing child
     var tgtC=isMinorC?null:trackerTargetWeights(latest.weight,latest.bf,c.goalBF,c.sex||'M',ageC);
     var tgtHtml='';
@@ -356,26 +349,8 @@ function buildTrackerHtml(c){
         +'</div>';
     }
 
-    wHtml+='<div style="background:#fff8e1;border:1px solid #ffb74d;border-radius:8px;padding:12px;margin-bottom:10px">'
-      +'<div style="font-size:10px;color:#e65100;font-weight:700;margin-bottom:8px">📊 Τρέχουσα Κατάσταση ('+latest.date+')</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:10px">'
-      +'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #2e7d32">'
-      +'<div style="color:#666">Βάρος</div><div style="font-size:14px;font-weight:700;color:#025857">'+latest.weight+' kg</div></div>'
-      +(latest.bf?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #ff9999"><div style="color:#666">Λίπος</div><div style="font-size:14px;font-weight:700;color:#c62828">'+latest.bf+'%</div>'+(latestFM!=null?'<div style="font-size:11px;font-weight:600;color:#d9534f" title="Λιπώδης μάζα = βάρος × %BF">'+latestFM.toFixed(1)+' kg</div>':'')+'</div>':'')
-      +(latestLBM?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #1565C0"><div style="color:#666">Lean Mass</div><div style="font-size:14px;font-weight:700;color:#1565C0">'+latestLBM+' kg</div></div>':'')
-      +(latestBMI!=null?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid '+latestBMIColor+'">'
-      +'<div style="color:#666">BMI</div><div style="font-size:14px;font-weight:700;color:'+latestBMIColor+'">'+latestBMI+(latestBMIStatus?' ('+latestBMIStatus+')':'')+'</div></div>'
-      // ✅ BMI used to just silently disappear with no height set — nothing told the practitioner
-      // why the card was missing, or what to do about it
-      :'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #ccc"><div style="color:#666">BMI</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Χρειάζεται ύψος — συμπλήρωσέ το στα Στοιχεία πελάτη</div></div>')
-      +(latest.waist?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #9c27b0"><div style="color:#666">Μέση</div><div style="font-size:14px;font-weight:700;color:#9c27b0">'+latest.waist+' cm</div></div>':'')
-      +(latest.hip?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid #f57c00"><div style="color:#666">Γοφοί</div><div style="font-size:14px;font-weight:700;color:#f57c00">'+latest.hip+' cm</div></div>':'')
-      +(ffmiC?'<div style="background:var(--card-bg);padding:8px;border-radius:5px;border-left:3px solid '+ffmiC.col+'" title="FFMI = άλιπη μάζα / ύψος² — δείχνει αν το ΔΜΣ οφείλεται σε μυ ή σε λίπος">'
-        +'<div style="color:#666">FFMI</div><div style="font-size:14px;font-weight:700;color:'+ffmiC.col+'">'+ffmiC.v+(ffmiC.cat?' <span style="font-size:10px;font-weight:600">('+ffmiC.cat+')</span>':'')+'</div></div>':'')
-      +tgtHtml
-      +'</div>'
-      +bfGaugeHtml(latest.bf,c.sex||'M',isMinorC,c.goalBF,(c.birthDate?ageAtDate(c.birthDate):c.age))
-      +'</div>';
+    // dietitian-only target-weight table stays under the tiles, but not in presentation mode
+    wHtml+=trackerResultsHtml(c,isMinorC,(!P&&tgtHtml)?'<div style="display:grid;font-size:10px;margin-bottom:10px">'+tgtHtml+'</div>':'');
 
     // ✅ TREND LINES: Weight & Body Fat % Charts
     if(c.weightLog.length>=2){
@@ -392,8 +367,8 @@ function buildTrackerHtml(c){
       wHtml+='<div style="font-size:10.5px;color:var(--text-muted);background:var(--panel-bg);border:1px dashed #ddd;border-radius:8px;padding:8px 12px;margin-bottom:15px">📈 Το γράφημα τάσης θα εμφανιστεί μετά τη 2η μέτρηση.</div>';
     }
 
-    // ── Progress summary ───────────────────────────────────────────────────────
-    if(c.weightLog.length>=2){
+    // ── Progress summary (dietitian view only — the dashboard above covers it for the client) ──
+    if(c.weightLog.length>=2 && !P){
       var sorted2=c.weightLog.slice().sort(function(a,b){return a.date<b.date?-1:1;});
       var first=sorted2[0],last=sorted2[sorted2.length-1];
       var wDiff=+(last.weight-first.weight).toFixed(1);
@@ -449,21 +424,30 @@ function buildTrackerHtml(c){
         +trackerInsightsHtml(c,sorted2)
         +'</div>';
     }
+    // circumference columns only when at least one measurement has them (tape isn't always used)
+    var trHasCol={};
+    ['waist','hip','arm'].forEach(function(k){trHasCol[k]=c.weightLog.some(function(e){return e[k]>0;});});
     wHtml+='<div style="overflow-x:auto"><table class="tracker-table"><thead><tr>'
         +'<th title="Ημερομηνία μέτρησης">Ημ/νία</th>'
         +'<th title="Σωματικό βάρος (kg)">Βάρος</th>'
         +'<th title="Ποσοστό σωματικού λίπους">Λίπος%</th>'
         +'<th title="Lean Body Mass - μυϊκή μάζα (kg)">LBM</th>'
-        +'<th title="Περίμετρος μέσης (cm)">Μέση</th>'
-        +'<th title="Περίμετρος γοφών (cm)">Γοφοί</th>'
-        +'<th title="Περίμετρος δικέφαλου (cm)">Δικέφ.</th>'
+        +(trHasCol.waist?'<th title="Περίμετρος μέσης (cm)">Μέση</th>':'')
+        +(trHasCol.hip?'<th title="Περίμετρος γοφών (cm)">Γοφοί</th>':'')
+        +(trHasCol.arm?'<th title="Περίμετρος δικέφαλου (cm)">Δικέφ.</th>':'')
         +'<th title="Ποιότητα ύπνου">Ύπνος</th>'
         +'<th title="Επίπεδο ενέργειας">Ενέρ.</th>'
         +'<th title="Συμμόρφωση με πλάνο (0-10)">Συμμ.</th>'
-        +'<th title="Διάφορες σημειώσεις">Σημειώσεις</th>'
-        +'<th></th></tr></thead><tbody>';
+        +(P?'':'<th title="Διάφορες σημειώσεις">Σημειώσεις</th><th></th>')
+        +'</tr></thead><tbody>';
+    // ✅ each value shows its change vs the previous visit BY DATE (tracker-results.js helpers);
+    // a row whose %BF was measured with a different method than the previous one is tinted.
+    var trSortedAll=trSorted(c),trM={};
+    trMetrics(c,trSortedAll).forEach(function(m){trM[m.k]=m;});
     c.weightLog.slice().reverse().forEach(function(e,ri){
       var i=c.weightLog.length-1-ri;
+      var si=trSortedAll.indexOf(e),pv=si>0?trSortedAll[si-1]:null;
+      var mMis=pv&&e.bf>0&&pv.bf>0&&trMethodMismatch(e,pv);
       var lbm=(e.bf>0)?+(e.weight*(1-e.bf/100)).toFixed(1):'—';
       var sleepStars=e.sleep?'⭐'.repeat(e.sleep):'—';
       var energyBolts=e.energy?'⚡'.repeat(e.energy):'—';
@@ -472,19 +456,19 @@ function buildTrackerHtml(c){
       // ✅ μέθοδος μέτρησης για μη-δερματοπτυχικές εγγραφές (οι δερματοπτυχικές έχουν ήδη το 📐 badge)
       var bfMethodLabel={caliper:'📐',bia:'⚡BIA',dexa:'🩻DEXA',estimate:'≈'};
       var methBadge=(e.bfMethod&&!e.sfProtocol)?'<span title="Μέθοδος μέτρησης λίπους" style="font-size:8px;background:#eef2f7;color:#456;border-radius:3px;padding:1px 4px;margin-left:3px;font-weight:700;cursor:default">'+(bfMethodLabel[e.bfMethod]||e.bfMethod)+'</span>':'';
-      wHtml+='<tr>'
+      wHtml+='<tr'+(mMis?' style="background:#fff8e1" title="Το %BF μετρήθηκε με διαφορετική μέθοδο από την προηγούμενη μέτρηση — η σύγκριση λίπους δεν είναι αξιόπιστη"':'')+'>'
         +'<td style="white-space:nowrap">'+e.date+'</td>'
-        +'<td><b>'+e.weight+' kg</b></td>'
-        +'<td>'+(e.bf?e.bf+'%'+(lbm!=='—'?' <span style="color:#888;font-size:0.92em" title="Λιπώδης μάζα = βάρος × %BF">('+(e.weight-lbm).toFixed(1)+' kg)</span>':'')+sfBadge+methBadge:'—')+'</td>'
-        +'<td>'+(lbm!=='—'?lbm+' kg':'—')+'</td>'
-        +'<td>'+(e.waist?e.waist+' cm':'—')+'</td>'
-        +'<td>'+(e.hip?e.hip+' cm':'—')+'</td>'
-        +'<td>'+(e.arm?e.arm+' cm':'—')+'</td>'
+        +'<td><b>'+e.weight+' kg</b>'+trTableDelta(e,pv,trM.weight)+'</td>'
+        +'<td>'+(e.bf?e.bf+'%'+(lbm!=='—'?' <span style="color:#888;font-size:0.92em" title="Λιπώδης μάζα = βάρος × %BF">('+(e.weight-lbm).toFixed(1)+' kg)</span>':'')+trTableDelta(e,pv,trM.bf)+sfBadge+methBadge:'—')+'</td>'
+        +'<td>'+(lbm!=='—'?lbm+' kg'+trTableDelta(e,pv,trM.lm):'—')+'</td>'
+        +(trHasCol.waist?'<td>'+(e.waist?e.waist+' cm'+trTableDelta(e,pv,trM.waist):'—')+'</td>':'')
+        +(trHasCol.hip?'<td>'+(e.hip?e.hip+' cm'+trTableDelta(e,pv,trM.hip):'—')+'</td>':'')
+        +(trHasCol.arm?'<td>'+(e.arm?e.arm+' cm'+trTableDelta(e,pv,trM.arm):'—')+'</td>':'')
         +'<td style="font-size:9px">'+sleepStars+'</td>'
         +'<td style="font-size:9px">'+energyBolts+'</td>'
         +'<td>'+(e.compliance?'<b>'+e.compliance+'/10</b>':'—')+'</td>'
-        +'<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666">'+esc(e.notes||'')+'</td>'
-        +'<td style="white-space:nowrap"><button class="met-del" onclick="editWeightEntry('+i+')" title="Επεξεργασία">✏️</button> <button class="met-del" onclick="removeWeightEntry('+i+')" title="Διαγραφή">&#10005;</button></td>'
+        +(P?'':'<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666">'+esc(e.notes||'')+'</td>'
+        +'<td style="white-space:nowrap"><button class="met-del" onclick="editWeightEntry('+i+')" title="Επεξεργασία">✏️</button> <button class="met-del" onclick="removeWeightEntry('+i+')" title="Διαγραφή">&#10005;</button></td>')
         +'</tr>';
     });
     wHtml+='</tbody></table></div>';
@@ -549,7 +533,8 @@ function buildTrackerHtml(c){
     },50);
   }
 
-  return '<div style="padding:16px 20px">'+wHtml+cHtml+'</div>';
+  // consultation log = private notes → never shown in presentation mode
+  return '<div style="padding:16px 20px">'+wHtml+(P?'':cHtml)+'</div>';
 }
 
 // ✅ TREND LINES CHARTS - Weight & Body Fat %
