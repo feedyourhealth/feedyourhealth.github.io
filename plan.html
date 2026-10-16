@@ -2014,14 +2014,18 @@ function viewHome(){
   });
 
   // Στόχος/Πρωτεΐνη/Υδατ/κες/Λιπαρά — δείχνει πόσο έχει ήδη καταναλωθεί σήμερα (άθροισμα των
-  // τσεκαρισμένων γευμάτων, μόνο το βασικό γεύμα κάθε slot — όχι τυχόν εναλλακτική) έναντι του
-  // ημερήσιου στόχου, με μπάρα προόδου· κόκκινο αν ξεπεραστεί ο στόχος.
+  // τσεκαρισμένων γευμάτων) έναντι του στόχου ΤΗΣ ΣΗΜΕΡΙΝΗΣ ημέρας, με μπάρα προόδου· κόκκινο αν
+  // ξεπεραστεί. Στόχος = τα σύνολα του πλάνου αυτής της μέρας (day.kcal/day.macros). Το s.targets
+  // είναι ο μέσος όρος της εβδομάδας, άρα σε ημέρα προπόνησης ο πελάτης έβγαινε «πάνω από τον στόχο»
+  // ακόμα κι όταν ακολουθούσε ακριβώς το πλάνο (2026-10-16)· μένει μόνο ως fallback.
+  const dm=(day&&day.macros)||{};
+  const dayTg=(day&&day.kcal)?{kcal:day.kcal,p:dm.p,c:dm.c,f:dm.f}:tg;
   const stats=el('div','stats stats-4');
   stats.innerHTML=
-    homeStat(T('statGoal'),eatK,tg.kcal||0,'kcal')
-    +homeStat(T('statProtein'),eatP,tg.p||0,unitG,true)
-    +homeStat(T('statCarbs'),eatC,tg.c||0,unitG)
-    +homeStat(T('statFat'),eatF,tg.f||0,unitG);
+    homeStat(T('statGoal'),eatK,dayTg.kcal||0,'kcal')
+    +homeStat(T('statProtein'),eatP,dayTg.p||tg.p||0,unitG,true)
+    +homeStat(T('statCarbs'),eatC,dayTg.c||tg.c||0,unitG)
+    +homeStat(T('statFat'),eatF,dayTg.f||tg.f||0,unitG);
   v.appendChild(stats);
 
   // 🥤 CHO γύρω από την προπόνηση — μόνο όταν το σήμερα είναι ημέρα προπόνησης με cho block
