@@ -197,7 +197,7 @@ const TXT={
     sFatDown:function(x){return 'Έχασες <b>'+x+' kg λίπος</b>';},
     sLeanSame:' και οι μύες σου έμειναν σταθεροί.',
     sLeanUp:function(x){return ' και κέρδισες <b>'+x+' kg μύες</b>.';},
-    sLeanDown:function(x){return '. Οι μύες μειώθηκαν λίγο ('+x+' kg) — η πρωτεΐνη μας βοηθά να τους κρατήσουμε.';},
+    sLeanDown:function(x){return '. Οι μύες μειώθηκαν λίγο ('+x+' kg).';},
     sFatUp:'Αυτή την περίοδο το λίπος ανέβηκε λίγο — θα το δούμε μαζί στο επόμενο ραντεβού.',
     sStable:'Η σύσταση του σώματός σου έμεινε ίδια — φυσιολογικό για ένα μήνα.',
     sStableLong:'Η σύσταση του σώματός σου έμεινε ίδια.',
@@ -227,8 +227,6 @@ const TXT={
     sugHealthy:'Ο ρυθμός απώλειας είναι μέσα σε υγιές εύρος.',
     sugToGo:function(kg){return 'Απομένουν ~'+kg+' kg λίπος για τον στόχο.';},
     sugAtGoal:'Το λίπος είναι ήδη εντός στόχου — στόχος πλέον η διατήρηση.',
-    sugProtPlan:function(g,pk){return 'Κράτα την πρωτεΐνη στον στόχο του πλάνου σου (~'+g+' g/ημ. · '+pk+' g/kg) για να προστατεύσεις τους μύες.';},
-    sugProtGen:'Κράτα επαρκή πρωτεΐνη (~1.6–2.2 g/kg) για να προστατεύσεις τους μύες.',
     more:'Δες λεπτομέρειες ▾', less:'Κλείσε τις λεπτομέρειες ▴',
     cmpLbl:'Σύγκριση με:', cmpPrev:'Προηγούμενη', cmpFirst:'1η μέτρηση',
     zoneTitle:'📍 Πού βρίσκεσαι',
@@ -257,7 +255,7 @@ const TXT={
     sFatDown:function(x){return 'You lost <b>'+x+' kg of fat</b>';},
     sLeanSame:' and your muscle stayed steady.',
     sLeanUp:function(x){return ' and gained <b>'+x+' kg of muscle</b>.';},
-    sLeanDown:function(x){return '. Muscle dipped a little ('+x+' kg) — protein helps us keep it.';},
+    sLeanDown:function(x){return '. Muscle dipped a little ('+x+' kg).';},
     sFatUp:'Body fat went up a little this period — we’ll look at it together at your next appointment.',
     sStable:'Your body composition stayed the same — normal for one month.',
     sStableLong:'Your body composition stayed the same.',
@@ -287,8 +285,6 @@ const TXT={
     sugHealthy:'The rate of loss is within a healthy range.',
     sugToGo:function(kg){return '~'+kg+' kg of fat to go for the goal.';},
     sugAtGoal:'Body fat is already at goal — the aim now is maintenance.',
-    sugProtPlan:function(g,pk){return 'Keep protein at your plan target (~'+g+' g/day · '+pk+' g/kg) to protect your muscle.';},
-    sugProtGen:'Keep protein adequate (~1.6–2.2 g/kg) to protect your muscle.',
     more:'See details ▾', less:'Hide details ▴',
     cmpLbl:'Compare with:', cmpPrev:'Previous', cmpFirst:'First measurement',
     zoneTitle:'📍 Where you stand',
@@ -530,7 +526,8 @@ function milestonesHtml(m){
     +(ms.next?'<span class="lk">🔒 '+esc(ms.next)+'</span>':'')+'</div></div>';
 }
 
-/* ── 6. «Τι κάνουμε τώρα» — the old buildSuggestion, noise- and method-aware ── */
+/* ── 6. «Τι κάνουμε τώρα» — the old buildSuggestion, noise- and method-aware. Only what the
+   measurements themselves say — no protein/diet advice (Stephanos' choice). ── */
 function suggestion(m){
   if(!m.Lbf) return T('noBF');
   const parts=[];
@@ -549,8 +546,6 @@ function suggestion(m){
     if(m.Lbf.bf>goal) parts.push(T('sugToGo')(f1(m.Lbf.kg*(m.Lbf.bf-goal)/100)));
     else parts.push(T('sugAtGoal'));
   }
-  if(SNAP.planProtG&&m.Lbf.kg>0) parts.push(T('sugProtPlan')(SNAP.planProtG,f1(SNAP.planProtG/m.Lbf.kg)));
-  else parts.push(T('sugProtGen'));
   return parts.join(' ');
 }
 
