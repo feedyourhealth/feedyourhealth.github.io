@@ -214,7 +214,9 @@ var CLIENT_MSG_DICTS={
     lipoForm:function(fn){return 'Γεια σου '+fn+'! Σου στέλνω το έντυπο λιπομέτρησής σου (σύσταση σώματος, δερματοπτυχές, περιφέρειες) σε PDF 📎';},
     lipoFormSubj:'Το έντυπο λιπομέτρησής σου — Feed Your Health',
     lipoLink:function(fn,url){return 'Γεια σου '+fn+'! Οι μετρήσεις σου είναι έτοιμες — δες σύσταση σώματος, ρυθμό προόδου & ιστορικό εδώ: '+url+' 📊 Ενημερώνεται μόνο του σε κάθε νέα μέτρηση.';},
-    lipoLinkSubj:'Οι μετρήσεις σου — Feed Your Health'
+    lipoLinkSubj:'Οι μετρήσεις σου — Feed Your Health',
+    birthday:function(fn,f){return 'Χρόνια πολλά '+fn+'! 🎂 Να είσαι πάντα υγιής και '+(f?'δυνατή':'δυνατός')+' — και σήμερα απόλαυσε την τούρτα σου χωρίς τύψεις 🍰 Feed Your Health 💚';},
+    nameday:function(fn,f){return 'Χρόνια πολλά '+fn+' για τη γιορτή σου! 🥳 Να είσαι πάντα υγιής και '+(f?'χαρούμενη':'χαρούμενος')+' — απόλαυσε τη μέρα σου (και το γλυκάκι σου 😉) χωρίς τύψεις! Feed Your Health 💚';}
   },
   en:{
     fbReminder:function(fn,url){return 'Hi '+fn+'! Before I build next week’s plan, tell me quickly how this one went — 30 seconds, on the Progress tab: '+url;},
@@ -235,7 +237,9 @@ var CLIENT_MSG_DICTS={
     lipoForm:function(fn){return 'Hi '+fn+'! Sending you your body-composition report (body composition, skinfolds, girths) as a PDF 📎';},
     lipoFormSubj:'Your body-composition report — Feed Your Health',
     lipoLink:function(fn,url){return 'Hi '+fn+'! Your measurements are ready — see body composition, rate of progress & history here: '+url+' 📊 It updates itself with every new measurement.';},
-    lipoLinkSubj:'Your measurements — Feed Your Health'
+    lipoLinkSubj:'Your measurements — Feed Your Health',
+    birthday:function(fn){return 'Happy birthday '+fn+'! 🎂 Wishing you health and strength — and today, enjoy your cake guilt-free 🍰 Feed Your Health 💚';},
+    nameday:function(fn){return 'Happy name day '+fn+'! 🥳 Wishing you health and happiness — enjoy your day (and a little treat 😉) guilt-free! Feed Your Health 💚';}
   },
   ru:{
     fbReminder:function(fn,url){return 'Привет, '+fn+'! Прежде чем я составлю план на следующую неделю, расскажи коротко, как прошла эта — 30 секунд, во вкладке «Прогресс»: '+url;},
@@ -256,7 +260,9 @@ var CLIENT_MSG_DICTS={
     lipoForm:function(fn){return 'Привет, '+fn+'! Отправляю тебе отчёт по составу тела (состав тела, кожные складки, обхваты) в PDF 📎';},
     lipoFormSubj:'Отчёт по составу тела — Feed Your Health',
     lipoLink:function(fn,url){return 'Привет, '+fn+'! Твои измерения готовы — состав тела, темп прогресса и история здесь: '+url+' 📊 Обновляется само при каждом новом измерении.';},
-    lipoLinkSubj:'Твои измерения — Feed Your Health'
+    lipoLinkSubj:'Твои измерения — Feed Your Health',
+    birthday:function(fn){return 'С днём рождения, '+fn+'! 🎂 Желаю здоровья и сил — а сегодня наслаждайся тортом без угрызений совести 🍰 Feed Your Health 💚';},
+    nameday:function(fn){return 'С именинами, '+fn+'! 🥳 Желаю здоровья и радости — наслаждайся этим днём (и чем-нибудь сладким 😉) без угрызений совести! Feed Your Health 💚';}
   },
   tr:{
     fbReminder:function(fn,url){return 'Merhaba '+fn+'! Gelecek haftanın planını hazırlamadan önce bu haftanın nasıl geçtiğini kısaca söyle — 30 saniye, İlerleme sekmesinde: '+url;},
@@ -277,7 +283,9 @@ var CLIENT_MSG_DICTS={
     lipoForm:function(fn){return 'Merhaba '+fn+'! Vücut kompozisyonu raporunu (vücut kompozisyonu, deri kıvrımları, çevre ölçümleri) PDF olarak gönderiyorum 📎';},
     lipoFormSubj:'Vücut kompozisyonu raporun — Feed Your Health',
     lipoLink:function(fn,url){return 'Merhaba '+fn+'! Ölçümlerin hazır — vücut kompozisyonu, ilerleme hızı ve geçmişi burada: '+url+' 📊 Her yeni ölçümde kendiliğinden güncellenir.';},
-    lipoLinkSubj:'Ölçümlerin — Feed Your Health'
+    lipoLinkSubj:'Ölçümlerin — Feed Your Health',
+    birthday:function(fn){return 'Doğum günün kutlu olsun '+fn+'! 🎂 Sağlık ve güç dolu bir yıl dilerim — bugün pastanın tadını vicdan azabı olmadan çıkar 🍰 Feed Your Health 💚';},
+    nameday:function(fn){return 'İsim günün kutlu olsun '+fn+'! 🥳 Sağlık ve mutluluk dilerim — günün (ve küçük bir tatlının 😉) tadını vicdan azabı olmadan çıkar! Feed Your Health 💚';}
   }
 };
 // Το λεξικό hand-off μηνυμάτων στη γλώσσα του πελάτη — fallback στα ελληνικά για κενό/άγνωστο c.lang.

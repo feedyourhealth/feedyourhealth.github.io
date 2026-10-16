@@ -809,10 +809,7 @@ function homeUpcomingBirthdays(){
   out.sort(function(a,b){ return a.daysLeft-b.daysLeft; });
   return out;
 }
-function homeBirthdayRow(x){
-  var sub=x.daysLeft===0?'🎉 σήμερα!':(x.daysLeft===1?'αύριο':'σε '+x.daysLeft+' ημέρες');
-  return homeRow(x.c, sub, 'teal');
-}
+function homeBirthdayRow(x){ return homeGreetRow(x,'birthday'); }
 
 // Ονομαστικές εορτές — δουλεύει αυτόματα, χωρίς καμία νέα καταχώρηση: βγάζει το μικρό όνομα από το
 // ήδη υπάρχον c.name (πρώτη λέξη, ίδια σύμβαση "Όνομα Επώνυμο" με τη φόρμα πελάτη/initials()) και το
@@ -902,9 +899,70 @@ function homeUpcomingNameDays(){
   out.sort(function(a,b){ return a.daysLeft-b.daysLeft; });
   return out;
 }
-function homeNameDayRow(x){
-  var sub=x.daysLeft===0?'🎉 σήμερα!':(x.daysLeft===1?'αύριο':'σε '+x.daysLeft+' ημέρες');
-  return homeRow(x.c, sub, 'teal');
+function homeNameDayRow(x){ return homeGreetRow(x,'nameday'); }
+
+// ── Ευχές γενεθλίων / ονομαστικής εορτής με ένα κλικ (2026-10-16) ──────────────────────────────
+// Τη μέρα της γιορτής η γραμμή παίρνει 🟢 WhatsApp + 🟣 Viber με έτοιμη ευχή στη γλώσσα του πελάτη
+// (CLIENT_MSG_DICTS.birthday/nameday, js/lib/helpers.js). Μετά την αποστολή καταγράφεται στο
+// c.greetSent[kind] η ημερομηνία της γιορτής (cloud-synced σαν κάθε πεδίο πελάτη) → η γραμμή δείχνει
+// «✅ στάλθηκε» και δεν ξαναζητάει ευχή μέχρι την επόμενη χρονιά. Οι μελλοντικές γραμμές (αύριο, σε N
+// ημέρες) μένουν απλά ενημερωτικές — ευχή πριν τη μέρα θα ήταν παράξενη.
+function homeGreetRow(x,kind){
+  var c=x.c;
+  if(x.daysLeft!==0) return homeRow(c, x.daysLeft===1?'αύριο':'σε '+x.daysLeft+' ημέρες', 'teal');
+  var today=fmtDateLocal(new Date());
+  if(c.greetSent && c.greetSent[kind]===today){
+    return homeRow(c, '✅ στάλθηκε ευχή', 'teal',
+      '<button type="button" class="hm-action-btn" style="background:transparent;color:var(--text-muted,#888)" title="Στείλε ξανά" onclick="'+greetOnclick(c,kind,'wa')+'">↻</button>');
+  }
+  var hasPhone=!!normalizePhoneIntl(c.phone);
+  var dis=hasPhone?'':' disabled title="Δεν υπάρχει τηλέφωνο στην καρτέλα πελάτη" style="opacity:.45;cursor:not-allowed"';
+  return homeRow(c, '🎉 σήμερα!', 'teal',
+    '<button type="button" class="hm-action-btn" style="background:#e3f7ea;color:#128C4B"'+(hasPhone?' title="Ευχή μέσω WhatsApp"':'')+dis+' onclick="'+greetOnclick(c,kind,'wa')+'">🟢 WhatsApp</button>'
+    +'<button type="button" class="hm-action-btn" style="background:#efe9fb;color:#5b3fb5"'+(hasPhone?' title="Αντιγράφει την ευχή και ανοίγει το Viber — κάνε επικόλληση (Ctrl+V)"':'')+dis+' onclick="'+greetOnclick(c,kind,'viber')+'">🟣 Viber</button>');
+}
+function greetOnclick(c,kind,channel){
+  return 'event.stopPropagation();sendClientGreeting(&quot;'+c.id+'&quot;,&quot;'+kind+'&quot;,&quot;'+channel+'&quot;)';
+}
+// Κλητική μικρού ονόματος για τα ελληνικά μηνύματα (Σάββας→Σάββα, Γιάννης→Γιάννη, Νίκος→Νίκο,
+// Στέφανος→Στέφανε). -ος: προπαροξύτονα → -ε, τα υπόλοιπα → -ο (καλύπτει τα συνηθισμένα ονόματα·
+// ό,τι δεν τελειώνει σε -ας/-ης/-ος, π.χ. γυναικεία ονόματα, μένει ως έχει).
+function greekVocative(name){
+  if(!name) return name;
+  if(/[αη]ς$/.test(name) || /[άή]ς$/.test(name)) return name.slice(0,-1);
+  if(/ος$/.test(name)){
+    // φωνηεντικές ομάδες από τον τόνο ως το τέλος (δίψηφα ως μία): 3+ = προπαροξύτονο
+    var m=name.match(/[άέήίόύώΐΰ][^άέήίόύώΐΰ]*$/);
+    if(!m) return name.slice(0,-2)+'ο';
+    var groups=(m[0].match(/(ου|αι|ει|οι|αυ|ευ|[αεηιουωάέήίόύώΐΰϊϋ])/g)||[]).length;
+    return name.slice(0,-2)+(groups>=3?'ε':'ο');
+  }
+  return name;
+}
+function sendClientGreeting(clientId,kind,channel){
+  var c=clients.find(function(x){return x.id===clientId;});
+  if(!c) return;
+  var phone=normalizePhoneIntl(c.phone);
+  if(!phone){ showErrorToast('Δεν υπάρχει τηλέφωνο για τον/την '+(c.name||'πελάτη')+'.'); return; }
+  var fname=(c.name||'').trim().split(/\s+/)[0]||'';
+  var lang=c.lang||'el';
+  if(lang==='el') fname=greekVocative(fname);
+  var d=clientMsgDict(c);
+  var msg=d[kind](fname, c.sex==='F');
+  if(channel==='viber'){
+    var done=function(){ showSuccessToast('📋 Η ευχή αντιγράφηκε — κάνε επικόλληση (Ctrl+V) στο Viber'); };
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(msg).then(done,function(){});
+      else { var ta=document.createElement('textarea'); ta.value=msg; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }
+    }catch(e){}
+    location.href='viber://chat?number='+encodeURIComponent('+'+phone);
+  } else {
+    window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener');
+  }
+  c.greetSent=c.greetSent||{};
+  c.greetSent[kind]=fmtDateLocal(new Date());
+  save();
+  if(typeof renderHome==='function' && document.querySelector('.hm-wrap')) renderHome();
 }
 
 function homeRow(c,sub,accent,actionHtml){
