@@ -182,9 +182,9 @@ const TOK=tokenParam();
 // CMP = comparison base for every delta on the page (hero, tiles, zone bar, skinfold map).
 // Default 'prev' (previous measurement) — Stephanos' explicit choice; '1η μέτρηση' lives in the details.
 let sb=null, L='el', CL='el', WRAP=null, SNAP=null, CMP='prev', DET=false;
-const LOCALE={el:'el-GR',en:'en-GB',ru:'ru-RU',tr:'tr-TR'};
+const LOCALE={el:'el-GR',en:'en-GB'};
 
-/* ── i18n el/en/ru/tr. Functions take already-formatted numbers. HTML (<b>) only in the
+/* ── i18n el/en only (Stephanos' choice). ru/tr clients get English — closer to them than Greek. Functions take already-formatted numbers. HTML (<b>) only in the
    «Με απλά λόγια» / goal strings, never around client-provided text. ── */
 const TXT={
   el:{
@@ -306,126 +306,6 @@ const TXT={
     needMoreTitle:'No measurements yet', needMoreBody:'This page will update as soon as your dietitian logs your first measurement.',
     invalidTitle:'Invalid link', invalidBody:'This link was not found. Ask your dietitian for a new one.',
     netTitle:'Something went wrong', netErr:'Connection problem. Check your internet and try again in a moment.'
-  },
-  ru:{
-    kg:'кг',
-    greet:function(n){return (n?n+', ':'')+'твои замеры';},
-    lastM:function(d){return 'Последний замер: '+d;},
-    profileFlag:'⚠ Данные профиля — замеров пока нет',
-    vsPrev:'По сравнению с предыдущим замером', vsFirst:'По сравнению с первым замером',
-    kgFat:'кг жира', kgW:'кг веса', plainLbl:'Простыми словами:',
-    sFatDown:function(x){return 'Ты потерял(а) <b>'+x+' кг жира</b>';},
-    sLeanSame:', а мышцы остались на месте.',
-    sLeanUp:function(x){return ' и набрал(а) <b>'+x+' кг мышц</b>.';},
-    sLeanDown:function(x){return '. Мышцы немного уменьшились ('+x+' кг) — белок поможет их сохранить.';},
-    sFatUp:'В этот период жир немного прибавился — обсудим это вместе на следующей встрече.',
-    sStable:'Состав тела не изменился — это нормально для одного месяца.',
-    sStableLong:'Состав тела не изменился.',
-    sOther:'В этот раз жир измеряли другим методом, поэтому мы его не сравниваем.',
-    sWtDown:function(x){return 'Твой вес снизился на <b>'+x+' кг</b>.';},
-    sWtUp:function(x,good){return good?'Ты набрал(а) <b>'+x+' кг</b> — как и планировали.':'Вес немного вырос ('+x+' кг).';},
-    sWtStable:'Твой вес остался стабильным.',
-    firstLbl:'Первый замер',
-    sFirst:'Это наша отправная точка — со следующего замера здесь будет виден твой прогресс.',
-    fromStart:function(d){return 'С начала ('+d+'):';},
-    tWeight:'Вес', tBf:'Жир %', tMuscle:'Мышцы', muscleHint:'безжировая масса: мышцы, кости, вода',
-    stable:'без изменений', otherM:'другой метод',
-    goalTitle:'🎯 Путь к цели', gStart:'Начало', gNow:'Сейчас', gGoal:'Цель',
-    gLeft:function(x){return 'До цели осталось <b>'+x+' кг</b>.';}, gDone:'🎯 Цель достигнута!',
-    msTitle:'🏅 Достижения',
-    msKg:function(s){return '−'+s+' кг с начала';},
-    msNext:function(s,l){return '−'+s+' кг (осталось '+l+')';},
-    msFat:function(s){return '−'+s+' кг жира';},
-    msLean:function(s){return '+'+s+' кг мышц';},
-    msHealthy:'Жир в здоровом диапазоне', msGoal:'Цель по весу!', msHalf:'Полпути к цели',
-    msVisits:function(n){return n+' замеров — постоянство!';},
-    nextTitle:'Что делаем дальше', noBF:'Для автоматической рекомендации нужен замер % жира.',
-    sugGoodDrop:function(v){return 'Хороший прогресс — % жира снизился на '+v+' пункта.';},
-    sugRise:'В этот период % жира немного вырос — на следующей встрече вместе решим, что скорректировать.',
-    sugStable:'% жира остался стабильным.',
-    sugAggr:'Снижение идёт довольно быстро — обсуди дефицит калорий со своим диетологом.',
-    sugHealthy:'Темп снижения в пределах здоровой нормы.',
-    sugToGo:function(kg){return 'До цели осталось ~'+kg+' кг жира.';},
-    sugAtGoal:'Жир уже в пределах цели — теперь задача удержать результат.',
-    sugProtPlan:function(g,pk){return 'Держи белок на уровне плана (~'+g+' г/день · '+pk+' г/кг), чтобы сохранить мышцы.';},
-    sugProtGen:'Держи достаточно белка (~1.6–2.2 г/кг), чтобы сохранить мышцы.',
-    more:'Подробнее ▾', less:'Скрыть подробности ▴',
-    cmpLbl:'Сравнить с:', cmpPrev:'Предыдущий', cmpFirst:'Первый замер',
-    zoneTitle:'📍 Где ты сейчас',
-    zoneSub:function(f,band){return 'жир по сравнению с '+(f?'женщинами':'мужчинами')+(band?' '+band+' лет':'');},
-    zLow:'низкий', zHealthy:'здоровый', zUp:'повышенный', zHigh:'высокий', zYou:'ты',
-    zRange:function(a,b){return 'Здоровый диапазон '+a+'–'+b+'%';},
-    zDash:function(l,v){return 'пунктир = '+l+' ('+v+'%)';},
-    zGoal:function(v){return '◆ цель '+v+'%';}, zSrc:'ориентировочные границы, не диагноз',
-    sfTitle:'📐 Откуда уходит жир', sfNote:'Темнее зелёный = большее снижение · оранжевый = увеличение.',
-    fbTitle:'📊 Жир (кг) по замерам', hTitle:'🗂 История замеров',
-    hOther:'другой метод — не сравнивается', hFat:'жир',
-    mCaliper:'кожные складки', mEst:'оценка',
-    SF:{abdomen:'Живот',suprailiac:'Над подвздошной костью',subscapular:'Под лопаткой',chest:'Грудь',midaxillary:'Подмышечная',tricep:'Трицепс',thigh:'Бедро',calf:'Голень'},
-    footQ:'Есть вопросы? Напиши своему диетологу', lock:'личная ссылка — не пересылай её', print:'🖨️ Печать / PDF',
-    needMoreTitle:'Замеров пока нет', needMoreBody:'Страница обновится, как только диетолог внесёт твой первый замер.',
-    invalidTitle:'Недействительная ссылка', invalidBody:'Ссылка не найдена. Попроси новую у своего диетолога.',
-    netTitle:'Что-то пошло не так', netErr:'Проблема с подключением. Проверь интернет и попробуй ещё раз.'
-  },
-  tr:{
-    kg:'kg',
-    greet:function(n){return (n?n+', ':'')+'ölçümlerin';},
-    lastM:function(d){return 'Son ölçüm: '+d;},
-    profileFlag:'⚠ Profil bilgileri — henüz ölçüm yok',
-    vsPrev:'Önceki ölçüme göre', vsFirst:'İlk ölçüme göre',
-    kgFat:'kg yağ', kgW:'kg kilo', plainLbl:'Kısaca:',
-    sFatDown:function(x){return '<b>'+x+' kg yağ</b> kaybettin';},
-    sLeanSame:' ve kas kütlen sabit kaldı.',
-    sLeanUp:function(x){return ' ve <b>'+x+' kg kas</b> kazandın.';},
-    sLeanDown:function(x){return '. Kas kütlen biraz azaldı ('+x+' kg) — protein onu korumamıza yardımcı olur.';},
-    sFatUp:'Bu dönemde yağ biraz arttı — bir sonraki randevuda birlikte bakacağız.',
-    sStable:'Vücut kompozisyonun aynı kaldı — bir ay için normal.',
-    sStableLong:'Vücut kompozisyonun aynı kaldı.',
-    sOther:'Yağ bu sefer farklı bir yöntemle ölçüldü, bu yüzden karşılaştırmıyoruz.',
-    sWtDown:function(x){return 'Kilon <b>'+x+' kg</b> azaldı.';},
-    sWtUp:function(x,good){return good?'<b>'+x+' kg</b> aldın — tam planladığımız gibi.':'Kilon biraz arttı ('+x+' kg).';},
-    sWtStable:'Kilon sabit kaldı.',
-    firstLbl:'İlk ölçüm',
-    sFirst:'Bu bizim başlangıç noktamız — bir sonraki ölçümden itibaren ilerlemeni burada göreceksin.',
-    fromStart:function(d){return 'Başlangıçtan beri ('+d+'):';},
-    tWeight:'Kilo', tBf:'Yağ %', tMuscle:'Kas', muscleHint:'yağsız kütle: kas, kemik, su',
-    stable:'sabit', otherM:'farklı yöntem',
-    goalTitle:'🎯 Hedefe doğru', gStart:'Başlangıç', gNow:'Şimdi', gGoal:'Hedef',
-    gLeft:function(x){return 'Hedefe <b>'+x+' kg</b> kaldı.';}, gDone:'🎯 Hedefe ulaşıldı!',
-    msTitle:'🏅 Kilometre taşları',
-    msKg:function(s){return 'Başlangıçtan beri −'+s+' kg';},
-    msNext:function(s,l){return '−'+s+' kg ('+l+' kaldı)';},
-    msFat:function(s){return '−'+s+' kg yağ';},
-    msLean:function(s){return '+'+s+' kg kas';},
-    msHealthy:'Sağlıklı yağ aralığına girdin', msGoal:'Kilo hedefi!', msHalf:'Hedefin yarısı',
-    msVisits:function(n){return n+' ölçüm — istikrar!';},
-    nextTitle:'Şimdi ne yapıyoruz', noBF:'Otomatik öneri için yağ % ölçümü gerekiyor.',
-    sugGoodDrop:function(v){return 'Güzel ilerleme — yağ oranı '+v+' puan düştü.';},
-    sugRise:'Bu dönemde yağ oranı biraz arttı — bir sonraki randevuda neyi ayarlayacağımıza birlikte karar vereceğiz.',
-    sugStable:'Yağ oranı sabit kaldı.',
-    sugAggr:'Oldukça hızlı kilo veriyorsun — kalori açığını diyetisyeninle konuş.',
-    sugHealthy:'Kayıp hızı sağlıklı aralıkta.',
-    sugToGo:function(kg){return 'Hedef için ~'+kg+' kg yağ kaldı.';},
-    sugAtGoal:'Yağ oranı zaten hedefte — artık amaç korumak.',
-    sugProtPlan:function(g,pk){return 'Kaslarını korumak için proteini plan hedefinde tut (~'+g+' g/gün · '+pk+' g/kg).';},
-    sugProtGen:'Kaslarını korumak için yeterli protein al (~1.6–2.2 g/kg).',
-    more:'Ayrıntıları gör ▾', less:'Ayrıntıları gizle ▴',
-    cmpLbl:'Karşılaştır:', cmpPrev:'Önceki', cmpFirst:'İlk ölçüm',
-    zoneTitle:'📍 Neredesin',
-    zoneSub:function(f,band){return (band?band+' yaş ':'')+(f?'kadınlara':'erkeklere')+' göre yağ oranı';},
-    zLow:'düşük', zHealthy:'sağlıklı', zUp:'yüksekçe', zHigh:'yüksek', zYou:'sen',
-    zRange:function(a,b){return 'Sağlıklı aralık %'+a+'–'+b;},
-    zDash:function(l,v){return 'kesikli çizgi = '+l+' (%'+v+')';},
-    zGoal:function(v){return '◆ hedef %'+v;}, zSrc:'yaklaşık sınırlar, teşhis değildir',
-    sfTitle:'📐 Yağ nereden gidiyor', sfNote:'Koyu yeşil = daha büyük düşüş · turuncu = artış.',
-    fbTitle:'📊 Ölçüm başına yağ (kg)', hTitle:'🗂 Ölçüm geçmişi',
-    hOther:'farklı yöntem — karşılaştırılmaz', hFat:'yağ',
-    mCaliper:'deri kıvrımı', mEst:'tahmin',
-    SF:{abdomen:'Karın',suprailiac:'Suprailiak',subscapular:'Kürek altı',chest:'Göğüs',midaxillary:'Koltuk altı',tricep:'Triseps',thigh:'Uyluk',calf:'Baldır'},
-    footQ:'Soruların mı var? Diyetisyenine mesaj at', lock:'kişisel bağlantı — başkasına iletme', print:'🖨️ Yazdır / PDF',
-    needMoreTitle:'Henüz ölçüm yok', needMoreBody:'Diyetisyenin ilk ölçümünü kaydettiğinde bu sayfa güncellenecek.',
-    invalidTitle:'Geçersiz bağlantı', invalidBody:'Bağlantı bulunamadı. Diyetisyeninden yenisini iste.',
-    netTitle:'Bir sorun oluştu', netErr:'Bağlantı sorunu. İnternetini kontrol edip biraz sonra tekrar dene.'
   }
 };
 function T(k){ const v=(TXT[L]&&TXT[L][k]!=null)?TXT[L][k]:TXT.el[k]; return v; }
@@ -514,17 +394,17 @@ function model(){
 
 function start(data){
   WRAP=data; SNAP=data.snapshot;
-  CL=(['en','ru','tr'].indexOf(data.lang)>-1)?data.lang:'el';
+  CL=(['en','ru','tr'].indexOf(data.lang)>-1)?'en':'el';
   L=CL; document.documentElement.lang=L;   // lang attr → correct text-transform:uppercase (Turkish İ)
   buildLangBar();
   if(!SNAP.log || !SNAP.log.length){ return renderState('ok','needMoreTitle','needMoreBody'); }
   render();
 }
 
-// Two pills only: Greek + the client's own language (EL/EN when the client is Greek).
+// EL / EN pills.
 function buildLangBar(){
   const lb=el('langbar'); if(!lb)return;
-  const pair=CL==='el'?['el','en']:['el',CL];
+  const pair=['el','en'];
   lb.innerHTML=pair.map(l=>'<button type="button" data-l="'+l+'" onclick="setLang(\''+l+'\')">'+l.toUpperCase()+'</button>').join('');
   lb.hidden=false; syncLangBar();
 }
