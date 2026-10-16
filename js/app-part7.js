@@ -359,6 +359,7 @@
         v:1,
         name:c.name||'', sex:c.sex||'M', age:c.age||null, height:c.height||null,
         goalBF:(typeof bfGoalTarget==='function')?bfGoalTarget(c):(c.goalBF||null),
+        goalWeight:(c.goalWeight||c.targetWeight||null), goal:c.goal||null,
         planProtG:planProtG,
         planGeneratedAt:c.planGeneratedAt||null,
         log:log,

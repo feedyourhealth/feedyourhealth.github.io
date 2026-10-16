@@ -25,7 +25,8 @@
     --tint:#E2EEE5; --bord:#c5ddd8; --bord-l:#eef4f2;
     --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
     --bg:#f4f8f6; --card:#ffffff; --danger:#b71c1c; --warn:#a15c00;
-    --lean:#1565C0; --fat:#e65100;
+    --z-low:#bbdefb; --z-ok:#c8e6c9; --z-up:#ffe0b2; --z-hi:#ffcc80;
+    --sf-good2:#00796b; --sf-good1:#4db6ac; --sf-flat:#b0bec5; --sf-up:#ffb74d;
   }
   @media (prefers-color-scheme: dark){
     :root{
@@ -33,7 +34,8 @@
       --tint:#173230; --bord:#2c413e; --bord-l:#1c302e;
       --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --ok:#68bf6c;
       --bg:#111917; --card:#18211f; --danger:#e0715f; --warn:#d6a24d;
-      --lean:#5b9be0; --fat:#ff8a3d;
+      --z-low:#22405a; --z-ok:#24432a; --z-up:#4a3a20; --z-hi:#5a4320;
+      --sf-good2:#26a69a; --sf-good1:#4db6ac; --sf-flat:#607d8b; --sf-up:#d6a24d;
     }
   }
   *{box-sizing:border-box}
@@ -47,82 +49,100 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     line-height:1.5; font-size:16px; -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:620px; margin:0 auto; padding:0 16px 64px}
-  header{display:flex; align-items:center; gap:10px; padding:16px 4px 6px}
+  .wrap{max-width:560px; margin:0 auto; padding:0 16px 56px}
+  header{display:flex; align-items:center; gap:10px; padding:16px 0 4px}
   .mark{width:30px;height:30px;border-radius:8px;flex:0 0 auto;background:linear-gradient(135deg,var(--teal),var(--teal-d))}
   header b{font-size:.82rem;font-weight:700;letter-spacing:.02em;color:var(--muted)}
   .langbar{display:flex;gap:6px;margin-left:auto}
   .langbar button{font:inherit;font-size:.74rem;font-weight:700;padding:4px 9px;border-radius:7px;border:1px solid var(--bord);background:var(--card);color:var(--faint);cursor:pointer}
   .langbar button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
 
-  .who{padding:6px 4px 4px}
-  .who h1{font-family:Georgia,"Times New Roman",serif;font-size:1.45rem;margin:0 0 3px;color:var(--teal-d)}
-  .upd{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--faint)}
-  .pulse{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 20%,transparent)}
+  .who{padding:6px 0 2px}
+  .who h1{font-family:Georgia,"Times New Roman",serif;font-size:1.4rem;margin:0 0 2px;color:var(--teal-d);line-height:1.25}
+  .upd{font-size:.8rem;color:var(--faint)}
 
-  .ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 4px 4px}
-  .ctrls select{font:inherit;font-size:.78rem;font-weight:600;color:var(--teal-d);background:var(--card);border:1px solid var(--bord);border-radius:8px;padding:6px 8px}
-  .ctrls label{font-size:.76rem;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:5px}
-  .pdfbtn{margin-left:auto;font:inherit;font-size:.78rem;font-weight:700;background:var(--tint);color:var(--teal-d);border:1px solid var(--bord);border-radius:8px;padding:6px 11px;cursor:pointer}
-  .printonly{display:none}
-
-  .card{background:var(--card);border:1px solid var(--bord);border-radius:14px;padding:15px 16px;margin:11px 4px}
-  .card h2{font-size:.72rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--teal-d);margin:0 0 10px}
+  .card{background:var(--card);border:1px solid var(--bord);border-radius:14px;padding:14px 15px;margin:10px 0}
+  .card h2{font-size:.74rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--teal-d);margin:0 0 9px}
   .card h2 .s{font-weight:500;color:var(--faint);text-transform:none;letter-spacing:0}
-  .row2{display:grid;grid-template-columns:1fr 1.25fr;gap:11px}
-  @media (max-width:420px){.row2{grid-template-columns:1fr}}
 
-  .donut{text-align:center}
-  .dlgd{display:flex;justify-content:center;gap:14px;margin-top:4px;font-size:.82rem;font-weight:600}
-  .dlgd i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:4px}
+  /* hero */
+  .hero .hl{font-size:.78rem;color:var(--faint)}
+  .hero .big{font-size:2.3rem;font-weight:800;color:var(--teal-d);line-height:1.15;margin:2px 0 6px;letter-spacing:-.01em}
+  .hero .big span{font-size:1rem;font-weight:700;color:var(--muted)}
+  .hero.pos{background:color-mix(in srgb,var(--ok) 8%,var(--card));border-color:color-mix(in srgb,var(--ok) 35%,var(--bord))}
+  .hero.pos .big{color:var(--ok)}
+  .hero .plain{font-size:.92rem;line-height:1.5}
+  .hero .plain b{font-weight:700}
+  .hero .since{margin-top:9px;padding-top:8px;border-top:1px solid var(--bord-l);font-size:.84rem;color:var(--muted)}
+  .hero .since b{color:var(--ink)}
+  .hero .since b.g{color:var(--ok)}
 
-  .rb{margin-bottom:12px}
-  .rb:last-child{margin-bottom:0}
-  .rbt{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:4px;gap:8px}
-  .rbt b{font-weight:600}
-  .rbtrack{height:8px;border-radius:5px;position:relative}
-  .rbcur{position:absolute;top:-3px;width:2px;height:14px;background:var(--ink)}
-  .rbgoal{position:absolute;top:-9px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--teal-d)}
-  .method{font-size:.74rem;color:var(--faint);margin-top:8px}
-  .glo{font-size:.7rem;color:var(--faint);margin-top:5px;line-height:1.5}
-  .dn{color:var(--ok)}.up{color:var(--danger)}.fl{color:var(--faint)}
+  /* tiles */
+  .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+  .tile{background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:10px 9px;min-width:0;text-align:center}
+  .tile .tl{font-size:.74rem;font-weight:700;color:var(--muted)}
+  .tile .tv{font-size:1.15rem;font-weight:800;color:var(--teal-d);margin:1px 0 4px;white-space:nowrap}
+  .tile .tv span{font-size:.72rem;font-weight:600;color:var(--faint)}
+  .chip{display:inline-block;font-size:.7rem;font-weight:700;padding:1px 8px;border-radius:9px;white-space:nowrap;background:var(--bord-l);color:var(--faint)}
+  .chip.good{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+  .chip.soft{background:color-mix(in srgb,var(--warn) 13%,transparent);color:var(--warn)}
 
-  .rateg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .rc-l{font-size:.76rem;color:var(--muted);font-weight:600}
-  .rc-b{font-size:1.05rem;color:var(--teal-d);font-weight:600}
-  .rc-b span{font-size:.7rem;color:var(--faint);font-weight:400}
-  .zone{margin-top:6px;height:16px;border-radius:5px;position:relative;
-    background:linear-gradient(90deg,var(--bord-l) 0 26%,color-mix(in srgb,var(--ok) 28%,transparent) 26% 62%,color-mix(in srgb,var(--warn) 26%,transparent) 62% 100%);
-    border:1px solid var(--bord)}
-  .zone .l{position:absolute;top:2px;font-size:.6rem;color:var(--faint)}
-  .zone .l.a{left:4px}.zone .l.b{right:4px}
-  .zone .mk{position:absolute;top:-3px;width:2px;height:22px;background:var(--ink)}
-  .zone .mk::after{content:"";position:absolute;top:-4px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--ink)}
-  .verdict{margin-top:8px;font-size:.82rem;font-weight:700;color:var(--ok)}
-  .verdict.warn{color:var(--warn)}
+  /* goal bar */
+  .gbar{height:12px;background:var(--bord-l);border-radius:7px;overflow:hidden}
+  .gbar i{display:block;height:100%;background:var(--ok);border-radius:7px}
+  .glbl{display:flex;justify-content:space-between;gap:6px;font-size:.74rem;color:var(--faint);margin-top:5px}
+  .glbl b{color:var(--teal-d)}
+  .gtxt{font-size:.84rem;margin-top:5px}
 
-  .leanrow{display:flex;gap:11px;align-items:center}
-  .leanbar{flex:0 0 84px;height:34px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--bord)}
-  .leanbar i{display:block}
-  .leanbar .f{background:var(--fat)}.leanbar .l{background:var(--lean)}
-  .leantxt{font-size:.8rem;color:var(--muted);line-height:1.5}
-  .leantxt b{color:var(--ink);font-weight:600}
-  .leanflag{font-size:.78rem;font-weight:700;color:var(--ok);margin-top:4px}
-  .leanflag.warn{color:var(--danger)}
+  /* milestones */
+  .ms{display:flex;flex-wrap:wrap;gap:6px}
+  .ms span{font-size:.8rem;padding:4px 10px;border-radius:14px;background:color-mix(in srgb,var(--ok) 12%,var(--card));color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);font-weight:700}
+  .ms span.lk{background:var(--card);color:var(--faint);border:1px dashed var(--bord);font-weight:600}
 
-  .sugg{background:color-mix(in srgb,var(--warn) 8%,var(--card));border-color:color-mix(in srgb,var(--warn) 35%,var(--bord))}
-  .sugg h2{color:var(--warn)}
-  .sugg p{margin:0;font-size:.86rem;color:var(--ink);line-height:1.55}
-  .sugg .pr{color:var(--warn);font-weight:600}
+  .next{background:var(--tint)}
+  .next p{margin:0;font-size:.9rem;line-height:1.55}
 
-  .sparks{display:grid;grid-template-columns:1fr 1fr;gap:12px 10px}
-  .spark{text-align:center}
-  .spark svg{width:100%;height:38px;display:block}
-  .spark .sl{font-size:.72rem;color:var(--faint);margin-top:3px;font-weight:600}
-  .spark .sv{font-size:.9rem;font-weight:800;color:var(--ink)}
+  .morebtn{display:block;width:100%;font:inherit;font-size:.9rem;font-weight:700;color:var(--teal-d);background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:11px;margin:12px 0 4px;cursor:pointer}
+  .det{display:none}
+  .det.open{display:block}
 
-  .scrfoot{padding:18px 16px 4px;text-align:center;font-size:.78rem;color:var(--faint);line-height:1.6}
-  .scrfoot .lock{display:inline-flex;align-items:center;gap:5px;margin-top:6px;color:var(--faint)}
+  .cmp{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);margin:10px 0 2px}
+  .cmp button{font:inherit;font-size:.78rem;font-weight:700;padding:5px 11px;border-radius:8px;border:1px solid var(--bord);background:var(--card);color:var(--teal-d);cursor:pointer}
+  .cmp button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+
+  /* zone bar */
+  .zone{position:relative;height:54px;margin:0 6px}
+  .zone .sg{position:absolute;top:18px;height:14px}
+  .zone .sl{position:absolute;top:36px;text-align:center;font-size:.62rem;color:var(--faint);white-space:nowrap;overflow:hidden}
+  .zone .cur{position:absolute;top:12px;height:26px;width:3px;margin-left:-1px;background:var(--ink)}
+  .zone .curl{position:absolute;top:-3px;transform:translateX(-50%);font-size:.72rem;font-weight:800;color:var(--ink);white-space:nowrap}
+  .zone .base{position:absolute;top:14px;height:22px;border-left:2px dashed var(--faint)}
+  .zone .goal{position:absolute;top:20px;width:10px;height:10px;margin-left:-5px;background:var(--teal);transform:rotate(45deg);border:1px solid var(--card)}
+  .note{font-size:.7rem;color:var(--faint);margin-top:4px;line-height:1.5}
+
+  /* skinfold map */
+  .sfwrap{display:flex;gap:12px;align-items:center}
+  .sfrow{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--bord-l);font-size:.8rem}
+  .sfrow:last-child{border-bottom:0}
+  .sfrow .dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;margin-right:3px}
+  .sfrow small{color:var(--faint)}
+
+  /* fat bars + history */
+  .fb{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:.76rem}
+  .fb .d{width:58px;color:var(--faint);white-space:nowrap}
+  .fb .t{flex:1;height:13px;background:var(--bord-l);border-radius:4px;overflow:hidden}
+  .fb .t i{display:block;height:100%;background:var(--teal-l);border-radius:4px}
+  .fb .v{width:52px;text-align:right;font-weight:700;color:var(--teal-d)}
+  .hr{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--bord-l);font-size:.82rem}
+  .hr:last-child{border-bottom:0}
+  .hr .d{color:var(--muted)}
+  .hr .v{text-align:right}
+  .hr .o{display:block;font-size:.7rem;color:var(--warn)}
+
+  .flag{display:inline-block;font-size:.76rem;font-weight:700;color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent);border-radius:6px;padding:4px 9px;margin:6px 0 0}
+
+  .scrfoot{padding:18px 8px 4px;text-align:center;font-size:.78rem;color:var(--faint);line-height:1.6}
+  .scrfoot button{font:inherit;font-size:.76rem;color:var(--faint);background:none;border:0;text-decoration:underline;cursor:pointer;padding:4px}
 
   .state{text-align:center;padding:48px 18px;max-width:420px;margin:0 auto}
   .state .big{width:60px;height:60px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;font-size:1.7rem;background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
@@ -132,14 +152,13 @@
   .spin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite;margin:70px auto}
   @keyframes sp{to{transform:rotate(360deg)}}
   @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
-  .flag{display:inline-block;font-size:.74rem;font-weight:700;color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent);border-radius:6px;padding:4px 9px;margin:0 4px 4px}
 
   @media print{
     .noprint{display:none!important}
-    .printonly{display:inline!important}
+    .det{display:block!important}
     body{background:#fff}
     .wrap{max-width:100%;padding:0 6mm}
-    .card{border:1px solid #ddd;box-shadow:none;break-inside:avoid}
+    .card,.tile{break-inside:avoid}
     * { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
   }
 </style>
@@ -148,10 +167,7 @@
 <div class="wrap">
   <header>
     <span class="mark"></span><b>Feed Your Health</b>
-    <div class="langbar noprint" id="langbar" hidden>
-      <button type="button" data-l="el" onclick="setLang('el')">EL</button>
-      <button type="button" data-l="en" onclick="setLang('en')">EN</button>
-    </div>
+    <div class="langbar noprint" id="langbar" hidden></div>
   </header>
   <div id="root"><div class="spin" role="status" aria-label="Loading"></div></div>
 </div>
@@ -163,104 +179,272 @@ const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 
 function tokenParam(){ const p=new URLSearchParams(location.search); return p.get('t')||p.get('token')||''; }
 const TOK=tokenParam();
-let sb=null, L='el', WRAP=null, SNAP=null, BASELINE='first';
+// CMP = comparison base for every delta on the page (hero, tiles, zone bar, skinfold map).
+// Default 'prev' (previous measurement) — Stephanos' explicit choice; '1η μέτρηση' lives in the details.
+let sb=null, L='el', CL='el', WRAP=null, SNAP=null, CMP='prev', DET=false;
+const LOCALE={el:'el-GR',en:'en-GB',ru:'ru-RU',tr:'tr-TR'};
 
-/* ── i18n (el/en only for v1 — ru/tr clients fall back to el; the WhatsApp/email MESSAGE
-   that carries this link is already translated in all 4 languages, see clientMsgDict) ── */
+/* ── i18n el/en/ru/tr. Functions take already-formatted numbers. HTML (<b>) only in the
+   «Με απλά λόγια» / goal strings, never around client-provided text. ── */
 const TXT={
   el:{
+    kg:'kg',
     greet:function(n){return (n?n+', ':'')+'οι μετρήσεις σου';},
-    updated:function(d){return 'Τελευταία ενημέρωση: '+d;}, auto:'ενημερώνεται αυτόματα',
-    compareLbl:'Σύγκριση με:', cmpFirst:'1η μέτρηση', cmpPrev:'προηγούμενη μέτρηση', cmpPlan:'έναρξη τρέχοντος πλάνου',
-    pdf:'🖨️ PDF',
-    compTitle:'Σύσταση βάρους', compTotal:'kg ΣΥΝΟΛΟ', lean:'Άλιπη', fat:'Λίπος',
-    whereTitle:'Πού βρίσκεσαι', goalLegend:'▲ στόχος',
-    bmi:'ΔΜΣ', ffmi:'FFMI (άλιπη μάζα)', bfPct:'% Λίπους',
-    method:'Μέθοδος', ffmiGlo:'FFMI = δείκτης άλιπης μάζας — δείχνει αν το ΔΜΣ οφείλεται σε μυ ή λίπος. Τα όρια %λίπους είναι στατιστικά, όχι διάγνωση.',
-    bmiUnder:'ελλιποβαρές', bmiNorm:'φυσιολογικό', bmiOver:'υπέρβαρο', bmiObese1:'παχυσαρκία Ι', bmiObese2:'παχυσαρκία ΙΙ', bmiObese3:'παχυσαρκία ΙΙΙ',
-    ffLow:'χαμηλή μυϊκή μάζα', ffNorm:'φυσιολογική μυϊκή μάζα', ffAbove:'αυξημένη μυϊκή μάζα', ffHigh:'υψηλή μυϊκή μάζα',
-    rateTitle:'Ρυθμός μεταβολής', rateSpan:function(w){return '· '+w+' εβδ.';},
-    rateBf:'% Λίπους', rateWt:'Βάρος', ptsWk:'μον./εβδ.', pctWk:'%ΣΒ/εβδ.', stalled:'στάσιμο', aggressive:'επιθετικό',
-    rateOK:'✅ Υγιής ρυθμός — καμία αλλαγή θερμίδων απαραίτητη.',
-    rateWarn:'⚠ Ρυθμός εκτός ιδανικού εύρους — δες προσλαμβανόμενες θερμίδες.',
-    leanTitle:'Διατήρηση άλιπης μάζας',
-    leanTxt:function(w,f,l,p){return 'Απώλεια <b>'+w+' kg</b> = <b>'+f+' kg</b> λίπος + <b>'+l+' kg</b> άλιπη. <b>'+p+'%</b> της απώλειας από άλιπη μάζα.';},
-    leanOK:'✅ Εντός αποδεκτού (κάτω από 30%).',
-    leanWarn:'⚠ Λίγο υψηλό — δώσε προσοχή στην πρωτεΐνη αυτή την περίοδο.',
-    suggTitle:'Η πρότασή μας', noBF:'Χρειάζεται μέτρηση % λίπους για αυτόματη πρόταση.',
-    sugGoodDrop:function(v){return 'Καλή πορεία — το % λίπους μειώθηκε κατά '+v+' μονάδες από τη βάση σύγκρισης.';},
-    sugRise:function(v){return 'Το % λίπους αυξήθηκε κατά '+v+' μονάδες από τη βάση — αξίζει επανεξέταση προσλαμβανόμενων θερμίδων.';},
-    sugStable:'Το % λίπους παρέμεινε σταθερό από τη βάση σύγκρισης.',
-    sugAggr:'Ο ρυθμός απώλειας είναι επιθετικός — μίλησε με τη διαιτολόγο σου για το έλλειμμα θερμίδων.',
-    sugStall:'Ο ρυθμός απώλειας έχει επιβραδυνθεί — αν έχει σταματήσει η πρόοδος, μίλησε με τη διαιτολόγο σου.',
+    lastM:function(d){return 'Τελευταία μέτρηση: '+d;},
+    profileFlag:'⚠ Στοιχεία προφίλ — καμία μέτρηση ακόμα',
+    vsPrev:'Σε σχέση με την προηγούμενη μέτρηση', vsFirst:'Σε σχέση με την 1η μέτρηση',
+    kgFat:'kg λίπος', kgW:'kg βάρος', plainLbl:'Με απλά λόγια:',
+    sFatDown:function(x){return 'Έχασες <b>'+x+' kg λίπος</b>';},
+    sLeanSame:' και οι μύες σου έμειναν σταθεροί.',
+    sLeanUp:function(x){return ' και κέρδισες <b>'+x+' kg μύες</b>.';},
+    sLeanDown:function(x){return '. Οι μύες μειώθηκαν λίγο ('+x+' kg) — η πρωτεΐνη μας βοηθά να τους κρατήσουμε.';},
+    sFatUp:'Αυτή την περίοδο το λίπος ανέβηκε λίγο — θα το δούμε μαζί στο επόμενο ραντεβού.',
+    sStable:'Η σύσταση του σώματός σου έμεινε ίδια — φυσιολογικό για ένα μήνα.',
+    sStableLong:'Η σύσταση του σώματός σου έμεινε ίδια.',
+    sOther:'Το λίπος αυτή τη φορά μετρήθηκε με άλλη μέθοδο, οπότε δεν το συγκρίνουμε.',
+    sWtDown:function(x){return 'Το βάρος σου μειώθηκε <b>'+x+' kg</b>.';},
+    sWtUp:function(x,good){return good?'Πήρες <b>'+x+' kg</b> — όπως θέλαμε.':'Το βάρος σου ανέβηκε λίγο ('+x+' kg).';},
+    sWtStable:'Το βάρος σου έμεινε σταθερό.',
+    firstLbl:'Πρώτη μέτρηση',
+    sFirst:'Αυτή είναι η αφετηρία μας — από την επόμενη μέτρηση θα βλέπεις εδώ την πρόοδό σου.',
+    fromStart:function(d){return 'Από την αρχή ('+d+'):';},
+    tWeight:'Βάρος', tBf:'Λίπος %', tMuscle:'Μύες', muscleHint:'άλιπη μάζα: μύες, οστά, νερό',
+    stable:'σταθερό', otherM:'άλλη μέθοδος',
+    goalTitle:'🎯 Πορεία προς τον στόχο', gStart:'Αρχή', gNow:'Τώρα', gGoal:'Στόχος',
+    gLeft:function(x){return 'Απομένουν <b>'+x+' kg</b> ως τον στόχο.';}, gDone:'🎯 Ο στόχος επιτεύχθηκε!',
+    msTitle:'🏅 Ορόσημα',
+    msKg:function(s){return '−'+s+' kg από την αρχή';},
+    msNext:function(s,l){return '−'+s+' kg (λείπουν '+l+')';},
+    msFat:function(s){return '−'+s+' kg λίπος';},
+    msLean:function(s){return '+'+s+' kg μύες';},
+    msHealthy:'Μπήκες στο υγιές εύρος λίπους', msGoal:'Στόχος βάρους!', msHalf:'Μισή διαδρομή ως τον στόχο',
+    msVisits:function(n){return n+' μετρήσεις — συνέπεια!';},
+    nextTitle:'Τι κάνουμε τώρα', noBF:'Χρειάζεται μέτρηση % λίπους για αυτόματη πρόταση.',
+    sugGoodDrop:function(v){return 'Καλή πορεία — το % λίπους μειώθηκε κατά '+v+' μονάδες.';},
+    sugRise:'Αυτή την περίοδο το % λίπους ανέβηκε λίγο — στο επόμενο ραντεβού θα δούμε μαζί τι προσαρμόζουμε.',
+    sugStable:'Το % λίπους παρέμεινε σταθερό.',
+    sugAggr:'Ο ρυθμός απώλειας είναι γρήγορος — μίλησε με τη διαιτολόγο σου για το έλλειμμα θερμίδων.',
     sugHealthy:'Ο ρυθμός απώλειας είναι μέσα σε υγιές εύρος.',
-    sugToGo:function(kg){return 'Απομένουν ~'+kg+' kg λιπώδης μάζα για τον στόχο %BF.';},
-    sugAtGoal:'Το %BF είναι ήδη εντός στόχου — στόχος πλέον η διατήρηση.',
-    sugProtPlan:function(g,pk){return 'Κράτα την πρωτεΐνη στον στόχο του πλάνου σου (~'+g+' g/ημ. · '+pk+' g/kg) για προστασία της άλιπης μάζας.';},
-    sugProtGen:'Κράτα επαρκή πρωτεΐνη (~1.6–2.2 g/kg) για προστασία της άλιπης μάζας.',
-    histTitle:'Ιστορικό', histSpan:function(n){return '· '+n+' μετρήσεις';},
-    weight:'Βάρος', bfPctLbl:'% Λίπους', leanMass:'Άλιπη μάζα', sfSum:'Άθροισμα δερματοπτυχών',
-    footQ:'Ερωτήσεις; στείλε μήνυμα στη διαιτολόγο σου', lock:'προσωπικό link — μη το προωθείς',
-    profileFlag:'⚠ Στοιχεία προφίλ — καμία μέτρηση tracker ακόμα',
+    sugToGo:function(kg){return 'Απομένουν ~'+kg+' kg λίπος για τον στόχο.';},
+    sugAtGoal:'Το λίπος είναι ήδη εντός στόχου — στόχος πλέον η διατήρηση.',
+    sugProtPlan:function(g,pk){return 'Κράτα την πρωτεΐνη στον στόχο του πλάνου σου (~'+g+' g/ημ. · '+pk+' g/kg) για να προστατεύσεις τους μύες.';},
+    sugProtGen:'Κράτα επαρκή πρωτεΐνη (~1.6–2.2 g/kg) για να προστατεύσεις τους μύες.',
+    more:'Δες λεπτομέρειες ▾', less:'Κλείσε τις λεπτομέρειες ▴',
+    cmpLbl:'Σύγκριση με:', cmpPrev:'Προηγούμενη', cmpFirst:'1η μέτρηση',
+    zoneTitle:'📍 Πού βρίσκεσαι',
+    zoneSub:function(f,band){return 'λίπος σε σχέση με '+(f?'γυναίκες':'άνδρες')+(band?' '+band+' ετών':'');},
+    zLow:'χαμηλό', zHealthy:'υγιές', zUp:'αυξημένο', zHigh:'υψηλό', zYou:'εσύ',
+    zRange:function(a,b){return 'Υγιές εύρος '+a+'–'+b+'%';},
+    zDash:function(l,v){return 'διακεκομμένη = '+l+' ('+v+'%)';},
+    zGoal:function(v){return '◆ στόχος '+v+'%';}, zSrc:'ενδεικτικά όρια, όχι διάγνωση',
+    sfTitle:'📐 Από πού φεύγει το λίπος', sfNote:'Πιο σκούρο πράσινο = μεγαλύτερη μείωση · πορτοκαλί = αύξηση.',
+    fbTitle:'📊 Λίπος (kg) ανά μέτρηση', hTitle:'🗂 Ιστορικό μετρήσεων',
+    hOther:'άλλη μέθοδος — δεν συγκρίνεται', hFat:'λίπος',
+    mCaliper:'δερματοπτυχές', mEst:'εκτίμηση',
+    SF:{abdomen:'Κοιλιά',suprailiac:'Υπερλαγόνιο',subscapular:'Υποπλάτιο',chest:'Στήθος',midaxillary:'Μεσομάσχαλο',tricep:'Τρικέφαλος',thigh:'Μηρός',calf:'Γάμπα'},
+    footQ:'Ερωτήσεις; στείλε μήνυμα στη διαιτολόγο σου', lock:'προσωπικό link — μη το προωθείς', print:'🖨️ Εκτύπωση / PDF',
     needMoreTitle:'Δεν υπάρχουν μετρήσεις ακόμα', needMoreBody:'Η σελίδα θα ενημερωθεί μόλις η διαιτολόγος σου καταγράψει την πρώτη σου μέτρηση.',
     invalidTitle:'Μη έγκυρος σύνδεσμος', invalidBody:'Ο σύνδεσμος δεν βρέθηκε. Ζήτησε καινούριο από τη διαιτολόγο σου.',
-    netTitle:'Κάτι πήγε στραβά', netErr:'Πρόβλημα σύνδεσης. Έλεγξε το internet και δοκίμασε ξανά σε λίγο.',
-    healthy:'Υγιές', below:'Κάτω από το υγιές', overfat:'Υπέρβαρο', obese:'Παχυσαρκία',
-    essential:'Απαραίτητο', athletic:'Αθλητικό', fit:'Φυσιολογικό', acceptable:'Αποδεκτό'
+    netTitle:'Κάτι πήγε στραβά', netErr:'Πρόβλημα σύνδεσης. Έλεγξε το internet και δοκίμασε ξανά σε λίγο.'
   },
   en:{
+    kg:'kg',
     greet:function(n){return (n?n+', ':'')+'your measurements';},
-    updated:function(d){return 'Last updated: '+d;}, auto:'updates automatically',
-    compareLbl:'Compare with:', cmpFirst:'first measurement', cmpPrev:'previous measurement', cmpPlan:'current plan start',
-    pdf:'🖨️ PDF',
-    compTitle:'Body composition', compTotal:'kg TOTAL', lean:'Lean', fat:'Fat',
-    whereTitle:'Where you stand', goalLegend:'▲ goal',
-    bmi:'BMI', ffmi:'FFMI (lean mass)', bfPct:'% Body fat',
-    method:'Method', ffmiGlo:'FFMI = fat-free mass index — shows whether BMI is driven by muscle or fat. %BF categories are statistical, not a diagnosis.',
-    bmiUnder:'underweight', bmiNorm:'normal', bmiOver:'overweight', bmiObese1:'obesity I', bmiObese2:'obesity II', bmiObese3:'obesity III',
-    ffLow:'low muscle mass', ffNorm:'normal muscle mass', ffAbove:'above-average muscle', ffHigh:'high muscle mass',
-    rateTitle:'Rate of change', rateSpan:function(w){return '· '+w+' wk';},
-    rateBf:'% Body fat', rateWt:'Weight', ptsWk:'pts/wk', pctWk:'%BW/wk', stalled:'stalled', aggressive:'aggressive',
-    rateOK:'✅ Healthy rate of change — no calorie change needed.',
-    rateWarn:'⚠ Rate outside the ideal range — review calorie intake.',
-    leanTitle:'Lean-mass retention',
-    leanTxt:function(w,f,l,p){return 'Loss <b>'+w+' kg</b> = <b>'+f+' kg</b> fat + <b>'+l+' kg</b> lean. <b>'+p+'%</b> of the loss from lean mass.';},
-    leanOK:'✅ Within acceptable (under 30%).',
-    leanWarn:'⚠ A bit high — watch your protein this period.',
-    suggTitle:'Our suggestion', noBF:'Needs a %BF measurement for an automatic suggestion.',
-    sugGoodDrop:function(v){return 'Good progress — body fat % dropped '+v+' points from the baseline.';},
-    sugRise:function(v){return 'Body fat % rose '+v+' points from the baseline — worth reviewing calorie intake.';},
-    sugStable:'Body fat % held steady from the baseline.',
-    sugAggr:'The rate of loss is aggressive — talk to your dietitian about the calorie deficit.',
-    sugStall:'The rate of loss has slowed — if progress has stalled, talk to your dietitian.',
+    lastM:function(d){return 'Last measurement: '+d;},
+    profileFlag:'⚠ Profile data — no measurement yet',
+    vsPrev:'Compared with your previous measurement', vsFirst:'Compared with your first measurement',
+    kgFat:'kg fat', kgW:'kg weight', plainLbl:'In plain words:',
+    sFatDown:function(x){return 'You lost <b>'+x+' kg of fat</b>';},
+    sLeanSame:' and your muscle stayed steady.',
+    sLeanUp:function(x){return ' and gained <b>'+x+' kg of muscle</b>.';},
+    sLeanDown:function(x){return '. Muscle dipped a little ('+x+' kg) — protein helps us keep it.';},
+    sFatUp:'Body fat went up a little this period — we’ll look at it together at your next appointment.',
+    sStable:'Your body composition stayed the same — normal for one month.',
+    sStableLong:'Your body composition stayed the same.',
+    sOther:'Body fat was measured with a different method this time, so we don’t compare it.',
+    sWtDown:function(x){return 'Your weight went down <b>'+x+' kg</b>.';},
+    sWtUp:function(x,good){return good?'You gained <b>'+x+' kg</b> — just as planned.':'Your weight went up a little ('+x+' kg).';},
+    sWtStable:'Your weight stayed steady.',
+    firstLbl:'First measurement',
+    sFirst:'This is our starting point — from your next measurement you’ll see your progress here.',
+    fromStart:function(d){return 'Since the start ('+d+'):';},
+    tWeight:'Weight', tBf:'Body fat %', tMuscle:'Muscle', muscleHint:'lean mass: muscle, bone, water',
+    stable:'steady', otherM:'other method',
+    goalTitle:'🎯 Progress to your goal', gStart:'Start', gNow:'Now', gGoal:'Goal',
+    gLeft:function(x){return '<b>'+x+' kg</b> to go.';}, gDone:'🎯 Goal reached!',
+    msTitle:'🏅 Milestones',
+    msKg:function(s){return '−'+s+' kg since the start';},
+    msNext:function(s,l){return '−'+s+' kg ('+l+' to go)';},
+    msFat:function(s){return '−'+s+' kg fat';},
+    msLean:function(s){return '+'+s+' kg muscle';},
+    msHealthy:'Into the healthy body-fat range', msGoal:'Weight goal!', msHalf:'Halfway to your goal',
+    msVisits:function(n){return n+' measurements — consistency!';},
+    nextTitle:'What we do now', noBF:'Needs a body-fat measurement for an automatic suggestion.',
+    sugGoodDrop:function(v){return 'Good progress — body fat % dropped '+v+' points.';},
+    sugRise:'Body fat % rose a little this period — at your next appointment we’ll decide together what to adjust.',
+    sugStable:'Body fat % held steady.',
+    sugAggr:'You’re losing quite fast — talk to your dietitian about the calorie deficit.',
     sugHealthy:'The rate of loss is within a healthy range.',
-    sugToGo:function(kg){return '~'+kg+' kg fat mass to go for the %BF goal.';},
-    sugAtGoal:'%BF is already at goal — the aim now is maintenance.',
-    sugProtPlan:function(g,pk){return 'Keep protein at your plan target (~'+g+' g/day · '+pk+' g/kg) to protect lean mass.';},
-    sugProtGen:'Keep protein adequate (~1.6–2.2 g/kg) to protect lean mass.',
-    histTitle:'History', histSpan:function(n){return '· '+n+' measurements';},
-    weight:'Weight', bfPctLbl:'% Body fat', leanMass:'Lean mass', sfSum:'Skinfold sum',
-    footQ:'Questions? Message your dietitian', lock:'personal link — don’t forward it',
-    profileFlag:'⚠ Profile data — no tracker measurement yet',
+    sugToGo:function(kg){return '~'+kg+' kg of fat to go for the goal.';},
+    sugAtGoal:'Body fat is already at goal — the aim now is maintenance.',
+    sugProtPlan:function(g,pk){return 'Keep protein at your plan target (~'+g+' g/day · '+pk+' g/kg) to protect your muscle.';},
+    sugProtGen:'Keep protein adequate (~1.6–2.2 g/kg) to protect your muscle.',
+    more:'See details ▾', less:'Hide details ▴',
+    cmpLbl:'Compare with:', cmpPrev:'Previous', cmpFirst:'First measurement',
+    zoneTitle:'📍 Where you stand',
+    zoneSub:function(f,band){return 'body fat vs '+(f?'women':'men')+(band?' aged '+band:'');},
+    zLow:'low', zHealthy:'healthy', zUp:'raised', zHigh:'high', zYou:'you',
+    zRange:function(a,b){return 'Healthy range '+a+'–'+b+'%';},
+    zDash:function(l,v){return 'dashed = '+l+' ('+v+'%)';},
+    zGoal:function(v){return '◆ goal '+v+'%';}, zSrc:'indicative ranges, not a diagnosis',
+    sfTitle:'📐 Where the fat is coming off', sfNote:'Darker green = bigger drop · orange = increase.',
+    fbTitle:'📊 Fat (kg) per measurement', hTitle:'🗂 Measurement history',
+    hOther:'other method — not compared', hFat:'fat',
+    mCaliper:'skinfolds', mEst:'estimate',
+    SF:{abdomen:'Abdomen',suprailiac:'Suprailiac',subscapular:'Subscapular',chest:'Chest',midaxillary:'Midaxillary',tricep:'Triceps',thigh:'Thigh',calf:'Calf'},
+    footQ:'Questions? Message your dietitian', lock:'personal link — don’t forward it', print:'🖨️ Print / PDF',
     needMoreTitle:'No measurements yet', needMoreBody:'This page will update as soon as your dietitian logs your first measurement.',
     invalidTitle:'Invalid link', invalidBody:'This link was not found. Ask your dietitian for a new one.',
-    netTitle:'Something went wrong', netErr:'Connection problem. Check your internet and try again in a moment.',
-    healthy:'Healthy', below:'Below healthy', overfat:'Overweight', obese:'Obesity',
-    essential:'Essential', athletic:'Athletic', fit:'Fitness', acceptable:'Acceptable'
+    netTitle:'Something went wrong', netErr:'Connection problem. Check your internet and try again in a moment.'
+  },
+  ru:{
+    kg:'кг',
+    greet:function(n){return (n?n+', ':'')+'твои замеры';},
+    lastM:function(d){return 'Последний замер: '+d;},
+    profileFlag:'⚠ Данные профиля — замеров пока нет',
+    vsPrev:'По сравнению с предыдущим замером', vsFirst:'По сравнению с первым замером',
+    kgFat:'кг жира', kgW:'кг веса', plainLbl:'Простыми словами:',
+    sFatDown:function(x){return 'Ты потерял(а) <b>'+x+' кг жира</b>';},
+    sLeanSame:', а мышцы остались на месте.',
+    sLeanUp:function(x){return ' и набрал(а) <b>'+x+' кг мышц</b>.';},
+    sLeanDown:function(x){return '. Мышцы немного уменьшились ('+x+' кг) — белок поможет их сохранить.';},
+    sFatUp:'В этот период жир немного прибавился — обсудим это вместе на следующей встрече.',
+    sStable:'Состав тела не изменился — это нормально для одного месяца.',
+    sStableLong:'Состав тела не изменился.',
+    sOther:'В этот раз жир измеряли другим методом, поэтому мы его не сравниваем.',
+    sWtDown:function(x){return 'Твой вес снизился на <b>'+x+' кг</b>.';},
+    sWtUp:function(x,good){return good?'Ты набрал(а) <b>'+x+' кг</b> — как и планировали.':'Вес немного вырос ('+x+' кг).';},
+    sWtStable:'Твой вес остался стабильным.',
+    firstLbl:'Первый замер',
+    sFirst:'Это наша отправная точка — со следующего замера здесь будет виден твой прогресс.',
+    fromStart:function(d){return 'С начала ('+d+'):';},
+    tWeight:'Вес', tBf:'Жир %', tMuscle:'Мышцы', muscleHint:'безжировая масса: мышцы, кости, вода',
+    stable:'без изменений', otherM:'другой метод',
+    goalTitle:'🎯 Путь к цели', gStart:'Начало', gNow:'Сейчас', gGoal:'Цель',
+    gLeft:function(x){return 'До цели осталось <b>'+x+' кг</b>.';}, gDone:'🎯 Цель достигнута!',
+    msTitle:'🏅 Достижения',
+    msKg:function(s){return '−'+s+' кг с начала';},
+    msNext:function(s,l){return '−'+s+' кг (осталось '+l+')';},
+    msFat:function(s){return '−'+s+' кг жира';},
+    msLean:function(s){return '+'+s+' кг мышц';},
+    msHealthy:'Жир в здоровом диапазоне', msGoal:'Цель по весу!', msHalf:'Полпути к цели',
+    msVisits:function(n){return n+' замеров — постоянство!';},
+    nextTitle:'Что делаем дальше', noBF:'Для автоматической рекомендации нужен замер % жира.',
+    sugGoodDrop:function(v){return 'Хороший прогресс — % жира снизился на '+v+' пункта.';},
+    sugRise:'В этот период % жира немного вырос — на следующей встрече вместе решим, что скорректировать.',
+    sugStable:'% жира остался стабильным.',
+    sugAggr:'Снижение идёт довольно быстро — обсуди дефицит калорий со своим диетологом.',
+    sugHealthy:'Темп снижения в пределах здоровой нормы.',
+    sugToGo:function(kg){return 'До цели осталось ~'+kg+' кг жира.';},
+    sugAtGoal:'Жир уже в пределах цели — теперь задача удержать результат.',
+    sugProtPlan:function(g,pk){return 'Держи белок на уровне плана (~'+g+' г/день · '+pk+' г/кг), чтобы сохранить мышцы.';},
+    sugProtGen:'Держи достаточно белка (~1.6–2.2 г/кг), чтобы сохранить мышцы.',
+    more:'Подробнее ▾', less:'Скрыть подробности ▴',
+    cmpLbl:'Сравнить с:', cmpPrev:'Предыдущий', cmpFirst:'Первый замер',
+    zoneTitle:'📍 Где ты сейчас',
+    zoneSub:function(f,band){return 'жир по сравнению с '+(f?'женщинами':'мужчинами')+(band?' '+band+' лет':'');},
+    zLow:'низкий', zHealthy:'здоровый', zUp:'повышенный', zHigh:'высокий', zYou:'ты',
+    zRange:function(a,b){return 'Здоровый диапазон '+a+'–'+b+'%';},
+    zDash:function(l,v){return 'пунктир = '+l+' ('+v+'%)';},
+    zGoal:function(v){return '◆ цель '+v+'%';}, zSrc:'ориентировочные границы, не диагноз',
+    sfTitle:'📐 Откуда уходит жир', sfNote:'Темнее зелёный = большее снижение · оранжевый = увеличение.',
+    fbTitle:'📊 Жир (кг) по замерам', hTitle:'🗂 История замеров',
+    hOther:'другой метод — не сравнивается', hFat:'жир',
+    mCaliper:'кожные складки', mEst:'оценка',
+    SF:{abdomen:'Живот',suprailiac:'Над подвздошной костью',subscapular:'Под лопаткой',chest:'Грудь',midaxillary:'Подмышечная',tricep:'Трицепс',thigh:'Бедро',calf:'Голень'},
+    footQ:'Есть вопросы? Напиши своему диетологу', lock:'личная ссылка — не пересылай её', print:'🖨️ Печать / PDF',
+    needMoreTitle:'Замеров пока нет', needMoreBody:'Страница обновится, как только диетолог внесёт твой первый замер.',
+    invalidTitle:'Недействительная ссылка', invalidBody:'Ссылка не найдена. Попроси новую у своего диетолога.',
+    netTitle:'Что-то пошло не так', netErr:'Проблема с подключением. Проверь интернет и попробуй ещё раз.'
+  },
+  tr:{
+    kg:'kg',
+    greet:function(n){return (n?n+', ':'')+'ölçümlerin';},
+    lastM:function(d){return 'Son ölçüm: '+d;},
+    profileFlag:'⚠ Profil bilgileri — henüz ölçüm yok',
+    vsPrev:'Önceki ölçüme göre', vsFirst:'İlk ölçüme göre',
+    kgFat:'kg yağ', kgW:'kg kilo', plainLbl:'Kısaca:',
+    sFatDown:function(x){return '<b>'+x+' kg yağ</b> kaybettin';},
+    sLeanSame:' ve kas kütlen sabit kaldı.',
+    sLeanUp:function(x){return ' ve <b>'+x+' kg kas</b> kazandın.';},
+    sLeanDown:function(x){return '. Kas kütlen biraz azaldı ('+x+' kg) — protein onu korumamıza yardımcı olur.';},
+    sFatUp:'Bu dönemde yağ biraz arttı — bir sonraki randevuda birlikte bakacağız.',
+    sStable:'Vücut kompozisyonun aynı kaldı — bir ay için normal.',
+    sStableLong:'Vücut kompozisyonun aynı kaldı.',
+    sOther:'Yağ bu sefer farklı bir yöntemle ölçüldü, bu yüzden karşılaştırmıyoruz.',
+    sWtDown:function(x){return 'Kilon <b>'+x+' kg</b> azaldı.';},
+    sWtUp:function(x,good){return good?'<b>'+x+' kg</b> aldın — tam planladığımız gibi.':'Kilon biraz arttı ('+x+' kg).';},
+    sWtStable:'Kilon sabit kaldı.',
+    firstLbl:'İlk ölçüm',
+    sFirst:'Bu bizim başlangıç noktamız — bir sonraki ölçümden itibaren ilerlemeni burada göreceksin.',
+    fromStart:function(d){return 'Başlangıçtan beri ('+d+'):';},
+    tWeight:'Kilo', tBf:'Yağ %', tMuscle:'Kas', muscleHint:'yağsız kütle: kas, kemik, su',
+    stable:'sabit', otherM:'farklı yöntem',
+    goalTitle:'🎯 Hedefe doğru', gStart:'Başlangıç', gNow:'Şimdi', gGoal:'Hedef',
+    gLeft:function(x){return 'Hedefe <b>'+x+' kg</b> kaldı.';}, gDone:'🎯 Hedefe ulaşıldı!',
+    msTitle:'🏅 Kilometre taşları',
+    msKg:function(s){return 'Başlangıçtan beri −'+s+' kg';},
+    msNext:function(s,l){return '−'+s+' kg ('+l+' kaldı)';},
+    msFat:function(s){return '−'+s+' kg yağ';},
+    msLean:function(s){return '+'+s+' kg kas';},
+    msHealthy:'Sağlıklı yağ aralığına girdin', msGoal:'Kilo hedefi!', msHalf:'Hedefin yarısı',
+    msVisits:function(n){return n+' ölçüm — istikrar!';},
+    nextTitle:'Şimdi ne yapıyoruz', noBF:'Otomatik öneri için yağ % ölçümü gerekiyor.',
+    sugGoodDrop:function(v){return 'Güzel ilerleme — yağ oranı '+v+' puan düştü.';},
+    sugRise:'Bu dönemde yağ oranı biraz arttı — bir sonraki randevuda neyi ayarlayacağımıza birlikte karar vereceğiz.',
+    sugStable:'Yağ oranı sabit kaldı.',
+    sugAggr:'Oldukça hızlı kilo veriyorsun — kalori açığını diyetisyeninle konuş.',
+    sugHealthy:'Kayıp hızı sağlıklı aralıkta.',
+    sugToGo:function(kg){return 'Hedef için ~'+kg+' kg yağ kaldı.';},
+    sugAtGoal:'Yağ oranı zaten hedefte — artık amaç korumak.',
+    sugProtPlan:function(g,pk){return 'Kaslarını korumak için proteini plan hedefinde tut (~'+g+' g/gün · '+pk+' g/kg).';},
+    sugProtGen:'Kaslarını korumak için yeterli protein al (~1.6–2.2 g/kg).',
+    more:'Ayrıntıları gör ▾', less:'Ayrıntıları gizle ▴',
+    cmpLbl:'Karşılaştır:', cmpPrev:'Önceki', cmpFirst:'İlk ölçüm',
+    zoneTitle:'📍 Neredesin',
+    zoneSub:function(f,band){return (band?band+' yaş ':'')+(f?'kadınlara':'erkeklere')+' göre yağ oranı';},
+    zLow:'düşük', zHealthy:'sağlıklı', zUp:'yüksekçe', zHigh:'yüksek', zYou:'sen',
+    zRange:function(a,b){return 'Sağlıklı aralık %'+a+'–'+b;},
+    zDash:function(l,v){return 'kesikli çizgi = '+l+' (%'+v+')';},
+    zGoal:function(v){return '◆ hedef %'+v;}, zSrc:'yaklaşık sınırlar, teşhis değildir',
+    sfTitle:'📐 Yağ nereden gidiyor', sfNote:'Koyu yeşil = daha büyük düşüş · turuncu = artış.',
+    fbTitle:'📊 Ölçüm başına yağ (kg)', hTitle:'🗂 Ölçüm geçmişi',
+    hOther:'farklı yöntem — karşılaştırılmaz', hFat:'yağ',
+    mCaliper:'deri kıvrımı', mEst:'tahmin',
+    SF:{abdomen:'Karın',suprailiac:'Suprailiak',subscapular:'Kürek altı',chest:'Göğüs',midaxillary:'Koltuk altı',tricep:'Triseps',thigh:'Uyluk',calf:'Baldır'},
+    footQ:'Soruların mı var? Diyetisyenine mesaj at', lock:'kişisel bağlantı — başkasına iletme', print:'🖨️ Yazdır / PDF',
+    needMoreTitle:'Henüz ölçüm yok', needMoreBody:'Diyetisyenin ilk ölçümünü kaydettiğinde bu sayfa güncellenecek.',
+    invalidTitle:'Geçersiz bağlantı', invalidBody:'Bağlantı bulunamadı. Diyetisyeninden yenisini iste.',
+    netTitle:'Bir sorun oluştu', netErr:'Bağlantı sorunu. İnternetini kontrol edip biraz sonra tekrar dene.'
   }
 };
 function T(k){ const v=(TXT[L]&&TXT[L][k]!=null)?TXT[L][k]:TXT.el[k]; return v; }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
 function el(id){ return document.getElementById(id); }
+function f1(v){ return (+v).toFixed(1); }
+function sgn(d,dec){ return (d>0?'+':d<0?'−':'±')+Math.abs(d).toFixed(dec==null?1:dec); }
+function fmtDate(iso,short){
+  if(!iso)return '';
+  const dateOnly=/^\d{4}-\d{2}-\d{2}$/.test(iso);
+  const d=new Date(dateOnly?iso+'T00:00:00Z':iso); if(isNaN(d))return '';
+  const o=short?{day:'numeric',month:'short'}:{day:'numeric',month:'short',year:'numeric'};
+  if(dateOnly)o.timeZone='UTC';
+  try{ return new Intl.DateTimeFormat(LOCALE[L]||'el-GR',o).format(d); }catch(e){ return iso.slice(0,10); }
+}
 
-/* ── %BF reference bands — MIRROR of js/lib/bf-norms.js (BF_BANDS) / bfHealthByAge, same
+/* ── %BF healthy ranges — MIRROR of js/lib/bf-norms.js (GALLAGHER_BF / bfHealthByAge), same
    numbers as the main app and plan.html. Standalone file, no shared script scope, so this
    is a deliberate duplicate — keep values in sync if the source ever changes. ── */
-function bfBands(sex){
-  return sex==='F'
-    ?[{lo:10,hi:13,col:'#1565C0'},{lo:14,hi:20,col:'var(--ok)'},{lo:21,hi:24,col:'#558b2f'},{lo:25,hi:31,col:'#f57c00'},{lo:32,hi:60,col:'#c62828'}]
-    :[{lo:2,hi:5,col:'#1565C0'},{lo:6,hi:13,col:'var(--ok)'},{lo:14,hi:17,col:'#558b2f'},{lo:18,hi:24,col:'#f57c00'},{lo:25,hi:60,col:'#c62828'}];
-}
 const GALLAGHER_BF={
   M:[{aLo:20,aHi:39,h:[8,19],o:25},{aLo:40,aHi:59,h:[11,21],o:28},{aLo:60,aHi:79,h:[13,24],o:30}],
   F:[{aLo:20,aHi:39,h:[21,32],o:39},{aLo:40,aHi:59,h:[23,33],o:40},{aLo:60,aHi:79,h:[24,35],o:42}]
@@ -271,68 +455,44 @@ function bfGalRow(sex,age){
   const a=age<20?20:(age>79?79:age);
   return rows.find(r=>a>=r.aLo&&a<=r.aHi)||rows[rows.length-1];
 }
-function bfHealthByAge(bf,sex,age){
-  const row=bfGalRow(sex,age);
-  if(!(bf>0)||!row)return null;
-  let key; if(bf<row.h[0])key='low'; else if(bf<=row.h[1])key='healthy'; else if(bf<row.o)key='overfat'; else key='obese';
-  const col={low:'#1565C0',healthy:'var(--ok)',overfat:'#f57c00',obese:'#c62828'}[key];
-  return {key,col,healthy:row.h.slice(),obeseLo:row.o,ageBand:row.aLo+'–'+row.aHi};
+
+/* ── comparison logic — ported from js/client-editor/tracker-results.js (not imported:
+   this page is standalone). %BF is only ever compared within ONE method: caliper entries
+   carry sfProtocol, others bfMethod (bia/dexa/estimate); unknown on either side = comparable. ── */
+const NOISE={bf:1, kg:0.3, mass:0.8};
+function mOf(e){ return e?(e.sfProtocol?'caliper':(e.bfMethod||'')):''; }
+function mism(a,b){ const x=mOf(a),y=mOf(b); return !!(x&&y&&x!==y); }
+function hasBf(e){ return !!(e&&e.bf>0&&e.kg>0); }
+function fatKg(e){ return e.kg*e.bf/100; }
+function leanKg(e){ return e.kg-fatKg(e); }
+function isMinor(){ return SNAP.age>0&&SNAP.age<18; }
+// Which direction is "good" for body weight (same rule as trWeightDir).
+function wDir(){
+  if(SNAP.goal==='gain')return 'higher';
+  if(SNAP.goal==='maintain')return null;
+  const g=SNAP.goalWeight, f=SNAP.log.find(e=>e.kg>0);
+  if(g>0&&f&&g>f.kg+0.5)return 'higher';
+  return 'lower';
 }
 
-/* ── range-bar helpers — same logic as exportLipometriaPDF() / plan.html's rangeBar ── */
-function rbPct(v,min,max){return Math.max(0,Math.min(100,(v-min)/(max-min)*100));}
-function rbGradient(boundaries,max){
-  const stops=[];
-  boundaries.forEach((b,i)=>{
-    const startPct=rbPct(b.v,boundaries[0].v,max);
-    stops.push(b.col+' '+startPct.toFixed(0)+'%');
-    if(i<boundaries.length-1){const endPct=rbPct(boundaries[i+1].v,boundaries[0].v,max);stops.push(b.col+' '+endPct.toFixed(0)+'%');}
-  });
-  return 'linear-gradient(90deg,'+stops.join(',')+')';
-}
-function rangeBar(label,valTxt,valCol,catTxt,boundaries,max,curVal,goalVal){
-  if(!boundaries){
-    return '<div class="rb"><div class="rbt"><span>'+label+'</span><b style="color:'+valCol+'">'+valTxt+'</b></div></div>';
-  }
-  const curPct=curVal!=null?rbPct(curVal,boundaries[0].v,max):null;
-  const goalPct=goalVal!=null?rbPct(goalVal,boundaries[0].v,max):null;
-  return '<div class="rb"><div class="rbt"><span>'+label+'</span><b style="color:'+valCol+'">'+valTxt+(catTxt?' · '+catTxt:'')+'</b></div>'
-    +'<div class="rbtrack" style="background:'+rbGradient(boundaries,max)+'">'
-    +(curPct!=null?'<span class="rbcur" style="left:'+curPct.toFixed(1)+'%"></span>':'')
-    +(goalPct!=null?'<span class="rbgoal" style="left:'+goalPct.toFixed(1)+'%"></span>':'')
-    +'</div></div>';
-}
-function deltaSpan(delta,decimals,goodDir){
-  if(delta==null||isNaN(delta))return '';
-  const eps=decimals===0?0.5:(decimals===2?0.005:0.05);
-  const flat=Math.abs(delta)<eps;
-  const improving=goodDir==='down'?delta<0:delta>0;
-  const cls=flat?'fl':(improving?'dn':'up');
-  const arrow=flat?'—':(delta>0?'▲':'▼');
-  return ' <span class="'+cls+'">'+arrow+Math.abs(delta).toFixed(decimals)+'</span>';
-}
-function sparkline(vals,color){
-  const v=vals.filter(x=>x!=null);
-  if(v.length<2)return '';
-  const min=Math.min(...v),max=Math.max(...v),range=(max-min)||1,n=v.length;
-  const pts=v.map((x,i)=>(2+i/(n-1)*94).toFixed(1)+','+(4+(1-(x-min)/range)*24).toFixed(1)).join(' ');
-  const last=pts.split(' ').pop().split(',');
-  return '<svg viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true">'
-    +'<polygon points="'+pts+' '+last[0]+',34 2,34" fill="'+color+'22"/>'
-    +'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.2"/>'
-    +'<circle cx="'+last[0]+'" cy="'+last[1]+'" r="2.6" fill="'+color+'"/></svg>';
-}
-function sfSumOf(entry){
-  if(!entry||!entry.sfFields)return null;
-  const v=Object.keys(entry.sfFields).map(k=>entry.sfFields[k]);
-  return v.length?v.reduce((s,x)=>s+x,0):null;
-}
-function fmtDate(iso){
-  if(!iso)return '';
-  const d=new Date(iso); if(isNaN(d))return '';
-  const MON=L==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-                     :['Ιαν','Φεβ','Μαρ','Απρ','Μαϊ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
-  return L==='en' ? (MON[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()) : (d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear());
+function model(){
+  const log=SNAP.log, Lst=log[log.length-1];
+  const W=log.filter(e=>e.kg>0);
+  const wL=W[W.length-1]||null, wB=W.length>1?(CMP==='first'?W[0]:W[W.length-2]):null;
+  const BF=log.filter(hasBf), Lbf=BF[BF.length-1]||null;
+  // %BF baseline = previous (or first) entry measured with the SAME method as the latest one
+  const same=Lbf?BF.filter(e=>e!==Lbf&&!mism(e,Lbf)):[];
+  const bfB=same.length?(CMP==='first'?same[0]:same[same.length-1]):null;
+  const bfOther=!!(Lbf&&!bfB&&BF.length>1);
+  const dW=(wL&&wB)?+(wL.kg-wB.kg).toFixed(1):null;
+  const dBf=bfB?+(Lbf.bf-bfB.bf).toFixed(1):null;
+  const dFat=bfB?+(fatKg(Lbf)-fatKg(bfB)).toFixed(1):null;
+  const dLean=bfB?+(leanKg(Lbf)-leanKg(bfB)).toFixed(1):null;
+  const fatReliable=!!(bfB&&Lbf===Lst&&Math.abs(dBf)>=NOISE.bf);
+  const bfF=Lbf?BF.find(e=>!mism(e,Lbf)):null;   // first same-method entry
+  const startFat=(bfF&&bfF!==Lbf&&Math.abs(Lbf.bf-bfF.bf)>=NOISE.bf)?{d:+(fatKg(Lbf)-fatKg(bfF)).toFixed(1),date:bfF.date}:null;
+  const startW=W.length>1?{d:+(wL.kg-W[0].kg).toFixed(1),date:W[0].date}:null;
+  return {log,Lst,W,wL,wB,BF,Lbf,bfB,bfOther,dW,dBf,dFat,dLean,fatReliable,bfF,startFat,startW,dir:wDir()};
 }
 
 /* ── boot ─────────────────────────────────────────────────────────────── */
@@ -349,17 +509,31 @@ function fmtDate(iso){
   }catch(e){ return renderState('err','netTitle','netErr'); }
   if(error){ console.error('[metriseis] get_lipo_snapshot',error); return renderState('err','netTitle','netErr'); }
   if(!data || !data.snapshot){ return renderState('err','invalidTitle','invalidBody'); }
-  WRAP=data; SNAP=data.snapshot;
-  L=(data.lang==='en')?'en':'el';
-  const lb=el('langbar'); if(lb) lb.hidden=false; syncLangBar();
-  if(!SNAP.log || !SNAP.log.length){ return renderState('ok','needMoreTitle','needMoreBody'); }
-  render();
+  start(data);
 })();
 
-function setLang(l){ L=l; syncLangBar(); render(); }
+function start(data){
+  WRAP=data; SNAP=data.snapshot;
+  CL=(['en','ru','tr'].indexOf(data.lang)>-1)?data.lang:'el';
+  L=CL; document.documentElement.lang=L;   // lang attr → correct text-transform:uppercase (Turkish İ)
+  buildLangBar();
+  if(!SNAP.log || !SNAP.log.length){ return renderState('ok','needMoreTitle','needMoreBody'); }
+  render();
+}
+
+// Two pills only: Greek + the client's own language (EL/EN when the client is Greek).
+function buildLangBar(){
+  const lb=el('langbar'); if(!lb)return;
+  const pair=CL==='el'?['el','en']:['el',CL];
+  lb.innerHTML=pair.map(l=>'<button type="button" data-l="'+l+'" onclick="setLang(\''+l+'\')">'+l.toUpperCase()+'</button>').join('');
+  lb.hidden=false; syncLangBar();
+}
+function setLang(l){ L=l; document.documentElement.lang=l; syncLangBar(); if(SNAP&&SNAP.log&&SNAP.log.length)render(); }
 function syncLangBar(){
   document.querySelectorAll('#langbar button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.l===L)));
 }
+function setCmp(v){ CMP=(v==='first')?'first':'prev'; render(); }
+function toggleDet(){ DET=!DET; render(); }
 
 function renderState(kind,titleKey,bodyKey){
   const r=el('root'); if(!r)return;
@@ -368,209 +542,248 @@ function renderState(kind,titleKey,bodyKey){
     +'<h1>'+esc(T(titleKey))+'</h1><p>'+esc(T(bodyKey))+'</p></div>';
 }
 
-/* ── compute everything for the chosen baseline (client-side — the full history already
-   sits in SNAP.log, so switching "Compare with" needs no server round-trip) ── */
-function computeView(){
-  const log=SNAP.log;
-  const entry=log[log.length-1];
-  let baseline=null;
-  if(log.length>1){
-    if(BASELINE==='prev') baseline=log[log.length-2];
-    else if(BASELINE==='plan' && SNAP.planGeneratedAt){
-      const planDay=new Date(SNAP.planGeneratedAt).toISOString().slice(0,10);
-      let best=null; log.forEach(e=>{ if(e!==entry && e.date<=planDay) best=e; });
-      baseline=best||log[0];
-    } else baseline=log[0];
-  }
-  const weight=entry.kg, bf=entry.bf;
-  const lbm=(bf&&weight)?+(weight*(1-bf/100)).toFixed(1):null;
-  const fm=(bf&&weight)?+(weight*bf/100).toFixed(1):null;
-  const h=SNAP.height||0, age=SNAP.age, sex=SNAP.sex||'M', isFem=sex==='F';
-  const isMinor=(age!=null&&age>0&&age<18);
-  const bmi=(h>0&&weight)?+(weight/((h/100)*(h/100))).toFixed(1):null;
-  const bmiCat=(bmi!=null&&!isMinor)?(bmi<18.5?T('bmiUnder'):bmi<25?T('bmiNorm'):bmi<30?T('bmiOver'):bmi<35?T('bmiObese1'):bmi<40?T('bmiObese2'):T('bmiObese3')):null;
-  const bmiCol=(bmi!=null&&!isMinor)?(bmi<18.5?'#1565C0':bmi<25?'var(--ok)':bmi<30?'#f57c00':'#c62828'):'var(--faint)';
-  const ffmi=(lbm&&h>0)?+(lbm/((h/100)*(h/100))).toFixed(1):null;
-  const ffLo=isFem?15:18, ffMid=isFem?18:20, ffHi=isFem?21:23;
-  const ffmiCat=(ffmi&&!isMinor)?(ffmi<ffLo?T('ffLow'):ffmi<ffMid?T('ffNorm'):ffmi<ffHi?T('ffAbove'):T('ffHigh')):null;
-  const ffmiCol=(ffmi&&!isMinor)?(ffmi<ffLo?'#1565C0':ffmi<ffHi?'var(--ok)':'#f57c00'):'var(--faint)';
-
-  const bfBandsNow=bfBands(sex);
-  const bfGv=bf?bfHealthByAge(bf,sex,age):null;
-  let bfCat=null,bfCol='var(--faint)',bfBounds=null;
-  const GLN={low:T('below'),healthy:T('healthy'),overfat:T('overfat'),obese:T('obese')};
-  if(bfGv){
-    bfCat=GLN[bfGv.key]+' ('+bfGv.ageBand+')'; bfCol=bfGv.col;
-    bfBounds=[{v:isFem?5:0,col:'#1565C0'},{v:bfGv.healthy[0],col:'var(--ok)'},{v:bfGv.healthy[1]+1,col:'#f57c00'},{v:bfGv.obeseLo,col:'#c62828'}];
-  } else if(bf){
-    const lbl=[T('essential'),T('athletic'),T('fit'),T('acceptable'),T('obese')];
-    bfBandsNow.forEach((b,i)=>{ if(bf>=b.lo){bfCat=lbl[i];bfCol=b.col;} });
-    bfBounds=[{v:isFem?5:0,col:bfBandsNow[0].col},{v:bfBandsNow[1].lo,col:bfBandsNow[1].col},{v:bfBandsNow[2].lo,col:bfBandsNow[2].col},{v:bfBandsNow[3].lo,col:bfBandsNow[3].col},{v:bfBandsNow[4].lo,col:bfBandsNow[4].col}];
-  }
-  const bfGoal=SNAP.goalBF||(bfGv?bfGv.healthy[1]:(bfBandsNow[2]&&bfBandsNow[2].hi));
-  const bfMax=bfGv?bfGv.obeseLo+8:(isFem?45:35);
-
-  const METHOD_INFO={
-    caliper:{l:(L==='en'?'skinfolds':'δερματοπτυχές')+(entry.sfProtocol?' · '+({jp4:'JP4',jp3:'JP3',jp7:'JP7',slaughter:'Slaughter'}[entry.sfProtocol]||entry.sfProtocol):''),e:'±3–5%'},
-    bia:{l:'BIA',e:'±3–5%'},
-    dexa:{l:'DEXA',e:'±1–2%'},
-    estimate:{l:(L==='en'?'estimate':'εκτίμηση'),e:'±5–8%'}
-  };
-  const bfm=entry.bfMethod||(entry.sfProtocol?'caliper':'');
-  const methodInfo=METHOD_INFO[bfm]||null;
-  const bfMethodLbl=methodInfo?(methodInfo.l+' · '+methodInfo.e):'';
-
-  const wDelta=(baseline&&baseline.kg!=null&&weight!=null)?+(weight-baseline.kg).toFixed(1):null;
-  const prevBf=(baseline&&baseline.bf>0)?baseline.bf:null;
-  const bfDelta=(bf&&prevBf)?+(bf-prevBf).toFixed(1):null;
-  const prevLbm=(baseline&&prevBf&&baseline.kg)?+(baseline.kg*(1-prevBf/100)).toFixed(1):null;
-  const lbmDelta=(lbm&&prevLbm)?+(lbm-prevLbm).toFixed(1):null;
-
-  const spanDays=(baseline&&baseline.date&&entry.date)?Math.max(1,Math.round((new Date(entry.date)-new Date(baseline.date))/86400000)):null;
-  const spanWk=spanDays?+(spanDays/7).toFixed(1):null;
-  const bfRateWk=(bfDelta!=null&&spanWk)?+(bfDelta/spanWk).toFixed(2):null;
-  const wtRateWk=(wDelta!=null&&spanWk&&baseline&&baseline.kg)?+((wDelta/baseline.kg*100)/spanWk).toFixed(2):null;
-  function rz(v,lo,hi){const a=Math.abs(v||0);return a<lo?0:a<=hi?1:2;}
-  const bfRateZone=bfRateWk!=null?rz(bfRateWk,0.1,0.6):null;
-  const wtRateZone=wtRateWk!=null?rz(wtRateWk,0.25,1.0):null;
-  const rateOK=(bfRateZone==null||bfRateZone<2)&&(wtRateZone==null||wtRateZone<2);
-
-  const wLost=(wDelta!=null&&wDelta<0)?+(-wDelta).toFixed(1):null;
-  const lbmLost=(lbmDelta!=null)?+Math.max(0,-lbmDelta).toFixed(1):null;
-  const leanSharePct=(wLost&&lbmLost!=null&&wLost>0)?Math.round(lbmLost/wLost*100):null;
-  const leanOK=(leanSharePct==null)||leanSharePct<=30;
-
-  const sSum=sfSumOf(entry), prevSum=baseline?sfSumOf(baseline):null;
-  const sSumDelta=(sSum!=null&&prevSum!=null)?Math.round(sSum-prevSum):null;
-
-  return {entry,baseline,weight,bf,lbm,fm,h,age,sex,isFem,isMinor,bmi,bmiCat,bmiCol,ffmi,ffLo,ffMid,ffHi,ffmiCat,ffmiCol,
-    bfCat,bfCol,bfBounds,bfGoal,bfMax,bfMethodLbl,wDelta,bfDelta,lbmDelta,spanWk,bfRateWk,wtRateWk,bfRateZone,wtRateZone,rateOK,
-    wLost,lbmLost,leanSharePct,leanOK,sSum,sSumDelta};
+/* ── delta chip: green when better, soft amber when worse, grey within measurement noise.
+   Never red — this page is read by the client. ── */
+function chip(d,noise,dir,unit){
+  if(d==null||isNaN(d))return '';
+  if(Math.abs(d)<noise)return '<span class="chip">'+(Math.abs(d)<0.05?esc(T('stable')):sgn(d)+unit)+'</span>';
+  const good=dir==='lower'?d<0:dir==='higher'?d>0:null;
+  return '<span class="chip'+(good===null?'':good?' good':' soft')+'">'+sgn(d)+unit+'</span>';
 }
 
-function buildSuggestion(v){
-  if(!v.bf) return T('noBF');
+/* ── 2. hero ── */
+function heroHtml(m){
+  if(!m.wB&&!m.bfB){
+    const v=m.wL?f1(m.wL.kg):(m.Lbf?m.Lbf.bf+'%':'—');
+    return '<div class="card hero"><div class="hl">'+esc(T('firstLbl'))+' · '+esc(fmtDate(m.Lst.date))+'</div>'
+      +'<div class="big">'+esc(v)+(m.wL?' <span>'+esc(T('kg'))+'</span>':'')+'</div>'
+      +'<div class="plain">'+esc(T('sFirst'))+'</div></div>';
+  }
+  let big,unit,pos=false,date,txt;
+  if(m.fatReliable||(m.dW==null&&m.bfB)){
+    big=m.dFat; unit=T('kgFat'); date=m.bfB.date;
+    if(!m.fatReliable){ txt=esc(CMP==='first'?T('sStableLong'):T('sStable')); }
+    else if(m.dFat<0){
+      pos=true;
+      const dl=m.dLean;
+      txt=T('sFatDown')(f1(-m.dFat))+(Math.abs(dl)<NOISE.mass?esc(T('sLeanSame')):dl>0?T('sLeanUp')(f1(dl)):esc(T('sLeanDown')(f1(-dl))));
+    } else txt=esc(T('sFatUp'));
+  } else {
+    big=m.dW; unit=T('kg'); date=m.wB.date;
+    const noise=Math.abs(m.dW)<NOISE.kg;
+    const good=!noise&&(m.dir==='lower'?m.dW<0:m.dir==='higher'?m.dW>0:false);
+    pos=good;
+    txt=noise?esc(T('sWtStable')):(m.dW<0?T('sWtDown')(f1(-m.dW)):T('sWtUp')(f1(m.dW),good));
+    if(m.bfB&&m.Lbf===m.Lst&&Math.abs(m.dBf)<NOISE.bf) txt+=' '+esc(CMP==='first'?T('sStableLong'):T('sStable'));
+    else if(m.bfOther&&m.Lbf===m.Lst) txt+=' '+esc(T('sOther'));
+  }
+  let since='';
+  if(CMP==='prev'){
+    const s=(m.startFat&&m.startFat.date!==date)?{d:m.startFat.d,u:T('kgFat'),date:m.startFat.date,noise:0.05,good:m.startFat.d<0}
+      :(m.startW&&m.startW.date!==date)?{d:m.startW.d,u:T('kg'),date:m.startW.date,noise:NOISE.kg,good:Math.abs(m.startW.d)>=NOISE.kg&&(m.dir==='lower'?m.startW.d<0:m.dir==='higher'?m.startW.d>0:false)}:null;
+    if(s) since='<div class="since">'+esc(T('fromStart')(fmtDate(s.date)))+' <b'+(s.good?' class="g"':'')+'>'+(Math.abs(s.d)<s.noise?esc(T('stable')):sgn(s.d)+' '+esc(s.u))+'</b></div>';
+  }
+  return '<div class="card hero'+(pos?' pos':'')+'">'
+    +'<div class="hl">'+esc(CMP==='first'?T('vsFirst'):T('vsPrev'))+' · '+esc(fmtDate(date))+'</div>'
+    +'<div class="big">'+(Math.abs(big)<0.05?'±0.0':sgn(big))+' <span>'+esc(unit)+'</span></div>'
+    +'<div class="plain"><b>'+esc(T('plainLbl'))+'</b> '+txt+'</div>'+since+'</div>';
+}
+
+/* ── 3. three tiles ── */
+function tilesHtml(m){
+  const t=function(lbl,val,u,ch,title){
+    return '<div class="tile"'+(title?' title="'+esc(title)+'"':'')+'><div class="tl">'+esc(lbl)+'</div><div class="tv">'+val+(val!=='—'?' <span>'+u+'</span>':'')+'</div>'+ch+'</div>';
+  };
+  const other='<span class="chip">'+esc(T('otherM'))+'</span>';
+  return '<div class="tiles">'
+    +t(T('tWeight'),m.wL?f1(m.wL.kg):'—',esc(T('kg')),m.wB?chip(m.dW,NOISE.kg,m.dir,''):'')
+    +t(T('tBf'),m.Lbf?f1(m.Lbf.bf):'—','%',m.bfB?chip(m.dBf,NOISE.bf,'lower',''):(m.bfOther?other:''))
+    +t(T('tMuscle'),m.Lbf?f1(leanKg(m.Lbf)):'—',esc(T('kg')),m.bfB?chip(m.dLean,NOISE.mass,'higher',''):(m.bfOther?other:''),T('muscleHint'))
+    +'</div>';
+}
+
+/* ── 4. goal bar ── */
+function goalHtml(m){
+  const g=SNAP.goalWeight;
+  if(!(g>0)||!m.wL)return '';
+  const s=m.W[0].kg,n=m.wL.kg;
+  if(Math.abs(s-g)<0.3)return '';
+  const pct=Math.max(0,Math.min(100,Math.round((s-n)/(s-g)*100)));
+  const done=Math.abs(n-g)<0.3||pct>=100;
+  return '<div class="card"><h2>'+esc(T('goalTitle'))+'</h2>'
+    +'<div class="gbar" role="img" aria-label="'+pct+'%"><i style="width:'+pct+'%"></i></div>'
+    +'<div class="glbl"><span>'+esc(T('gStart'))+' '+f1(s)+'</span><b>'+esc(T('gNow'))+' '+f1(n)+' · '+pct+'%</b><span>'+esc(T('gGoal'))+' '+f1(g)+'</span></div>'
+    +'<div class="gtxt">'+(done?esc(T('gDone')):T('gLeft')(f1(Math.abs(g-n))))+'</div></div>';
+}
+
+/* ── 5. milestones (port of trMilestones, no circumferences) ── */
+function milestones(m){
+  const out=[]; let next=null;
+  if(m.W.length>=1&&m.wL){
+    const dW=+(m.wL.kg-m.W[0].kg).toFixed(1);
+    if(m.dir==='lower'&&!isMinor()){
+      let got=null;
+      [2,3,5,8,10,15,20,25,30].forEach(s=>{ if(-dW>=s)got=s; else if(!next&&-dW>0)next=T('msNext')(s,f1(s+dW)); });
+      if(got)out.push(T('msKg')(got));
+    }
+  }
+  if(m.Lbf&&m.bfF&&m.bfF!==m.Lbf){
+    const a=m.bfF,b=m.Lbf,dF=fatKg(b)-fatKg(a),dL=leanKg(b)-leanKg(a);
+    [10,5,3,2].some(s=>{ if(-dF>=s){out.push(T('msFat')(s));return true;} return false; });
+    if(m.dir==='higher')[3,2,1].some(s=>{ if(dL>=s){out.push(T('msLean')(s));return true;} return false; });
+    const r=bfGalRow(SNAP.sex,SNAP.age);
+    if(r&&!isMinor()&&a.bf>r.h[1]&&b.bf<=r.h[1])out.push(T('msHealthy'));
+  }
+  const g=SNAP.goalWeight;
+  if(g>0&&m.wL&&Math.abs(m.W[0].kg-g)>=0.3){
+    const pct=(m.W[0].kg-m.wL.kg)/(m.W[0].kg-g)*100;
+    if(pct>=100)out.push(T('msGoal')); else if(pct>=50)out.push(T('msHalf'));
+  }
+  [20,10,5].some(s=>{ if(m.log.length>=s){out.push(T('msVisits')(s));return true;} return false; });
+  return {got:out,next:next};
+}
+function milestonesHtml(m){
+  const ms=milestones(m);
+  if(!ms.got.length&&!ms.next)return '';
+  return '<div class="card"><h2>'+esc(T('msTitle'))+'</h2><div class="ms">'
+    +ms.got.map(t=>'<span>'+esc(t)+'</span>').join('')
+    +(ms.next?'<span class="lk">🔒 '+esc(ms.next)+'</span>':'')+'</div></div>';
+}
+
+/* ── 6. «Τι κάνουμε τώρα» — the old buildSuggestion, noise- and method-aware ── */
+function suggestion(m){
+  if(!m.Lbf) return T('noBF');
   const parts=[];
-  if(v.bfDelta!=null){
-    if(v.bfDelta<0) parts.push(T('sugGoodDrop')(Math.abs(v.bfDelta).toFixed(1)));
-    else if(v.bfDelta>0) parts.push(T('sugRise')(v.bfDelta.toFixed(1)));
+  if(m.bfB){
+    if(m.dBf<=-NOISE.bf){
+      parts.push(T('sugGoodDrop')(f1(-m.dBf)));
+      const wk=Math.max(1,(new Date(m.Lbf.date)-new Date(m.bfB.date))/86400000/7);
+      parts.push((-m.dBf/wk)>0.6?T('sugAggr'):T('sugHealthy'));
+    }
+    else if(m.dBf>=NOISE.bf) parts.push(T('sugRise'));
     else parts.push(T('sugStable'));
   }
-  if(v.bfRateWk!=null && v.bfRateWk<0){
-    if(v.bfRateZone===2) parts.push(T('sugAggr'));
-    else if(v.bfRateZone===0) parts.push(T('sugStall'));
-    else parts.push(T('sugHealthy'));
+  const r=bfGalRow(SNAP.sex,SNAP.age>0?SNAP.age:30);
+  const goal=SNAP.goalBF||(r?r.h[1]:null);
+  if(goal){
+    if(m.Lbf.bf>goal) parts.push(T('sugToGo')(f1(m.Lbf.kg*(m.Lbf.bf-goal)/100)));
+    else parts.push(T('sugAtGoal'));
   }
-  if(v.bf>v.bfGoal){
-    const fmGoalKg=+(v.weight*(v.bf-v.bfGoal)/100).toFixed(1);
-    parts.push(T('sugToGo')(fmGoalKg));
-  } else {
-    parts.push(T('sugAtGoal'));
-  }
-  if(SNAP.planProtG){
-    const perKg=+(SNAP.planProtG/v.weight).toFixed(1);
-    parts.push(T('sugProtPlan')(SNAP.planProtG,perKg));
-  } else {
-    parts.push(T('sugProtGen'));
-  }
+  if(SNAP.planProtG&&m.Lbf.kg>0) parts.push(T('sugProtPlan')(SNAP.planProtG,f1(SNAP.planProtG/m.Lbf.kg)));
+  else parts.push(T('sugProtGen'));
   return parts.join(' ');
 }
 
+/* ── details: comparison switch ── */
+function cmpHtml(m){
+  if(m.log.length<2)return '';
+  const b=function(v,lbl){return '<button type="button" aria-pressed="'+(CMP===v)+'" onclick="setCmp(\''+v+'\')">'+esc(lbl)+'</button>';};
+  return '<div class="cmp noprint"><span>'+esc(T('cmpLbl'))+'</span>'+b('prev',T('cmpPrev'))+b('first',T('cmpFirst'))+'</div>';
+}
+
+/* ── details: «Πού βρίσκεσαι» zone bar (port of trZoneBarHtml; soft colours, no red) ── */
+function zoneHtml(m){
+  if(!m.Lbf||isMinor())return '';
+  const sex=SNAP.sex==='F'?'F':'M', hasAge=SNAP.age>0;
+  const r=bfGalRow(sex,hasAge?SNAP.age:30);
+  const lo=Math.max(2,r.h[0]-8),hi=r.o+8;
+  const X=function(v){return Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));};
+  const segs=[[lo,r.h[0],'var(--z-low)',T('zLow')],[r.h[0],r.h[1],'var(--z-ok)',T('zHealthy')],[r.h[1],r.o,'var(--z-up)',T('zUp')],[r.o,hi,'var(--z-hi)',T('zHigh')]];
+  let bar=segs.map(s=>{
+    const l=X(s[0]).toFixed(1),w=(X(s[1])-X(s[0])).toFixed(1);
+    return '<div class="sg" style="left:'+l+'%;width:'+w+'%;background:'+s[2]+'"></div><div class="sl" style="left:'+l+'%;width:'+w+'%">'+esc(s[3])+'</div>';
+  }).join('');
+  const v=m.Lbf.bf;
+  const base=m.bfB?'<div class="base" style="left:'+X(m.bfB.bf).toFixed(1)+'%"></div>':'';
+  const goal=SNAP.goalBF>0?'<div class="goal" style="left:'+X(SNAP.goalBF).toFixed(1)+'%"></div>':'';
+  bar+=base+goal+'<div class="cur" style="left:'+X(v).toFixed(1)+'%"></div><div class="curl" style="left:'+Math.max(8,Math.min(92,X(v))).toFixed(1)+'%">'+esc(T('zYou'))+' '+f1(v)+'%</div>';
+  const notes=[T('zRange')(r.h[0],r.h[1])];
+  if(base)notes.push(T('zDash')(CMP==='first'?T('cmpFirst'):T('cmpPrev'),f1(m.bfB.bf)));
+  if(goal)notes.push(T('zGoal')(SNAP.goalBF));
+  notes.push(T('zSrc'));
+  return '<div class="card"><h2>'+esc(T('zoneTitle'))+' <span class="s">· '+esc(T('zoneSub')(sex==='F',hasAge?r.aLo+'–'+r.aHi:''))+'</span></h2>'
+    +'<div class="zone">'+bar+'</div><div class="note">'+esc(notes.join(' · '))+'</div></div>';
+}
+
+/* ── details: skinfold map (port of trSkinfoldMapHtml) ── */
+const SF_POS={chest:[36,46],subscapular:[54,44],midaxillary:[62,62],tricep:[76,58],abdomen:[40,82],suprailiac:[58,94],thigh:[34,142],calf:[56,174]};
+function bodySvg(extra){
+  const s='fill="none" stroke="var(--faint)" stroke-width="1.5"';
+  return '<svg viewBox="0 0 90 200" width="70" aria-hidden="true" style="flex:none">'
+    +'<circle cx="45" cy="18" r="13" '+s+'/><rect x="24" y="34" width="42" height="70" rx="12" '+s+'/>'
+    +'<rect x="8" y="38" width="12" height="58" rx="6" '+s+'/><rect x="70" y="38" width="12" height="58" rx="6" '+s+'/>'
+    +'<rect x="26" y="106" width="16" height="84" rx="7" '+s+'/><rect x="48" y="106" width="16" height="84" rx="7" '+s+'/>'
+    +extra+'</svg>';
+}
+function skinfoldHtml(){
+  const sf=SNAP.log.filter(e=>e.sfFields&&Object.keys(e.sfFields).some(k=>e.sfFields[k]>0));
+  if(sf.length<2)return '';
+  const Le=sf[sf.length-1],Be=CMP==='first'?sf[0]:sf[sf.length-2],a=Be.sfFields,b=Le.sfFields;
+  const keys=Object.keys(SF_POS).filter(k=>a[k]>0&&b[k]>0);
+  if(!keys.length)return '';
+  const colOf=p=>p<=-15?'var(--sf-good2)':p<=-5?'var(--sf-good1)':p<5?'var(--sf-flat)':'var(--sf-up)';
+  const SFL=T('SF');
+  let dots='',rows='';
+  keys.forEach(k=>{
+    const p=Math.round((b[k]-a[k])/a[k]*100),pos=SF_POS[k];
+    dots+='<circle cx="'+pos[0]+'" cy="'+pos[1]+'" r="6" fill="'+colOf(p)+'" stroke="var(--card)" stroke-width="1.5"/>';
+    rows+='<div class="sfrow"><span><i class="dot" style="background:'+colOf(p)+'"></i>'+esc(SFL[k]||k)+' <small>'+a[k]+'→'+b[k]+' mm</small></span>'
+      +'<span class="chip'+(p<=-5?' good':p<5?'':' soft')+'">'+sgn(p,0)+'%</span></div>';
+  });
+  return '<div class="card"><h2>'+esc(T('sfTitle'))+' <span class="s">· '+esc(fmtDate(Be.date,true))+' → '+esc(fmtDate(Le.date,true))+'</span></h2>'
+    +'<div class="sfwrap">'+bodySvg(dots)+'<div style="flex:1;min-width:0">'+rows+'</div></div>'
+    +'<div class="note">'+esc(T('sfNote'))+'</div></div>';
+}
+
+/* ── details: fat kg per visit (same method as the latest %BF only) ── */
+function fatBarsHtml(m){
+  if(!m.Lbf)return '';
+  const e8=m.BF.filter(e=>!mism(e,m.Lbf)).slice(-8);
+  if(e8.length<2)return '';
+  const mx=Math.max.apply(null,e8.map(fatKg));
+  return '<div class="card"><h2>'+esc(T('fbTitle'))+'</h2>'
+    +e8.map(e=>{ const f=fatKg(e);
+      return '<div class="fb"><span class="d">'+esc(fmtDate(e.date,true))+'</span><span class="t"><i style="width:'+(f/mx*100).toFixed(1)+'%"></i></span><span class="v">'+f1(f)+' '+esc(T('kg'))+'</span></div>';
+    }).join('')+'</div>';
+}
+
+/* ── details: history list (newest first) ── */
+function methodLbl(e){
+  const k=mOf(e);
+  return k==='caliper'?T('mCaliper'):k==='bia'?'BIA':k==='dexa'?'DEXA':k==='estimate'?T('mEst'):'';
+}
+function historyHtml(m){
+  if(m.log.length<2)return '';
+  const rows=m.log.slice(-12).reverse().map(e=>{
+    // method named only on rows that differ from the latest %BF method — no repeated noise
+    const other=e.bf>0&&m.Lbf&&mism(e,m.Lbf);
+    const bf=e.bf>0?f1(e.bf)+'% '+esc(T('hFat')):'';
+    return '<div class="hr"><span class="d">'+esc(fmtDate(e.date))+'</span><span class="v">'
+      +(e.kg>0?'<b>'+f1(e.kg)+' '+esc(T('kg'))+'</b>':'')+(e.kg>0&&bf?' · ':'')+bf
+      +(other?'<span class="o">'+esc(methodLbl(e))+' · '+esc(T('hOther'))+'</span>':'')+'</span></div>';
+  }).join('');
+  return '<div class="card"><h2>'+esc(T('hTitle'))+'</h2>'+rows+'</div>';
+}
+
 function render(){
-  const v=computeView();
-  const log=SNAP.log, hist=log.slice(-8);
+  const m=model();
   const fname=(SNAP.name||'').split(' ')[0]||'';
+  let h='<div class="who"><h1>'+esc(T('greet')(fname))+'</h1>'
+    +(SNAP.profileOnly?'':'<div class="upd">'+esc(T('lastM')(fmtDate(m.Lst.date)))+'</div>')
+    +(SNAP.profileOnly?'<span class="flag">'+esc(T('profileFlag'))+'</span>':'')+'</div>';
+  h+=heroHtml(m);
+  h+=tilesHtml(m);
+  h+=goalHtml(m);
+  h+=milestonesHtml(m);
+  h+='<div class="card next"><h2>'+esc(T('nextTitle'))+'</h2><p>'+esc(suggestion(m))+'</p></div>';
 
-  let h='';
-  h+='<div class="who"><h1>'+esc(T('greet')(fname))+'</h1>'
-    +'<div class="upd"><span class="pulse"></span>'+esc(T('updated')(fmtDate(WRAP.updated_at)))+' · '+esc(T('auto'))+'</div></div>';
-
-  if(SNAP.profileOnly){
-    h+='<div style="margin:6px 4px"><span class="flag">'+esc(T('profileFlag'))+'</span></div>';
+  const det=[cmpHtml(m),zoneHtml(m),skinfoldHtml(),fatBarsHtml(m),historyHtml(m)].filter(Boolean);
+  if(det.length){
+    h+='<button type="button" class="morebtn noprint" aria-expanded="'+DET+'" onclick="toggleDet()">'+esc(DET?T('less'):T('more'))+'</button>';
+    h+='<div class="det'+(DET?' open':'')+'">'+det.join('')+'</div>';
   }
-
-  h+='<div class="ctrls noprint">';
-  if(log.length>1){
-    h+='<label>'+esc(T('compareLbl'))+' <select id="baselineSel" onchange="BASELINE=this.value;render()">'
-      +'<option value="first"'+(BASELINE==='first'?' selected':'')+'>'+esc(T('cmpFirst'))+'</option>'
-      +'<option value="prev"'+(BASELINE==='prev'?' selected':'')+'>'+esc(T('cmpPrev'))+'</option>'
-      +(SNAP.planGeneratedAt?'<option value="plan"'+(BASELINE==='plan'?' selected':'')+'>'+esc(T('cmpPlan'))+'</option>':'')
-      +'</select></label>';
-  }
-  h+='<button type="button" class="pdfbtn" onclick="window.print()">'+esc(T('pdf'))+'</button></div>';
-  if(log.length>1 && v.baseline){
-    h+='<div class="printonly" style="font-size:.78rem;color:var(--faint);margin:4px 4px 0">'+esc(T('compareLbl'))+' '
-      +esc(BASELINE==='prev'?T('cmpPrev'):BASELINE==='plan'?T('cmpPlan'):T('cmpFirst'))+' ('+esc(fmtDate(v.baseline.date))+')</div>';
-  }
-
-  // donut + where-you-stand
-  h+='<div class="row2">';
-  h+='<div class="card donut"><h2>'+esc(T('compTitle'))+'</h2>';
-  if(v.weight&&v.lbm!=null&&v.fm!=null){
-    const lbmFrac=v.lbm/v.weight, fatFrac=v.fm/v.weight;
-    h+='<svg viewBox="0 0 140 140" width="118" height="118" style="margin:2px auto 0;display:block" role="img" aria-label="'+v.weight+' kg">'
-      +'<circle cx="70" cy="70" r="52" fill="none" stroke="var(--bord-l)" stroke-width="16"/>'
-      +'<circle cx="70" cy="70" r="52" fill="none" stroke="#1565C0" stroke-width="16" stroke-dasharray="'+(326.7*lbmFrac).toFixed(1)+' 326.7" transform="rotate(-90 70 70)"/>'
-      +'<circle cx="70" cy="70" r="52" fill="none" stroke="#e65100" stroke-width="16" stroke-dasharray="'+(326.7*fatFrac).toFixed(1)+' 326.7" stroke-dashoffset="-'+(326.7*lbmFrac).toFixed(1)+'" transform="rotate(-90 70 70)"/>'
-      +'<text x="70" y="66" text-anchor="middle" font-size="19" font-weight="800" fill="var(--teal-d)">'+v.weight+'</text>'
-      +'<text x="70" y="80" text-anchor="middle" font-size="7" fill="var(--faint)">'+esc(T('compTotal'))+'</text>'
-      +(v.wDelta!=null?'<text x="70" y="93" text-anchor="middle" font-size="7.5" font-weight="800" fill="'+(v.wDelta<0?'var(--ok)':v.wDelta>0?'#c62828':'var(--faint)')+'">'+(v.wDelta<0?'▼':v.wDelta>0?'▲':'—')+' '+Math.abs(v.wDelta).toFixed(1)+'kg</text>':'')
-      +'</svg><div class="dlgd"><span><i style="background:#1565C0"></i>'+esc(T('lean'))+' '+v.lbm+'kg</span><span><i style="background:#e65100"></i>'+esc(T('fat'))+' '+v.fm+'kg</span></div>';
-  } else {
-    h+='<div style="padding:30px 0;color:var(--faint);font-size:.85rem">—</div>';
-  }
-  h+='</div>';
-
-  h+='<div class="card"><h2>'+esc(T('whereTitle'))+' <span class="s">· '+esc(T('goalLegend'))+'</span></h2>';
-  if(v.bmi!=null) h+=rangeBar(T('bmi'),String(v.bmi),v.bmiCol,v.isMinor?null:v.bmiCat,v.isMinor?null:[{v:15,col:'#1565C0'},{v:18.5,col:'var(--ok)'},{v:25,col:'#f57c00'},{v:30,col:'#c62828'}],40,v.bmi,24.9);
-  if(v.ffmi!=null) h+=rangeBar(T('ffmi'),String(v.ffmi),v.ffmiCol,v.isMinor?null:v.ffmiCat,v.isMinor?null:[{v:v.ffLo-4,col:'#1565C0'},{v:v.ffLo,col:'var(--ok)'},{v:v.ffMid,col:'#43a047'},{v:v.ffHi,col:'#f57c00'}],v.ffHi+5,v.ffmi,null);
-  if(v.bf) h+=rangeBar(T('bfPct'),v.bf+'%'+deltaSpan(v.bfDelta,1,'down'),v.bfCol,v.bfCat,v.bfBounds,v.bfMax,v.bf,v.bfGoal);
-  if(v.bfMethodLbl) h+='<div class="method">'+esc(T('method'))+': '+esc(v.bfMethodLbl)+'</div>';
-  if(v.ffmi!=null) h+='<div class="glo">'+esc(T('ffmiGlo'))+'</div>';
-  h+='</div></div>';
-
-  // rate of change
-  if(v.spanWk && (v.bfRateWk!=null||v.wtRateWk!=null)){
-    h+='<div class="card"><h2>'+esc(T('rateTitle'))+' <span class="s">'+esc(T('rateSpan')(v.spanWk))+'</span></h2>'
-      +'<div class="rateg">';
-    function rateCell(label,val,unit,zone){
-      const mk=zone===0?14:zone===1?50:86;
-      return '<div><div class="rc-l">'+esc(label)+'</div><div class="rc-b">'+(val>0?'+':'')+val+' <span>'+esc(unit)+'</span></div>'
-        +'<div class="zone"><span class="l a">'+esc(T('stalled'))+'</span><span class="l b">'+esc(T('aggressive'))+'</span><span class="mk" style="left:'+mk+'%"></span></div></div>';
-    }
-    if(v.bfRateWk!=null) h+=rateCell(T('rateBf'),v.bfRateWk,T('ptsWk'),v.bfRateZone);
-    if(v.wtRateWk!=null) h+=rateCell(T('rateWt'),v.wtRateWk,T('pctWk'),v.wtRateZone);
-    h+='</div><div class="verdict'+(v.rateOK?'':' warn')+'">'+esc(v.rateOK?T('rateOK'):T('rateWarn'))+'</div></div>';
-  }
-
-  // lean-mass retention
-  if(v.leanSharePct!=null){
-    h+='<div class="card"><h2>'+esc(T('leanTitle'))+'</h2><div class="leanrow">'
-      +'<div class="leanbar" role="img" aria-label="lean vs fat share of weight lost"><i class="f" style="flex:'+Math.max(0,100-v.leanSharePct)+'"></i><i class="l" style="flex:'+v.leanSharePct+'"></i></div>'
-      +'<div><div class="leantxt">'+T('leanTxt')(v.wLost.toFixed(1),(v.wLost-v.lbmLost).toFixed(1),v.lbmLost.toFixed(1),v.leanSharePct)+'</div>'
-      +'<div class="leanflag'+(v.leanOK?'':' warn')+'">'+esc(v.leanOK?T('leanOK'):T('leanWarn'))+'</div></div>'
-      +'</div></div>';
-  }
-
-  // suggestion
-  h+='<div class="card sugg"><h2>'+esc(T('suggTitle'))+'</h2><p>'+esc(buildSuggestion(v))+'</p></div>';
-
-  // history
-  if(hist.length>1){
-    const hw=hist.map(e=>e.kg), hb=hist.map(e=>e.bf>0?e.bf:null);
-    const hl=hist.map(e=>e.bf>0?+(e.kg*(1-e.bf/100)).toFixed(1):null);
-    const hs=hist.map(e=>sfSumOf(e));
-    const anySf=hs.some(x=>x!=null);
-    h+='<div class="card"><h2>'+esc(T('histTitle'))+' <span class="s">'+esc(T('histSpan')(hist.length))+'</span></h2><div class="sparks">'
-      +'<div class="spark">'+sparkline(hw,'#1565C0')+'<div class="sl">'+esc(T('weight'))+'</div><div class="sv" style="color:#1565C0">'+v.weight+' kg'+deltaSpan(v.wDelta,1,'down')+'</div></div>'
-      +'<div class="spark">'+sparkline(hb,'#c62828')+'<div class="sl">'+esc(T('bfPctLbl'))+'</div><div class="sv" style="color:#c62828">'+(v.bf?v.bf+'%':'—')+deltaSpan(v.bfDelta,1,'down')+'</div></div>'
-      +'<div class="spark">'+sparkline(hl,'var(--ok)')+'<div class="sl">'+esc(T('leanMass'))+'</div><div class="sv" style="color:var(--ok)">'+(v.lbm||'—')+' kg'+deltaSpan(v.lbmDelta,1,'up')+'</div></div>'
-      +(anySf?'<div class="spark">'+sparkline(hs,'#8a5a00')+'<div class="sl">'+esc(T('sfSum'))+'</div><div class="sv" style="color:#8a5a00">'+(v.sSum!=null?Math.round(v.sSum)+' mm':'—')+deltaSpan(v.sSumDelta,0,'down')+'</div></div>':'')
-      +'</div></div>';
-  }
-
-  h+='<div class="scrfoot">Feed Your Health · '+esc(T('footQ'))+'<br><span class="lock">🔒 '+esc(T('lock'))+'</span></div>';
-
+  h+='<div class="scrfoot">Feed Your Health · '+esc(T('footQ'))+'<br>🔒 '+esc(T('lock'))
+    +'<br><button type="button" class="noprint" onclick="window.print()">'+esc(T('print'))+'</button></div>';
   el('root').innerHTML=h;
 }
 </script>
