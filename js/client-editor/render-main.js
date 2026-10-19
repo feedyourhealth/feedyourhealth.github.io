@@ -404,7 +404,11 @@ function renderMain(){
     +'</div>'
     +'</div>'
     // 📋 Ερωτηματολόγιο εισαγωγής (Upgrades Phase 2) — κάρτα κατάστασης + κουμπί αποστολής
+    // 📒 Ημερολόγιο φαγητού (food-diary.js) — δίπλα στο ερωτηματολόγιο, στενεύουν σε 1 στήλη σε μικρή οθόνη
+    +'<div class="intake-diary-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 12px;align-items:start">'
     +(typeof buildIntakeCardHtml==='function'?buildIntakeCardHtml(c):'')
+    +(typeof buildFoodDiaryCardHtml==='function'?buildFoodDiaryCardHtml(c):'')
+    +'</div>'
     // +buildExcludeHtml(c)
     // ✅ TEMPLATE SELECTOR - Show available nutrition plan templates
     +buildTmplSelectorHtml(c)

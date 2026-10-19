@@ -544,7 +544,7 @@ function swTab(n){
   // was added) and, more visibly, onto the new 📇 Επισκόπηση tab. List it here like the rest.
   // 'met-section-wrap' δεν χρειάζεται πια εδώ — το buildMetHtml() ζωγραφίζεται μέσα στο
   // #modal-btns-grid (inline-sections.js), που κρύβεται ήδη ολόκληρο εκτός tab 1.
-  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','sec-daytgt','sec-intake'];
+  var sectionIds=['sec-goal','sec-macros','sec-anthropometry','sec-activity','sec-dietary','sec-medical','sec-daytgt','sec-intake','sec-food-diary'];
   sectionIds.forEach(function(id){
     var el=document.getElementById(id);
     if(el)el.style.display=n===1?'block':'none';

@@ -503,6 +503,13 @@ function selectClient(id){
           } else if(changed){ reRender(); }
         }).catch(function(){});
       }
+      // 📒 Ημερολόγιο φαγητού: φρέσκο «Εβδ N · x/7» + κουκκίδα νέας καταγραφής στην κάρτα.
+      if(c.diaryToken && c.diaryStatus==='active' && window.Cloud && typeof window.Cloud.fetchFoodDiary==='function'){
+        var dSig=(typeof foodDiarySig==='function')?foodDiarySig(c):'';
+        window.Cloud.fetchFoodDiary(c).then(function(){
+          if(foodDiarySig(c)!==dSig && typeof getC==='function' && getC()===c && typeof renderMain==='function'){ save(); renderMain(); }
+        }).catch(function(){});
+      }
     }
 
     var tb=document.getElementById('tmpl-sb-btn');

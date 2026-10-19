@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#025857">
+<title>Feed Your Health — Ημερολόγιο φαγητού</title>
+<!-- Same CSP as intake.html: self-hosted scripts + inline, connect-src only this project's
+     Supabase host. frame-ancestors omitted (a <meta> CSP cannot enforce it). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ημερολόγιο">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<script src="vendor/supabase-js.min.js"></script>
+<style>
+  :root{
+    --teal:#025857; --teal-d:#014545; --teal-l:#037070;
+    --tint:#E2EEE5; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --ok:#2e7d32;
+    --bg:#f4f8f6; --card:#ffffff; --danger:#b71c1c; --warn:#a15c00;
+    --done:#e6f2ec; --note:#2b6cb0; --note-bg:#e8f1fb;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --teal:#3aa8a6; --teal-d:#8fd4d2; --teal-l:#4bb8b6;
+      --tint:#173230; --bord:#2c413e; --bord-l:#1c302e;
+      --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --ok:#68bf6c;
+      --bg:#111917; --card:#18211f; --danger:#e0715f; --warn:#d6a24d;
+      --done:#1a2d27; --note:#8db8e3; --note-bg:#1d2b3a;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5; font-size:16px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:560px; margin:0 auto; padding:0 14px 64px}
+  header{display:flex; align-items:center; gap:10px; padding:16px 2px 10px}
+  .mark{width:30px;height:30px;border-radius:8px;flex:0 0 auto;background:linear-gradient(135deg,var(--teal),var(--teal-d))}
+  header b{font-size:.82rem;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+  .savepill{margin-left:auto;font-size:.74rem;font-weight:600;color:var(--ok);opacity:0;transition:opacity .25s;white-space:nowrap}
+  .savepill.on{opacity:1}
+  .savepill.warn{color:var(--warn)}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:1.4rem;margin:.1em 0 .1em;color:var(--teal-d)}
+  .lead{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+  .banner{background:var(--tint);color:var(--teal-d);border-radius:10px;padding:9px 12px;font-size:.86rem;margin:0 0 12px}
+
+  .wknav{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bord-l);border-radius:12px;padding:4px;margin-bottom:8px}
+  .wknav button{font:inherit;border:none;background:var(--card);color:var(--ink);border-radius:9px;width:40px;height:34px;cursor:pointer;font-size:1.1rem}
+  .wknav button:disabled{opacity:.35;cursor:default}
+  .wknav div{text-align:center;display:flex;flex-direction:column;line-height:1.25}
+  .wknav div b{font-size:.92rem}
+  .wknav div small{font-size:.76rem;color:var(--faint)}
+
+  .days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px}
+  .day{border:1px solid var(--bord);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 0 5px;font:inherit;font-size:.72rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent}
+  .day b{font-size:.95rem;font-variant-numeric:tabular-nums}
+  .day i{width:6px;height:6px;border-radius:50%;background:var(--bord)}
+  .day.part i{background:var(--warn)}
+  .day.full i{background:var(--ok)}
+  .day.today{border-color:var(--teal-l)}
+  .day.sel{background:var(--teal);border-color:var(--teal);color:#fff}
+  .day.sel i{background:#fff}
+  .day:disabled{opacity:.35;cursor:default}
+
+  .dayhead{font-size:.8rem;color:var(--faint);margin:0 2px 8px;font-weight:600}
+  .meals{display:flex;flex-direction:column;gap:8px}
+  .meal{border:1px solid var(--bord);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;background:var(--card)}
+  .meal.done{background:var(--done);border-color:transparent}
+  .meal:focus-within{border-color:var(--teal-l);box-shadow:0 0 0 3px color-mix(in srgb,var(--teal-l) 20%,transparent)}
+  .meal-h{display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .meal-h span{font-weight:600;font-size:.9rem}
+  .meal-h small{color:var(--ok);font-size:.8rem;font-weight:700}
+  .meal textarea{width:100%;border:none;background:transparent;font:inherit;font-size:.95rem;color:var(--ink);resize:none;padding:0;min-height:24px;outline:none;line-height:1.45;overflow:hidden}
+  .meal textarea::placeholder{color:var(--faint);opacity:.8}
+  .meal textarea[readonly]{cursor:default}
+  .quick{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font:inherit;font-size:.78rem;border:1px dashed var(--bord);background:transparent;color:var(--muted);border-radius:99px;padding:4px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .chip:active{transform:scale(.97)}
+  .bubble{background:var(--note-bg);color:var(--note);border-radius:10px;padding:7px 10px;font-size:.85rem;display:flex;gap:7px;line-height:1.4}
+  .bubble b{font-weight:600}
+  .feel{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--bord);padding-top:12px;margin-top:12px}
+  .feel span{font-size:.8rem;color:var(--faint)}
+  .feel-row{display:flex;gap:6px}
+  .feel-row button{flex:1;font:inherit;font-size:.85rem;border:1px solid var(--bord);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .feel-row button[aria-pressed="true"]{border-color:var(--teal);background:var(--tint);font-weight:600}
+  .feel-row button:disabled{cursor:default}
+
+  .state{text-align:center;padding:48px 18px;max-width:420px;margin:0 auto}
+  .state .big{width:60px;height:60px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;font-size:1.7rem;background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+  .state .big.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+  .state .big.err{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+  .state p{color:var(--muted);font-size:.95rem}
+  .spin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite;margin:60px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}.savepill{transition:none}}
+  button:focus-visible{outline:2px solid var(--teal-l);outline-offset:2px}
+  .footnote{text-align:center;font-size:.74rem;color:var(--faint);margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mark"></span><b>Feed Your Health</b>
+    <span class="savepill" id="savepill" role="status" aria-live="polite"></span>
+  </header>
+  <div id="root"><div class="spin" role="status" aria-label="Loading"></div></div>
+  <div class="footnote" id="footnote" hidden></div>
+</div>
+
+<script>
+'use strict';
+const SUPABASE_URL='https://vqmzrmotdqqoswlgfgrn.supabase.co';
+const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+
+function tokenParam(){ const p=new URLSearchParams(location.search); return p.get('t')||p.get('token')||''; }
+const TOK=tokenParam();
+const PEND_KEY='fyh_diary_pending_'+TOK;     // days typed but not yet confirmed by the server
+let sb=null, L='el', D=null, READONLY=false;
+let selDate=null, selWeek=0;
+
+const SLOTS=['breakfast','snack1','lunch','snack2','dinner','extra'];
+
+/* ── i18n ─────────────────────────────────────────────────────────────── */
+const TXT={
+  el:{
+    hi:'Γεια σου', intro:'Γράψε με δικά σου λόγια τι έφαγες. Δεν χρειάζονται ποσότητες ή θερμίδες — αρκεί 1 λεπτό τη μέρα.',
+    week:'Εβδομάδα', of:'από', prevW:'Προηγούμενη εβδομάδα', nextW:'Επόμενη εβδομάδα',
+    days:['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'],
+    daysLong:['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'],
+    today:'σήμερα',
+    s_breakfast:'Πρωινό', s_snack1:'Δεκατιανό', s_lunch:'Μεσημεριανό', s_snack2:'Απογευματινό', s_dinner:'Βραδινό', s_extra:'Κάτι άλλο;',
+    p_breakfast:'π.χ. καφές με γάλα, 2 φρυγανιές με μέλι', p_snack1:'π.χ. ένα μήλο', p_lunch:'π.χ. φακές, ψωμί, φέτα',
+    p_snack2:'π.χ. γιαούρτι', p_dinner:'π.χ. σαλάτα με τόνο', p_extra:'τσιμπολόγημα, ποτό, γλυκό…',
+    q_same:'↺ Όπως χθες', q_skip:'— Δεν έφαγα', q_out:'🍽 Έξω',
+    skipTxt:'Δεν έφαγα', outTxt:'Έξω: ', sameTxt:'Ίδιο με χθες',
+    feelQ:'Προαιρετικά · Πώς ήταν η μέρα;', f0:'😣 Δύσκολη', f1:'😐 Οκ', f2:'😊 Καλή',
+    dietitian:'Διαιτολόγος', r_ok:'Μπράβο!', r_warn:'Να το δούμε μαζί.', r_q:'Πόσο περίπου;',
+    saving:'Αποθηκεύεται…', saved:'✓ Αποθηκεύτηκε', offline:'⚠️ Χωρίς σύνδεση — θα ξαναδοκιμάσει',
+    endedBanner:'Το ημερολόγιο ολοκληρώθηκε — μπορείς να το δεις, αλλά όχι να το αλλάξεις.',
+    notStarted:'Το ημερολόγιο ξεκινά στις', validUntil:'Ισχύει έως',
+    supersededTitle:'Αυτός ο σύνδεσμος αντικαταστάθηκε', supersededBody:'Ο διαιτολόγος σου έστειλε νεότερο ημερολόγιο. Άνοιξε το πιο πρόσφατο μήνυμά του.',
+    invalidTitle:'Μη έγκυρος σύνδεσμος', invalidBody:'Ο σύνδεσμος δεν βρέθηκε. Ζήτησε καινούριο από τον διαιτολόγο σου.',
+    netTitle:'Κάτι πήγε στραβά', netErr:'Πρόβλημα σύνδεσης. Έλεγξε το internet και δοκίμασε ξανά σε λίγο.',
+    tooLong:'⚠️ Πολύ μεγάλο κείμενο — σύντομέ το λίγο',
+    privacy:'Τα γραφόμενά σου τα βλέπει μόνο ο διαιτολόγος σου.'
+  },
+  en:{
+    hi:'Hi', intro:'Write in your own words what you ate. No amounts or calories needed — about 1 minute a day.',
+    week:'Week', of:'of', prevW:'Previous week', nextW:'Next week',
+    days:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    daysLong:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+    today:'today',
+    s_breakfast:'Breakfast', s_snack1:'Morning snack', s_lunch:'Lunch', s_snack2:'Afternoon snack', s_dinner:'Dinner', s_extra:'Anything else?',
+    p_breakfast:'e.g. coffee with milk, 2 rusks with honey', p_snack1:'e.g. an apple', p_lunch:'e.g. lentils, bread, feta',
+    p_snack2:'e.g. yogurt', p_dinner:'e.g. tuna salad', p_extra:'snacking, drinks, sweets…',
+    q_same:'↺ Same as yesterday', q_skip:'— Skipped', q_out:'🍽 Ate out',
+    skipTxt:'Skipped', outTxt:'Ate out: ', sameTxt:'Same as yesterday',
+    feelQ:'Optional · How was your day?', f0:'😣 Hard', f1:'😐 OK', f2:'😊 Good',
+    dietitian:'Dietitian', r_ok:'Well done!', r_warn:'Let’s talk about this.', r_q:'Roughly how much?',
+    saving:'Saving…', saved:'✓ Saved', offline:'⚠️ Offline — will retry',
+    endedBanner:'This diary is finished — you can view it but not change it.',
+    notStarted:'The diary starts on', validUntil:'Open until',
+    supersededTitle:'This link was replaced', supersededBody:'Your dietitian sent a newer diary. Open their most recent message.',
+    invalidTitle:'Invalid link', invalidBody:'This link was not found. Ask your dietitian for a new one.',
+    netTitle:'Something went wrong', netErr:'Connection problem. Check your internet and try again in a moment.',
+    tooLong:'⚠️ Text too long — please shorten it',
+    privacy:'Only your dietitian can see what you write.'
+  }
+};
+function T(k){ return (TXT[L]&&TXT[L][k]!=null)?TXT[L][k]:TXT.el[k]; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];}); }
+function el(id){ return document.getElementById(id); }
+
+/* ── dates as 'YYYY-MM-DD' strings, UTC math (no DST surprises) ─────── */
+function toUTC(s){ const p=String(s).slice(0,10).split('-'); return Date.UTC(+p[0],+p[1]-1,+p[2]); }
+function fromUTC(ms){ return new Date(ms).toISOString().slice(0,10); }
+function addDays(s,n){ return fromUTC(toUTC(s)+n*86400000); }
+function diffDays(a,b){ return Math.round((toUTC(a)-toUTC(b))/86400000); }
+function dow(s){ return (new Date(toUTC(s)).getUTCDay()+6)%7; }   // 0=Mon
+function ddmm(s){ return s.slice(8,10)+'/'+s.slice(5,7); }
+function localToday(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+/* ── pending (unsent) days survive a reload / bad signal ─────────────── */
+function loadPending(){ try{ return JSON.parse(localStorage.getItem(PEND_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function storePending(p){ try{ if(Object.keys(p).length) localStorage.setItem(PEND_KEY,JSON.stringify(p)); else localStorage.removeItem(PEND_KEY); }catch(e){} }
+let PENDING={};
+
+/* ── boot ─────────────────────────────────────────────────────────────── */
+(async function boot(){
+  if(!TOK){ return renderState('err','invalidTitle','invalidBody'); }
+  try{
+    // Stateless on purpose (same origin as the dietitian app — never adopt its session).
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+      auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
+    });
+  }catch(e){ return renderState('err','netTitle','netErr'); }
+  const data=await fetchDiary();
+  if(data===false) return renderState('err','netTitle','netErr');
+  if(!data) return renderState('err','invalidTitle','invalidBody');
+  L=(data.lang==='en')?'en':'el';
+  document.documentElement.lang=L;
+  if(data.status==='superseded') return renderState('warn','supersededTitle','supersededBody');
+  D=data;
+  READONLY=(data.status!=='active');
+  PENDING=READONLY?{}:loadPending();
+  Object.keys(PENDING).forEach(function(k){ D.entries[k]=PENDING[k]; });
+  const t=todayD(), last=endDate();
+  selDate = t<D.start_date ? D.start_date : (t>last ? last : t);
+  selWeek = Math.floor(diffDays(selDate,D.start_date)/7);
+  render();
+  if(Object.keys(PENDING).length) flushAll();
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') refreshComments(); });
+  window.addEventListener('online',flushAll);
+})();
+
+async function fetchDiary(){
+  let data,error;
+  try{ ({data,error}=await sb.rpc('get_food_diary',{p_token:TOK})); }catch(e){ return false; }
+  if(error){ console.error('[diary] get_food_diary',error); return false; }
+  if(!data) return null;
+  data.entries=data.entries||{}; data.comments=data.comments||{};
+  data.weeks=data.weeks||4;
+  data.start_date=String(data.start_date).slice(0,10);
+  data.today=data.today?String(data.today).slice(0,10):localToday();
+  return data;
+}
+async function refreshComments(){
+  if(!D) return;
+  const fresh=await fetchDiary(); if(!fresh||fresh===false) return;
+  const before=JSON.stringify(D.comments);
+  D.comments=fresh.comments; D.today=fresh.today;
+  if(fresh.status!=='active' && !READONLY){ READONLY=true; D.status=fresh.status; render(); return; }
+  if(JSON.stringify(D.comments)!==before) renderMeals();
+}
+
+function todayD(){ return D.today||localToday(); }
+function endDate(){ return addDays(D.start_date, D.weeks*7-1); }
+function maxEditable(){ const t=todayD(), e=endDate(); return t<e?t:e; }
+function dayOf(date){ return D.entries[date]||{}; }
+function filledCount(date){ const m=(dayOf(date).meals)||{}; return SLOTS.filter(function(k){ return m[k]&&String(m[k]).trim(); }).length; }
+
+/* ── states ───────────────────────────────────────────────────────────── */
+function renderState(kind,titleK,bodyK){
+  const badge = kind==='ok'?'✓' : kind==='warn'?'!' : '×';
+  el('root').innerHTML='<div class="state"><div class="big '+(kind==='ok'?'':kind)+'">'+badge+'</div>'+
+    '<h1>'+esc(T(titleK))+'</h1><p>'+esc(T(bodyK))+'</p></div>';
+}
+
+/* ── main view ────────────────────────────────────────────────────────── */
+function render(){
+  const fname=(D.client_name||'').trim().split(' ')[0]||'';
+  const t=todayD();
+  let banner='';
+  if(READONLY) banner='<div class="banner">'+esc(T('endedBanner'))+'</div>';
+  else if(t<D.start_date) banner='<div class="banner">'+esc(T('notStarted'))+' '+esc(ddmm(D.start_date))+'.</div>';
+  el('root').innerHTML=
+    '<h1>'+esc(T('hi'))+(fname?(' '+esc(fname)):'')+' 👋</h1>'+
+    '<p class="lead">'+esc(T('intro'))+'</p>'+banner+
+    '<div class="wknav">'+
+      '<button type="button" id="wPrev" aria-label="'+esc(T('prevW'))+'">‹</button>'+
+      '<div><b id="wTitle"></b><small id="wDates"></small></div>'+
+      '<button type="button" id="wNext" aria-label="'+esc(T('nextW'))+'">›</button>'+
+    '</div>'+
+    '<div class="days" id="days"></div>'+
+    '<div class="dayhead" id="dayhead"></div>'+
+    '<div class="meals" id="meals"></div>'+
+    '<div class="feel"><span>'+esc(T('feelQ'))+'</span><div class="feel-row" id="feel">'+
+      [0,1,2].map(function(v){ return '<button type="button" data-v="'+v+'" aria-pressed="false">'+esc(T('f'+v))+'</button>'; }).join('')+
+    '</div></div>';
+  const foot=el('footnote'); foot.hidden=false;
+  foot.textContent=T('privacy')+' · '+T('validUntil')+' '+ddmm(endDate());
+  el('wPrev').onclick=function(){ goWeek(selWeek-1); };
+  el('wNext').onclick=function(){ goWeek(selWeek+1); };
+  el('days').addEventListener('click',function(e){ const b=e.target.closest('.day'); if(!b||b.disabled) return; selDate=b.dataset.d; renderDays(); renderMeals(); });
+  el('feel').addEventListener('click',onFeel);
+  el('meals').addEventListener('input',onMealInput);
+  el('meals').addEventListener('click',onChip);
+  el('meals').addEventListener('focusout',function(e){ if(e.target.tagName==='TEXTAREA') setTimeout(renderMealsIfIdle,0); });
+  renderDays(); renderMeals();
+}
+function goWeek(w){
+  if(w<0||w>=D.weeks) return;
+  const first=addDays(D.start_date,w*7);
+  if(first>maxEditable() && !(READONLY && first<=endDate())) return;
+  selWeek=w;
+  const last=addDays(first,6), cap=maxEditable();
+  selDate = (w===Math.floor(diffDays(cap,D.start_date)/7)) ? cap : (last<cap?last:cap);
+  if(selDate<first) selDate=first;
+  renderDays(); renderMeals();
+}
+function renderDays(){
+  const first=addDays(D.start_date,selWeek*7);
+  el('wTitle').textContent=T('week')+' '+(selWeek+1)+' '+T('of')+' '+D.weeks;
+  el('wDates').textContent=ddmm(first)+' – '+ddmm(addDays(first,6));
+  el('wPrev').disabled=selWeek===0;
+  const nextFirst=addDays(first,7);
+  el('wNext').disabled=(selWeek+1>=D.weeks)||(nextFirst>maxEditable());
+  const t=todayD(), cap=maxEditable();
+  let h='';
+  for(let i=0;i<7;i++){
+    const d=addDays(first,i), f=filledCount(d);
+    const cls=['day', d===selDate?'sel':'', d===t?'today':'', f>=4?'full':(f>0||dayOf(d).feel!=null)?'part':''].join(' ');
+    h+='<button type="button" class="'+cls+'" data-d="'+d+'"'+(d>cap?' disabled':'')+'><span>'+esc(T('days')[dow(d)])+'</span><b>'+(+d.slice(8,10))+'</b><i></i></button>';
+  }
+  el('days').innerHTML=h;
+}
+function rLabel(c){ return c.t || ({'👍':T('r_ok'),'⚠️':T('r_warn'),'❓':T('r_q')}[c.r]||''); }
+function renderMeals(){
+  const day=dayOf(selDate), m=day.meals||{};
+  el('dayhead').textContent=T('daysLong')[dow(selDate)]+' '+ddmm(selDate)+(selDate===todayD()?' · '+T('today'):'');
+  el('meals').innerHTML=SLOTS.map(function(k){
+    const v=m[k]||'', has=!!String(v).trim();
+    const c=D.comments[selDate+'|'+k];
+    const chips=(!has && !READONLY)?'<div class="quick">'+
+        '<button type="button" class="chip" data-k="'+k+'" data-q="same">'+esc(T('q_same'))+'</button>'+
+        '<button type="button" class="chip" data-k="'+k+'" data-q="skip">'+esc(T('q_skip'))+'</button>'+
+        '<button type="button" class="chip" data-k="'+k+'" data-q="out">'+esc(T('q_out'))+'</button></div>':'';
+    return '<div class="meal'+(has?' done':'')+'" data-k="'+k+'">'+
+      '<div class="meal-h"><label for="m-'+k+'"><span>'+esc(T('s_'+k))+'</span></label>'+(has?'<small>✓</small>':'')+'</div>'+
+      '<textarea id="m-'+k+'" data-k="'+k+'" rows="1" maxlength="600" placeholder="'+esc(READONLY?'':T('p_'+k))+'"'+(READONLY?' readonly':'')+'>'+esc(v)+'</textarea>'+
+      chips+
+      (c?'<div class="bubble"><span>'+esc(c.r||'💬')+'</span><span><b>'+esc(T('dietitian'))+':</b> '+esc(rLabel(c))+'</span></div>':'')+
+    '</div>';
+  }).join('');
+  document.querySelectorAll('#meals textarea').forEach(autoGrow);
+  document.querySelectorAll('#feel button').forEach(function(b){
+    b.setAttribute('aria-pressed', day.feel!=null && String(day.feel)===b.dataset.v ? 'true':'false');
+    b.disabled=READONLY;
+  });
+}
+function renderMealsIfIdle(){
+  const a=document.activeElement;
+  if(a && a.tagName==='TEXTAREA' && a.closest('#meals')) return;
+  renderMeals();
+}
+function autoGrow(t){ t.style.height='auto'; t.style.height=Math.max(24,t.scrollHeight)+'px'; }
+
+/* ── edits ────────────────────────────────────────────────────────────── */
+function setMeal(date,k,v){
+  const day=Object.assign({},dayOf(date)); day.meals=Object.assign({},day.meals||{});
+  if(String(v).trim()) day.meals[k]=v; else delete day.meals[k];
+  D.entries[date]=day; queueSave(date);
+}
+function onMealInput(e){
+  const t=e.target; if(t.tagName!=='TEXTAREA'||READONLY) return;
+  autoGrow(t);
+  setMeal(selDate,t.dataset.k,t.value);
+  const box=t.closest('.meal'), has=!!t.value.trim();
+  box.classList.toggle('done',has);
+  renderDays();
+}
+function onChip(e){
+  const b=e.target.closest('.chip'); if(!b||READONLY) return;
+  const k=b.dataset.k, q=b.dataset.q;
+  let v;
+  if(q==='skip') v=T('skipTxt');
+  else if(q==='out') v=T('outTxt');
+  else { const prev=((dayOf(addDays(selDate,-1)).meals)||{})[k]; v=(prev&&String(prev).trim())?prev:T('sameTxt'); }
+  setMeal(selDate,k,v);
+  renderMeals(); renderDays();
+  if(q==='out'){ const t=el('m-'+k); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } }
+}
+function onFeel(e){
+  const b=e.target.closest('button'); if(!b||READONLY) return;
+  const day=Object.assign({},dayOf(selDate)), v=+b.dataset.v;
+  day.feel=(day.feel===v)?null:v;
+  D.entries[selDate]=day; queueSave(selDate);
+  renderMeals(); renderDays();
+}
+
+/* ── autosave: one RPC per day, debounced ─────────────────────────────── */
+const timers={};
+let inflight=0;
+function pill(txt,warn){
+  const p=el('savepill'); if(!p) return;
+  p.textContent=txt; p.classList.toggle('warn',!!warn); p.classList.add('on');
+  clearTimeout(p._t); if(!warn && txt===T('saved')) p._t=setTimeout(function(){ p.classList.remove('on'); },1600);
+}
+function queueSave(date){
+  PENDING[date]=D.entries[date]||{}; storePending(PENDING);
+  pill(T('saving'));
+  clearTimeout(timers[date]);
+  timers[date]=setTimeout(function(){ sendDay(date); },900);
+}
+async function sendDay(date){
+  const day=PENDING[date]; if(day===undefined) return;
+  const payload={ meals:Object.assign({},day.meals||{}), feel:(day.feel==null?null:day.feel) };
+  inflight++;
+  let data,error;
+  try{ ({data,error}=await sb.rpc('save_food_diary_day',{p_token:TOK,p_date:date,p_day:payload})); }catch(e){ error=e; }
+  inflight--;
+  // warn, not error: a dropped signal is expected on phones and the day is retried from PENDING
+  if(error||!data){ console.warn('[diary] save',error); pill(T('offline'),true); scheduleRetry(); return; }
+  if(data.ok===true){
+    if(PENDING[date]===day){ delete PENDING[date]; storePending(PENDING); }
+    if(!inflight && !Object.keys(PENDING).length) pill(T('saved'));
+    return;
+  }
+  if(data.reason==='too_large'){ pill(T('tooLong'),true); return; }
+  if(data.reason==='superseded'){ delete PENDING[date]; storePending(PENDING); return renderState('warn','supersededTitle','supersededBody'); }
+  if(data.reason==='ended'||data.reason==='bad_date'){
+    delete PENDING[date]; storePending(PENDING);
+    if(data.reason==='ended'){ READONLY=true; render(); }
+    return;
+  }
+  if(data.reason==='not_found'){ return renderState('err','invalidTitle','invalidBody'); }
+  pill(T('offline'),true); scheduleRetry();
+}
+let retryT=null;
+function scheduleRetry(){ clearTimeout(retryT); retryT=setTimeout(flushAll,15000); }
+function flushAll(){ Object.keys(PENDING).forEach(function(d){ clearTimeout(timers[d]); sendDay(d); }); }
+window.addEventListener('pagehide',function(){ storePending(PENDING); });
+</script>
+</body>
+</html>

@@ -17,6 +17,7 @@ function goToApp(){
     if(window.Cloud && typeof window.Cloud.refreshPlanFeedbackCache==='function') window.Cloud.refreshPlanFeedbackCache();
     if(window.Cloud && typeof window.Cloud.refreshLinkHealthCache==='function') window.Cloud.refreshLinkHealthCache();
     if(window.Cloud && typeof window.Cloud.refreshIntakeStatuses==='function') window.Cloud.refreshIntakeStatuses();
+    if(window.Cloud && typeof window.Cloud.refreshFoodDiaryStatuses==='function') window.Cloud.refreshFoodDiaryStatuses();
     // 2026-08-23: κρατά τα παραπάνω 4 caches ζωντανά όσο ο διαιτολόγος έχει ανοιχτή την εφαρμογή —
     // πριν ανανεώνονταν μόνο εδώ, στο login, βλ. js/app-part1.js.
     if(typeof startPortalPollInterval==='function') startPortalPollInterval();

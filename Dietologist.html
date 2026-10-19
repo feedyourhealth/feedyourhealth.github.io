@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="a695a7a2c8a0">
+<meta name="fyh-build" content="bbf1dbe7f4cf">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -345,13 +345,13 @@ setTimeout(function(){
      Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
 <script defer src="js/calc/portion-optimizer.js?v=81b9c75d3c"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
-<script defer src="js/core/persistence.js?v=70b14bc587"></script>
+<script defer src="js/core/persistence.js?v=0fce92ad08"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
      (needs snapWholeG, cm, deepClone, DEFAULT_TMPLS — all loaded above) -->
 <script defer src="js/core/templates.js?v=4f045a551d"></script>
 <!-- core/state — client roster/selection (clients/curId/getC), CRUD, JSON_CACHE,
      TOUCH_HANDLERS/MOBILE_VIEWPORT, field validation, toggleSidebar -->
-<script defer src="js/core/state.js?v=105d671015"></script>
+<script defer src="js/core/state.js?v=3134b5058e"></script>
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
@@ -362,7 +362,7 @@ setTimeout(function(){
 <!-- client-list/clients-tab — the ΠΕΛΑΤΕΣ browsing page + bulk group-assign +
      SPORT_INFO, carved out of app-part5-home.js. renderClients is runtime. -->
 <script defer src="js/client-list/clients-tab.js?v=064b51ac61"></script>
-<script defer src="js/app-part2.js?v=587d8a101a"></script>
+<script defer src="js/app-part2.js?v=2e8032a552"></script>
 <!-- appointments/* — the "📝 Ραντεβού" tab, carved out of app-part2.js. Pure fns;
      callers (renderMain/swTab, app-part5 portal refresh) are runtime. -->
 <script defer src="js/appointments/appointments.js?v=8e1272a524"></script>
@@ -375,8 +375,8 @@ setTimeout(function(){
 <script defer src="js/client-editor/tracker.js?v=5f58ea6251"></script>
 <script defer src="js/client-editor/tracker-results.js?v=8b4fc9e326"></script>
 <script defer src="js/client-editor/day-targets.js?v=7a5388c52f"></script>
-<script defer src="js/client-editor/form-controls.js?v=75997e4360"></script>
-<script defer src="js/client-editor/render-main.js?v=54d734f49a"></script>
+<script defer src="js/client-editor/form-controls.js?v=326dad8ee9"></script>
+<script defer src="js/client-editor/render-main.js?v=21231d2737"></script>
 <!-- client-editor/overview — the "📇 Επισκόπηση" client sub-tab: read-only status
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
@@ -388,6 +388,9 @@ setTimeout(function(){
 <!-- client-editor/intake — Upgrades Phase 2: intake-questionnaire card in s1 + send
      modal. Pure fn declarations; needs render-main.js (calls renderMain) at runtime. -->
 <script defer src="js/client-editor/intake.js?v=154e4d06d0"></script>
+<!-- client-editor/food-diary — 📒 food-diary card next to the intake card + send modal +
+     week-by-week viewer with per-meal comments. Client page: imerologio.html. -->
+<script defer src="js/client-editor/food-diary.js?v=8229add5e2"></script>
 <!-- client-editor/diet-panels — template editor + plan history/save/charts, the last
      of the old app-part1.js (now removed). Only `var curTmplGoal` at parse time. -->
 <script defer src="js/client-editor/diet-panels.js?v=0727f41a7f"></script>
@@ -717,7 +720,7 @@ setTimeout(function(){
      Κάθε χρήστης έχει ΜΙΑ γραμμή στον πίνακα user_data (ένα jsonb "συρτάρι").
      Όλα τα δεδομένα (clients, templates, tracking) πάνε σαν ένα πακέτο.
      ═══════════════════════════════════════════════════════════════ -->
-<script defer src="js/app-part7.js?v=0e30e1c7fe"></script>
+<script defer src="js/app-part7.js?v=4f8d01bc02"></script>
 
 </body>
 </html>

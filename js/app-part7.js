@@ -478,6 +478,123 @@
       }).catch(function(){ return null; });
     },
 
+    // ── 📒 ΗΜΕΡΟΛΟΓΙΟ ΦΑΓΗΤΟΥ (imerologio.html) ──────────────────────────
+    // Πίνακας food_diary (μία γραμμή ανά αποστολή, ίδιο μοτίβο με client_intake): ο
+    // διαιτολόγος διαβάζει/γράφει απευθείας (RLS)· ο πελάτης μόνο μέσω των RPC
+    // get_food_diary / save_food_diary_day. 4 εβδομάδες από start_date (= μέρα αποστολής).
+    // entries = του πελάτη, comments = δικά μας (τα βλέπει ο πελάτης), notes = μόνο δικά μας.
+    // Βλ. sql/2026-10-19_food_diary.sql.
+    FOOD_DIARY_BASE:'https://feedyourhealth.github.io/imerologio.html',
+    FOOD_DIARY_WEEKS:4,
+
+    _sessionUid:function(){
+      var self=this;
+      return this.sb.auth.getSession().then(function(res){
+        var session=(res&&res.data)?res.data.session:null;
+        if(!session || !session.user){
+          self.user=null; self._showLogin();
+          throw new Error('Η σύνδεσή σου στο cloud έχει λήξει. Συνδέσου ξανά και ξαναπροσπάθησε.');
+        }
+        self.user=session.user;
+        return session.user.id;
+      });
+    },
+    _diaryErr:function(err, fallback){
+      var detail=[err.code,err.details,err.hint].filter(Boolean).join(' — ');
+      if(/row-level security/i.test(err.message||''))
+        return new Error('Δεν επιτρέπεται η αποθήκευση (κανόνας ασφαλείας της βάσης). Χρειάζεται έλεγχος στο Supabase.'+(detail?' ['+detail+']':''));
+      if(/food_diary|does not exist|relation/i.test(err.message||''))
+        return new Error('Ο πίνακας food_diary δεν βρέθηκε — τρέξε το sql/2026-10-19_food_diary.sql στο Supabase.'+(detail?' ['+detail+']':''));
+      return new Error(fallback+(err.message?' ['+err.message+']':''));
+    },
+
+    // ΝΕΟ ημερολόγιο για τον πελάτη: όσα ενεργά ('active') → 'superseded', νέα γραμμή με
+    // start_date = σήμερα. lang: 'el' | 'en'. Resolve → {url, token}.
+    sendFoodDiary:function(c, lang){
+      var self=this;
+      if(!this.enabled || !this.user){ return Promise.reject(new Error('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις ημερολόγιο.')); }
+      if(!c || !c.id){ return Promise.reject(new Error('Δεν υπάρχει επιλεγμένος πελάτης.')); }
+      var lg=(lang==='en')?'en':'el';
+      return this._sessionUid().then(function(uid){
+        return self.sb.from('food_diary').update({status:'superseded'})
+          .eq('dietitian_id',uid).eq('client_id',c.id).eq('status','active').then(function(){
+            var tok=genSecureToken();
+            var start=foodDiaryTodayStr();
+            var row={ token:tok, dietitian_id:uid, client_id:c.id, client_name:c.name||'', status:'active', lang:lg, start_date:start, weeks:self.FOOD_DIARY_WEEKS };
+            return self.sb.from('food_diary').insert(row).then(function(res){
+              if(res.error) throw self._diaryErr(res.error,'Απέτυχε η δημιουργία του ημερολογίου. Δοκίμασε ξανά.');
+              c.diaryToken=tok;
+              c.diaryLang=lg;
+              c.diaryStatus='active';
+              c.diaryStart=start;
+              c.diaryWeeks=self.FOOD_DIARY_WEEKS;
+              c.diarySentAt=new Date().toISOString();
+              c.diaryDays=0;
+              delete c.diaryLastEntryAt;
+              delete c.diarySeenAt;
+              try{ if(typeof save==='function') save(); }catch(e){}
+              return { url:self.FOOD_DIARY_BASE+'?t='+tok, token:tok };
+            });
+          });
+      });
+    },
+
+    // Ολόκληρη η γραμμή του τρέχοντος ημερολογίου (entries + comments + notes). Ενημερώνει
+    // τα σύντομα πεδία στον πελάτη (status / diaryDays / diaryLastEntryAt) — τα ίδια τα
+    // κείμενα ΔΕΝ μπαίνουν στο blob του πελάτη. Resolve → row | null.
+    fetchFoodDiary:function(c){
+      if(!this.enabled || !this.user || !c || !c.diaryToken) return Promise.resolve(null);
+      return this.sb.from('food_diary').select('status,lang,start_date,weeks,entries,comments,notes,sent_at,last_entry_at')
+        .eq('token',c.diaryToken).maybeSingle().then(function(res){
+          if(res.error || !res.data) return null;
+          foodDiaryApplySummary(c,res.data);
+          return res.data;
+        }).catch(function(){ return null; });
+    },
+
+    // Μαζικός έλεγχος για όλα τα ενεργά ημερολόγια — τροφοδοτεί την κουκκίδα «νέα καταγραφή»
+    // στην κάρτα χωρίς να ανοίξει ο διαιτολόγος κάθε πελάτη. Resolve → true αν κάτι άλλαξε.
+    refreshFoodDiaryStatuses:function(){
+      if(!this.enabled || !this.user) return Promise.resolve(false);
+      var act=(window.clients||[]).filter(function(c){ return c && c.diaryToken && c.diaryStatus==='active' && !c.deleted; });
+      if(!act.length) return Promise.resolve(false);
+      return this.sb.from('food_diary').select('token,status,start_date,weeks,entries,last_entry_at').in('token',act.map(function(c){return c.diaryToken;})).then(function(res){
+        if(res.error){ console.error('[CLOUD] refreshFoodDiaryStatuses', res.error); return false; }
+        var byTok={}; (res.data||[]).forEach(function(r){ byTok[r.token]=r; });
+        var changed=false;
+        act.forEach(function(c){ var r=byTok[c.diaryToken]; if(r && foodDiaryApplySummary(c,r)) changed=true; });
+        if(changed){
+          try{ if(typeof save==='function') save(); }catch(e){}
+          if(typeof getC==='function' && act.indexOf(getC())>=0 && typeof renderMain==='function' && !document.getElementById('fd-overlay')) renderMain();
+        }
+        return changed;
+      }).catch(function(e){ console.error('[CLOUD] refreshFoodDiaryStatuses network', e && e.message); return false; });
+    },
+
+    // Γράφει μόνο τη στήλη comments (ο πελάτης δεν την αγγίζει ποτέ) ή notes.
+    saveFoodDiaryField:function(c, field, value){
+      var self=this;
+      if(field!=='comments' && field!=='notes') return Promise.reject(new Error('bad field'));
+      if(!this.enabled || !this.user || !c || !c.diaryToken) return Promise.reject(new Error('Πρέπει να είσαι συνδεδεμένος στο cloud.'));
+      var upd={}; upd[field]=value||{};
+      return this.sb.from('food_diary').update(upd).eq('token',c.diaryToken).then(function(res){
+        if(res.error) throw self._diaryErr(res.error,'Δεν αποθηκεύτηκε. Δοκίμασε ξανά.');
+        return true;
+      });
+    },
+
+    // ⏹ Τερματισμός: το λινκ μένει μόνο για ανάγνωση.
+    endFoodDiary:function(c){
+      var self=this;
+      if(!this.enabled || !this.user || !c || !c.diaryToken) return Promise.reject(new Error('Πρέπει να είσαι συνδεδεμένος στο cloud.'));
+      return this.sb.from('food_diary').update({status:'ended'}).eq('token',c.diaryToken).then(function(res){
+        if(res.error) throw self._diaryErr(res.error,'Δεν έγινε ο τερματισμός. Δοκίμασε ξανά.');
+        c.diaryStatus='ended';
+        try{ if(typeof save==='function') save(); }catch(e){}
+        return true;
+      });
+    },
+
     // JSON.stringify με ταξινομημένα keys σε κάθε επίπεδο — έτσι το hash δεν αλλάζει μόνο και μόνο επειδή
     // η σειρά των keys άλλαξε (π.χ. το jsonb column στο Supabase ΔΕΝ εγγυάται διατήρηση της αρχικής σειράς
     // keys όταν αποθηκεύει/επιστρέφει ένα object — ένα Cloud.load() μετά τη δημοσίευση θα έδειχνε "ξεπερασμένο"

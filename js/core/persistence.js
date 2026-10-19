@@ -766,6 +766,7 @@ function startPortalPollInterval(){
     if(typeof window.Cloud.refreshCheckinsCache==='function') window.Cloud.refreshCheckinsCache();
     if(typeof window.Cloud.refreshLinkHealthCache==='function') window.Cloud.refreshLinkHealthCache();
     if(typeof window.Cloud.refreshIntakeStatuses==='function') window.Cloud.refreshIntakeStatuses();
+    if(typeof window.Cloud.refreshFoodDiaryStatuses==='function') window.Cloud.refreshFoodDiaryStatuses();
   }, 120000);  // 2 λεπτά
 }
 function stopPortalPollInterval(){
