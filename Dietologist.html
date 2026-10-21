@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="bbf1dbe7f4cf">
+<meta name="fyh-build" content="34b97da639d2">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -20,7 +20,7 @@
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css?v=e2826968fc">
+<link rel="stylesheet" href="css/styles.css?v=93a4702394">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -153,6 +153,14 @@ setTimeout(function(){
   <div class="qa-panel" id="qa-quickappt" style="display:none">
     <input type="text" class="qa-input" id="qa-quickappt-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για σημείωση ραντεβού" oninput="renderQAQuickAppt(this.value)">
     <div class="qa-results" id="qa-quickappt-results"></div>
+  </div>
+
+  <button type="button" class="qa-btn qa-btn-wait" id="qa-toggle-wait" onclick="toggleQA('qa-wait')" aria-expanded="false" aria-controls="qa-wait">
+    <span>⏳ Βάλε πελάτη σε αναμονή</span><span aria-hidden="true">▾</span>
+  </button>
+  <div class="qa-panel" id="qa-wait" style="display:none">
+    <input type="text" class="qa-input" id="qa-wait-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για αναμονή" oninput="renderQAWait(this.value)">
+    <div class="qa-results" id="qa-wait-results"></div>
   </div>
 
   <div class="sb-sep"></div>
@@ -304,6 +312,14 @@ setTimeout(function(){
       <input type="text" class="qa-input" id="msheet-qa-quickappt-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για σημείωση ραντεβού" oninput="renderMSheetQA('quickappt',this.value)">
       <div class="qa-results" id="msheet-qa-quickappt-results"></div>
     </div>
+
+    <button type="button" class="qa-btn qa-btn-wait" id="msheet-qa-toggle-wait" onclick="toggleMSheetQA('wait')" aria-expanded="false" aria-controls="msheet-qa-wait">
+      <span>⏳ Βάλε πελάτη σε αναμονή</span><span aria-hidden="true">▾</span>
+    </button>
+    <div class="qa-panel" id="msheet-qa-wait" style="display:none">
+      <input type="text" class="qa-input" id="msheet-qa-wait-input" placeholder="Όνομα πελάτη..." aria-label="Αναζήτηση πελάτη για αναμονή" oninput="renderMSheetQA('wait',this.value)">
+      <div class="qa-results" id="msheet-qa-wait-results"></div>
+    </div>
   </div>
 </div>
 </div>
@@ -330,7 +346,7 @@ setTimeout(function(){
 <script defer src="js/data/sodium-satfat.js?v=85ee6610c4"></script>
 <!-- lib/* — pure leaf helpers (depend only on data/*) -->
 <script defer src="js/lib/bf-norms.js?v=4d2063a063"></script>
-<script defer src="js/lib/helpers.js?v=95796b0815"></script>
+<script defer src="js/lib/helpers.js?v=bd5ac99a55"></script>
 <script defer src="js/lib/food-resolve.js?v=b326dbdffa"></script>
 <!-- calc/* — pure energy & scaling calc (depend on data/* + lib/helpers.js) -->
 <script defer src="js/calc/plan-energy.js?v=9f83ba22fe"></script>
@@ -352,13 +368,16 @@ setTimeout(function(){
 <!-- core/state — client roster/selection (clients/curId/getC), CRUD, JSON_CACHE,
      TOUCH_HANDLERS/MOBILE_VIEWPORT, field validation, toggleSidebar -->
 <script defer src="js/core/state.js?v=3134b5058e"></script>
+<!-- client-list/waiting — ⏳ «Σε αναμονή» ανά πελάτη (c.waitItems): παράθυρο, υπενθύμιση,
+     κάρτα Αρχικής/λωρίδα πελάτη/ετικέτα λίστας. Πριν το roster-ui: το renderSB το διαβάζει. -->
+<script defer src="js/client-list/waiting.js?v=60586ddde6"></script>
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
-<script defer src="js/client-list/roster-ui.js?v=4ba33a183c"></script>
+<script defer src="js/client-list/roster-ui.js?v=b8979239a0"></script>
 <!-- client-list/quick-actions — sidebar quick-action sheets + mobile more-sheet
      (toggleQA/renderMSheetQA…), carved out of app-part1.js. All refs runtime. -->
-<script defer src="js/client-list/quick-actions.js?v=429d283909"></script>
+<script defer src="js/client-list/quick-actions.js?v=bbd0c233c5"></script>
 <!-- client-list/clients-tab — the ΠΕΛΑΤΕΣ browsing page + bulk group-assign +
      SPORT_INFO, carved out of app-part5-home.js. renderClients is runtime. -->
 <script defer src="js/client-list/clients-tab.js?v=064b51ac61"></script>
@@ -376,11 +395,11 @@ setTimeout(function(){
 <script defer src="js/client-editor/tracker-results.js?v=8b4fc9e326"></script>
 <script defer src="js/client-editor/day-targets.js?v=7a5388c52f"></script>
 <script defer src="js/client-editor/form-controls.js?v=326dad8ee9"></script>
-<script defer src="js/client-editor/render-main.js?v=21231d2737"></script>
+<script defer src="js/client-editor/render-main.js?v=dc24ba5b92"></script>
 <!-- client-editor/overview — the "📇 Επισκόπηση" client sub-tab: read-only status
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
-<script defer src="js/client-editor/overview.js?v=6a7505affd"></script>
+<script defer src="js/client-editor/overview.js?v=86a9794e2d"></script>
 <!-- client-editor/inline-sections — unfolds the 5 "modal" settings (Χρόνοι Γευμάτων /
      MET / Διατροφή / Ιατρικές / Συμπληρώματα) into inline collapsible section-cards in
      s1's #modal-btns-grid. Reuses the existing modal save fns (same input IDs). -->
@@ -416,7 +435,7 @@ setTimeout(function(){
 <script defer src="js/plan-gen/food-selector.js?v=de432f65e1"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=fbeaed85c9"></script>
 <script defer src="js/plan-gen/micronutrient-html.js?v=53ca272633"></script>
-<script defer src="js/plan-gen/publish-modal.js?v=b6b94de8e1"></script>
+<script defer src="js/plan-gen/publish-modal.js?v=2a2ecc54f5"></script>
 <script defer src="js/plan-gen/food-lib-favorites.js?v=06a8bc3ab7"></script>
 <!-- reports/* — plan & body-comp exports (PDF/Word/GDocs), backup I/O. Pure fns,
      no load-time code; refs resolve at click time. -->
@@ -433,7 +452,7 @@ setTimeout(function(){
 <script defer src="js/tracking/tracking.js?v=1dcc15d626"></script>
 <!-- tabs/* — the standalone nav tabs (Αρχική / Διατροφές / Μηνύματα / Συνταγές / Tips).
      Pure fn declarations, no load-time code. -->
-<script defer src="js/tabs/home-diets.js?v=1ed0e2c493"></script>
+<script defer src="js/tabs/home-diets.js?v=850e6886cf"></script>
 <script defer src="js/tabs/messages.js?v=a80cf8552d"></script>
 <script defer src="js/tabs/progress.js?v=a0bb31d35c"></script>
 <script defer src="js/tabs/recipes.js?v=b3bdae9fb5"></script>

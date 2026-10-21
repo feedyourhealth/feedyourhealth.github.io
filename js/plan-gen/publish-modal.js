@@ -162,7 +162,9 @@ function openPublishModal(){
     // "ξαναστείλε το ίδιο πλάνο" ανοίγει κατευθείαν στο link+κανάλια. Χωρίς στόχο βάρους μένει
     // ανοιχτή ώστε η προειδοποίηση από κάτω να μη χαθεί.
     var settingsOpen=!c.goalWeight;
-    body.innerHTML='<div class="sf-panel" style="padding:8px 10px;margin-bottom:12px">'
+    // ⏳ Αν ο πελάτης είναι σε αναμονή (js/client-list/waiting.js): «Ήρθαν; Κλείσε την αναμονή» πάνω-πάνω.
+    body.innerHTML=(typeof waitPublishPromptHtml==='function'?waitPublishPromptHtml(c):'')
+      +'<div class="sf-panel" style="padding:8px 10px;margin-bottom:12px">'
       +'<div class="sf-header" onclick="togglePublishSettings()"><span>⚙️ Ρυθμίσεις πελάτη <span style="font-size:10px;font-weight:400;color:#9fb5b0">— μήνυμα Αρχικής, στόχοι Προόδου</span></span><span id="publish-settings-chevron" class="sec-chevron'+(settingsOpen?' open':'')+'">▸</span></div>'
       +'<div id="publish-settings-body" style="display:'+(settingsOpen?'block':'none')+';margin-top:10px">'
       +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">✍️ Προσωπικό μήνυμα στον πελάτη <span style="color:#9fb5b0">(προαιρετικό)</span></div>'

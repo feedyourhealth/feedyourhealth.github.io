@@ -216,6 +216,10 @@ var CLIENT_MSG_DICTS={
     lipoLink:function(fn,url){return 'Γεια σου '+fn+'! Οι μετρήσεις σου είναι έτοιμες — δες σύσταση σώματος, ρυθμό προόδου & ιστορικό εδώ: '+url+' 📊 Ενημερώνεται μόνο του σε κάθε νέα μέτρηση.';},
     lipoLinkSubj:'Οι μετρήσεις σου — Feed Your Health',
     birthday:function(fn,f){return 'Χρόνια πολλά '+fn+'! 🎂 Να είσαι πάντα υγιής και '+(f?'δυνατή':'δυνατός')+' — και σήμερα απόλαυσε την τούρτα σου χωρίς τύψεις 🍰 Feed Your Health 💚';},
+    waitWhat:{labs:'τις αναλύσεις αίματος',training:'το πρόγραμμα προπόνησής σου',doctor:'τη γνώμη του γιατρού σου',measure:'τις νέες σου μετρήσεις',change:'τα στοιχεία για την αλλαγή του πλάνου σου',other:'τα στοιχεία που συζητήσαμε'},
+    waitAnd:' και ',
+    waitReminder:function(fn,what,temp){return 'Γεια σου '+fn+'! 😊 Περιμένω ακόμα '+what+' για να ολοκληρώσουμε το πλάνο σου. Όποτε μπορείς, στείλε μου εδώ μια φωτογραφία ή το PDF.'+(temp?' Μέχρι τότε συνεχίζουμε κανονικά με το προσωρινό πλάνο 💪':'');},
+    waitReminderSubj:'Για το πλάνο σου — Feed Your Health',
     nameday:function(fn,f){return 'Χρόνια πολλά '+fn+' για τη γιορτή σου! 🥳 Να είσαι πάντα υγιής και '+(f?'χαρούμενη':'χαρούμενος')+' — απόλαυσε τη μέρα σου (και το γλυκάκι σου 😉) χωρίς τύψεις! Feed Your Health 💚';}
   },
   en:{
@@ -239,6 +243,10 @@ var CLIENT_MSG_DICTS={
     lipoLink:function(fn,url){return 'Hi '+fn+'! Your measurements are ready — see body composition, rate of progress & history here: '+url+' 📊 It updates itself with every new measurement.';},
     lipoLinkSubj:'Your measurements — Feed Your Health',
     birthday:function(fn){return 'Happy birthday '+fn+'! 🎂 Wishing you health and strength — and today, enjoy your cake guilt-free 🍰 Feed Your Health 💚';},
+    waitWhat:{labs:'your blood test results',training:'your training programme',doctor:'your doctor’s opinion',measure:'your new measurements',change:'the details for updating your plan',other:'the details we discussed'},
+    waitAnd:' and ',
+    waitReminder:function(fn,what,temp){return 'Hi '+fn+'! 😊 I’m still waiting for '+what+' so we can finish your plan. Whenever you can, send me a photo or the PDF here.'+(temp?' Until then, we carry on with your temporary plan as normal 💪':'');},
+    waitReminderSubj:'About your plan — Feed Your Health',
     nameday:function(fn){return 'Happy name day '+fn+'! 🥳 Wishing you health and happiness — enjoy your day (and a little treat 😉) guilt-free! Feed Your Health 💚';}
   },
   ru:{
@@ -262,6 +270,10 @@ var CLIENT_MSG_DICTS={
     lipoLink:function(fn,url){return 'Привет, '+fn+'! Твои измерения готовы — состав тела, темп прогресса и история здесь: '+url+' 📊 Обновляется само при каждом новом измерении.';},
     lipoLinkSubj:'Твои измерения — Feed Your Health',
     birthday:function(fn){return 'С днём рождения, '+fn+'! 🎂 Желаю здоровья и сил — а сегодня наслаждайся тортом без угрызений совести 🍰 Feed Your Health 💚';},
+    waitWhat:{labs:'результаты анализов крови',training:'твою программу тренировок',doctor:'мнение твоего врача',measure:'твои новые измерения',change:'данные для изменения твоего плана',other:'то, что мы обсуждали'},
+    waitAnd:' и ',
+    waitReminder:function(fn,what,temp){return 'Привет, '+fn+'! 😊 Я всё ещё жду '+what+', чтобы мы могли закончить твой план. Когда сможешь, пришли сюда фото или PDF.'+(temp?' А пока продолжаем как обычно по временному плану 💪':'');},
+    waitReminderSubj:'По твоему плану — Feed Your Health',
     nameday:function(fn){return 'С именинами, '+fn+'! 🥳 Желаю здоровья и радости — наслаждайся этим днём (и чем-нибудь сладким 😉) без угрызений совести! Feed Your Health 💚';}
   },
   tr:{
@@ -285,6 +297,10 @@ var CLIENT_MSG_DICTS={
     lipoLink:function(fn,url){return 'Merhaba '+fn+'! Ölçümlerin hazır — vücut kompozisyonu, ilerleme hızı ve geçmişi burada: '+url+' 📊 Her yeni ölçümde kendiliğinden güncellenir.';},
     lipoLinkSubj:'Ölçümlerin — Feed Your Health',
     birthday:function(fn){return 'Doğum günün kutlu olsun '+fn+'! 🎂 Sağlık ve güç dolu bir yıl dilerim — bugün pastanın tadını vicdan azabı olmadan çıkar 🍰 Feed Your Health 💚';},
+    waitWhat:{labs:'kan tahlili sonuçlarını',training:'antrenman programını',doctor:'doktorunun görüşünü',measure:'yeni ölçümlerini',change:'planını güncellemek için gereken bilgileri',other:'konuştuğumuz bilgileri'},
+    waitAnd:' ve ',
+    waitReminder:function(fn,what,temp){return 'Merhaba '+fn+'! 😊 Planını tamamlayabilmemiz için hâlâ '+what+' bekliyorum. Fırsat bulduğunda buraya bir fotoğraf ya da PDF gönder.'+(temp?' O zamana kadar geçici planla normal şekilde devam ediyoruz 💪':'');},
+    waitReminderSubj:'Planın hakkında — Feed Your Health',
     nameday:function(fn){return 'İsim günün kutlu olsun '+fn+'! 🥳 Sağlık ve mutluluk dilerim — günün (ve küçük bir tatlının 😉) tadını vicdan azabı olmadan çıkar! Feed Your Health 💚';}
   }
 };

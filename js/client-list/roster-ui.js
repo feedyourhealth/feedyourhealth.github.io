@@ -119,6 +119,7 @@ function clientQuickChipsHtml(base){
   var attnCount=base.filter(clientNeedsAttention).length;
   var noplanCount=base.filter(function(c){return !(c.weekPlan && Object.keys(c.weekPlan).length>0);}).length;
   var todayCount=base.filter(function(c){return c.lastAccess && Math.floor((Date.now()-c.lastAccess)/86400000)===0;}).length;
+  var waitCount=base.filter(clientIsWaiting).length;
   var isAll=(_clientFilterQuick===''&&_clientFilterStatus!=='noplan');
   function chip(key,label,count,active){
     return '<button type="button" class="client-quick-chip'+(active?' active':'')+'" onclick="setClientQuickFilter(\''+key+'\')">'
@@ -129,6 +130,7 @@ function clientQuickChipsHtml(base){
     +chip('attention','🚩 Χρειάζονται προσοχή',attnCount,_clientFilterQuick==='attention')
     +chip('noplan','⭕ Χωρίς πλάνο',noplanCount,_clientFilterStatus==='noplan')
     +chip('today','🕐 Ενεργοί σήμερα',todayCount,_clientFilterQuick==='today')
+    +(waitCount?chip('waiting','⏳ Σε αναμονή',waitCount,_clientFilterQuick==='waiting'):'')
     +'</div>';
 }
 
@@ -274,7 +276,7 @@ function clientCardHtml(c){
       ?('<div class="cc-bulk-check'+(isSel?' checked':'')+'">'+(isSel?'✓':'')+'</div>')
       :('<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'))
     +'<div class="cc-headtext">'
-    +'<div class="cc-name" title="'+esc(c.name||'Νέος πελάτης')+'">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'')+'</div>'
+    +'<div class="cc-name" title="'+esc(c.name||'Νέος πελάτης')+'">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+(clientIsWaiting(c)?' <span title="Σε αναμονή">⏳</span>':'')+(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'')+'</div>'
     +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
     +'</div>'
     +goalRingHtml
@@ -289,6 +291,7 @@ function clientCardHtml(c){
     +'<span class="cc-status '+(hasActive?'cc-status-active':'cc-status-none')+'">'+(hasActive?'📊 Ενεργό σχέδιο':'⭕ Χωρίς σχέδιο')+'</span>'
     +progressBadge(c)
     +lastAccessChipHtml(c.lastAccess)
+    +clientWaitBadgeHtml(c)
     +'</div>'
     +'</div>';
 }
@@ -304,6 +307,7 @@ function clientRowHtml(c){
   var nameBadges=(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')
     +(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')
     +(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')
+    +(clientIsWaiting(c)?' '+clientWaitBadgeHtml(c):'')
     +(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'');
   // ✅ audit fix (2026-08-24, finding #1): ίδιο data-client-id με το clientCardHtml — για το
   // δεξί-κλικ context menu στην προβολή "Λίστα".
@@ -353,6 +357,7 @@ function renderSB(){
     if(_clientFilterStatus==='noplan' && hasPlan) return false;
     if(_clientFilterQuick==='attention' && !clientNeedsAttention(c)) return false;
     if(_clientFilterQuick==='today' && !(c.lastAccess && Math.floor((Date.now()-c.lastAccess)/86400000)===0)) return false;
+    if(_clientFilterQuick==='waiting' && !clientIsWaiting(c)) return false;
     return true;
   });
   // ✅ Sort according to the selected mode (default: most recent visit first)
@@ -376,6 +381,8 @@ function renderSB(){
   } else {
     list.sort(function(a,b){return(b.lastAccess||0)-(a.lastAccess||0);});
   }
+  // ⏳ Φίλτρο «Σε αναμονή»: πρώτα όσοι καθυστερούν, μετά κατά ημερομηνία (υπερισχύει της ταξινόμησης).
+  if(_clientFilterQuick==='waiting') list.sort(function(a,b){return clientWaitUrgency(a)-clientWaitUrgency(b);});
   // ✅ 2026-08-06: μετρητής μετακινήθηκε πάνω από τη λίστα (πριν ζούσε θαμμένος στο τέλος σε 9px
   // γκρι κείμενο μετά τους αρχειοθετημένους/διαγραμμένους — εύκολο να μη φανεί καν χωρίς scroll).
   // Ένα σημείο τώρα, όχι δύο· ίδια λογική "Ν από Μ" μόνο όταν κάτι είναι φιλτραρισμένο.

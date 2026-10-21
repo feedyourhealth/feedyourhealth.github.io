@@ -1190,11 +1190,17 @@ function renderHome(){
   // διπλή προβολή του σκορ.
   var sig2=pendingPlanRows.concat(approachingRenewalRows).concat(staleRows); // 📄 νέο πλάνο / ξαναδημοσίευση
   var sigCardHtml=homeCard('📄 Χρειάζονται νέο πλάνο', sig2, 'ακόμα', 'warning', 4);
+  // ⏳ Σε αναμονή (js/client-list/waiting.js): πελάτες που περιμένουμε κάτι για το πλάνο τους —
+  // πιο επείγον πρώτα, κόκκινη κάρτα όταν κάποιος καθυστερεί. Δίπλα στο «νέο πλάνο»: ίδια δουλειά.
+  var _wait=(typeof homeWaitingRows==='function')?homeWaitingRows():{rows:[],late:0};
+  var waitCardHtml=homeCard('⏳ Σε αναμονή'+(_wait.late?' <span class="wait-chip wait-chip-late">'+_wait.late+' καθυστερ'+(_wait.late===1?'εί':'ούν')+'</span>':''),
+    _wait.rows, 'ακόμα', _wait.late?'danger':'warning', 5);
   // Κάθε κομμάτι της Αρχικής είναι συμπτυσσόμενο (homeSectionHtml) — η επιλογή θυμάται ανά browser.
   html+=homeSectionHtml('signals','📄 Πλάνα & πρόοδος','<div class="hm-signals">'
     +(sigCardHtml||'<div class="hm-card"><div class="hm-empty" style="text-align:center;padding:10px 0;font-size:13px">✅ Κανένα εκκρεμές σήμα — τα πλάνα είναι εντάξει</div></div>')
+    +waitCardHtml
     +homeProgressPointerCard()
-    +'</div>', sig2.length||null, false);
+    +'</div>', (sig2.length+_wait.rows.length)||null, false);
 
   var buckets=homeAttentionBuckets(_attn, staleClients);
   // Προεπιλογή κόκκινο· αλλά αν το κόκκινο είναι άδειο ενώ υπάρχουν μπαγιάτικα, ξεκίνα στο κίτρινο —

@@ -10,7 +10,7 @@
 
 /* ===== Γρήγορες ενέργειες πλαϊνής μπάρας: Νέο πλάνο / Γρήγορη μέτρηση ===== */
 function closeAllQA(){
-  ['qa-newplan','qa-quickmeasure','qa-quickappt'].forEach(function(p){
+  ['qa-newplan','qa-quickmeasure','qa-quickappt','qa-wait'].forEach(function(p){
     var panel=document.getElementById(p);
     var btn=document.getElementById('qa-toggle-'+p.replace('qa-',''));
     if(panel) panel.style.display='none';
@@ -31,6 +31,7 @@ function toggleQA(id){
     if(id==='qa-newplan') renderQANewPlan('');
     else if(id==='qa-quickmeasure') renderQAQuickMeasure('');
     else if(id==='qa-quickappt') renderQAQuickAppt('');
+    else if(id==='qa-wait') renderQAWait('');
   }
 }
 
@@ -111,6 +112,25 @@ function qaCreateAndAppt(name){
   closeAllQA();
 }
 
+// ⏳ Βάλε πελάτη σε αναμονή — ανοίγει κατευθείαν το παράθυρο (js/client-list/waiting.js), χωρίς να
+// φύγεις από τη σελίδα που είσαι. Χωρίς «+ νέος πελάτης»: αναμονή έχει μόνο όποιος έχει ήδη έρθει.
+function qaWaitSub(c){
+  var w=clientActiveWaits(c)[0];
+  return w?('⏳ ήδη: '+waitReasonsText(w)):qaPlanStatusText(c);
+}
+function renderQAWait(q){
+  var results=document.getElementById('qa-wait-results'); if(!results) return;
+  var html='';
+  qaMatchingClients(q).forEach(function(c){
+    html+='<div class="qa-row" onclick="qaStartWait(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+esc(qaWaitSub(c))+'</span></div>';
+  });
+  results.innerHTML=html||'<div class="qa-row qa-row-sub">Κανένας πελάτης</div>';
+}
+function qaStartWait(id){
+  closeAllQA();
+  openWaitModal(id);
+}
+
 // ✅ 2026-08-22: mobile "Περισσότερα" sheet — βλ. σχόλιο πάνω από το markup στο Dietologist.html.
 // Ίδιο accordion μοτίβο με toggleQA/closeAllQA (πάνω), αλλά σε δικά του msheet-qa-* ids ώστε να μη
 // συγκρούεται με τα ήδη υπάρχοντα ids του πλαϊνού μενού — και τα δύο σετ στοιχείων συνυπάρχουν στο
@@ -146,7 +166,7 @@ function closeMoreSheet(){
   if(wasOpen && btn) btn.focus();
 }
 function closeAllMSheetQA(){
-  ['newplan','quickmeasure','quickappt'].forEach(function(k){
+  ['newplan','quickmeasure','quickappt','wait'].forEach(function(k){
     var panel=document.getElementById('msheet-qa-'+k);
     var btn=document.getElementById('msheet-qa-toggle-'+k);
     if(panel) panel.style.display='none';
@@ -173,6 +193,13 @@ function toggleMSheetQA(kind){
 function renderMSheetQA(kind,q){
   var results=document.getElementById('msheet-qa-'+kind+'-results'); if(!results) return;
   var list=qaMatchingClients(q), html='';
+  if(kind==='wait'){
+    list.forEach(function(c){
+      html+='<div class="qa-row" onclick="closeMoreSheet();qaStartWait(\''+c.id+'\');"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+esc(qaWaitSub(c))+'</span></div>';
+    });
+    results.innerHTML=html;
+    return;
+  }
   var startFn = kind==='newplan'?'qaStartPlan':(kind==='quickmeasure'?'qaStartMeasure':'qaStartAppt');
   var createFn = kind==='newplan'?'qaCreateAndPlan':(kind==='quickmeasure'?'qaCreateAndMeasure':'qaCreateAndAppt');
   list.forEach(function(c){

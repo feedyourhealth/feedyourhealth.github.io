@@ -270,6 +270,7 @@ function buildOverviewHtml(c){
         +(railFb||'<div style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:11px;padding:13px 14px;margin-bottom:14px;font-size:12px;color:var(--text-muted)">Δεν έχει στείλει feedback ακόμη.</div>')
         +railIntake
         +railNotes
+        +(typeof waitHistoryCardHtml==='function'?waitHistoryCardHtml(c):'')
       +'</div>'
     +'</div>';
 }
