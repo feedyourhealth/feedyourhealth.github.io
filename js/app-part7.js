@@ -232,8 +232,11 @@
             }
             c._publishedPlanHash=self._hashPlan(c.weekPlan);   // ώστε να ξέρουμε αν ο σύνδεσμος «μπαγιατεύει» μετά από επόμενη επεξεργασία
             c._publishedPlanHashVer=self.HASH_VER;
+            // 📊 η έκδοση που πήρε ο πελάτης μπαίνει πάντα στο Ιστορικό πλάνων (js/client-editor/plan-history.js)
+            var hist=null;
+            try{ if(typeof recordPlanSent==='function') hist=recordPlanSent(c); }catch(e){ console.warn('[plan-history] record failed',e); }
             try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
-            return {url:self.PORTAL_BASE+'?t='+tok, expiresAt:expiresAt};
+            return {url:self.PORTAL_BASE+'?t='+tok, expiresAt:expiresAt, history:hist};
           });
         };
         var tok=c.shareToken;

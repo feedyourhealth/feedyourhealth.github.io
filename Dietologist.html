@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="34b97da639d2">
+<meta name="fyh-build" content="409bdc931e11">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -399,7 +399,7 @@ setTimeout(function(){
 <!-- client-editor/overview — the "📇 Επισκόπηση" client sub-tab: read-only status
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
-<script defer src="js/client-editor/overview.js?v=86a9794e2d"></script>
+<script defer src="js/client-editor/overview.js?v=d2650b1a3b"></script>
 <!-- client-editor/inline-sections — unfolds the 5 "modal" settings (Χρόνοι Γευμάτων /
      MET / Διατροφή / Ιατρικές / Συμπληρώματα) into inline collapsible section-cards in
      s1's #modal-btns-grid. Reuses the existing modal save fns (same input IDs). -->
@@ -410,9 +410,11 @@ setTimeout(function(){
 <!-- client-editor/food-diary — 📒 food-diary card next to the intake card + send modal +
      week-by-week viewer with per-meal comments. Client page: imerologio.html. -->
 <script defer src="js/client-editor/food-diary.js?v=8229add5e2"></script>
-<!-- client-editor/diet-panels — template editor + plan history/save/charts, the last
+<!-- client-editor/diet-panels — template editor (plan history → plan-history.js), the last
      of the old app-part1.js (now removed). Only `var curTmplGoal` at parse time. -->
-<script defer src="js/client-editor/diet-panels.js?v=0727f41a7f"></script>
+<script defer src="js/client-editor/diet-panels.js?v=13a1b996b5"></script>
+<!-- client-editor/plan-history — 📊 Ιστορικό πλάνων (s4): auto-save on publish, backups, chart, compare. -->
+<script defer src="js/client-editor/plan-history.js?v=7669c8f8bb"></script>
 <!-- plan-gen/* — the entire meal-plan generation subsystem, carved out of the old
      monolithic app-part3.js (now fully removed). Pure fn declarations + literal
      state vars; every cross-reference resolves at runtime, so load order among
@@ -428,14 +430,14 @@ setTimeout(function(){
 <script defer src="js/plan-gen/plan-transform.js?v=c4dd4387d7"></script>
 <script defer src="js/plan-gen/mediterranean.js?v=fd8edb7252"></script>
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
-<script defer src="js/plan-gen/gen-plan.js?v=86c16c5797"></script>
+<script defer src="js/plan-gen/gen-plan.js?v=9bc169d9b8"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
 <script defer src="js/plan-gen/week-table.js?v=c792be720e"></script>
-<script defer src="js/plan-gen/household.js?v=25f04de6bd"></script>
+<script defer src="js/plan-gen/household.js?v=72f3c98855"></script>
 <script defer src="js/plan-gen/food-selector.js?v=de432f65e1"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=fbeaed85c9"></script>
 <script defer src="js/plan-gen/micronutrient-html.js?v=53ca272633"></script>
-<script defer src="js/plan-gen/publish-modal.js?v=2a2ecc54f5"></script>
+<script defer src="js/plan-gen/publish-modal.js?v=1cfcab09fe"></script>
 <script defer src="js/plan-gen/food-lib-favorites.js?v=06a8bc3ab7"></script>
 <!-- reports/* — plan & body-comp exports (PDF/Word/GDocs), backup I/O. Pure fns,
      no load-time code; refs resolve at click time. -->
@@ -739,7 +741,7 @@ setTimeout(function(){
      Κάθε χρήστης έχει ΜΙΑ γραμμή στον πίνακα user_data (ένα jsonb "συρτάρι").
      Όλα τα δεδομένα (clients, templates, tracking) πάνε σαν ένα πακέτο.
      ═══════════════════════════════════════════════════════════════ -->
-<script defer src="js/app-part7.js?v=4f8d01bc02"></script>
+<script defer src="js/app-part7.js?v=f89b61ffaf"></script>
 
 </body>
 </html>

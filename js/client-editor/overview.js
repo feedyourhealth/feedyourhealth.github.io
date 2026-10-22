@@ -99,7 +99,7 @@ function buildOverviewHtml(c){
   // saved plans (the dietitian's plan history)
   (c.savedPlans||[]).forEach(function(p){
     var when=p.date||p.createdAt;
-    push(when,'plan','📱 Πλάνο #'+(p.number||'?')+' αποθηκεύτηκε', p.note?esc(p.note):'');
+    push(when,'plan','📱 Πλάνο #'+(p.number||'?')+(p.kind==='sent'?' στάλθηκε':' αποθηκεύτηκε'), p.note?esc(p.note):'');
   });
   // last generation, if newer than any saved plan
   if(c.planGeneratedAt){

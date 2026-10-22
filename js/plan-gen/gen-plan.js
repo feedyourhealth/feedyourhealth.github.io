@@ -177,7 +177,10 @@ function applyPostGenerationCleanup(c, excl){
 
 function genPlan(){
   try{
-  var c=getC();if(!c)return;var t=calcTDEE(c);c.weekPlan={};
+  var c=getC();if(!c)return;var t=calcTDEE(c);
+  // 📊 an unsaved/unsent weekPlan is kept as a backup in the plan history before it's replaced
+  if(typeof phBackupIfUnsaved==='function') phBackupIfUnsaved(c,'Πριν τη δημιουργία νέου πλάνου');
+  c.weekPlan={};
 
   // ⚕️ Active medical protocols (e.g. Διαβήτης, Χοληστερόλη) contribute their avoidFoods to the exclusion list below —
   // union across every active protocol, so multiple simultaneous conditions are each respected.

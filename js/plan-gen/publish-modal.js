@@ -163,7 +163,9 @@ function openPublishModal(){
     // ανοιχτή ώστε η προειδοποίηση από κάτω να μη χαθεί.
     var settingsOpen=!c.goalWeight;
     // ⏳ Αν ο πελάτης είναι σε αναμονή (js/client-list/waiting.js): «Ήρθαν; Κλείσε την αναμονή» πάνω-πάνω.
+    var hist=res.history;
     body.innerHTML=(typeof waitPublishPromptHtml==='function'?waitPublishPromptHtml(c):'')
+      +(hist?'<div style="font-size:12px;color:#1b5e3f;background:#e5f2ec;border-radius:8px;padding:7px 10px;margin-bottom:10px">✓ '+(hist.isNew?'Αποθηκεύτηκε στο Ιστορικό πλάνων ως <b>Πλάνο #'+hist.number+'</b>':(hist.updated?'Ενημερώθηκε το σημερινό <b>Πλάνο #'+hist.number+'</b> στο Ιστορικό':'Ίδιο με το <b>Πλάνο #'+hist.number+'</b> του Ιστορικού — σημειώθηκε ως σταλμένο'))+'</div>':'')
       +'<div class="sf-panel" style="padding:8px 10px;margin-bottom:12px">'
       +'<div class="sf-header" onclick="togglePublishSettings()"><span>⚙️ Ρυθμίσεις πελάτη <span style="font-size:10px;font-weight:400;color:#9fb5b0">— μήνυμα Αρχικής, στόχοι Προόδου</span></span><span id="publish-settings-chevron" class="sec-chevron'+(settingsOpen?' open':'')+'">▸</span></div>'
       +'<div id="publish-settings-body" style="display:'+(settingsOpen?'block':'none')+';margin-top:10px">'
