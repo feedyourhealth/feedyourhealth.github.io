@@ -340,5 +340,13 @@ var FOOD_ALIASES={
   'Smart Bar Plant Vanilla Fudge':'PhD Smart Bar Plant Βανίλια Fudge',
   'PhD Plant Βανίλια Fudge':'PhD Smart Bar Plant Βανίλια Fudge',
   'PhD Smart Bar Plant':'PhD Smart Bar Plant Αλατισμένη Καραμέλα',
-  'Smart Bar Plant':'PhD Smart Bar Plant Αλατισμένη Καραμέλα'
+  'Smart Bar Plant':'PhD Smart Bar Plant Αλατισμένη Καραμέλα',
+  // Grenade — added 2026-10-22
+  'Grenade Cookie Dough':'Grenade Bar Cookie Dough',
+  'Grenade Protein Bar Cookie Dough':'Grenade Bar Cookie Dough',
+  'Grenade Dough':'Grenade Bar Cookie Dough',
+  'Grenade Oreo':'Grenade Bar Oreo',
+  'Grenade Protein Bar Oreo':'Grenade Bar Oreo',
+  'Grenade Cocoa & Vanilla':'Grenade Bar Oreo',
+  'Grenade':'Grenade Bar Cookie Dough'
 };

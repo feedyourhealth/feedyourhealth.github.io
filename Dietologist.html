@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="7b1da231054f">
+<meta name="fyh-build" content="f82e5082fef1">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -333,17 +333,17 @@ setTimeout(function(){
      The smoke harness in test/smoke.html mirrors this list.
      ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- data/* (no dependencies) — split out of the old js/data.js in module-split wave 1 -->
-<script defer src="js/data/foods.js?v=1a09ff352d"></script>
-<script defer src="js/data/portions.js?v=b8d351dadc"></script>
+<script defer src="js/data/foods.js?v=ac29cd4179"></script>
+<script defer src="js/data/portions.js?v=e679b5fe88"></script>
 <script defer src="js/data/met-activities.js?v=681944b201"></script>
 <script defer src="js/data/supplements.js?v=9dabfbc622"></script>
 <script defer src="js/data/protocols.js?v=24295ac166"></script>
-<script defer src="js/data/micronutrients.js?v=047a1e2374"></script>
-<script defer src="js/data/food-aliases.js?v=1c6b72a939"></script>
+<script defer src="js/data/micronutrients.js?v=f48b8f4223"></script>
+<script defer src="js/data/food-aliases.js?v=0badb620b0"></script>
 <script defer src="js/data/templates.js?v=1bf4aad8d6"></script>
 <script defer src="js/data/recipes.js?v=976134ab66"></script>
 <script defer src="js/data/misc.js?v=da0dce215b"></script>
-<script defer src="js/data/sodium-satfat.js?v=85ee6610c4"></script>
+<script defer src="js/data/sodium-satfat.js?v=4901f0034b"></script>
 <!-- lib/* — pure leaf helpers (depend only on data/*) -->
 <script defer src="js/lib/bf-norms.js?v=4d2063a063"></script>
 <script defer src="js/lib/helpers.js?v=bd5ac99a55"></script>

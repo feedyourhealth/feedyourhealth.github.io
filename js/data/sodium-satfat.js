@@ -125,5 +125,6 @@ var NA_SF={
   'PhD Smart Bar Μαύρη Σοκολάτα & Βατόμουρο':[200,6.0], 'PhD Smart Bar Σοκολάτα Φυστικοβούτυρο':[250,5.0],
   'PhD Smart Bar Σοκολάτα Γάλακτος Φουντούκι':[200,6.0], 'PhD Smart Bar Λευκή Σοκολάτα Blondie':[200,7.0],
   'PhD Smart Bar Cookies & Cream':[250,6.0], 'PhD Smart Bar Birthday Cake':[200,7.0], 'PhD Smart Bar Μαύρη Σοκολάτα Matcha':[200,8.0],
-  'PhD Smart Bar Plant Αλατισμένη Καραμέλα':[400,8.0], 'PhD Smart Bar Plant Βανίλια Fudge':[250,8.0]
+  'PhD Smart Bar Plant Αλατισμένη Καραμέλα':[400,8.0], 'PhD Smart Bar Plant Βανίλια Fudge':[250,8.0],
+  'Grenade Bar Cookie Dough':[224,7.2], 'Grenade Bar Oreo':[236,9.3]
 };

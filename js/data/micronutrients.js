@@ -320,6 +320,8 @@ var MICRONUTRIENTS={
   // Εκτίμηση — vegan μπάρα, μοντέλο σε φυτική πρωτεΐνη (σόγια/μπιζέλι) + βούτυρο κακάο/καρύδας
   'PhD Smart Bar Plant Αλατισμένη Καραμέλα':{Fe:4.0,Zn:2.0,Mg:60,Ca:60,B1:0.1,B2:0.1,B3:1.0,B6:0.1,B12:0,Folate:30,Omega3:0.05,Omega6:1.5,Iodine:0,Choline:20,DHA:0},
   'PhD Smart Bar Plant Βανίλια Fudge':{Fe:4.0,Zn:2.0,Mg:60,Ca:60,B1:0.1,B2:0.1,B3:1.0,B6:0.1,B12:0,Folate:30,Omega3:0.05,Omega6:1.5,Iodine:0,Choline:20,DHA:0},
+  'Grenade Bar Cookie Dough':{Fe:1.8,Zn:1.5,Mg:60,Ca:250,B1:0.08,B2:0.35,B3:2.0,B6:0.1,B12:0.7,Folate:20,Omega3:0.03,Omega6:1.5,Iodine:15,Choline:30,DHA:0},
+  'Grenade Bar Oreo':{Fe:2.0,Zn:1.5,Mg:50,Ca:250,B1:0.1,B2:0.35,B3:1.0,B6:0.1,B12:0.7,Folate:20,Omega3:0.03,Omega6:0.8,Iodine:15,Choline:30,DHA:0},
   'Hungry Not Protein Bar Πραλίνα Φουντουκιού':{Fe:2.5,Zn:2.5,Mg:85,Ca:180,B1:0.15,B2:0.4,B3:1.5,B6:0.15,B12:0.8,Folate:35,Omega3:0.05,Omega6:2.5,Iodine:10,Choline:40,DHA:0},
   'Κύβο λαχανικών':{Fe:2.0,Zn:0.5,Mg:20,Ca:100,B1:0.05,B2:0.1,B3:2.0,B6:0.1,B12:0,Folate:10,Omega3:0.05,Omega6:1.0,Iodine:5,Choline:10,DHA:0},
   'Μπούκοβο':{Fe:7.3,Zn:2.5,Mg:150,Ca:148,B1:0.33,B2:0.9,B3:8.7,B6:2.45,B12:0,Folate:106,Omega3:0.5,Omega6:8.0,Iodine:0,Choline:20,DHA:0},

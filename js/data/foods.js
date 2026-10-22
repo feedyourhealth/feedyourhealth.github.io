@@ -313,6 +313,9 @@ var FOODS={
 // ✅ 2026-09-28: PhD Smart Bar PLANT (vegan, 64g/μπάρα) — per-100g από phd.com: 389-390kcal, 33g πρωτ., 32g υδατ. (1.0g σάκχ., 26g πολυόλες μέσα στους υδατ.), 20g λιπ. (10g κορ.), 0.50g αλάτι. Φυτ. ίνες δεν δόθηκαν → fi:0. Vegan → ΟΧΙ σε QUICK_EXCL Γαλακτοκομικά.
 'PhD Smart Bar Plant Αλατισμένη Καραμέλα':{k:389,p:33,c:32,f:20,fi:0,cat:'Συνταγές FYH',plantBased:true,en:'PhD Smart Bar Plant Salted Caramel',ru:'Протеиновый батончик PhD Smart Bar Plant солёная карамель',tr:'PhD Smart Bar Plant Tuzlu Karamel'},
 'PhD Smart Bar Plant Βανίλια Fudge':{k:390,p:33,c:32,f:20,fi:0,cat:'Συνταγές FYH',plantBased:true,en:'PhD Smart Bar Plant Vanilla Fudge',ru:'Протеиновый батончик PhD Smart Bar Plant ванильная помадка',tr:'PhD Smart Bar Plant Vanilyalı Fudge'},
+// Grenade (Alphamega 852167 / 888685, 60g μπάρα) — added 2026-10-22, per-100g label; kcal < Atwater because of polyols
+'Grenade Bar Cookie Dough':{k:364,p:34,c:28,f:15,fi:11,cat:'Συνταγές FYH',en:'Grenade Protein Bar Cookie Dough',ru:'Протеиновый батончик Grenade Cookie Dough',tr:'Grenade Protein Bar Cookie Dough'},
+'Grenade Bar Oreo':{k:389,p:35,c:34,f:17,fi:2,cat:'Συνταγές FYH',en:'Grenade Protein Bar Oreo',ru:'Протеиновый батончик Grenade Oreo',tr:'Grenade Protein Bar Oreo'},
 'Σάλτσα Ντομάτας (FYH)':{k:133,p:1.2,c:8,f:11,fi:1.3,cat:'Συνταγές FYH',en:'FYH Tomato Sauce',ru:'Томатный соус (FYH)',tr:'Domates Sosu (FYH)'},
 // Petretzeakis Breakfast Recipes
 'Breakfast Burrito (Πετρετζίκης)':{k:420,p:18,c:48,f:16,fi:4.5,cat:'Συνταγές FYH',containsCats:['Αυγά/Γαλακτ.'],en:'Breakfast Burrito (Petretzikis)',ru:'Буррито на завтрак (Petretzikis)',tr:'Kahvaltı Burritosu (Petretzikis)'}, // real eggs + Κασέρι cheese
