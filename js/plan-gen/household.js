@@ -26,6 +26,29 @@ function hhCandidates(c){
   }).sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'el'); });
 }
 
+// Ετικέτες για το πεδίο αναζήτησης· συνονόματοι ξεχωρίζουν με τηλέφωνο/email (αλλιώς #2, #3).
+function hhCandLabels(cands){
+  var seen={};
+  cands.forEach(function(x){ var n=x.name||'—'; seen[n]=(seen[n]||0)+1; });
+  var idx={};
+  return cands.map(function(x){
+    var n=x.name||'—', label=n;
+    if(seen[n]>1){ idx[n]=(idx[n]||0)+1; label=n+' · '+(x.phone||x.email||('#'+idx[n])); }
+    return {id:x.id, label:label};
+  });
+}
+// Από το κείμενο του πεδίου → πελάτης: ακριβής ετικέτα, αλλιώς ΜΟΝΑΔΙΚΟ μερικό ταίριασμα
+// (χωρίς τόνους/πεζά-κεφαλαία). Αν ταιριάζουν πολλοί, δεν μαντεύουμε.
+function hhPickCandidate(inp){
+  var c=getC(); if(!c||!inp) return;
+  var q=normalizeGreekText(String(inp.value||'').trim()); if(!q) return;
+  var opts=hhCandLabels(hhCandidates(c));
+  var hit=opts.filter(function(o){ return normalizeGreekText(o.label)===q; });
+  if(!hit.length) hit=opts.filter(function(o){ return normalizeGreekText(o.label).indexOf(q)>=0; });
+  if(hit.length===1){ inp.value=''; hhAddMember(hit[0].id); return; }
+  showErrorToast(hit.length?'Ταιριάζουν '+hit.length+' πελάτες — γράψε περισσότερα ή διάλεξε από τη λίστα.':'Δεν βρέθηκε πελάτης «'+inp.value+'» (ή ανήκει ήδη σε νοικοκυριό / είναι αρχειοθετημένος).');
+}
+
 function hhAddMember(otherId){
   var c=getC(), o=clients.find(function(x){ return x.id===otherId; });
   if(!c||!o) return;
@@ -101,10 +124,10 @@ function buildHouseholdSectionHtml(c){
   }
   var cands=(members.length>=HH_MAX_MEMBERS)?[]:hhCandidates(c);
   if(cands.length){
-    h+='<select style="margin-top:8px" onchange="if(this.value){hhAddMember(this.value);}">'
-      +'<option value="">'+(members.length?'+ Προσθήκη μέλους…':'+ Σύνδεση με πελάτη…')+'</option>'
-      +cands.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.name||'—')+'</option>'; }).join('')
-      +'</select>';
+    // Πεδίο αναζήτησης (native datalist): γράφεις όνομα ή επώνυμο, διαλέγεις, Enter/επιλογή = προσθήκη.
+    h+='<input type="text" list="hh-cand-list" style="margin-top:8px" autocomplete="off" placeholder="🔍 '+(members.length?'Προσθήκη μέλους — γράψε όνομα ή επώνυμο…':'Σύνδεση με πελάτη — γράψε όνομα ή επώνυμο…')+'" aria-label="Αναζήτηση πελάτη για το νοικοκυριό" '
+      +'onchange="hhPickCandidate(this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();hhPickCandidate(this);}">'
+      +'<datalist id="hh-cand-list">'+hhCandLabels(cands).map(function(o){ return '<option value="'+esc(o.label)+'">'; }).join('')+'</datalist>';
   } else if(!members.length){
     h+='<div style="font-size:12px;color:#9fb5b0">Δεν υπάρχουν άλλοι πελάτες για σύνδεση.</div>';
   }
