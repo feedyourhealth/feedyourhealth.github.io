@@ -301,14 +301,131 @@ function _buildBackupObj(){
     clients: clients,
     customTemplates: customTemplates,
     trackingData: (typeof TRACKING_DATA !== 'undefined' ? TRACKING_DATA : null),
-    totalClients: (clients ? clients.length : 0)
+    totalClients: (clients ? clients.length : 0),
+    // 2026-10-22: όλα τα υπόλοιπα δεδομένα του διαιτολόγου, ώστε ένα αρχείο backup να αρκεί
+    // μόνο του για πλήρη επαναφορά (ακόμα κι αν χαθεί το Supabase). Βλ. _applyBackupData.
+    savedCombos: (typeof getSavedCombos === 'function' ? getSavedCombos() : safeStorageGet('savedCombos', [])),
+    tipsLibrary: (typeof getTipsLibrary === 'function' ? getTipsLibrary() : safeStorageGet('tipsLibrary', [])),
+    recipeMeta: (typeof getRecipeMeta === 'function' ? getRecipeMeta() : safeStorageGet('recipeMeta', {})),
+    favoriteMeals: (typeof getFavoriteMeals === 'function' ? getFavoriteMeals() : safeStorageGet('favoriteMeals', [])),
+    customRecipes: (window.customRecipes || []),
+    clinicContact: _currentClinicContact()
   };
+}
+
+function _currentClinicContact(){
+  var C = (window.Cloud && window.Cloud.CLINIC) || {};
+  function ls(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
+  return { wa: C.wa || ls('fyh-clinic-wa'), tel: C.tel || ls('fyh-clinic-tel'), email: C.email || ls('fyh-clinic-email') };
 }
 
 // Lightweight signature to detect real changes (so we don't back up identical data).
 function _dataSignature(){
-  try { return clients.length + ':' + JSON.stringify(clients).length + ':' + JSON.stringify(customTemplates).length; }
+  try {
+    return clients.length + ':' + JSON.stringify(clients).length + ':' + JSON.stringify(customTemplates).length
+      + ':' + JSON.stringify(safeStorageGet('savedCombos', [])).length
+      + ':' + JSON.stringify(safeStorageGet('tipsLibrary', [])).length
+      + ':' + JSON.stringify(safeStorageGet('recipeMeta', {})).length
+      + ':' + JSON.stringify(safeStorageGet('favoriteMeals', [])).length
+      + ':' + JSON.stringify(window.customRecipes || []).length;
+  }
   catch(e){ return String(Date.now()); }
+}
+
+// ── Επαναφορά από αντίγραφο (αρχείο .json, φάκελος backup ή snapshot) ─────────────────
+// mode 'replace': ό,τι υπάρχει στο αντίγραφο αντικαθιστά το τρέχον. Κλειδιά που ΔΕΝ υπάρχουν
+//   στο αντίγραφο (παλιότερα backups) μένουν όπως είναι — ποτέ δεν σβήνονται.
+// mode 'merge': προστίθενται μόνο όσα λείπουν (πελάτες/templates/combos/tips/αγαπημένα ανά id).
+// Οι δικές σου συνταγές ζουν σε δικό τους πίνακα στο cloud: και στα δύο modes ανεβαίνουν ΜΟΝΟ
+// όσες λείπουν (ίδιο όνομα = υπάρχει ήδη) — ποτέ δεν σβήνεται ή αλλάζει υπάρχουσα.
+function _mergeById(base, incoming, keyFn){
+  var out = (base || []).slice(), seen = {};
+  out.forEach(function(x){ var k = x && keyFn(x); if(k) seen[k] = true; });
+  (incoming || []).forEach(function(x){
+    var k = x && keyFn(x);
+    if(!x || (k && seen[k])) return;
+    if(k) seen[k] = true;
+    out.push(x);
+  });
+  return out;
+}
+function _byId(x){ return x.id; }
+
+function _applyBackupData(d, mode){
+  d = d || {};
+  var merge = (mode === 'merge');
+  var res = { clients: 0, templates: 0, combos: 0, tips: 0, recipesPending: 0 };
+
+  if(Array.isArray(d.clients)){
+    clients = merge ? _mergeById(clients, d.clients, _byId) : d.clients;
+  }
+  if(Array.isArray(d.customTemplates)){
+    customTemplates = merge ? _mergeById(customTemplates, d.customTemplates, _byId) : d.customTemplates;
+  }
+  if(d.trackingData && typeof d.trackingData === 'object' && typeof TRACKING_DATA !== 'undefined'){
+    var curEmpty = !TRACKING_DATA || !(TRACKING_DATA.plans || []).length;
+    if(!merge || curEmpty){
+      TRACKING_DATA = d.trackingData;
+      if(typeof saveTrackingData === 'function') saveTrackingData(); else safeStorageSet('dietologist_tracking', TRACKING_DATA);
+    }
+  }
+  if(Array.isArray(d.savedCombos) && typeof setSavedCombos === 'function'){
+    setSavedCombos(merge ? mergeSavedComboLists(getSavedCombos(), d.savedCombos) : d.savedCombos);
+  }
+  if(Array.isArray(d.tipsLibrary) && typeof setTipsLibrary === 'function'){
+    // Αν δεν έχουν αποθηκευτεί ποτέ tips εδώ (π.χ. νέος υπολογιστής), το getTipsLibrary() δίνει τα
+    // προεπιλεγμένα — αυτά ΔΕΝ ενώνονται με του backup, αλλιώς θα εμφανίζονταν διπλά.
+    var tipsSaved = safeStorageGet('tipsLibrary', null) !== null;
+    setTipsLibrary((merge && tipsSaved) ? _mergeById(getTipsLibrary(), d.tipsLibrary, _byId) : d.tipsLibrary);
+  }
+  if(d.recipeMeta && typeof d.recipeMeta === 'object' && typeof saveRecipeMetaAll === 'function'){
+    var meta = d.recipeMeta;
+    if(merge){
+      meta = Object.assign({}, getRecipeMeta());
+      Object.keys(d.recipeMeta).forEach(function(k){ if(!(k in meta)) meta[k] = d.recipeMeta[k]; });
+    }
+    saveRecipeMetaAll(meta);
+  }
+  if(Array.isArray(d.favoriteMeals) && typeof saveFavoriteMeals === 'function'){
+    saveFavoriteMeals(merge ? _mergeById(getFavoriteMeals(), d.favoriteMeals, function(x){ return x.key; }) : d.favoriteMeals);
+  }
+  if(d.clinicContact && typeof d.clinicContact === 'object'){
+    var cur = _currentClinicContact();
+    ['wa','tel','email'].forEach(function(k){
+      var v = d.clinicContact[k] || '';
+      if(!v || (merge && cur[k])) return;           // merge: κρατάμε ό,τι έχει ήδη συμπληρωθεί
+      try { localStorage.setItem('fyh-clinic-' + k, v); } catch(e){}
+      if(window.Cloud && window.Cloud.CLINIC) window.Cloud.CLINIC[k] = v;
+    });
+  }
+  if(Array.isArray(d.customRecipes) && d.customRecipes.length && window.Cloud && typeof window.Cloud.saveCustomRecipe === 'function'){
+    var have = {};
+    (window.customRecipes || []).forEach(function(r){ if(r && r.name) have[String(r.name).trim().toLowerCase()] = true; });
+    var missing = d.customRecipes.filter(function(r){
+      var k = r && r.name && String(r.name).trim().toLowerCase();
+      if(!k || have[k]) return false;
+      have[k] = true;
+      return true;
+    });
+    res.recipesPending = missing.length;
+    // Σειριακά, για να μη γίνουν διπλο-εισαγωγές αν πατηθεί δεύτερη φορά πριν τελειώσει.
+    missing.reduce(function(p, r){
+      return p.then(function(){ return window.Cloud.saveCustomRecipe(r); });
+    }, Promise.resolve()).then(function(){
+      if(missing.length && typeof showSuccessToast === 'function') showSuccessToast('✅ Επαναφέρθηκαν ' + missing.length + ' δικές σου συνταγές.');
+    });
+  }
+
+  res.clients = clients.length;
+  res.templates = customTemplates.length;
+  res.combos = (typeof getSavedCombos === 'function') ? getSavedCombos().length : 0;
+  res.tips = (typeof getTipsLibrary === 'function') ? getTipsLibrary().length : 0;
+  return res;
+}
+
+function _backupRestoreSummary(r){
+  return r.clients + ' πελάτες, ' + r.templates + ' templates, ' + r.combos + ' συνδυασμοί, ' + r.tips + ' tips'
+    + (r.recipesPending ? ', ' + r.recipesPending + ' συνταγές ανεβαίνουν' : '');
 }
 
 // ── Layer 1: Rolling in-app snapshots ──────────────────────────────────────────────
@@ -459,14 +576,14 @@ function _restoreFromSnapshotList(snaps){
     showConfirmDialog('⚠️ Θα αντικατασταθούν ΟΛΑ τα τρέχοντα δεδομένα με το snapshot της '
         + new Date(chosen.ts).toLocaleString('el-GR') + ' (' + chosen.count + ' πελάτες).\n\nΣυνέχεια;', function(){
       var d = chosen.data || {};
-      clients = d.clients || [];
-      customTemplates = d.customTemplates || [];
-      if(d.trackingData && typeof TRACKING_DATA !== 'undefined') TRACKING_DATA = d.trackingData;
+      if(!Array.isArray(d.clients)) d.clients = [];
+      if(!Array.isArray(d.customTemplates)) d.customTemplates = [];
+      var r = _applyBackupData(d, 'replace');
       _doSave();
       curId = null;
       if(typeof renderSB === 'function') renderSB();
       if(typeof renderMain === 'function') renderMain();
-      showSuccessToast('✅ Επαναφορά ολοκληρώθηκε: ' + clients.length + ' πελάτες.');
+      showSuccessToast('✅ Επαναφορά ολοκληρώθηκε: ' + _backupRestoreSummary(r) + '.');
     }, {confirmLabel:'Αντικατάσταση'});
   }
 
@@ -590,14 +707,14 @@ function _confirmAndRestoreFromDisk(name){
     _backupDirHandle.getFileHandle(name).then(function(fh){ return fh.getFile(); }).then(function(file){ return file.text(); }).then(function(text){
       var d;
       try{ d=JSON.parse(text); }catch(e){ showErrorToast('❌ Το αρχείο backup είναι κατεστραμμένο/μη αναγνώσιμο.'); return; }
-      clients=d.clients||[];
-      customTemplates=d.customTemplates||[];
-      if(d.trackingData && typeof TRACKING_DATA!=='undefined') TRACKING_DATA=d.trackingData;
+      if(!Array.isArray(d.clients)) d.clients=[];
+      if(!Array.isArray(d.customTemplates)) d.customTemplates=[];
+      var r=_applyBackupData(d, 'replace');
       _doSave();
       curId=null;
       if(typeof renderSB==='function') renderSB();
       if(typeof renderMain==='function') renderMain();
-      showSuccessToast('✅ Επαναφορά ολοκληρώθηκε από '+esc(dateLabel)+': '+clients.length+' πελάτες.');
+      showSuccessToast('✅ Επαναφορά ολοκληρώθηκε από '+esc(dateLabel)+': '+_backupRestoreSummary(r)+'.');
     }).catch(function(e){ console.error('[BACKUP] restore disk', e); showErrorToast('❌ Αποτυχία ανάγνωσης: '+(e&&e.message||'άγνωστο σφάλμα')); });
   }, {confirmLabel:'Αντικατάσταση'});
 }
@@ -782,15 +899,9 @@ function stopPortalPollInterval(){
 
 function exportData(){
   // Create export object with timestamp
-  var exportObj={
-    version: '2.0',
-    exportedAt: new Date().toISOString(),
-    clients: deepClone(clients),  // Deep copy
-    customTemplates: deepClone(customTemplates),
-    trackingData: TRACKING_DATA || {},
-    savedCombos: deepClone(safeStorageGet('savedCombos', [])),
-    backupCount: (safeStorageGet('backup_count') || 0) + 1
-  };
+  // Ίδιο πλήρες περιεχόμενο με τα αυτόματα backups (βλ. _buildBackupObj).
+  var exportObj=deepClone(_buildBackupObj());
+  exportObj.backupCount=(safeStorageGet('backup_count') || 0) + 1;
 
   // Create blob and download
   var dataStr=JSON.stringify(exportObj, null, 2);

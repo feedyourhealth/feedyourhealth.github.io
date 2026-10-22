@@ -103,28 +103,18 @@ function importBackup(){
       var incoming = data.clients.length;
       var existing = clients.length;
 
-      function finish(){
+      // _applyBackupData (js/core/persistence.js) επαναφέρει ΟΛΟ το αρχείο: πελάτες, templates,
+      // tracking, combos, tips, συνταγές, αγαπημένα, στοιχεία επικοινωνίας. Κλειδιά που λείπουν
+      // από παλιότερα backups δεν σβήνουν τίποτα.
+      function finish(r){
         curId = null;
         saveNow();
         renderSB();
-        showSuccessToast('✅ Εισαγωγή επιτυχής! ' + clients.length + ' πελάτες φορτώθηκαν.');
+        if(typeof renderMain === 'function') renderMain();
+        showSuccessToast('✅ Εισαγωγή επιτυχής! ' + _backupRestoreSummary(r) + '.');
       }
-      function doMerge(){
-        var existingIds = clients.map(function(c){return c.id;});
-        var toAdd = data.clients.filter(function(c){return existingIds.indexOf(c.id) < 0;});
-        clients = clients.concat(toAdd);
-        if(Array.isArray(data.savedCombos) && data.savedCombos.length){
-          setSavedCombos(mergeSavedComboLists(getSavedCombos(), data.savedCombos));
-        }
-        finish();
-      }
-      function doReplace(){
-        clients = data.clients;
-        // Only overwrite if this backup actually has combos — an older backup (from before
-        // combos got their own key) shouldn't wipe out combos saved since then.
-        if(Array.isArray(data.savedCombos)) setSavedCombos(data.savedCombos);
-        finish();
-      }
+      function doMerge(){ finish(_applyBackupData(data, 'merge')); }
+      function doReplace(){ finish(_applyBackupData(data, 'replace')); }
 
       if(existing > 0){
         showConfirmDialog(

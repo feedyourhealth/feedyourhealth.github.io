@@ -101,6 +101,8 @@ function setSavedCombos(arr){
   // data before — see the doc comment above), so it has to poke Cloud sync directly instead
   // of getting it for free the way client-data saves do.
   if(window.Cloud) try{ window.Cloud.save(); }catch(e){}
+  // Same for the disk-folder backup (js/core/persistence.js), which also carries combos now.
+  if(typeof _writeFileBackup==='function') try{ _writeFileBackup(false); }catch(e){}
 }
 
 /* ---- Tips Library (tab «📚 Tips», js/app-part7-tips.js) ----
@@ -182,6 +184,7 @@ function setTipsLibrary(arr){
   _tipsLibraryCache=arr;
   safeStorageSet('tipsLibrary', arr);
   if(window.Cloud) try{ window.Cloud.save(); }catch(e){}
+  if(typeof _writeFileBackup==='function') try{ _writeFileBackup(false); }catch(e){}
 }
 
 // ── Lightweight toast notification ─────────────────────────────────────────

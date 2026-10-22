@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="4cd27f91b821">
+<meta name="fyh-build" content="105f1fec2f51">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -361,7 +361,7 @@ setTimeout(function(){
      Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
 <script defer src="js/calc/portion-optimizer.js?v=81b9c75d3c"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
-<script defer src="js/core/persistence.js?v=0fce92ad08"></script>
+<script defer src="js/core/persistence.js?v=1ce6a6eb36"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
      (needs snapWholeG, cm, deepClone, DEFAULT_TMPLS — all loaded above) -->
 <script defer src="js/core/templates.js?v=4f045a551d"></script>
@@ -425,7 +425,7 @@ setTimeout(function(){
 <script defer src="js/plan-gen/red-meat.js?v=b1936c8320"></script>
 <script defer src="js/plan-gen/exclusions.js?v=9edd5b2051"></script>
 <script defer src="js/plan-gen/food-distribution.js?v=6c9a6c536b"></script>
-<script defer src="js/plan-gen/combos-tips.js?v=a11c1ead66"></script>
+<script defer src="js/plan-gen/combos-tips.js?v=bb986ea013"></script>
 <script defer src="js/plan-gen/meal-library.js?v=12a93a8fa3"></script>
 <script defer src="js/plan-gen/recipe-finder.js?v=ebf95398b4"></script>
 <script defer src="js/plan-gen/plan-transform.js?v=c4dd4387d7"></script>
@@ -445,7 +445,7 @@ setTimeout(function(){
 <script defer src="js/reports/exports.js?v=230b84ded5"></script>
 <script defer src="js/reports/targets-sheet.js?v=dffe24a58d"></script>
 <script defer src="js/reports/kitchen-link.js?v=26975cd35b"></script>
-<script defer src="js/app-part4.js?v=9557e5caa3"></script>
+<script defer src="js/app-part4.js?v=8fe7789ea9"></script>
 <!-- client-editor/modals — recipe-ingredients / micronutrient / supplement-picker
      modals, carved out of app-part4.js. Pure fns; all refs runtime. -->
 <script defer src="js/client-editor/modals.js?v=cc723de17b"></script>
