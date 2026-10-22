@@ -6,6 +6,7 @@
     Q.prototype[m]=function(){ return this; };
   });
   Q.prototype.in=function(k,v){ this.inF={k:k,v:v}; return this; };
+  Q.prototype.range=function(a,b){ this.rg=[a,b]; return this; };
   Q.prototype.select=function(){ return this; };
   Q.prototype.eq=function(k,v){ this.f[k]=v; return this; };
   Q.prototype.maybeSingle=function(){ this.single=true; return this; };
@@ -19,7 +20,7 @@
     return new Promise(function(r){ setTimeout(function(){ r(self._exec()); }, (window.__SERVER&&window.__SERVER.latency)||30); }).then(res,rej);
   };
   Q.prototype._exec=function(){
-    var S=window.__SERVER;
+    var S=window.__SERVER, self0=this;
     S.calls=S.calls||[]; S.calls.push(this.t+':'+this.op);
     if(this.t==='shared_plans'){   // κρατά ό,τι δημοσιεύεται, για το get_shared_plan παρακάτω
       S.shared=S.shared||{};
@@ -27,6 +28,16 @@
       if(this.op==='update'&&this.f.token&&S.shared[this.f.token]) Object.assign(S.shared[this.f.token],clone(this.p));
     }
     if(this.t==='food_diary') return fdExec(this,S);
+    // Πίνακες που διαβάζει μόνο ο διαιτολόγος (client_meal_log, client_supp_log, …): S.tables[name] = [rows].
+    if(this.op==='select' && S.tables && S.tables[this.t]){
+      var tr=S.tables[this.t].filter(function(r){ return fdMatch(self0,r); }).map(clone);
+      if(this.rg) tr=tr.slice(this.rg[0],this.rg[1]+1);
+      return {data:tr, error:null};
+    }
+    if(this.t==='shared_plans' && this.op==='select' && this.f.token){
+      var sp=(S.shared||{})[this.f.token];
+      return {data:sp?[{snapshot:clone(sp.snapshot)}]:[], error:null};
+    }
     if(this.t!=='user_data') return {data:this.single?null:[], error:null};
     var uid=this.f.user_id || (this.p&&this.p.user_id);
     S.rows=S.rows||{};

@@ -453,7 +453,9 @@ function progressRefresh(){
     typeof Cloud.refreshClientLogsCache==='function'?Cloud.refreshClientLogsCache():Promise.resolve(),
     typeof Cloud.refreshPlanFeedbackCache==='function'?Cloud.refreshPlanFeedbackCache():Promise.resolve(),
     typeof Cloud.refreshLinkHealthCache==='function'?Cloud.refreshLinkHealthCache():Promise.resolve(),
-    typeof Cloud.refreshMealLogCache==='function'?Cloud.refreshMealLogCache():Promise.resolve()
+    typeof Cloud.refreshMealLogCache==='function'?Cloud.refreshMealLogCache():Promise.resolve(),
+    typeof Cloud.refreshSuppLogCache==='function'?Cloud.refreshSuppLogCache():Promise.resolve(),
+    typeof Cloud.refreshShopCache==='function'?Cloud.refreshShopCache():Promise.resolve()
   ]).then(function(){
     // Αν στο μεταξύ άλλαξες tab, μην το πατήσεις. Αν άνοιξες πελάτη (π.χ. «Πλήρες ιστορικό →» από το
     // Ραντεβού, που κάνει swTab(10) + openProgressClient αμέσως μετά), μείνε σε ΑΥΤΟΝ — πριν, το
@@ -816,12 +818,17 @@ function progressSwapsHtml(c,ckRows){
   if(!st.swaps.length){
     html+='<div class="hm-empty">Καμία αντικατάσταση'+(_progressSwapRange==='4w'?' τις τελευταίες 4 εβδομάδες.':' αυτή την εβδομάδα.')+'</div>';
   } else {
+    // Πάτημα σε γραμμή ⇒ πλάνο ↔ τι έφαγε (progress-insights.js, 2026-10-22).
+    var hasDet=typeof piSwapDetailHtml==='function';
     html+=st.swaps.map(function(x){
       var wd=(new Date(x.date+'T00:00:00').getDay()+6)%7;
-      return '<div class="pr-sw-row"><span class="pr-sw-when">'+PROGRESS_SWAP_DAYS[wd]+' '+progressShortDate(x.date)+' · '+esc(x.s)+'</span>'
-        +'<span class="pr-sw-from">'+esc(x.o)+'</span><span class="pr-sw-arrow">→</span><span class="pr-sw-to">'+esc(x.n)+'</span></div>';
+      var row='<span class="pr-sw-when">'+PROGRESS_SWAP_DAYS[wd]+' '+progressShortDate(x.date)+' · '+esc(x.s)+'</span>'
+        +'<span class="pr-sw-from">'+esc(x.o)+'</span><span class="pr-sw-arrow">→</span><span class="pr-sw-to">'+esc(x.n)+'</span>';
+      if(!hasDet) return '<div class="pr-sw-row">'+row+'</div>';
+      return '<details class="pr-sw-det"><summary class="pr-sw-row" title="Δες τι ακριβώς έφαγε">'+row+'</summary>'+piSwapDetailHtml(c,x)+'</details>';
     }).join('');
   }
+  if(typeof piSwapPrefsHtml==='function') html+=piSwapPrefsHtml(st4.swaps);
   return html+'</div>';
 }
 
@@ -945,11 +952,21 @@ function openProgressClient(id){
     +'</div></div>';
   html+=progressAdherenceChartPanel(c,rows);
   html+=progressWeeklyConsistencyHtml(c,rows);
+  if(typeof progressSkipsHtml==='function') html+=progressSkipsHtml(c,rows);
   html+=progressSwapsHtml(c,rows);
+  if(typeof progressSuppsHtml==='function') html+=progressSuppsHtml(c);
+  if(typeof progressShopHtml==='function') html+=progressShopHtml(c);
   html+=(typeof progressWeightPanelHtml==='function')?progressWeightPanelHtml(c):'';
   html+='<div style="margin-top:14px">'+progressTimelineHtml(progressBuildTimeline(c),c.id)+'</div>';
   html+='</div>';
   main.innerHTML=html;
+  // Λίστα αγορών + ονόματα συμπληρωμάτων ζουν στο snapshot του λινκ — φέρνεται μία φορά ανά πελάτη
+  // (cache, και null σε αποτυχία ώστε να μη ξαναζητιέται), μετά ξαναζωγραφίζουμε αν είμαστε ακόμα εδώ.
+  if(window.Cloud && typeof Cloud.fetchPublishedSnapshot==='function'){
+    Cloud.fetchPublishedSnapshot(c).then(function(got){
+      if(got && curTab===10 && _progressOpenId===id) openProgressClient(id);
+    }).catch(function(){});
+  }
 }
 
 // ── Phase 4 (2026-09-15, μετά από mockup συζήτησης): γράφημα βάρους αντί για το διπλό panel ──────

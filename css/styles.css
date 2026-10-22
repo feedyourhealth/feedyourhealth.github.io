@@ -480,6 +480,42 @@ body.dark-mode .pr-wk-df{border-color:#444}
 .pr-sw-arrow{color:var(--teal);font-weight:700}
 .pr-sw-to{font-weight:600;color:var(--teal)}
 @media (max-width:600px){.pr-sw-row{grid-template-columns:1fr;gap:2px}.pr-sw-arrow{display:none}}
+/* 📈 Πρόοδος — κάρτες progress-insights.js (2026-10-22) */
+.pi-bars{display:grid;grid-template-columns:minmax(110px,170px) minmax(0,1fr) 44px 52px;gap:8px 10px;align-items:center;font-size:13px}
+.pi-bt{height:10px;border-radius:5px;background:#e6eded;overflow:hidden}
+.pi-bf{display:block;height:10px;border-radius:5px;background:var(--teal)}
+.pi-bf.pi-low{background:#b7791f}
+.pi-bv{font-weight:700;text-align:right}
+.pi-lowt{color:#8a5b00}
+.pi-bn{color:var(--text-muted);font-size:12px}
+.pi-note{margin-top:10px;font-size:13px;color:#6e4800;background:#fbf3e2;border-radius:8px;padding:8px 10px}
+.pi-foot{margin-top:10px;font-size:11.5px;color:var(--text-muted)}
+.pr-sw-det>summary{list-style:none;cursor:pointer}
+.pr-sw-det>summary::-webkit-details-marker{display:none}
+.pr-sw-det>summary:hover{background:#f6faf9}
+.pr-sw-det[open]>summary .pr-sw-to::after{content:" ▴"}
+.pi-det{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:6px 0 4px;font-size:12.5px}
+.pi-side{background:#f4f6f5;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.pi-side.pi-ate{background:#e9f4f1}
+.pi-sh{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.03em}
+.pi-mac{margin-top:4px;font-size:11.5px;color:var(--text-muted)}
+.pi-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px;font-size:12px}
+.pi-chip{padding:3px 8px;border-radius:6px;background:#eef2f2}
+.pi-chip-w{background:#fbeccd;color:#6e4800}
+.pi-prefs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.pi-pref{background:#f4f6f5;border-radius:8px;padding:10px 12px;font-size:12.5px;display:flex;flex-direction:column;gap:4px}
+.pi-pref-h{font-weight:700}
+.pi-pref-h span{font-weight:400;color:var(--text-muted)}
+.pi-pref-r{display:flex;justify-content:space-between;gap:8px}
+.pi-pref-f{font-size:11.5px;color:#6e4800}
+@media (max-width:600px){.pi-bars{grid-template-columns:minmax(90px,120px) minmax(0,1fr) 40px}.pi-bn{display:none}.pi-det{grid-template-columns:1fr}}
+body.dark-mode .pi-bt{background:#333}
+body.dark-mode .pi-note{background:#3a2f1a;color:#F5D7A1}
+body.dark-mode .pi-lowt,body.dark-mode .pi-pref-f{color:#E0C79A}
+body.dark-mode .pi-side,body.dark-mode .pi-pref,body.dark-mode .pi-chip{background:#2a2a2a}
+body.dark-mode .pi-side.pi-ate{background:#24453f}
+body.dark-mode .pi-chip-w{background:#3a2f1a;color:#F5D7A1}
+body.dark-mode .pr-sw-det>summary:hover{background:#262626}
 body.dark-mode .pr-sw-rb{background:#2a2a2a;border-color:#444;color:#ccc}
 body.dark-mode .pr-sw-rb.on{background:var(--teal);color:#fff}
 body.dark-mode .pr-sw-flag{background:#3a2f1a;border-color:#6b5a2a}

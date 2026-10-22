@@ -1786,6 +1786,58 @@
       return byDate;
     },
 
+    // ── 💊 ΠΟΙΑ ΣΥΜΠΛΗΡΩΜΑΤΑ ΠΗΡΕ + 🛒 ΛΙΣΤΑ ΑΓΟΡΩΝ (2026-10-22) ──
+    // client_supp_log: {date: {"<όνομα συμπληρώματος όπως στο snapshot>": true}} — ίδιο μοτίβο με το
+    // client_meal_log. client_shop_log: ΜΙΑ γραμμή ανά λινκ, μόνο η τρέχουσα κατάσταση {"<είδος>": true}
+    // (ο πελάτης την καθαρίζει με «Καθάρισμα», άρα δεν υπάρχει ιστορικό). Θέλουν το
+    // sql/2026-10-22_supp_shop_read_policy.sql — χωρίς αυτό η βάση γυρνά σιωπηλά 0 γραμμές.
+    _suppLogCache:{}, _shopCache:{},
+    refreshSuppLogCache:function(){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve();
+      var tokens=[];
+      (window.clients||[]).forEach(function(c){ if(!c.deleted) tokens=tokens.concat(self.checkinTokensFor(c)); });
+      if(!tokens.length) return Promise.resolve();
+      return this._fetchAllByToken('client_supp_log','token,date,supps_map',tokens,'date','fetchAllSuppLogs').then(function(byToken){
+        if(byToken) self._suppLogCache=byToken;
+      });
+    },
+    suppLogFor:function(c){
+      var self=this, byDate={};
+      this.checkinTokensFor(c).forEach(function(t){ (self._suppLogCache[t]||[]).forEach(function(r){ byDate[r.date]=r.supps_map||{}; }); });
+      return byDate;
+    },
+    refreshShopCache:function(){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve();
+      var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
+      if(!tokens.length) return Promise.resolve();
+      return this._fetchAllByToken('client_shop_log','token,checks,updated_at',tokens,'updated_at','fetchAllShopState').then(function(byToken){
+        if(byToken) self._shopCache=byToken;
+      });
+    },
+    // {checks, updated_at} του ΤΡΕΧΟΝΤΟΣ λινκ (η λίστα αγορών ανήκει στο snapshot εκείνου του λινκ), ή null.
+    shopFor:function(c){
+      var r=c && c.shareToken && (this._shopCache[c.shareToken]||[])[0];
+      return r?{checks:r.checks||{}, updated_at:r.updated_at}:null;
+    },
+    // Το snapshot που ΒΛΕΠΕΙ ο πελάτης (λίστα αγορών, συμπληρώματα με τα ονόματα-κλειδιά του
+    // client_supp_log). Ένας πελάτης τη φορά — τα snapshots είναι μεγάλα για να φέρνουμε όλα μαζί.
+    // Cache ανά token: undefined = δεν ζητήθηκε, null = δεν βρέθηκε/σφάλμα (δεν ξαναζητιέται).
+    _pubSnapCache:{},
+    publishedSnapshotFor:function(c){ return (c && c.shareToken)?this._pubSnapCache[c.shareToken]:null; },
+    fetchPublishedSnapshot:function(c){
+      var self=this, tok=c && c.shareToken;
+      if(!tok || !this.enabled || !this.user || this._pubSnapCache[tok]!==undefined) return Promise.resolve(false);
+      this._pubSnapCache[tok]=null;
+      return this.sb.from('shared_plans').select('snapshot').eq('token',tok).then(function(res){
+        if(res.error){ console.error('[CLOUD] fetchPublishedSnapshot', res.error.message||res.error); return false; }
+        var row=(res.data||[])[0];
+        self._pubSnapCache[tok]=(row && row.snapshot)||null;
+        return !!self._pubSnapCache[tok];
+      });
+    },
+
     // ── 🔗 ΥΓΕΙΑ ΣΥΝΔΕΣΜΟΥ PORTAL (2026-08-14) ──────────────────────────────
     // Το isStale() πιο πάνω ελέγχει ΜΟΝΟ αν άλλαξε το πλάνο ΤΟΠΙΚΑ μετά τη δημοσίευση — δεν βλέπει αν
     // η ίδια η γραμμή shared_plans χάθηκε από τη βάση (διαγραφή, χειροκίνητο cleanup, ό,τι άλλο) ΜΕΤΑ
