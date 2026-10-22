@@ -6,6 +6,7 @@
   sync_test.py        cloud sync: stale/dirty cache, conflicts, other account, failed load
   snapshot_storage_test.py  snapshots in IndexedDB (not localStorage), legacy move, quota toast once
   backup_restore_test.py  backup file holds everything; import restores all of it (replace/merge, old files)
+  favorites_sync_test.py  ⭐ favourite meals ride the cloud blob (old blob keeps local, new PC downloads)
   allergen_test.py    allergen quick-exclude migration + genPlan never serves a group food
   allergy_ui_test.py  ⚠️ Αλλεργίες section: intake apply, genPlan/insert/publish guards
   repro_test.py       pregnancy / lactation kcal, safety flags, form ticks, genPlan gate
@@ -24,7 +25,7 @@ import subprocess, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'backup_restore_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py', 'food_diary_test.py', 'waiting_test.py', 'plan_history_test.py', 'plan_history_athlete_test.py']
+TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'backup_restore_test.py', 'favorites_sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py', 'food_diary_test.py', 'waiting_test.py', 'plan_history_test.py', 'plan_history_athlete_test.py']
 
 failed = []
 for name in TESTS:

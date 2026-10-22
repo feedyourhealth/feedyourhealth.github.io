@@ -136,6 +136,9 @@ function getFavoriteMeals(){
 
 function saveFavoriteMeals(meals){
   safeStorageSet('favoriteMeals', meals);
+  // Ταξιδεύουν στο cloud blob (Cloud._blobBody) και στο αρχείο backup, όπως τα saved combos.
+  if(window.Cloud) try{ window.Cloud.save(); }catch(e){}
+  if(typeof _writeFileBackup==='function') try{ _writeFileBackup(false); }catch(e){}
 }
 
 function toggleFavoriteMeal(d,mi,btn){

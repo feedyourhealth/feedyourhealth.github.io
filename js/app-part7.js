@@ -1166,6 +1166,8 @@
         recipeMeta: (typeof getRecipeMeta==='function'?getRecipeMeta():null),
         savedCombos: (typeof safeStorageGet==='function'?safeStorageGet('savedCombos',[]):[]),
         tipsLibrary: (typeof safeStorageGet==='function'?safeStorageGet('tipsLibrary',[]):[]),
+        // ⭐ Αγαπημένα γεύματα — ως 2026-10-22 ζούσαν μόνο στο localStorage (χάνονταν σε νέο υπολογιστή).
+        favoriteMeals: (typeof safeStorageGet==='function'?safeStorageGet('favoriteMeals',[]):[]),
         // Clinic contact (WhatsApp/phone/email shown to the client in the plan's «Ρώτησέ με»
         // sheet) used to be localStorage-only, so publishing from another browser/device gave
         // the client a contact-less link. Rides along in the same blob now; self.CLINIC is
@@ -1225,6 +1227,8 @@
             safeStorageSet('tipsLibrary', d.tipsLibrary);
             window._tipsLibraryCache = d.tipsLibrary;
           }
+          // Παλιό blob χωρίς favoriteMeals → κρατάμε τα τοπικά (ποτέ δεν σβήνονται) και ανεβαίνουν παρακάτω.
+          if(Array.isArray(d.favoriteMeals)) safeStorageSet('favoriteMeals', d.favoriteMeals);
         }
         // Clinic contact — raw localStorage keys (read by loadSettingsPanel + _buildSnapshot
         // via self.CLINIC) plus the in-memory self.CLINIC object so a publish right after
@@ -1241,6 +1245,8 @@
       self._version=ver||0;
       self._markSynced(ver);
       self._lastSyncedSig=self._blobSig();
+      // Τα τοπικά αγαπημένα δεν υπάρχουν ακόμα στο cloud → το επόμενο save() (autosave 30") τα ανεβάζει.
+      if(!Array.isArray(d.favoriteMeals) && typeof safeStorageGet==='function' && (safeStorageGet('favoriteMeals',[])||[]).length) self._lastSyncedSig=null;
       if(typeof curId!=='undefined' && curId && !window.clients.some(function(c){ return c.id===curId; })) window.curId=null;
     },
 
