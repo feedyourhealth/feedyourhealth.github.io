@@ -20,6 +20,8 @@
 // modal + render-main button), buildPlanHistoryHtml (render-main, persistence recover),
 // renderPlanCharts (form-controls tab switch — no-op now, kept for that caller), recordPlanSent
 // (app-part7 Cloud.publishPlan), phBackupIfUnsaved (gen-plan genPlan).
+// Athletes: phase/race tags, race list, debrief, «Επανάληψη» and per-plan sport metrics live in
+// plan-history-athlete.js (pha*), called from here behind typeof guards.
 
 var PH_MAX_BACKUPS=3, PH_BACKUP_DAYS=30;
 var PH_DAYS=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
@@ -157,9 +159,14 @@ function phBackupIfUnsaved(c,reason){
 /* ── creating entries ──────────────────────────────────────────────────── */
 function phMakeEntry(c,kind,note){
   var now=new Date(),ctx=phContextNow(c);
+  var tag=(typeof phaCurrentTag==='function')?phaCurrentTag(c):{};
+  if(typeof phaSnapshot==='function'){var a=phaSnapshot(c);if(a)ctx.athlete=a;}
+  if(!note&&tag.note)note=tag.note;
+  if(c.planTag&&c.planTag.note)c.planTag.note='';   // a carried-over debrief note is used once
   return {id:'plan_'+Date.now(),number:phNextNumber(c),date:phToday(),time:now.toLocaleTimeString('el-GR'),
     note:note||'',kind:kind,sentDates:kind==='sent'?[phToday()]:[],hash:phHash(c.weekPlan),
-    macros:phWeekMacros(c.weekPlan),weekPlan:deepClone(c.weekPlan),goal:c.goal,goalMain:c.goalMain||null,dietType:c.dietType,ctx:ctx};
+    macros:phWeekMacros(c.weekPlan),weekPlan:deepClone(c.weekPlan),goal:c.goal,goalMain:c.goalMain||null,dietType:c.dietType,ctx:ctx,
+    phase:tag.phase||null,raceId:tag.raceId||null};
 }
 // Called by Cloud.publishPlan() after a successful publish. Returns {number,isNew} or null.
 function recordPlanSent(c){
@@ -180,6 +187,8 @@ function recordPlanSent(c){
     // Same-day re-send after edits → that day's version is replaced, not stacked.
     var fresh=phMakeEntry(c,'sent','');
     fresh.id=last.id;fresh.number=last.number;fresh.sentDates=last.sentDates||[today];
+    if(!fresh.phase)fresh.phase=last.phase||null;
+    if(!fresh.raceId)fresh.raceId=last.raceId||null;
     c.savedPlans[c.savedPlans.indexOf(last)]=fresh;
     phRefresh(c);
     return {number:fresh.number,isNew:false,updated:true};
@@ -206,6 +215,10 @@ function showSavePlanPanel(){
     if(dateElem)dateElem.textContent=new Date().toLocaleDateString('el-GR');
     var noteElem=document.getElementById('plan-save-note');
     if(noteElem)noteElem.value='';
+    // 🏁 athletes: phase + race for this version (plan-history-athlete.js)
+    var wrap=document.getElementById('pha-save-wrap');
+    if(!wrap&&noteElem){wrap=document.createElement('div');wrap.id='pha-save-wrap';var row=noteElem.parentNode;row.parentNode.insertBefore(wrap,row.nextSibling);}
+    if(wrap){phEnsureStyle();wrap.innerHTML=(typeof phaSaveSectionHtml==='function')?phaSaveSectionHtml(c):'';}
   }
 }
 function closeSavePlanPanel(){
@@ -219,10 +232,12 @@ function doSavePlan(){
   phNormalizeNumbers(c);
   var noteElem=document.getElementById('plan-save-note');
   var note=noteElem?noteElem.value.trim():'';
+  if(typeof phaReadSaveSection==='function')phaReadSaveSection(c);
   var plans=phSorted(c),last=plans[plans.length-1],msg;
   if(last&&phPlanHash(last)===phHash(c.weekPlan)){
-    // Identical to the newest entry — don't store a second copy, just attach the note.
+    // Identical to the newest entry — don't store a second copy, just attach the note (+ athlete tag).
     if(note)last.note=note;
+    if(c.planTag&&document.getElementById('pha-save-phase')){last.phase=c.planTag.phase||null;last.raceId=c.planTag.raceId||null;}
     msg='✓ Ίδιο με το Πλάνο #'+last.number+(note?' — ενημερώθηκε η σημείωση':'');
   } else {
     var e=phMakeEntry(c,'manual',note);
@@ -379,8 +394,10 @@ function phChartSvg(c,plans,periods){
   if(plans.length<1)return '';
   var first=plans[0].date,lastEnd=phToday();
   if(lastEnd<plans[plans.length-1].date)lastEnd=plans[plans.length-1].date;
+  var ath=typeof phaIsAthlete==='function'&&phaIsAthlete(c);
+  if(ath)lastEnd=phaChartEnd(c,lastEnd);
   var span=Math.max(1,phDaysBetween(first,lastEnd));
-  var X0=60,X1=740,Y0=20,Y1=170;
+  var X0=60,X1=740,Y0=26,Y1=170;
   function xOf(d){return X0+(X1-X0)*Math.max(0,Math.min(span,phDaysBetween(first,d)))/span;}
   var ks=plans.map(function(p){return (p.macros&&p.macros.k)||0;});
   var kMin=Math.floor((Math.min.apply(null,ks)-150)/100)*100,kMax=Math.ceil((Math.max.apply(null,ks)+150)/100)*100;
@@ -394,7 +411,8 @@ function phChartSvg(c,plans,periods){
   var hasW=pts.length>0,wMin=0,wMax=1;
   if(hasW){var ws=pts.map(function(p){return p.w;});wMin=Math.floor(Math.min.apply(null,ws)-1);wMax=Math.ceil(Math.max.apply(null,ws)+1);}
   function yW(w){return Y1-(Y1-Y0)*(w-wMin)/Math.max(1,wMax-wMin);}
-  var s='<svg viewBox="0 0 820 236" style="width:100%;height:auto;display:block" role="img" aria-label="Θερμίδες κάθε πλάνου στον χρόνο'+(hasW?' μαζί με το βάρος':'')+'">';
+  var s='<svg viewBox="0 0 820 236" style="width:100%;height:auto;display:block" role="img" aria-label="Θερμίδες κάθε πλάνου στον χρόνο'+(hasW?' μαζί με το βάρος':'')+(ath&&(c.races||[]).length?' και τους αγώνες':'')+'">';
+  if(ath)s+=phaChartBands(c,plans,xOf,Y0,Y1);
   // grid + kcal ticks
   for(var i=0;i<=4;i++){
     var kv=kMin+(kMax-kMin)*i/4,y=yK(kv);
@@ -402,8 +420,8 @@ function phChartSvg(c,plans,periods){
     s+='<text x="'+(X0-8)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" style="fill:var(--text-muted)">'+Math.round(kv)+'</text>';
   }
   if(hasW){
-    s+='<text x="'+(X1+8)+'" y="'+(Y0+4)+'" font-size="11" fill="#c2410c">'+wMax+' kg</text>';
-    s+='<text x="'+(X1+8)+'" y="'+(Y1+4)+'" font-size="11" fill="#c2410c">'+wMin+' kg</text>';
+    s+='<text x="'+(X1+20)+'" y="'+(Y0+4)+'" font-size="11" fill="#c2410c">'+wMax+' kg</text>';
+    s+='<text x="'+(X1+20)+'" y="'+(Y1+4)+'" font-size="11" fill="#c2410c">'+wMin+' kg</text>';
   }
   // adherence bars under each period
   periods.forEach(function(pr){
@@ -424,6 +442,7 @@ function phChartSvg(c,plans,periods){
     s+='<path d="'+wd+'" fill="none" stroke="#c2410c" stroke-width="2" stroke-dasharray="5 4"/>';
     pts.forEach(function(p){s+='<circle cx="'+xOf(p.d).toFixed(1)+'" cy="'+yW(p.w).toFixed(1)+'" r="4" fill="#c2410c"><title>'+phFmtShort(p.d)+' · '+phDec(p.w)+' kg</title></circle>';});
   }
+  if(ath)s+=phaChartFlags(c,xOf,first,lastEnd,Y0,Y1);
   // x labels — staggered when two plans are close together
   var lastX=-999,row=0;
   plans.forEach(function(p){
@@ -439,7 +458,7 @@ function buildPlanHistoryHtml(c){
   var dbg='<div style="margin:8px 20px 0;display:flex;justify-content:flex-end">'
     +'<button class="btn tertiary" style="padding:5px 10px;font-size:11px" onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" title="Ελέγχει αν υπάρχουν πλάνα σε τοπικό backup που λείπουν από το ιστορικό αυτού του πελάτη">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
     +'</div>';
-  if((!c.savedPlans||!c.savedPlans.length)&&!(c.planBackups||[]).length){
+  if((!c.savedPlans||!c.savedPlans.length)&&!(c.planBackups||[]).length&&!(typeof phaIsAthlete==='function'&&phaIsAthlete(c))){
     return dbg+'<div style="padding:20px;text-align:center;color:var(--text-muted)"><div style="font-size:16px;font-weight:600;margin-bottom:10px">📊 Ιστορικό Πλάνων</div><p>Δεν υπάρχουν αποθηκευμένα πλάνα ακόμα.<br>Κάθε πλάνο που στέλνεις στον πελάτη μπαίνει εδώ αυτόματα· μπορείς και να πατήσεις «Αποθήκευση Διατροφής».</p></div>';
   }
   try{
@@ -464,6 +483,8 @@ function buildPlanHistoryHtmlInner(c){
     return {from:p.date,to:to,days:Math.max(0,phDaysBetween(p.date,end)),closed:i<plans.length-1,adh:phAdherence(c,p.date,adhTo)};
   });
   var sentCount=plans.filter(function(p){return p.kind==='sent';}).length;
+  var isAth=typeof phaIsAthlete==='function'&&phaIsAthlete(c);
+  var raceCount=plans.filter(function(p){return p.raceId;}).length;
   var html='<div class="ph-wrap">';
 
   // header
@@ -474,11 +495,13 @@ function buildPlanHistoryHtmlInner(c){
     +'<div class="ph-chips">'
     +'<button class="ph-chip'+(phFilter==='all'?' on':'')+'" onclick="phSetFilter(\'all\')">Όλα</button>'
     +'<button class="ph-chip'+(phFilter==='sent'?' on':'')+'" onclick="phSetFilter(\'sent\')">Στάλθηκαν ('+sentCount+')</button>'
+    +(isAth?'<button class="ph-chip'+(phFilter==='race'?' on':'')+'" onclick="phSetFilter(\'race\')">Αγώνες ('+raceCount+')</button>':'')
     +'<button class="ph-chip'+(phFilter==='backup'?' on':'')+'" onclick="phSetFilter(\'backup\')">Backups ('+backups.length+')</button>'
     +'</div>'
     +(plans.length>=2?'<button class="btn secondary" style="font-size:12.5px;padding:7px 12px;min-height:auto" onclick="openPlanCompare()">⇄ Σύγκριση πλάνων</button>':'')
     +'</div></div>';
 
+  if(isAth)html+=phaTopHtml(c,plans);
   if(plans.length){
     // summary strip
     var b0=phBodyAt(c,plans[0]),bN=phLatestBody(c);
@@ -518,6 +541,7 @@ function buildPlanHistoryHtmlInner(c){
   items=items.filter(function(it){
     if(phFilter==='sent')return it.t==='plan'&&it.p.kind==='sent';
     if(phFilter==='backup')return it.t==='bk';
+    if(phFilter==='race')return it.t==='plan'&&!!it.p.raceId;
     return true;
   });
   if(plans.length&&phOpen[plans[plans.length-1].id]==null)phOpen['__newest_'+plans[plans.length-1].id]=true;
@@ -559,6 +583,7 @@ function phPlanItemHtml(c,p,i,plans,periods,curHash,lastItem){
   else if(p.kind==='manual')badges+='<span class="ph-badge ph-b-man">💾 Χειροκίνητη</span>';
   var dt=p.dietType||(p.ctx&&p.ctx.dietType);
   if(dt&&typeof DIET_TYPE_BADGE!=='undefined'&&DIET_TYPE_BADGE[dt])badges+='<span class="ph-badge ph-b-diet">'+esc(DIET_TYPE_BADGE[dt])+'</span>';
+  if(typeof phaBadges==='function')badges+=phaBadges(c,p);
 
   var h='<div class="ph-row"><div class="ph-rail"><div class="ph-dot'+(isActive?' act':'')+'"></div>'+(lastItem?'':'<div class="ph-line"></div>')+'</div><div class="ph-body">';
   h+='<div class="ph-head" onclick="if(!event.target.closest(\'details\'))phToggle(\''+id+'\')">'
@@ -567,6 +592,7 @@ function phPlanItemHtml(c,p,i,plans,periods,curHash,lastItem){
     +(body.w?'<span class="ph-muted">'+phDec(body.w)+' kg</span>':'')
     +'<span class="ph-muted">'+(pr.closed?pr.days+' '+(pr.days===1?'μέρα':'μέρες'):'ισχύει '+pr.days+' '+(pr.days===1?'μέρα':'μέρες'))+'</span>'
     +(pr.adh?'<span class="ph-pill" style="'+phAdhColor(pr.adh.pct)+'">τήρηση '+pr.adh.pct+'%</span>':'')
+    +(typeof phaRowExtra==='function'?phaRowExtra(c,p,body):'')
     +'<span class="ph-muted" style="font-size:12px">'+deltaTxt+'</span>'
     +'<details class="ph-menu"><summary aria-label="Ενέργειες για το Πλάνο #'+p.number+'">⋮</summary><div class="ph-menu-list">'
     +'<button onclick="loadPlanAsActive(\''+id+'\')">📥 Φόρτωση ως ενεργό</button>'
@@ -605,6 +631,7 @@ function phPlanItemHtml(c,p,i,plans,periods,curHash,lastItem){
     +(m.fi!=null?'<div class="ph-muted" style="font-size:12px">Φυτικές ίνες '+m.fi+' g</div>':'')
     +'</div>';
   h+='</div>';  // /grid
+  if(typeof phaDetailHtml==='function')h+=phaDetailHtml(c,p,body,isActive);
 
   h+='<div class="ph-grid">';
   // what changed
