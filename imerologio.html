@@ -138,7 +138,7 @@ const TXT={
     q_same:'↺ Όπως χθες', q_skip:'— Δεν έφαγα', q_out:'🍽 Έξω',
     skipTxt:'Δεν έφαγα', outTxt:'Έξω: ', sameTxt:'Ίδιο με χθες',
     feelQ:'Προαιρετικά · Πώς ήταν η μέρα;', f0:'😣 Δύσκολη', f1:'😐 Οκ', f2:'😊 Καλή',
-    dietitian:'Διαιτολόγος', r_ok:'Μπράβο!', r_warn:'Να το δούμε μαζί.', r_q:'Πόσο περίπου;',
+    dietitian:'Διαιτολόγος', r_ok:'Μπράβο!', r_great:'Πολύ καλή επιλογή!', r_warn:'Να το δούμε μαζί.', r_oh:'Έλεος!', r_q:'Πόσο περίπου;',
     saving:'Αποθηκεύεται…', saved:'✓ Αποθηκεύτηκε', offline:'⚠️ Χωρίς σύνδεση — θα ξαναδοκιμάσει',
     endedBanner:'Το ημερολόγιο ολοκληρώθηκε — μπορείς να το δεις, αλλά όχι να το αλλάξεις.',
     notStarted:'Το ημερολόγιο ξεκινά στις', validUntil:'Ισχύει έως',
@@ -160,7 +160,7 @@ const TXT={
     q_same:'↺ Same as yesterday', q_skip:'— Skipped', q_out:'🍽 Ate out',
     skipTxt:'Skipped', outTxt:'Ate out: ', sameTxt:'Same as yesterday',
     feelQ:'Optional · How was your day?', f0:'😣 Hard', f1:'😐 OK', f2:'😊 Good',
-    dietitian:'Dietitian', r_ok:'Well done!', r_warn:'Let’s talk about this.', r_q:'Roughly how much?',
+    dietitian:'Dietitian', r_ok:'Well done!', r_great:'Great choice!', r_warn:'Let’s talk about this.', r_oh:'Oh dear!', r_q:'Roughly how much?',
     saving:'Saving…', saved:'✓ Saved', offline:'⚠️ Offline — will retry',
     endedBanner:'This diary is finished — you can view it but not change it.',
     notStarted:'The diary starts on', validUntil:'Open until',
@@ -308,7 +308,8 @@ function renderDays(){
   }
   el('days').innerHTML=h;
 }
-function rLabel(c){ return c.t || ({'👍':T('r_ok'),'⚠️':T('r_warn'),'❓':T('r_q')}[c.r]||''); }
+// Same reactions as FD_REACT in js/client-editor/food-diary.js
+function rLabel(c){ return c.t || ({'👍':T('r_ok'),'💪':T('r_great'),'⚠️':T('r_warn'),'🤦':T('r_oh'),'❓':T('r_q')}[c.r]||''); }
 function renderMeals(){
   const day=dayOf(selDate), m=day.meals||{};
   el('dayhead').textContent=T('daysLong')[dow(selDate)]+' '+ddmm(selDate)+(selDate===todayD()?' · '+T('today'):'');

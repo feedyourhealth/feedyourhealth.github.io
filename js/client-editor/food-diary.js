@@ -11,7 +11,19 @@
 var FD_SLOTS=[['breakfast','Πρωινό'],['snack1','Δεκατιανό'],['lunch','Μεσημεριανό'],['snack2','Απογευματινό'],['dinner','Βραδινό'],['extra','Κάτι άλλο']];
 var FD_DAYS=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
 var FD_FEEL=['😣','😐','😊'];
-var FD_REACT=[['👍','Μπράβο'],['⚠️','Να το δούμε'],['❓','Πόσο περίπου;']];
+// Reactions: one click, stored as the emoji in comments[...].r; imerologio.html shows the label
+// in the client's language when no text is written (keep its rLabel map in step with this list).
+var FD_REACT=[['👍','Μπράβο'],['💪','Πολύ καλή επιλογή'],['⚠️','Να το δούμε'],['🤦','Έλεος'],['❓','Πόσο περίπου;']];
+// Ready-made advice: one click writes the phrase into the comment box, in the diary's language
+// (c.diaryLang), so it stays editable and an English client reads it in English.
+var FD_TIPS=[
+  ['🥩','Πρωτεΐνη',     {el:'Πρόσθεσε λίγη πρωτεΐνη εδώ.',             en:'Add some protein here.'}],
+  ['🥗','Λαχανικά',     {el:'Πρόσθεσε λαχανικά ή σαλάτα.',             en:'Add some vegetables or a salad.'}],
+  ['🍞','Μικρότερη μερίδα',{el:'Λίγο μικρότερη μερίδα την επόμενη φορά.', en:'A slightly smaller portion next time.'}],
+  ['⏰','Μην το παραλείπεις',{el:'Προσπάθησε να μην το παραλείπεις.',    en:'Try not to skip this meal.'}],
+  ['💧','Νερό',         {el:'Μην ξεχνάς το νερό.',                     en:'Don’t forget your water.'}],
+  ['🔄','Αντί γι\' αυτό…',{el:'Δοκίμασε αντί γι\' αυτό: ',              en:'Try this instead: '}]
+];
 
 // ── dates as 'YYYY-MM-DD' strings (same helpers as imerologio.html) ──────────
 function foodDiaryTodayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -354,6 +366,8 @@ function fdRenderSel(){
   box.innerHTML='<span class="fd-lbl">'+FD_DAYS[fdDow(d)]+' '+fdDM(d)+' · '+lab+'</span>'
     +'<div style="font-size:14px;white-space:pre-wrap">'+(String(v).trim()?esc(v):'<span style="color:var(--text-muted)">Δεν έχει γράψει κάτι.</span>')+'</div>'
     +'<div class="fd-react" id="fd-react">'+FD_REACT.map(function(r){ return '<button type="button" data-r="'+r[0]+'" class="'+(V.draftR===r[0]?'on':'')+'">'+r[0]+' '+r[1]+'</button>'; }).join('')+'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:var(--text-muted)">Έτοιμες συμβουλές'+(foodDiaryLangFor(V.c)==='en'?' (γράφονται στα αγγλικά, όπως το λινκ)':'')+'</span>'
+      +'<div class="fd-react fd-tips" id="fd-tips">'+FD_TIPS.map(function(t,i){ return '<button type="button" data-i="'+i+'">'+t[0]+' '+esc(t[1])+'</button>'; }).join('')+'</div></div>'
     +'<textarea id="fd-cmt" placeholder="Σχόλιο για τον πελάτη (προαιρετικό)…" maxlength="500">'+esc(cm.t||'')+'</textarea>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
       +'<button class="btn primary" style="font-size:12.5px" id="fd-cmt-save">Αποθήκευση σχολίου</button>'
@@ -364,6 +378,15 @@ function fdRenderSel(){
     var b=e.target.closest('button'); if(!b) return;
     V.draftR=(V.draftR===b.dataset.r)?null:b.dataset.r;
     document.querySelectorAll('#fd-react button').forEach(function(x){ x.classList.toggle('on',x.dataset.r===V.draftR); });
+  };
+  document.getElementById('fd-tips').onclick=function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    var ta=document.getElementById('fd-cmt'), tip=FD_TIPS[+b.dataset.i]; if(!ta||!tip) return;
+    var phrase=tip[2][foodDiaryLangFor(V.c)]||tip[2].el;
+    if(ta.value.indexOf(phrase.trim())>=0 && phrase.slice(-1)!==' ') return;   // already there
+    var cur=ta.value.replace(/\s+$/,'');
+    ta.value=(cur?cur+(/[.!;?…:]$/.test(cur)?' ':'. '):'')+phrase;
+    ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
   };
   document.getElementById('fd-cmt-save').onclick=function(){
     var t=document.getElementById('fd-cmt').value.trim();

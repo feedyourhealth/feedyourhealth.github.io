@@ -100,6 +100,15 @@ try:
         pg.fill('#fd-notes', 'Πρωινό σταθερό')
         pg.wait_for_timeout(1400)
         check(J(f'window.__SERVER.diaries["{tok}"].notes')['0'] == 'Πρωινό σταθερό', 'private week note autosaved')
+        check(pg.locator('#fd-react button').count() == 5 and 'Έλεος' in pg.inner_text('#fd-react'), '5 reactions incl. «Έλεος»')
+        pg.click(f'#fd-tbl td.cell[data-c="{today}|lunch"]')
+        pg.click('#fd-tips button[data-i="0"]'); pg.click('#fd-tips button[data-i="1"]'); pg.click('#fd-tips button[data-i="0"]')
+        check(pg.input_value('#fd-cmt') == 'Πρόσθεσε λίγη πρωτεΐνη εδώ. Πρόσθεσε λαχανικά ή σαλάτα.', f'advice chips write the phrases once each ({pg.input_value("#fd-cmt")!r})')
+        pg.click('#fd-cmt-save'); pg.wait_for_timeout(400)
+        pg.click(f'#fd-tbl td.cell[data-c="{today}|snack1"]')
+        pg.click('#fd-react button[data-r="🤦"]'); pg.click('#fd-cmt-save'); pg.wait_for_timeout(400)
+        cm = J(f'window.__SERVER.diaries["{tok}"].comments')
+        check(cm.get(f'{today}|snack1', {}).get('r') == '🤦' and 'πρωτεΐνη' in cm.get(f'{today}|lunch', {}).get('t', ''), 'reaction-only «Έλεος» + advice comment saved')
         J('closeFoodDiaryViewer()'); pg.wait_for_timeout(300)
         card = pg.inner_text('#sec-food-diary')
         check('1/7' in card and 'νέα καταγραφή' not in card, 'card: 1/7 days, no «νέα» badge after viewing')
@@ -109,6 +118,7 @@ try:
         cp.close(); cp = client_page(server)
         b = cp.inner_text('#meals')
         check('Τέλειο πρωινό!' in b and 'Διαιτολόγος' in b, 'comment bubble under breakfast')
+        check('Έλεος!' in b and 'Πρόσθεσε λαχανικά ή σαλάτα.' in b, 'client sees «Έλεος!» and the advice text')
         check('Πρωινό σταθερό' not in cp.content(), 'private notes never reach the client page')
 
         print('5. Χωρίς σύνδεση → κρατιέται και στέλνεται μετά')
@@ -164,8 +174,14 @@ try:
         print('9. English link')
         server['diaries'][tok2]['lang'] = 'en'
         tok = tok2
+        J('getC().diaryLang="en"; openFoodDiaryViewer()'); pg.wait_for_selector('#fd-tbl td.cell', timeout=4000)
+        pg.click(f'#fd-tbl td.cell[data-c="{today}|breakfast"]'); pg.click('#fd-tips button[data-i="4"]')
+        check(pg.input_value('#fd-cmt') == 'Don’t forget your water.', 'advice chip writes English for an English link')
+        J('closeFoodDiaryViewer()')
+        server['diaries'][tok2]['comments'] = {f'{today}|breakfast': {'r': '🤦', 't': ''}, f'{today}|lunch': {'r': '💪', 't': ''}}
         cp3 = client_page(server)
         check('Breakfast' in cp3.inner_text('#meals') and 'Week 1 of 4' in cp3.inner_text('.wknav'), 'English labels')
+        check('Oh dear!' in cp3.inner_text('#meals') and 'Great choice!' in cp3.inner_text('#meals'), 'new reactions translated for English clients')
         br.close()
 finally:
     srv.terminate()
