@@ -97,7 +97,9 @@ function msgRowHtml(m,compact){
       tagHtml='<span style="background:#e8f5e9;color:#014545;border-radius:999px;padding:2px 8px;font-size:10px;margin-right:6px;white-space:nowrap">'+td.icon+' '+td.label+'</span>';
     }
     var weightHtml=m.weight?(' · <b>'+m.weight+' kg</b>'):'';
-    subline=(urgent?'⏳ ':'💬 ')+m.date+' · '+ageTxt;
+    // ❓ = ερώτηση από το «Ρώτησέ με → Γράψε μου εδώ» του link (plan.html sendAskInApp).
+    var isQuestion=m.noteRaw.indexOf('❓')>=0;
+    subline=(urgent?'⏳ ':(isQuestion?'❓ Ερώτηση · ':'💬 '))+m.date+' · '+ageTxt;
     // ✂️ Μεγάλες σημειώσεις (>140 χαρακτήρες) περικόπτονται με "περισσότερα ▾" — καθαρό DOM toggle
     // μέσα στο ίδιο onclick, όχι re-render όλης της λίστας (θα έχανε το scroll position).
     var noteTextHtml;

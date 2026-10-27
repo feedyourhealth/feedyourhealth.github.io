@@ -335,7 +335,9 @@
   .sheet .ssub{font-size:12px;color:var(--muted);margin-bottom:14px}
   .sheet a.opt{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink);padding:12px 12px;border:.5px solid var(--bord);border-radius:12px;margin-bottom:9px;font-size:14px;font-weight:600}
   .sheet a.opt i{font-size:20px;width:24px;text-align:center}
-  .sheet a.wa{color:#0e8a4f}.sheet a.tel{color:var(--teal)}.sheet a.mail{color:#b25b00}
+  .sheet a.wa{color:#0e8a4f}.sheet a.tel{color:var(--teal)}.sheet a.mail{color:#b25b00}.sheet a.ask{color:var(--teal-d)}
+  .sheet .ask-ok{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--teal-d);background:var(--tint);border-radius:12px;padding:11px 12px;margin-bottom:9px}
+  .sheet .ask-err{font-size:12px;color:#c0392b;margin:6px 0 0}
   .sheet .close{width:100%;background:var(--tint);border:none;border-radius:12px;padding:11px;font-size:13px;color:var(--teal-d);font-weight:600;cursor:pointer;margin-top:4px}
   @media (min-width:880px){
     .fab{bottom:24px}
@@ -589,6 +591,8 @@ const I18N={
     contactWa:'WhatsApp', contactTel:'Τηλεφώνησε', contactMail:'Email', contactClose:'Κλείσιμο',
     contactGreeting:'Γεια σας! Είμαι ο/η {name} και έχω μια ερώτηση για το πλάνο μου.', contactFallbackName:'πελάτης/πελάτισσα',
     contactQSubject:'Ερώτηση για το πλάνο μου',
+    contactWrite:'Γράψε μου εδώ', contactWritePh:'Γράψε την ερώτησή σου…', contactSend:'Αποστολή',
+    contactSent:'Στάλθηκε! Θα σου απαντήσω σύντομα.', contactSendFail:'Δεν στάλθηκε. Έλεγξε τη σύνδεσή σου και δοκίμασε ξανά.',
     obTitle1:'Το πλάνο σου', obSub1:'Εδώ βλέπεις τα γεύματά σου κάθε μέρα, με ποσότητες και θερμίδες.',
     obTitle2:'Τσέκαρε ό,τι τρως', obSub2:'Πάτα ένα γεύμα όταν το ολοκληρώσεις — έτσι χτίζεις το σερί σου.',
     obTitle3:'Δες την πρόοδό σου', obSub3:'Σκορ, σερί και βάρος σε μία ματιά — ενημέρωσέ τα όποτε θες.',
@@ -699,6 +703,8 @@ const I18N={
     contactWa:'WhatsApp', contactTel:'Call', contactMail:'Email', contactClose:'Close',
     contactGreeting:'Hi! I\'m {name} and I have a question about my plan.', contactFallbackName:'your client',
     contactQSubject:'Question about my plan',
+    contactWrite:'Write to me here', contactWritePh:'Type your question…', contactSend:'Send',
+    contactSent:'Sent! I\'ll get back to you soon.', contactSendFail:'Not sent. Check your connection and try again.',
     obTitle1:'Your plan', obSub1:'Here you see your meals every day, with quantities and calories.',
     obTitle2:'Check off what you eat', obSub2:'Tap a meal once you finish it — that builds your streak.',
     obTitle3:'See your progress', obSub3:'Score, streak and weight at a glance — update anytime.',
@@ -809,6 +815,8 @@ const I18N={
     contactWa:'WhatsApp', contactTel:'Позвонить', contactMail:'Email', contactClose:'Закрыть',
     contactGreeting:'Здравствуйте! Меня зовут {name}, у меня вопрос по поводу моего плана.', contactFallbackName:'ваш клиент',
     contactQSubject:'Вопрос по моему плану',
+    contactWrite:'Написать здесь', contactWritePh:'Напишите ваш вопрос…', contactSend:'Отправить',
+    contactSent:'Отправлено! Я скоро отвечу.', contactSendFail:'Не отправлено. Проверьте подключение и попробуйте снова.',
     obTitle1:'Ваш план', obSub1:'Здесь вы видите свои приёмы пищи на каждый день, с количеством и калориями.',
     obTitle2:'Отмечайте, что съели', obSub2:'Нажмите на приём пищи, когда закончите его — так вы наращиваете серию.',
     obTitle3:'Смотрите свой прогресс', obSub3:'Счёт, серия и вес — одним взглядом, обновляйте когда угодно.',
@@ -919,6 +927,8 @@ const I18N={
     contactWa:'WhatsApp', contactTel:'Ara', contactMail:'E-posta', contactClose:'Kapat',
     contactGreeting:'Merhaba! Ben {name}, planımla ilgili bir sorum var.', contactFallbackName:'danışanınız',
     contactQSubject:'Planımla ilgili soru',
+    contactWrite:'Buradan yaz', contactWritePh:'Sorunu yaz…', contactSend:'Gönder',
+    contactSent:'Gönderildi! En kısa sürede yanıtlayacağım.', contactSendFail:'Gönderilemedi. Bağlantını kontrol edip tekrar dene.',
     obTitle1:'Planın', obSub1:'Burada her gün için öğünlerini, miktarlarını ve kalorilerini görürsün.',
     obTitle2:'Yediklerini işaretle', obSub2:'Bir öğünü bitirdiğinde üzerine dokun — böylece serini oluşturursun.',
     obTitle3:'İlerlemeni gör', obSub3:'Puan, seri ve kilo tek bakışta — istediğin zaman güncelle.',
@@ -1516,7 +1526,7 @@ function editClientNote(){ editingNote=true; go('home'); }
 // ολόκληρη τη γραμμή σε κάθε κλήση (δεν κάνει partial update από μόνο του), οπότε ΕΔΩ κάνουμε το
 // merge: ό,τι ΔΕΝ περιλαμβάνεται στο patch διατηρείται από την προηγούμενη τοπική εγγραφή, αλλιώς
 // π.χ. ένα μήνυμα που στέλνεται το απόγευμα θα έσβηνε ένα βάρος που καταγράφηκε το πρωί.
-function saveClientLogPatch(patch){
+function saveClientLogPatch(patch,onDone){
   const existing=getClientLogToday()||{};
   const merged=Object.assign({},existing,patch,{synced:false});
   setClientLogToday(merged);
@@ -1529,7 +1539,7 @@ function saveClientLogPatch(patch){
     SNAP.progress.current=merged.w;
     if(!SNAP.progress.start)SNAP.progress.start=merged.w;
   }
-  syncClientLog(merged.w||null, merged.n||'', merged.tag||null);
+  syncClientLog(merged.w||null, merged.n||'', merged.tag||null, onDone);
   return merged;
 }
 // Καταγραφή βάρους από το Πρόοδος tab (write-only, χωρίς login).
@@ -1562,7 +1572,7 @@ function submitClientNote(){
 // αντί να νομίζει ότι η διαιτολόγος του έλαβε κάτι που ποτέ δεν έφτασε.
 // Το tag κωδικοποιείται ως πρόθεμα "[tag:id] " μέσα στο ίδιο πεδίο σημείωσης (p_note) — έτσι δεν
 // χρειάζεται νέα στήλη/migration στο client_logs table, μόνο parsing στην πλευρά του διαιτολόγου.
-function syncClientLog(w,n,tag){
+function syncClientLog(w,n,tag,onDone){
   const tok=token(), todK=dKey(new Date());
   if(!sb||!tok)return;
   const noteToSend=((tag?'[tag:'+tag+'] ':'')+(n||'')).trim()||null;
@@ -1572,9 +1582,11 @@ function syncClientLog(w,n,tag){
     const ok=!(res&&res.error);
     const e=getClientLogToday(); if(e){e.synced=ok; setClientLogToday(e);}
     if(curTab()==='prog'||curTab()==='home')go(curTab());
+    if(onDone)onDone(ok);
   }).catch(()=>{
     const e=getClientLogToday(); if(e){e.synced=false; setClientLogToday(e);}
     if(curTab()==='prog'||curTab()==='home')go(curTab());
+    if(onDone)onDone(false);
   });
 }
 // Καλείται από το κουμπί "Δοκίμασε ξανά" στην προειδοποίηση μη-συγχρονισμένης καταγραφής.
@@ -1826,9 +1838,9 @@ function render(){
     +tabBtn('prog','ti-chart-line',T('nav_prog'));
   app.appendChild(nav);
 
-  // Το FAB εμφανίζεται μόνο αν υπάρχει ΠΡΑΓΜΑΤΙΚΟΣ τρόπος επικοινωνίας (WhatsApp/τηλέφωνο/email).
+  // Το FAB εμφανίζεται μόνο αν υπάρχει ΠΡΑΓΜΑΤΙΚΟΣ τρόπος επικοινωνίας (WhatsApp/τηλέφωνο/email ή «Γράψε μου εδώ»).
   // Το γενικό site link δεν εμφανίζεται πλέον — μπέρδευε τον πελάτη χωρίς λόγο.
-  if(hasDirectContact()){
+  if(hasDirectContact()||canAskInApp()){
     const fab=el('button','fab');
     fab.innerHTML='<i class="ti ti-message-circle"></i>'+T('fabAsk');
     fab.onclick=openContact;
@@ -1904,12 +1916,42 @@ function openContact(){
   const msg=encodeURIComponent(T('contactGreeting',{name:fname||T('contactFallbackName')}));
   const bg=el('div','sheet-bg'); bg.onclick=e=>{if(e.target===bg)bg.remove()};
   let opts='';
+  if(canAskInApp())opts+='<a class="opt ask" href="#" onclick="event.preventDefault();openAskInApp(this)"><i class="ti ti-pencil"></i>'+T('contactWrite')+'</a>';
   if(c.wa)opts+='<a class="opt wa" href="https://wa.me/'+esc(String(c.wa).replace(/[^0-9]/g,''))+'?text='+msg+'" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i>'+T('contactWa')+'</a>';
   if(c.tel)opts+='<a class="opt tel" href="tel:'+esc(c.tel)+'"><i class="ti ti-phone"></i>'+T('contactTel')+'</a>';
   if(c.email)opts+='<a class="opt mail" href="mailto:'+esc(c.email)+'?subject='+encodeURIComponent(T('contactQSubject'))+'"><i class="ti ti-mail"></i>'+T('contactMail')+'</a>';
   bg.innerHTML='<div class="sheet"><h3>'+T('contactHdr')+'</h3><div class="ssub">'+T('contactSub')+'</div>'
     +opts+'<button class="close" onclick="this.closest(\'.sheet-bg\').remove()">'+T('contactClose')+'</button></div>';
   document.body.appendChild(bg);
+}
+// «Γράψε μου εδώ»: η ερώτηση γράφεται στη σημερινή client_logs εγγραφή (ίδιο κανάλι με το composer της
+// Αρχικής), οπότε φτάνει στην καρτέλα «💬 Μηνύματα» του διαιτολόγου χωρίς νέο table/RPC. Το πρόθεμα «❓ »
+// την ξεχωρίζει εκεί. Αν υπάρχει ήδη σημερινό μήνυμα, η ερώτηση προστίθεται από κάτω — το RPC
+// αντικαθιστά όλη τη γραμμή, άρα αλλιώς θα έσβηνε ό,τι είχε στείλει νωρίτερα.
+function canAskInApp(){return !!(sb&&token())}
+function openAskInApp(a){
+  const sheet=a.closest('.sheet'); if(!sheet)return;
+  sheet.querySelectorAll('a.opt').forEach(x=>x.remove());
+  const box=el('div','');
+  box.innerHTML='<textarea class="log-inp" id="ask-text" placeholder="'+esc(T('contactWritePh'))+'"></textarea>'
+    +'<button class="swap-btn" style="justify-content:center;margin:8px 0 9px;width:100%" onclick="sendAskInApp(this)"><i class="ti ti-send"></i>'+T('contactSend')+'</button>';
+  sheet.insertBefore(box,sheet.querySelector('.close'));
+  const ta=document.getElementById('ask-text'); if(ta)ta.focus();
+}
+function sendAskInApp(btn){
+  const ta=document.getElementById('ask-text');
+  const q=ta&&ta.value?ta.value.trim():'';
+  if(!q)return;
+  const prev=(getClientLogToday()||{}).n||'';
+  // Σε «ξαναδοκίμασε» μετά από αποτυχία, η ερώτηση είναι ήδη στο τοπικό note — να μη διπλασιαστεί.
+  const n=prev.endsWith('❓ '+q)?prev:(prev?prev+'\n':'')+'❓ '+q;
+  btn.disabled=true;
+  const box=btn.parentElement;
+  saveClientLogPatch({n:n},ok=>{
+    if(!box.isConnected)return;
+    if(ok)box.innerHTML='<div class="ask-ok"><i class="ti ti-circle-check"></i>'+T('contactSent')+'</div>';
+    else{btn.disabled=false; let er=box.querySelector('.ask-err'); if(!er){er=el('div','ask-err');box.appendChild(er);} er.textContent=T('contactSendFail');}
+  });
 }
 // Ελαφρύ tour 3 οθονών, δείχνεται ΜΙΑ φορά συνολικά (setOnboardingSeen κλειδώνει αμέσως στο κλείσιμο/παράλειψη).
 // bg προστίθεται στο document ΠΡΙΝ το πρώτο paint(), αλλιώς το $('#ob-next') (global querySelector) δεν θα έβρισκε
