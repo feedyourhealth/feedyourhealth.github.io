@@ -33,6 +33,45 @@ function cm(n,g){
   var ns=(typeof NA_SF!=='undefined'&&NA_SF[key])||[0,0];
   return{k:+(g/100*f.k).toFixed(1),p:+(g/100*f.p).toFixed(1),f:+(g/100*f.f).toFixed(1),c:+(g/100*f.c).toFixed(1),fi:+(g/100*(f.fi||0)).toFixed(1),na:Math.round(g/100*ns[0]),sf:+(g/100*ns[1]).toFixed(1)};}
 
+// ── Μετονομασίες τροφίμων: εφάπαξ ενημέρωση αποθηκευμένων δεδομένων (2026-10-29) ──
+// Το FOOD_ALIASES κρατά σωστά τα macros για παλιά ονόματα, αλλά FOOD_UNITS/PORTIONS κ.λπ. διαβάζονται με
+// το ακριβές όνομα — γι' αυτό οι πελάτες (πλάνα, ιστορικό, αποκλεισμοί…), τα πρότυπα και οι αποθηκευμένοι
+// συνδυασμοί γράφονται μία φορά με το νέο όνομα. Αλλάζει ΜΟΝΟ τιμή/κλειδί ακριβώς ίσο με το παλιό όνομα.
+// Χωρίς σημαία έκδοσης: ο έλεγχος τρέχει σε κάθε φόρτωση και αποθηκεύει ΜΟΝΟ αν άλλαξε κάτι — έτσι ένα
+// load χωρίς παλιά ονόματα δεν ανεβάζει τίποτα στο cloud (tests/sync_test.py).
+var FOOD_RENAMES={'Πατάτες':'Πατάτες (βρ.)'};
+function renameFoodsDeep(o){
+  var n=0;
+  if(Array.isArray(o)){
+    for(var i=0;i<o.length;i++){
+      if(typeof o[i]==='string'&&FOOD_RENAMES[o[i]]){o[i]=FOOD_RENAMES[o[i]];n++;}
+      else if(o[i]&&typeof o[i]==='object')n+=renameFoodsDeep(o[i]);
+    }
+  } else if(o&&typeof o==='object'){
+    Object.keys(o).forEach(function(k){
+      var v=o[k];
+      if(typeof v==='string'&&FOOD_RENAMES[v]){o[k]=FOOD_RENAMES[v];n++;}
+      else if(v&&typeof v==='object')n+=renameFoodsDeep(v);
+      if(FOOD_RENAMES[k]&&!(FOOD_RENAMES[k] in o)){o[FOOD_RENAMES[k]]=o[k];delete o[k];n++;}
+    });
+  }
+  return n;
+}
+// Τρέχει μετά τη φόρτωση από το cloud (Cloud._afterLoadMigrations, js/app-part7.js).
+function runFoodRenameMigration(){
+  var changed=false;
+  if(typeof clients!=='undefined'&&clients&&renameFoodsDeep(clients))changed=true;
+  if(typeof customTemplates!=='undefined'&&customTemplates&&renameFoodsDeep(customTemplates))changed=true;
+  if(typeof safeStorageGet==='function'&&typeof safeStorageSet==='function'){
+    var combos=safeStorageGet('savedCombos',[]);
+    if(combos&&renameFoodsDeep(combos)){
+      safeStorageSet('savedCombos',combos);
+      if(typeof _savedCombosCache!=='undefined')_savedCombosCache=combos;
+    }
+  }
+  if(changed&&typeof save==='function')save();
+}
+
 /* ✅ Get food color HEX value based on category - RETURNS HEX COLOR */
 function getFoodColorHex(foodName){
   var fk=resolveFood(foodName);

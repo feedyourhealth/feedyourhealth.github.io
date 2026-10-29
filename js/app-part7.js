@@ -100,6 +100,8 @@
       if(!this._loaded || this._conflictPending) return;
       try{ if(typeof runAllergenListMigration==='function') runAllergenListMigration(); }
       catch(e){ console.error('[MIGRATION] allergen lists', e); }
+      try{ if(typeof runFoodRenameMigration==='function') runFoodRenameMigration(); }
+      catch(e){ console.error('[MIGRATION] food renames', e); }
     },
 
     // Το cloud blob ήρθε αφού ο χρήστης έβλεπε ήδη το cache — συγχρόνισε την οθόνη.

@@ -21,7 +21,11 @@ def day():
 
 mi = {'id': 'mi', 'name': 'Μιχάλης Δοκιμή', 'sex': 'M', 'age': 42, 'weight': 82, 'height': 178, 'activity': 'mod',
       'goal': 'maintain', 'allergenListsVer': 2, 'foodExclude': [], 'weekPlan': {str(d): day() for d in range(7)}}
-S = {'rows': {U1: {'data': {'clients': [mi], 'customTemplates': []}, 'version': 1}}}
+# Πελάτης/πρότυπο με το ΠΑΛΙΟ όνομα «Πατάτες» → η εφάπαξ μετονομασία (runFoodRenameMigration) το κάνει «Πατάτες (βρ.)»
+po = {'id': 'po', 'name': 'Παλιό Πλάνο', 'sex': 'F', 'age': 30, 'weight': 60, 'height': 165, 'activity': 'light', 'goal': 'maintain',
+      'allergenListsVer': 2, 'foodExclude': ['Πατάτες'], 'weekPlan': {'0': [{'name': 'Μεσημεριανό', 'foods': [{'n': 'Πατάτες', 'g': 150}]}]}}
+tpl = {'id': 'tp1', 'name': 'Πρότυπο', 'meals': [{'name': 'Βραδινό', 'foods': [{'n': 'Πατάτες', 'g': 200}]}]}
+S = {'rows': {U1: {'data': {'clients': [mi, po], 'customTemplates': [tpl]}, 'version': 1}}}
 
 # Ημερομηνία αγώνα = η Κυριακή σε 3-9 μέρες → καρβοφόρτωση Πεμ/Παρ/Σαβ (οι μέρες ΠΡΙΝ τον αγώνα)
 today = datetime.date.today()
@@ -47,6 +51,13 @@ try:
         pg.wait_for_timeout(800)
         J = lambda js: pg.evaluate(js)
         plan = lambda: J('JSON.stringify(clients.find(x=>x.id==="mi").weekPlan)')
+
+        print('0. Μετονομασία «Πατάτες» → «Πατάτες (βρ.)» στα αποθηκευμένα δεδομένα')
+        p0 = J('JSON.stringify(clients.find(x=>x.id==="po"))')
+        check('"Πατάτες"' not in p0 and p0.count('Πατάτες (βρ.)') == 2, f'client plan + exclusions renamed ({p0[:160]})')
+        check(J('JSON.stringify(customTemplates)').count('Πατάτες (βρ.)') == 1, 'custom template renamed')
+        check(J('!!FOODS["Πατάτες (βρ.)"] && !FOODS["Πατάτες"] && FOOD_UNITS["Πατάτες (βρ.)"].u==="τεμ." && cm("Πατάτες",100).k===87'),
+              'new key everywhere, old name still resolves via alias')
 
         print('1. Άνοιγμα πελάτη = μόνο baseline, καμία αλλαγή')
         J('selectClient("mi"); renderMain(); swTab(4);'); pg.wait_for_timeout(300)

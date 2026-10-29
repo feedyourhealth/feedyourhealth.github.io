@@ -191,11 +191,11 @@ function addPotatoToFishMeals(days){
       // υδατ./100g και ήδη καλύπτουν τον ρόλο του αμύλου σε ένα πιάτο φακές+σαρδέλες).
       // Η Γλυκοπατάτα ελέγχεται ρητά με το όνομά της γιατί είναι καταχωρημένη cat:'Λαχανικά', όχι 'Δημητριακά'.
       var hasCarb=meal.foods.some(function(f){
-        if(f.n==='Πατάτες'||f.n==='Γλυκοπατάτα')return true;
+        if(f.n==='Πατάτες (βρ.)'||f.n==='Γλυκοπατάτα')return true;
         var cat=FOODS[f.n]&&FOODS[f.n].cat;
         return cat==='Δημητριακά'||cat==='Όσπρια';
       });
-      if(!hasCarb)meal.foods.push({n:'Πατάτες',g:200});
+      if(!hasCarb)meal.foods.push({n:'Πατάτες (βρ.)',g:200});
     });
   });
   return result;
