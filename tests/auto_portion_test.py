@@ -78,6 +78,15 @@ try:
         check(changed and set(changed) <= {3, 4, 5}, f'only carb-load days changed in the plan ({changed})')
         toast = J('(document.getElementById("portion-adjust-toast")||{}).innerText||""')
         check('Οι στόχοι άλλαξαν' in toast and 'Αναίρεση' in toast, f'toast with Αναίρεση ({toast[:90]!r})')
+        low = J('getLowFiberDayIndexes(clients.find(x=>x.id==="mi"))')
+        check(sorted(low) == [3, 4, 5, 6], f'low-fiber days = load days + race day ({low})')
+        check('(λιγότερες ίνες)' in toast or 'Ρύζι άσπρο' in toast or 'Μακαρόνια' in toast or 'Ψωμί λευκό' in toast,
+              f'low-fiber suggestions offered ({toast!r})')
+        check('+ Ρύζι καστανό' not in toast and '+ Κινόα' not in toast and '+ Ψωμί ολικής' not in toast and '+ Βρώμη' not in toast, 'no whole-grain add suggestions on load days')
+        J('renderWeekTable()'); pg.wait_for_timeout(150)
+        fiv = J('[...document.querySelectorAll(".totals-row td")].slice(1).map(td=>{var r=td.querySelectorAll(".macro-bar-row");return r.length?r[r.length-1].querySelector(".mbr-val").textContent:""})')
+        check(all('/≤15g' in fiv[d] for d in (3, 4, 5, 6)) and not any('≤' in fiv[d] for d in (0, 1, 2)), f'fiber row shows ≤15g only on Thu–Sun ({fiv})')
+        check('χαμηλές ίνες, έως 15g/ημ.' in J('document.body.textContent'), 'weekly fiber banner explains the low-fiber days')
         check(carbs(5) > c_old + 50, f'Saturday carbs went up toward 820g ({c_old:.0f} → {carbs(5):.0f})')
 
         print('3. Αναίρεση γυρίζει το πλάνο και δεν ξανατρέχει')

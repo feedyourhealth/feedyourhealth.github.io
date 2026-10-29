@@ -41,6 +41,18 @@ function getEventDayIndex(c){
   var dow=new Date(c.eventDate+'T00:00:00').getDay(); // 0=Sun..6=Sat
   return isNaN(dow)?null:(dow+6)%7;
 }
+// 🌾 Ημέρες χαμηλών ινών = ημέρες καρβοφόρτωσης + ημέρα αγώνα (2026-10-29). Για να χωρέσουν ~10 g/kg
+// υδατάνθρακες και να μειωθεί το ρίσκο γαστρεντερικών στον αγώνα, προτιμώνται «λευκές» πηγές
+// (Burke 2011, Thomas/ACSM 2016, de Oliveira 2014, Jeukendrup 2017). Δεν υπάρχει επίσημος αριθμός·
+// τα ≤15 g/ημ. είναι η συνήθης πρακτική τιμή. Η μπάρα ινών και οι προτάσεις υδατανθράκων το ακολουθούν.
+var LOW_FIBER_MAX_G=15;
+function getLowFiberDayIndexes(c){
+  var idxs=getCarbLoadDayIndexes(c);
+  if(!idxs.length) return [];
+  var ev=getEventDayIndex(c);
+  if(ev!=null&&idxs.indexOf(ev)<0) idxs.push(ev);
+  return idxs;
+}
 
 function makeDayTgtDefaults(c,t){
   var boost=(c.carbBoost!=null?c.carbBoost:20)/100;

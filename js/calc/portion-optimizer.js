@@ -183,6 +183,16 @@ var PO_STARCH_BY_SLOT={
   lunch:[['Ρύζι καστανό (βρ.)',150],['Πατάτες',150],['Κινόα (βρ.)',150],['Κριθαράκι (βρ.)',120],['Γλυκοπατάτα',150]],
   dinner:[['Ρύζι καστανό (βρ.)',150],['Πατάτες',150],['Κινόα (βρ.)',150],['Κριθαράκι (βρ.)',120],['Γλυκοπατάτα',150]]
 };
+// 🌾 Ημέρες καρβοφόρτωσης/αγώνα (getLowFiberDayIndexes): «λευκές» πηγές χαμηλών ινών αντί για ολικής.
+var PO_STARCH_LOW_FIBER={
+  breakfast:[['Ψωμί λευκό',50],['Μέλι άβραστο',20],['Φρυγανιές',30]],
+  lunch:[['Ρύζι άσπρο (βρ.)',200],['Μακαρόνια (βρ.)',200],['Κριθαράκι (βρ.)',150],['Πατάτες',200]],
+  dinner:[['Ρύζι άσπρο (βρ.)',200],['Μακαρόνια (βρ.)',200],['Κριθαράκι (βρ.)',150],['Πατάτες',200]]
+};
+// Ολικής → «λευκό» ισοδύναμο (ίδιοι υδατάνθρακες) για τις ημέρες χαμηλών ινών.
+var PO_LOW_FIBER_SWAP={'Ψωμί ολικής άλεσης':'Ψωμί λευκό','Ψωμί ολικής άλεσης (φρυγανισμένο)':'Φρυγανιές',
+  'Ψωμί σίκαλης':'Ψωμί λευκό','Ψωμί προζύμης':'Ψωμί λευκό','Ρύζι καστανό (βρ.)':'Ρύζι άσπρο (βρ.)',
+  'Ρύζι μαύρο (βρ.)':'Ρύζι άσπρο (βρ.)','Κινόα (βρ.)':'Ρύζι άσπρο (βρ.)','Βρώμη (ωμή)':'Φρυγανιές'};
 // Άπαχες εναλλακτικές για κρέας όταν δεν βρεθεί ίδιο είδος (π.χ. «Κοτόπουλο …»). Ψάρια/λάδια/ξηροί
 // καρποί ΔΕΝ προτείνονται ποτέ για αντικατάσταση — είναι «καλό» λίπος (ω-3, μεσογειακό πρότυπο).
 var PO_LEAN_MEATS=['Κοτόπουλο στήθος (ψητό)','Γαλοπούλα στήθος','Μπριζόλα άπαχη','Βοδινό άπαχο (ψητό)'];
@@ -206,6 +216,8 @@ function _poAllowedFn(c){
 
 function _poDiagnose(c, d, meals, T, allowed){
   var msgs=[],sugg=[];
+  var lowFi=(typeof getLowFiberDayIndexes==='function')&&getLowFiberDayIndexes(c).indexOf(d)!==-1;
+  var starchBySlot=lowFi?PO_STARCH_LOW_FIBER:PO_STARCH_BY_SLOT;
   var tot=_poTot(meals),pct={};
   ['p','f','c'].forEach(function(x){pct[x]=T[x]>0?Math.round(tot[x]/T[x]*100):100;});
   var off=function(x){return T[x]>0&&Math.abs(pct[x]-100)>PO_OK_BAND;};
@@ -236,13 +248,39 @@ function _poDiagnose(c, d, meals, T, allowed){
   if(off('p'))msgs.push('πρωτεΐνη '+pct.p+'%');
 
   // Πρόταση 1: πρόσθεσε υδατάνθρακα στο πρώτο κύριο γεύμα που δεν έχει (μεσημεριανό → βραδινό → πρωινό).
-  if(carbShort&&noStarch.length){
-    var order={lunch:0,dinner:1,breakfast:2};
-    var target=noStarch.slice().sort(function(a,b){return order[a.slot]-order[b.slot];})[0];
-    var inMeal={};(meals[target.mi].foods||[]).forEach(function(f){inMeal[f.n]=1;});
-    var pick=PO_STARCH_BY_SLOT[target.slot].filter(function(x){return !inMeal[x[0]]&&allowed(x[0]);})[0];
+  // Καρβοφόρτωση/αγώνας: ακόμα κι αν όλα τα κύρια γεύματα έχουν ήδη άμυλο, πρόσθεσε δεύτερη «λευκή» πηγή
+  // — το ±50% ανά τρόφιμο δεν φτάνει μόνο του για ~10 g/kg.
+  var carbTargets=noStarch;
+  if(carbShort&&!noStarch.length&&lowFi){
+    carbTargets=[];
+    meals.forEach(function(m,mi){
+      var slot=(typeof classifyMealSlot==='function')?classifyMealSlot(m.name):'other';
+      if(starchBySlot[slot])carbTargets.push({mi:mi,slot:slot,name:m.name});
+    });
+  }
+  if(carbShort&&carbTargets.length){
+    var order={lunch:0,dinner:1,breakfast:2},pick=null,target=null;
+    carbTargets.slice().sort(function(a,b){return order[a.slot]-order[b.slot];}).some(function(tg){
+      var inMeal={};(meals[tg.mi].foods||[]).forEach(function(f){inMeal[f.n]=1;});
+      pick=starchBySlot[tg.slot].filter(function(x){return !inMeal[x[0]]&&allowed(x[0]);})[0];
+      target=tg;return !!pick;
+    });
     if(pick)sugg.push({d:d,type:'add',mi:target.mi,n:pick[0],g:pick[1],
       label:DAYS[d]+': + '+pick[0]+' '+pick[1]+'g στο '+target.name});
+  }
+  // Πρόταση 1β: ημέρα χαμηλών ινών με ίνες > LOW_FIBER_MAX_G → η πιο «ινώδης» πηγή ολικής γίνεται λευκή.
+  if(lowFi&&typeof LOW_FIBER_MAX_G!=='undefined'){
+    var dayFi=0,worst=null;
+    meals.forEach(function(m,mi){(m.foods||[]).forEach(function(f,fi){
+      var fiG=cm(f.n,f.g).fi||0;dayFi+=fiG;
+      var to=PO_LOW_FIBER_SWAP[f.n];
+      if(to&&FOODS[to]&&allowed(to)&&(!worst||fiG>worst.fiG))worst={mi:mi,fi:fi,n:f.n,g:f.g,to:to,fiG:fiG};
+    });});
+    if(dayFi>LOW_FIBER_MAX_G&&worst){
+      var sg=Math.max(5,Math.round(FOODS[resolveFood(worst.n)].c*worst.g/FOODS[worst.to].c/5)*5);
+      sugg.push({d:d,type:'swap',mi:worst.mi,fi:worst.fi,from:worst.n,to:worst.to,g:sg,
+        label:DAYS[d]+': '+worst.n+' → '+worst.to+' '+sg+'g (λιγότερες ίνες)'});
+    }
   }
   // Πρόταση 2: λιπαρή πρωτεΐνη (κρέας/γαλακτοκομικά, ΟΧΙ ψάρια) → πιο άπαχη, ίδια πρωτεΐνη.
   if(fatHigh){

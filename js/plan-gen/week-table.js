@@ -350,6 +350,7 @@ function renderWeekTable(){
   var tdeeR=calcTDEE(c);
   var effTgtArr=getDayTgtEff(c,tdeeR);
   var fiberDayTgt=getFiberTarget(c.age,c.sex);
+  var lowFiDays=(typeof getLowFiberDayIndexes==='function')?getLowFiberDayIndexes(c):[];
   html+='<tr class="totals-row"><td class="meal-label">Σύνολο</td>';
   for(var d=0;d<7;d++){
     var tK=0,tP=0,tF=0,tC=0,tFi=0;
@@ -367,6 +368,12 @@ function renderWeekTable(){
     function mVal(actual,target){return actual&&target?(actual/target<0.8?'#e67e22':actual/target>1.15?'#c0392b':'var(--text-sub)'):'var(--text-sub)';}
     var fiPct=fiberDayTgt?tFi/fiberDayTgt:1;
     var fiValColor=fiPct<0.65?'#B71C1C':fiPct<0.85?'#e67e22':'var(--mac-fi)';
+    // 🌾 Καρβοφόρτωση/αγώνας: ο στόχος είναι ΑΝΩΤΑΤΟ όριο (≤LOW_FIBER_MAX_G), όχι ελάχιστο
+    var lowFi=lowFiDays.indexOf(d)!==-1;
+    if(lowFi)fiValColor=tFi<=LOW_FIBER_MAX_G?'var(--mac-fi)':tFi<=LOW_FIBER_MAX_G+10?'#e67e22':'#B71C1C';
+    var fiBarHtml=lowFi
+      ?'<div style="width:'+Math.min(100,Math.round(tFi/LOW_FIBER_MAX_G*100))+'%;background:'+(tFi<=LOW_FIBER_MAX_G?'#795548':fiValColor)+'" class="macro-bar-fill"></div>'
+      :mBar(tFi,fiberDayTgt,'#795548');
     html+='<td>'
       +'<div class="tot-kcal '+kCls+'">'+Math.round(tK)+' / '+eff.k+' kcal '+kPct+'%'+trainBadge+'</div>'
       +'<div class="macro-bar-row">'
@@ -384,10 +391,10 @@ function renderWeekTable(){
         +'<div class="macro-bar">'+mBar(tC,eff.c,'#2e7d32')+'</div>'
         +'<span class="mbr-val" style="color:'+mVal(tC,eff.c)+'">'+Math.round(tC)+'/'+Math.round(eff.c)+'g</span>'
       +'</div>'
-      +'<div class="macro-bar-row" title="Φυτικές Ίνες — στόχος '+fiberDayTgt+'g/ημ. (DRI)">'
+      +'<div class="macro-bar-row" title="'+(lowFi?'Φυτικές Ίνες — καρβοφόρτωση/αγώνας: χαμηλές, έως '+LOW_FIBER_MAX_G+'g (λευκό ρύζι/ζυμαρικά/ψωμί, πατάτα χωρίς φλούδα, μέλι, χυμοί)':'Φυτικές Ίνες — στόχος '+fiberDayTgt+'g/ημ. (DRI)')+'">'
         +'<span class="mbr-label" style="color:var(--mac-fi)">Ί</span>'
-        +'<div class="macro-bar">'+mBar(tFi,fiberDayTgt,'#795548')+'</div>'
-        +'<span class="mbr-val" style="color:'+fiValColor+'">'+tFi.toFixed(1)+'/'+fiberDayTgt+'g</span>'
+        +'<div class="macro-bar">'+fiBarHtml+'</div>'
+        +'<span class="mbr-val" style="color:'+fiValColor+'">'+tFi.toFixed(1)+'/'+(lowFi?'≤'+LOW_FIBER_MAX_G:fiberDayTgt)+'g</span>'
       +'</div>'
       +'</td>';
   }
@@ -415,12 +422,14 @@ function renderWeekTable(){
   var protoFi=(typeof getProtocolFiberTarget==='function')?getProtocolFiberTarget(c):null;
   var fiDayTgt=Math.max(getFiberTarget(c.age,c.sex), protoFi?protoFi.g:0);
   var fiByProto=!!(protoFi && protoFi.g>=getFiberTarget(c.age,c.sex));
-  var wkFiTot=0,wkFiTgt=fiDayTgt*7;
+  // 🌾 Ημέρες καρβοφόρτωσης/αγώνα: εκτός εβδομαδιαίου στόχου (εκεί θέλουμε ΧΑΜΗΛΕΣ ίνες, ≤LOW_FIBER_MAX_G)
+  var wkLowFi=(typeof getLowFiberDayIndexes==='function')?getLowFiberDayIndexes(c):[];
+  var wkFiTot=0,wkFiTgt=fiDayTgt*(7-wkLowFi.length);
   var wkFiByDay=[];
   for(var wfd=0;wfd<7;wfd++){
     var dFi=0;
     (c.weekPlan[wfd]||[]).forEach(function(m){(m.foods||[]).forEach(function(ff){dFi+=cm(ff.n,ff.g).fi;});});
-    wkFiByDay.push(dFi);wkFiTot+=dFi;
+    wkFiByDay.push(dFi);if(wkLowFi.indexOf(wfd)===-1)wkFiTot+=dFi;
   }
   var wkFiPct=wkFiTgt?Math.round(wkFiTot/wkFiTgt*100):100;
   var wkFiColor=wkFiPct>=90?'#4CAF50':wkFiPct>=65?'#FF9800':'#F44336';
@@ -429,7 +438,9 @@ function renderWeekTable(){
   DAYS.forEach(function(dn,di){
     var dp=wkFiByDay[di],dPct=fiDayTgt?Math.round(dp/fiDayTgt*100):100;
     var dc=dPct>=90?'#4CAF50':dPct>=65?'#FF9800':'#F44336';
-    dotHtml+='<span title="'+dn+': '+dp.toFixed(1)+'g ('+dPct+'%)" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:default">'
+    var dLow=wkLowFi.indexOf(di)!==-1;
+    if(dLow)dc=dp<=LOW_FIBER_MAX_G?'#4CAF50':dp<=LOW_FIBER_MAX_G+10?'#FF9800':'#F44336';
+    dotHtml+='<span title="'+dn+': '+dp.toFixed(1)+'g '+(dLow?'(καρβοφόρτωση/αγώνας: στόχος ≤'+LOW_FIBER_MAX_G+'g)':'('+dPct+'%)')+'" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:default">'
       +'<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+dc+'"></span>'
       +'<span style="font-size:8px;color:var(--text-muted)">'+dn.charAt(0)+'</span>'
     +'</span>';
@@ -446,6 +457,8 @@ function renderWeekTable(){
     +(fiByProto&&wkFiPct<90
       ?'<span style="font-size:10px;color:var(--bad-fg);font-weight:600;flex-basis:100%">⚠ Κάτω από τον στόχο πρωτοκόλλου ('+fiDayTgt+'g/ημ., μ.ό. τώρα '+Math.round(wkFiTot/7)+'g) — πρόσθεσε βρώμη, όσπρια, λαχανικά, φρούτα με φλούδα ή ψωμί/ζυμαρικά ολικής.</span>'
       :(wkFiPct<65?'<span style="font-size:10px;color:var(--bad-fg);font-weight:600">⚠ Χαμηλή πρόσληψη ινών — στόχος '+fiDayTgt+'g/ημ. (DRI AI)</span>':''))
+    +(wkLowFi.length?'<span style="font-size:10px;color:var(--text-sub);flex-basis:100%">🏁 '+wkLowFi.slice().sort().map(function(i){return DAYS[i];}).join(', ')
+      +': καρβοφόρτωση/αγώνας → <b>χαμηλές ίνες, έως '+LOW_FIBER_MAX_G+'g/ημ.</b> (λευκό ρύζι/ζυμαρικά/ψωμί, πατάτα χωρίς φλούδα, μέλι, χυμοί) — δεν μετράνε στον εβδομαδιαίο στόχο.</span>':'')
   +'</div>';
   // 🔄 Αντικαταστάσεις πρωτοκόλλου (Διαβήτης/Χοληστερόλη) που υπάρχουν τώρα στο πλάνο — 2026-10-15.
   var protoSwaps=(typeof findProtocolSwapsInPlan==='function')?findProtocolSwapsInPlan(c):[];
