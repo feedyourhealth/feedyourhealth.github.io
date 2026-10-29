@@ -23,7 +23,7 @@ mi = {'id': 'mi', 'name': 'Μιχάλης Δοκιμή', 'sex': 'M', 'age': 42, 
       'goal': 'maintain', 'allergenListsVer': 2, 'foodExclude': [], 'weekPlan': {str(d): day() for d in range(7)}}
 S = {'rows': {U1: {'data': {'clients': [mi], 'customTemplates': []}, 'version': 1}}}
 
-# Ημερομηνία αγώνα = η Κυριακή σε 2-8 μέρες → καρβοφόρτωση Παρ/Σαβ/Κυρ μέσα στην τρέχουσα εβδομάδα πλάνου
+# Ημερομηνία αγώνα = η Κυριακή σε 3-9 μέρες → καρβοφόρτωση Πεμ/Παρ/Σαβ (οι μέρες ΠΡΙΝ τον αγώνα)
 today = datetime.date.today()
 sunday = today + datetime.timedelta(days=(6 - today.weekday()) or 7)
 if (sunday - today).days < 3: sunday += datetime.timedelta(days=7)
@@ -56,19 +56,29 @@ try:
         check(not J('!!document.getElementById("portion-adjust-toast")'), 'no toast on open')
 
         def carbs(d): return J(f'clients.find(x=>x.id==="mi").weekPlan[{d}].reduce((s,m)=>s+m.foods.reduce((a,f)=>a+cm(f.n,f.g).c,0),0)')
-        c_old = carbs(6)
+        c_old = carbs(5)
 
-        print('2. Ημερομηνία αγώνα → καρβοφόρτωση → αυτόματη προσαρμογή μόνο Παρ/Σαβ/Κυρ')
+        tg = lambda: J('getDayTgtEff(clients.find(x=>x.id==="mi"),calcTDEE(clients.find(x=>x.id==="mi")))')
+        t0 = tg()
+
+        print('2. Ημερομηνία αγώνα → καρβοφόρτωση Πεμ/Παρ/Σαβ → αυτόματη προσαρμογή μόνο αυτών')
         J(f'setEventDate("{sunday.isoformat()}")'); pg.wait_for_timeout(2200)
         loads = J('getCarbLoadDayIndexes(clients.find(x=>x.id==="mi"))')
-        check(sorted(loads) == [4, 5, 6], f'carb-load days are Fri/Sat/Sun ({loads})')
+        check(sorted(loads) == [3, 4, 5], f'carb-load days are Thu/Fri/Sat, race day excluded ({loads})')
+        t1 = tg()
+        check(all(t1[d]['c'] == 820 for d in (3, 4, 5)), f'loading days carbs = 10 g/kg = 820 ({[t1[d]["c"] for d in (3,4,5)]})')
+        check(all(t1[d]['k'] > t0[d]['k'] + 1000 for d in (3, 4, 5)), f'loading days kcal go up ({[t0[d]["k"] for d in (3,4,5)]} → {[t1[d]["k"] for d in (3,4,5)]})')
+        check(all(t1[d]['p'] == t0[d]['p'] and t1[d]['f'] <= 41 for d in (3, 4, 5)), 'protein unchanged, fat ≤ 0.5 g/kg on loading days')
+        check(all(t1[d]['k'] == t1[d]['p']*4 + t1[d]['c']*4 + t1[d]['f']*9 for d in (3, 4, 5)), 'kcal = 4P + 4C + 9F on loading days')
+        check(all(t1[d] == t0[d] for d in (0, 1, 2, 6)), 'other days (incl. race day) untouched')
+        banner = J('document.body.textContent')
+        check('Ενεργή καρβοφόρτωση: Πεμ, Παρ, Σαβ (αγώνας: Κυρ)' in banner, 'banner names Thu/Fri/Sat + race day')
         after = json.loads(plan()); old = json.loads(before)
         changed = [d for d in range(7) if after[str(d)] != old[str(d)]]
-        check(changed and set(changed) <= {4, 5, 6}, f'only carb-load days changed ({changed})')
+        check(changed and set(changed) <= {3, 4, 5}, f'only carb-load days changed in the plan ({changed})')
         toast = J('(document.getElementById("portion-adjust-toast")||{}).innerText||""')
         check('Οι στόχοι άλλαξαν' in toast and 'Αναίρεση' in toast, f'toast with Αναίρεση ({toast[:90]!r})')
-        tgt = J('getDayTgtEff(clients.find(x=>x.id==="mi"),calcTDEE(clients.find(x=>x.id==="mi")))[6].c')
-        check(carbs(6) > c_old + 50, f'Sunday carbs went up toward target {tgt}g ({c_old:.0f} → {carbs(6):.0f})')
+        check(carbs(5) > c_old + 50, f'Saturday carbs went up toward 820g ({c_old:.0f} → {carbs(5):.0f})')
 
         print('3. Αναίρεση γυρίζει το πλάνο και δεν ξανατρέχει')
         J('document.querySelector("#portion-adjust-toast button[data-undo]").click()'); pg.wait_for_timeout(300)

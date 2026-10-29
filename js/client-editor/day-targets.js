@@ -21,17 +21,25 @@ function daysUntilEvent(dateStr){
 
 // Carbohydrate loading (ISSN Position Stand: Nutrient Timing — ~8-12g carbs/kg/day, 1-3 days pre-event).
 // Only returns day-of-week indexes (0=Mon..6=Sun, matching trainDays/weekPlan) when c.eventDate is set
-// AND the event is actually imminent (0-10 days out) for THIS plan generation — inert otherwise, so a
+// AND the event is actually imminent (1-10 days out) for THIS plan generation — inert otherwise, so a
 // client with no event date, or one far from any event, behaves exactly as before.
+// Οι ημέρες φόρτωσης είναι οι ημέρες ΠΡΙΝ τον αγώνα (αγώνας Κυρ → Πεμ/Παρ/Σαβ). Η ίδια η ημέρα αγώνα
+// ΔΕΝ είναι ημέρα φόρτωσης (2026-10-29): έχει τον κανονικό της στόχο (MET αγώνα) + pre-race 1-4 g/kg
+// και 60-90 g/h κατά τη διάρκεια από το CHO protocol (Burke 2011, Thomas 2016).
 function getCarbLoadDayIndexes(c){
   var daysLeft=daysUntilEvent(c.eventDate);
-  if(daysLeft==null||daysLeft<0||daysLeft>10) return [];
+  if(daysLeft==null||daysLeft<1||daysLeft>10) return [];
   var loadDays=c.carbLoadDays!=null?c.carbLoadDays:3;
-  var eventDow=new Date(c.eventDate+'T00:00:00').getDay(); // 0=Sun..6=Sat
-  var eventIdx=(eventDow+6)%7; // convert to 0=Mon..6=Sun
+  var eventIdx=getEventDayIndex(c);
   var idxs=[];
-  for(var k=0;k<loadDays;k++) idxs.push(((eventIdx-k)%7+7)%7);
+  for(var k=1;k<=loadDays;k++) idxs.push(((eventIdx-k)%7+7)%7);
   return idxs;
+}
+// Ημέρα εβδομάδας του αγώνα (0=Δευ..6=Κυρ), ή null αν δεν έχει οριστεί ημερομηνία.
+function getEventDayIndex(c){
+  if(!c||!c.eventDate) return null;
+  var dow=new Date(c.eventDate+'T00:00:00').getDay(); // 0=Sun..6=Sat
+  return isNaN(dow)?null:(dow+6)%7;
 }
 
 function makeDayTgtDefaults(c,t){
@@ -97,24 +105,33 @@ function makeDayTgtDefaults(c,t){
     }
 
     // 🏁 Carb-loading override (only on the specific pre-event days computed above; no-op for everyone else).
-    // Reduces fat kcal-for-kcal to make room, same pattern as the training-day carb boost above.
+    // Υδατάνθρακες = 10 g/kg, πρωτεΐνη ίδια, λίπος χαμηλό (≤ fatFloorG) και οι θερμίδες ΑΝΕΒΑΙΝΟΥΝ όσο
+    // χρειάζεται (2026-10-29). Παλιά ήταν kcal-neutral (μόνο από λίπος) → σε ημέρα 1580 kcal ο
+    // «στόχος 10 g/kg» έβγαινε ~230 g, ενώ το banner έλεγε ~800 g.
     if(carbLoadIdxs.indexOf(i)!==-1){
       var loadCarbG=Math.round((c.weight||70)*10); // ISSN: ~10g/kg/day carb-loading target
       // ⚕️ Cap at any active protocol's carb% ceiling (e.g. Διαβήτης) — the protocol always wins over
       // the event-prep target, so carb-loading never silently exceeds a clinical limit on those days.
+      // Με πρωτόκολλο μένει η παλιά, θερμιδικά ουδέτερη λογική (το όριο % δεν έχει νόημα αν ανεβαίνουν οι kcal).
       var protocolCarbCapPct=(typeof getProtocolCarbCapPct==='function')?getProtocolCarbCapPct(c):null;
-      if(protocolCarbCapPct!=null){
+      if(protocolCarbCapPct==null){
+        if(loadCarbG>dayC){
+          dayF=Math.min(dayF,fatFloorG);
+          dayC=loadCarbG;
+          dayKcal=dayP*4+dayC*4+dayF*9;
+        }
+      } else {
         var capGrams=Math.round(dayKcal*protocolCarbCapPct/100/4);
         if(capGrams<loadCarbG) loadCarbG=capGrams;
-      }
-      if(loadCarbG>dayC){
-        var extraLoadC=loadCarbG-dayC;
-        // Βήμα D0: μη ρίχνεις το λίπος κάτω από fatFloorG ούτε για carb-loading· ο στόχος υδατανθράκων
-        // παίρνει μόνο ό,τι επιτρέπει ο θερμιδικός προϋπολογισμός αφού κρατηθεί το κατώφλι λίπους.
-        var wantLoadCutG=extraLoadC*4/9;
-        var loadCutG=Math.min(wantLoadCutG, Math.max(0, dayF-fatFloorG));
-        dayF=Math.round(dayF-loadCutG);
-        dayC=dayC+Math.round(loadCutG*9/4);
+        if(loadCarbG>dayC){
+          var extraLoadC=loadCarbG-dayC;
+          // Βήμα D0: μη ρίχνεις το λίπος κάτω από fatFloorG ούτε για carb-loading· ο στόχος υδατανθράκων
+          // παίρνει μόνο ό,τι επιτρέπει ο θερμιδικός προϋπολογισμός αφού κρατηθεί το κατώφλι λίπους.
+          var wantLoadCutG=extraLoadC*4/9;
+          var loadCutG=Math.min(wantLoadCutG, Math.max(0, dayF-fatFloorG));
+          dayF=Math.round(dayF-loadCutG);
+          dayC=dayC+Math.round(loadCutG*9/4);
+        }
       }
     }
 
@@ -483,7 +500,8 @@ function buildDayTgtHtml(c,t){
     var dAbbrCL=['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'];
     var namesCL=carbLoadIdxs.slice().sort(function(a,b){return a-b;}).map(function(ix){return dAbbrCL[ix];});
     var loadCarbGPreview=Math.round((c.weight||70)*10);
-    carbLoadNote='<div style="background:#fff3e0;border:1px solid #ffb74d;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#e65100"><b>🏁 Ενεργή καρβοφόρτωση:</b> '+namesCL.join(', ')+' — στόχος ~'+loadCarbGPreview+'g υδατάνθρακες/ημέρα (ISSN: 8-12g/kg)</div>';
+    var evIdxCL=getEventDayIndex(c);
+    carbLoadNote='<div style="background:#fff3e0;border:1px solid #ffb74d;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#e65100"><b>🏁 Ενεργή καρβοφόρτωση:</b> '+namesCL.join(', ')+(evIdxCL!=null?' (αγώνας: '+dAbbrCL[evIdxCL]+')':'')+' — στόχος ~'+loadCarbGPreview+'g υδατάνθρακες/ημέρα (ISSN: 8-12g/kg), οι θερμίδες αυτών των ημερών ανεβαίνουν ανάλογα</div>';
   }
   // 🥤 CHO Training Protocol — control strip (same look as .carb-boost-row, dashed green tint).
   var choCtrlHtml='';
