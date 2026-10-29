@@ -468,7 +468,7 @@ function avoidOxalateWithDairy(days){
 // ── Ensure adequate fish intake: omega-3 for inflammation control ──
 // Ερευνητικά ευρήματα: Ωμέγα-6:3 αναλογία πρέπει να είναι 4:1 (όχι 15:1-20:1)
 // Λύση: Παρακολούθηση ότι υπάρχει ψάρι ≥2-3x/εβδάδα (σολομός, σαρδέλες, λαβράκι)
-var OMEGA3_FISH=['Σολομός (ψητός)','Σαρδέλες','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Μπακαλιάρος (ψητός)'];
+var OMEGA3_FISH=['Σολομός (ψητός)','Σαρδέλες (κονσέρβα, νερό)','Λαβράκι (ψητό)','Τόνος (κονσέρβα)','Μπακαλιάρος (ψητός)'];
 
 function ensureOmega3FishIntake(days){
   var result=deepClone(days);

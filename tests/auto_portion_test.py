@@ -56,7 +56,7 @@ try:
         p0 = J('JSON.stringify(clients.find(x=>x.id==="po"))')
         check('"Πατάτες"' not in p0 and p0.count('Πατάτες (βρ.)') == 2 and p0.count('Φακές (βρ.)') == 2 and '"Γλυκοπατάτα (ψητή)"' in p0,
               f'client plan + exclusions renamed ({p0[:200]})')
-        check(J('cm("Γλυκοπατάτα",100).k===90 && cm("Φακές",100).k===116 && !!FOOD_UNITS["Γλυκοπατάτα (ψητή)"] && !!FOODS["Γαλοπούλα στήθος (ψητό)"]'),
+        check(J('cm("Γλυκοπατάτα",100).k===90 && cm("Φακές",100).k===116 && !!FOOD_UNITS["Γλυκοπατάτα (ψητή)"] && !!FOODS["Γαλοπούλα στήθος (ψητό)"] && cm("Σαρδέλες",100).k===167 && cm("Σαρδέλες",100).sf===2.3'),
               'legumes/sweet potato/turkey: new keys + old names resolve (sweet potato = baked 90 kcal)')
         check(J('getProtocol("fodmap").restrictions.avoidFoods.indexOf("Φασόλια")!==-1'), 'FODMAP avoid list keeps substring «Φασόλια» (still matches borlotti)')
         check(J('JSON.stringify(customTemplates)').count('Πατάτες (βρ.)') == 1, 'custom template renamed')

@@ -51,7 +51,7 @@ var FOODS={
 'Ρόκα':{k:25,p:2.6,c:3.7,f:0.7,fi:1.6,cat:'Λαχανικά',en:'Arugula',ru:'Руккола',tr:'Roka'},
 'Μαγιονέζα light':{k:300,p:0.9,c:9,f:28,fi:0,cat:'Καρυκεύματα',en:'Light Mayonnaise',ru:'Майонез light',tr:'Light Mayonez'},
 'Γαρίδες (βραστές)':{k:99,p:24,c:0,f:0.3,fi:0,cat:'Ψάρια',en:'Shrimp (boiled)',ru:'Креветки (варёные)',tr:'Karides (haşlanmış)'},
-'Σαρδέλες':{k:260,p:30,c:0,f:14,fi:0,cat:'Ψάρια',en:'Sardines (canned)',ru:'Сардины (консервированные)',tr:'Sardalya (konserve)'},
+'Σαρδέλες (κονσέρβα, νερό)':{k:167,p:25,c:0,f:7.4,fi:0,cat:'Ψάρια',en:'Sardines (canned)',ru:'Сардины (консервированные)',tr:'Sardalya (konserve)'},
 'Τσιπούρα (ψητή)':{k:131,p:26,c:0,f:2.9,fi:0,cat:'Ψάρια',en:'Sea Bream (grilled)',ru:'Дорадо (гриль)',tr:'Çipura (ızgara)'},
 'Μπακαλιάρος (ψητός)':{k:105,p:22.8,c:0,f:0.9,fi:0,cat:'Ψάρια',en:'Cod (grilled)',ru:'Треска (гриль)',tr:'Morina Balığı (ızgara)'},
 'Σκουμπρί (ψητό)':{k:239,p:23.8,c:0,f:15.4,fi:0,cat:'Ψάρια',en:'Mackerel (grilled)',ru:'Скумбрия (гриль)',tr:'Uskumru (ızgara)'},
@@ -637,7 +637,7 @@ var FOOD_PAIRING_EXT={
   // ── ΨΑΡΙΑ ──
   'Τσιπούρα (ψητή)':{flavor_profile:['delicate','umami'],best_pairings:['Λεμόνι','Σπαράγγια','Σκόρδο','Σπανάκι'],avoid_with:['Κοτόπουλο στήθος (ψητό)','Φακές (βρ.)'],texture:'tender',aromatic_herbs:['άνηθος','θυμάρι'],category:'protein'},
   'Μπακαλιάρος (ψητός)':{flavor_profile:['mild','delicate'],best_pairings:['Σκόρδο','Πατάτες (βρ.)','Λεμόνι','Σπανάκι'],avoid_with:['Κοτόπουλο στήθος (ψητό)'],texture:'flaky',aromatic_herbs:['μαϊντανός','σκόρδο'],category:'protein'},
-  'Σαρδέλες':{flavor_profile:['umami','strong','oily'],best_pairings:['Λεμόνι','Ρίγανη','Ντοματες','Κρεμμύδι'],avoid_with:['Κοτόπουλο στήθος (ψητό)','γλυκά'],texture:'tender',aromatic_herbs:['ρίγανη','μαϊντανός'],category:'protein'},
+  'Σαρδέλες (κονσέρβα, νερό)':{flavor_profile:['umami','strong','oily'],best_pairings:['Λεμόνι','Ρίγανη','Ντοματες','Κρεμμύδι'],avoid_with:['Κοτόπουλο στήθος (ψητό)','γλυκά'],texture:'tender',aromatic_herbs:['ρίγανη','μαϊντανός'],category:'protein'},
   'Σκουμπρί (ψητό)':{flavor_profile:['umami','strong','oily'],best_pairings:['Λεμόνι','Σκόρδο','Μαϊντανός','Πατάτες (βρ.)'],avoid_with:['γλυκά'],texture:'tender',aromatic_herbs:['μαϊντανός','ρίγανη'],category:'protein'},
   'Χταπόδι (βρ.)':{flavor_profile:['umami','delicate'],best_pairings:['Λεμόνι','Ελιές','Ξίδι','Πατάτες (βρ.)','Σκόρδο'],avoid_with:['γαλακτοκομικά'],texture:'tender-firm',aromatic_herbs:['ρίγανη','μαϊντανός'],category:'protein'},
   'Καλαμάρι (ψητό)':{flavor_profile:['delicate','umami'],best_pairings:['Λεμόνι','Σκόρδο','Μαϊντανός','Πιπεριά κόκκινη'],avoid_with:['γαλακτοκομικά'],texture:'tender',aromatic_herbs:['μαϊντανός','σκόρδο'],category:'protein'},
