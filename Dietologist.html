@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="a12134972234">
+<meta name="fyh-build" content="f35e0b78bb1c">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -353,13 +353,13 @@ setTimeout(function(){
 <!-- calc/macros-recalc — micronutrient targets + the cascade-recalc engine
      (getMicronutrientTargets, onClientChange, recalculateMacros …). Zero load-time
      code; renderMain/genPlan/makeDayTgtDefaults refs resolve at call time. -->
-<script defer src="js/calc/macros-recalc.js?v=01d98da800"></script>
+<script defer src="js/calc/macros-recalc.js?v=668a97a8db"></script>
 <!-- calc/micronutrients — micronutrient adequacy analysis, gap→supplement matching,
      and normalizeGreekText (accent-strip used across plan-gen/*). Pure; callers runtime. -->
 <script defer src="js/calc/micronutrients.js?v=67408a9c0e"></script>
 <!-- calc/portion-optimizer — «⚖️ Προσαρμογή ποσοτήτων»: grams-only fit to the day macro targets.
      Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
-<script defer src="js/calc/portion-optimizer.js?v=81b9c75d3c"></script>
+<script defer src="js/calc/portion-optimizer.js?v=0bd8629034"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
 <script defer src="js/core/persistence.js?v=1ce6a6eb36"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
@@ -395,7 +395,7 @@ setTimeout(function(){
 <script defer src="js/client-editor/tracker-results.js?v=8b4fc9e326"></script>
 <script defer src="js/client-editor/day-targets.js?v=7a5388c52f"></script>
 <script defer src="js/client-editor/form-controls.js?v=326dad8ee9"></script>
-<script defer src="js/client-editor/render-main.js?v=dc24ba5b92"></script>
+<script defer src="js/client-editor/render-main.js?v=4db068a0ff"></script>
 <!-- client-editor/overview — the "📇 Επισκόπηση" client sub-tab: read-only status
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
@@ -456,7 +456,7 @@ setTimeout(function(){
 <!-- tabs/* — the standalone nav tabs (Αρχική / Διατροφές / Μηνύματα / Συνταγές / Tips).
      Pure fn declarations, no load-time code. -->
 <script defer src="js/tabs/home-diets.js?v=850e6886cf"></script>
-<script defer src="js/tabs/messages.js?v=a80cf8552d"></script>
+<script defer src="js/tabs/messages.js?v=d8d86fa4e3"></script>
 <script defer src="js/tabs/progress.js?v=c78be71644"></script>
 <script defer src="js/tabs/progress-insights.js?v=a0fc6f0f09"></script>
 <script defer src="js/tabs/recipes.js?v=b3bdae9fb5"></script>

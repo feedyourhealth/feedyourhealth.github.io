@@ -1,0 +1,89 @@
+"""⚖️ Αυτόματη προσαρμογή ποσοτήτων: όταν αλλάζουν οι στόχοι ημέρας (καρβοφόρτωση, προπονήσεις…)
+προσαρμόζονται ΜΟΝΟ οι ημέρες που άλλαξαν, με toast + Αναίρεση· το άνοιγμα πελάτη δεν αλλάζει τίποτα."""
+import json, subprocess, sys, time, urllib.request, io, datetime
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+REPO = Path(__file__).resolve().parent.parent
+FAKE = (Path(__file__).parent / 'fake_supabase.js').read_text(encoding='utf-8')
+PORT = 8897
+U1 = 'user-111'
+fails, errors = [], []
+def check(cond, msg):
+    print(('  ok   ' if cond else '  FAIL ') + msg)
+    if not cond: fails.append(msg)
+
+def day():
+    return [{'name': 'Πρωινό', 'foods': [{'n': 'Βρώμη', 'g': 60}, {'n': 'Γιαούρτι 2%', 'g': 200}, {'n': 'Μπανάνα', 'g': 120}]},
+            {'name': 'Μεσημεριανό', 'foods': [{'n': 'Κοτόπουλο στήθος (ψητό)', 'g': 150}, {'n': 'Ρύζι (βρ.)', 'g': 200}]},
+            {'name': 'Ενδιάμεσο', 'foods': [{'n': 'Ψωμί ολικής άλεσης', 'g': 60}, {'n': 'Μέλι', 'g': 20}]},
+            {'name': 'Βραδινό', 'foods': [{'n': 'Σολομός', 'g': 150}, {'n': 'Πατάτες (βρ.)', 'g': 250}]}]
+
+mi = {'id': 'mi', 'name': 'Μιχάλης Δοκιμή', 'sex': 'M', 'age': 42, 'weight': 82, 'height': 178, 'activity': 'mod',
+      'goal': 'maintain', 'allergenListsVer': 2, 'foodExclude': [], 'weekPlan': {str(d): day() for d in range(7)}}
+S = {'rows': {U1: {'data': {'clients': [mi], 'customTemplates': []}, 'version': 1}}}
+
+# Ημερομηνία αγώνα = η Κυριακή σε 2-8 μέρες → καρβοφόρτωση Παρ/Σαβ/Κυρ μέσα στην τρέχουσα εβδομάδα πλάνου
+today = datetime.date.today()
+sunday = today + datetime.timedelta(days=(6 - today.weekday()) or 7)
+if (sunday - today).days < 3: sunday += datetime.timedelta(days=7)
+
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PORT), '--directory', str(REPO)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+try:
+    for _ in range(50):
+        try: urllib.request.urlopen(f'http://localhost:{PORT}/', timeout=1); break
+        except Exception: time.sleep(0.2)
+    with sync_playwright() as p:
+        br = p.chromium.launch()
+        ctx = br.new_context(bypass_csp=True, viewport={'width': 1400, 'height': 1000})
+        ctx.route('**/vendor/supabase-js.min.js*', lambda r: r.fulfill(status=200, content_type='application/javascript', body=FAKE))
+        ctx.route('**/*.supabase.co/**', lambda r: r.abort())
+        pg = ctx.new_page()
+        pg.on('pageerror', lambda e: errors.append(str(e)))
+        pg.on('console', lambda m: errors.append(m.text) if m.type == 'error' else None)
+        pg.add_init_script('window.__SERVER=' + json.dumps(S) + ';window.__UID=' + json.dumps(U1) + ';localStorage.clear();')
+        pg.goto(f'http://localhost:{PORT}/Dietologist.html', wait_until='domcontentloaded')
+        pg.wait_for_function('window.Cloud && Cloud._loaded===true', timeout=10000)
+        pg.wait_for_timeout(800)
+        J = lambda js: pg.evaluate(js)
+        plan = lambda: J('JSON.stringify(clients.find(x=>x.id==="mi").weekPlan)')
+
+        print('1. Άνοιγμα πελάτη = μόνο baseline, καμία αλλαγή')
+        J('selectClient("mi"); renderMain(); swTab(4);'); pg.wait_for_timeout(300)
+        before = plan()  # μετά το πρώτο render (κανονικοποίηση πεδίων γευμάτων), πριν τρέξει το auto-sync
+        pg.wait_for_timeout(1600)
+        check(plan() == before, 'opening the client does not touch the plan')
+        check(not J('!!document.getElementById("portion-adjust-toast")'), 'no toast on open')
+
+        def carbs(d): return J(f'clients.find(x=>x.id==="mi").weekPlan[{d}].reduce((s,m)=>s+m.foods.reduce((a,f)=>a+cm(f.n,f.g).c,0),0)')
+        c_old = carbs(6)
+
+        print('2. Ημερομηνία αγώνα → καρβοφόρτωση → αυτόματη προσαρμογή μόνο Παρ/Σαβ/Κυρ')
+        J(f'setEventDate("{sunday.isoformat()}")'); pg.wait_for_timeout(2200)
+        loads = J('getCarbLoadDayIndexes(clients.find(x=>x.id==="mi"))')
+        check(sorted(loads) == [4, 5, 6], f'carb-load days are Fri/Sat/Sun ({loads})')
+        after = json.loads(plan()); old = json.loads(before)
+        changed = [d for d in range(7) if after[str(d)] != old[str(d)]]
+        check(changed and set(changed) <= {4, 5, 6}, f'only carb-load days changed ({changed})')
+        toast = J('(document.getElementById("portion-adjust-toast")||{}).innerText||""')
+        check('Οι στόχοι άλλαξαν' in toast and 'Αναίρεση' in toast, f'toast with Αναίρεση ({toast[:90]!r})')
+        tgt = J('getDayTgtEff(clients.find(x=>x.id==="mi"),calcTDEE(clients.find(x=>x.id==="mi")))[6].c')
+        check(carbs(6) > c_old + 50, f'Sunday carbs went up toward target {tgt}g ({c_old:.0f} → {carbs(6):.0f})')
+
+        print('3. Αναίρεση γυρίζει το πλάνο και δεν ξανατρέχει')
+        J('document.querySelector("#portion-adjust-toast button[data-undo]").click()'); pg.wait_for_timeout(300)
+        J('renderMain()'); pg.wait_for_timeout(1600)
+        check(plan() == before, 'undo restores the plan and a re-render does not re-adjust')
+
+        print('4. Χωρίς αλλαγή στόχων → τίποτα')
+        J('renderMain()'); pg.wait_for_timeout(1600)
+        check(plan() == before and not J('!!document.getElementById("portion-adjust-toast")'), 'plain re-render: no change, no toast')
+
+        br.close()
+finally:
+    srv.terminate()
+
+errors = [e for e in errors if 'favicon' not in e]
+check(not errors, f'no console errors ({errors[:3]})')
+print('\nFAILED: %d' % len(fails) if fails else '\nALL PASSED')
+sys.exit(1 if fails else 0)

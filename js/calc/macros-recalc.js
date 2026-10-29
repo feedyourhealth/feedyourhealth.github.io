@@ -520,10 +520,8 @@ function shouldRegeneratePlan(c){
   if(!c._lastRecalcTime)return false;  // First generation, don't ask again
   if(c._lastSportApplied!==c.sport)return true;
 
-  // TDEE changed significantly (>100 kcal)
-  var currentTDEE=calcTDEE(c).target;
-  if(c._lastTarget&&Math.abs(currentTDEE-c._lastTarget)>100)return true;
-
+  // Αλλαγή TDEE/στόχων ΔΕΝ ρωτάει πια για αναδημιουργία: η poAutoSync (calc/portion-optimizer.js)
+  // προσαρμόζει αυτόματα τα γραμμάρια στις ημέρες που άλλαξαν (2026-10-29).
   return false;
 }
 

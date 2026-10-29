@@ -106,6 +106,8 @@ function refreshGenChecklist(){
 
 function renderMain(){
   var c=getC();if(!c)return;
+  // ⚖️ Αυτόματη προσαρμογή ποσοτήτων στις ημέρες που άλλαξαν στόχους (calc/portion-optimizer.js)
+  if(typeof poAutoSyncSchedule==='function')poAutoSyncSchedule();
 
   // DEFENSIVE: Ensure all required fields exist (migration safety)
   if(!c.metActivities) c.metActivities = [];

@@ -274,18 +274,20 @@ function _poDiagnose(c, d, meals, T, allowed){
 // dayIndex: αριθμός → μόνο αυτή η ημέρα· undefined → όλη η εβδομάδα.
 // undoTo: (εσωτερικό) το πλάνο στο οποίο γυρίζει η Αναίρεση — όταν η προσαρμογή τρέχει μετά από
 // πρόταση, η Αναίρεση επαναφέρει ΚΑΙ την πρόταση (την κατάσταση πριν το κλικ).
-function adjustPlanPortions(dayIndex, undoTo){
+// dayIndex: αριθμός (μία ημέρα), πίνακας ημερών ή τίποτα (όλη η εβδομάδα).
+// auto=true: κλήση από poAutoSync (άλλαξαν οι στόχοι) — σιωπηλά αν δεν άλλαξε/δεν λείπει τίποτα.
+function adjustPlanPortions(dayIndex, undoTo, auto){
   var c=getC();
-  if(!c||!c.weekPlan||!Object.keys(c.weekPlan).length){showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
+  if(!c||!c.weekPlan||!Object.keys(c.weekPlan).length){if(!auto)showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
   var tdee=calcTDEE(c),eff=getDayTgtEff(c,tdee),effByDay={};
-  var days=((typeof dayIndex==='number')?[dayIndex]:[0,1,2,3,4,5,6]).filter(function(d){
+  var days=((typeof dayIndex==='number')?[dayIndex]:Array.isArray(dayIndex)?dayIndex:[0,1,2,3,4,5,6]).filter(function(d){
     var meals=c.weekPlan[d];
     if(!meals||!meals.length)return false;
     var e=eff[d]||{k:tdee.target,p:tdee.p,f:tdee.f,c:tdee.carb};
     if(!(e.k>0))return false;
     effByDay[d]=e;return true;
   });
-  if(!days.length){showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
+  if(!days.length){if(!auto)showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
   var oldPlan=undoTo||deepClone(c.weekPlan);
   var r=optimizePlanPortions(c,days,effByDay),misses=[],sugg=[];
   var allowed=_poAllowedFn(c);
@@ -296,8 +298,37 @@ function adjustPlanPortions(dayIndex, undoTo){
     sugg=sugg.concat(dg.sugg);
   });
   if(r.changed||undoTo){save();renderWeekTable();}
+  if(auto&&!r.changed&&!misses.length)return;
   showPortionAdjustToast({optChanged:r.changed,touchedDays:r.changedDays,misses:misses,
-    oldPlan:(r.changed||undoTo)?oldPlan:null,dayIndex:dayIndex,sugg:sugg.slice(0,3),afterSuggestion:!!undoTo});
+    oldPlan:(r.changed||undoTo)?oldPlan:null,dayIndex:dayIndex,sugg:sugg.slice(0,3),afterSuggestion:!!undoTo,
+    autoDays:auto?days.filter(function(d){return r.touched[d];}):null});
+}
+
+// ── Αυτόματη προσαρμογή όταν αλλάζουν οι στόχοι ημέρας (2026-10-29, επιλογή διαιτολόγου:
+// «αφού ο πελάτης δεν βλέπει τίποτα πριν ξαναστείλω το link, να γίνεται μόνο του»).
+// Η renderMain καλεί το poAutoSyncSchedule σε κάθε render. ~1s μετά την τελευταία αλλαγή συγκρίνει
+// τους στόχους κάθε ημέρας με το στιγμιότυπο της προηγούμενης φοράς και τρέχει τη Προσαρμογή
+// ΜΟΝΟ στις ημέρες που άλλαξαν — οι υπόλοιπες (ίσως διορθωμένες με το χέρι) μένουν ως έχουν.
+// Πρώτο render ενός πελάτη (άνοιγμα, αλλαγή πελάτη, νέο αντικείμενο από Cloud.load) = μόνο baseline.
+var PO_AUTO_DELAY_MS=1000, _poAutoTimer=null, _poAutoSnap=null; // {c: αντικείμενο πελάτη, keys: [7 strings]}
+function _poTargetKeys(c){
+  var eff=getDayTgtEff(c,calcTDEE(c)),keys=[];
+  for(var d=0;d<7;d++){var e=eff[d]||{};keys.push([e.k,e.p,e.f,e.c].map(function(v){return Math.round(v||0);}).join('|'));}
+  return keys;
+}
+function poAutoSyncSchedule(){
+  clearTimeout(_poAutoTimer);
+  _poAutoTimer=setTimeout(poAutoSyncCheck,PO_AUTO_DELAY_MS);
+}
+function poAutoSyncCheck(){
+  var c=getC();if(!c)return;
+  var keys;try{keys=_poTargetKeys(c);}catch(e){return;}
+  var prev=(_poAutoSnap&&_poAutoSnap.c===c)?_poAutoSnap.keys:null;
+  _poAutoSnap={c:c,keys:keys};
+  if(!prev||!c.weekPlan)return;
+  var changed=[];
+  for(var d=0;d<7;d++)if(keys[d]!==prev[d]&&c.weekPlan[d]&&c.weekPlan[d].length)changed.push(d);
+  if(changed.length)adjustPlanPortions(changed,null,true);
 }
 
 // Εφαρμόζει μια πρόταση (πρόσθεση υδατάνθρακα / άπαχη αντικατάσταση) και ξανατρέχει την προσαρμογή
@@ -323,6 +354,8 @@ function showPortionAdjustToast(o){
   var sugg=o.sugg||[],misses=o.misses||[];
   var scope=(typeof o.dayIndex==='number')?('Προσαρμόστηκε η '+DAYS[o.dayIndex])
     :(o.touchedDays===1?'Προσαρμόστηκε 1 ημέρα':'Προσαρμόστηκαν '+o.touchedDays+' ημέρες');
+  if(o.autoDays&&o.autoDays.length)scope='Οι στόχοι άλλαξαν — προσαρμόστηκαν αυτόματα: '+o.autoDays.map(function(d){return DAYS[d];}).join(', ');
+  else if(o.autoDays)scope='Οι στόχοι άλλαξαν';
   var head=o.afterSuggestion?('✓ Η πρόταση εφαρμόστηκε'+(o.optChanged?' και οι ποσότητες προσαρμόστηκαν ξανά':''))
           :o.optChanged?('✓ '+scope+' · '+o.optChanged+(o.optChanged===1?' τρόφιμο άλλαξε':' τρόφιμα άλλαξαν')+' ποσότητα')
           :'✓ Το πλάνο είναι ήδη όσο πιο κοντά γίνεται στους στόχους';

@@ -16,6 +16,7 @@
   waiting_test.py     ⏳ «Σε αναμονή»: modal, home card, banner, list filter, reminder el/en, close on publish
   plan_history_test.py  📊 plan history: numbering, backups, auto-save on publish, chart, compare
   plan_history_athlete_test.py  🏁 athletes: races, phase/race per plan, CHO g/kg per day, EA, debrief, repeat
+  auto_portion_test.py  ⚖️ target change (carb-load) → only changed days' grams auto-adjusted, toast + undo
   version_check_test.py  ?v= stamps up to date + stale page reloads once / banner (scripts/stamp-version.py)
 
 All of them use a fake in-browser Supabase — they never touch real data.
@@ -25,7 +26,7 @@ import subprocess, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'backup_restore_test.py', 'favorites_sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py', 'food_diary_test.py', 'waiting_test.py', 'plan_history_test.py', 'plan_history_athlete_test.py', 'progress_insights_test.py']
+TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'backup_restore_test.py', 'favorites_sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py', 'food_diary_test.py', 'waiting_test.py', 'plan_history_test.py', 'plan_history_athlete_test.py', 'progress_insights_test.py', 'auto_portion_test.py']
 
 failed = []
 for name in TESTS:
