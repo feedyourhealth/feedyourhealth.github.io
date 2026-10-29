@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="91dc797e3c15">
+<meta name="fyh-build" content="fe14f4f684cb">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -333,21 +333,21 @@ setTimeout(function(){
      The smoke harness in test/smoke.html mirrors this list.
      ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- data/* (no dependencies) — split out of the old js/data.js in module-split wave 1 -->
-<script defer src="js/data/foods.js?v=b2af56fe39"></script>
-<script defer src="js/data/portions.js?v=f19e47eba4"></script>
+<script defer src="js/data/foods.js?v=0091244ef2"></script>
+<script defer src="js/data/portions.js?v=cabfdf2b2f"></script>
 <script defer src="js/data/met-activities.js?v=681944b201"></script>
 <script defer src="js/data/supplements.js?v=9dabfbc622"></script>
 <script defer src="js/data/protocols.js?v=24295ac166"></script>
-<script defer src="js/data/micronutrients.js?v=4e92e37ac9"></script>
-<script defer src="js/data/food-aliases.js?v=d6de29ef0c"></script>
-<script defer src="js/data/templates.js?v=3a813d9014"></script>
-<script defer src="js/data/recipes.js?v=56d2557261"></script>
-<script defer src="js/data/misc.js?v=f72ed9e918"></script>
-<script defer src="js/data/sodium-satfat.js?v=b24016857d"></script>
+<script defer src="js/data/micronutrients.js?v=30f52a1008"></script>
+<script defer src="js/data/food-aliases.js?v=65550e8b1c"></script>
+<script defer src="js/data/templates.js?v=4f92a88e62"></script>
+<script defer src="js/data/recipes.js?v=708b0a88f5"></script>
+<script defer src="js/data/misc.js?v=2ee53ada6a"></script>
+<script defer src="js/data/sodium-satfat.js?v=d8d20bd172"></script>
 <!-- lib/* — pure leaf helpers (depend only on data/*) -->
 <script defer src="js/lib/bf-norms.js?v=4d2063a063"></script>
 <script defer src="js/lib/helpers.js?v=bd5ac99a55"></script>
-<script defer src="js/lib/food-resolve.js?v=1c8dc4f94e"></script>
+<script defer src="js/lib/food-resolve.js?v=c5d18514c1"></script>
 <!-- calc/* — pure energy & scaling calc (depend on data/* + lib/helpers.js) -->
 <script defer src="js/calc/plan-energy.js?v=9f83ba22fe"></script>
 <!-- calc/macros-recalc — micronutrient targets + the cascade-recalc engine
@@ -359,7 +359,7 @@ setTimeout(function(){
 <script defer src="js/calc/micronutrients.js?v=67408a9c0e"></script>
 <!-- calc/portion-optimizer — «⚖️ Προσαρμογή ποσοτήτων»: grams-only fit to the day macro targets.
      Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
-<script defer src="js/calc/portion-optimizer.js?v=44944c9009"></script>
+<script defer src="js/calc/portion-optimizer.js?v=d9800dbef0"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
 <script defer src="js/core/persistence.js?v=1ce6a6eb36"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
@@ -421,15 +421,15 @@ setTimeout(function(){
      state vars; every cross-reference resolves at runtime, so load order among
      these is not load-bearing. food-lib-favorites.js carries the one piece of
      load-time code (a window 'load' listener that starts the hourly auto-backup). -->
-<script defer src="js/plan-gen/med-score.js?v=925cb1e4ab"></script>
+<script defer src="js/plan-gen/med-score.js?v=84ad7c0223"></script>
 <script defer src="js/plan-gen/red-meat.js?v=b1936c8320"></script>
 <script defer src="js/plan-gen/exclusions.js?v=9edd5b2051"></script>
 <script defer src="js/plan-gen/food-distribution.js?v=6c9a6c536b"></script>
 <script defer src="js/plan-gen/combos-tips.js?v=bb986ea013"></script>
 <script defer src="js/plan-gen/meal-library.js?v=12a93a8fa3"></script>
-<script defer src="js/plan-gen/recipe-finder.js?v=7dbdc426f8"></script>
+<script defer src="js/plan-gen/recipe-finder.js?v=a7d88ecb6a"></script>
 <script defer src="js/plan-gen/plan-transform.js?v=c4dd4387d7"></script>
-<script defer src="js/plan-gen/mediterranean.js?v=a0f57f828e"></script>
+<script defer src="js/plan-gen/mediterranean.js?v=c3925f38b4"></script>
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
 <script defer src="js/plan-gen/gen-plan.js?v=9bc169d9b8"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
@@ -673,7 +673,7 @@ setTimeout(function(){
 <button id="settingsToggle" onclick="toggleSettingsPanel()" style="position:fixed;bottom:20px;left:20px;background:#025857;color:white;border:none;padding:12px 16px;border-radius:6px;cursor:pointer;font-weight:600;z-index:996;display:none;font-size:14px;">⚙️ Ρυθμίσεις</button>
 
 
-<script defer src="js/app-part5.js?v=501430c3a6"></script>
+<script defer src="js/app-part5.js?v=db8bdb6c1c"></script>
 
 <!-- VALIDATION MODAL -->
 <div id="validationModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1100;align-items:center;justify-content:center;overflow-y:auto;padding:20px 0;">

@@ -25,7 +25,7 @@ var FOODS={
 'Βοδινό άπαχο (ψητό)':{k:204,p:28,c:0,f:8,fi:0,cat:'Κρέας',en:'Lean Beef (grilled)',ru:'Постная говядина (гриль)',tr:'Yağsız Dana Eti (ızgara)'},
 'Βοδινά φιλετάκια':{k:200,p:28,c:0,f:8,fi:0,cat:'Κρέας',en:'Beef Strips',ru:'Полоски говядины',tr:'Dana Eti Şeritleri'},
 'Βοδινά μπιφτέκια (ψημένα)':{k:193,p:28,c:0,f:9.3,fi:0,cat:'Κρέας',en:'Beef Patties (grilled)',ru:'Говяжьи котлеты (гриль)',tr:'Dana Köfte (ızgara)'},
-'Γαλοπούλα στήθος':{k:135,p:30,c:0,f:1,fi:0,cat:'Κρέας',en:'Turkey (roasted)',ru:'Индейка (запечённая)',tr:'Hindi (fırında)'},
+'Γαλοπούλα στήθος (ψητό)':{k:135,p:30,c:0,f:1,fi:0,cat:'Κρέας',en:'Turkey (roasted)',ru:'Индейка (запечённая)',tr:'Hindi (fırında)'},
 'Κοτόπουλο μπούτι (ψητό)':{k:189,p:27,c:0,f:8.2,fi:0,cat:'Κρέας',en:'Chicken Thigh (grilled)',ru:'Куриное бедро (гриль)',tr:'Tavuk But (ızgara)'},
 'Μοσχάρι (ψητό)':{k:200,p:28,c:0,f:8,fi:0,cat:'Κρέας',en:'Veal (roasted)',ru:'Телятина (запечённая)',tr:'Dana Eti (fırında)'},
 'Μοσχάρι κιμάς (μαγ.)':{k:172,p:24.4,c:0,f:7.6,fi:0,cat:'Κρέας',en:'Ground Veal (cooked)',ru:'Телячий фарш (готовый)',tr:'Dana Kıyma (pişmiş)'},
@@ -145,11 +145,11 @@ var FOODS={
 'Κράκερ ολικής':{k:431,p:10,c:68,f:13,fi:8.5,cat:'Δημητριακά',en:'Whole Wheat Crackers',ru:'Цельнозерновые крекеры',tr:'Tam Buğday Kraker'},
 'Popcorn (αέρας)':{k:387,p:12.9,c:77.8,f:4.5,fi:14.5,cat:'Δημητριακά',en:'Popcorn (air-popped)',ru:'Попкорн (без масла)',tr:'Patlamış Mısır (havada patlatılmış)'},
 /* Όσπρια (βρασμένα) — εξαιρετικές πηγές φυτικών ινών */
-'Φασόλια':{k:127,p:9,c:23.7,f:0.5,fi:6.3,cat:'Όσπρια',en:'Beans',ru:'Фасоль',tr:'Fasulye'},
-'Ρεβίθια':{k:164,p:9,c:27.4,f:2.6,fi:7.6,cat:'Όσπρια',en:'Chickpeas',ru:'Нут',tr:'Nohut'},
-'Φακές':{k:116,p:9,c:20.1,f:0.4,fi:7.9,cat:'Όσπρια',en:'Lentils',ru:'Чечевица',tr:'Mercimek'},
-'Μαυρομάτικα':{k:116,p:7.7,c:21,f:0.5,fi:6.5,cat:'Όσπρια',en:'Black-eyed Peas',ru:'Чёрноглазая фасоль',tr:'Börülce'},
-'Φάβα':{k:118,p:8.3,c:21,f:0.4,fi:8.3,cat:'Όσπρια',en:'Yellow Split Peas',ru:'Жёлтый колотый горох (фава)',tr:'Sarı Bakla (Fava)'},
+'Φασόλια (βρ.)':{k:127,p:9,c:23.7,f:0.5,fi:6.3,cat:'Όσπρια',en:'Beans',ru:'Фасоль',tr:'Fasulye'},
+'Ρεβίθια (βρ.)':{k:164,p:9,c:27.4,f:2.6,fi:7.6,cat:'Όσπρια',en:'Chickpeas',ru:'Нут',tr:'Nohut'},
+'Φακές (βρ.)':{k:116,p:9,c:20.1,f:0.4,fi:7.9,cat:'Όσπρια',en:'Lentils',ru:'Чечевица',tr:'Mercimek'},
+'Μαυρομάτικα (βρ.)':{k:116,p:7.7,c:21,f:0.5,fi:6.5,cat:'Όσπρια',en:'Black-eyed Peas',ru:'Чёрноглазая фасоль',tr:'Börülce'},
+'Φάβα (βρ.)':{k:118,p:8.3,c:21,f:0.4,fi:8.3,cat:'Όσπρια',en:'Yellow Split Peas',ru:'Жёлтый колотый горох (фава)',tr:'Sarı Bakla (Fava)'},
 'Γίγαντες (βρ.)':{k:119,p:8.2,c:21.5,f:0.4,fi:5.8,cat:'Όσπρια',en:'Giant Beans (cooked)',ru:'Гигантская фасоль (варёная)',tr:'İri Fasulye (pişmiş)'},
 'Κουκιά (βρ.)':{k:110,p:7.6,c:19.7,f:0.5,fi:5.4,cat:'Όσπρια',en:'Fava Beans (cooked)',ru:'Бобы (варёные)',tr:'Bakla (pişmiş)'},
 'Αρακάς (βρ.)':{k:84,p:5.4,c:15.6,f:0.2,fi:5.5,cat:'Όσπρια',en:'Green Peas (cooked)',ru:'Зелёный горошек (варёный)',tr:'Bezelye (pişmiş)'},
@@ -162,7 +162,7 @@ var FOODS={
 'Beyond Beef (φυτικός κιμάς)':{k:221,p:17.7,c:6.2,f:15.9,fi:1.2,cat:'Όσπρια',en:'Beyond Beef (plant-based mince)',ru:'Beyond Beef (растительный фарш)',tr:'Beyond Beef (bitkisel kıyma)'},
 /* Λαχανικά */
 'Αγγούρι':{k:16,p:0.7,c:3.6,f:0.1,fi:0.5,cat:'Λαχανικά',en:'Cucumber',ru:'Огурец',tr:'Salatalık'},
-'Γλυκοπατάτα':{k:86,p:1.6,c:20,f:0.1,fi:3.0,cat:'Λαχανικά',en:'Sweet Potato',ru:'Сладкий картофель (батат)',tr:'Tatlı Patates'},
+'Γλυκοπατάτα (ψητή)':{k:90,p:2.0,c:20.7,f:0.2,fi:3.3,cat:'Λαχανικά',en:'Sweet Potato',ru:'Сладкий картофель (батат)',tr:'Tatlı Patates'},
 'Καρότα':{k:41,p:0.9,c:10,f:0.2,fi:2.8,cat:'Λαχανικά',en:'Carrots',ru:'Морковь',tr:'Havuç'},
 'Κολοκυθάκια':{k:17,p:1.2,c:3.1,f:0.3,fi:1.0,cat:'Λαχανικά',en:'Zucchini',ru:'Кабачки',tr:'Kabak'},
 'Καλαμπόκι (ολόκληρο στον ατμό 200g)':{k:172,p:6.6,c:38,f:2.2,fi:4.8,cat:'Λαχανικά',en:'Corn on the Cob (steamed, 200g)',ru:'Кукуруза в початках (на пару, 200г)',tr:'Mısır Koçanı (buharda, 200g)'},
@@ -473,7 +473,7 @@ var FOOD_PAIRING_DB={
     aromatic_herbs:['περιγιάλι','μύρωνο'],
     category:'protein'
   },
-  'Φακές':{
+  'Φακές (βρ.)':{
     flavor_profile:['earthy','mild'],
     best_pairings:['κρεμμύδι','σκόρδο','καρότο','κολιαντρος','γλυκοπατάτα','ρύζι'],
     avoid_with:['τόνος','ψάρι','κοτόπουλο'],
@@ -481,7 +481,7 @@ var FOOD_PAIRING_DB={
     aromatic_herbs:['κολιαντρος','μύρωνο','κύμινο'],
     category:'protein'
   },
-  'Ρεβίθια':{
+  'Ρεβίθια (βρ.)':{
     flavor_profile:['earthy','creamy'],
     best_pairings:['σκόρδο','κρεμμύδι','ντοματα','κολιαντρος','σπανάκι','καρότο'],
     avoid_with:['ψάρι','κοτόπουλο'],
@@ -522,7 +522,7 @@ var FOOD_PAIRING_DB={
     aromatic_herbs:['κολιαντρος','θυμάρι'],
     category:'carb'
   },
-  'Γλυκοπατάτα':{
+  'Γλυκοπατάτα (ψητή)':{
     flavor_profile:['sweet','earthy'],
     best_pairings:['κάρι','κολιαντρος','κοτόπουλο','φακές','αφέλια'],
     avoid_with:[],
@@ -626,8 +626,8 @@ var FOOD_PAIRING_DB={
 var FOOD_PAIRING_EXT={
   // ── ΚΡΕΑΣ ──
   'Κοτόπουλο μπούτι (ψητό)':{flavor_profile:['rich','umami'],best_pairings:['Πατάτες (βρ.)','Λεμόνι','Σκόρδο','Πιπεριές','Ρύζι καστανό (βρ.)','Μανιτάρια'],avoid_with:['Σολομός (ψητός)','Τόνος (κονσέρβα)'],texture:'tender',aromatic_herbs:['ροσμαρίνι','θυμάρι','πάπρικα'],category:'protein'},
-  'Γαλοπούλα στήθος':{flavor_profile:['mild','lean'],best_pairings:['Ρύζι καστανό (βρ.)','Σπανάκι','Μανιτάρια','Πιπεριές','Κινόα (βρ.)'],avoid_with:['Σολομός (ψητός)'],texture:'tender',aromatic_herbs:['θυμάρι','βασιλικό'],category:'protein'},
-  'Μοσχάρι (ψητό)':{flavor_profile:['rich','umami','strong'],best_pairings:['Πατάτες (βρ.)','Μανιτάρια','Κρεμμύδι','Καρότα','Πιπεριά κόκκινη'],avoid_with:['Φακές','ψάρι'],texture:'firm',aromatic_herbs:['ροσμαρίνι','θυμάρι'],category:'protein'},
+  'Γαλοπούλα στήθος (ψητό)':{flavor_profile:['mild','lean'],best_pairings:['Ρύζι καστανό (βρ.)','Σπανάκι','Μανιτάρια','Πιπεριές','Κινόα (βρ.)'],avoid_with:['Σολομός (ψητός)'],texture:'tender',aromatic_herbs:['θυμάρι','βασιλικό'],category:'protein'},
+  'Μοσχάρι (ψητό)':{flavor_profile:['rich','umami','strong'],best_pairings:['Πατάτες (βρ.)','Μανιτάρια','Κρεμμύδι','Καρότα','Πιπεριά κόκκινη'],avoid_with:['Φακές (βρ.)','ψάρι'],texture:'firm',aromatic_herbs:['ροσμαρίνι','θυμάρι'],category:'protein'},
   'Βοδινό άπαχο (ψητό)':{flavor_profile:['rich','umami'],best_pairings:['Πατάτες (βρ.)','Μανιτάρια','Σπαράγγια','Μπρόκολο','Ρύζι καστανό (βρ.)'],avoid_with:['ψάρι'],texture:'firm',aromatic_herbs:['ροσμαρίνι','θυμάρι'],category:'protein'},
   'Μπριζόλα άπαχη':{flavor_profile:['rich','umami'],best_pairings:['Πατάτες (βρ.)','Σαλάτα εποχής','Μανιτάρια','Πιπεριά κόκκινη'],avoid_with:['ψάρι'],texture:'firm',aromatic_herbs:['ροσμαρίνι','πάπρικα'],category:'protein'},
   'Χοιρινό (μπριζόλα)':{flavor_profile:['rich','savory'],best_pairings:['Πατάτες (βρ.)','Μήλο','Λάχανο','Μουστάρδα','Κρεμμύδι'],avoid_with:['ψάρι'],texture:'firm',aromatic_herbs:['θυμάρι','δεντρολίβανο'],category:'protein'},
@@ -635,7 +635,7 @@ var FOOD_PAIRING_EXT={
   'Κουνέλι (μαγ.)':{flavor_profile:['mild','savory'],best_pairings:['Κρεμμύδι','Ντοματες','Σκόρδο','Πατάτες (βρ.)'],avoid_with:['ψάρι'],texture:'tender',aromatic_herbs:['θυμάρι','δάφνη'],category:'protein'},
   'Συκώτι μοσχαρίσιο (σχάρα/φούρνο)':{flavor_profile:['rich','strong','umami'],best_pairings:['Κρεμμύδι','Πατάτες (βρ.)','Λεμόνι','Σκόρδο'],avoid_with:['ψάρι','γαλακτοκομικά'],texture:'firm',aromatic_herbs:['δεντρολίβανο','θυμάρι'],category:'protein'},
   // ── ΨΑΡΙΑ ──
-  'Τσιπούρα (ψητή)':{flavor_profile:['delicate','umami'],best_pairings:['Λεμόνι','Σπαράγγια','Σκόρδο','Σπανάκι'],avoid_with:['Κοτόπουλο στήθος (ψητό)','Φακές'],texture:'tender',aromatic_herbs:['άνηθος','θυμάρι'],category:'protein'},
+  'Τσιπούρα (ψητή)':{flavor_profile:['delicate','umami'],best_pairings:['Λεμόνι','Σπαράγγια','Σκόρδο','Σπανάκι'],avoid_with:['Κοτόπουλο στήθος (ψητό)','Φακές (βρ.)'],texture:'tender',aromatic_herbs:['άνηθος','θυμάρι'],category:'protein'},
   'Μπακαλιάρος (ψητός)':{flavor_profile:['mild','delicate'],best_pairings:['Σκόρδο','Πατάτες (βρ.)','Λεμόνι','Σπανάκι'],avoid_with:['Κοτόπουλο στήθος (ψητό)'],texture:'flaky',aromatic_herbs:['μαϊντανός','σκόρδο'],category:'protein'},
   'Σαρδέλες':{flavor_profile:['umami','strong','oily'],best_pairings:['Λεμόνι','Ρίγανη','Ντοματες','Κρεμμύδι'],avoid_with:['Κοτόπουλο στήθος (ψητό)','γλυκά'],texture:'tender',aromatic_herbs:['ρίγανη','μαϊντανός'],category:'protein'},
   'Σκουμπρί (ψητό)':{flavor_profile:['umami','strong','oily'],best_pairings:['Λεμόνι','Σκόρδο','Μαϊντανός','Πατάτες (βρ.)'],avoid_with:['γλυκά'],texture:'tender',aromatic_herbs:['μαϊντανός','ρίγανη'],category:'protein'},
@@ -643,9 +643,9 @@ var FOOD_PAIRING_EXT={
   'Καλαμάρι (ψητό)':{flavor_profile:['delicate','umami'],best_pairings:['Λεμόνι','Σκόρδο','Μαϊντανός','Πιπεριά κόκκινη'],avoid_with:['γαλακτοκομικά'],texture:'tender',aromatic_herbs:['μαϊντανός','σκόρδο'],category:'protein'},
   'Μύδια (βρ.)':{flavor_profile:['umami','briny'],best_pairings:['Σκόρδο','Λεμόνι','Ντοματες','Μαϊντανός'],avoid_with:['γλυκά'],texture:'tender',aromatic_herbs:['μαϊντανός','σκόρδο'],category:'protein'},
   // ── ΟΣΠΡΙΑ / ΦΥΤΙΚΕΣ ΠΡΩΤΕΪΝΕΣ ──
-  'Φασόλια':{flavor_profile:['earthy','creamy'],best_pairings:['Κρεμμύδι','Καρότα','Ντοματες','Σκόρδο','Σέλινο'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['δάφνη','θυμάρι'],category:'protein'},
-  'Μαυρομάτικα':{flavor_profile:['earthy','mild'],best_pairings:['Κρεμμύδι','Σπανάκι','Λεμόνι','Ελαιόλαδο','Άνηθος'],avoid_with:['ψάρι'],texture:'tender',aromatic_herbs:['άνηθος','μαϊντανός'],category:'protein'},
-  'Φάβα':{flavor_profile:['creamy','earthy'],best_pairings:['Κρεμμύδι','Λεμόνι','Ελαιόλαδο','Κάπαρη'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['μαϊντανός'],category:'protein'},
+  'Φασόλια (βρ.)':{flavor_profile:['earthy','creamy'],best_pairings:['Κρεμμύδι','Καρότα','Ντοματες','Σκόρδο','Σέλινο'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['δάφνη','θυμάρι'],category:'protein'},
+  'Μαυρομάτικα (βρ.)':{flavor_profile:['earthy','mild'],best_pairings:['Κρεμμύδι','Σπανάκι','Λεμόνι','Ελαιόλαδο','Άνηθος'],avoid_with:['ψάρι'],texture:'tender',aromatic_herbs:['άνηθος','μαϊντανός'],category:'protein'},
+  'Φάβα (βρ.)':{flavor_profile:['creamy','earthy'],best_pairings:['Κρεμμύδι','Λεμόνι','Ελαιόλαδο','Κάπαρη'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['μαϊντανός'],category:'protein'},
   'Γίγαντες (βρ.)':{flavor_profile:['creamy','earthy'],best_pairings:['Ντοματες','Κρεμμύδι','Σκόρδο','Καρότα','Σέλινο'],avoid_with:['ψάρι'],texture:'creamy',aromatic_herbs:['μαϊντανός','δάφνη'],category:'protein'},
   'Tofu (φυσικό)':{flavor_profile:['neutral','mild'],best_pairings:['Σάλτσα σόγιας (μειωμένο αλάτι)','Σκόρδο','Πιπεριά κόκκινη','Μπρόκολο','Ρύζι άσπρο (βρ.)'],avoid_with:[],texture:'soft',aromatic_herbs:['τζίντζερ','σκόρδο'],category:'protein'},
   'Edamame (βρ.)':{flavor_profile:['fresh','mild'],best_pairings:['Σάλτσα σόγιας (μειωμένο αλάτι)','Ρύζι άσπρο (βρ.)','Σουσάμι'],avoid_with:[],texture:'tender',aromatic_herbs:['σουσάμι'],category:'protein'},
@@ -667,7 +667,7 @@ var FOOD_PAIRING_EXT={
   'Ψωμί ολικής άλεσης':{flavor_profile:['nutty','mild'],best_pairings:['Αυγά (ολόκληρα)','Τυρί φέτα','Ντοματες','Αβοκάντο'],avoid_with:[],texture:'chewy',aromatic_herbs:[],category:'carb'},
   'Ψωμί προζύμης':{flavor_profile:['tangy','nutty','mild'],best_pairings:['Αυγά (ολόκληρα)','Τυρί φέτα','Αβοκάντο','Ντοματες','Ελαιόλαδο'],avoid_with:[],texture:'chewy',aromatic_herbs:[],category:'carb'},
   // ── ΛΑΧΑΝΙΚΑ ──
-  'Καρότα':{flavor_profile:['sweet','earthy'],best_pairings:['Κύμινο','Μέλι','Κοτόπουλο στήθος (ψητό)','Φακές'],avoid_with:[],texture:'crisp',aromatic_herbs:['κύμινο','κολιαντρος'],category:'vegetable'},
+  'Καρότα':{flavor_profile:['sweet','earthy'],best_pairings:['Κύμινο','Μέλι','Κοτόπουλο στήθος (ψητό)','Φακές (βρ.)'],avoid_with:[],texture:'crisp',aromatic_herbs:['κύμινο','κολιαντρος'],category:'vegetable'},
   'Κολοκυθάκια':{flavor_profile:['mild','fresh'],best_pairings:['Σκόρδο','Λεμόνι','Φέτα','Δυόσμος','Ντοματες'],avoid_with:[],texture:'tender',aromatic_herbs:['δυόσμος','βασιλικό'],category:'vegetable'},
   'Μελιτζάνες':{flavor_profile:['earthy','smoky'],best_pairings:['Ντοματες','Σκόρδο','Φέτα','Κιμάς','Ελαιόλαδο'],avoid_with:[],texture:'soft',aromatic_herbs:['βασιλικό','ρίγανη'],category:'vegetable'},
   'Κουνουπίδι':{flavor_profile:['earthy','mild'],best_pairings:['Σκόρδο','Λεμόνι','Κύμινο','Πάπρικα'],avoid_with:[],texture:'tender',aromatic_herbs:['κύμινο','πάπρικα'],category:'vegetable'},

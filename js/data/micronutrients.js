@@ -36,8 +36,8 @@ var MICRONUTRIENTS={
   'Ντομάτα':{Fe:0.27,Zn:0.17,Mg:10,Ca:12,B1:0.04,B2:0.02,B3:0.59,B6:0.08,B12:0,Folate:15,Omega3:0.05,Omega6:0.2,Iodine:0,Choline:7,DHA:0},
   'Λεμόνι':{Fe:0.6,Zn:0.1,Mg:8,Ca:26,B1:0.04,B2:0.02,B3:0.1,B6:0.08,B12:0,Folate:11,Omega3:0.03,Omega6:0.02,Iodine:0,Choline:5,DHA:0},
   // Legumes
-  'Φακές':{Fe:3.3,Zn:3.27,Mg:47,Ca:36,B1:0.64,B2:0.19,B3:2.13,B6:0.54,B12:0,Folate:181,Omega3:0.06,Omega6:0.3,Iodine:0,Choline:28,DHA:0},
-  'Ρεβίθια':{Fe:2.89,Zn:2.11,Mg:48,Ca:49,B1:0.48,B2:0.21,B3:1.54,B6:0.54,B12:0,Folate:172,Omega3:0.06,Omega6:0.7,Iodine:0,Choline:35,DHA:0},
+  'Φακές (βρ.)':{Fe:3.3,Zn:3.27,Mg:47,Ca:36,B1:0.64,B2:0.19,B3:2.13,B6:0.54,B12:0,Folate:181,Omega3:0.06,Omega6:0.3,Iodine:0,Choline:28,DHA:0},
+  'Ρεβίθια (βρ.)':{Fe:2.89,Zn:2.11,Mg:48,Ca:49,B1:0.48,B2:0.21,B3:1.54,B6:0.54,B12:0,Folate:172,Omega3:0.06,Omega6:0.7,Iodine:0,Choline:35,DHA:0},
   // Nuts & Seeds
   'Αμύγδαλα':{Fe:3.71,Zn:3.12,Mg:270,Ca:264,B1:0.20,B2:0.92,B3:3.62,B6:0.10,B12:0,Folate:50,Omega3:0.39,Omega6:12.3,Iodine:0,Choline:52,DHA:0},
   'Chia seeds':{Fe:8.0,Zn:4.58,Mg:335,Ca:631,B1:0.62,B2:0.27,B3:8.83,B6:0.90,B12:0,Folate:78,Omega3:17.83,Omega6:5.8,Iodine:0,Choline:63,DHA:0},
@@ -48,7 +48,7 @@ var MICRONUTRIENTS={
   'Κοτόπουλο μπούτι (ψητό)':{Fe:1.13,Zn:1.92,Mg:24,Ca:9,B1:0.096,B2:0.218,B3:6.21,B6:0.462,B12:0.42,Folate:5,Omega3:0.061,Omega6:1.46,Iodine:6,Choline:65,DHA:0},
   'Κοτόπουλο σουβλάκι':{Fe:1.04,Zn:1.0,Mg:29,Ca:15,B1:0.07,B2:0.114,B3:13.7,B6:0.60,B12:0.34,Folate:4,Omega3:0.05,Omega6:1.5,Iodine:6,Choline:65,DHA:0},
   'Κοτόπουλο μπιφτέκι':{Fe:1.1,Zn:1.5,Mg:26,Ca:12,B1:0.08,B2:0.17,B3:10.0,B6:0.53,B12:0.38,Folate:5,Omega3:0.06,Omega6:1.5,Iodine:6,Choline:65,DHA:0},
-  'Γαλοπούλα στήθος':{Fe:0.71,Zn:1.72,Mg:32,Ca:9,B1:0.035,B2:0.205,B3:11.8,B6:0.807,B12:0.39,Folate:9,Omega3:0.03,Omega6:0.6,Iodine:35,Choline:65,DHA:0},
+  'Γαλοπούλα στήθος (ψητό)':{Fe:0.71,Zn:1.72,Mg:32,Ca:9,B1:0.035,B2:0.205,B3:11.8,B6:0.807,B12:0.39,Folate:9,Omega3:0.03,Omega6:0.6,Iodine:35,Choline:65,DHA:0},
   'Μπριζόλα άπαχη':{Fe:1.96,Zn:5.21,Mg:24,Ca:19,B1:0.072,B2:0.128,B3:7.87,B6:0.578,B12:1.91,Folate:9,Omega3:0.02,Omega6:0.3,Iodine:3,Choline:85,DHA:0},
   'Λαβράκι (ψητό)':{Fe:0.37,Zn:0.52,Mg:53,Ca:13,B1:0.13,B2:0.15,B3:1.9,B6:0.46,B12:0.3,Folate:6,Omega3:0.86,Omega6:0.1,Iodine:30,Choline:65,DHA:400,VitD:2},
   'Τσιπούρα (ψητή)':{Fe:0.4,Zn:0.5,Mg:39,Ca:20,B1:0.10,B2:0.12,B3:3.0,B6:0.40,B12:1.0,Folate:8,Omega3:0.50,Omega6:0.1,Iodine:30,Choline:65,DHA:400,VitD:2},
@@ -92,7 +92,7 @@ var MICRONUTRIENTS={
   'Σκόρδο':{Fe:1.7,Zn:1.16,Mg:25,Ca:181,B1:0.20,B2:0.11,B3:0.70,B6:1.24,B12:0,Folate:3,Omega3:0.005,Omega6:0.23,Iodine:0,Choline:24,DHA:0},
   'Κρεμμύδι':{Fe:0.21,Zn:0.17,Mg:10,Ca:23,B1:0.046,B2:0.027,B3:0.12,B6:0.12,B12:0,Folate:19,Omega3:0.004,Omega6:0.013,Iodine:1,Choline:6,DHA:0},
   // Grains / Starches (cooked)
-  'Γλυκοπατάτα':{Fe:0.69,Zn:0.32,Mg:25,Ca:38,B1:0.11,B2:0.11,B3:1.49,B6:0.29,B12:0,Folate:6,Omega3:0.01,Omega6:0.05,Iodine:0,Choline:13,DHA:0},
+  'Γλυκοπατάτα (ψητή)':{Fe:0.69,Zn:0.32,Mg:25,Ca:38,B1:0.11,B2:0.11,B3:1.49,B6:0.29,B12:0,Folate:6,Omega3:0.01,Omega6:0.05,Iodine:0,Choline:13,DHA:0},
   'Κινόα (βρ.)':{Fe:1.49,Zn:1.09,Mg:64,Ca:17,B1:0.107,B2:0.11,B3:0.41,B6:0.12,B12:0,Folate:42,Omega3:0.09,Omega6:1.0,Iodine:0,Choline:23,DHA:0},
   'Φαγόπυρο (βρ.)':{Fe:0.8,Zn:0.61,Mg:51,Ca:7,B1:0.04,B2:0.039,B3:0.94,B6:0.077,B12:0,Folate:14,Omega3:0.01,Omega6:0.18,Iodine:0,Choline:20,DHA:0},
   'Πλιγούρι (βρ.)':{Fe:0.96,Zn:0.57,Mg:32,Ca:10,B1:0.057,B2:0.028,B3:1.0,B6:0.08,B12:0,Folate:18,Omega3:0.02,Omega6:0.2,Iodine:0,Choline:9,DHA:0},
@@ -103,7 +103,7 @@ var MICRONUTRIENTS={
   'Ψωμί σίκαλης':{Fe:2.5,Zn:1.4,Mg:40,Ca:73,B1:0.17,B2:0.17,B3:1.7,B6:0.07,B12:0,Folate:35,Omega3:0.06,Omega6:0.6,Iodine:5,Choline:15,DHA:0},
   'Ψωμί λευκό':{Fe:3.6,Zn:0.7,Mg:23,Ca:151,B1:0.40,B2:0.23,B3:3.9,B6:0.10,B12:0,Folate:85,Omega3:0.03,Omega6:0.5,Iodine:10,Choline:15,DHA:0},
   // Legumes
-  'Φασόλια':{Fe:3.7,Zn:1.38,Mg:63,Ca:90,B1:0.118,B2:0.046,B3:0.14,B6:0.093,B12:0,Folate:81,Omega3:0.10,Omega6:0.2,Iodine:0,Choline:28,DHA:0},
+  'Φασόλια (βρ.)':{Fe:3.7,Zn:1.38,Mg:63,Ca:90,B1:0.118,B2:0.046,B3:0.14,B6:0.093,B12:0,Folate:81,Omega3:0.10,Omega6:0.2,Iodine:0,Choline:28,DHA:0},
   // Fats / Nuts
   'Αβοκάντο':{Fe:0.55,Zn:0.64,Mg:29,Ca:12,B1:0.067,B2:0.13,B3:1.74,B6:0.26,B12:0,Folate:81,Omega3:0.11,Omega6:1.7,Iodine:0,Choline:14,DHA:0},
   'Ελιές':{Fe:3.3,Zn:0.22,Mg:11,Ca:88,B1:0.003,B2:0,B3:0.04,B6:0.009,B12:0,Folate:3,Omega3:0.06,Omega6:1.2,Iodine:0,Choline:0,DHA:0},
@@ -194,8 +194,8 @@ var MICRONUTRIENTS={
   'Βρώμη (βρ.)':{Fe:1.2,Zn:0.9,Mg:35,Ca:13,B1:0.19,B2:0.03,B3:0.24,B6:0.03,B12:0,Folate:14,Omega3:0.1,Omega6:1.4,Iodine:1,Choline:10,DHA:0},
   'Ρύζι μαύρο (βρ.)':{Fe:0.6,Zn:1.0,Mg:40,Ca:15,B1:0.1,B2:0.05,B3:2.5,B6:0.3,B12:0,Folate:10,Omega3:0.07,Omega6:1.5,Iodine:0,Choline:8,DHA:0},
   // Legumes
-  'Μαυρομάτικα':{Fe:2.3,Zn:1.3,Mg:44,Ca:24,B1:0.2,B2:0.06,B3:0.7,B6:0.07,B12:0,Folate:130,Omega3:0.04,Omega6:0.2,Iodine:0,Choline:25,DHA:0},
-  'Φάβα':{Fe:1.9,Zn:1.4,Mg:32,Ca:22,B1:0.15,B2:0.06,B3:1.0,B6:0.06,B12:0,Folate:65,Omega3:0.03,Omega6:0.2,Iodine:0,Choline:20,DHA:0},
+  'Μαυρομάτικα (βρ.)':{Fe:2.3,Zn:1.3,Mg:44,Ca:24,B1:0.2,B2:0.06,B3:0.7,B6:0.07,B12:0,Folate:130,Omega3:0.04,Omega6:0.2,Iodine:0,Choline:25,DHA:0},
+  'Φάβα (βρ.)':{Fe:1.9,Zn:1.4,Mg:32,Ca:22,B1:0.15,B2:0.06,B3:1.0,B6:0.06,B12:0,Folate:65,Omega3:0.03,Omega6:0.2,Iodine:0,Choline:20,DHA:0},
   'Γίγαντες (βρ.)':{Fe:2.5,Zn:1.0,Mg:40,Ca:40,B1:0.15,B2:0.06,B3:0.6,B6:0.1,B12:0,Folate:60,Omega3:0.05,Omega6:0.2,Iodine:0,Choline:22,DHA:0},
   'Κουκιά (βρ.)':{Fe:1.5,Zn:1.0,Mg:30,Ca:30,B1:0.15,B2:0.06,B3:1.0,B6:0.1,B12:0,Folate:100,Omega3:0.03,Omega6:0.2,Iodine:0,Choline:20,DHA:0},
   'Αρακάς (βρ.)':{Fe:1.47,Zn:1.19,Mg:33,Ca:27,B1:0.25,B2:0.13,B3:2.09,B6:0.17,B12:0,Folate:65,Omega3:0.04,Omega6:0.08,Iodine:0,Choline:28,DHA:0},

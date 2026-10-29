@@ -23,7 +23,7 @@ mi = {'id': 'mi', 'name': 'Μιχάλης Δοκιμή', 'sex': 'M', 'age': 42, 
       'goal': 'maintain', 'allergenListsVer': 2, 'foodExclude': [], 'weekPlan': {str(d): day() for d in range(7)}}
 # Πελάτης/πρότυπο με το ΠΑΛΙΟ όνομα «Πατάτες» → η εφάπαξ μετονομασία (runFoodRenameMigration) το κάνει «Πατάτες (βρ.)»
 po = {'id': 'po', 'name': 'Παλιό Πλάνο', 'sex': 'F', 'age': 30, 'weight': 60, 'height': 165, 'activity': 'light', 'goal': 'maintain',
-      'allergenListsVer': 2, 'foodExclude': ['Πατάτες'], 'weekPlan': {'0': [{'name': 'Μεσημεριανό', 'foods': [{'n': 'Πατάτες', 'g': 150}]}]}}
+      'allergenListsVer': 2, 'foodExclude': ['Πατάτες', 'Φακές'], 'weekPlan': {'0': [{'name': 'Μεσημεριανό', 'foods': [{'n': 'Πατάτες', 'g': 150}, {'n': 'Φακές', 'g': 200}, {'n': 'Γλυκοπατάτα', 'g': 130}]}]}}
 tpl = {'id': 'tp1', 'name': 'Πρότυπο', 'meals': [{'name': 'Βραδινό', 'foods': [{'n': 'Πατάτες', 'g': 200}]}]}
 S = {'rows': {U1: {'data': {'clients': [mi, po], 'customTemplates': [tpl]}, 'version': 1}}}
 
@@ -54,7 +54,11 @@ try:
 
         print('0. Μετονομασία «Πατάτες» → «Πατάτες (βρ.)» στα αποθηκευμένα δεδομένα')
         p0 = J('JSON.stringify(clients.find(x=>x.id==="po"))')
-        check('"Πατάτες"' not in p0 and p0.count('Πατάτες (βρ.)') == 2, f'client plan + exclusions renamed ({p0[:160]})')
+        check('"Πατάτες"' not in p0 and p0.count('Πατάτες (βρ.)') == 2 and p0.count('Φακές (βρ.)') == 2 and '"Γλυκοπατάτα (ψητή)"' in p0,
+              f'client plan + exclusions renamed ({p0[:200]})')
+        check(J('cm("Γλυκοπατάτα",100).k===90 && cm("Φακές",100).k===116 && !!FOOD_UNITS["Γλυκοπατάτα (ψητή)"] && !!FOODS["Γαλοπούλα στήθος (ψητό)"]'),
+              'legumes/sweet potato/turkey: new keys + old names resolve (sweet potato = baked 90 kcal)')
+        check(J('getProtocol("fodmap").restrictions.avoidFoods.indexOf("Φασόλια")!==-1'), 'FODMAP avoid list keeps substring «Φασόλια» (still matches borlotti)')
         check(J('JSON.stringify(customTemplates)').count('Πατάτες (βρ.)') == 1, 'custom template renamed')
         check(J('!!FOODS["Πατάτες (βρ.)"] && !FOODS["Πατάτες"] && FOOD_UNITS["Πατάτες (βρ.)"].u==="τεμ." && cm("Πατάτες",100).k===87'),
               'new key everywhere, old name still resolves via alias')

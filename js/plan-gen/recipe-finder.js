@@ -283,7 +283,7 @@ function generateSmartMeal(targetKcal, targetMacros, day, savedCombos, mealName,
   var AROMATIC_VEG={'Σκόρδο':1,'Κρεμμύδι':1,'Κρεμμυδάκι (φρέσκο)':1};
   // Αμυλούχα/καλαμπόκι: λειτουργούν ως υδατάνθρακας, όχι ως «λαχανικό συνοδευτικό»
   var STARCHY_VEG={'Καλαμπόκι (ολόκληρο στον ατμό 200g)':1,'Καλαμπόκι (ολόκληρο στον ατμό 400g - Halvatzis)':1};
-  var KETO_STARCH={'Πατάτες (βρ.)':1,'Γλυκοπατάτα':1};
+  var KETO_STARCH={'Πατάτες (βρ.)':1,'Γλυκοπατάτα (ψητή)':1};
   var veggies = Object.keys(FOODS).filter(function(f) {
     // Skip excluded foods
     if(isExcluded(f)) return false;
