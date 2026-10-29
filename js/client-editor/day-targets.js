@@ -83,7 +83,11 @@ function makeDayTgtDefaults(c,t){
     var fPct=t.fPct/100;
     var cPct=t.cPct/100;
 
-    var dayP=Math.round(dayKcal*pPct/4);
+    // Πρωτεΐνη ΣΤΑΘΕΡΗ κάθε μέρα (2026-10-29): % του preset πάνω στον ΕΒΔΟΜΑΔΙΑΙΟ μέσο όρο (= t.p),
+    // όχι στις θερμίδες της ημέρας. Με MET ο δρομέας έπαιρνε 79 g (0.98 g/kg) σε ημέρα ξεκούρασης και
+    // 250 g (3.1 g/kg) την ημέρα μαραθωνίου. Thomas 2016 / ISSN: πρωτεΐνη 1.2-2.0 g/kg κάθε μέρα·
+    // αυτό που ακολουθεί το φορτίο είναι οι υδατάνθρακες (υπόλοιπο θερμίδων παρακάτω).
+    var dayP=t.p>0?t.p:Math.round(dayKcal*pPct/4);
     var dayF=Math.round(dayKcal*fPct/9);
     var dayC=Math.max(0,Math.round((dayKcal-dayP*4-dayF*9)/4)); // floor at 0 — defense-in-depth against p%+f% together exceeding 100
 

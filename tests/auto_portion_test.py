@@ -89,6 +89,20 @@ try:
         J('renderMain()'); pg.wait_for_timeout(1600)
         check(plan() == before and not J('!!document.getElementById("portion-adjust-toast")'), 'plain re-render: no change, no toast')
 
+        print('5. Πρωτεΐνη σταθερή κάθε μέρα με MET (εβδομάδα δρομέα με μαραθώνιο)')
+        J('''(()=>{var c=clients.find(x=>x.id==="mi");c.activity="sed";c.eventDate=null;c.macroP=20;c.macroF=25;c.macroC=55;
+          c.metActivities=[{id:"run_10",name:"Τρέξιμο 10 km/h",met:9.8,mins:30,time:"05:00",days:[1]},
+            {id:"run_10",name:"Τρέξιμο 10 km/h",met:9.8,mins:70,time:"05:00",days:[2,3]},
+            {id:"run_10",name:"Τρέξιμο 10 km/h",met:9.8,mins:40,time:"05:00",days:[5]},
+            {id:"run_12",name:"Τρέξιμο 12 km/h",met:11.5,mins:210,time:"07:00",days:[6]}];
+          _rebuildTrainDaysFromMet(c);renderMain();})()'''); pg.wait_for_timeout(300)
+        t2 = tg(); w = 82
+        ps = [t2[d]['p'] for d in range(7)]; ks = [t2[d]['k'] for d in range(7)]
+        check(len(set(ps)) == 1, f'same protein every day ({ps})')
+        check(1.2 <= ps[0] / w <= 2.0, f'protein {ps[0]} g = {ps[0]/w:.2f} g/kg (1.2-2.0)')
+        check(ks[6] > ks[0] + 1500 and t2[6]['c'] > t2[0]['c'] + 300, f'race day: kcal/carbs carry the load, not protein (kcal {ks}, C {[t2[d]["c"] for d in range(7)]})')
+        check(all(abs(t2[d]['p']*4 + t2[d]['c']*4 + t2[d]['f']*9 - ks[d]) <= 6 for d in range(7)), 'P/F/C add up to each day kcal')
+
         br.close()
 finally:
     srv.terminate()
