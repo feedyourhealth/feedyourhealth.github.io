@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="d6c9cf26237b">
+<meta name="fyh-build" content="a65634a601f8">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -20,7 +20,7 @@
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css?v=e11629ddb1">
+<link rel="stylesheet" href="css/styles.css?v=f9652e2682">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -353,13 +353,13 @@ setTimeout(function(){
 <!-- calc/macros-recalc — micronutrient targets + the cascade-recalc engine
      (getMicronutrientTargets, onClientChange, recalculateMacros …). Zero load-time
      code; renderMain/genPlan/makeDayTgtDefaults refs resolve at call time. -->
-<script defer src="js/calc/macros-recalc.js?v=668a97a8db"></script>
+<script defer src="js/calc/macros-recalc.js?v=ce5c844dad"></script>
 <!-- calc/micronutrients — micronutrient adequacy analysis, gap→supplement matching,
      and normalizeGreekText (accent-strip used across plan-gen/*). Pure; callers runtime. -->
 <script defer src="js/calc/micronutrients.js?v=67408a9c0e"></script>
 <!-- calc/portion-optimizer — «⚖️ Προσαρμογή ποσοτήτων»: grams-only fit to the day macro targets.
      Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
-<script defer src="js/calc/portion-optimizer.js?v=d9800dbef0"></script>
+<script defer src="js/calc/portion-optimizer.js?v=1ba9c7f829"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
 <script defer src="js/core/persistence.js?v=1ce6a6eb36"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
@@ -395,7 +395,7 @@ setTimeout(function(){
 <script defer src="js/client-editor/tracker-results.js?v=8b4fc9e326"></script>
 <script defer src="js/client-editor/day-targets.js?v=ec4b2e8f99"></script>
 <script defer src="js/client-editor/form-controls.js?v=326dad8ee9"></script>
-<script defer src="js/client-editor/render-main.js?v=4db068a0ff"></script>
+<script defer src="js/client-editor/render-main.js?v=813820b9bb"></script>
 <!-- client-editor/overview — the "📇 Επισκόπηση" client sub-tab: read-only status
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
@@ -431,9 +431,9 @@ setTimeout(function(){
 <script defer src="js/plan-gen/plan-transform.js?v=c4dd4387d7"></script>
 <script defer src="js/plan-gen/mediterranean.js?v=8fbb755210"></script>
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
-<script defer src="js/plan-gen/gen-plan.js?v=9bc169d9b8"></script>
+<script defer src="js/plan-gen/gen-plan.js?v=817656fa17"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
-<script defer src="js/plan-gen/week-table.js?v=edfed22c31"></script>
+<script defer src="js/plan-gen/week-table.js?v=7ef7832863"></script>
 <script defer src="js/plan-gen/household.js?v=72f3c98855"></script>
 <script defer src="js/plan-gen/food-selector.js?v=de432f65e1"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=fbeaed85c9"></script>

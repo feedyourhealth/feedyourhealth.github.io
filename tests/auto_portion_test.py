@@ -1,5 +1,5 @@
-"""⚖️ Αυτόματη προσαρμογή ποσοτήτων: όταν αλλάζουν οι στόχοι ημέρας (καρβοφόρτωση, προπονήσεις…)
-προσαρμόζονται ΜΟΝΟ οι ημέρες που άλλαξαν, με toast + Αναίρεση· το άνοιγμα πελάτη δεν αλλάζει τίποτα."""
+"""⚠️ Οι στόχοι άλλαξαν: όταν αλλάζουν οι στόχοι ημέρας (καρβοφόρτωση, προπονήσεις…) το πλάνο ΔΕΝ αλλάζει μόνο του·
+κίτρινο πλαίσιο + «νέοι στόχοι» στις ημέρες, ⚖️ από το πλαίσιο προσαρμόζει μόνο αυτές σε πρακτικές ποσότητες."""
 import json, subprocess, sys, time, urllib.request, io, datetime
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -16,8 +16,8 @@ def check(cond, msg):
 def day():
     return [{'name': 'Πρωινό', 'foods': [{'n': 'Βρώμη', 'g': 60}, {'n': 'Γιαούρτι 2%', 'g': 200}, {'n': 'Μπανάνα', 'g': 120}]},
             {'name': 'Μεσημεριανό', 'foods': [{'n': 'Κοτόπουλο στήθος (ψητό)', 'g': 150}, {'n': 'Ρύζι (βρ.)', 'g': 200}]},
-            {'name': 'Ενδιάμεσο', 'foods': [{'n': 'Ψωμί ολικής άλεσης', 'g': 60}, {'n': 'Μέλι', 'g': 20}]},
-            {'name': 'Βραδινό', 'foods': [{'n': 'Σολομός', 'g': 150}, {'n': 'Πατάτες (βρ.)', 'g': 250}]}]
+            {'name': 'Ενδιάμεσο', 'foods': [{'n': 'Ψωμί ολικής άλεσης', 'g': 60}, {'n': 'Μέλι', 'g': 20}, {'n': 'Muffins Μύρτιλου', 'g': 60}]},
+            {'name': 'Βραδινό', 'foods': [{'n': 'Σολομός', 'g': 150}, {'n': 'Πατάτες (βρ.)', 'g': 250}, {'n': 'Σαλάτα εποχής', 'g': 100}, {'n': 'Ελαιόλαδο', 'g': 10}]}]
 
 mi = {'id': 'mi', 'name': 'Μιχάλης Δοκιμή', 'sex': 'M', 'age': 42, 'weight': 82, 'height': 178, 'activity': 'mod',
       'goal': 'maintain', 'allergenListsVer': 2, 'foodExclude': [], 'weekPlan': {str(d): day() for d in range(7)}}
@@ -64,7 +64,7 @@ try:
               'new key everywhere, old name still resolves via alias')
 
         print('1. Άνοιγμα πελάτη = μόνο baseline, καμία αλλαγή')
-        J('selectClient("mi"); renderMain(); swTab(4);'); pg.wait_for_timeout(300)
+        J('selectClient("mi"); renderMain(); swTab(2);'); pg.wait_for_timeout(300)
         before = plan()  # μετά το πρώτο render (κανονικοποίηση πεδίων γευμάτων), πριν τρέξει το auto-sync
         pg.wait_for_timeout(1600)
         check(plan() == before, 'opening the client does not touch the plan')
@@ -76,8 +76,16 @@ try:
         tg = lambda: J('getDayTgtEff(clients.find(x=>x.id==="mi"),calcTDEE(clients.find(x=>x.id==="mi")))')
         t0 = tg()
 
-        print('2. Ημερομηνία αγώνα → καρβοφόρτωση Πεμ/Παρ/Σαβ → αυτόματη προσαρμογή μόνο αυτών')
+        print('2. Ημερομηνία αγώνα → καρβοφόρτωση Πεμ/Παρ/Σαβ → ΔΕΝ αλλάζει τίποτα, μόνο κίτρινο πλαίσιο')
         J(f'setEventDate("{sunday.isoformat()}")'); pg.wait_for_timeout(2200)
+        check(plan() == before, 'changing targets does NOT touch the plan')
+        check(not J('!!document.getElementById("portion-adjust-toast")'), 'no auto-adjust toast')
+        bn = J('(document.getElementById("po-tgt-banner")||{}).innerText||""')
+        check('Οι στόχοι άλλαξαν' in bn and 'Πέμπτη, Παρασκευή, Σάββατο' in bn and 'Προσαρμογή 3 ημερών' in bn, f'banner lists Thu/Fri/Sat + button ({bn[:160]!r})')
+        chips = J('[...document.querySelectorAll(".week-table thead th")].map(th=>th.querySelector(".po-tgt-chip")?1:0)')
+        check(chips == [0, 0, 0, 0, 1, 1, 1, 0], f'«νέοι στόχοι» chip only on Thu/Fri/Sat headers ({chips})')
+        J('document.querySelector("#po-tgt-banner .po-tgt-go").click()'); pg.wait_for_timeout(400)
+        check(not J('!!document.getElementById("po-tgt-banner")'), 'banner gone after adjusting')
         loads = J('getCarbLoadDayIndexes(clients.find(x=>x.id==="mi"))')
         check(sorted(loads) == [3, 4, 5], f'carb-load days are Thu/Fri/Sat, race day excluded ({loads})')
         t1 = tg()
@@ -92,7 +100,20 @@ try:
         changed = [d for d in range(7) if after[str(d)] != old[str(d)]]
         check(changed and set(changed) <= {3, 4, 5}, f'only carb-load days changed in the plan ({changed})')
         toast = J('(document.getElementById("portion-adjust-toast")||{}).innerText||""')
-        check('Οι στόχοι άλλαξαν' in toast and 'Αναίρεση' in toast, f'toast with Αναίρεση ({toast[:90]!r})')
+        check('Προσαρμόστηκαν' in toast and 'Αναίρεση' in toast, f'toast with Αναίρεση ({toast[:90]!r})')
+        # Πρακτικές ποσότητες: τεμάχια/φέτες ολόκληρα, φλ./κ.σ. σε ½, σαλάτα ίδια, γραμμάρια σε 5/10 g
+        bad = J('''(()=>{var c=clients.find(x=>x.id==="mi"),o=JSON.parse(%s),bad=[];
+          [3,4,5].forEach(d=>c.weekPlan[d].forEach((m,mi)=>m.foods.forEach((f,fi)=>{
+            var g0=o[d][mi].foods[fi].g; if(f.g===g0)return;
+            var fu=FOOD_UNITS[f.n],cat=(FOODS[resolveFood(f.n)]||{}).cat,k=cm(f.n,100).k;
+            if(cat==="Λαχανικά"&&k<40){bad.push("veg "+f.n);return;}
+            var w=_poWholeG(f.n);
+            if(w){if(Math.abs(f.g/w-Math.round(f.g/w))>0.01)bad.push(f.n+" "+f.g);return;}
+            if(f.g%%_poGramStep(f.g))bad.push(f.n+" "+f.g+"g");
+          })));return bad;})()''' % json.dumps(before))
+        check(not bad, f'adjusted amounts are practical (whole pieces, ½ cups/spoons, salad untouched, 5/10 g) ({bad})')
+        check(J('_poWholeG("Muffins Μύρτιλου")===60 && _poWholeG("Γιαούρτι 2%")===100 && _poWholeG("Ελαιόλαδο")===5 && _poWholeG("Ρύζι (βρ.)")===0'),
+              'unit rules: muffin whole, yogurt ½ φλ., oil ½ κ.σ., rice in grams')
         low = J('getLowFiberDayIndexes(clients.find(x=>x.id==="mi"))')
         check(sorted(low) == [3, 4, 5, 6], f'low-fiber days = load days + race day ({low})')
         check('(λιγότερες ίνες)' in toast or 'Ρύζι άσπρο' in toast or 'Μακαρόνια' in toast or 'Ψωμί λευκό' in toast,
@@ -104,14 +125,18 @@ try:
         check('χαμηλές ίνες, έως 15g/ημ.' in J('document.body.textContent'), 'weekly fiber banner explains the low-fiber days')
         check(carbs(5) > c_old + 50, f'Saturday carbs went up toward 820g ({c_old:.0f} → {carbs(5):.0f})')
 
-        print('3. Αναίρεση γυρίζει το πλάνο και δεν ξανατρέχει')
+        print('3. Αναίρεση γυρίζει το πλάνο και ξαναφέρνει το πλαίσιο· «Θα το κάνω μόνος μου» το κλείνει')
         J('document.querySelector("#portion-adjust-toast button[data-undo]").click()'); pg.wait_for_timeout(300)
         J('renderMain()'); pg.wait_for_timeout(1600)
         check(plan() == before, 'undo restores the plan and a re-render does not re-adjust')
+        check(J('!!document.getElementById("po-tgt-banner")'), 'after undo the banner is back')
+        J('document.querySelector("#po-tgt-banner .po-tgt-no").click()'); pg.wait_for_timeout(300)
+        check(plan() == before and not J('!!document.getElementById("po-tgt-banner")'), 'dismiss closes the banner, plan unchanged')
 
         print('4. Χωρίς αλλαγή στόχων → τίποτα')
         J('renderMain()'); pg.wait_for_timeout(1600)
-        check(plan() == before and not J('!!document.getElementById("portion-adjust-toast")'), 'plain re-render: no change, no toast')
+        check(plan() == before and not J('!!document.getElementById("portion-adjust-toast")') and not J('!!document.getElementById("po-tgt-banner")'),
+              'plain re-render: no change, no toast, no banner')
 
         print('5. Πρωτεΐνη σταθερή κάθε μέρα με MET (εβδομάδα δρομέα με μαραθώνιο)')
         J('''(()=>{var c=clients.find(x=>x.id==="mi");c.activity="sed";c.eventDate=null;c.macroP=20;c.macroF=25;c.macroC=55;

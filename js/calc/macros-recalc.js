@@ -520,8 +520,8 @@ function shouldRegeneratePlan(c){
   if(!c._lastRecalcTime)return false;  // First generation, don't ask again
   if(c._lastSportApplied!==c.sport)return true;
 
-  // Αλλαγή TDEE/στόχων ΔΕΝ ρωτάει πια για αναδημιουργία: η poAutoSync (calc/portion-optimizer.js)
-  // προσαρμόζει αυτόματα τα γραμμάρια στις ημέρες που άλλαξαν (2026-10-29).
+  // Αλλαγή TDEE/στόχων ΔΕΝ ρωτάει για αναδημιουργία: εμφανίζεται το κίτρινο «⚠️ Οι στόχοι άλλαξαν»
+  // πάνω από τον πίνακα (calc/portion-optimizer.js → poTargetsBannerHtml, 2026-11-06).
   return false;
 }
 

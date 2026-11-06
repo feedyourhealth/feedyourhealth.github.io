@@ -181,6 +181,8 @@ function genPlan(){
   // 📊 an unsaved/unsent weekPlan is kept as a backup in the plan history before it's replaced
   if(typeof phBackupIfUnsaved==='function') phBackupIfUnsaved(c,'Πριν τη δημιουργία νέου πλάνου');
   c.weekPlan={};
+  // Το νέο πλάνο φτιάχνεται για τους τρέχοντες στόχους → φεύγει το «⚠️ Οι στόχοι άλλαξαν».
+  if(typeof poTargetsReset==='function') poTargetsReset(c);
 
   // ⚕️ Active medical protocols (e.g. Διαβήτης, Χοληστερόλη) contribute their avoidFoods to the exclusion list below —
   // union across every active protocol, so multiple simultaneous conditions are each respected.

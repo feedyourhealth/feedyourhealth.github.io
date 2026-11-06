@@ -37,10 +37,13 @@ function regenerateDay(dayIndex){
   pregnancyBlockCheck(c, function(){
     showConfirmDialog('Αναδημιουργία μόνο της ημέρας «'+DAYS[dayIndex]+'»;', function(){
       var oldPlan = deepClone(c.weekPlan);
+      // Το genPlan «αναγνωρίζει» τους στόχους όλων των ημερών· εδώ αλλάζει μόνο μία → κρατάμε τις άλλες.
+      var tgtBase=(typeof _poAutoSnap!=='undefined'&&_poAutoSnap&&_poAutoSnap.c===c)?_poAutoSnap.keys.slice():null;
       genPlan();
       var newDay = deepClone(c.weekPlan[dayIndex]);
       c.weekPlan = deepClone(oldPlan);
       c.weekPlan[dayIndex] = newDay;
+      if(tgtBase&&_poAutoSnap&&_poAutoSnap.c===c){ _poAutoSnap.keys=tgtBase; poTargetsReset(c,[dayIndex]); }
       save();
       renderWeekTable();
       showSuccessToast('🔄 Η ημέρα «'+DAYS[dayIndex]+'» αναδημιουργήθηκε!');
@@ -136,7 +139,9 @@ function renderWeekTable(){
     +dblHint
     +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. ένα ακόμα ενδιάμεσο/σνακ) σε όλες τις ημέρες" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
     +'</div>';
-  var html=summaryCard+buildHouseholdPlanBar(c)+foodDotLegend+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
+  // ⚠️ «Οι στόχοι άλλαξαν» — πάνω από «Προσθήκη γεύματος» (calc/portion-optimizer.js)
+  var tgtBanner=(typeof poTargetsBannerHtml==='function')?poTargetsBannerHtml(c):'';
+  var html=summaryCard+buildHouseholdPlanBar(c)+foodDotLegend+tgtBanner+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
     // ✅ Native title tooltip explains T/R on hover instead of a permanent banner repeating
     // the same explanation once above a table where the badge already appears 7 times.
@@ -175,7 +180,8 @@ function renderWeekTable(){
       +'<button onclick="swapDayPrompt(this,'+di+');closeDayMenu(\''+dayMenuId+'\')">🔁 Ανταλλαγή με άλλη ημέρα</button>'
       +(_hhOn?'<button onclick="openHouseholdApply(\'day\','+di+');closeDayMenu(\''+dayMenuId+'\')">↔️ Εφαρμογή ημέρας σε…</button>':'')
       +'</div>';
-    html+='<th style="position:relative">'+d+badge+timeStr+sportStr+choStr+dayMenuBtn+dayMenuDropdown+'</th>';
+    var tgtChip=(typeof poTargetsDayChip==='function')?poTargetsDayChip(c,di):'';
+    html+='<th style="position:relative">'+d+badge+timeStr+sportStr+choStr+tgtChip+dayMenuBtn+dayMenuDropdown+'</th>';
   });
   html+='</tr></thead><tbody>';
 

@@ -31,10 +31,20 @@ var PO_PROT_PER_MEAL_GKG=0.3, PO_MEAT_MIN_G=80;
 var PO_PACK_UNITS={'μπάρα':1,'bar':1,'κύπελλο':1,'μπουκάλι':1,'συσκευασία':1,'scoop':1,'patty':1};
 var PO_NO_TIE_CATS={'Λάδια':1,'Ξηροί καρποί':1};
 
+// Πρακτικές ποσότητες (2026-11-06, επιλογή διαιτολόγου: «μου δίνει ½ muffin ή ¾ φλ. σαλάτα»):
+// τρόφιμα σε τεμάχια/φέτες → πάντα ολόκληρα· σε κούπες/κουτάλια/μερίδες/χούφτες → βήματα του ½.
+var PO_WHOLE_UNITS={'τεμ.':1,'φέτα':1,'ρόγα':1,'κομμάτι':1,'stick':1};
+var PO_HALF_UNITS={'φλ.':1,'κ.σ.':1,'κ.γλ.':1,'κ.γ.':1,'μερίδ.':1,'χούφτα':1};
+// Λαχανικά/σαλάτες κάτω από αυτές τις θερμίδες (ανά 100g) δεν αλλάζουν ποτέ (οι πατάτες, ~87, αλλάζουν).
+var PO_VEG_LOCK_KCAL=40;
+// Βήμα γραμμαρίων για ό,τι μετριέται σε g: 5g κάτω από 50g (μέλι, ξηροί καρποί), αλλιώς 10g.
+function _poGramStep(g){return g<10?1:g<50?5:10;}
 function _poWholeG(n){
   var fu=FOOD_UNITS[n];
   if(!fu||!fu.g)return 0;
-  return (WHOLE_UNIT_FOODS[n]||PO_PACK_UNITS[fu.u])?fu.g:0;
+  if(WHOLE_UNIT_FOODS[n]||PO_PACK_UNITS[fu.u]||PO_WHOLE_UNITS[fu.u])return fu.g;
+  if(PO_HALF_UNITS[fu.u])return fu.g/2;
+  return 0;
 }
 
 // Χτίζει τις μεταβλητές για τις ημέρες dayIdxs. Κάθε «ομάδα» = μία μεταβλητή γραμμαρίων· τρόφιμα με
@@ -61,7 +71,9 @@ function _poBuild(c, dayIdxs, effByDay, extraLocks){
         var key=PO_NO_TIE_CATS[cat]?('#'+items.length):(f.n+'|'+g0);
         // Κλειδωμένα: μηδενικές θερμίδες (μπαχαρικά/άγνωστα), μηδενική ποσότητα, ή ακέραιο/συσκευασμένο
         // τρόφιμο που ΔΕΝ είναι ήδη σε ακέραια τεμάχια (π.χ. ½ πίτα) — αλλιώς θα «στρογγυλευόταν» σε ολόκληρο.
-        var locked=v.k<=0||g0<=0||(extraLocks&&extraLocks[key])||(wholeG&&Math.abs(g0/wholeG-Math.round(g0/wholeG))>0.01);
+        // + σαλάτες/λαχανικά χαμηλών θερμίδων: δεν αλλάζουν ποτέ (μένει όση σαλάτα έβαλε η διαιτολόγος).
+        var locked=v.k<=0||g0<=0||(extraLocks&&extraLocks[key])||(wholeG&&Math.abs(g0/wholeG-Math.round(g0/wholeG))>0.01)
+          ||(cat==='Λαχανικά'&&v.k<PO_VEG_LOCK_KCAL);
         // Κάτω όριο: ±PO_MAX_CHANGE (+ ελάχιστο 5g). ΟΧΙ minScaleG — για τρόφιμα με μεγάλη μονάδα
         // «κλείδωνε» κάθε μερίδα κάτω από μισό τεμάχιο (βλ. MIN_SCALE_G_OVERRIDE στο plan-energy.js).
         var lo=Math.max(g0*(1-PO_MAX_CHANGE),Math.min(5,g0)),hi=g0*(1+PO_MAX_CHANGE);
@@ -144,8 +156,9 @@ function _poSolve(M){
   pass();
   groups.forEach(function(gr){
     if(gr.locked||gr.wholeG)return;
-    var st=gr.g<25?1:5;
-    gr.g=Math.min(Math.round(gr.hi),Math.max(Math.round(gr.lo),Math.round(gr.g/st)*st));
+    var st=_poGramStep(gr.g),hi=Math.floor(gr.hi/st)*st,lo=Math.ceil(gr.lo/st)*st;
+    if(lo>hi){lo=Math.round(gr.lo);hi=Math.round(gr.hi);}
+    gr.g=Math.min(hi,Math.max(lo,Math.round(gr.g/st)*st));
   });
 }
 
@@ -313,10 +326,10 @@ function _poDiagnose(c, d, meals, T, allowed){
 // undoTo: (εσωτερικό) το πλάνο στο οποίο γυρίζει η Αναίρεση — όταν η προσαρμογή τρέχει μετά από
 // πρόταση, η Αναίρεση επαναφέρει ΚΑΙ την πρόταση (την κατάσταση πριν το κλικ).
 // dayIndex: αριθμός (μία ημέρα), πίνακας ημερών ή τίποτα (όλη η εβδομάδα).
-// auto=true: κλήση από poAutoSync (άλλαξαν οι στόχοι) — σιωπηλά αν δεν άλλαξε/δεν λείπει τίποτα.
-function adjustPlanPortions(dayIndex, undoTo, auto){
+// alsoAck: (από το κίτρινο πλαίσιο) ημέρες που «αναγνωρίζονται» χωρίς προσαρμογή (ίδιες θερμίδες).
+function adjustPlanPortions(dayIndex, undoTo, alsoAck){
   var c=getC();
-  if(!c||!c.weekPlan||!Object.keys(c.weekPlan).length){if(!auto)showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
+  if(!c||!c.weekPlan||!Object.keys(c.weekPlan).length){showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
   var tdee=calcTDEE(c),eff=getDayTgtEff(c,tdee),effByDay={};
   var days=((typeof dayIndex==='number')?[dayIndex]:Array.isArray(dayIndex)?dayIndex:[0,1,2,3,4,5,6]).filter(function(d){
     var meals=c.weekPlan[d];
@@ -325,8 +338,10 @@ function adjustPlanPortions(dayIndex, undoTo, auto){
     if(!(e.k>0))return false;
     effByDay[d]=e;return true;
   });
-  if(!days.length){if(!auto)showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
+  if(!days.length){showErrorToast('Δεν υπάρχει πλάνο για προσαρμογή.');return;}
   var oldPlan=undoTo||deepClone(c.weekPlan);
+  // Οι ημέρες που προσαρμόστηκαν (και όσες «αναγνωρίστηκαν») παύουν να δείχνουν «νέοι στόχοι».
+  var prevBase=poTargetsAck(c,days.concat(alsoAck||[]));
   var r=optimizePlanPortions(c,days,effByDay),misses=[],sugg=[];
   var allowed=_poAllowedFn(c);
   days.forEach(function(d){
@@ -335,20 +350,23 @@ function adjustPlanPortions(dayIndex, undoTo, auto){
     if(dg.msgs.length)misses.push(DAYS[d]+': '+dg.msgs.join(' · '));
     sugg=sugg.concat(dg.sugg);
   });
-  if(r.changed||undoTo){save();renderWeekTable();}
-  if(auto&&!r.changed&&!misses.length)return;
+  if(r.changed||undoTo)save();
+  renderWeekTable();
   showPortionAdjustToast({optChanged:r.changed,touchedDays:r.changedDays,misses:misses,
     oldPlan:(r.changed||undoTo)?oldPlan:null,dayIndex:dayIndex,sugg:sugg.slice(0,3),afterSuggestion:!!undoTo,
-    autoDays:auto?days.filter(function(d){return r.touched[d];}):null});
+    prevBase:prevBase});
 }
 
-// ── Αυτόματη προσαρμογή όταν αλλάζουν οι στόχοι ημέρας (2026-10-29, επιλογή διαιτολόγου:
-// «αφού ο πελάτης δεν βλέπει τίποτα πριν ξαναστείλω το link, να γίνεται μόνο του»).
-// Η renderMain καλεί το poAutoSyncSchedule σε κάθε render. ~1s μετά την τελευταία αλλαγή συγκρίνει
-// τους στόχους κάθε ημέρας με το στιγμιότυπο της προηγούμενης φοράς και τρέχει τη Προσαρμογή
-// ΜΟΝΟ στις ημέρες που άλλαξαν — οι υπόλοιπες (ίσως διορθωμένες με το χέρι) μένουν ως έχουν.
-// Πρώτο render ενός πελάτη (άνοιγμα, αλλαγή πελάτη, νέο αντικείμενο από Cloud.load) = μόνο baseline.
-var PO_AUTO_DELAY_MS=1000, _poAutoTimer=null, _poAutoSnap=null; // {c: αντικείμενο πελάτη, keys: [7 strings]}
+// ── «Οι στόχοι άλλαξαν» (2026-11-06, αντικαθιστά την αυτόματη προσαρμογή της 2026-10-29).
+// Επιλογή διαιτολόγου: όταν αλλάζει προπόνηση/αγώνας/φάση, το πλάνο ΔΕΝ αλλάζει μόνο του — εμφανίζεται
+// κίτρινο πλαίσιο πάνω από τον πίνακα + ετικέτα «⚠ νέοι στόχοι» στις ημέρες, και αποφασίζει εκείνη.
+// Baseline = οι στόχοι κάθε ημέρας τη στιγμή που το πλάνο θεωρείται «συγχρονισμένο» (άνοιγμα πελάτη,
+// ⚖️ προσαρμογή, «Θα το κάνω μόνος μου», νέο πλάνο). Ημέρα με στόχους ≠ baseline = «νέοι στόχοι».
+// Η renderMain καλεί το poAutoSyncSchedule· το πρώτο render ενός πελάτη (άνοιγμα, αλλαγή πελάτη, νέο
+// αντικείμενο από Cloud.load) ορίζει μόνο baseline, ~1s αργότερα (μετά τις κανονικοποιήσεις).
+// Μόνο στη μνήμη: μετά από ανανέωση σελίδας το πλαίσιο δεν ξαναεμφανίζεται (η γραμμή «Σύνολο» μένει).
+var PO_AUTO_DELAY_MS=1000, PO_MAIN_KCAL=15, _poAutoTimer=null, _poAutoSnap=null; // {c, keys:[7], shown}
+var PO_DAYS_GEN=['Δευτέρας','Τρίτης','Τετάρτης','Πέμπτης','Παρασκευής','Σαββάτου','Κυριακής'];
 function _poTargetKeys(c){
   var eff=getDayTgtEff(c,calcTDEE(c)),keys=[];
   for(var d=0;d<7;d++){var e=eff[d]||{};keys.push([e.k,e.p,e.f,e.c].map(function(v){return Math.round(v||0);}).join('|'));}
@@ -361,12 +379,99 @@ function poAutoSyncSchedule(){
 function poAutoSyncCheck(){
   var c=getC();if(!c)return;
   var keys;try{keys=_poTargetKeys(c);}catch(e){return;}
-  var prev=(_poAutoSnap&&_poAutoSnap.c===c)?_poAutoSnap.keys:null;
-  _poAutoSnap={c:c,keys:keys};
-  if(!prev||!c.weekPlan)return;
-  var changed=[];
-  for(var d=0;d<7;d++)if(keys[d]!==prev[d]&&c.weekPlan[d]&&c.weekPlan[d].length)changed.push(d);
-  if(changed.length)adjustPlanPortions(changed,null,true);
+  if(!_poAutoSnap||_poAutoSnap.c!==c){_poAutoSnap={c:c,keys:keys,shown:''};return;}
+  var info=poTargetsChanged(c,keys);
+  if((info?info.sig:'')!==_poAutoSnap.shown&&typeof renderWeekTable==='function')renderWeekTable();
+}
+// Νέο πλάνο (Δημιουργία/Αναδημιουργία): φτιάχτηκε για τους τρέχοντες στόχους → baseline.
+function poTargetsReset(c,days){ if(c)poTargetsAck(c,days); }
+// {main:[ημέρες με αλλαγή θερμίδων], minor:[μόνο μακροθρεπτικά], rows:[{d,from,to}], sig} ή null
+function poTargetsChanged(c,keys){
+  if(!_poAutoSnap||_poAutoSnap.c!==c||!c.weekPlan)return null;
+  try{keys=keys||_poTargetKeys(c);}catch(e){return null;}
+  var main=[],minor=[],rows=[];
+  for(var d=0;d<7;d++){
+    if(keys[d]===_poAutoSnap.keys[d]||!c.weekPlan[d]||!c.weekPlan[d].length)continue;
+    var a=_poAutoSnap.keys[d].split('|').map(Number),b=keys[d].split('|').map(Number);
+    var from={k:a[0],p:a[1],f:a[2],c:a[3]},to={k:b[0],p:b[1],f:b[2],c:b[3]};
+    (Math.abs(to.k-from.k)>=PO_MAIN_KCAL?main:minor).push(d);
+    rows.push({d:d,from:from,to:to});
+  }
+  if(!rows.length)return null;
+  return {main:main,minor:minor,rows:rows,sig:keys.join(';')+'#'+_poAutoSnap.keys.join(';')};
+}
+// Οι ημέρες days (τίποτα = όλες) γίνονται baseline. Επιστρέφει το προηγούμενο baseline (για Αναίρεση).
+function poTargetsAck(c,days){
+  if(!_poAutoSnap||_poAutoSnap.c!==c)return null;
+  var prev=_poAutoSnap.keys.slice(),keys;
+  try{keys=_poTargetKeys(c);}catch(e){return prev;}
+  (days||[0,1,2,3,4,5,6]).forEach(function(d){_poAutoSnap.keys[d]=keys[d];});
+  return prev;
+}
+function poTargetsDismiss(){
+  var c=getC();if(!c)return;
+  poTargetsAck(c);
+  renderWeekTable();
+}
+// Κουμπί του πλαισίου: προσαρμόζει τις ημέρες με αλλαγή θερμίδων (ή, αν δεν υπάρχουν, όσες άλλαξαν
+// μόνο σε μακροθρεπτικά)· οι ημέρες με «ίδιες θερμίδες» απλώς αναγνωρίζονται.
+function poTargetsAdjust(){
+  var c=getC(),info=c&&poTargetsChanged(c);if(!info)return;
+  if(info.main.length)adjustPlanPortions(info.main,null,info.minor);
+  else adjustPlanPortions(info.minor);
+}
+function _poJoinDays(ds,gen){
+  if(!gen)return ds.map(function(d){return DAYS[d];}).join(', ');
+  if(ds.length===7)return 'όλης της εβδομάδας';
+  if(ds.length<=2)return ds.map(function(d){return PO_DAYS_GEN[d];}).join(' & ');
+  return ds.length+' ημερών';
+}
+// Ετικέτα στην κεφαλίδα ημέρας του πίνακα (plan-gen/week-table.js).
+function poTargetsDayChip(c,di){
+  var info=poTargetsChanged(c);if(!info)return '';
+  var ds=info.main.length?info.main:info.minor;
+  if(ds.indexOf(di)===-1)return '';
+  return '<span class="po-tgt-chip" title="Οι στόχοι αυτής της ημέρας άλλαξαν — οι ποσότητες του πλάνου όχι">⚠ νέοι στόχοι</span>';
+}
+// Το κίτρινο πλαίσιο πάνω από τον πίνακα (plan-gen/week-table.js, πάνω από «Προσθήκη γεύματος»).
+function poTargetsBannerHtml(c){
+  var info=poTargetsChanged(c);
+  if(_poAutoSnap&&_poAutoSnap.c===c)_poAutoSnap.shown=info?info.sig:'';
+  if(!info)return '';
+  var mainSet={};info.main.forEach(function(d){mainSet[d]=1;});
+  function macroTxt(r){
+    var parts=[];
+    [['p','πρωτεΐνη'],['f','λίπος'],['c','υδατάνθρακες']].forEach(function(x){
+      if(r.from[x[0]]!==r.to[x[0]])parts.push(x[1]+' '+r.from[x[0]]+' → '+r.to[x[0]]+' g');
+    });
+    return parts.join(', ');
+  }
+  // Ημέρες με ίδια αλλαγή → μία γραμμή
+  var groups=[],byKey={};
+  info.rows.forEach(function(r){
+    var isMain=!!mainSet[r.d],k=(isMain?'M':'m')+JSON.stringify([r.from,r.to]);
+    if(!byKey[k]){byKey[k]={main:isMain,r:r,days:[]};groups.push(byKey[k]);}
+    byKey[k].days.push(r.d);
+  });
+  // Πρώτα οι ημέρες με αλλαγή θερμίδων, μετά οι «ίδιες θερμίδες»
+  groups=groups.filter(function(g){return g.main;}).concat(groups.filter(function(g){return !g.main;}));
+  var minorGroups=groups.filter(function(g){return !g.main;}).length;
+  var lines=groups.map(function(g){
+    var r=g.r,mt=macroTxt(r);
+    if(g.main){
+      var dk=r.to.k-r.from.k;
+      return '<div class="po-tgt-row">• <b>'+_poJoinDays(g.days)+'</b>: '+r.from.k+' → <b>'+r.to.k+' kcal</b> ('+(dk>0?'+':'')+dk+')'+(mt?' · '+mt:'')+'</div>';
+    }
+    var label=(info.main.length&&minorGroups===1)?'Υπόλοιπες ημέρες':_poJoinDays(g.days);
+    return '<div class="po-tgt-row">• '+label+': ίδιες θερμίδες'+(mt?' ('+mt+')':'')+'</div>';
+  }).join('');
+  var btnDays=info.main.length?info.main:info.minor;
+  return '<div id="po-tgt-banner" class="po-tgt-banner">'
+    +'<div class="po-tgt-txt"><div class="po-tgt-title">⚠️ Οι στόχοι άλλαξαν · οι ποσότητες του πλάνου δεν άλλαξαν</div>'+lines+'</div>'
+    +'<div class="po-tgt-btns">'
+    +'<button type="button" class="po-tgt-go" onclick="poTargetsAdjust()" title="Προσαρμογή ποσοτήτων μόνο σε αυτές τις ημέρες — δεν αλλάζουν τρόφιμα">⚖️ Προσαρμογή '+_poJoinDays(btnDays,true)+'</button>'
+    +'<button type="button" class="po-tgt-no" onclick="poTargetsDismiss()" title="Κλείνει το πλαίσιο χωρίς να αλλάξει τίποτα">Θα το κάνω μόνος μου ✕</button>'
+    +'</div></div>';
 }
 
 // Εφαρμόζει μια πρόταση (πρόσθεση υδατάνθρακα / άπαχη αντικατάσταση) και ξανατρέχει την προσαρμογή
@@ -392,8 +497,6 @@ function showPortionAdjustToast(o){
   var sugg=o.sugg||[],misses=o.misses||[];
   var scope=(typeof o.dayIndex==='number')?('Προσαρμόστηκε η '+DAYS[o.dayIndex])
     :(o.touchedDays===1?'Προσαρμόστηκε 1 ημέρα':'Προσαρμόστηκαν '+o.touchedDays+' ημέρες');
-  if(o.autoDays&&o.autoDays.length)scope='Οι στόχοι άλλαξαν — προσαρμόστηκαν αυτόματα: '+o.autoDays.map(function(d){return DAYS[d];}).join(', ');
-  else if(o.autoDays)scope='Οι στόχοι άλλαξαν';
   var head=o.afterSuggestion?('✓ Η πρόταση εφαρμόστηκε'+(o.optChanged?' και οι ποσότητες προσαρμόστηκαν ξανά':''))
           :o.optChanged?('✓ '+scope+' · '+o.optChanged+(o.optChanged===1?' τρόφιμο άλλαξε':' τρόφιμα άλλαξαν')+' ποσότητα')
           :'✓ Το πλάνο είναι ήδη όσο πιο κοντά γίνεται στους στόχους';
@@ -428,7 +531,12 @@ function showPortionAdjustToast(o){
   if(undoBtn)undoBtn.onclick=function(){
     clearTimeout(timer);t.remove();
     var cc=getC();
-    if(cc){cc.weekPlan=o.oldPlan;save();renderWeekTable();}
+    if(cc){
+      cc.weekPlan=o.oldPlan;
+      // Το πλάνο γύρισε πίσω → οι ημέρες ξαναδείχνουν «νέοι στόχοι», όπως πριν την προσαρμογή.
+      if(o.prevBase&&_poAutoSnap&&_poAutoSnap.c===cc)_poAutoSnap.keys=o.prevBase;
+      save();renderWeekTable();
+    }
     dietoToast('↩ Η προσαρμογή ποσοτήτων αναιρέθηκε');
   };
 }
