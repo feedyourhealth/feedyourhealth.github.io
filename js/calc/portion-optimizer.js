@@ -365,7 +365,11 @@ function adjustPlanPortions(dayIndex, undoTo, alsoAck){
 // Η renderMain καλεί το poAutoSyncSchedule· το πρώτο render ενός πελάτη (άνοιγμα, αλλαγή πελάτη, νέο
 // αντικείμενο από Cloud.load) ορίζει μόνο baseline, ~1s αργότερα (μετά τις κανονικοποιήσεις).
 // Μόνο στη μνήμη: μετά από ανανέωση σελίδας το πλαίσιο δεν ξαναεμφανίζεται (η γραμμή «Σύνολο» μένει).
-var PO_AUTO_DELAY_MS=1000, PO_MAIN_KCAL=15, _poAutoTimer=null, _poAutoSnap=null; // {c, keys:[7], shown}
+var PO_AUTO_DELAY_MS=1000, PO_MAIN_KCAL=15, _poAutoTimer=null;
+// Ένα baseline ανά πελάτη (id → {c, keys:[7], shown}), ώστε το πλαίσιο να μένει όταν πας σε άλλον
+// πελάτη και γυρίσεις. Ισχύει μόνο για το ίδιο αντικείμενο πελάτη (νέο από Cloud.load = νέο baseline).
+var _poSnaps={};
+function _poSnap(c){var s=c&&_poSnaps[c.id];return (s&&s.c===c)?s:null;}
 var PO_DAYS_GEN=['Δευτέρας','Τρίτης','Τετάρτης','Πέμπτης','Παρασκευής','Σαββάτου','Κυριακής'];
 function _poTargetKeys(c){
   var eff=getDayTgtEff(c,calcTDEE(c)),keys=[];
@@ -379,33 +383,33 @@ function poAutoSyncSchedule(){
 function poAutoSyncCheck(){
   var c=getC();if(!c)return;
   var keys;try{keys=_poTargetKeys(c);}catch(e){return;}
-  if(!_poAutoSnap||_poAutoSnap.c!==c){_poAutoSnap={c:c,keys:keys,shown:''};return;}
+  if(!_poSnap(c)){_poSnaps[c.id]={c:c,keys:keys,shown:''};return;}
   var info=poTargetsChanged(c,keys);
-  if((info?info.sig:'')!==_poAutoSnap.shown&&typeof renderWeekTable==='function')renderWeekTable();
+  if((info?info.sig:'')!==_poSnap(c).shown&&typeof renderWeekTable==='function')renderWeekTable();
 }
 // Νέο πλάνο (Δημιουργία/Αναδημιουργία): φτιάχτηκε για τους τρέχοντες στόχους → baseline.
 function poTargetsReset(c,days){ if(c)poTargetsAck(c,days); }
 // {main:[ημέρες με αλλαγή θερμίδων], minor:[μόνο μακροθρεπτικά], rows:[{d,from,to}], sig} ή null
 function poTargetsChanged(c,keys){
-  if(!_poAutoSnap||_poAutoSnap.c!==c||!c.weekPlan)return null;
+  if(!_poSnap(c)||!c.weekPlan)return null;
   try{keys=keys||_poTargetKeys(c);}catch(e){return null;}
   var main=[],minor=[],rows=[];
   for(var d=0;d<7;d++){
-    if(keys[d]===_poAutoSnap.keys[d]||!c.weekPlan[d]||!c.weekPlan[d].length)continue;
-    var a=_poAutoSnap.keys[d].split('|').map(Number),b=keys[d].split('|').map(Number);
+    if(keys[d]===_poSnap(c).keys[d]||!c.weekPlan[d]||!c.weekPlan[d].length)continue;
+    var a=_poSnap(c).keys[d].split('|').map(Number),b=keys[d].split('|').map(Number);
     var from={k:a[0],p:a[1],f:a[2],c:a[3]},to={k:b[0],p:b[1],f:b[2],c:b[3]};
     (Math.abs(to.k-from.k)>=PO_MAIN_KCAL?main:minor).push(d);
     rows.push({d:d,from:from,to:to});
   }
   if(!rows.length)return null;
-  return {main:main,minor:minor,rows:rows,sig:keys.join(';')+'#'+_poAutoSnap.keys.join(';')};
+  return {main:main,minor:minor,rows:rows,sig:keys.join(';')+'#'+_poSnap(c).keys.join(';')};
 }
 // Οι ημέρες days (τίποτα = όλες) γίνονται baseline. Επιστρέφει το προηγούμενο baseline (για Αναίρεση).
 function poTargetsAck(c,days){
-  if(!_poAutoSnap||_poAutoSnap.c!==c)return null;
-  var prev=_poAutoSnap.keys.slice(),keys;
+  if(!_poSnap(c))return null;
+  var prev=_poSnap(c).keys.slice(),keys;
   try{keys=_poTargetKeys(c);}catch(e){return prev;}
-  (days||[0,1,2,3,4,5,6]).forEach(function(d){_poAutoSnap.keys[d]=keys[d];});
+  (days||[0,1,2,3,4,5,6]).forEach(function(d){_poSnap(c).keys[d]=keys[d];});
   return prev;
 }
 function poTargetsDismiss(){
@@ -436,7 +440,7 @@ function poTargetsDayChip(c,di){
 // Το κίτρινο πλαίσιο πάνω από τον πίνακα (plan-gen/week-table.js, πάνω από «Προσθήκη γεύματος»).
 function poTargetsBannerHtml(c){
   var info=poTargetsChanged(c);
-  if(_poAutoSnap&&_poAutoSnap.c===c)_poAutoSnap.shown=info?info.sig:'';
+  if(_poSnap(c))_poSnap(c).shown=info?info.sig:'';
   if(!info)return '';
   var mainSet={};info.main.forEach(function(d){mainSet[d]=1;});
   function macroTxt(r){
@@ -534,7 +538,7 @@ function showPortionAdjustToast(o){
     if(cc){
       cc.weekPlan=o.oldPlan;
       // Το πλάνο γύρισε πίσω → οι ημέρες ξαναδείχνουν «νέοι στόχοι», όπως πριν την προσαρμογή.
-      if(o.prevBase&&_poAutoSnap&&_poAutoSnap.c===cc)_poAutoSnap.keys=o.prevBase;
+      if(o.prevBase&&_poSnap(cc))_poSnap(cc).keys=o.prevBase;
       save();renderWeekTable();
     }
     dietoToast('↩ Η προσαρμογή ποσοτήτων αναιρέθηκε');

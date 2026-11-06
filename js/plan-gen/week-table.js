@@ -38,12 +38,12 @@ function regenerateDay(dayIndex){
     showConfirmDialog('Αναδημιουργία μόνο της ημέρας «'+DAYS[dayIndex]+'»;', function(){
       var oldPlan = deepClone(c.weekPlan);
       // Το genPlan «αναγνωρίζει» τους στόχους όλων των ημερών· εδώ αλλάζει μόνο μία → κρατάμε τις άλλες.
-      var tgtBase=(typeof _poAutoSnap!=='undefined'&&_poAutoSnap&&_poAutoSnap.c===c)?_poAutoSnap.keys.slice():null;
+      var tgtBase=(typeof _poSnap==='function'&&_poSnap(c))?_poSnap(c).keys.slice():null;
       genPlan();
       var newDay = deepClone(c.weekPlan[dayIndex]);
       c.weekPlan = deepClone(oldPlan);
       c.weekPlan[dayIndex] = newDay;
-      if(tgtBase&&_poAutoSnap&&_poAutoSnap.c===c){ _poAutoSnap.keys=tgtBase; poTargetsReset(c,[dayIndex]); }
+      if(tgtBase&&_poSnap(c)){ _poSnap(c).keys=tgtBase; poTargetsReset(c,[dayIndex]); }
       save();
       renderWeekTable();
       showSuccessToast('🔄 Η ημέρα «'+DAYS[dayIndex]+'» αναδημιουργήθηκε!');
