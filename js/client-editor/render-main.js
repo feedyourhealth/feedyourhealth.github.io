@@ -87,9 +87,10 @@ function buildGenChecklistHtml(c){
   var chips=GEN_CHK_ITEMS.map(function(it){ return chip(it[1], errs.some(function(e){return e.indexOf(it[0]+'_')===0;})); });
   if(errs.indexOf('bf_invalid')>-1)     chips.push(chip('% Λίπος',true));
   if(errs.indexOf('macros_invalid')>-1) chips.push(chip('Μακροθρεπτικά',true));
-  var head=miss
-    ? '<span style="font-size:11.5px;font-weight:800;color:#b3403f;margin-right:4px">Λείπουν '+miss+' για δημιουργία πλάνου:</span>'
-    : '<span style="font-size:11.5px;font-weight:800;color:#025857;margin-right:4px">✓ Έτοιμο για δημιουργία πλάνου</span>';
+  // Όλα συμπληρωμένα → κρυφό (κρατά το id για το refreshGenChecklist): το «✓ Έτοιμο…» έπιανε μια γραμμή
+  // και πάνω από το πλάνο, χωρίς να λέει κάτι χρήσιμο (2026-11-06, μελέτη ροής).
+  if(!miss) return '<div id="gen-checklist" style="display:none"></div>';
+  var head='<span style="font-size:11.5px;font-weight:800;color:#b3403f;margin-right:4px">Λείπουν '+miss+' για δημιουργία πλάνου:</span>';
   return '<div id="gen-checklist" style="display:flex;flex-wrap:wrap;gap:7px 14px;align-items:center;background:var(--panel-bg);border:1px solid var(--border-light);border-radius:8px;padding:9px 12px;margin-bottom:8px">'
     +head+chips.join('')+'</div>';
 }
@@ -436,8 +437,9 @@ function renderMain(){
     // ✅ S2: MEAL PLAN VIEW ONLY
     +'<div id="s2" style="display:none">'
     +'<div class="plan-actions-primary">'
-      +'<button class="btn primary" onclick="showSavePlanPanel()">&#128190; Αποθήκευση Διατροφής</button>'
-      +'<button class="btn secondary" onclick="openPublishModal()" title="Δημιούργησε σύνδεσμο για να δει ο πελάτης το πλάνο στο κινητό του">&#128241; Στείλε στον πελάτη</button>'
+      // Κύριο = «Στείλε»: αποθηκεύει ήδη αυτόματα στο Ιστορικό πλάνων (2026-11-06)
+      +'<button class="btn primary" onclick="openPublishModal()" title="Δημιούργησε σύνδεσμο για να δει ο πελάτης το πλάνο στο κινητό του — αποθηκεύεται και στο Ιστορικό πλάνων">&#128241; Στείλε στον πελάτη</button>'
+      +'<button class="btn secondary" onclick="showSavePlanPanel()" title="Αποθήκευση στο Ιστορικό πλάνων χωρίς αποστολή">&#128190; Αποθήκευση Διατροφής</button>'
     +'</div>'
     +((window.Cloud && window.Cloud.isStale(c))?'<div class="plan-stale-warning" title="Το πλάνο άλλαξε μετά την τελευταία δημοσίευση. Πάτα «Στείλε στον πελάτη» ξανά για να ενημερωθεί ο σύνδεσμος του πελάτη.">&#9888;&#65039; Ο σύνδεσμος πελάτη είναι ξεπερασμένος</div>':'')
     +'<div class="plan-links-row">'
@@ -445,7 +447,7 @@ function renderMain(){
       +'<button class="btn tertiary regen-plan-btn" onclick="regeneratePlan()" title="Αντικαθιστά ΟΛΗ την εβδομάδα με νέο πλάνο">&#8635; Αναδημιουργία</button>'
       +'<button class="btn tertiary" id="star-tmpl-btn" onclick="toggleMealTemplate()" title="Χρήση των γευμάτων αυτού του πελάτη ως έμπνευση σε νέα πλάνα">'+(c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης')+'</button>'
       +'<button class="btn tertiary save-tmpl-btn" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button>'
-    +'</div>'
+    // Εξαγωγή: στην ίδια γραμμή (ήταν δική της γραμμή πλήρους πλάτους)
     +'<div class="plan-export-dropdown">'
       +'<button class="btn plan-export-btn" onclick="togglePlanExportMenu(this)">&#8659; Εξαγωγή &#9662;</button>'
       +'<div class="plan-export-menu" id="plan-export-menu">'
@@ -455,6 +457,7 @@ function renderMain(){
         +'<button onclick="closePlanExportMenu();exportPDF(\'en\')">PDF (English)</button>'
       +'</div>'
     +'</div>'
+    +'</div>'   // .plan-links-row
     +'<div id="save-tmpl-panel" class="save-tmpl-panel" style="display:none">'
     +'<span class="save-tmpl-lbl">Όνομα:</span>'
     +'<input type="text" id="save-tmpl-name" class="save-tmpl-inp" placeholder="π.χ. Πλάνο Muay Thai 1800kcal...">'

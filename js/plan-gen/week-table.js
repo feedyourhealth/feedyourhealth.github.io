@@ -135,13 +135,15 @@ function renderWeekTable(){
     var dblNames=dblDays.map(function(i){return DAYS[i];}).join(', ');
     dblHint='<span style="font-size:11px;color:var(--wk-accent-fg);background:var(--teal-tint);border:1px solid #b5dcd6;border-radius:8px;padding:4px 10px">🏋️ Διπλή προπόνηση: <b>'+dblNames+'</b> — πρόσθεσε γεύμα πριν/ανάμεσα στις προπονήσεις</span>';
   }
-  var addMealBar='<div style="display:flex;justify-content:'+(dblHint?'space-between':'flex-end')+';align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">'
-    +dblHint
+  // 🎨 Υπόμνημα χρωμάτων: ανοίγει με κλικ (ήταν μόνιμη γραμμή πάνω από τον πίνακα)
+  var legendToggle='<details class="plan-legend"><summary>🎨 Χρώματα</summary>'+foodDotLegend+'</details>';
+  var addMealBar='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">'
+    +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+legendToggle+dblHint+'</div>'
     +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. ένα ακόμα ενδιάμεσο/σνακ) σε όλες τις ημέρες" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
     +'</div>';
   // ⚠️ «Οι στόχοι άλλαξαν» — πάνω από «Προσθήκη γεύματος» (calc/portion-optimizer.js)
   var tgtBanner=(typeof poTargetsBannerHtml==='function')?poTargetsBannerHtml(c):'';
-  var html=summaryCard+buildHouseholdPlanBar(c)+foodDotLegend+tgtBanner+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
+  var html=summaryCard+buildHouseholdPlanBar(c)+tgtBanner+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
   DAYS.forEach(function(d,di){
     // ✅ Native title tooltip explains T/R on hover instead of a permanent banner repeating
     // the same explanation once above a table where the badge already appears 7 times.
@@ -552,7 +554,22 @@ function renderWeekTable(){
       +pp.hits.map(function(h){return esc(h.food)+' έως '+h.maxG+'g (όριο '+h.max+'g'+(h.note?', '+esc(h.note):'')+') <b>×'+h.count+'</b>';}).join(' · ')
       +'</div>';
   }).join('');
-  con.innerHTML=scoreHtml+swapBannerHtml+nutBannerHtml+protoWarnHtml+protoPortionHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
+  // 📊 Ποιότητα πλάνου: Μεσογειακή βαθμολογία + ίνες + κατανομή γευμάτων σε ΜΙΑ γραμμή που ανοίγει με
+  // κλικ (ήταν 3 κάρτες ~300px πάνω από τον πίνακα — 2026-11-06, μελέτη ροής). Οι κλινικές
+  // προειδοποιήσεις (πρωτόκολλα, νάτριο/κορεσμένα, αντικαταστάσεις, τόνος) μένουν ορατές όπως πριν.
+  var qms=calcMedScore(c.weekPlan),qmsPct=Math.round(qms.score/qms.total*100);
+  var qCol=function(p){return p>=85?'var(--wk-accent-fg)':p>=57?'var(--mac-k)':'var(--bad-fg)';};
+  var nViol=(foodValidation&&foodValidation.violations)?foodValidation.violations.length:0;
+  var fiAlert=(fiByProto&&wkFiPct<90)||wkFiPct<65;
+  var qOpen=false;try{qOpen=localStorage.getItem('fyh_plan_quality_open')==='1';}catch(e){}
+  var qualityHtml='<details class="plan-quality" id="plan-quality"'+(qOpen?' open':'')+' ontoggle="try{localStorage.setItem(\'fyh_plan_quality_open\',this.open?\'1\':\'0\')}catch(e){}">'
+    +'<summary><span class="pq-t">📊 Ποιότητα πλάνου</span>'
+    +'<span class="pq-i">🫒 Μεσογειακή <b style="color:'+qCol(qmsPct)+'">'+qms.score+'/'+qms.total+'</b></span>'
+    +'<span class="pq-i">🌾 Ίνες <b style="color:'+wkFiTxtColor+'">'+wkFiPct+'%</b>'+(fiAlert?' <span style="color:var(--bad-fg)">⚠</span>':'')+'</span>'
+    +'<span class="pq-i">🍽 Κατανομή '+(nViol?'<b style="color:var(--bad-fg)">'+nViol+' '+(nViol===1?'παρατήρηση':'παρατηρήσεις')+'</b>':'<b style="color:var(--good)">✓</b>')+'</span>'
+    +'<span class="pq-more">λεπτομέρειες</span></summary>'
+    +'<div class="pq-body">'+scoreHtml+fiberBannerHtml+validationHtml+'</div></details>';
+  con.innerHTML=qualityHtml+swapBannerHtml+nutBannerHtml+protoWarnHtml+protoPortionHtml+tunaWarnHtml+html;
   // «💾 Αποθήκευση & → Πλάνο» (tracker.js qmSave): μόλις εμφανιστεί το «⚠️ Οι στόχοι άλλαξαν», κύλισε εκεί.
   if(window._poScrollToBanner){
     var _tb=document.getElementById('po-tgt-banner');

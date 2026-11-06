@@ -808,6 +808,27 @@ body.dark-mode .rd-edit-btn:hover{background:#1a2e2e}
 .plan-links-row .btn.regen-plan-btn:hover{color:#bf360c}
 .plan-export-dropdown{position:relative;margin-bottom:12px}
 .plan-export-btn{width:100%;background:#fff;color:#444;border:1px solid #ccc}
+/* Εξαγωγή μέσα στη γραμμή συνδέσμων (2026-11-06) */
+.plan-links-row{align-items:center}
+.plan-links-row .plan-export-dropdown{margin-bottom:0}
+.plan-links-row .plan-export-btn{width:auto;padding:4px 12px;min-height:auto;font-size:11px}
+.plan-links-row .plan-export-menu{left:auto;right:0;min-width:200px}
+/* 📊 Ποιότητα πλάνου — μία γραμμή, ανοίγει με κλικ (plan-gen/week-table.js) */
+.plan-quality{background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;margin-bottom:10px}
+.plan-quality>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:8px 14px;font-size:12px;color:var(--text-sub)}
+.plan-quality>summary::-webkit-details-marker{display:none}
+.plan-quality>summary::before{content:'▸';font-size:11px;color:var(--text-muted);transition:transform .15s}
+.plan-quality[open]>summary::before{transform:rotate(90deg)}
+.plan-quality .pq-t{font-weight:700;color:var(--text-strong,#17302e)}
+.plan-quality .pq-i b{font-size:13px}
+.plan-quality .pq-more{margin-left:auto;font-size:11px;color:var(--teal);text-decoration:underline}
+.plan-quality[open] .pq-more{visibility:hidden}
+.plan-quality .pq-body{padding:0 10px 2px}
+.plan-legend>summary{cursor:pointer;font-size:11px;color:var(--text-muted);list-style:none}
+.plan-legend>summary::-webkit-details-marker{display:none}
+.plan-legend[open]{flex-basis:100%}
+.plan-legend[open]>summary{margin-bottom:6px}
+@media (max-width:767px){.plan-quality{position:sticky;left:0;max-width:calc(100vw - 24px);box-sizing:border-box}.plan-quality .pq-more{display:none}}
 .plan-export-btn:hover{background:#f5f5f5}
 .plan-export-menu{display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;background:#fff;border:1px solid #ddd;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:20;overflow:hidden}
 .plan-export-menu.open{display:block}
