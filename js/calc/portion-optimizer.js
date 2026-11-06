@@ -55,6 +55,10 @@ function _poBuild(c, dayIdxs, effByDay, extraLocks){
   var protFloorMeal=(c.weight>0?c.weight:0)*PO_PROT_PER_MEAL_GKG;
   dayIdxs.forEach(function(d){
     var meals=c.weekPlan[d],T=effByDay[d];
+    // «Ίδια μερίδα όλη την εβδομάδα» ισχύει μόνο ανάμεσα σε ημέρες με ΙΔΙΟΥΣ στόχους: μέρες προπόνησης,
+    // καρβοφόρτωσης ή αγώνα δεν δένονται με τις μέρες ξεκούρασης — αλλιώς έμεναν στο 63–85% των
+    // θερμιδών τους (2026-11-06). Οι μέρες ξεκούρασης (ίδιοι στόχοι) κρατούν ίδιες μερίδες μεταξύ τους.
+    var tKey=[T.k,T.p,T.f,T.c].map(function(v){return Math.round(v||0);}).join('/');
     var mealK0=meals.map(function(m){return (m.foods||[]).reduce(function(s,f){return s+cm(f.n,f.g).k;},0);});
     days.push({d:d,T:T,mealK0:mealK0});
     meals.forEach(function(m,mi){
@@ -68,7 +72,7 @@ function _poBuild(c, dayIdxs, effByDay, extraLocks){
         // Λάδια/ξηροί καρποί ΔΕΝ δένονται μεταξύ ημερών: είναι το «ρυθμιστικό» του λίπους κάθε ημέρας
         // και 5g vs 8g λάδι δεν αφορά το meal prep. Δεμένα, το λίπος ανέβαινε 104%→121% σε 3/7 ημέρες.
         // Το '#'+index είναι σταθερό ανάμεσα στα δύο builds (ίδια σειρά), οπότε δουλεύει και για extraLocks.
-        var key=PO_NO_TIE_CATS[cat]?('#'+items.length):(f.n+'|'+g0);
+        var key=PO_NO_TIE_CATS[cat]?('#'+items.length):(f.n+'|'+g0+'|'+tKey);
         // Κλειδωμένα: μηδενικές θερμίδες (μπαχαρικά/άγνωστα), μηδενική ποσότητα, ή ακέραιο/συσκευασμένο
         // τρόφιμο που ΔΕΝ είναι ήδη σε ακέραια τεμάχια (π.χ. ½ πίτα) — αλλιώς θα «στρογγυλευόταν» σε ολόκληρο.
         // + σαλάτες/λαχανικά χαμηλών θερμίδων: δεν αλλάζουν ποτέ (μένει όση σαλάτα έβαλε η διαιτολόγος).

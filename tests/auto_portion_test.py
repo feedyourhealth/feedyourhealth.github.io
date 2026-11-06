@@ -152,6 +152,22 @@ try:
         check(ks[6] > ks[0] + 1500 and t2[6]['c'] > t2[0]['c'] + 300, f'race day: kcal/carbs carry the load, not protein (kcal {ks}, C {[t2[d]["c"] for d in range(7)]})')
         check(all(abs(t2[d]['p']*4 + t2[d]['c']*4 + t2[d]['f']*9 - ks[d]) <= 6 for d in range(7)), 'P/F/C add up to each day kcal')
 
+        print('6. Εβδομαδιαίο ⚖️: ίδια μερίδα μόνο σε ημέρες με ίδιους στόχους')
+        J('document.querySelectorAll("#portion-adjust-toast").forEach(e=>e.remove())')
+        J('adjustPlanPortions()'); pg.wait_for_timeout(500)
+        wp = json.loads(plan())
+        check(wp['0'] == wp['4'], 'rest days (same targets) keep identical portions')
+        check(wp['2'] == wp['3'], 'same training days (Wed/Thu, 70 min) keep identical portions')
+        mixed = J('''(()=>{var c=clients.find(x=>x.id==="mi"),t=calcTDEE(c),e=getDayTgtEff(c,t),eb={};
+          for(var d=0;d<7;d++)eb[d]=e[d];
+          var M=_poBuild(c,[0,1,2,3,4,5,6],eb),tk=d=>[e[d].k,e[d].p,e[d].f,e[d].c].map(Math.round).join('/');
+          return M.groups.filter(g=>new Set(g.items.map(it=>tk(it.d))).size>1).length})()''')
+        check(mixed == 0, f'no shared portion between days with different targets ({mixed} mixed groups)')
+        tied = J('''(()=>{var c=clients.find(x=>x.id==="mi"),t=calcTDEE(c),e=getDayTgtEff(c,t),eb={};
+          for(var d=0;d<7;d++)eb[d]=e[d];
+          var M=_poBuild(c,[0,1,2,3,4,5,6],eb);return M.groups.filter(g=>new Set(g.items.map(it=>it.d)).size>1).length})()''')
+        check(tied > 0, f'same-target days still share portions ({tied} shared groups)')
+
         br.close()
 finally:
     srv.terminate()
