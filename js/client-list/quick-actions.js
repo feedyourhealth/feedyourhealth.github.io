@@ -74,10 +74,18 @@ function qaStartPlan(id){
   genPlanWithUndo();
   closeAllQA();
 }
+// «⚡ Ξεκίνα πλάνο τώρα» / «+ Δημιούργησε νέο πελάτη»: νέος πελάτης → «Στοιχεία πελάτη» με τον κέρσορα
+// στο πρώτο πεδίο. ΔΕΝ τρέχει genPlan: ένας νέος πελάτης δεν έχει ακόμα φύλο/ηλικία/βάρος/ύψος/στόχο/
+// δραστηριότητα, οπότε έβγαινε κόκκινο μήνυμα με 7 λάθη και άνοιγε η Επισκόπηση (χωρίς πεδία)
+// (2026-11-06). Το «Δημιουργία πλάνου →» μένει πάντα ορατό στο κάτω μέρος των Στοιχείων.
 function qaCreateAndPlan(name){
   addClient(name);
-  genPlanWithUndo();
   closeAllQA();
+  swTab(1);
+  setTimeout(function(){
+    var el=document.getElementById((name||'').trim()?'inp-sex':'inp-name');
+    if(el){ el.scrollIntoView({block:'center'}); el.focus(); }
+  },150);
 }
 function qaStartMeasure(id){
   selectClient(id);
