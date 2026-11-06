@@ -74,7 +74,7 @@ function homeClientsNeedingAttention(){
     if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)){
       var daysOld=Math.floor((now-c.planGeneratedAt)/86400000);
       out.push({c:c,tier:1,gap:daysOld,reason:'renewal',label:'το πλάνο έγινε πριν '+daysOld+' ημέρες',
-        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>'});
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')" title="Φτιάχνει νέο πλάνο από την αρχή και αντικαθιστά το τρέχον (το παλιό μένει στο Ιστορικό πλάνων). Για ίδια γεύματα με νέες ποσότητες: μέτρηση → «⚖️ Προσαρμογή & αποστολή».">Νέο πλάνο από την αρχή</button>'});
       return;
     }
     var wl=c.weightLog||[];
@@ -760,7 +760,7 @@ function homeApproachingRenewal(){
 function homeApproachingRenewalRow(x){
   var sub=x.daysLeft===1?'ανανέωση αύριο':'ανανέωση σε '+x.daysLeft+' ημέρες';
   return homeRow(x.c, sub, 'amber',
-    '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+x.c.id+'\')">Δημιούργησε πλάνο τώρα</button>');
+    '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+x.c.id+'\')" title="Φτιάχνει νέο πλάνο από την αρχή και αντικαθιστά το τρέχον (το παλιό μένει στο Ιστορικό πλάνων). Για ίδια γεύματα με νέες ποσότητες: μέτρηση → «⚖️ Προσαρμογή & αποστολή».">Νέο πλάνο από την αρχή</button>');
 }
 
 // Πάει στη σελίδα Πελάτες με καθαρά φίλτρα + μόνο το ζητούμενο status, ώστε ο αριθμός που έδειξε το
@@ -1393,7 +1393,7 @@ function renderDiets(){
     // baseline (compact 34px), το class δίνει ένα touch-only μεγέθυνσης hook (css/styles.css,
     // @media(hover:none)) χωρίς να πειράζει την πυκνή desktop εμφάνιση.
     var thresholdInp='<span style="font-size:10px;color:var(--text-muted);margin-left:6px;white-space:nowrap" title="Όριο ανανέωσης για αυτόν τον πελάτη" onclick="event.stopPropagation()">⚙ <input type="number" class="renewal-days-inp" value="'+(c.renewalDays||PLAN_RENEWAL_DAYS)+'" min="7" max="120" style="width:34px;font-size:10px;padding:1px 3px;border:1px solid var(--border-light);border-radius:4px" onchange="setClientRenewalDays(\''+c.id+'\',this.value)"> ημ.</span>';
-    return dietsRow(c, 'το πλάνο έγινε πριν '+daysOld+' ημέρες'+thresholdInp, '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε νέο πλάνο</button>'+snoozeBtn, 'red');
+    return dietsRow(c, 'το πλάνο έγινε πριν '+daysOld+' ημέρες'+thresholdInp, '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')" title="Φτιάχνει νέο πλάνο από την αρχή και αντικαθιστά το τρέχον (το παλιό μένει στο Ιστορικό πλάνων). Για ίδια γεύματα με νέες ποσότητες: μέτρηση → «⚖️ Προσαρμογή & αποστολή».">Νέο πλάνο από την αρχή</button>'+snoozeBtn, 'red');
   }, 'Όλοι είναι εντάξει 👍', 'danger');
 
   html+=dietsSection('🟢 Ενεργά', dietsActive(), function(c){
