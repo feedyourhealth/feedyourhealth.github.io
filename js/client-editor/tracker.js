@@ -223,6 +223,11 @@ function buildTrackerHtml(c){
   // fields it prefills (see the setTimeout near the end of this function) would be labelled
   // for the wrong protocol.
   var protoForSelect=(ee&&ee.sfProtocol)?ee.sfProtocol:defaultProto;
+  // Απλή φόρμα: όχι σε επεξεργασία/παρουσίαση ή όταν ο διαιτολόγος άνοιξε την πλήρη. Πρωτόκολλο = της
+  // τελευταίας μέτρησης με δερματοπτυχές (αν άλλαξε π.χ. σε JP7 για κάποιον πελάτη), αλλιώς το προεπιλεγμένο.
+  var qmCompact=!ee&&!P&&!_qmFull;
+  var qmLastSf=(c.weightLog||[]).filter(function(e){return e.sfProtocol;}).slice(-1)[0];
+  var qmProto=(qmLastSf&&!(isMinorC&&qmLastSf.sfProtocol!=='slaughter'))?qmLastSf.sfProtocol:defaultProto;
   // ✅ 2026-08-01: buildClientProgressHtml/clientLogsPanelHtml/planFeedbackPanelHtml moved to the
   // "📝 Ραντεβού" tab (buildAppointmentsHtml) — αυτά είναι το feedback του πελάτη (portal check-ins,
   // δικές του σημειώσεις, αξιολόγηση πλάνου), όχι σωματομετρικά, οπότε ανήκουν εκεί όπου γίνεται η
@@ -253,6 +258,13 @@ function buildTrackerHtml(c){
     // ✅ βάση σύγκρισης για όλα τα Δ / τάσεις / ρυθμό στο Έντυπο Λιπομέτρησης — ο διαιτολόγος το
     // επιλέγει πριν πατήσει «Έντυπο / WhatsApp / Email». Μόνο με ≥2 μετρήσεις έχει νόημα.
     +((c.weightLog&&c.weightLog.length>1)?'<div style="font-size:10px;color:var(--text-muted);margin:-2px 0 8px">📅 Σύγκριση εντύπου λιπομέτρησης με: <select id="lipo-baseline" class="tracker-inp" style="font-size:10px;width:auto;padding:1px 4px"><option value="first">1η μέτρηση</option><option value="prev">προηγούμενη μέτρηση</option>'+(c.planGeneratedAt?'<option value="plan">έναρξη τρέχοντος πλάνου</option>':'')+'</select></div>':'')
+    // ── 📐 Νέα μέτρηση (απλή φόρμα, 2026-11-06): ημερομηνία + βάρος + σημεία δερματοπτυχόμετρου.
+    // Ο διαιτολόγος μετρά ΜΟΝΟ με δερματοπτυχόμετρο & ζυγαριά (63/63 μετρήσεις: 0% περιφέρειες/ύπνος/
+    // σημειώσεις). Η πλήρης φόρμα μένει από κάτω (κρυφή) — η αποθήκευση γεμίζει τα πεδία της και καλεί
+    // την ίδια addWeightEntry(), ώστε υπολογισμός/ιστορικό να μην αλλάζουν. Επεξεργασία = πλήρης φόρμα.
+    +(qmCompact?qmCardHtml(c,qmProto):'')
+    +'<div id="tr-full-form"'+(qmCompact?' style="display:none"':'')+'>'
+    +((!ee&&!qmCompact)?'<div style="margin:-2px 0 8px"><a href="javascript:void(0)" onclick="qmSetFull(false)" style="font-size:11px;color:#025857">← Απλή φόρμα (μόνο δερματοπτυχόμετρο &amp; βάρος)</a></div>':'')
     // ── Skinfold panel ────────────────────────────────────────────────────────
     +'<div class="sf-panel" id="sf-panel">'
     +'<div class="sf-header" onclick="toggleSkinfoldPanel()">'
@@ -331,6 +343,7 @@ function buildTrackerHtml(c){
     +(ee?'<button class="btn" style="padding:5px 11px;font-size:11px;background:#888;color:#fff;border:none" onclick="cancelWeightEdit()">Άκυρο</button>':'')
     +'<button class="btn" style="padding:5px 11px;font-size:11px" onclick="addWeightEntry()">'+(ee?'✓ Αποθήκευση αλλαγών':'+ Προσθήκη')+'</button>'
     +'</div>'
+    +'</div>'   // #tr-full-form
     +'</div>';
   if(c.weightLog.length>0){
     // ✅ Current state = the results dashboard (tracker-results.js): tiles + Δ + sparklines,
@@ -691,27 +704,7 @@ function updateSkinfoldFields(){
     var el=document.getElementById('sf-'+k);
     if(el&&el.value)carryOver[k]=el.value;
   });
-  var defs=[];
-  var ref='';
-  if(p==='jp4'){
-    ref='Jackson & Pollock, 1985 — 4 σημεία';
-    defs=[
-      {k:'abdomen',   lbl:'1. Κοιλιά mm'},
-      {k:'suprailiac',lbl:'2. Υπερλαγόνιο mm'},
-      {k:'tricep',    lbl:'3. Τρικέφαλος mm'},
-      {k:'thigh',     lbl:'4. Μηρός (τετρακέφαλος) mm'}
-    ];
-  } else if(p==='jp3'){
-    ref='Jackson & Pollock, 1978/1980';
-    if(sex==='M') defs=[{k:'chest',lbl:'Στήθος mm'},{k:'abdomen',lbl:'Κοιλιά mm'},{k:'thigh',lbl:'Μηρός mm'}];
-    else defs=[{k:'tricep',lbl:'Τρικέφαλος mm'},{k:'suprailiac',lbl:'Υπερλαγόνιο mm'},{k:'thigh',lbl:'Μηρός mm'}];
-  } else if(p==='jp7'){
-    ref='Jackson & Pollock, 1978/1980';
-    defs=[{k:'chest',lbl:'Στήθος'},{k:'midaxillary',lbl:'Μεσομάσχαλο'},{k:'tricep',lbl:'Τρικέφαλος'},{k:'subscapular',lbl:'Υποπλάτιο'},{k:'abdomen',lbl:'Κοιλιά'},{k:'suprailiac',lbl:'Υπερλαγόνιο'},{k:'thigh',lbl:'Μηρός'}];
-  } else {
-    ref='Slaughter et al., 1988';
-    defs=[{k:'tricep',lbl:'Τρικέφαλος mm'},{k:'calf',lbl:'Γαστροκνήμιος mm'}];
-  }
+  var sd=skinfoldSiteDefs(p,sex),defs=sd.defs,ref=sd.ref;
   if(refSpan)refSpan.textContent=ref;
   var sitesDiv=document.getElementById('sf-sites');
   if(sitesDiv){
@@ -1115,3 +1108,134 @@ function removeConsultEntry(idx){
   }, {icon:'🗑️', confirmLabel:'Διαγραφή'});
 }
 
+// ── 📐 Νέα μέτρηση — απλή φόρμα (2026-11-06) ─────────────────────────────────────────────────────
+// Μία κάρτα: ημερομηνία, βάρος, σημεία δερματοπτυχόμετρου του πρωτοκόλλου, αποτέλεσμα σε πραγματικό
+// χρόνο. «Αποθήκευση & → Πλάνο» γεμίζει την κρυφή πλήρη φόρμα και καλεί την addWeightEntry() (ίδια
+// αποθήκευση, ίδιο %BF, ίδιο ιστορικό) και μετά ανοίγει το Πλάνο στο «⚠️ Οι στόχοι άλλαξαν».
+var _qmFull=false; // true = ο διαιτολόγος άνοιξε την πλήρη φόρμα («＋ Περισσότερα» / «αλλαγή»)
+
+// Σημεία ανά πρωτόκολλο — κοινά για την πλήρη φόρμα (updateSkinfoldFields) και την απλή κάρτα.
+function skinfoldSiteDefs(p,sex){
+  if(p==='jp4')return{ref:'Jackson & Pollock, 1985 — 4 σημεία',defs:[
+    {k:'abdomen',   lbl:'1. Κοιλιά mm'},
+    {k:'suprailiac',lbl:'2. Υπερλαγόνιο mm'},
+    {k:'tricep',    lbl:'3. Τρικέφαλος mm'},
+    {k:'thigh',     lbl:'4. Μηρός (τετρακέφαλος) mm'}]};
+  if(p==='jp3')return{ref:'Jackson & Pollock, 1978/1980',defs:(sex==='M')
+    ?[{k:'chest',lbl:'Στήθος mm'},{k:'abdomen',lbl:'Κοιλιά mm'},{k:'thigh',lbl:'Μηρός mm'}]
+    :[{k:'tricep',lbl:'Τρικέφαλος mm'},{k:'suprailiac',lbl:'Υπερλαγόνιο mm'},{k:'thigh',lbl:'Μηρός mm'}]};
+  if(p==='jp7')return{ref:'Jackson & Pollock, 1978/1980',defs:[{k:'chest',lbl:'Στήθος'},{k:'midaxillary',lbl:'Μεσομάσχαλο'},{k:'tricep',lbl:'Τρικέφαλος'},{k:'subscapular',lbl:'Υποπλάτιο'},{k:'abdomen',lbl:'Κοιλιά'},{k:'suprailiac',lbl:'Υπερλαγόνιο'},{k:'thigh',lbl:'Μηρός'}]};
+  return{ref:'Slaughter et al., 1988',defs:[{k:'tricep',lbl:'Τρικέφαλος mm'},{k:'calf',lbl:'Γαστροκνήμιος mm'}]};
+}
+var QM_PROTO_LABEL={jp4:'JP 4 σημεία (Jackson & Pollock)',jp3:'JP 3 σημεία (Jackson & Pollock)',jp7:'JP 7 σημεία (Jackson & Pollock)',slaughter:'Slaughter (1988) · παιδιά/έφηβοι'};
+
+function _qmPrev(c){
+  var log=(c.weightLog||[]).slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+  return log.length?log[log.length-1]:null;
+}
+function _qmNum(v){return String(v).replace('.',',');}
+
+function qmCardHtml(c,p){
+  var today=new Date().toISOString().slice(0,10);
+  var defs=skinfoldSiteDefs(p,c.sex||'M').defs;
+  var inp=function(id,lbl,cls){return '<div class="qm-f"><label for="'+id+'">'+lbl+'</label><input type="'+(cls?'date':'number')+'" id="'+id+'"'
+    +(cls?' class="'+cls+'" value="'+today+'"':' step="0.1" min="1" max="300" inputmode="decimal"')
+    +' oninput="qmUpdate()" onkeydown="qmKey(event)"></div>';};
+  return '<div class="qm-card" id="qm-card" data-proto="'+p+'">'
+    +'<div class="qm-head"><span class="qm-title">📐 Νέα μέτρηση</span>'
+    +'<span class="qm-proto">'+esc(QM_PROTO_LABEL[p]||p)+(p==='slaughter'?' — αυτόματα για &lt;18':'')
+    +'<a href="javascript:void(0)" onclick="qmSetFull(true)" title="Άλλο πρωτόκολλο (JP3/JP7/Slaughter) — ανοίγει την πλήρη φόρμα">αλλαγή</a></span></div>'
+    +'<div class="qm-grid">'
+    +inp('qm-date','Ημερομηνία','qm-date')
+    +inp('qm-weight','Βάρος (kg)')
+    +'<span class="qm-sep"></span>'
+    +defs.map(function(f){return inp('qm-sf-'+f.k,f.lbl.replace(/^\d+\.\s*/,'').replace(/\s*mm$/,'')+' (mm)');}).join('')
+    +'</div>'
+    +'<div class="qm-res" id="qm-res" style="display:none"></div>'
+    +'<div class="qm-act">'
+    +'<button type="button" class="qm-go" onclick="qmSave(true)" title="Αποθηκεύει τη μέτρηση και ανοίγει το Πλάνο στις αλλαγές στόχων">💾 Αποθήκευση &amp; → Πλάνο</button>'
+    +'<button type="button" class="qm-save" onclick="qmSave(false)">Μόνο αποθήκευση</button>'
+    +'<a href="javascript:void(0)" class="qm-more" onclick="qmSetFull(true)">＋ Περισσότερα (περιφέρειες, ύπνος/ενέργεια, σημειώσεις, %λίπους από άλλη μέθοδο)</a>'
+    +'</div>'
+    +'<div class="qm-hint">Enter = επόμενο πεδίο · Enter στο τελευταίο = «Αποθήκευση &amp; → Πλάνο». Το %λίπους υπολογίζεται μόνο του όσο γράφεις.</div>'
+    +'</div>';
+}
+
+// Τιμές της κάρτας: {p, date, weight, fields, filled, total, res}
+function _qmRead(){
+  var c=getC(),card=document.getElementById('qm-card');if(!c||!card)return null;
+  var p=card.getAttribute('data-proto'),defs=skinfoldSiteDefs(p,c.sex||'M').defs,fields={},filled=0;
+  defs.forEach(function(f){var el=document.getElementById('qm-sf-'+f.k);var v=el?parseFloat(el.value):NaN;if(v>0){fields[f.k]=v;filled++;}});
+  var date=(document.getElementById('qm-date')||{}).value||'';
+  var weight=parseFloat((document.getElementById('qm-weight')||{}).value)||0;
+  var res=filled===defs.length?calcSkinfoldBF(p,c.sex||'M',c.age||25,fields):{bf:null};
+  return {c:c,p:p,date:date,weight:weight,fields:fields,filled:filled,total:defs.length,res:res};
+}
+
+function qmUpdate(){
+  var r=_qmRead(),box=document.getElementById('qm-res');if(!r||!box)return;
+  var prev=_qmPrev(r.c),parts=[],bf=r.res&&r.res.bf;
+  if(bf!=null){
+    var d=(prev&&prev.bf>0)?Math.round((bf-prev.bf)*10)/10:null;
+    parts.push('<span>Λίπος <b>'+_qmNum(bf)+'%</b>'+(d!=null?' <span class="d">('+(d>0?'+':d<0?'−':'±')+_qmNum(Math.abs(d))+')</span>':'')+'</span>');
+    if(r.weight>0){
+      var fm=+(r.weight*bf/100).toFixed(1),lm=+(r.weight-fm).toFixed(1);
+      parts.push('<span>Λιπώδης μάζα <b>'+_qmNum(fm)+' kg</b></span>','<span>Άλιπη μάζα <b>'+_qmNum(lm)+' kg</b></span>');
+    }
+  }
+  if(r.weight>0&&prev&&prev.weight>0){
+    var dw=Math.round((r.weight-prev.weight)*10)/10;
+    parts.push('<span class="d">Βάρος '+(dw>0?'+':dw<0?'−':'±')+_qmNum(Math.abs(dw))+' kg από '+prev.date.slice(8,10)+'/'+prev.date.slice(5,7)+'</span>');
+  }
+  box.innerHTML=parts.join('');
+  box.style.display=parts.length?'flex':'none';
+}
+
+// Enter → επόμενο πεδίο· στο τελευταίο → «Αποθήκευση & → Πλάνο»
+function qmKey(e){
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  var all=[].slice.call(document.querySelectorAll('#qm-card .qm-grid input'));
+  var i=all.indexOf(e.target);
+  if(i>=0&&i<all.length-1){all[i+1].focus();if(all[i+1].select)all[i+1].select();}
+  else qmSave(true);
+}
+
+function qmSetFull(full){
+  _qmFull=!!full;
+  var c=getC(),el=document.getElementById('s3');
+  if(c&&el)el.innerHTML=buildTrackerHtml(c);
+}
+
+function qmSave(goPlan){
+  var r=_qmRead();if(!r)return;
+  var c=r.c;
+  var flash=function(id){var el=document.getElementById(id);if(el){el.style.borderColor='#e57373';el.style.background='#ffebee';el.focus();setTimeout(function(){el.style.borderColor='';el.style.background='';},1500);}};
+  if(!r.date){showErrorToast('Χρειάζεται ημερομηνία.');flash('qm-date');return;}
+  if(!(r.weight>=20&&r.weight<=300)){showErrorToast('Χρειάζεται έγκυρο βάρος (20-300 kg).');flash('qm-weight');return;}
+  if(r.filled>0&&r.filled<r.total){
+    showErrorToast('Λείπουν σημεία δερματοπτυχόμετρου ('+r.filled+'/'+r.total+') — συμπλήρωσέ τα ή άδειασέ τα όλα για μέτρηση μόνο βάρους.');
+    var miss=skinfoldSiteDefs(r.p,c.sex||'M').defs.filter(function(f){return !r.fields[f.k];})[0];
+    if(miss)flash('qm-sf-'+miss.k);
+    return;
+  }
+  // Γέμισμα της κρυφής πλήρους φόρμας → ίδια addWeightEntry() (sfFields/bfMethod/c.bf/c.lbm όπως πάντα)
+  document.getElementById('tr-date').value=r.date;
+  document.getElementById('tr-weight').value=r.weight;
+  var body=document.getElementById('sf-body'),protoEl=document.getElementById('sf-proto');
+  if(r.filled&&body&&protoEl){
+    body.style.display='block';
+    protoEl.value=r.p;
+    updateSkinfoldFields();
+    Object.keys(r.fields).forEach(function(k){var el=document.getElementById('sf-'+k);if(el)el.value=r.fields[k];});
+    applySkinfoldBF();
+  }
+  var n=(c.weightLog||[]).length;
+  addWeightEntry();
+  if((c.weightLog||[]).length<=n)return; // δεν αποθηκεύτηκε — το μήνυμα λάθους το έδειξε η addWeightEntry
+  if(goPlan){
+    // Το Πλάνο ανοίγει και (μόλις εμφανιστεί, ~1s) κυλάει στο «⚠️ Οι στόχοι άλλαξαν» — week-table.js
+    window._poScrollToBanner=Date.now();
+    swTab(2);
+  }
+}

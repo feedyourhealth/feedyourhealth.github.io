@@ -553,6 +553,12 @@ function renderWeekTable(){
       +'</div>';
   }).join('');
   con.innerHTML=scoreHtml+swapBannerHtml+nutBannerHtml+protoWarnHtml+protoPortionHtml+fiberBannerHtml+validationHtml+tunaWarnHtml+html;
+  // «💾 Αποθήκευση & → Πλάνο» (tracker.js qmSave): μόλις εμφανιστεί το «⚠️ Οι στόχοι άλλαξαν», κύλισε εκεί.
+  if(window._poScrollToBanner){
+    var _tb=document.getElementById('po-tgt-banner');
+    if(_tb){ window._poScrollToBanner=0; _tb.scrollIntoView({block:'center'}); }
+    else if(Date.now()-window._poScrollToBanner>5000) window._poScrollToBanner=0;
+  }
 
   // Enable drag & drop for meals
   enableMealDragDrop();

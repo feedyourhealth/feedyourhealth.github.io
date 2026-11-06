@@ -383,10 +383,11 @@ function poAutoSyncSchedule(){
 function poAutoSyncCheck(){
   var c=getC();if(!c)return;
   var keys;try{keys=_poTargetKeys(c);}catch(e){return;}
-  if(!_poSnap(c)){_poSnaps[c.id]={c:c,keys:keys,shown:''};return;}
+  if(!_poSnap(c)){_poSnaps[c.id]={c:c,keys:keys,shown:'',wl:(c.weightLog||[]).length,bmr:_poBmrMethod(c)};return;}
   var info=poTargetsChanged(c,keys);
   if((info?info.sig:'')!==_poSnap(c).shown&&typeof renderWeekTable==='function')renderWeekTable();
 }
+function _poBmrMethod(c){try{return calcTDEE(c).bmrMethod||'';}catch(e){return '';}}
 // Νέο πλάνο (Δημιουργία/Αναδημιουργία): φτιάχτηκε για τους τρέχοντες στόχους → baseline.
 function poTargetsReset(c,days){ if(c)poTargetsAck(c,days); }
 // {main:[ημέρες με αλλαγή θερμίδων], minor:[μόνο μακροθρεπτικά], rows:[{d,from,to}], sig} ή null
@@ -405,12 +406,19 @@ function poTargetsChanged(c,keys){
   return {main:main,minor:minor,rows:rows,sig:keys.join(';')+'#'+_poSnap(c).keys.join(';')};
 }
 // Οι ημέρες days (τίποτα = όλες) γίνονται baseline. Επιστρέφει το προηγούμενο baseline (για Αναίρεση).
+// Όταν δεν μένει καμία ημέρα με «νέους στόχους», η μέτρηση/ο τύπος υπολογισμού θεωρούνται κι αυτά «γνωστά».
 function poTargetsAck(c,days){
-  if(!_poSnap(c))return null;
-  var prev=_poSnap(c).keys.slice(),keys;
+  var sn=_poSnap(c);if(!sn)return null;
+  var prev={keys:sn.keys.slice(),wl:sn.wl,bmr:sn.bmr},keys;
   try{keys=_poTargetKeys(c);}catch(e){return prev;}
-  (days||[0,1,2,3,4,5,6]).forEach(function(d){_poSnap(c).keys[d]=keys[d];});
+  (days||[0,1,2,3,4,5,6]).forEach(function(d){sn.keys[d]=keys[d];});
+  if(keys.every(function(k,d){return k===sn.keys[d];})){sn.wl=(c.weightLog||[]).length;sn.bmr=_poBmrMethod(c);}
   return prev;
+}
+function _poRestoreBase(c,prev){
+  var sn=_poSnap(c);if(!sn||!prev)return;
+  if(Array.isArray(prev)){sn.keys=prev;return;}
+  sn.keys=prev.keys;sn.wl=prev.wl;sn.bmr=prev.bmr;
 }
 function poTargetsDismiss(){
   var c=getC();if(!c)return;
@@ -419,10 +427,12 @@ function poTargetsDismiss(){
 }
 // Κουμπί του πλαισίου: προσαρμόζει τις ημέρες με αλλαγή θερμίδων (ή, αν δεν υπάρχουν, όσες άλλαξαν
 // μόνο σε μακροθρεπτικά)· οι ημέρες με «ίδιες θερμίδες» απλώς αναγνωρίζονται.
-function poTargetsAdjust(){
+// send=true («Προσαρμογή & αποστολή»): μετά ανοίγει το παράθυρο αποστολής (ίδιο με «Στείλε στον πελάτη»).
+function poTargetsAdjust(send){
   var c=getC(),info=c&&poTargetsChanged(c);if(!info)return;
   if(info.main.length)adjustPlanPortions(info.main,null,info.minor);
   else adjustPlanPortions(info.minor);
+  if(send&&typeof openPublishModal==='function')setTimeout(openPublishModal,250);
 }
 function _poJoinDays(ds,gen){
   if(!gen)return ds.map(function(d){return DAYS[d];}).join(', ');
@@ -469,12 +479,28 @@ function poTargetsBannerHtml(c){
     var label=(info.main.length&&minorGroups===1)?'Υπόλοιπες ημέρες':_poJoinDays(g.days);
     return '<div class="po-tgt-row">• '+label+': ίδιες θερμίδες'+(mt?' ('+mt+')':'')+'</div>';
   }).join('');
-  var btnDays=info.main.length?info.main:info.minor;
+  var btnDays=info.main.length?info.main:info.minor,sn=_poSnap(c);
+  // Νέα μέτρηση από τότε που το πλάνο ήταν «συγχρονισμένο» → στον τίτλο (ημ/νία · kg · %λίπους)
+  var why='';
+  if(sn&&(c.weightLog||[]).length>sn.wl){
+    var lm=(c.weightLog||[]).slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;}).pop();
+    if(lm)why=' μετά τη νέα μέτρηση ('+lm.date.slice(8,10)+'/'+lm.date.slice(5,7)+' · '+String(lm.weight).replace('.',',')+' kg'
+      +(lm.bf>0?' · '+String(lm.bf).replace('.',',')+'% λίπος':'')+')';
+  }
+  // Άλλαξε ο τύπος του μεταβολισμού (π.χ. 1η μέτρηση με %λίπους: Mifflin → Katch-McArdle) → εξήγηση,
+  // αλλιώς ένα «+260 kcal με λιγότερα κιλά» μοιάζει με λάθος.
+  var curB=_poBmrMethod(c),info2='';
+  if(sn&&sn.bmr&&curB&&curB!==sn.bmr){
+    var nm=function(s){return s.replace(/\s*\(.*\)\s*$/,'');};
+    info2='<div class="po-tgt-row po-tgt-info">ℹ️ <b>Ο μεταβολισμός υπολογίζεται πλέον με '+esc(nm(curB))+'</b> αντί για '+esc(nm(sn.bmr))
+      +(/Katch/.test(curB)&&!/Katch/.test(sn.bmr)?' (από την άλιπη μάζα της μέτρησης με δερματοπτυχόμετρο). Γι\'αυτό οι θερμίδες μπορεί να ανέβουν ακόμα κι αν έπεσε το βάρος.':'.')+'</div>';
+  }
   return '<div id="po-tgt-banner" class="po-tgt-banner">'
-    +'<div class="po-tgt-txt"><div class="po-tgt-title">⚠️ Οι στόχοι άλλαξαν · οι ποσότητες του πλάνου δεν άλλαξαν</div>'+lines+'</div>'
+    +'<div class="po-tgt-txt"><div class="po-tgt-title">⚠️ Οι στόχοι άλλαξαν'+why+' · οι ποσότητες του πλάνου δεν άλλαξαν</div>'+lines+info2+'</div>'
     +'<div class="po-tgt-btns">'
-    +'<button type="button" class="po-tgt-go" onclick="poTargetsAdjust()" title="Προσαρμογή ποσοτήτων μόνο σε αυτές τις ημέρες — δεν αλλάζουν τρόφιμα">⚖️ Προσαρμογή '+_poJoinDays(btnDays,true)+'</button>'
-    +'<button type="button" class="po-tgt-no" onclick="poTargetsDismiss()" title="Κλείνει το πλαίσιο χωρίς να αλλάξει τίποτα">Θα το κάνω μόνος μου ✕</button>'
+    +'<button type="button" class="po-tgt-go" onclick="poTargetsAdjust(true)" title="Προσαρμογή ποσοτήτων ('+_poJoinDays(btnDays,true)+') και άνοιγμα της αποστολής στον πελάτη">⚖️ Προσαρμογή &amp; αποστολή</button>'
+    +'<button type="button" class="po-tgt-no po-tgt-only" onclick="poTargetsAdjust()" title="Προσαρμογή ποσοτήτων μόνο σε αυτές τις ημέρες — δεν αλλάζουν τρόφιμα">⚖️ Μόνο προσαρμογή '+_poJoinDays(btnDays,true)+'</button>'
+    +'<button type="button" class="po-tgt-no po-tgt-dismiss" onclick="poTargetsDismiss()" title="Κλείνει το πλαίσιο χωρίς να αλλάξει τίποτα">Θα το κάνω μόνος μου ✕</button>'
     +'</div></div>';
 }
 
@@ -538,7 +564,7 @@ function showPortionAdjustToast(o){
     if(cc){
       cc.weekPlan=o.oldPlan;
       // Το πλάνο γύρισε πίσω → οι ημέρες ξαναδείχνουν «νέοι στόχοι», όπως πριν την προσαρμογή.
-      if(o.prevBase&&_poSnap(cc))_poSnap(cc).keys=o.prevBase;
+      if(o.prevBase)_poRestoreBase(cc,o.prevBase);
       save();renderWeekTable();
     }
     dietoToast('↩ Η προσαρμογή ποσοτήτων αναιρέθηκε');

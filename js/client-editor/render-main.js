@@ -277,7 +277,11 @@ function renderMain(){
     +'<div class="fgrp"><label>Ύψος (cm)</label><input type="number" id="inp-height" value="'+(c.height||'')+'" min="100" max="250"></div>'
     +'<div class="fgrp"><label>% Σώμ. Λίπος</label><input type="number" id="inp-bf" value="'+(c.bf||'')+'" min="3" max="60" step="0.1" placeholder="π.χ. 18.5"></div></div>'
     // ✅ Lean Mass + RMR now inside Anthropometry section
-    +'<div class="fg"><div class="fgrp"><label>Lean Mass (kg)</label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63"></div>'
+    // Lean Mass (kg): κρυφό όταν είναι κενό — μετράς με δερματοπτυχόμετρο, η άλιπη μάζα βγαίνει από τη μέτρηση.
+    // Αν έχει τιμή, υπερισχύει στον υπολογισμό (plan-energy.js, προτεραιότητα 1) → προειδοποίηση + καθαρισμός.
+    +'<div class="fg">'+((c.leanmass>0)?'<div class="fgrp"><label>Lean Mass (kg) <span style="font-weight:400;color:#b45309">⚠️ υπερισχύει των μετρήσεων</span></label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63">'
+      +'<div style="font-size:10.5px;color:#8a5a00;margin-top:3px;line-height:1.4">Χειροκίνητη τιμή: ο μεταβολισμός υπολογίζεται από αυτήν και όχι από το δερματοπτυχόμετρο'+(c.lbm>0?' (τελευταία μέτρηση: '+c.lbm+' kg)':'')+'. '
+      +'<a href="javascript:void(0)" onclick="upd(\'leanmass\',0);renderMain();" style="color:#025857;font-weight:600">✕ Καθαρισμός</a></div></div>':'')
     +'<div class="fgrp"><label>🧪 RMR (kcal)</label><input type="number" id="inp-rmr" value="'+(c.rmr||'')+'" min="500" max="5000" step="1" placeholder="π.χ. 1650 (εργαστηριακή)"></div></div>'
     // ✅ BMI as badge (not input field)
     +(c.weight&&c.height?'<div id="bmi-badge" style="background:#E2EEE5;padding:8px 12px;border-radius:6px;margin-top:8px;font-size:12px;font-weight:600;color:#025857;border-left:3px solid #025857;">📊 BMI: '+Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10+' <span style="font-size:10px;color:#666;font-weight:normal;">('+
@@ -378,8 +382,9 @@ function renderMain(){
     +'🧮 Formula: '+
     (function(){
       if(c.rmr)return'<b>RMR (Laboratory-Measured)</b> ← Ακριβέστερη';
+      // ίδια σειρά με τον υπολογισμό (plan-energy.js): Lean Mass πριν από %λίπους
+      if(c.leanmass)return'<b>Katch-McArdle</b> (Lean Mass, χειροκίνητη) ← Καλή';
       if(c.bf)return'<b>Katch-McArdle</b> (Body Fat %) ← Συνιστώμενη';
-      if(c.leanmass)return'<b>Katch-McArdle</b> (Lean Mass) ← Καλή';
       return'<b>Mifflin-St Jeor</b> (Default) ← Γενική';
     })()
     +'</div>'
