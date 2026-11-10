@@ -393,39 +393,98 @@ function homeFirstWeekRow(x){
   return homeRow(x.c, 'πλάνο '+ageTxt+' · '+x.n+' check-in ✓', 'teal');
 }
 
-// Μέση τήρηση ανά ημέρα εβδομάδας (Δε–Κυ), όλοι οι πελάτες με σύνδεσμο, ~4 εβδομάδες. ckOverallScore
-// ανά ημέρα -> μέσος όρος ανά weekday. Δείχνει ΠΟΤΕ πέφτει η δέσμευση (π.χ. Κυριακή -> nudge Σάββατο).
+// Τήρηση ανά ημέρα εβδομάδας (Δε–Κυ), όλοι οι πελάτες με σύνδεσμο, τις 4 τελευταίες εβδομάδες
+// (χωρίς σήμερα — η μέρα δεν έχει κλείσει). Ανά weekday δύο ΞΕΧΩΡΙΣΤΑ νούμερα, γιατί είναι
+// διαφορετικά προβλήματα με διαφορετική λύση:
+//   log = % πελατών που έκαναν check-in εκείνη τη μέρα (χαμηλό -> υπενθύμιση)
+//   adh = μέσο ckOverallScore ΑΠΟ ΟΣΟΥΣ κατέγραψαν (χαμηλό -> αλλαγή πλάνου)
+// Ένας πελάτης «μετράει» για μια μέρα από την αρχή του (νωρίτερο από planGeneratedAt / 1ο check-in)
+// και μετά — αλλιώς ένας νέος πελάτης θα έριχνε το «κατέγραψαν» για μέρες που δεν είχε καν πλάνο.
+// trend = τήρηση των 2 τελευταίων εβδ. vs των 2 προηγούμενων (μόνο αν ≥ CK_TREND_MIN_PP μονάδες).
 function homeWeekdayHeatmap(){
   if(!window.Cloud || typeof window.Cloud.checkinsFor!=='function') return null;
-  var sums=[0,0,0,0,0,0,0], cnts=[0,0,0,0,0,0,0];
-  var wk0=ckWeekDates(0)[0];
-  var minKey=ckDayKey(new Date(new Date(wk0+'T00:00:00').getTime()-21*86400000));
-  var todayKey=ckDayKey(new Date());
+  var DAY=86400000;
+  var wk0=new Date(ckWeekDates(0)[0]+'T00:00:00');
+  var start=new Date(wk0.getTime()-21*DAY);
+  var today=new Date(); today.setHours(0,0,0,0);
+  var days=[];   // όλες οι μέρες του παραθύρου ως χθες
+  for(var d=new Date(start); d<today; d=new Date(d.getTime()+DAY)) days.push(ckDayKey(d));
+  if(!days.length) return null;
+  var midKey=ckDayKey(new Date(wk0.getTime()-7*DAY)); // αρχή των «2 τελευταίων εβδομάδων»
+  var mk=function(){return [0,0,0,0,0,0,0];};
+  var elig=mk(), logged=mk(), sum=mk(), occ=mk(), sumA=mk(), cntA=mk(), sumB=mk(), cntB=mk();
+  var wdOf=function(k){var js=new Date(k+'T00:00:00').getDay(); return js===0?6:js-1;};
+  days.forEach(function(k){ occ[wdOf(k)]++; });
   clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;}).forEach(function(c){
-    window.Cloud.checkinsFor(c).forEach(function(r){
-      if(!r.date || r.date<minKey || r.date>todayKey) return;
-      var sc=ckOverallScore(ckPillarStats([r]));
-      if(sc==null) return;
-      var js=new Date(r.date+'T00:00:00').getDay(), wd=(js===0?6:js-1);
-      sums[wd]+=sc; cnts[wd]++;
+    var rows=window.Cloud.checkinsFor(c);
+    var firstKey=null;
+    if(c.planGeneratedAt) firstKey=ckDayKey(new Date(c.planGeneratedAt));
+    if(rows.length && rows[0].date && (!firstKey || rows[0].date<firstKey)) firstKey=rows[0].date;
+    if(!firstKey) return;
+    var byDate=ckRowsByDate(rows);
+    days.forEach(function(k){
+      if(k<firstKey) return;
+      var wd=wdOf(k); elig[wd]++;
+      var r=byDate[k]; if(!r) return;
+      var st=ckPillarStats([r]); if(!st.anyData) return;
+      var sc=ckOverallScore(st); if(sc==null) return;
+      logged[wd]++; sum[wd]+=sc;
+      if(k>=midKey){sumB[wd]+=sc;cntB[wd]++;} else {sumA[wd]+=sc;cntA[wd]++;}
     });
   });
-  if(!cnts.some(function(n){return n>0;})) return null;
-  return sums.map(function(s,i){ return cnts[i]?Math.round(s/cnts[i]):null; });
+  if(!logged.some(function(n){return n>0;})) return null;
+  return [0,1,2,3,4,5,6].map(function(i){
+    var trend=null;
+    if(cntA[i]>=3 && cntB[i]>=3){
+      var dlt=Math.round(sumB[i]/cntB[i]-sumA[i]/cntA[i]);
+      if(Math.abs(dlt)>=CK_TREND_MIN_PP) trend=dlt;
+    }
+    return {
+      log: elig[i]?Math.round(logged[i]/elig[i]*100):null,
+      adh: logged[i]?Math.round(sum[i]/logged[i]):null,
+      avgLogged: occ[i]?Math.round(logged[i]/occ[i]):0,
+      avgElig: occ[i]?Math.round(elig[i]/occ[i]):0,
+      trend: trend
+    };
+  });
+}
+// Χρώμα ΣΧΕΤΙΚΟ μέσα στη γραμμή: η χειρότερη μέρα πιο έντονη, η καλύτερη πιο ανοιχτή — αλλιώς όταν
+// όλες οι μέρες είναι στη «χαμηλή» ζώνη βγαίνουν ίδιο χρώμα και δεν ξεχωρίζει τίποτα.
+function homeWeekdayRelShade(v,arr,ramp){
+  if(v==null) return 'background:var(--panel-bg);color:#888';
+  var vs=arr.filter(function(x){return x!=null;});
+  var mn=Math.min.apply(null,vs), mx=Math.max.apply(null,vs);
+  var t=mx===mn?0:(mx-v)/(mx-mn);
+  return 'background:'+(t>0.66?ramp[2]:t>0.33?ramp[1]:ramp[0])+';color:'+ramp[3];
 }
 function homeWeekdayHeatmapHtml(vals){
   if(!vals) return '';
   var names=['Δε','Τρ','Τε','Πε','Πα','Σα','Κυ'];
-  var cells=vals.map(function(v,i){
-    var bg=v==null?'var(--panel-bg)':(v>=75?'#0F6E56':v>=60?'#3f9e82':v>=45?'#5DCAA5':v>=33?'#9FE1CB':v>=20?'#f0c39a':'#e79a9a');
-    var fg=v==null?'#888':(v<45?'#333':'#fff');
-    return '<div style="flex:1;text-align:center">'
-      +'<div style="font-size:10px;color:#888;margin-bottom:3px">'+names[i]+'</div>'
-      +'<div style="font-size:10px;font-weight:700;padding:5px 0;border-radius:6px;background:'+bg+';color:'+fg+'">'+(v==null?'—':v+'%')+'</div>'
-      +'</div>';
+  var BLUE=['#E6F1FB','#B5D4F4','#85B7EB','#0C447C'], TEAL=['#E1F5EE','#9FE1CB','#5DCAA5','#085041'];
+  var logs=vals.map(function(v){return v.log;}), adhs=vals.map(function(v){return v.adh;});
+  var cell=function(v,arr,ramp,tip){
+    return '<div title="'+tip+'" style="flex:1;text-align:center;font-size:10px;font-weight:700;padding:5px 0;border-radius:6px;'
+      +homeWeekdayRelShade(v,arr,ramp)+'">'+(v==null?'—':v+'%')+'</div>';
+  };
+  var lbl=function(t){return '<div style="width:74px;flex:none;font-size:10px;color:#888;align-self:center">'+t+'</div>';};
+  var row=function(inner){return '<div style="display:flex;gap:5px;margin-top:4px">'+inner+'</div>';};
+  var head=lbl('')+names.map(function(n){return '<div style="flex:1;text-align:center;font-size:10px;color:#888">'+n+'</div>';}).join('');
+  var logRow=lbl('Κατέγραψαν')+vals.map(function(v,i){
+    return cell(v.log,logs,BLUE,names[i]+': έκαναν check-in κατά μ.ό. '+v.avgLogged+' από '+v.avgElig+' πελάτες');
+  }).join('');
+  var adhRow=lbl('Τήρησαν')+vals.map(function(v,i){
+    return cell(v.adh,adhs,TEAL,names[i]+': μέση τήρηση στόχων από όσους κατέγραψαν');
+  }).join('');
+  var nRow=lbl('Πλήθος · τάση')+vals.map(function(v){
+    var t='';
+    if(v.trend!=null) t=' <span style="color:'+(v.trend>0?'#3B6D11':'#A32D2D')+'">'+(v.trend>0?'▲':'▼')+Math.abs(v.trend)+'</span>';
+    return '<div style="flex:1;text-align:center;font-size:10px;color:#888;white-space:nowrap">'+v.avgLogged+'/'+v.avgElig+t+'</div>';
   }).join('');
   return '<div class="hm-card hm-card-info"><div class="hm-card-title">🗓 Τήρηση ανά ημέρα (4 εβδ.)</div>'
-    +'<div style="display:flex;gap:5px;margin-top:4px">'+cells+'</div></div>';
+    +row(head)+row(logRow)+row(adhRow)+row(nRow)
+    +'<div style="font-size:10px;color:#888;margin-top:6px;line-height:1.4">'
+    +'<b>Κατέγραψαν</b> = % πελατών με check-in εκείνη τη μέρα · <b>Τήρησαν</b> = μέση τήρηση από όσους κατέγραψαν · '
+    +'πλήθος = μ.ό. ανά εβδομάδα · ▲▼ = τελευταίες 2 εβδ. vs προηγούμενες 2 · πιο έντονο χρώμα = χειρότερη μέρα</div></div>';
 }
 
 // Ίδιο day-of-week gate με την ⭐ κάρτα feedback στο plan.html (Παρ/Σαβ/Κυρ) — δεν έχει νόημα να
