@@ -298,6 +298,13 @@ var FOOD_ALIASES={
   'Cream of Rice - Natural (OstroVit)':'Cream of Rice (OstroVit)',
   'Κρέμα ρυζιού OstroVit':'Cream of Rice (OstroVit)',
   'Κρέμα ρυζιού':'Cream of Rice (OstroVit)',
+  // GymBeam Protein Cream of Rice - Chocolate 360g — added 2026-11-11
+  'Protein Cream of Rice - GymBeam':'Protein Cream of Rice Σοκολάτα (GymBeam)',
+  'GymBeam Protein Cream of Rice':'Protein Cream of Rice Σοκολάτα (GymBeam)',
+  'Protein Cream of Rice Chocolate (GymBeam)':'Protein Cream of Rice Σοκολάτα (GymBeam)',
+  'Protein Cream of Rice (GymBeam)':'Protein Cream of Rice Σοκολάτα (GymBeam)',
+  'Πρωτεϊνική κρέμα ρυζιού GymBeam':'Protein Cream of Rice Σοκολάτα (GymBeam)',
+  'Κρέμα ρυζιού πρωτεΐνης σοκολάτα':'Protein Cream of Rice Σοκολάτα (GymBeam)',
   // Alpro Natural No Sugars Soya Yogurt — added 2026-09-28
   'Alpro Natural Unsweetened Soya Yogurt':'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)',
   'Alpro Natural Unsweetened Soya Yogurt 400 g':'Γιαούρτι σόγιας Alpro (χωρίς ζάχαρη)',

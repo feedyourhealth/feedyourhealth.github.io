@@ -41,7 +41,7 @@ var QUICK_EXCL={
   // a dietitian clicking this one button to exclude dairy would have unknowingly also excluded the
   // almond/soy/oat milk alternatives their client might actually want. Same root confusion already
   // fixed for the lactose-intolerance protocol's own avoidFoods list (see MEDICAL_PROTOCOLS.lactose).
-  '🥛 Γαλακτοκομικά':['Γιαούρτι 2%','Cottage cheese','Cream cheese','Τυρί φέτα','Μοτσαρέλα','Γάλα πλήρες','Πρωτεΐνη σκόνη (whey)','Στραγγιστό γιαούρτι 0%','Γιαούρτι πλήρες 5%','Ανθότυρο','Μυζήθρα','Γάλα φρέσκο 1.5% Λιπαρά','Γραβιέρα','Κασέρι','Κεφαλοτύρι','Παρμεζάνα','Quark (0%)','Ricotta','Edam light','Σαγανάκι (τηγανητό)','PhD Smart Bar Σοκολάτα Brownie','PhD Smart Bar Φράουλα & Κρέμα','PhD Smart Bar Μαύρη Σοκολάτα Μόκα','PhD Smart Bar Μαύρη Σοκολάτα & Βατόμουρο','PhD Smart Bar Σοκολάτα Φυστικοβούτυρο','PhD Smart Bar Σοκολάτα Γάλακτος Φουντούκι','PhD Smart Bar Λευκή Σοκολάτα Blondie','PhD Smart Bar Cookies & Cream','PhD Smart Bar Birthday Cake','PhD Smart Bar Μαύρη Σοκολάτα Matcha','Grenade Bar Cookie Dough','Grenade Bar Oreo'],
+  '🥛 Γαλακτοκομικά':['Γιαούρτι 2%','Cottage cheese','Cream cheese','Τυρί φέτα','Μοτσαρέλα','Γάλα πλήρες','Πρωτεΐνη σκόνη (whey)','Στραγγιστό γιαούρτι 0%','Γιαούρτι πλήρες 5%','Ανθότυρο','Μυζήθρα','Γάλα φρέσκο 1.5% Λιπαρά','Γραβιέρα','Κασέρι','Κεφαλοτύρι','Παρμεζάνα','Quark (0%)','Ricotta','Edam light','Σαγανάκι (τηγανητό)','PhD Smart Bar Σοκολάτα Brownie','PhD Smart Bar Φράουλα & Κρέμα','PhD Smart Bar Μαύρη Σοκολάτα Μόκα','PhD Smart Bar Μαύρη Σοκολάτα & Βατόμουρο','PhD Smart Bar Σοκολάτα Φυστικοβούτυρο','PhD Smart Bar Σοκολάτα Γάλακτος Φουντούκι','PhD Smart Bar Λευκή Σοκολάτα Blondie','PhD Smart Bar Cookies & Cream','PhD Smart Bar Birthday Cake','PhD Smart Bar Μαύρη Σοκολάτα Matcha','Grenade Bar Cookie Dough','Grenade Bar Oreo','Protein Cream of Rice Σοκολάτα (GymBeam)'],
   // ✅ 2026-08-01: added 'Βρώμη (ωμή)' — plain/non-certified oats are botanically gluten-free but
   // carry a real cross-contamination risk (Celiac Disease Foundation, the celiac protocol's own
   // cited source, explicitly warns regular oats need a "certified gluten-free" label). Confirmed
@@ -107,6 +107,7 @@ var FOOD_UNITS={
   'Ρυζογκοφρέτες':{g:10,u:'τεμ.'},
   'Ρυζόγαλο στιγμής (VAST)':{g:18,u:'scoop'},
   'Cream of Rice (OstroVit)':{g:40,u:'μερίδ.'},
+  'Protein Cream of Rice Σοκολάτα (GymBeam)':{g:40,u:'μερίδ.'},
   // Ψωμί / Πίτα — ανά τεμάχιο
   'Ψωμί σίκαλης':{g:30,u:'φέτα'},
   'Ψωμί λευκό':{g:30,u:'φέτα'},
@@ -360,6 +361,7 @@ var PORTIONS={
 'Ρυζογκοφρέτες':[{n:'1 τεμ.',g:10},{n:'2 τεμ.',g:20},{n:'3 τεμ.',g:30}],
 'Ρυζόγαλο στιγμής (VAST)':[{n:'1 scoop',g:18},{n:'2 scoops',g:36},{n:'3 scoops',g:54},{n:'80g (ξηρό)',g:80}],
 'Cream of Rice (OstroVit)':[{n:'½ μερίδα',g:20},{n:'1 μερίδα',g:40},{n:'2 μερίδες',g:80}],
+'Protein Cream of Rice Σοκολάτα (GymBeam)':[{n:'½ μερίδα',g:20},{n:'1 μερίδα',g:40},{n:'1½ μερίδα',g:60},{n:'2 μερίδες',g:80}],
 'Μούσλι':[{n:'1 Κ.',g:10},{n:'½ φλ.',g:45},{n:'1 φλ.',g:90}],
 'Ψωμί ολικής άλεσης':[{n:'1 φέτα',g:35},{n:'2 φέτες',g:70}],
 'Ψωμί ολικής άλεσης (φρυγανισμένο)':[{n:'1 φέτα',g:30},{n:'2 φέτες',g:60}],
