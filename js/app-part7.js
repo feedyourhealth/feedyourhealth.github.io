@@ -198,10 +198,15 @@
       if(!this.enabled || !this.user){ return Promise.reject(new Error('Πρέπει να είσαι συνδεδεμένος στο cloud για να δημοσιεύσεις πλάνο.')); }
       if(!c){ return Promise.reject(new Error('Δεν υπάρχει επιλεγμένος πελάτης.')); }
       var snap;
-      try{ snap=this._buildSnapshot(c); }catch(e){ return Promise.reject(e); }
-      // Ξαναέλεγξε το session ΠΡΙΝ γράψεις — αν έχει λήξει στο παρασκήνιο (π.χ. καρτέλα ανοιχτή πολλή ώρα),
-      // εδώ το πιάνουμε και δίνουμε καθαρό μήνυμα αντί για ακατανόητο σφάλμα RLS από τη βάση.
-      return this.sb.auth.getSession().then(function(res){
+      // ⭐ 2026-11-12: πρώτα φρέσκα «Αυτό έφαγα» αυτού του πελάτη (client_meal_log), ώστε οι εναλλακτικές
+      // του νέου link να βγουν με βάση τις προτιμήσεις του (clientAltPreferences, meal-library.js).
+      // Αν η ανάγνωση αποτύχει, η δημοσίευση συνεχίζει κανονικά με ό,τι υπάρχει ήδη στο cache.
+      return this.refreshMealLogFor(c).then(function(){
+        snap=self._buildSnapshot(c);
+        // Ξαναέλεγξε το session ΠΡΙΝ γράψεις — αν έχει λήξει στο παρασκήνιο (π.χ. καρτέλα ανοιχτή πολλή ώρα),
+        // εδώ το πιάνουμε και δίνουμε καθαρό μήνυμα αντί για ακατανόητο σφάλμα RLS από τη βάση.
+        return self.sb.auth.getSession();
+      }).then(function(res){
         var session=(res&&res.data)?res.data.session:null;
         if(!session || !session.user){
           self.user=null; self._showLogin();
@@ -1780,6 +1785,16 @@
       return this._fetchAllByToken('client_meal_log','token,date,meals_map',tokens,'date','fetchAllMealLogs').then(function(byToken){
         if(byToken) self._mealLogCache=byToken;   // null = σφάλμα — κράτα το προηγούμενο cache
       });
+    },
+    // Μόνο τα λινκ ΕΝΟΣ πελάτη (πριν από τη δημοσίευση) — συγχωνεύεται στο cache χωρίς να σβήνει τους
+    // υπόλοιπους. Δεν απορρίπτει ποτέ: σε σφάλμα/χωρίς σύνδεση απλώς μένει το υπάρχον cache.
+    refreshMealLogFor:function(c){
+      var self=this, tokens=this.checkinTokensFor(c);
+      if(!this.enabled || !this.user || !tokens.length) return Promise.resolve();
+      return this._fetchAllByToken('client_meal_log','token,date,meals_map',tokens,'date','fetchMealLogFor').then(function(byToken){
+        if(!byToken) return;
+        tokens.forEach(function(t){ self._mealLogCache[t]=byToken[t]||[]; });
+      },function(){});
     },
     // {date: meals_map} από ΟΛΑ τα λινκ του πελάτη (νεότερο λινκ κερδίζει την ίδια μέρα, όπως checkinsFor).
     mealLogFor:function(c){

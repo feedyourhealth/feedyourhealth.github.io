@@ -231,14 +231,97 @@ function mealLooksMain(foods){
   });
 }
 
+// ── ⭐ ΠΡΟΤΙΜΗΣΕΙΣ ΠΕΛΑΤΗ ΑΠΟ ΤΟ «Αυτό έφαγα» (2026-11-12) ──
+// Ο πελάτης πατά «Αυτό έφαγα» σε μια εναλλακτική στο link → client_meal_log κρατά {a,n,o,s,f}
+// (n=ελληνικός τίτλος, s=slot/όνομα γεύματος, f=[[τρόφιμο,γρ.]] — κενό σε links πριν τις 2026-10-12).
+// Εδώ γίνεται ένα προφίλ των τελευταίων ALT_PREF_DAYS ημερών, που το buildAlternatesPool /
+// pickMealAlternates χρησιμοποιούν στην επόμενη δημοσίευση:
+//   meals  = τα ακριβή γεύματα που διάλεξε (μόνο όταν υπάρχει f) + πόσες φορές
+//   groups = ποια κύρια πρωτεΐνη διαλέγει ανά slot (π.χ. πρωινό → αυγό)
+//   foods  = τρόφιμα που επανέρχονται στις επιλογές του (και από τον τίτλο των παλιών links)
+// Αναίρεση στο link = η τιμή γίνεται ξανά true/false → η επιλογή απλώς δεν μετράει πια.
+var ALT_PREF_DAYS=56;
+var ALT_PREF_MAX_FAV=2;   // έως τόσα αγαπημένα ανά γεύμα — η 3η θέση μένει πάντα για κάτι καινούργιο
+// Ο πελάτης το έχει ήδη φάει στη θέση αυτού του γεύματος, άρα λίγο πιο χαλαρό όριο «ισοδυναμίας»
+// από το ALT_MACRO_OK (0.20) — π.χ. γιαούρτι-βρώμη-μέλι αντί για αυγά-ψωμί ≈ 0.23. Ένα high-carb
+// pre-run σνακ ↔ αυγά (≈0.5+) μένει ακόμα εκτός.
+var ALT_PREF_MACRO_OK=0.30;
+function _altPrefSlot(s, foods){
+  var sl=classifyMealSlot(s);
+  if(sl==='other'){
+    var n=String(s||'').toLowerCase();
+    if(/breakfast|завтрак|kahvalt/.test(n))sl='breakfast';
+    else if(/lunch|обед|öğle/.test(n))sl='lunch';
+    else if(/dinner|ужин|akşam/.test(n))sl='dinner';
+    else if(/snack|перекус|ara öğün/.test(n))sl='snack';
+    else if(foods&&foods.length)sl=mealLooksMain(foods)?'lunch':'snack';
+  }
+  return sl;
+}
+function clientAltPreferences(c, today){
+  var prefs={meals:{}, groups:{}, foods:{}, total:0};
+  var log=(c&&window.Cloud&&typeof window.Cloud.mealLogFor==='function')?window.Cloud.mealLogFor(c):{};
+  var t=today?new Date(today+'T12:00:00'):new Date();
+  var cutoff=new Date(t.getTime()-ALT_PREF_DAYS*86400000).toISOString().slice(0,10);
+  // Τίτλος → τρόφιμο (ίδιο «καθάρισμα» με mealShortTitle) — για τα παλιά picks που έχουν μόνο όνομα.
+  var byTitle=null;
+  function titleFoods(n){
+    if(!byTitle){
+      byTitle={};
+      Object.keys(FOODS).forEach(function(k){
+        var tt=k.replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim();
+        if(!byTitle[tt])byTitle[tt]=k;
+      });
+    }
+    return String(n||'').replace(/…$/,'').split(', ').map(function(x){return byTitle[x.trim()];}).filter(Boolean);
+  }
+  function resolveName(n){
+    if(FOODS[n])return n;
+    var r=(typeof resolveFood==='function')?resolveFood(n):null;
+    return (r&&FOODS[r])?r:null;
+  }
+  Object.keys(log||{}).forEach(function(date){
+    if(date<cutoff)return;
+    var mm=log[date]||{};
+    Object.keys(mm).forEach(function(idx){
+      var v=mm[idx];
+      if(!v||typeof v!=='object')return;
+      var foods=[], ok=true;
+      (Array.isArray(v.f)?v.f:[]).forEach(function(p){
+        var n=Array.isArray(p)?resolveName(p[0]):null, g=Array.isArray(p)?+p[1]:0;
+        if(!n||!(g>0)){ok=false;return;}
+        foods.push({n:n,g:g});
+      });
+      if(!ok)foods=[];
+      var names=foods.length?foods.map(function(f){return f.n;}):titleFoods(v.n);
+      if(!names.length)return;
+      prefs.total++;
+      var slot=_altPrefSlot(v.s, foods);
+      names.forEach(function(n){ prefs.foods[n]=(prefs.foods[n]||0)+1; });
+      var grp=foods.length?mealProteinGroup(foods):mealProteinGroup(names.map(function(n){return {n:n,g:100};}));
+      var gs=prefs.groups[slot]||(prefs.groups[slot]={_n:0});
+      gs[grp]=(gs[grp]||0)+1; gs._n++;
+      if(foods.length){
+        var sig=mealSignature(foods);
+        var e=prefs.meals[sig]||(prefs.meals[sig]={foods:foods, slots:[], count:0, last:''});
+        e.count++;
+        if(date>e.last){e.last=date; e.foods=foods;}
+        if(e.slots.indexOf(slot)===-1)e.slots.push(slot);
+      }
+    });
+  });
+  return prefs;
+}
+
 // One-time, per-client candidate pool. `excl` = the client's FULL exclusion list
 // (buildEffectiveExclusionList). Each entry: {foods,kcal,sig,slots,group,src,trust}.
-function buildAlternatesPool(c, excl){
+// `prefs` (προαιρετικό) = clientAltPreferences(c) — αν λείπει, υπολογίζεται εδώ. Μένει στο pool.prefs.
+function buildAlternatesPool(c, excl, prefs){
   var dt=(c&&c.dietType)||'normal';
   var exclLower=(excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
   var disliked=(c&&c.dislikedRecipeIds)||[];
   var pool=[], seen={};
-  function add(foods, slots, src, id){
+  function add(foods, slots, src, id, picks){
     if(!foods||!foods.length)return;
     var sig=mealSignature(foods);
     if(!sig||seen[sig])return;
@@ -247,11 +330,20 @@ function buildAlternatesPool(c, excl){
     var kcal=calculateMealKcal(foods);
     if(kcal<50)return;
     seen[sig]=true;
-    pool.push({foods:foods, kcal:kcal, sig:sig, slots:slots, src:src,
+    pool.push({foods:foods, kcal:kcal, sig:sig, slots:slots, src:src, picks:picks||0,
       group:mealProteinGroup(foods), macro:mealMacroShares(foods), main:mealLooksMain(foods),
       trust:(typeof getRecipeTrustScore==='function')?getRecipeTrustScore(id||sig):0.5});
   }
   function slotOf(name){ var s=classifyMealSlot(name); return s==='other'?['breakfast','snack','lunch','dinner']:[s]; }
+
+  // 0. ⭐ Ό,τι διάλεξε ο ίδιος με «Αυτό έφαγα» — ΠΡΩΤΟ, ώστε να κερδίζει το dedup (src 'picked').
+  //    Περνά από τα ίδια φίλτρα (αποκλεισμοί, 👎, και ανά ημέρα ο τύπος διατροφής στο pickMealAlternates).
+  if(!prefs){ try{ prefs=clientAltPreferences(c); }catch(e){ prefs=null; } }
+  if(prefs) Object.keys(prefs.meals).forEach(function(sig){
+    var m=prefs.meals[sig];
+    add(deepClone(m.foods), m.slots.indexOf('other')!==-1?['breakfast','snack','lunch','dinner']:m.slots.slice(), 'picked', null, m.count);
+  });
+  pool.prefs=prefs;
 
   // 1. This client's own well-followed past meals (harvestOwnHistory's ≥60%-completed rule) —
   //    added FIRST so a meal they already know wins the dedup + gets the 'own' ranking bonus.
@@ -318,23 +410,41 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
     return !isBlocked(x.foods);
   });
   var myMacro=mealMacroShares(meal.foods);
+  // ⭐ Προτιμήσεις από το «Αυτό έφαγα» (pool.prefs, βλ. clientAltPreferences)
+  var prefs=pool.prefs||null;
+  var slotGroups=(prefs&&prefs.groups[slot])||null;
   function score(x){
     x._m=macroShareDistance(myMacro, x.macro||(x.macro=mealMacroShares(x.foods)));
     var s=Math.abs(x.kcal-tk)/tk + ALT_MACRO_WEIGHT*x._m;
     if(x.kcal<tk*0.5||x.kcal>tk*1.8)s+=1;            // would need extreme rescaling — last resort only
     if(x.src==='own')s-=0.15;
+    // Το διάλεξε ο ίδιος: −0.30, +0.05 για κάθε επιπλέον φορά (έως −0.50)
+    if(x.src==='picked')s-=0.30+0.05*Math.min((x.picks||1)-1,4);
+    if(prefs){
+      // ίδια κύρια πρωτεΐνη με αυτή που διαλέγει σε αυτό το slot (π.χ. πρωινό → αυγό): έως −0.10
+      if(slotGroups&&slotGroups._n)s-=0.10*((slotGroups[x.group]||0)/slotGroups._n);
+      // τρόφιμα που επανέρχονται στις επιλογές του: −0.04 το καθένα, έως −0.08
+      var hit=0; x.foods.forEach(function(f){ if(prefs.foods[f.n])hit++; });
+      s-=0.04*Math.min(hit,2);
+    }
     s-=((x.trust||0.5)-0.5)*0.2;
     return s;
   }
   cands.forEach(function(x){x._s=score(x);});
   cands.sort(function(a,b){return a._s-b._s;});
-  var picked=[], used={}, curGroup=mealProteinGroup(meal.foods);
-  function take(x){ picked.push(x); used[x.group]=true; }
+  var picked=[], used={}, curGroup=mealProteinGroup(meal.foods), favN=0;
+  var favCap=Math.min(ALT_PREF_MAX_FAV, count-1);
+  function canTake(x){ return picked.indexOf(x)===-1 && (x.src!=='picked' || favN<favCap); }
+  function take(x){ picked.push(x); used[x.group]=true; if(x.src==='picked')favN++; }
+  // 0) ⭐ έως favCap γεύματα που διάλεξε ο ίδιος (μόνο ισοδύναμα σε μακροθρεπτικά) ·
   // 1) new protein group, also different from the current meal's · 2) new group among the picks —
   // both only among macro-equivalent candidates · 3) best remaining, whatever the group (so we
   // still reach `count` when the pool is narrow)
-  cands.forEach(function(x){ if(picked.length<count && x._m<=ALT_MACRO_OK && !used[x.group] && x.group!==curGroup) take(x); });
-  cands.forEach(function(x){ if(picked.length<count && x._m<=ALT_MACRO_OK && !used[x.group] && picked.indexOf(x)===-1) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && x.src==='picked' && x._m<=ALT_PREF_MACRO_OK && canTake(x)) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && x._m<=ALT_MACRO_OK && !used[x.group] && x.group!==curGroup && canTake(x)) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && x._m<=ALT_MACRO_OK && !used[x.group] && canTake(x)) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && canTake(x)) take(x); });
+  // στενή δεξαμενή: αν λείπουν ακόμα θέσεις, επιτρέπονται κι άλλα αγαπημένα
   cands.forEach(function(x){ if(picked.length<count && picked.indexOf(x)===-1) take(x); });
   return picked.map(function(x){
     var scaled=scalePlan([{name:meal.name,foods:deepClone(x.foods)}], null, [{k:targetKcal}])[0];
