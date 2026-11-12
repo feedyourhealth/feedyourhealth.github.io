@@ -95,7 +95,13 @@
           if(S0.rpcFail){ return Promise.resolve({data:null,error:{message:'network'}}); }
           return new Promise(function(r){ setTimeout(function(){ r({data:fdRpc(name,args,S0),error:null}); },20); });
         }
-        var S=window.__SERVER||{}, row=(name==='get_shared_plan'&&S.shared&&args)?S.shared[args.p_token]:null;
+        var S=window.__SERVER||{};
+        // Γενικά RPC για tests: S.rpcCalls = [[name,args]] ό,τι κλήθηκε· S.rpcData[name] = τι επιστρέφει.
+        (S.rpcCalls=S.rpcCalls||[]).push([name,clone(args)]);
+        if(S.rpcData && (name in S.rpcData)){
+          var pd=Promise.resolve({data:clone(S.rpcData[name]),error:null}); pd.single=function(){ return pd; }; return pd;
+        }
+        var row=(name==='get_shared_plan'&&S.shared&&args)?S.shared[args.p_token]:null;
         var p=Promise.resolve({data:row?{snapshot:clone(row.snapshot),updated_at:row.updated_at,expires_at:row.expires_at}:null,error:null});
         p.single=function(){ return p; };
         return p;

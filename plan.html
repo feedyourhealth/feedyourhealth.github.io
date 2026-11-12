@@ -109,6 +109,29 @@
   .meal .mc:active{transform:scale(.85)}
   .meal.eaten .mc{background:var(--teal);border-color:var(--teal)}
   .meal.eaten .nm{color:var(--faint);text-decoration:line-through}
+  /* 🏃 γραμμή προπόνησης (workoutBlock) — ίδιο ύφος με το .meal, διακεκομμένη γραμμή πάνω όταν είναι μέσα στην κάρτα γευμάτων */
+  .wk-block.wk-in-card{border-top:.5px dashed var(--bord);margin-top:8px}
+  .wk-row{display:flex;gap:10px;padding:10px 0 2px;align-items:flex-start;cursor:pointer}
+  .wk-row .mc{width:23px;height:23px;border:1.5px solid var(--bord);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;margin-top:1px;transition:transform .1s}
+  .wk-row:active .mc{transform:scale(.85)}
+  .wk-row.on .mc{background:var(--teal);border-color:var(--teal)}
+  .wk-row .t{font-size:12px;color:var(--faint);width:42px;flex-shrink:0;padding-top:1px}
+  .wk-row .nm{font-size:14px;color:var(--ink);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .wk-row .nm i{color:var(--teal);font-size:15px}
+  .wk-row .mi{font-size:12px;color:var(--muted)}
+  .wk-row.on .mi{color:var(--ok)}
+  .wk-xtra{font-size:10.5px;background:var(--tint2);color:var(--teal-d);border-radius:999px;padding:1px 7px;font-weight:600}
+  .wk-x{margin-left:auto;background:none;border:none;color:var(--faint);cursor:pointer;padding:4px;font-size:16px;display:flex;flex-shrink:0}
+  .wk-add{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:10px 0 2px;font-family:inherit;font-size:12.5px;color:var(--faint);cursor:pointer;text-align:left}
+  .wk-add .plus{width:23px;height:23px;border:1.5px dashed var(--bord);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
+  .wk-pick{padding:8px 0 2px}
+  .wk-lbl{font-size:11px;color:var(--muted);margin:2px 0 6px}
+  .wk-pick .log-tags{margin-bottom:6px}
+  .wk-acts{display:flex;gap:8px;margin-top:2px}
+  .wk-acts button{flex:1;border-radius:10px;padding:9px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+  .wk-cancel{background:none;border:.5px solid var(--bord);color:var(--muted)}
+  .wk-save{background:var(--teal);border:none;color:#fff}
+  .wk-save:disabled{opacity:.4;cursor:not-allowed}
   /* check-off στο tab Πλάνο (σήμερα ή παλαιότερα) — ίδιο ύφος με το .meal .mc της Αρχικής */
   .pm-chk{width:23px;height:23px;border:1.5px solid var(--bord);border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;cursor:pointer;transition:transform .1s}
   .pm-chk:active{transform:scale(.85)}
@@ -572,7 +595,8 @@ const I18N={
     trainDaySuffix:'ημέρα προπόνησης', matchDaySuffix:'ημέρα αγώνα',
     statGoal:'Στόχος', statProtein:'Πρωτεΐνη', statCarbs:'Υδατ/κες', statFat:'Λιπαρά', statOf:'από {t}',
     coachNoteHdr:'Μήνυμα από τη διαιτολόγο σου',
-    todayMealsHdr:'Η διατροφή μου σήμερα', matchBadge:'Αγώνας', tapMealHint:'Πάτα ένα γεύμα όταν το ολοκληρώσεις.',
+    todayMealsHdr:'Η διατροφή μου σήμερα', matchBadge:'Αγώνας', tapMealHint:'Πάτα ένα γεύμα όταν το ολοκληρώσεις.', wkTraining:'Προπόνηση', wkHintToday:'Η προπόνησή σου σήμερα · πάτα όταν τελειώσεις', wkHintPast:'Πάτα αν την έκανες', wkDone:'Έγινε ✓', wkAdd:'Έκανα προπόνηση (εκτός προγράμματος)', wkWhat:'Τι έκανες;', wkHowLong:'Πόση ώρα; (προαιρετικό)', wkSave:'Αποθήκευση', wkCancel:'Άκυρο', wkExtra:'εξτρά', wkLogged:'Καταγράφηκε ✓', wkUndo:'Αναίρεση', wkToday:'σήμερα',
+    wkT_weights:'Βάρη', wkT_run:'Τρέξιμο', wkT_walk:'Περπάτημα', wkT_bike:'Ποδήλατο', wkT_swim:'Κολύμπι', wkT_team:'Ομαδικό άθλημα', wkT_other:'Άλλο',
     noMealsToday:'Δεν υπάρχει πλάνο για σήμερα.', mealFallback:'Γεύμα', cookedW:'βρασμένο βάρος', beforeMatch:'πριν τον αγώνα', afterMatch:'μετά τον αγώνα',
     quickShop:'Λίστα ψώνια', quickSupps:'Συμπληρώματα', quickSpices:'Μπαχαρικά & βότανα', quickSpicesSub:'Οδηγός χρήσης',
     quickFruits:'Φρούτα', quickFruitsSub:'Λίστα ανταλλαγής', suppsNone:'—', suppsProgress:'{d} από {t} σήμερα', shopProgress:'{d} από {t} ✓',
@@ -684,7 +708,8 @@ const I18N={
     trainDaySuffix:'training day', matchDaySuffix:'match day',
     statGoal:'Target', statProtein:'Protein', statCarbs:'Carbs', statFat:'Fat', statOf:'of {t}',
     coachNoteHdr:'A note from your dietitian',
-    todayMealsHdr:'My meals today', matchBadge:'Match', tapMealHint:'Tap a meal once you finish it.',
+    todayMealsHdr:'My meals today', matchBadge:'Match', tapMealHint:'Tap a meal once you finish it.', wkTraining:'Training', wkHintToday:'Your workout today · tap when you’re done', wkHintPast:'Tap if you did it', wkDone:'Done ✓', wkAdd:'I worked out (not in my plan)', wkWhat:'What did you do?', wkHowLong:'How long? (optional)', wkSave:'Save', wkCancel:'Cancel', wkExtra:'extra', wkLogged:'Logged ✓', wkUndo:'Undo', wkToday:'today',
+    wkT_weights:'Weights', wkT_run:'Running', wkT_walk:'Walking', wkT_bike:'Cycling', wkT_swim:'Swimming', wkT_team:'Team sport', wkT_other:'Other',
     noMealsToday:'No plan for today.', mealFallback:'Meal', cookedW:'cooked weight', beforeMatch:'before the match', afterMatch:'after the match',
     quickShop:'Shopping list', quickSupps:'Supplements', quickSpices:'Spices & herbs', quickSpicesSub:'Usage guide',
     quickFruits:'Fruits', quickFruitsSub:'Exchange list', suppsNone:'—', suppsProgress:'{d} of {t} today', shopProgress:'{d} of {t} ✓',
@@ -796,7 +821,8 @@ const I18N={
     trainDaySuffix:'день тренировки', matchDaySuffix:'день матча',
     statGoal:'Цель', statProtein:'Белки', statCarbs:'Углеводы', statFat:'Жиры', statOf:'из {t}',
     coachNoteHdr:'Сообщение от вашего диетолога',
-    todayMealsHdr:'Мой рацион сегодня', matchBadge:'Матч', tapMealHint:'Нажмите на приём пищи, когда закончите его.',
+    todayMealsHdr:'Мой рацион сегодня', matchBadge:'Матч', tapMealHint:'Нажмите на приём пищи, когда закончите его.', wkTraining:'Тренировка', wkHintToday:'Ваша тренировка сегодня · нажмите, когда закончите', wkHintPast:'Нажмите, если вы её сделали', wkDone:'Сделано ✓', wkAdd:'Была тренировка (вне плана)', wkWhat:'Что вы делали?', wkHowLong:'Сколько времени? (необязательно)', wkSave:'Сохранить', wkCancel:'Отмена', wkExtra:'доп.', wkLogged:'Записано ✓', wkUndo:'Отменить', wkToday:'сегодня',
+    wkT_weights:'Силовая', wkT_run:'Бег', wkT_walk:'Ходьба', wkT_bike:'Велосипед', wkT_swim:'Плавание', wkT_team:'Командный спорт', wkT_other:'Другое',
     noMealsToday:'На сегодня плана нет.', mealFallback:'Приём пищи', cookedW:'вес в варёном виде', beforeMatch:'перед матчем', afterMatch:'после матча',
     quickShop:'Список покупок', quickSupps:'Добавки', quickSpices:'Специи и травы', quickSpicesSub:'Руководство по применению',
     quickFruits:'Фрукты', quickFruitsSub:'Список замены', suppsNone:'—', suppsProgress:'{d} из {t} сегодня', shopProgress:'{d} из {t} ✓',
@@ -908,7 +934,8 @@ const I18N={
     trainDaySuffix:'antrenman günü', matchDaySuffix:'maç günü',
     statGoal:'Hedef', statProtein:'Protein', statCarbs:'Karbonhidrat', statFat:'Yağ', statOf:'{t} içinden',
     coachNoteHdr:'Diyetisyeninizden bir not',
-    todayMealsHdr:'Bugünkü beslenmem', matchBadge:'Maç', tapMealHint:'Bir öğünü bitirdiğinde üzerine dokun.',
+    todayMealsHdr:'Bugünkü beslenmem', matchBadge:'Maç', tapMealHint:'Bir öğünü bitirdiğinde üzerine dokun.', wkTraining:'Antrenman', wkHintToday:'Bugünkü antrenmanın · bitirince dokun', wkHintPast:'Yaptıysan dokun', wkDone:'Yapıldı ✓', wkAdd:'Antrenman yaptım (plan dışı)', wkWhat:'Ne yaptın?', wkHowLong:'Ne kadar sürdü? (isteğe bağlı)', wkSave:'Kaydet', wkCancel:'İptal', wkExtra:'ekstra', wkLogged:'Kaydedildi ✓', wkUndo:'Geri al', wkToday:'bugün',
+    wkT_weights:'Ağırlık', wkT_run:'Koşu', wkT_walk:'Yürüyüş', wkT_bike:'Bisiklet', wkT_swim:'Yüzme', wkT_team:'Takım sporu', wkT_other:'Diğer',
     noMealsToday:'Bugün için plan yok.', mealFallback:'Öğün', cookedW:'haşlanmış ağırlık', beforeMatch:'maçtan önce', afterMatch:'maçtan sonra',
     quickShop:'Alışveriş listesi', quickSupps:'Takviyeler', quickSpices:'Baharat ve otlar', quickSpicesSub:'Kullanım rehberi',
     quickFruits:'Meyveler', quickFruitsSub:'Değişim listesi', suppsNone:'—', suppsProgress:'bugün {t} içinden {d}', shopProgress:'{t} içinden {d} ✓',
@@ -1320,6 +1347,7 @@ function flushAllLocalSync(){
   if(_waterSyncTimer){clearTimeout(_waterSyncTimer);_waterSyncNow();}
   if(_suppSyncTimer){clearTimeout(_suppSyncTimer);_suppSyncNow();}
   if(_shopSyncTimer){clearTimeout(_shopSyncTimer);_shopSyncNow();}
+  if(_wkSyncTimer){clearTimeout(_wkSyncTimer);_wkSyncNow();}
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAllLocalSync();});
 
@@ -1406,6 +1434,49 @@ async function hydrateSuppCheckins(){
     if(localOnly)Object.keys(local).forEach(dateKey=>{if(!(dateKey in data))syncSuppCheckin(dateKey);});
     return changed;
   }catch(e){console.error('[FYH portal] hydrateSuppCheckins failed:',e);return false;}
+}
+
+// ── 🏃 Γυμναστική (client_workout_log, βλ. sql/2026-11-12_workout_log.sql) ──
+// Ανά ημέρα: {d:true} = έκανε την προγραμματισμένη προπόνηση, {e:{t,m}} = εξτρά σε μέρα χωρίς
+// πρόγραμμα (t = id τύπου από WK_TYPES, m = λεπτά ή null), {} = τίποτα. Το {} μένει τοπικά (όχι delete)
+// ώστε το hydrate να μη «ξαναζωντανέψει» ένα ξε-τσεκάρισμα — ίδια λογική με το meals map.
+// Δεν μπαίνει στο σκορ τήρησης ούτε αλλάζει στόχους — μόνο καταγραφή για τον διαιτολόγο.
+function getWorkoutLog(){try{return JSON.parse(localStorage.getItem(lk('workouts'))||'{}')}catch(e){return {}}}
+function getWorkoutFor(dateKey){return getWorkoutLog()[dateKey]||{}}
+function setWorkoutFor(dateKey,val){
+  try{const all=getWorkoutLog(); all[dateKey]=val||{}; localStorage.setItem(lk('workouts'),JSON.stringify(all));}catch(e){}
+  syncWorkoutCheckin(dateKey);
+}
+let _wkSyncTimer=null, _wkSyncQueue=new Set();
+function syncWorkoutCheckin(dateKey){
+  _wkSyncQueue.add(dateKey);
+  if(_wkSyncTimer)clearTimeout(_wkSyncTimer);
+  _wkSyncTimer=setTimeout(_wkSyncNow,400);
+}
+function _wkSyncNow(){
+  _wkSyncTimer=null;
+  if(!sb)return;
+  const tok=token(); if(!tok)return;
+  const dates=[..._wkSyncQueue]; _wkSyncQueue.clear();
+  dates.forEach(dateKey=>{
+    sb.rpc('save_workout_checkin',{p_token:tok,p_date:dateKey,p_data:getWorkoutFor(dateKey)}).then(null,()=>{});
+  });
+}
+async function hydrateWorkoutCheckins(){
+  const tok=token(); if(!tok||!sb)return false;
+  try{
+    const {data,error}=await sb.rpc('get_workout_checkins',{p_token:tok});
+    if(error||!data||typeof data!=='object')return false;
+    const local=getWorkoutLog();
+    const merged=Object.assign({},data);
+    let localOnly=false;
+    Object.keys(local).forEach(dateKey=>{if(!(dateKey in merged)){merged[dateKey]=local[dateKey];localOnly=true;}});
+    const changed=JSON.stringify(merged)!==JSON.stringify(local);
+    localStorage.setItem(lk('workouts'),JSON.stringify(merged));
+    // Μια μέρα που ο server δεν έχει και τοπικά είναι {} = απλά ξε-τσεκαρισμένη· δεν ξαναστέλνεται.
+    if(localOnly)Object.keys(local).forEach(dateKey=>{if(!(dateKey in data)&&Object.keys(local[dateKey]||{}).length)syncWorkoutCheckin(dateKey);});
+    return changed;
+  }catch(e){console.error('[FYH portal] hydrateWorkoutCheckins failed:',e);return false;}
 }
 
 // Η λίστα αγορών δεν έχει ημερομηνία — ένα επίπεδο, συνεχές checklist ανά token.
@@ -1754,7 +1825,7 @@ async function boot(){
     render();
     // Fire-and-forget — δεν καθυστερεί το πρώτο paint· αν φέρει κάτι που άλλαξε το τοπικό
     // cache (π.χ. check-off χαμένο από τον browser), ξανασχεδιάζει το τρέχον tab.
-    Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState()])
+    Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState(),hydrateWorkoutCheckins()])
       .then(results=>{
         const shopReset=checkShoppingListFreshness();
         if(results.some(Boolean)||shopReset)go(curTab());
@@ -1790,7 +1861,7 @@ async function refreshPlan(){
       SNAP=data.snapshot; SNAP._updated=data.updated_at;
       LANG=pickLang(SNAP.lang);
       applyLangMeta();
-      await Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState()]);
+      await Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState(),hydrateWorkoutCheckins()]);
       checkShoppingListFreshness();
       backfillCheckins();
       const badge=$('#upd-badge'); if(badge)badge.innerHTML=updatedBadge();
@@ -2092,6 +2163,8 @@ function viewHome(){
     });
     cp.appendChild(el('div','empty-glass-note',T('tapMealHint')));
   }else{cp.appendChild(el('div','mi',T('noMealsToday')));}
+  // 🏃 προπόνηση σήμερα — διακριτικά μέσα στην ίδια κάρτα, όχι νέα κάρτα
+  const wkb=workoutBlock(defaultDay(),todayKey(),'home'); if(wkb){wkb.classList.add('wk-in-card');cp.appendChild(wkb);}
   c.appendChild(cp); v.appendChild(c);
 
   // ενυδάτωση — πλήρης κάρτα (το tab «Νερό» καταργήθηκε)
@@ -2387,6 +2460,78 @@ function choCard(cho){
   return c;
 }
 
+// ── 🏃 Γραμμή «Προπόνηση» (Αρχική: μέσα στην κάρτα γευμάτων · Πλάνο: για σήμερα/παλιότερες μέρες) ──
+// Μέρα προπόνησης (day.isTrain) → μία γραμμή με κύκλο τσεκαρίσματος, ίδια χειρονομία με τα γεύματα.
+// Μέρα χωρίς πρόγραμμα → αχνό «+ Έκανα προπόνηση» που ανοίγει επιλογή τύπου/διάρκειας. Μελλοντικές μέρες: τίποτα.
+// Παλιά links (πριν το 2026-11-12) δεν έχουν day.workouts → γράφει τη γενική λέξη «Προπόνηση».
+const WK_TYPES=['weights','run','walk','bike','swim','team','other'];
+const WK_MINS=[30,45,60,90];
+let wkPick=null; // {date,t,m} — ανοιχτή επιλογή εξτρά προπόνησης
+function wkRerender(tab){
+  const sc=$('#scroll'), y=sc?sc.scrollTop:0;
+  go(tab);
+  const sc2=$('#scroll'); if(sc2)sc2.scrollTop=y;
+}
+function workoutBlock(dayIdx,dateKey,tab){
+  const day=SNAP&&SNAP.days&&SNAP.days[dayIdx];
+  if(!day || dateKey>todayKey())return null;
+  const isToday=dateKey===todayKey();
+  const log=getWorkoutFor(dateKey);
+  const wrap=el('div','wk-block');
+  const keyAct=(node,fn)=>{node.setAttribute('role','button');node.tabIndex=0;node.onclick=fn;node.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}};};
+
+  if(day.isTrain){
+    const ws=(day.workouts&&day.workouts.length)?day.workouts:[{n:'',m:0,t:''}];
+    const name=ws.map(w=>(w.n||T('wkTraining'))+(w.m?' · '+w.m+'′':'')).join(' + ');
+    const on=!!log.d;
+    const row=el('div','wk-row'+(on?' on':''));
+    row.setAttribute('aria-pressed',String(on));
+    row.innerHTML='<span class="mc">'+(on?'<i class="ti ti-check"></i>':'')+'</span>'
+      +'<div class="t">'+esc((ws[0]&&ws[0].t)||'')+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="nm"><i class="ti ti-run"></i><span>'+esc(name)+'</span></div>'
+      +'<div class="mi">'+esc(on?T('wkDone'):(isToday?T('wkHintToday'):T('wkHintPast')))+'</div></div>';
+    keyAct(row,()=>{const nv=Object.assign({},getWorkoutFor(dateKey)); if(nv.d)delete nv.d; else nv.d=true; setWorkoutFor(dateKey,nv); wkRerender(tab);});
+    wrap.appendChild(row);
+    return wrap;
+  }
+
+  if(log.e){
+    const e=log.e;
+    const row=el('div','wk-row on');
+    row.innerHTML='<span class="mc"><i class="ti ti-check"></i></span>'
+      +'<div class="t">'+esc(isToday?T('wkToday'):'')+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="nm"><i class="ti ti-run"></i><span>'+esc(T('wkT_'+(WK_TYPES.indexOf(e.t)>-1?e.t:'other'))+(e.m?' · '+e.m+'′':''))+'</span> <span class="wk-xtra">'+esc(T('wkExtra'))+'</span></div>'
+      +'<div class="mi">'+esc(T('wkLogged'))+'</div></div>';
+    const x=el('button','wk-x'); x.type='button'; x.setAttribute('aria-label',T('wkUndo')); x.title=T('wkUndo');
+    x.innerHTML='<i class="ti ti-x"></i>';
+    x.onclick=()=>{setWorkoutFor(dateKey,{}); wkRerender(tab);};
+    row.appendChild(x);
+    wrap.appendChild(row);
+    return wrap;
+  }
+
+  if(wkPick && wkPick.date===dateKey){
+    const pk=el('div','wk-pick');
+    pk.innerHTML='<div class="wk-lbl">'+esc(T('wkWhat'))+'</div><div class="log-tags">'
+      +WK_TYPES.map(t=>'<button type="button" class="log-tag'+(wkPick.t===t?' log-tag-on':'')+'" data-t="'+t+'">'+esc(T('wkT_'+t))+'</button>').join('')+'</div>'
+      +'<div class="wk-lbl">'+esc(T('wkHowLong'))+'</div><div class="log-tags">'
+      +WK_MINS.map(m=>'<button type="button" class="log-tag'+(wkPick.m===m?' log-tag-on':'')+'" data-m="'+m+'">'+m+(m===90?'′+':'′')+'</button>').join('')+'</div>'
+      +'<div class="wk-acts"><button type="button" class="wk-cancel">'+esc(T('wkCancel'))+'</button><button type="button" class="wk-save"'+(wkPick.t?'':' disabled')+'>'+esc(T('wkSave'))+'</button></div>';
+    pk.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{wkPick.t=b.dataset.t;wkRerender(tab);});
+    pk.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const m=+b.dataset.m;wkPick.m=wkPick.m===m?null:m;wkRerender(tab);});
+    pk.querySelector('.wk-cancel').onclick=()=>{wkPick=null;wkRerender(tab);};
+    pk.querySelector('.wk-save').onclick=()=>{if(!wkPick.t)return; setWorkoutFor(dateKey,{e:{t:wkPick.t,m:wkPick.m||null}}); wkPick=null; wkRerender(tab);};
+    wrap.appendChild(pk);
+    return wrap;
+  }
+
+  const add=el('button','wk-add'); add.type='button';
+  add.innerHTML='<span class="plus"><i class="ti ti-plus"></i></span><span>'+esc(T('wkAdd'))+'</span>';
+  add.onclick=()=>{wkPick={date:dateKey,t:null,m:null}; wkRerender(tab);};
+  wrap.appendChild(add);
+  return wrap;
+}
+
 // ── PLAN ──────────────────────────────────────────────────────────────────
 function viewPlan(){
   const s=SNAP, v=el('div','view active');
@@ -2501,6 +2646,9 @@ function viewPlan(){
     });
     v.appendChild(grid);
   }else{v.appendChild(el('div','mi',T('noMealsForDay')));}
+  // 🏃 προπόνηση αυτής της μέρας — εδώ διορθώνει και μια μέρα που ξέχασε (μόνο σήμερα/παλιότερα)
+  const wkb=workoutBlock(curDay,planDateKey,'plan');
+  if(wkb){const wc=el('div','card'), wp=el('div','card-pad'); wp.style.paddingTop='4px'; wp.appendChild(wkb); wc.appendChild(wp); v.appendChild(wc);}
   return v;
 }
 function shortDay(l){return (l||'').slice(0,3)}

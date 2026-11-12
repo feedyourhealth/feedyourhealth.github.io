@@ -790,6 +790,22 @@
         };
       }
 
+      // 🏃 Προπονήσεις της μέρας για τη γραμμή «Προπόνηση» του link (2026-11-12): [{n,m,t}] από τις
+      // «Προπονήσεις (MET)» — n = όνομα (μόνο ελληνικά· τα MET ονόματα δεν έχουν μετάφραση, οπότε σε
+      // en/ru/tr μένει κενό και το link γράφει τη γενική λέξη), m = λεπτά, t = ώρα. Μέρα προπόνησης
+      // χωρίς MET (μόνο συντελεστής δραστηριότητας) → μία κενή εγγραφή με την ώρα από trainTimesByDay.
+      function buildDayWorkouts(dayIdx){
+        if(!(c.trainDays&&c.trainDays[dayIdx])) return [];
+        var out=[];
+        (c.metActivities||[]).forEach(function(ma){
+          if(!ma||!(ma.days||[]).some(function(x){return +x===dayIdx;})) return;
+          out.push({n:lang==='el'?(ma.name||''):'', m:+ma.mins||0, t:ma.time||''});
+        });
+        if(!out.length) out.push({n:'', m:0, t:(c.trainTimesByDay&&c.trainTimesByDay[dayIdx])||''});
+        out.sort(function(a,b){return (a.t||'99')<(b.t||'99')?-1:1;});
+        return out;
+      }
+
       var days=[];
       for(var d=0; d<7; d++){
         var dm=wp[d]||[];
@@ -871,6 +887,7 @@
           macros:{p:Math.round(dP),c:Math.round(dC),f:Math.round(dF)},
           fiber:Math.round(dFi*10)/10,
           cho:buildDayCho(d),
+          workouts:buildDayWorkouts(d),
           meals:meals
         });
       }
@@ -1800,6 +1817,26 @@
     mealLogFor:function(c){
       var self=this, byDate={};
       this.checkinTokensFor(c).forEach(function(t){ (self._mealLogCache[t]||[]).forEach(function(r){ byDate[r.date]=r.meals_map||{}; }); });
+      return byDate;
+    },
+
+    // ── 🏃 ΓΥΜΝΑΣΤΙΚΗ (client_workout_log — γράφει το plan.html, 2026-11-12) ──
+    // {date: {d:true} | {e:{t,m}}} — d = έκανε την προγραμματισμένη, e = εξτρά. Θέλει το
+    // sql/2026-11-12_workout_log.sql — χωρίς αυτό η βάση γυρνά σφάλμα/0 γραμμές και η στήλη μένει κενή.
+    _workoutLogCache:{},
+    refreshWorkoutLogCache:function(){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve();
+      var tokens=[];
+      (window.clients||[]).forEach(function(c){ if(!c.deleted) tokens=tokens.concat(self.checkinTokensFor(c)); });
+      if(!tokens.length) return Promise.resolve();
+      return this._fetchAllByToken('client_workout_log','token,date,data',tokens,'date','fetchAllWorkoutLogs').then(function(byToken){
+        if(byToken) self._workoutLogCache=byToken;
+      },function(){});
+    },
+    workoutLogFor:function(c){
+      var self=this, byDate={};
+      this.checkinTokensFor(c).forEach(function(t){ (self._workoutLogCache[t]||[]).forEach(function(r){ byDate[r.date]=r.data||{}; }); });
       return byDate;
     },
 

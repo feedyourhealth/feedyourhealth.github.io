@@ -445,6 +445,12 @@ body.dark-mode .hm-card{background:#242424;border-color:#444}
 .pr-wk-de{background:#f4f4f4;border:1px solid #cfcfcf}
 .pr-wk-df{border:1px dashed #d6d6d6}
 .pr-wk-dx{opacity:0}
+/* 🏃 γυμναστική κάτω από κάθε μέρα (progressWorkoutCell) */
+.pr-wk-gs{line-height:0;margin-top:3px}
+.pr-wk-g{display:inline-block;width:11px;height:4px;border-radius:2px;margin-right:2px;vertical-align:middle;box-sizing:border-box}
+.pr-wk-gd{background:#025857}.pr-wk-gm{border:1px solid #025857}.pr-wk-gx{background:#d98a1c}.pr-wk-gp{border:1px dashed #9fb5b0}.pr-wk-gn{background:none}
+.pr-wk-gym{font-weight:700;color:var(--teal)}.pr-wk-gym small{font-weight:600;color:#b26e0f;margin-left:3px;font-size:11px}
+body.dark-mode .pr-wk-gd{background:#3fb3a8}body.dark-mode .pr-wk-gm{border-color:#3fb3a8}body.dark-mode .pr-wk-gx{background:#f0a43a}body.dark-mode .pr-wk-gym small{color:#f0b45a}
 .pr-wk-p{display:inline-block;min-width:38px;text-align:center;padding:2px 6px;border-radius:6px;font-weight:600}
 .pr-wk-pg{background:#E1F5EE;color:#085041}.pr-wk-pa{background:#FAEEDA;color:#633806}.pr-wk-pr{background:#FCEBEB;color:#791F1F}.pr-wk-pn{color:var(--text-muted)}
 .pr-wk-more{background:none;border:none;padding:8px 0 0;font-size:12px;font-weight:600;color:var(--teal);cursor:pointer;font-family:inherit}

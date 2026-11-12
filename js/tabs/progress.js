@@ -455,7 +455,8 @@ function progressRefresh(){
     typeof Cloud.refreshLinkHealthCache==='function'?Cloud.refreshLinkHealthCache():Promise.resolve(),
     typeof Cloud.refreshMealLogCache==='function'?Cloud.refreshMealLogCache():Promise.resolve(),
     typeof Cloud.refreshSuppLogCache==='function'?Cloud.refreshSuppLogCache():Promise.resolve(),
-    typeof Cloud.refreshShopCache==='function'?Cloud.refreshShopCache():Promise.resolve()
+    typeof Cloud.refreshShopCache==='function'?Cloud.refreshShopCache():Promise.resolve(),
+    typeof Cloud.refreshWorkoutLogCache==='function'?Cloud.refreshWorkoutLogCache():Promise.resolve()
   ]).then(function(){
     // Αν στο μεταξύ άλλαξες tab, μην το πατήσεις. Αν άνοιξες πελάτη (π.χ. «Πλήρες ιστορικό →» από το
     // Ραντεβού, που κάνει swTab(10) + openProgressClient αμέσως μετά), μείνε σε ΑΥΤΟΝ — πριν, το
@@ -589,6 +590,25 @@ function progressToggleOlderWeeks(btn){
   tb.style.display=open?'':'none';
   btn.innerHTML=open?'Απόκρυψη παλιότερων ▴':btn.getAttribute('data-label');
 }
+// ── 🏃 Γυμναστική ανά μέρα (2026-11-12) — από το client_workout_log (Cloud.workoutLogFor) + c.trainDays.
+// Ένα λεπτό σημάδι κάτω από κάθε τετράγωνο ημέρας + στήλη «Γυμν.» (έγιναν/προγραμματισμένες +εξτρά).
+// ΔΕΝ μπαίνει στο σκορ τήρησης. «Δεν σημειώθηκε» μόνο από PROGRESS_WK_START και μετά — πριν από
+// αυτή την ημερομηνία το link δεν είχε καν τη γραμμή, οπότε δεν «καταδικάζουμε» παλιές εβδομάδες.
+var PROGRESS_WK_START='2026-11-12';
+var PROGRESS_WK_TYPES={weights:'Βάρη',run:'Τρέξιμο',walk:'Περπάτημα',bike:'Ποδήλατο',swim:'Κολύμπι',team:'Ομαδικό άθλημα',other:'Άλλο'};
+var PROGRESS_WK_DAYNAMES=['Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο','Κυριακή'];
+function progressWorkoutCell(c,wlog,k,i,todayKey){
+  var planned=!!(c.trainDays&&c.trainDays[i]);
+  var e=wlog[k]||{};
+  var lbl=PROGRESS_WK_DAYNAMES[i]+' '+progressShortDate(k);
+  if(k>todayKey) return {cl:planned?'p':'n',t:planned?lbl+' · προγραμματισμένη':''};
+  if(e.e){ var x=e.e; return {cl:'x',t:lbl+' · Εξτρά: '+(PROGRESS_WK_TYPES[x.t]||'Άλλο')+(x.m?', '+x.m+'′':'')}; }
+  if(planned && e.d) return {cl:'d',t:lbl+' · προγραμματισμένη, έγινε'};
+  if(!planned && e.d) return {cl:'x',t:lbl+' · προπόνηση (εκτός τρέχοντος προγράμματος)'};
+  if(planned && k===todayKey) return {cl:'p',t:lbl+' · σήμερα, δεν σημειώθηκε ακόμα'};
+  if(planned && k>=PROGRESS_WK_START) return {cl:'m',t:lbl+' · προγραμματισμένη, δεν σημειώθηκε'};
+  return {cl:'n',t:''};
+}
 function progressWeeklyConsistencyHtml(c,rows){
   var head='<div class="hm-card pr-wk" style="margin-bottom:14px"><div class="hm-card-title">📅 Συνέπεια ανά εβδομάδα';
   if(!rows.length) return head+'</div><div class="hm-empty">Δεν υπάρχουν ακόμα καταγραφές από το portal.</div></div>';
@@ -596,6 +616,8 @@ function progressWeeklyConsistencyHtml(c,rows){
   var todayKey=ckDayKey(new Date());
   var firstOff=Math.min(0,progressWeekOffsetOf(rows[0].date));
   var weeks=[], daysWith=0, daysTotal=0, scoreSum=0, scoreN=0, goodWeeks=0, emptyWeeks=0;
+  var wlog=(window.Cloud && Cloud.workoutLogFor)?Cloud.workoutLogFor(c):{};
+  var showGym=(c.trainDays||[]).some(Boolean) || Object.keys(wlog).some(function(k){return Object.keys(wlog[k]||{}).length>0;});
   for(var off=0;off>=firstOff;off--){
     var keys=ckWeekDates(off);
     var wkRows=keys.map(function(k){return byDate[k];}).filter(Boolean);
@@ -613,7 +635,10 @@ function progressWeeklyConsistencyHtml(c,rows){
     var isEmpty=!st.anyData && off<0;               // η τρέχουσα δεν «καταδικάζεται» πριν τελειώσει
     if(isEmpty) emptyWeeks++;
     if(score!=null){ scoreSum+=score; scoreN++; if(score>=PROGRESS_GOOD_MIN) goodWeeks++; }
-    weeks.push({off:off,keys:keys,cells:cells,score:score,isEmpty:isEmpty,appts:appts,
+    var gym=keys.map(function(k,i){return progressWorkoutCell(c,wlog,k,i,todayKey);});
+    var gPlan=0,gDone=0,gExtra=0;
+    gym.forEach(function(g){ if(g.cl==='d'){gPlan++;gDone++;} else if(g.cl==='m') gPlan++; else if(g.cl==='x') gExtra++; });
+    weeks.push({off:off,keys:keys,cells:cells,score:score,isEmpty:isEmpty,appts:appts,gym:gym,gPlan:gPlan,gDone:gDone,gExtra:gExtra,
       diet:progressWeeklyPillarPct(byDate,off,'diet'),wat:progressWeeklyPillarPct(byDate,off,'wat'),sup:progressWeeklyPillarPct(byDate,off,'sup')});
   }
   function pill(v){ return '<span class="pr-wk-p pr-wk-p'+progressPctClass(v)+'">'+(v==null?'—':v+'%')+'</span>'; }
@@ -622,8 +647,10 @@ function progressWeeklyConsistencyHtml(c,rows){
       +(w.off===0?' <span class="pr-wk-cur">τρέχ.</span>':'')
       +w.appts.map(function(a){return ' <span title="Ραντεβού '+esc(a.date)+'">🗓</span>';}).join('');
     var dots=w.cells.map(function(cl){return '<span class="pr-wk-d pr-wk-d'+cl+'"></span>';}).join('');
-    if(w.isEmpty) return '<tr class="pr-wk-empty"><td>'+label+'</td><td>'+dots+'</td><td colspan="4">Καμία καταχώρηση όλη την εβδομάδα</td></tr>';
-    return '<tr><td>'+label+'</td><td>'+dots+'</td><td>'+pill(w.diet)+'</td><td>'+pill(w.wat)+'</td><td>'+pill(w.sup)+'</td><td>'+pill(w.score)+'</td></tr>';
+    if(showGym) dots+='<div class="pr-wk-gs">'+w.gym.map(function(g){return '<span class="pr-wk-g pr-wk-g'+g.cl+'"'+(g.t?' title="'+esc(g.t)+'"':'')+'></span>';}).join('')+'</div>';
+    var gymTd=showGym?'<td class="pr-wk-gym">'+((w.gPlan||w.gExtra)?(w.gPlan?w.gDone+'/'+w.gPlan:'')+(w.gExtra?'<small>+'+w.gExtra+'</small>':''):'<span style="color:var(--text-muted)">—</span>')+'</td>':'';
+    if(w.isEmpty) return '<tr class="pr-wk-empty"><td>'+label+'</td><td>'+dots+'</td><td colspan="4">Καμία καταχώρηση όλη την εβδομάδα</td>'+gymTd+'</tr>';
+    return '<tr><td>'+label+'</td><td>'+dots+'</td><td>'+pill(w.diet)+'</td><td>'+pill(w.wat)+'</td><td>'+pill(w.sup)+'</td><td>'+pill(w.score)+'</td>'+gymTd+'</tr>';
   }
   var visible=weeks.slice(0,PROGRESS_WEEKS_VISIBLE), older=weeks.slice(PROGRESS_WEEKS_VISIBLE);
   var avg=scoreN?Math.round(scoreSum/scoreN):null;
@@ -635,7 +662,7 @@ function progressWeeklyConsistencyHtml(c,rows){
     +tile('Εβδ. ≥ '+PROGRESS_GOOD_MIN+'%',goodWeeks+' / '+weeks.length)
     +tile('Εβδ. χωρίς τίποτα',emptyWeeks,emptyWeeks>0)
     +'</div>';
-  html+='<div class="pr-wk-scroll"><table class="pr-wk-t"><thead><tr><th>Εβδομάδα</th><th>Δε Τρ Τε Πε Πα Σα Κυ</th><th>Διατροφή</th><th>Νερό</th><th>Συμπλ.</th><th>Σκορ</th></tr></thead>'
+  html+='<div class="pr-wk-scroll"><table class="pr-wk-t"><thead><tr><th>Εβδομάδα</th><th>Δε Τρ Τε Πε Πα Σα Κυ</th><th>Διατροφή</th><th>Νερό</th><th>Συμπλ.</th><th>Σκορ</th>'+(showGym?'<th title="Προπονήσεις: έγιναν / προγραμματισμένες (+ εξτρά). Δεν μετράει στο σκορ.">🏃 Γυμν.</th>':'')+'</tr></thead>'
     +'<tbody>'+visible.map(rowHtml).join('')+'</tbody>'
     +(older.length?'<tbody id="pr-wk-older" style="display:none">'+older.map(rowHtml).join('')+'</tbody>':'')
     +'</table></div>';
@@ -643,7 +670,8 @@ function progressWeeklyConsistencyHtml(c,rows){
     var lbl='Δες και τις '+older.length+' παλιότερες εβδομάδες ▾';
     html+='<button type="button" class="pr-wk-more" data-label="'+esc(lbl)+'" onclick="progressToggleOlderWeeks(this)">'+lbl+'</button>';
   }
-  html+='<div class="pr-wk-legend"><span><span class="pr-wk-d pr-wk-dg"></span>τήρησε όλους τους στόχους</span><span><span class="pr-wk-d pr-wk-da"></span>μερικώς</span><span><span class="pr-wk-d pr-wk-dr"></span>χαμηλή (&lt;'+PROGRESS_LOW_MAX+'%)</span><span><span class="pr-wk-d pr-wk-de"></span>χωρίς καταχώρηση</span><span>🗓 ραντεβού</span><span>— χωρίς στόχο</span></div>';
+  html+='<div class="pr-wk-legend"><span><span class="pr-wk-d pr-wk-dg"></span>τήρησε όλους τους στόχους</span><span><span class="pr-wk-d pr-wk-da"></span>μερικώς</span><span><span class="pr-wk-d pr-wk-dr"></span>χαμηλή (&lt;'+PROGRESS_LOW_MAX+'%)</span><span><span class="pr-wk-d pr-wk-de"></span>χωρίς καταχώρηση</span><span>🗓 ραντεβού</span><span>— χωρίς στόχο</span></div>'
+    +(showGym?'<div class="pr-wk-legend" style="margin-top:4px"><span>🏃 κάτω από κάθε μέρα:</span><span><span class="pr-wk-g pr-wk-gd"></span>προπόνηση έγινε</span><span><span class="pr-wk-g pr-wk-gm"></span>προγραμματισμένη, δεν σημειώθηκε</span><span><span class="pr-wk-g pr-wk-gx"></span>εξτρά (εκτός προγράμματος)</span><span>· δεν μετράει στο σκορ</span></div>':'');
   return html+'</div>';
 }
 
