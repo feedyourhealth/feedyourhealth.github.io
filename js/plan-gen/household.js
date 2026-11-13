@@ -318,6 +318,104 @@ function hhIsShared(c, meal, d){
   });
 }
 
+// ── 🔍 Αυτόματη εύρεση ίδιων γευμάτων ───────────────────────────────────────────────────
+// Όταν τα πλάνα φτιάχτηκαν χωριστά (όχι με «Εφαρμογή σε…»), τα ίδια γεύματα δεν έχουν hhKey.
+// Ίδιο = ίδια ημέρα, ίδια θέση (όνομα + σειρά, όπως hhMatchSlot), ίδιο ΣΥΝΟΛΟ τροφίμων· τα γραμμάρια
+// μπορεί να διαφέρουν. «Σχεδόν ίδιο» = διαφέρουν το πολύ κατά 1 τρόφιμο σε κάθε πλευρά, με τα μισά
+// τουλάχιστον κοινά. Η σήμανση βάζει ΜΟΝΟ hhKey — δεν αλλάζει ποτέ τρόφιμα ή γραμμάρια.
+function _hhMealNames(meal){
+  var out=[];
+  (meal&&meal.foods||[]).forEach(function(f){ if(f&&f.n&&f.n!==FREE_MEAL_MARKER&&f.g>0&&out.indexOf(f.n)<0) out.push(f.n); });
+  return out;
+}
+function _hhGrams(meal, n){
+  var s=0; (meal.foods||[]).forEach(function(f){ if(f&&f.n===n&&f.g>0) s+=f.g; }); return Math.round(s);
+}
+function _hhAllSameKey(list){
+  var k=list[0].meal.hhKey;
+  return !!k && list.every(function(e){ return e.meal.hhKey===k; });
+}
+function _hhNear(a, b){
+  var common=a.filter(function(n){ return b.indexOf(n)>=0; }).length;
+  var ea=a.length-common, eb=b.length-common;
+  return common>=1 && ea<=1 && eb<=1 && (ea+eb)>=1 && common*2>=Math.max(a.length,b.length);
+}
+function hhFindSameMeals(c){
+  var res={exact:[], near:[]};
+  var members=hhMembers(c).filter(function(x){ return x.weekPlan&&Object.keys(x.weekPlan).length; });
+  if(members.length<2) return res;
+  var mkRow=function(d, list, exact){
+    var anchor=list[0].names;
+    var common=anchor.filter(function(n){ return list.every(function(e){ return e.names.indexOf(n)>=0; }); });
+    return {
+      d:d, slot:list[0].meal.name||'', exact:exact,
+      names:common,
+      refs:list.map(function(e){
+        return {id:e.x.id, mi:e.mi, who:hhFirstName(e.x),
+          grams:common.map(function(n){ return _hhGrams(e.meal,n); }),
+          extra:e.names.filter(function(n){ return common.indexOf(n)<0; }).map(function(n){ return {n:n, g:_hhGrams(e.meal,n)}; })};
+      })
+    };
+  };
+  for(var d=0; d<7; d++){
+    var slots={}, sOrder=[];
+    members.forEach(function(x){
+      var cnt={};
+      (x.weekPlan[d]||[]).forEach(function(meal, mi){
+        if(!meal) return;
+        var nm=meal.name||'', occ=cnt[nm]||0; cnt[nm]=occ+1;
+        var names=_hhMealNames(meal); if(!names.length) return;
+        var k=nm+'#'+occ;
+        if(!slots[k]){ slots[k]=[]; sOrder.push(k); }
+        slots[k].push({x:x, mi:mi, meal:meal, names:names, sig:names.slice().sort().join('|')});
+      });
+    });
+    sOrder.forEach(function(k){
+      var groups=[], bySig={};
+      slots[k].forEach(function(e){
+        if(!(e.sig in bySig)){ bySig[e.sig]=groups.length; groups.push([]); }
+        groups[bySig[e.sig]].push(e);
+      });
+      groups.forEach(function(g){ if(g.length>=2 && !_hhAllSameKey(g)) res.exact.push(mkRow(d,g,true)); });
+      for(var i=0;i<groups.length;i++) for(var j=i+1;j<groups.length;j++){
+        var all=groups[i].concat(groups[j]);
+        if(_hhNear(groups[i][0].names, groups[j][0].names) && !_hhAllSameKey(all)) res.near.push(mkRow(d,all,false));
+      }
+    });
+  }
+  return res;
+}
+// Βάζει κοινό hhKey στα γεύματα κάθε σειράς. Επιστρέφει λίστα αναίρεσης [{id,d,mi,prev}].
+// Αν δύο σειρές αγγίζουν το ίδιο γεύμα, ενώνονται σε ένα κλειδί (ποτέ μισό-κοινό πιάτο).
+function hhMarkSameMeals(rows){
+  var undo=[], touched={};   // "id|d|mi" → κλειδί που μπήκε σε αυτό το πέρασμα
+  var mealOf=function(r){ var x=clients.find(function(y){ return y.id===r.id; }); return x&&x.weekPlan&&x.weekPlan[r.d]&&x.weekPlan[r.d][r.mi]; };
+  rows.forEach(function(row){
+    var refs=row.refs.map(function(r){ return {id:r.id, d:row.d, mi:r.mi}; }).filter(function(r){ return mealOf(r); });
+    if(refs.length<2) return;
+    var runKeys=[];
+    refs.forEach(function(r){ var k=touched[r.id+'|'+r.d+'|'+r.mi]; if(k&&runKeys.indexOf(k)<0) runKeys.push(k); });
+    var key=runKeys[0]||('k'+Date.now().toString(36)+Math.random().toString(36).slice(2,7));
+    // ένωση: ό,τι πήρε άλλο κλειδί σε αυτό το πέρασμα και ανήκει σε αυτή τη σειρά → ίδιο κλειδί
+    Object.keys(touched).forEach(function(t){
+      if(runKeys.indexOf(touched[t])>0){ var p=t.split('|'), m=mealOf({id:p[0],d:+p[1],mi:+p[2]}); if(m){ m.hhKey=key; touched[t]=key; } }
+    });
+    refs.forEach(function(r){
+      var t=r.id+'|'+r.d+'|'+r.mi, m=mealOf(r);
+      if(!(t in touched)) undo.push({id:r.id, d:r.d, mi:r.mi, prev:m.hhKey});
+      m.hhKey=key; touched[t]=key;
+    });
+  });
+  return undo;
+}
+function hhUndoMarkSameMeals(undo){
+  (undo||[]).forEach(function(u){
+    var x=clients.find(function(y){ return y.id===u.id; }), m=x&&x.weekPlan&&x.weekPlan[u.d]&&x.weekPlan[u.d][u.mi];
+    if(!m) return;
+    if(u.prev) m.hhKey=u.prev; else delete m.hhKey;
+  });
+}
+
 // Διαγραφή πελάτη (κάδος): κρατά το householdId του διαγραμμένου (αν γίνει ανάκτηση, ξαναμπαίνει),
 // αλλά το link κουζίνας δεν πρέπει να τον δείχνει: ξαναδημοσιεύεται χωρίς αυτόν ή λήγει αν μένει
 // ένα μόνο μέλος. Καλείται από deleteClient() και DeleteClientCommand.execute().

@@ -122,10 +122,69 @@ function kitchenLinkAfterLeave(tok, remaining){
   }
 }
 
-function openKitchenLinkModal(){
+// Ενότητα «🔍 Βρέθηκαν ίδια γεύματα» μέσα στο παράθυρο. Τα ίδια = τσεκαρισμένα, τα σχεδόν ίδια = όχι.
+var _kitSameRows=[], _kitSameUndo=null;
+function _kitSameRowHtml(row, i){
+  var foods=row.names.map(_kShortName).join(', ');
+  var exWho={}, exOrder=[];   // «Αμύγδαλα (Νίκος, Γιώργος)» αντί για μία φορά ανά μέλος
+  row.refs.forEach(function(r){ r.extra.forEach(function(e){ if(!exWho[e.n]){ exWho[e.n]=[]; exOrder.push(e.n); } exWho[e.n].push(r.who); }); });
+  var extras=exOrder.map(function(n){ return _kShortName(n)+' ('+exWho[n].join(', ')+')'; });
+  if(extras.length) foods+=(foods?' + ':'')+'<span style="color:#b36b00">'+esc(extras.join(' / '))+'</span>';
+  else foods=esc(foods);
+  var grams=row.refs.map(function(r){
+    var s=esc(r.who)+' '+(r.grams.length?r.grams.join(' / ')+' γρ.':'');
+    if(r.extra.length) s+=(r.grams.length?' + ':'')+r.extra.map(function(e){ return esc(_kShortName(e.n))+' '+e.g+' γρ.'; }).join(', ');
+    return s;
+  }).join(' · ');
+  return '<label style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid #eef4f2;cursor:pointer">'
+    +'<input type="checkbox" class="kit-same-cb" value="'+i+'"'+(row.exact?' checked':'')+' style="margin-top:3px" onchange="kitchenSameCount()">'
+    +'<div><div style="font-size:11px;color:#5a8a82">'+esc(DAYS[row.d])+' · '+esc(row.slot)+'</div>'
+    +'<div style="font-size:13px;color:#014545">'+foods+'</div>'
+    +'<div style="font-size:11px;color:#9fb5b0">'+grams+'</div></div></label>';
+}
+function _kitSameSectionHtml(c){
+  var found=hhFindSameMeals(c);
+  _kitSameRows=found.exact.concat(found.near);
+  if(!_kitSameRows.length) return '';
+  var nE=found.exact.length;
+  var h='<div style="border:1px solid #c5ddd8;border-radius:10px;padding:10px 12px;margin-bottom:10px">'
+    +'<div style="font-size:13px;color:#014545;margin-bottom:4px">🔍 '+(nE?('Βρέθηκαν <b>'+nE+(nE===1?' γεύμα':' γεύματα')+'</b> ίδια στα πλάνα (ίδια μέρα, ίδιο γεύμα, ίδια τρόφιμα) που δεν είναι ακόμη σημειωμένα ως κοινά.'):'Βρέθηκαν γεύματα που είναι σχεδόν ίδια στα πλάνα.')+'</div>'
+    +'<div style="font-size:11px;color:#5a8a82;margin-bottom:6px">Μπαίνει μόνο η ετικέτα «κοινό» — τα γραμμάρια του καθενός μένουν όπως τα έβαλες.</div>'
+    +'<div style="max-height:260px;overflow-y:auto">';
+  if(nE) h+=found.exact.map(function(r,i){ return _kitSameRowHtml(r,i); }).join('');
+  if(found.near.length){
+    h+='<div style="font-size:11px;color:#b36b00;margin:8px 0 2px">Σχεδόν ίδια — διαφέρουν σε 1 τρόφιμο (διάλεξε αν τα θες κοινά· στο link το διαφορετικό φαίνεται στο πιάτο του καθενός):</div>'
+      +found.near.map(function(r,i){ return _kitSameRowHtml(r,nE+i); }).join('');
+  }
+  h+='</div><button class="btn" id="kit-same-btn" style="width:100%;margin-top:8px;background:#E2EEE5;color:#014545;border:1px solid #c5ddd8" onclick="kitchenMarkSame()"></button></div>';
+  return h;
+}
+function kitchenSameCount(){
+  var n=document.querySelectorAll('.kit-same-cb:checked').length, b=document.getElementById('kit-same-btn');
+  if(b) b.textContent=n?('✓ Σημείωσε '+n+(n===1?' γεύμα':' γεύματα')+' ως κοινά'):'Δεν επιλέχθηκε κανένα γεύμα';
+}
+function kitchenMarkSame(){
+  var rows=[].slice.call(document.querySelectorAll('.kit-same-cb:checked')).map(function(cb){ return _kitSameRows[+cb.value]; }).filter(Boolean);
+  if(!rows.length){ showErrorToast('Δεν επιλέχθηκε κανένα γεύμα.'); return; }
+  _kitSameUndo=hhMarkSameMeals(rows);
+  save();
+  if(document.getElementById('week-con')&&typeof renderWeekTable==='function') renderWeekTable();
+  openKitchenLinkModal({marked:rows.length});
+}
+function kitchenUndoSame(){
+  hhUndoMarkSameMeals(_kitSameUndo); _kitSameUndo=null;
+  save();
+  if(document.getElementById('week-con')&&typeof renderWeekTable==='function') renderWeekTable();
+  openKitchenLinkModal();
+}
+
+function openKitchenLinkModal(opts){
   var c=getC(); if(!c||!c.householdId) return;
+  opts=(opts&&typeof opts==='object')?opts:{};
+  if(!opts.marked) _kitSameUndo=null;
   var snap=buildKitchenSnapshot(c);
   var nShared=snap.days.reduce(function(s,d){ return s+d.meals.length; },0);
+  var sameHtml=_kitSameSectionHtml(c);
   var noPlan=hhMembers(c).filter(function(x){ return !x.weekPlan||!Object.keys(x.weekPlan).length; }).map(hhFirstName);
   var ov=document.getElementById('kitchen-overlay'); if(ov) ov.remove();
   ov=document.createElement('div');
@@ -136,13 +195,18 @@ function openKitchenLinkModal(){
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:24px">🏠</span><div style="font-size:18px;font-weight:700;color:#014545">Link κουζίνας</div></div>'
     +'<div style="font-size:13px;color:#5a8a82;margin-bottom:10px">Για όποιον μαγειρεύει στο σπίτι «'+esc(snap.name)+'» ('+esc(snap.members.join(', '))+'). '
     +'Δείχνει τα <b>κοινά γεύματα</b> με τη συνολική ποσότητα και τη μερίδα του καθενός, και τη <b>λίστα αγορών</b> όλου του σπιτιού. Δεν δείχνει βάρη, στόχους ή μετρήσεις.</div>'
-    +'<div style="font-size:13px;margin-bottom:10px;padding:8px 10px;border-radius:8px;background:'+(nShared?'#E2EEE5;color:#014545':'#fff4e5;color:#8a5200')+'">'
+    +(opts.marked&&_kitSameUndo?'<div style="font-size:13px;margin-bottom:10px;padding:8px 10px;border-radius:8px;background:#E2EEE5;color:#014545;display:flex;align-items:center;gap:8px;justify-content:space-between">'
+      +'<span>✓ '+opts.marked+(opts.marked===1?' γεύμα σημειώθηκε':' γεύματα σημειώθηκαν')+' ως κοινά. Δεν άλλαξε κανένα γραμμάριο.</span>'
+      +'<button class="btn" style="padding:3px 10px;font-size:12px;white-space:nowrap" onclick="kitchenUndoSame()">↩ Αναίρεση</button></div>':'')
+    +((nShared||!sameHtml)?'<div style="font-size:13px;margin-bottom:10px;padding:8px 10px;border-radius:8px;background:'+(nShared?'#E2EEE5;color:#014545':'#fff4e5;color:#8a5200')+'">'
     +(nShared?('✓ '+nShared+(nShared===1?' κοινό γεύμα':' κοινά γεύματα')+' αυτή την εβδομάδα')
-      :'⚠️ Δεν υπάρχουν ακόμη κοινά γεύματα. Στο πλάνο, από το ⋮ ενός γεύματος: «↔️ Εφαρμογή σε…». Η λίστα αγορών λειτουργεί ήδη.')+'</div>'
+      :'⚠️ Δεν υπάρχουν ακόμη κοινά γεύματα. Στο πλάνο, από το ⋮ ενός γεύματος: «↔️ Εφαρμογή σε…». Η λίστα αγορών λειτουργεί ήδη.')+'</div>':'')
+    +sameHtml
     +(noPlan.length?'<div style="font-size:12px;color:#e08a00;margin-bottom:10px">Χωρίς πλάνο (δεν θα εμφανιστούν): '+esc(noPlan.join(', '))+'</div>':'')
     +'<div id="kitchen-link-body"><button class="btn" style="width:100%;background:#025857;color:#fff;border:1px solid #025857" onclick="createKitchenLink()">🔗 '+(c.kitchenToken?'Ενημέρωση συνδέσμου':'Δημιουργία συνδέσμου')+'</button></div>'
     +'<div style="text-align:right;margin-top:12px"><button class="btn" onclick="document.getElementById(\'kitchen-overlay\').remove()">Κλείσιμο</button></div></div>';
   document.body.appendChild(ov);
+  kitchenSameCount();
 }
 
 function createKitchenLink(){

@@ -144,6 +144,38 @@ try:
             check(f'"{bad}"' not in sj and (bad not in ('Παπαδοπούλου',) or bad not in sj), f'snapshot has no «{bad}»')
         check('Γιαούρτι 2%' in snap['shopDays'][0] and 'Μήλο' in snap['shopDays'][0], 'shopping includes individual meals (breakfast, snack)')
 
+        print('6β. Αυτόματη εύρεση ίδιων γευμάτων (πλάνα φτιαγμένα χωριστά)')
+        strip = lambda wp: {d: [[(f['n'], f['g']) for f in m['foods']] for m in wp[d]] for d in wp}
+        grams_before = {cid: strip(C(cid)['weekPlan']) for cid in ('ni', 'el', 'gi')}
+        found = J('(()=>{const f=hhFindSameMeals(getC());return {e:f.exact.length,n:f.near.map(r=>[r.d,r.slot,r.refs.map(x=>x.who).sort().join(",")])};})()')
+        check(found['e'] == 21, f"21 identical unshared meals found (breakfast/lunch/snack × 7) ({found['e']})")
+        check(found['n'] == [[1, 'Βραδινό', 'Γιώργος,Ελένη,Νίκος']], f"1 near-match: Τρίτη dinner, Ελένη without almonds ({found['n']})")
+        J('openKitchenLinkModal()'); pg.wait_for_timeout(200)
+        cbs = J('[...document.querySelectorAll(".kit-same-cb")].map(c=>c.checked)')
+        ktxt = pg.inner_text('#kitchen-overlay')
+        check(cbs.count(True) == 21 and cbs.count(False) == 1, f'modal: 21 pre-checked + 1 near unchecked ({cbs.count(True)}/{cbs.count(False)})')
+        check('Βρέθηκαν 21 γεύματα' in ktxt and 'Δεν υπάρχουν ακόμη κοινά' not in ktxt, 'modal shows the «Βρέθηκαν» box')
+        check('Σημείωσε 21 γεύματα ως κοινά' in ktxt, 'button counts the checked rows')
+        J('document.querySelector(".kit-same-cb:not(:checked)").click()'); pg.wait_for_timeout(100)
+        check('Σημείωσε 22 γεύματα' in pg.inner_text('#kit-same-btn'), 'ticking the near row updates the count')
+        pg.click('#kit-same-btn'); pg.wait_for_timeout(300)
+        snap = J('buildKitchenSnapshot(getC())')
+        check(len(snap['days'][0]['meals']) == 4 and all(len(m['plates']) == 3 for m in snap['days'][0]['meals']), 'Δευτέρα: all 4 meals now shared by 3')
+        tue = [m for m in snap['days'][1]['meals'] if m['slot'] == 'Βραδινό'][0]
+        el_plate = [p for p in tue['plates'] if p['who'] == 'Ελένη'][0]
+        check(len(tue['plates']) == 3 and not any('Αμύγδαλα' in i['n'] for i in el_plate['items']), 'Τρίτη dinner shared by 3, Ελένη\'s plate still without almonds')
+        check(all(strip(C(cid)['weekPlan']) == grams_before[cid] for cid in grams_before), 'no food or gram changed')
+        check(J('hhFindSameMeals(getC()).exact.length') == 0, 'nothing left to suggest')
+        ktxt = pg.inner_text('#kitchen-overlay')
+        check('22 γεύματα σημειώθηκαν' in ktxt and 'κοινά γεύματα αυτή την εβδομάδα' in ktxt, 'modal re-opens with confirmation + shared count')
+        pg.click('#kitchen-overlay >> text=Αναίρεση'); pg.wait_for_timeout(300)
+        snap = J('buildKitchenSnapshot(getC())')
+        check(len(snap['days'][0]['meals']) == 1 and len(snap['days'][1]['meals'][0]['plates']) == 2, 'undo: back to only the dinners shared')
+        check(not C('el')['weekPlan']['1'][3].get('hhKey') and not C('ni')['weekPlan']['0'][0].get('hhKey'), 'undo removed the new marks')
+        check(C('ni')['weekPlan']['1'][3].get('hhKey') == C('gi')['weekPlan']['1'][3].get('hhKey'), 'undo restored Νίκος/Γιώργος\'s previous Τρίτη key')
+        check(J('hhFindSameMeals(getC()).exact.length') == 21, 'suggestions are back after undo')
+        J('document.getElementById("kitchen-overlay").remove()')
+
         print('7. Δημοσίευση + kouzina.html')
         J('openKitchenLinkModal()'); pg.wait_for_timeout(200)
         J('createKitchenLink()'); pg.wait_for_timeout(800)
