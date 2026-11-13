@@ -147,12 +147,79 @@ function resetChecks(){ setChecks({}); render(); }
 
 function qtyHtml(main,sub){ return '<div class="q">'+esc(main)+(sub?'<small>'+esc(sub)+'</small>':'')+'</div>'; }
 
+// ── Ωμό ↔ μαγειρεμένο ──────────────────────────────────────────────────────────────────
+// Το πλάνο γράφει μαγειρεμένα γραμμάρια· ο μάγειρας ζυγίζει ωμό/ξερό. SNAP.foods[k].f = συντελεστής
+// (COOKED_TO_RAW). Αυγά = τεμάχια, κονσέρβες = δεν μαγειρεύονται → χωρίς μετατροπή.
+const TODAY=(new Date().getDay()+6)%7;
+function fmeta(t){
+  if(t.k&&SNAP.foods[t.k]) return SNAP.foods[t.k];
+  const ks=Object.keys(SNAP.foods).filter(k=>SNAP.foods[k].name===t.n);   // παλιά snapshots χωρίς k
+  return ks.length===1?SNAP.foods[ks[0]]:null;
+}
+function cookable(m){ return !!(m&&m.f&&!m.egg&&!/κονσέρβα/.test(m.lbl||'')); }
+function rawG(g,f){ return Math.max(5,Math.round(g*f/5)*5); }
+function rawTxt(g,m){ return rawG(g,m.f)+' γρ. '+(m.lbl||'ωμό'); }
+
+// ── Μαγείρεψε μια φορά για 2–3 μέρες ───────────────────────────────────────────────────
+// Ίδιο τρόφιμο που μαγειρεύεται (ή φαγητό-συνταγή) σε ≥2 μέρες μέσα σε παράθυρο ψυγείου:
+// ψάρι 2 μέρες, τα υπόλοιπα 3. Από ΟΛΑ τα γεύματα του σπιτιού (shopDays), όχι μόνο τα κοινά.
+let _batch=null;
+function batchPlan(){
+  if(_batch) return _batch;
+  const out=[], byKey={};
+  for(let d=0; d<7; d++){
+    const sd=SNAP.shopDays[d]||{};
+    Object.keys(sd).forEach(k=>{
+      const m=SNAP.foods[k]; if(!m||!(sd[k]>0)) return;
+      if(!cookable(m) && m.cat!=='Συνταγές FYH') return;
+      (byKey[k]=byKey[k]||[]).push(d);
+    });
+  }
+  Object.keys(byKey).forEach(k=>{
+    const m=SNAP.foods[k], win=m.cat==='Ψάρια'?2:3, days=byKey[k];
+    let i=0;
+    while(i<days.length){
+      const start=days[i], grp=[];
+      while(i<days.length && days[i]<=start+win-1){ grp.push(days[i]); i++; }
+      if(grp.length>=2){
+        const g=grp.reduce((s,d)=>s+SNAP.shopDays[d][k],0);
+        out.push({k:k, name:m.name, start:start, days:grp, g:Math.round(g),
+          amt:cookable(m)?rawTxt(g,m):('~'+Math.round(g/10)*10+' γρ. έτοιμο'),
+          sub:cookable(m)?('→ ~'+Math.round(g/10)*10+' γρ. έτοιμο'):'1 κατσαρόλα / ταψί'});
+      }
+    }
+  });
+  out.sort((a,b)=>a.start-b.start||a.name.localeCompare(b.name,'el'));
+  return (_batch=out);
+}
+function daysTxt(ds){ return ds.map(d=>DSHORT[d]).join(' · '); }
+function batchRow(b){ return '<div class="row"><span>'+esc(b.name)+'<small style="display:block;color:var(--faint);font-size:.72rem">για '+esc(daysTxt(b.days))+'</small></span>'+qtyHtml(b.amt,b.sub)+'</div>'; }
+
+// Για αύριο: μούλιασμα οσπρίων + ξεπάγωμα κρέατος/ψαριού (αν δεν είναι ήδη μαγειρεμένα από πριν).
+function prepFor(t){
+  const sd=SNAP.shopDays[t]||{}, soak=[], thaw=[];
+  const cooked=k=>batchPlan().some(b=>b.k===k&&b.days.indexOf(t)>0);
+  Object.keys(sd).forEach(k=>{
+    const m=SNAP.foods[k]; if(!m||!(sd[k]>0)||cooked(k)) return;
+    if(/Φασόλια|Ρεβίθια|Μαυρομάτικα/.test(k) && !/φρέσκ|κονσέρβ/i.test(k)) soak.push(m.name+(cookable(m)?' ('+rawTxt(sd[k],m)+')':''));
+    else if(cookable(m) && (m.cat==='Κρέας'||m.cat==='Ψάρια')) thaw.push(m.name);
+  });
+  return {soak:soak, thaw:thaw};
+}
+
 function mealCard(m){
   let h='<div class="card"><div class="mh"><span class="slot">'+esc(m.slot)+'</span></div>'
     +'<div class="dish">'+esc(m.dish)+'</div>'
-    +'<div class="lbl">Μαγειρέψτε συνολικά</div><div class="tot">'
-    +m.total.map(t=>'<div class="row"><span>'+esc(t.n)+'</span>'+qtyHtml(t.g+' γρ.',(t.main&&t.main.indexOf('γρ.')<0)?'≈ '+t.main:'')+'</div>').join('')
-    +'</div><div class="lbl">Μοιράστε στα πιάτα</div>';
+    +'<div class="lbl">Μαγειρέψτε συνολικά <span style="font-weight:400">· ζύγισε ωμά / ξερά, πριν το μαγείρεμα</span></div><div class="tot">'
+    +m.total.map(t=>{
+      const fm=fmeta(t);
+      // Μέρος του «μαγείρεψε μια φορά»: όχι ξανά ωμό βάρος (διπλομέτρημα) — μόνο πόσο έτοιμο παίρνεις.
+      const b=t.k&&batchPlan().find(x=>x.k===t.k&&x.days.indexOf(DAY)>=0);
+      if(b) return '<div class="row"><span>'+esc(t.n)+'</span>'+qtyHtml(t.g+' γρ. έτοιμο',b.start===DAY?'από το 🍳 μαγείρεμα παραπάνω':'🥡 από το ψυγείο ('+DSHORT[b.start]+')')+'</div>';
+      if(cookable(fm)) return '<div class="row"><span>'+esc(t.n)+'</span>'+qtyHtml(rawTxt(t.g,fm),'→ ~'+t.g+' γρ. έτοιμο')+'</div>';
+      return '<div class="row"><span>'+esc(t.n)+'</span>'+qtyHtml(t.g+' γρ.',(t.main&&t.main.indexOf('γρ.')<0)?'≈ '+t.main:'')+'</div>';
+    }).join('')
+    +'</div><div class="lbl">Μοιράστε στα πιάτα <span style="font-weight:400">· έτοιμο φαγητό</span></div>';
   m.plates.forEach(p=>{
     h+='<div class="plate"><div class="pw">'+esc(p.who)+'</div>'
       +p.items.map(i=>'<div class="row"><span>'+esc(i.n)+'</span>'+qtyHtml(i.main,i.sub)+'</div>').join('')+'</div>';
@@ -164,16 +231,41 @@ function viewToday(){
   const d=SNAP.days[DAY]||{meals:[]};
   let h='<div class="pills">'+DSHORT.map((x,i)=>{
     const n=(SNAP.days[i]&&SNAP.days[i].meals.length)||0;
-    return '<button class="dp" aria-pressed="'+(i===DAY)+'" onclick="setDay('+i+')">'+x+'<small>'+(n?n+' κοινά':'—')+'</small></button>';
+    return '<button class="dp" aria-pressed="'+(i===DAY)+'" onclick="setDay('+i+')">'+(i===TODAY?'Σήμ.':x)+'<small>'+(n?n+' κοινά':'—')+'</small></button>';
   }).join('')+'</div>';
-  h+='<h2 style="margin-top:0">'+esc(DAYS[DAY])+'</h2>';
+  const isToday=DAY===TODAY;
+  h+='<h2 style="margin-top:0">'+(isToday?'Σήμερα · ':'')+esc(DAYS[DAY])+'</h2>';
+  // μαγείρεψε σήμερα και για τις επόμενες μέρες / υπάρχει ήδη έτοιμο από προηγούμενη μέρα
+  const bp=batchPlan(), cookNow=bp.filter(b=>b.start===DAY), ready=bp.filter(b=>b.days.indexOf(DAY)>0);
+  if(cookNow.length) h+='<div class="card"><div class="dish" style="margin-bottom:4px">🍳 '+(isToday?'Σήμερα μαγείρεψε':'Μαγείρεψε')+' και για τις επόμενες μέρες</div>'
+    +'<div class="tot">'+cookNow.map(batchRow).join('')+'</div>'
+    +'<div class="foot" style="text-align:left;margin-top:8px">Η ποσότητα είναι για όλες αυτές τις μέρες μαζί, μαζί και με το σημερινό. Ό,τι περισσέψει, σε κλειστό δοχείο στο ψυγείο.</div></div>';
+  if(ready.length) h+='<div class="card" style="padding:10px 14px;font-size:.88rem">🥡 <b>Έτοιμο από το ψυγείο:</b> '
+    +ready.map(b=>esc(b.name)+' <span style="color:var(--faint)">(από '+esc(DAYS[b.start])+')</span>').join(', ')+'</div>';
   if(!d.meals.length) h+='<div class="card empty">Καμία κοινή μέρα σήμερα — ο καθένας έχει το δικό του πλάνο.</div>';
   else h+=d.meals.map(mealCard).join('');
+  // για αύριο: τι θέλει προετοιμασία από απόψε
+  const t=(DAY+1)%7, p=prepFor(t);
+  if(p.soak.length||p.thaw.length){
+    h+='<div class="card" style="font-size:.88rem"><div class="dish" style="margin-bottom:6px">🌙 Από απόψε, για '+(isToday?'αύριο ('+esc(DAYS[t])+')':esc(DAYS[t]))+'</div>'
+      +(p.soak.length?'<div style="margin-bottom:4px">🫘 Βάλε σε νερό να μουλιάσουν: <b>'+esc(p.soak.join(', '))+'</b></div>':'')
+      +(p.thaw.length?'<div>🧊 Αν είναι στην κατάψυξη, κατέβασέ τα στο ψυγείο: <b>'+esc(p.thaw.join(', '))+'</b></div>':'')
+      +'</div>';
+  }
   return h;
 }
 
 function viewWeek(){
-  let h='<div class="card">';
+  let h='';
+  const bp=batchPlan();
+  if(bp.length){
+    const starts=[...new Set(bp.map(b=>b.start))];
+    h+='<div class="card"><div class="dish" style="margin-bottom:2px">🍳 Μαγείρεψε μια φορά, φτάνει για 2–3 μέρες</div>'
+      +'<div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">Τα ίδια τρόφιμα που ξαναμπαίνουν τις επόμενες μέρες. Μαγείρεψέ τα μαζί και κράτα τα σε κλειστό δοχείο στο ψυγείο: ψάρι έως 2 μέρες, τα υπόλοιπα έως 3.</div>'
+      +starts.map(s=>'<div class="lbl">'+esc(DAYS[s])+'</div><div class="tot">'+bp.filter(b=>b.start===s).map(batchRow).join('')+'</div>').join('')
+      +'</div>';
+  }
+  h+='<div class="card">';
   SNAP.days.forEach((d,i)=>{
     h+='<div class="wk" onclick="setDay('+i+')"><div class="d">'+DSHORT[i]+'</div><div class="m">'
       +(d.meals.length?d.meals.map(m=>'<div><span>'+esc(m.slot)+':</span> '+esc(m.dish)+'</div>').join(''):'<span>Χωρίς κοινά γεύματα</span>')
@@ -223,7 +315,7 @@ function render(){
   const upd=s.updated?new Date(s.updated).toLocaleDateString('el-GR',{day:'numeric',month:'long'}):'';
   let h='<div class="who"><h1>'+esc(s.name)+'</h1><div class="upd">'+esc((s.members||[]).join(' · '))+(upd?' · ενημέρωση '+esc(upd):'')+'</div></div>';
   h+='<div class="tabs">'
-    +'<button class="tab" aria-pressed="'+(VIEW==='today')+'" onclick="setView(\'today\')">Ημέρα</button>'
+    +'<button class="tab" aria-pressed="'+(VIEW==='today')+'" onclick="setView(\'today\')">'+(DAY===TODAY?'Σήμερα':'Ημέρα')+'</button>'
     +'<button class="tab" aria-pressed="'+(VIEW==='week')+'" onclick="setView(\'week\')">Εβδομάδα</button>'
     +'<button class="tab" aria-pressed="'+(VIEW==='shop')+'" onclick="setView(\'shop\')">Ψώνια</button></div>';
   if(VIEW!=='shop' && s.allergyWarn && s.allergyWarn.length){

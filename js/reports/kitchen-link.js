@@ -36,7 +36,7 @@ function buildKitchenSnapshot(c){
         var dish=gr.dish||tOrder.slice(0,3).map(_kShortName).join(', ');
         return {
           slot:gr.slot, dish:dish,
-          total:tOrder.map(function(n){ var q=_kQty(n,tot[n]); return {n:_kShortName(n), g:Math.round(tot[n]), main:q.main}; }),
+          total:tOrder.map(function(n){ var q=_kQty(n,tot[n]); return {n:_kShortName(n), k:n, g:Math.round(tot[n]), main:q.main}; }),
           plates:gr.plates.map(function(p){
             return {who:p.who, items:p.foods.map(function(f){ var q=_kQty(f.n,f.g); return {n:_kShortName(f.n), main:q.main, sub:q.sub}; })};
           })
