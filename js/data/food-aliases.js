@@ -298,6 +298,13 @@ var FOOD_ALIASES={
   'Cream of Rice - Natural (OstroVit)':'Cream of Rice (OstroVit)',
   'Κρέμα ρυζιού OstroVit':'Cream of Rice (OstroVit)',
   'Κρέμα ρυζιού':'Cream of Rice (OstroVit)',
+  // TBJP Cream of Rice Caramel Biscuit 2kg — added 2026-11-17
+  'TBJP Cream of Rice':'Cream of Rice Caramel Biscuit (TBJP)',
+  'Cream of Rice (TBJP)':'Cream of Rice Caramel Biscuit (TBJP)',
+  'TBJP Cream of Rice Caramel Biscuit':'Cream of Rice Caramel Biscuit (TBJP)',
+  'Cream of Rice Caramel Biscuit':'Cream of Rice Caramel Biscuit (TBJP)',
+  'Κρέμα ρυζιού TBJP':'Cream of Rice Caramel Biscuit (TBJP)',
+  'Κρέμα ρυζιού καραμέλα μπισκότο':'Cream of Rice Caramel Biscuit (TBJP)',
   // GymBeam Protein Cream of Rice - Chocolate 360g — added 2026-11-11
   'Protein Cream of Rice - GymBeam':'Protein Cream of Rice Σοκολάτα (GymBeam)',
   'GymBeam Protein Cream of Rice':'Protein Cream of Rice Σοκολάτα (GymBeam)',

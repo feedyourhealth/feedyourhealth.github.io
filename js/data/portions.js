@@ -107,6 +107,7 @@ var FOOD_UNITS={
   'Ρυζογκοφρέτες':{g:10,u:'τεμ.'},
   'Ρυζόγαλο στιγμής (VAST)':{g:18,u:'scoop'},
   'Cream of Rice (OstroVit)':{g:40,u:'μερίδ.'},
+  'Cream of Rice Caramel Biscuit (TBJP)':{g:25,u:'scoop'},
   'Protein Cream of Rice Σοκολάτα (GymBeam)':{g:40,u:'μερίδ.'},
   // Ψωμί / Πίτα — ανά τεμάχιο
   'Ψωμί σίκαλης':{g:30,u:'φέτα'},
@@ -361,6 +362,7 @@ var PORTIONS={
 'Ρυζογκοφρέτες':[{n:'1 τεμ.',g:10},{n:'2 τεμ.',g:20},{n:'3 τεμ.',g:30}],
 'Ρυζόγαλο στιγμής (VAST)':[{n:'1 scoop',g:18},{n:'2 scoops',g:36},{n:'3 scoops',g:54},{n:'80g (ξηρό)',g:80}],
 'Cream of Rice (OstroVit)':[{n:'½ μερίδα',g:20},{n:'1 μερίδα',g:40},{n:'2 μερίδες',g:80}],
+'Cream of Rice Caramel Biscuit (TBJP)':[{n:'1 scoop',g:25},{n:'2 scoops',g:50},{n:'3 scoops',g:75},{n:'4 scoops',g:100}],
 'Protein Cream of Rice Σοκολάτα (GymBeam)':[{n:'½ μερίδα',g:20},{n:'1 μερίδα',g:40},{n:'1½ μερίδα',g:60},{n:'2 μερίδες',g:80}],
 'Μούσλι':[{n:'1 Κ.',g:10},{n:'½ φλ.',g:45},{n:'1 φλ.',g:90}],
 'Ψωμί ολικής άλεσης':[{n:'1 φέτα',g:35},{n:'2 φέτες',g:70}],
