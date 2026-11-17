@@ -851,6 +851,13 @@ var SNACK_RECIPES=[
     {n:'Γιαούρτι 2%',g:200},{n:'Μούρα',g:100},{n:'Μπανάνα',g:100},{n:'Μέλι άβραστο',g:10}
   ],kcal:308,macro:{p:23,f:5,c:49},tags:['Smoothie','Γρήγορη','Ενέργεια'],mealTimes:['Ενδιάμεσα']},
 
+  {id:'ultimate_power_recovery_smoothie',name:'Ultimate Power & Recovery Smoothie',foods:[
+    {n:'Βρώμη (ωμή)',g:66},{n:'Cottage cheese',g:200},{n:'Γάλα φρέσκο 1.5% Λιπαρά',g:150},{n:'Νερό',g:200},
+    {n:'Μέλι άβραστο',g:10},{n:'Πρωτεΐνη σκόνη (whey)',g:17},{n:'Σπανάκι',g:20},{n:'Λάχανο',g:25},
+    {n:'Φράουλες',g:72},{n:'Μούρα',g:15},{n:'Chia seeds',g:1},{n:'Αλάτι',g:0.5}
+  ],kcal:665,macro:{p:54,f:17,c:77},tags:['Smoothie','Vegetarian','high_protein','Ενέργεια','Γρήγορη'],mealTimes:['Πρωινά','Ενδιάμεσα'],
+  instructions:'Υλικά: 66 g βρώμη · 200 g cottage cheese · 150 ml γάλα Delact 1.5% · 200 ml νερό · 1½ κ.γ. μέλι · ½ σέσουλα USN Blue Lab Whey σοκολάτα (~17 g) · 1 σέσουλα κρεατίνη OstroVit (3–5 g) · 6 φύλλα σπανάκι · 1 φύλλο λάχανο · 6 φράουλες · 12 μύρτιλα · ¼ κ.γ. chia · 1 πρέζα χοντρό αλάτι.\nΒάλε όλα τα υλικά στο μπλέντερ και χτύπησε στη δυνατή ταχύτητα για 45–60 δευτερόλεπτα, μέχρι να γίνει λείο και κρεμώδες.'},
+
   {id:'cottage_cheese_flax_berries',name:'Cottage Cheese με Λιναρόσπορο & Μούρα',foods:[
     {n:'Cottage cheese',g:150},{n:'Λιναρόσπορος',g:10},{n:'Μούρα',g:80}
   ],kcal:235,macro:{p:19,f:11,c:16},tags:['Vegetarian','Ελαφρύ','Ω3','Γρήγορη'],mealTimes:['Βραδινά','Ενδιάμεσα']},
