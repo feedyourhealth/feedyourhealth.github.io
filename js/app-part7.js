@@ -690,7 +690,7 @@
         return (foods||[]).some(function(f){ return foodEx.indexOf(f.n)===-1 && foodBlockedByDietCats(f.n,c.dietType,dayCats); });
       }
       // Δεξαμενή εναλλακτικών — χτίζεται ΜΙΑ φορά για όλη την εβδομάδα (βλ. buildAlternatesPool).
-      var altPool=null;
+      var altPool=null, altWeekSeen={};   // altWeekSeen: τι έχει ήδη προταθεί αυτή την εβδομάδα (ποικιλία, 2026-11-17)
       if(typeof buildAlternatesPool==='function'){ try{ altPool=buildAlternatesPool(c, altFilterExcl); }catch(e){ console.error('[snapshot] alternates pool failed:',e); } }
 
       // #1 — ομαδοποίηση των auto-αποκλεισμένων μιας κατηγορίας (π.χ. "όχι κόκκινο κρέας" → 14 ονόματα)
@@ -835,7 +835,7 @@
           var title=foods.map(function(x){return shortName(x.name)+(x.sub?' '+x.qty+' '+x.sub:' ('+x.g+' '+gLbl+')');}).slice(0,3).join(', ')+(foods.length>3?'…':'');
           var alternates=[];
           if(altPool){
-            pickMealAlternates(altPool, meal, c, mk, 3, function(foods){ return altBlockedByDiet(foods,d); }).forEach(function(a){
+            pickMealAlternates(altPool, meal, c, mk, 3, function(foods){ return altBlockedByDiet(foods,d); }, altWeekSeen).forEach(function(a){
               var af=[], ak=0, ap=0, ac=0, aF=0;
               (a.foods||[]).forEach(function(f){
                 var v=macro(f.n,f.g);

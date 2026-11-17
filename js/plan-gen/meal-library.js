@@ -212,6 +212,24 @@ function macroShareDistance(a,b){
 var ALT_MACRO_WEIGHT=1.5;   // βάρος της απόστασης μακροθρεπτικών στη βαθμολογία (οι θερμίδες κλιμακώνονται έτσι κι αλλιώς)
 var ALT_MACRO_OK=0.20;      // έως εδώ μια εναλλακτική θεωρείται «ισοδύναμη» και μπορεί να προτιμηθεί για ποικιλία πρωτεΐνης
 
+// ── ΠΟΙΚΙΛΙΑ (2026-11-17) ── Πριν, ένα σνακ «Energy Bites + Μήλο» έπαιρνε 3 εναλλακτικές που ήταν πάλι
+// energy bites με άλλο φρούτο, και οι ίδιες 3 έβγαιναν κάθε μέρα. Τρεις κανόνες:
+//  1. Κύριο τρόφιμο (αυτό με τις περισσότερες θερμίδες) διαφορετικό από του γεύματος ΚΑΙ ανάμεσα στις
+//     εναλλακτικές — εκτός αν η δεξαμενή είναι τόσο στενή που αλλιώς δεν βγαίνουν 3.
+//  2. Ποινή επανάληψης μέσα στην εβδομάδα (ίδιο slot): ό,τι έχει ήδη προταθεί πάει λίγο πιο πίσω, ώστε
+//     όταν υπάρχει σχεδόν εξίσου καλή επιλογή, ο πελάτης να βλέπει κάτι άλλο. Τα ⭐ «Αυτό έφαγα» εξαιρούνται.
+//  3. Στα σνακ πιο χαλαρό όριο «ισοδυναμίας» μακροθρεπτικών, ώστε να χωράνε πραγματικά διαφορετικά
+//     σνακ (γιαούρτι, τοστ…). Στα κύρια γεύματα μένει το ALT_MACRO_OK για να μη χάνουν πρωτεΐνη.
+// Δοκιμή σε 14 πελάτες: διαφορετικές εναλλακτικές/εβδ. 631→826, «ίδιο κύριο τρόφιμο» 20%→1,8%.
+var ALT_SNACK_MACRO_OK=0.30;
+var ALT_WEEK_REPEAT_PEN=0.15;
+function mealMainFood(foods){
+  var best=null, bk=-1;
+  (foods||[]).forEach(function(f){ var v=cm(f.n,f.g); if((v.k||0)>bk){bk=v.k||0; best=f.n;} });
+  if(!best)return '';
+  return FOODS[best]?best:((typeof resolveFood==='function'&&resolveFood(best))||best);
+}
+
 // Μοιάζει με κύριο γεύμα; = έχει κρέας/ψάρι/όσπρια/λαχανικά/αυγά, μαγειρεμένο άμυλο «(βρ.)» ή σύνθετο
 // πιάτο. Γιαούρτι με μέλι, φρούτο με ξηρούς καρπούς, μπάρες κτλ. ΔΕΝ μοιάζουν — ώστε να μην
 // προτείνονται ως εναλλακτική Μεσημεριανού/Βραδινού, όποιο κι αν είναι το όνομα/tag της πηγής τους.
@@ -382,7 +400,8 @@ function buildAlternatesPool(c, excl, prefs){
 // client's own proven meals and for trusted (👍 / rarely-regenerated) meals; then greedy pick so
 // each alternate has a DIFFERENT main protein (e.g. όσπρια / αυγό / γαλακτοκομικό) instead of 3
 // variants of one dish — but variety is only preferred among macro-equivalent candidates.
-function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
+// `weekSeen` (προαιρετικό) = κοινό αντικείμενο για όλη την εβδομάδα ({'slot|sig': φορές}) — κανόνας 2 ποικιλίας.
+function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked, weekSeen){
   count=count||3;
   var dt=(c&&c.dietType)||'normal';
   var slot=classifyMealSlot(meal.name);
@@ -409,7 +428,8 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
     if((slot==='lunch'||slot==='dinner') && x.foods.some(function(f){return (f.n||'').toLowerCase().indexOf('βρώμη')!==-1;}))return false;
     return !isBlocked(x.foods);
   });
-  var myMacro=mealMacroShares(meal.foods);
+  var myMacro=mealMacroShares(meal.foods), myMain=mealMainFood(meal.foods);
+  var macroOK=(slot==='snack')?ALT_SNACK_MACRO_OK:ALT_MACRO_OK;   // κανόνας 3
   // ⭐ Προτιμήσεις από το «Αυτό έφαγα» (pool.prefs, βλ. clientAltPreferences)
   var prefs=pool.prefs||null;
   var slotGroups=(prefs&&prefs.groups[slot])||null;
@@ -428,24 +448,36 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked){
       s-=0.04*Math.min(hit,2);
     }
     s-=((x.trust||0.5)-0.5)*0.2;
+    // κανόνας 2: ήδη προτάθηκε αυτή την εβδομάδα στο ίδιο slot → λίγο πιο πίσω (όχι τα ⭐ δικά του)
+    if(weekSeen && x.src!=='picked') s+=ALT_WEEK_REPEAT_PEN*(weekSeen[slot+'|'+x.sig]||0);
     return s;
   }
-  cands.forEach(function(x){x._s=score(x);});
+  cands.forEach(function(x){ x._s=score(x); if(x._main===undefined)x._main=mealMainFood(x.foods); });
   cands.sort(function(a,b){return a._s-b._s;});
-  var picked=[], used={}, curGroup=mealProteinGroup(meal.foods), favN=0;
+  var picked=[], used={}, usedMain={}, curGroup=mealProteinGroup(meal.foods), favN=0;
+  usedMain[myMain]=true;
   var favCap=Math.min(ALT_PREF_MAX_FAV, count-1);
-  function canTake(x){ return picked.indexOf(x)===-1 && (x.src!=='picked' || favN<favCap); }
-  function take(x){ picked.push(x); used[x.group]=true; if(x.src==='picked')favN++; }
+  // κανόνας 1: όχι ίδιο κύριο τρόφιμο με το γεύμα ή με άλλη εναλλακτική (τα ⭐ δικά του περνούν πάντα)
+  function canTake(x, anyMain){
+    if(picked.indexOf(x)!==-1)return false;
+    if(x.src==='picked' && favN>=favCap)return false;
+    if(!anyMain && x.src!=='picked' && usedMain[x._main])return false;
+    return true;
+  }
+  function take(x){ picked.push(x); used[x.group]=true; usedMain[x._main]=true; if(x.src==='picked')favN++; }
   // 0) ⭐ έως favCap γεύματα που διάλεξε ο ίδιος (μόνο ισοδύναμα σε μακροθρεπτικά) ·
-  // 1) new protein group, also different from the current meal's · 2) new group among the picks —
-  // both only among macro-equivalent candidates · 3) best remaining, whatever the group (so we
-  // still reach `count` when the pool is narrow)
+  // 1) new protein group, also different from the current meal's · 2) new group among the picks ·
+  // 3) same group but another main food — all three only among macro-equivalent candidates ·
+  // 4) best remaining with another main food · 5) narrow pool: same main food allowed ·
+  // 6) αν λείπουν ακόμα θέσεις, επιτρέπονται κι άλλα αγαπημένα
   cands.forEach(function(x){ if(picked.length<count && x.src==='picked' && x._m<=ALT_PREF_MACRO_OK && canTake(x)) take(x); });
-  cands.forEach(function(x){ if(picked.length<count && x._m<=ALT_MACRO_OK && !used[x.group] && x.group!==curGroup && canTake(x)) take(x); });
-  cands.forEach(function(x){ if(picked.length<count && x._m<=ALT_MACRO_OK && !used[x.group] && canTake(x)) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && x._m<=macroOK && !used[x.group] && x.group!==curGroup && canTake(x)) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && x._m<=macroOK && !used[x.group] && canTake(x)) take(x); });
+  cands.forEach(function(x){ if(picked.length<count && x._m<=macroOK && canTake(x)) take(x); });
   cands.forEach(function(x){ if(picked.length<count && canTake(x)) take(x); });
-  // στενή δεξαμενή: αν λείπουν ακόμα θέσεις, επιτρέπονται κι άλλα αγαπημένα
+  cands.forEach(function(x){ if(picked.length<count && canTake(x,true)) take(x); });
   cands.forEach(function(x){ if(picked.length<count && picked.indexOf(x)===-1) take(x); });
+  if(weekSeen) picked.forEach(function(x){ var k=slot+'|'+x.sig; weekSeen[k]=(weekSeen[k]||0)+1; });
   return picked.map(function(x){
     var scaled=scalePlan([{name:meal.name,foods:deepClone(x.foods)}], null, [{k:targetKcal}])[0];
     return {name:meal.name, foods:scaled.foods, src:x.src};
