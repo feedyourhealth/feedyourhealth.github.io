@@ -470,6 +470,21 @@ body.dark-mode .pr-wk-df{border-color:#444}
 .pr-sw-flag-a{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .pr-sw-link{background:none;border:none;padding:4px;font-size:12px;color:#6b4a22;text-decoration:underline;cursor:pointer;font-family:inherit}
 .pr-sw-sub{font-size:12px;font-weight:700;margin:14px 0 6px}
+/* 👎 Δεν του αρέσουν (progress-rejects.js, 2026-11-17) */
+.pr-rj-reasons{display:flex;flex-direction:column;gap:6px;max-width:460px}
+.pr-rj-r{display:flex;align-items:center;gap:10px;font-size:12px}
+.pr-rj-rl{width:120px;flex-shrink:0}
+.pr-rj-bar{flex:1;height:9px;background:#e8f5e9;border-radius:5px;overflow:hidden}
+.pr-rj-bar>span{display:block;height:100%;background:var(--teal);border-radius:5px}
+.pr-rj-tip{font-size:12px;color:#014545;background:#e8f5e9;border-radius:8px;padding:8px 10px;margin-top:8px;max-width:620px}
+.pr-rj-row{display:grid;grid-template-columns:80px 110px minmax(0,1fr) 120px auto;gap:8px;align-items:center;padding:6px 0;border-top:1px solid #eee;font-size:12px}
+.pr-rj-d,.pr-rj-why{color:#555}
+.pr-rj-foot{font-size:11px;color:#666;margin-top:10px}
+@media (max-width:600px){.pr-rj-row{grid-template-columns:1fr auto;gap:2px 8px}.pr-rj-s,.pr-rj-why{grid-column:1}.pr-rj-n{grid-column:1}}
+body.dark-mode .pr-rj-bar{background:#1f2f2a}
+body.dark-mode .pr-rj-tip{background:#16302a;color:#8fe0d4}
+body.dark-mode .pr-rj-row{border-color:#333}
+body.dark-mode .pr-rj-d,body.dark-mode .pr-rj-why,body.dark-mode .pr-rj-foot{color:#aaa}
 .pr-sw-grid{border-collapse:separate;border-spacing:4px;font-size:11px;min-width:420px}
 .pr-sw-grid th{font-weight:600;color:var(--text-muted);font-size:10.5px;text-align:center}
 .pr-sw-grid td{padding:0;text-align:center}

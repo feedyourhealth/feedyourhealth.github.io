@@ -20,6 +20,7 @@
   quick_measure_test.py  📐 simple caliper card → same save; «Αποθήκευση & → Πλάνο» banner (measurement, Katch note), Lean Mass
   alt_preferences_test.py  ⭐ link alternates follow the client's «Αυτό έφαγα» picks (fresh log on publish, ≤2 favourites, exclusions win)
   alt_variety_test.py      link alternates vary: no same main food as the meal, rotate across the week, exclusions still win
+  alt_reject_test.py       👎 «Όχι για μένα»: spares + instant swap + reasons + undo in the link, excluded on publish, Πρόοδος section
   workout_log_test.py  🏃 client-link workout check-off (planned row, extra workout, sync, hydrate) + Πρόοδος «Γυμν.» column
   version_check_test.py  ?v= stamps up to date + stale page reloads once / banner (scripts/stamp-version.py)
 
@@ -30,7 +31,7 @@ import subprocess, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'backup_restore_test.py', 'favorites_sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py', 'food_diary_test.py', 'waiting_test.py', 'plan_history_test.py', 'plan_history_athlete_test.py', 'progress_insights_test.py', 'alt_preferences_test.py', 'alt_variety_test.py', 'auto_portion_test.py', 'quick_measure_test.py', 'workout_log_test.py']
+TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'backup_restore_test.py', 'favorites_sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py', 'food_diary_test.py', 'waiting_test.py', 'plan_history_test.py', 'plan_history_athlete_test.py', 'progress_insights_test.py', 'alt_preferences_test.py', 'alt_variety_test.py', 'alt_reject_test.py', 'auto_portion_test.py', 'quick_measure_test.py', 'workout_log_test.py']
 
 failed = []
 for name in TESTS:

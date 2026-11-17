@@ -331,6 +331,21 @@ function clientAltPreferences(c, today){
   return prefs;
 }
 
+// 👎 «Όχι για μένα» (2026-11-17): ό,τι απέρριψε ο πελάτης στο link → {sig:true}. Όχι όσα αναίρεσε (x) ούτε
+// όσα επανέφερε ο διαιτολόγος από την Πρόοδο ΜΕΤΑ την απόρριψη (c.altRejectRestored[sig] = ISO ώρα).
+function clientRejectedAltSigs(c){
+  var out={};
+  var rej=(c&&window.Cloud&&typeof window.Cloud.altRejectsFor==='function')?window.Cloud.altRejectsFor(c):{};
+  var restored=(c&&c.altRejectRestored)||{};
+  Object.keys(rej||{}).forEach(function(sig){
+    var e=rej[sig];
+    if(!e||e.x) return;
+    if(restored[sig] && restored[sig]>=(e.t||'')) return;
+    out[sig]=true;
+  });
+  return out;
+}
+
 // One-time, per-client candidate pool. `excl` = the client's FULL exclusion list
 // (buildEffectiveExclusionList). Each entry: {foods,kcal,sig,slots,group,src,trust}.
 // `prefs` (προαιρετικό) = clientAltPreferences(c) — αν λείπει, υπολογίζεται εδώ. Μένει στο pool.prefs.
@@ -338,12 +353,14 @@ function buildAlternatesPool(c, excl, prefs){
   var dt=(c&&c.dietType)||'normal';
   var exclLower=(excl||[]).map(function(x){return (x||'').toLowerCase();}).filter(Boolean);
   var disliked=(c&&c.dislikedRecipeIds)||[];
+  var rejected={}; try{ rejected=clientRejectedAltSigs(c); }catch(e){ rejected={}; }
   var pool=[], seen={};
   function add(foods, slots, src, id, picks){
     if(!foods||!foods.length)return;
     var sig=mealSignature(foods);
     if(!sig||seen[sig])return;
     if(disliked.indexOf(sig)!==-1||(id&&disliked.indexOf(id)!==-1))return;   // 👎 by this client
+    if(rejected[sig])return;                                                  // 👎 «Όχι για μένα» στο link
     if(comboHasExcludedFood(foods,exclLower))return;
     var kcal=calculateMealKcal(foods);
     if(kcal<50)return;
@@ -401,7 +418,10 @@ function buildAlternatesPool(c, excl, prefs){
 // each alternate has a DIFFERENT main protein (e.g. όσπρια / αυγό / γαλακτοκομικό) instead of 3
 // variants of one dish — but variety is only preferred among macro-equivalent candidates.
 // `weekSeen` (προαιρετικό) = κοινό αντικείμενο για όλη την εβδομάδα ({'slot|sig': φορές}) — κανόνας 2 ποικιλίας.
-function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked, weekSeen){
+// `recordN` (προαιρετικό) = πόσες από τις πρώτες μετράνε ως «προτάθηκαν» στο weekSeen (default όλες) —
+// το snapshot ζητά 6 (3 ορατές + 3 ρεζέρβες για το 👎 «Όχι για μένα») αλλά μετρά μόνο τις 3 ορατές.
+// Οι πρώτες 3 από τις 6 είναι ακριβώς ίδιες με ό,τι θα έβγαινε με count=3 (τα περάσματα παίρνουν με σειρά).
+function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked, weekSeen, recordN){
   count=count||3;
   var dt=(c&&c.dietType)||'normal';
   var slot=classifyMealSlot(meal.name);
@@ -477,7 +497,7 @@ function pickMealAlternates(pool, meal, c, targetKcal, count, isBlocked, weekSee
   cands.forEach(function(x){ if(picked.length<count && canTake(x)) take(x); });
   cands.forEach(function(x){ if(picked.length<count && canTake(x,true)) take(x); });
   cands.forEach(function(x){ if(picked.length<count && picked.indexOf(x)===-1) take(x); });
-  if(weekSeen) picked.forEach(function(x){ var k=slot+'|'+x.sig; weekSeen[k]=(weekSeen[k]||0)+1; });
+  if(weekSeen) picked.slice(0, recordN||picked.length).forEach(function(x){ var k=slot+'|'+x.sig; weekSeen[k]=(weekSeen[k]||0)+1; });
   return picked.map(function(x){
     var scaled=scalePlan([{name:meal.name,foods:deepClone(x.foods)}], null, [{k:targetKcal}])[0];
     return {name:meal.name, foods:scaled.foods, src:x.src};

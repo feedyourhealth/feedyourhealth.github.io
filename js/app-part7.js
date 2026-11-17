@@ -201,7 +201,8 @@
       // ⭐ 2026-11-12: πρώτα φρέσκα «Αυτό έφαγα» αυτού του πελάτη (client_meal_log), ώστε οι εναλλακτικές
       // του νέου link να βγουν με βάση τις προτιμήσεις του (clientAltPreferences, meal-library.js).
       // Αν η ανάγνωση αποτύχει, η δημοσίευση συνεχίζει κανονικά με ό,τι υπάρχει ήδη στο cache.
-      return this.refreshMealLogFor(c).then(function(){
+      // 👎 2026-11-17: και φρέσκα «Όχι για μένα» (client_alt_reject), ώστε να μην ξαναπροταθούν.
+      return Promise.all([this.refreshMealLogFor(c), this.refreshAltRejectFor(c)]).then(function(){
         snap=self._buildSnapshot(c);
         // Ξαναέλεγξε το session ΠΡΙΝ γράψεις — αν έχει λήξει στο παρασκήνιο (π.χ. καρτέλα ανοιχτή πολλή ώρα),
         // εδώ το πιάνουμε και δίνουμε καθαρό μήνυμα αντί για ακατανόητο σφάλμα RLS από τη βάση.
@@ -833,9 +834,11 @@
           // να βλέπει τη μερίδα χωρίς να ανοίγει το tab Πλάνο. Τρόφιμα με μονάδα εμφάνισης (τεμ./φέτα/φλ.
           // — x.sub μη κενό) δείχνουν όπως στο tab Πλάνο: «Αυγά 3 τεμ. (165γρ.)»· τα υπόλοιπα μόνο γραμμάρια.
           var title=foods.map(function(x){return shortName(x.name)+(x.sub?' '+x.qty+' '+x.sub:' ('+x.g+' '+gLbl+')');}).slice(0,3).join(', ')+(foods.length>3?'…':'');
-          var alternates=[];
+          var alternates=[], altSpares=[];
           if(altPool){
-            pickMealAlternates(altPool, meal, c, mk, 3, function(foods){ return altBlockedByDiet(foods,d); }, altWeekSeen).forEach(function(a){
+            // 6 = 3 ορατές + 3 ρεζέρβες (altSpares): όταν ο πελάτης πατά 👎 «Όχι για μένα» σε μία, το
+            // plan.html βάζει αμέσως την επόμενη ρεζέρβα στη θέση της (2026-11-17). Μόνο οι 3 μετράνε στην ποικιλία.
+            pickMealAlternates(altPool, meal, c, mk, 6, function(foods){ return altBlockedByDiet(foods,d); }, altWeekSeen, 3).forEach(function(a, ai){
               var af=[], ak=0, ap=0, ac=0, aF=0;
               (a.foods||[]).forEach(function(f){
                 var v=macro(f.n,f.g);
@@ -847,7 +850,7 @@
               // el/k/macros (2026-10-12): για το «Αυτό έφαγα» — el = ελληνικός τίτλος (ό,τι βλέπει ο
               // διαιτολόγος στην Πρόοδο, ανεξάρτητα από τη γλώσσα του link), k = [[τρόφιμο,γρ.]] ώστε το
               // «Βάλε στο πλάνο» να ξέρει ακριβώς τι να βάλει, macros = για τα σύνολα της Αρχικής του πελάτη.
-              alternates.push({name:altTitle, el:mealShortTitle(a.foods), kcal:Math.round(ak),
+              (ai<3?alternates:altSpares).push({name:altTitle, el:mealShortTitle(a.foods), kcal:Math.round(ak),
                 macros:{p:Math.round(ap),c:Math.round(ac),f:Math.round(aF)},
                 k:(a.foods||[]).map(function(f){return [f.n,Math.round(f.g)];}), foods:af});
             });
@@ -875,7 +878,8 @@
             kcal:Math.round(mk),
             macros:{p:Math.round(mp),c:Math.round(mc),f:Math.round(mf)},
             foods:foods,
-            alternates:alternates
+            alternates:alternates,
+            altSpares:altSpares   // 👎 ρεζέρβες — το plan.html τις δείχνει μόνο όταν κρυφτεί κάποια από τις 3
           });
         });
         days.push({
@@ -1833,6 +1837,43 @@
       return this._fetchAllByToken('client_workout_log','token,date,data',tokens,'date','fetchAllWorkoutLogs').then(function(byToken){
         if(byToken) self._workoutLogCache=byToken;
       },function(){});
+    },
+    // ── 👎 «ΟΧΙ ΓΙΑ ΜΕΝΑ» (client_alt_reject — γράφει το plan.html, 2026-11-17) ──
+    // ΜΙΑ γραμμή ανά link: data = {sig: {el,s,f,r,t,x?}} (βλ. sql/2026-11-17_alt_reject.sql). Χωρίς το SQL
+    // η βάση γυρνά σφάλμα → το cache μένει κενό και όλα δουλεύουν όπως πριν.
+    _altRejCache:{},
+    refreshAltRejectCache:function(){
+      var self=this;
+      if(!this.enabled || !this.user) return Promise.resolve();
+      var tokens=[];
+      (window.clients||[]).forEach(function(c){ if(!c.deleted) tokens=tokens.concat(self.checkinTokensFor(c)); });
+      if(!tokens.length) return Promise.resolve();
+      return this._fetchAllByToken('client_alt_reject','token,data,updated_at',tokens,'updated_at','fetchAllAltRejects').then(function(byToken){
+        if(byToken) self._altRejCache=byToken;
+      },function(){});
+    },
+    refreshAltRejectFor:function(c){
+      var self=this, tokens=this.checkinTokensFor(c);
+      if(!this.enabled || !this.user || !tokens.length) return Promise.resolve();
+      return this._fetchAllByToken('client_alt_reject','token,data,updated_at',tokens,'updated_at','fetchAltRejectFor').then(function(byToken){
+        if(!byToken) return;
+        tokens.forEach(function(t){ self._altRejCache[t]=byToken[t]||[]; });
+      },function(){});
+    },
+    // {sig: {sig,el,s,f,r,t,x?}} από ΟΛΑ τα links του πελάτη — ανά sig κερδίζει η νεότερη εγγραφή.
+    altRejectsFor:function(c){
+      var self=this, out={};
+      this.checkinTokensFor(c).forEach(function(t){
+        (self._altRejCache[t]||[]).forEach(function(r){
+          var d=r.data||{};
+          Object.keys(d).forEach(function(sig){
+            var e=d[sig]; if(!e||typeof e!=='object') return;
+            var cur=out[sig];
+            if(!cur || String(e.t||'')>String(cur.t||'')) out[sig]=Object.assign({sig:sig},e);
+          });
+        });
+      });
+      return out;
     },
     workoutLogFor:function(c){
       var self=this, byDate={};

@@ -456,7 +456,8 @@ function progressRefresh(){
     typeof Cloud.refreshMealLogCache==='function'?Cloud.refreshMealLogCache():Promise.resolve(),
     typeof Cloud.refreshSuppLogCache==='function'?Cloud.refreshSuppLogCache():Promise.resolve(),
     typeof Cloud.refreshShopCache==='function'?Cloud.refreshShopCache():Promise.resolve(),
-    typeof Cloud.refreshWorkoutLogCache==='function'?Cloud.refreshWorkoutLogCache():Promise.resolve()
+    typeof Cloud.refreshWorkoutLogCache==='function'?Cloud.refreshWorkoutLogCache():Promise.resolve(),
+    typeof Cloud.refreshAltRejectCache==='function'?Cloud.refreshAltRejectCache():Promise.resolve()
   ]).then(function(){
     // Αν στο μεταξύ άλλαξες tab, μην το πατήσεις. Αν άνοιξες πελάτη (π.χ. «Πλήρες ιστορικό →» από το
     // Ραντεβού, που κάνει swTab(10) + openProgressClient αμέσως μετά), μείνε σε ΑΥΤΟΝ — πριν, το
@@ -982,6 +983,7 @@ function openProgressClient(id){
   html+=progressWeeklyConsistencyHtml(c,rows);
   if(typeof progressSkipsHtml==='function') html+=progressSkipsHtml(c,rows);
   html+=progressSwapsHtml(c,rows);
+  if(typeof progressRejectsHtml==='function') html+=progressRejectsHtml(c);
   if(typeof progressSuppsHtml==='function') html+=progressSuppsHtml(c);
   if(typeof progressShopHtml==='function') html+=progressShopHtml(c);
   html+=(typeof progressWeightPanelHtml==='function')?progressWeightPanelHtml(c):'';

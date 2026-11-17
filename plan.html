@@ -161,6 +161,25 @@
   .alt-banner .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
   .alt-banner b{font-size:13px;color:var(--teal-d)}
   .alt-banner span{font-size:12px;color:var(--muted)}
+  /* 👎 «Όχι για μένα» (2026-11-17) — κρύβει μια εναλλακτική, βάζει ρεζέρβα (altSpares) στη θέση της */
+  .swap-no{flex-shrink:0;width:40px;height:40px;margin-left:-4px;border-radius:9px;border:none;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer}
+  .swap-item.new{outline:1.5px dashed var(--teal)}
+  .swap-new{align-self:flex-start;font-size:10px;font-weight:700;color:#fff;background:var(--teal);border-radius:6px;padding:1px 6px;margin-bottom:2px}
+  .swap-ask{display:flex;flex-direction:column;gap:10px;padding:12px;background:var(--card);border:1.5px solid var(--teal);border-radius:10px}
+  .swap-ask .hd{display:flex;gap:8px;align-items:flex-start}
+  .swap-ask .hd>i{color:var(--teal);font-size:18px}
+  .swap-ask .tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .swap-ask b{font-size:13px;color:var(--teal-d)}
+  .swap-ask .tx span{font-size:12px;color:var(--muted)}
+  .swap-ask .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .swap-ask .chips button{min-height:40px;padding:0 12px;border-radius:20px;border:1px solid var(--bord);background:var(--tint2);color:var(--teal-d);font-size:13px;font-family:inherit;cursor:pointer}
+  .swap-ask .skip{align-self:flex-end;min-height:40px;padding:0 8px;border:none;background:none;color:var(--teal);font-size:13px;text-decoration:underline;font-family:inherit;cursor:pointer}
+  .swap-hidden{font-size:11px;color:var(--muted);margin-top:2px}
+  .swap-hidden button{background:none;border:none;color:var(--teal);font-size:11px;text-decoration:underline;padding:6px 2px;font-family:inherit;cursor:pointer}
+  .alt-toast{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;z-index:60;background:#1a3330;color:#fff;border-radius:12px;padding:6px 6px 6px 14px;display:flex;align-items:center;gap:10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  .alt-toast>i{color:#8fe0d4;font-size:18px}
+  .alt-toast span{flex:1;line-height:1.35}
+  .alt-toast button{min-height:44px;padding:0 12px;border:none;background:none;color:#8fe0d4;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
   .alt-banner button{background:none;border:none;color:var(--teal);font-size:12px;text-decoration:underline;padding:8px 4px;font-family:inherit;cursor:pointer}
 
   .log-inp{width:100%;border:.5px solid var(--bord);border-radius:10px;padding:9px 11px;font-size:16px;font-family:inherit;color:var(--ink);background:var(--card);box-sizing:border-box}
@@ -638,7 +657,7 @@ const I18N={
     dayMon:'Δευ',dayTue:'Τρι',dayWed:'Τετ',dayThu:'Πεμ',dayFri:'Παρ',daySat:'Σαβ',daySun:'Κυρ',
     subPlan:'Το εβδομαδιαίο πλάνο μου', subProg:'Η πρόοδός μου', subShop:'Λίστα για ψώνια', subWater:'Ενυδάτωση',
     subSupps:'Τα συμπληρώματά μου', subSpices:'Μπαχαρικά & βότανα', subFruits:'Λίστα ανταλλαγής φρούτων',
-    noMealsForDay:'Δεν υπάρχει πλάνο για αυτή την ημέρα.', alternates:'Εναλλακτικά', alternatesNote:'Ισοδύναμες επιλογές βάσει των προτιμήσεών σου. Αν έφαγες κάποια, πάτα «Αυτό έφαγα».', altAte:'Αυτό έφαγα', altPicked:'✓ Επιλέχθηκε', altAteBanner:'Έφαγες την εναλλακτική', altUndo:'Αναίρεση',
+    noMealsForDay:'Δεν υπάρχει πλάνο για αυτή την ημέρα.', alternates:'Εναλλακτικά', alternatesNote:'Ισοδύναμες επιλογές βάσει των προτιμήσεών σου. Αν έφαγες κάποια, πάτα «Αυτό έφαγα».', altAte:'Αυτό έφαγα', altPicked:'✓ Επιλέχθηκε', altAteBanner:'Έφαγες την εναλλακτική', altUndo:'Αναίρεση', altNo:'Όχι για μένα', altNoteNo:'Αν κάτι δεν είναι για σένα, πάτα 👎 και θα σου προτείνουμε άλλο.', altWhyHead:'{name}: όχι για σένα', altWhySub:'Θες να μας πεις γιατί; (προαιρετικό)', altRTaste:'Δεν μου αρέσει', altRTime:'Δεν έχω χρόνο', altRFind:'Δεν το βρίσκω', altSkip:'Παράλειψη', altNew:'Νέα πρόταση', altHidden1:'1 κρυμμένη επιλογή', altHiddenN:'{n} κρυμμένες επιλογές', altRestore:'Επαναφορά', altToast:'Δεν θα σου το ξαναπροτείνουμε. Σου βάλαμε κάτι άλλο.', altToastNone:'Δεν θα σου το ξαναπροτείνουμε.',
     macroP:'Π', macroC:'Υ', macroF:'Λ',
     shopHdr:'Λίστα για ψώνια', shopEmpty:'Δεν υπάρχει λίστα ακόμη.', shopRawLegend:'Η ποσότητα είναι αυτή που αγοράζεις · σε παρένθεση το ωμό/μη-μαγειρεμένο βάρος όπου διαφέρει.', shopResetBtn:'Καθάρισε όλα',
     waterProtocolHdr:'Πρωτόκολλο ενυδάτωσης', waterProtocolBody:'Στόχος βάσει βάρους · +500 ml τις ημέρες προπόνησης · 1 ποτήρι πριν από κάθε γεύμα.', waterHint:'Πάτα ένα ποτήρι για να καταγράψεις πόσο νερό ήπιες σήμερα.',
@@ -749,7 +768,7 @@ const I18N={
     dayMon:'Mon',dayTue:'Tue',dayWed:'Wed',dayThu:'Thu',dayFri:'Fri',daySat:'Sat',daySun:'Sun',
     subPlan:'My weekly plan', subProg:'My progress', subShop:'Shopping list', subWater:'Hydration',
     subSupps:'My supplements', subSpices:'Spices & herbs', subFruits:'Fruit exchange list',
-    noMealsForDay:'No plan for this day.', alternates:'Alternatives', alternatesNote:'Equivalent options based on your preferences. If you ate one, tap “I ate this”.', altAte:'I ate this', altPicked:'✓ Selected', altAteBanner:'You ate the alternative', altUndo:'Undo',
+    noMealsForDay:'No plan for this day.', alternates:'Alternatives', alternatesNote:'Equivalent options based on your preferences. If you ate one, tap “I ate this”.', altAte:'I ate this', altPicked:'✓ Selected', altAteBanner:'You ate the alternative', altUndo:'Undo', altNo:'Not for me', altNoteNo:'If one isn’t for you, tap 👎 and we’ll suggest another.', altWhyHead:'{name}: not for you', altWhySub:'Want to tell us why? (optional)', altRTaste:'I don’t like it', altRTime:'No time', altRFind:'Can’t find it', altSkip:'Skip', altNew:'New suggestion', altHidden1:'1 hidden option', altHiddenN:'{n} hidden options', altRestore:'Restore', altToast:'We won’t suggest it again. Here’s something else.', altToastNone:'We won’t suggest it again.',
     macroP:'P', macroC:'C', macroF:'F',
     shopHdr:'Shopping list', shopEmpty:'No list yet.', shopRawLegend:'The amount shown is what you buy · the raw/uncooked weight is in parentheses where it differs.', shopResetBtn:'Reset all',
     waterProtocolHdr:'Hydration protocol', waterProtocolBody:'Target based on weight · +500 ml on training days · 1 glass before each meal.', waterHint:'Tap a glass to log how much water you drank today.',
@@ -860,7 +879,7 @@ const I18N={
     dayMon:'Пн',dayTue:'Вт',dayWed:'Ср',dayThu:'Чт',dayFri:'Пт',daySat:'Сб',daySun:'Вс',
     subPlan:'Мой недельный план', subProg:'Мой прогресс', subShop:'Список покупок', subWater:'Гидратация',
     subSupps:'Мои добавки', subSpices:'Специи и травы', subFruits:'Список замены фруктов',
-    noMealsForDay:'На этот день плана нет.', alternates:'Альтернативы', alternatesNote:'Равноценные варианты на основе ваших предпочтений. Если вы съели один из них, нажмите «Я съел(а) это».', altAte:'Я съел(а) это', altPicked:'✓ Выбрано', altAteBanner:'Вы съели альтернативу', altUndo:'Отменить',
+    noMealsForDay:'На этот день плана нет.', alternates:'Альтернативы', alternatesNote:'Равноценные варианты на основе ваших предпочтений. Если вы съели один из них, нажмите «Я съел(а) это».', altAte:'Я съел(а) это', altPicked:'✓ Выбрано', altAteBanner:'Вы съели альтернативу', altUndo:'Отменить', altNo:'Не для меня', altNoteNo:'Если вариант вам не подходит, нажмите 👎 — мы предложим другой.', altWhyHead:'{name}: не для вас', altWhySub:'Расскажете почему? (необязательно)', altRTaste:'Не нравится', altRTime:'Нет времени', altRFind:'Не могу найти', altSkip:'Пропустить', altNew:'Новый вариант', altHidden1:'1 скрытый вариант', altHiddenN:'Скрыто вариантов: {n}', altRestore:'Вернуть', altToast:'Больше не предложим. Вот другой вариант.', altToastNone:'Больше не предложим.',
     macroP:'Б', macroC:'У', macroF:'Ж',
     shopHdr:'Список покупок', shopEmpty:'Список пока пуст.', shopRawLegend:'Указано количество для покупки · в скобках — сырой/необработанный вес, если он отличается.', shopResetBtn:'Сбросить всё',
     waterProtocolHdr:'Протокол гидратации', waterProtocolBody:'Цель на основе веса · +500 мл в дни тренировок · 1 стакан перед каждым приёмом пищи.', waterHint:'Нажмите на стакан, чтобы отметить, сколько воды вы выпили сегодня.',
@@ -971,7 +990,7 @@ const I18N={
     dayMon:'Pzt',dayTue:'Sal',dayWed:'Çar',dayThu:'Per',dayFri:'Cum',daySat:'Cmt',daySun:'Paz',
     subPlan:'Haftalık planım', subProg:'İlerlemem', subShop:'Alışveriş listesi', subWater:'Sıvı alımı',
     subSupps:'Takviyelerim', subSpices:'Baharat ve otlar', subFruits:'Meyve değişim listesi',
-    noMealsForDay:'Bu gün için plan yok.', alternates:'Alternatifler', alternatesNote:'Tercihlerine göre eşdeğer seçenekler. Birini yediysen “Bunu yedim”e dokun.', altAte:'Bunu yedim', altPicked:'✓ Seçildi', altAteBanner:'Alternatifi yedin', altUndo:'Geri al',
+    noMealsForDay:'Bu gün için plan yok.', alternates:'Alternatifler', alternatesNote:'Tercihlerine göre eşdeğer seçenekler. Birini yediysen “Bunu yedim”e dokun.', altAte:'Bunu yedim', altPicked:'✓ Seçildi', altAteBanner:'Alternatifi yedin', altUndo:'Geri al', altNo:'Bana göre değil', altNoteNo:'Sana göre olmayan bir seçenek için 👎’ye dokun, başka bir şey önerelim.', altWhyHead:'{name}: sana göre değil', altWhySub:'Nedenini söylemek ister misin? (isteğe bağlı)', altRTaste:'Sevmiyorum', altRTime:'Vaktim yok', altRFind:'Bulamıyorum', altSkip:'Geç', altNew:'Yeni öneri', altHidden1:'1 gizli seçenek', altHiddenN:'{n} gizli seçenek', altRestore:'Geri getir', altToast:'Bunu bir daha önermeyeceğiz. Yerine başka bir şey koyduk.', altToastNone:'Bunu bir daha önermeyeceğiz.',
     macroP:'P', macroC:'K', macroF:'Y',
     shopHdr:'Alışveriş listesi', shopEmpty:'Henüz liste yok.', shopRawLegend:'Gösterilen miktar satın alacağın miktardır · farklıysa parantez içinde çiğ/pişmemiş ağırlık verilmiştir.', shopResetBtn:'Tümünü sıfırla',
     waterProtocolHdr:'Sıvı alım protokolü', waterProtocolBody:'Kiloya göre hedef · antrenman günlerinde +500 ml · her öğünden önce 1 bardak.', waterHint:'Bugün ne kadar su içtiğini kaydetmek için bir bardağa dokun.',
@@ -1102,12 +1121,106 @@ function setMeals(o){setMealsFor(todayKey(),o)}
 // Truthy και στις δύο περιπτώσεις, οπότε όλες οι μετρήσεις «έφαγε / δεν έφαγε» μένουν ως είχαν.
 function pickedAlt(m,v){
   if(!v||typeof v!=='object')return null;
-  const alt=(m&&m.alternates||[])[v.a];
+  const alt=mealAltsAll(m)[v.a];
   return (alt&&(alt.el||alt.name)===v.n)?alt:{name:v.n,kcal:0};
 }
 function altPickValue(m,k){
-  const a=m.alternates[k];
+  const a=mealAltsAll(m)[k];
   return {a:k, n:a.el||a.name, o:m.elTitle||m.title||'', s:m.slot||m.label||'', f:a.k||[]};
+}
+// ── 👎 «ΟΧΙ ΓΙΑ ΜΕΝΑ» (2026-11-17) ──
+// Το snapshot έχει 3 ορατές εναλλακτικές (m.alternates) + έως 3 ρεζέρβες (m.altSpares). Ο πελάτης πατά 👎 →
+// η εναλλακτική κρύβεται (σε ΟΛΕΣ τις μέρες — «δεν είναι για μένα» γενικά), μπαίνει η επόμενη ρεζέρβα,
+// και ρωτάμε προαιρετικά γιατί. Δείκτες στο {a} του «Αυτό έφαγα» = θέση στο alternates+altSpares (οι
+// πρώτες 3 ίδιες με πριν, άρα τα παλιά picks δεν σπάνε).
+// Αποθήκευση: {sig: {el,s,f,r,t,x?}} (r = taste|time|find|'' · x=1 = αναιρέθηκε, μένει για το hydrate).
+// Κρύβεται μόνο ό,τι απορρίφθηκε ΜΕΤΑ τη δημοσίευση αυτού του snapshot: τα παλιότερα τα έχει ήδη
+// αφαιρέσει η εφαρμογή στη δημοσίευση — εκτός αν ο διαιτολόγος τα επανέφερε, οπότε πρέπει να φαίνονται.
+function mealAltsAll(m){return ((m&&m.alternates)||[]).concat((m&&m.altSpares)||[]);}
+function getAltRejects(){try{return JSON.parse(localStorage.getItem(lk('altrej'))||'{}')||{}}catch(e){return {}}}
+function setAltRejects(o){try{localStorage.setItem(lk('altrej'),JSON.stringify(o))}catch(e){} syncAltRejects();}
+function altSig(a){return (a&&a.k&&a.k.length)?a.k.map(p=>p[0]).sort().join('|'):'n:'+((a&&(a.el||a.name))||'');}
+function isAltRejected(a,rej){
+  const r=(rej||getAltRejects())[altSig(a)];
+  if(!r||r.x)return false;
+  const pub=Date.parse((SNAP&&(SNAP.publishedAt||SNAP._updated))||'');
+  return !pub||!(Date.parse(r.t||'')<=pub);
+}
+let _altAsk=null, _altToastTimer=null, _altRejTimer=null;
+const _altOpen=new Set();
+// Λίστα που βλέπει ο πελάτης για ένα γεύμα: έως 3, παραλείποντας τις κρυμμένες (εκτός από αυτή που
+// μόλις πάτησε 👎 και τη ρωτάμε «γιατί» — μένει στη θέση της ως πάνελ μέχρι να απαντήσει).
+function mealAltView(m,dateKey,idx){
+  const all=mealAltsAll(m), rej=getAltRejects(), base=((m&&m.alternates)||[]).length;
+  const list=[], hidden=[];
+  all.forEach((a,ci)=>{
+    const sig=altSig(a);
+    const ask=!!(_altAsk&&_altAsk.sig===sig&&_altAsk.key===dateKey+'|'+idx);
+    if(isAltRejected(a,rej)&&!ask){ if(hidden.indexOf(sig)===-1)hidden.push(sig); return; }
+    if(list.length<3)list.push({a,ci,sig,ask,isNew:ci>=base});
+  });
+  return {list,hidden};
+}
+function altReject(m,a,dateKey,idx){
+  const rej=getAltRejects(), sig=altSig(a);
+  rej[sig]={el:a.el||a.name||'', s:m.slot||m.label||'', f:a.k||[], r:'', t:new Date().toISOString()};
+  setAltRejects(rej);
+  // Υπάρχει ρεζέρβα να μπει στη θέση της; (για το μήνυμα του toast)
+  const left=mealAltsAll(m).filter(x=>!isAltRejected(x,rej)).length;
+  _altAsk={sig, key:dateKey+'|'+idx, repl:left>=3};
+  _altOpen.add(dateKey+'|'+idx);
+  go('plan');
+}
+function altAnswer(reason){
+  if(!_altAsk)return;
+  const ask=_altAsk; _altAsk=null;
+  const rej=getAltRejects();
+  if(rej[ask.sig]&&!rej[ask.sig].x){rej[ask.sig].r=reason||''; setAltRejects(rej);}
+  go('plan');
+  altToast(ask.sig, ask.repl);
+}
+function altUnreject(sigs){
+  const rej=getAltRejects(), t=new Date().toISOString();
+  (sigs||[]).forEach(sg=>{ if(rej[sg])rej[sg]=Object.assign({},rej[sg],{x:1,t}); });
+  setAltRejects(rej);
+  go('plan');
+}
+function altToast(sig,repl){
+  const old=document.getElementById('alt-toast'); if(old)old.remove();
+  const t=el('div','alt-toast'); t.id='alt-toast'; t.setAttribute('role','status');
+  t.innerHTML='<i class="ti ti-check"></i><span>'+esc(T(repl?'altToast':'altToastNone'))+'</span>';
+  const b=el('button',null,T('altUndo')); b.type='button';
+  b.onclick=()=>{ t.remove(); altUnreject([sig]); };
+  t.appendChild(b);
+  document.body.appendChild(t);
+  clearTimeout(_altToastTimer); _altToastTimer=setTimeout(()=>{ t.remove(); },7000);
+}
+function syncAltRejects(){
+  if(_altRejTimer)clearTimeout(_altRejTimer);
+  _altRejTimer=setTimeout(()=>{
+    _altRejTimer=null;
+    if(!sb)return;
+    const tok=token(); if(!tok)return;
+    sb.rpc('save_alt_rejects',{p_token:tok,p_data:getAltRejects()}).then(null,()=>{});
+  },400);
+}
+// Ίδιο μοτίβο με τα υπόλοιπα hydrate: ανά sig κερδίζει το νεότερο t (άλλη συσκευή / αναίρεση).
+async function hydrateAltRejects(){
+  const tok=token(); if(!tok||!sb)return false;
+  try{
+    const {data,error}=await sb.rpc('get_alt_rejects',{p_token:tok});
+    if(error||!data||typeof data!=='object')return false;
+    const local=getAltRejects(), merged=Object.assign({},data);
+    let localNewer=false;
+    Object.keys(local).forEach(sg=>{
+      const a=local[sg], b=merged[sg];
+      if(!b||(Date.parse(a&&a.t||'')||0)>(Date.parse(b&&b.t||'')||0)){merged[sg]=a; localNewer=true;}
+    });
+    const changed=JSON.stringify(merged)!==JSON.stringify(local);
+    try{localStorage.setItem(lk('altrej'),JSON.stringify(merged))}catch(e){}
+    if(localNewer)syncAltRejects();
+    return changed;
+  }catch(e){console.error('[FYH portal] hydrateAltRejects failed:',e);return false;}
 }
 // supplement adherence: { 'YYYY-MM-DD': { '<supp name>': true } }
 function getSuppLog(){try{return JSON.parse(localStorage.getItem(lk('supps'))||'{}')}catch(e){return {}}}
@@ -1815,7 +1928,7 @@ async function boot(){
     render();
     // Fire-and-forget — δεν καθυστερεί το πρώτο paint· αν φέρει κάτι που άλλαξε το τοπικό
     // cache (π.χ. check-off χαμένο από τον browser), ξανασχεδιάζει το τρέχον tab.
-    Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState(),hydrateWorkoutCheckins()])
+    Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState(),hydrateWorkoutCheckins(),hydrateAltRejects()])
       .then(results=>{
         const shopReset=checkShoppingListFreshness();
         if(results.some(Boolean)||shopReset)go(curTab());
@@ -1851,7 +1964,7 @@ async function refreshPlan(){
       SNAP=data.snapshot; SNAP._updated=data.updated_at;
       LANG=pickLang(SNAP.lang);
       applyLangMeta();
-      await Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState(),hydrateWorkoutCheckins()]);
+      await Promise.all([hydrateMealCheckins(),hydrateWaterCheckins(),hydrateSuppCheckins(),hydrateShopState(),hydrateWorkoutCheckins(),hydrateAltRejects()]);
       checkShoppingListFreshness();
       backfillCheckins();
       const badge=$('#upd-badge'); if(badge)badge.innerHTML=updatedBadge();
@@ -2571,6 +2684,7 @@ function viewPlan(){
       // Εναλλακτική που έφαγε (αν πάτησε «Αυτό έφαγα») — banner πάνω από τη λίστα, με αναίρεση.
       const picked=eatenHere[idx]&&typeof eatenHere[idx]==='object'?eatenHere[idx]:null;
       function setPick(val){
+        _altOpen.delete(planDateKey+'|'+idx);   // όπως πριν: μετά το «Αυτό έφαγα» η λίστα κλείνει, φαίνεται το banner
         const e=getMealsFor(planDateKey); e[idx]=val; setMealsFor(planDateKey,e);
         syncMealCheckin(planDateKey);
         pushCheckin(planDateKey);
@@ -2585,26 +2699,60 @@ function viewPlan(){
         bn.appendChild(ub);
         body.appendChild(bn);
       }
-      if(m.alternates&&m.alternates.length){
-        const btn=el('button','swap-btn');
+      const av=mealAltView(m,planDateKey,idx);
+      if(av.list.length||av.hidden.length){
+        const okey=planDateKey+'|'+idx, isOpen=_altOpen.has(okey);
+        const btn=el('button','swap-btn'+(isOpen?' open':''));
         btn.innerHTML='<span style="display:flex;align-items:center;gap:6px"><i class="ti ti-refresh"></i>'+T('alternates')+'</span><i class="ti ti-chevron-down chev"></i>';
-        const list=el('div','swap-list');
-        m.alternates.forEach((a,k)=>{
-          const on=!!(picked&&picked.a===k&&pickedAlt(m,picked)===a);
-          // «Αυτό έφαγα» μόνο για σήμερα ή παλαιότερα — όπως και το απλό check-off.
-          const item=el('div','swap-item'+(isFuture?'':' pickable')+(on?' on':''));
+        const list=el('div','swap-list'+(isOpen?' open':''));
+        av.list.forEach(({a,ci,ask,isNew})=>{
+          // 👎 μόλις πατήθηκε → στη θέση της, «γιατί;» (προαιρετικό) — απάντηση ή Παράλειψη την κρύβει
+          if(ask){
+            const p=el('div','swap-ask');
+            p.innerHTML='<div class="hd"><i class="ti ti-thumb-down"></i><div class="tx"><b>'+esc(T('altWhyHead',{name:a.name||''}))+'</b><span>'+esc(T('altWhySub'))+'</span></div></div>';
+            const chips=el('div','chips');
+            [['taste','altRTaste'],['time','altRTime'],['find','altRFind']].forEach(([code,key])=>{
+              const cb=el('button',null,T(key)); cb.type='button'; cb.onclick=()=>altAnswer(code); chips.appendChild(cb);
+            });
+            p.appendChild(chips);
+            const sk=el('button','skip',T('altSkip')); sk.type='button'; sk.onclick=()=>altAnswer('');
+            p.appendChild(sk);
+            list.appendChild(p);
+            return;
+          }
+          const on=!!(picked&&picked.a===ci&&pickedAlt(m,picked)===a);
+          const item=el('div','swap-item pickable'+(on?' on':'')+(isNew?' new':''));
           const foodsStr=(a.foods||[]).map(f=>f.name+' '+f.qty+(f.sub?' '+f.sub:'')+(f.ck?' ('+T('cookedW')+')':'')).join(', ');
-          item.innerHTML='<div class="tx"><span class="nm">'+esc(a.name||'')+'</span><span class="fd">'+esc(foodsStr)+'</span></div>';
+          item.innerHTML='<div class="tx">'+(isNew?'<span class="swap-new">'+esc(T('altNew'))+'</span>':'')+'<span class="nm">'+esc(a.name||'')+'</span><span class="fd">'+esc(foodsStr)+'</span></div>';
+          // «Αυτό έφαγα» μόνο για σήμερα ή παλαιότερα — όπως και το απλό check-off.
           if(!isFuture){
             const pb=el('button','swap-pick',on?T('altPicked'):T('altAte')); pb.type='button';
-            pb.onclick=()=>setPick(on?false:altPickValue(m,k));
+            pb.onclick=()=>setPick(on?false:altPickValue(m,ci));
             item.appendChild(pb);
+          }
+          // 👎 σε κάθε μέρα (και μελλοντική — μπορεί να «ξεσκαρτάρει» από πριν), όχι σε αυτή που έφαγε
+          if(!on){
+            const nb=el('button','swap-no','<i class="ti ti-thumb-down"></i>'); nb.type='button';
+            nb.setAttribute('aria-label',T('altNo')); nb.title=T('altNo');
+            nb.onclick=()=>altReject(m,a,planDateKey,idx);
+            item.appendChild(nb);
           }
           list.appendChild(item);
         });
-        const note=el('div','swap-note',T('alternatesNote'));
+        if(av.hidden.length){
+          const n=av.hidden.length;
+          const hd=el('div','swap-hidden',esc(n===1?T('altHidden1'):T('altHiddenN',{n}))+' · ');
+          const rb=el('button',null,T('altRestore')); rb.type='button';
+          rb.onclick=()=>altUnreject(av.hidden);
+          hd.appendChild(rb);
+          list.appendChild(hd);
+        }
+        const note=el('div','swap-note',T('alternatesNote')+' '+T('altNoteNo'));
         list.appendChild(note);
-        btn.onclick=()=>{btn.classList.toggle('open');list.classList.toggle('open')};
+        btn.onclick=()=>{
+          btn.classList.toggle('open'); list.classList.toggle('open');
+          if(list.classList.contains('open'))_altOpen.add(okey); else _altOpen.delete(okey);
+        };
         body.appendChild(btn);
         body.appendChild(list);
       }
