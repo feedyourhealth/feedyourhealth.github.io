@@ -692,7 +692,7 @@ function buildMetHtml(c,t){
       var ma=acts[i];
       var kcalSess=Math.round(ma.met*3.5*(c.weight||80)/200*ma.mins);
       dayKcal+=kcalSess;
-      return '<div class="met-sess'+(_metBoxEditing(i,d,editIdx)?' met-item-editing':'')+'" data-i="'+i+'" data-d="'+d+'" onclick="editMetActivity('+i+','+d+')" onpointerdown="metSessPointerDown(event,'+i+','+d+')" title="Κλικ για επεξεργασία · σύρε σε άλλη μέρα για μετακίνηση (Ctrl = αντιγραφή)">'
+      return '<div class="met-sess'+(_metBoxEditing(i,d,editIdx)?' met-item-editing':'')+'" data-i="'+i+'" data-d="'+d+'" onclick="editMetActivity('+i+','+d+')" onpointerdown="metSessPointerDown(event,'+i+','+d+')" title="Κλικ για επεξεργασία · σύρε σε άλλη μέρα για αντιγραφή (Shift = μετακίνηση)">'
         +'<div class="met-sess-acts">'
         +'<button type="button" class="met-edit" onclick="event.stopPropagation();editMetActivity('+i+','+d+')" title="Επεξεργασία">✏️</button>'
         +'<button type="button" class="met-del" onclick="event.stopPropagation();removeMetActivityDay('+i+','+d+')" title="Αφαίρεση μόνο από '+dAbbrM[d]+'">&#10005;</button>'
@@ -1063,8 +1063,8 @@ function removeMetActivityDay(idx,day){
 
 /* ── Σύρσιμο κουτιού προπόνησης σε άλλη μέρα ──
    Custom pointer-drag όπως στο πλέγμα πλάνου (meal-slots.js), όχι HTML5 draggable.
-   Απόθεση = ΜΕΤΑΚΙΝΗΣΗ μόνο αυτής της μέρας (η πηγή βγαίνει από τα days)· με Ctrl
-   (ή ⌘) πατημένο τη στιγμή της απόθεσης = ΑΝΤΙΓΡΑΦΗ (η πηγή μένει). Μόνο ποντίκι/γραφίδα —
+   Απόθεση = ΑΝΤΙΓΡΑΦΗ (η πηγή μένει — αφαιρείς με ✕ αν θέλεις)· με Shift πατημένο
+   τη στιγμή της απόθεσης = ΜΕΤΑΚΙΝΗΣΗ (η πηγή βγαίνει από τα days). Μόνο ποντίκι/γραφίδα —
    στο κινητό οι μέρες είναι η μία κάτω από την άλλη και η αλλαγή μέρας γίνεται από το ✏️.
    Κατώφλι 6px ώστε το απλό κλικ να ανοίγει επεξεργασία. Esc ακυρώνει. */
 var _metDrag=null; // {i, srcD, startX, startY, started, ghost, el}
@@ -1102,7 +1102,7 @@ function _onMetDragMove(e){
     document.body.appendChild(md.ghost);
   }
   e.preventDefault();
-  var copy=e.ctrlKey||e.metaKey;
+  var copy=!e.shiftKey;
   md.ghost.textContent=(copy?'⧉ Αντιγραφή: ':'↪ Μετακίνηση: ')+(md.name||'');
   md.ghost.style.left=(e.clientX+14)+'px';md.ghost.style.top=(e.clientY+14)+'px';
   var prev=document.querySelector('.met-day-col.met-drop-over');
@@ -1115,7 +1115,7 @@ function _onMetDragUp(e){
   var drop=null;
   if(md&&md.started){
     var t=_metDragColAt(e.clientX,e.clientY);
-    if(t&&t.d!==md.srcD)drop={i:md.i,src:md.srcD,dst:t.d,copy:!!(e.ctrlKey||e.metaKey)};
+    if(t&&t.d!==md.srcD)drop={i:md.i,src:md.srcD,dst:t.d,copy:!e.shiftKey};
     // κατάπιε το click που ακολουθεί (να μην ανοίξει επεξεργασία το κουτί)
     var swallow=function(ev){ev.stopPropagation();ev.preventDefault();};
     document.addEventListener('click',swallow,true);
