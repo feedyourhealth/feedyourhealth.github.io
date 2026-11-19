@@ -187,6 +187,7 @@ var MICRONUTRIENTS={
   'Κρίθινο παξιμάδι':{Fe:2.5,Zn:1.2,Mg:50,Ca:30,B1:0.3,B2:0.1,B3:3.5,B6:0.15,B12:0,Folate:25,Omega3:0.1,Omega6:0.8,Iodine:0,Choline:12,DHA:0},
   'Κους κους (βρ.)':{Fe:0.4,Zn:0.4,Mg:8,Ca:6,B1:0.03,B2:0.02,B3:1.0,B6:0.03,B12:0,Folate:11,Omega3:0.01,Omega6:0.06,Iodine:0,Choline:5,DHA:0},
   'Σπαγγέτι ολικής (βρ.)':{Fe:1.3,Zn:1.0,Mg:44,Ca:15,B1:0.15,B2:0.05,B3:2.0,B6:0.1,B12:0,Folate:15,Omega3:0.05,Omega6:0.4,Iodine:0,Choline:10,DHA:0},
+  'Τραχανάς Στάτου (ξηρός)':{Fe:2.5,Zn:2.2,Mg:70,Ca:180,B1:0.25,B2:0.3,B3:3.5,B6:0.2,B12:0.2,Folate:30,Omega3:0.05,Omega6:0.8,Iodine:10,Choline:30,DHA:0},
   'Τραχανάς (βρ.)':{Fe:0.8,Zn:0.6,Mg:20,Ca:30,B1:0.06,B2:0.1,B3:1.0,B6:0.05,B12:0.1,Folate:10,Omega3:0.02,Omega6:0.3,Iodine:5,Choline:12,DHA:0},
   'Φρυγανιές':{Fe:2.5,Zn:0.8,Mg:25,Ca:40,B1:0.2,B2:0.1,B3:3.0,B6:0.1,B12:0,Folate:30,Omega3:0.03,Omega6:0.8,Iodine:0,Choline:10,DHA:0},
   'Wasa Φρυγανιές Σίκαλης':{Fe:3.5,Zn:1.8,Mg:90,Ca:30,B1:0.25,B2:0.1,B3:2.5,B6:0.25,B12:0,Folate:30,Omega3:0.1,Omega6:0.5,Iodine:0,Choline:15,DHA:0},
