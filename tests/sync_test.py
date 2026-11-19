@@ -159,6 +159,22 @@ try:
         s = server(pg)
         check(s.get('writes') == 1 and any(c['name'] == 'EditedWhileOffline' for c in s['rows'][U1]['data']['clients']), 'after retry, the edit uploaded on top of current version')
         check(not pg.is_visible('#cloud-load-error'), 'banner hidden after recovery'); cG.close()
+
+        print('H. Push throttle (Disk IO): many edits soon after a push -> no extra write; tab hidden -> sent at once')
+        S = {'rows': {U1: {'data': blob([cl('c1', 'Alpha')]), 'version': 1}}}
+        cH = ctx(); pg = open_page(cH, S, U1, seed={}); wait_loaded(pg)
+        pg.evaluate('clients[0].name="H1";saveNow();'); pg.wait_for_timeout(2500)
+        check(server(pg).get('writes') == 1, f"first edit uploads (writes={server(pg).get('writes')})")
+        for i in range(5):
+            pg.evaluate(f'clients[0].name="H2_{i}";saveNow();'); pg.wait_for_timeout(500)
+        pg.wait_for_timeout(2500)
+        check(server(pg).get('writes') == 1, f"5 more edits within 30s: still one write (writes={server(pg).get('writes')})")
+        check(pg.evaluate('!!Cloud._t'), 'one push stays scheduled')
+        pg.evaluate("Object.defineProperty(document,'visibilityState',{get:()=>'hidden',configurable:true});document.dispatchEvent(new Event('visibilitychange'))")
+        pg.wait_for_timeout(1500)
+        s = server(pg)
+        check(s.get('writes') == 2 and s['rows'][U1]['data']['clients'][0]['name'] == 'H2_4', f"tab hidden -> latest state sent once (writes={s.get('writes')})")
+        cH.close()
         br.close()
 finally:
     srv.terminate()

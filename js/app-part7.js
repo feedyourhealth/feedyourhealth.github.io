@@ -1090,8 +1090,15 @@
 
     signOut:function(){
       var self=this;
-      if(this.sb){ this.sb.auth.signOut().then(function(){ self.user=null; location.reload(); }).catch(function(){ location.reload(); }); }
-      else { location.reload(); }
+      if(!this.sb){ location.reload(); return; }
+      // Με το 30" throttle του save() μπορεί να εκκρεμεί push — στείλ' το πριν σβήσει το session.
+      var flush=Promise.resolve();
+      if(this._t){ clearTimeout(this._t); this._t=null; }
+      if(this.user && this._loaded && this._canWrite()) flush=this._queuePush().catch(function(){});
+      var bail=new Promise(function(r){ setTimeout(r,8000); });
+      Promise.race([flush,bail]).then(function(){
+        return self.sb.auth.signOut();
+      }).then(function(){ self.user=null; location.reload(); }).catch(function(){ location.reload(); });
     },
 
     // 👁️ Εμφάνιση/απόκρυψη κωδικού
@@ -1411,6 +1418,7 @@
         var sig=JSON.stringify(body);
         if(sig===self._lastSyncedSig){ resolve({ok:true,skipped:true}); return; }   // τίποτα καινούριο
         var seq=self._changeSeq;
+        self._lastPushAt=Date.now();
         body.updatedAt=new Date().toISOString();
         var blob=body;
         var done=function(ver){
@@ -1543,9 +1551,18 @@
       // επόμενο load() να ξέρει αν τα τοπικά πρέπει να ανέβουν ή να αντικατασταθούν από το cloud.
       this._ls(this._DIRTY_KEY,'1');
       if(!this._loaded) return;   // ανεβαίνουν μόλις τελειώσει το load() (εκείνο αποφασίζει)
-      clearTimeout(this._t);
-      this._t=setTimeout(function(){ self._queuePush(); },1500);
+      // 2026-11-19: κάθε push ξαναγράφει ΟΛΟ το blob (~10 MB) — με 1,5" debounce μια μισάωρη
+      // επεξεργασία πλάνου έκανε δεκάδες τέτοιες εγγραφές κι εξάντλησε το Disk IO budget του Nano
+      // (το project έγινε Unhealthy). Τώρα: το πολύ ένα push ανά _PUSH_MIN_GAP. Αν υπάρχει ήδη
+      // προγραμματισμένο push, δεν το μετατοπίζουμε — όταν φύγει, στέλνει ό,τι ισχύει εκείνη τη
+      // στιγμή. Κλείσιμο/κρύψιμο καρτέλας στέλνει αμέσως (visibilitychange + beforeunload), και το
+      // _DIRTY_KEY εγγυάται ότι ό,τι δεν πρόλαβε ανεβαίνει στο επόμενο load().
+      if(this._t) return;
+      var since=Date.now()-(this._lastPushAt||0);
+      var wait=Math.max(1500, this._PUSH_MIN_GAP-since);
+      this._t=setTimeout(function(){ self._t=null; self._queuePush(); },wait);
     },
+    _PUSH_MIN_GAP:30000,
 
     // ⚠️ 2026-09-11 fix: πριν, αυτό το .then() ζούσε ανώνυμο μέσα στο save() — δύο αλλαγές
     // αρκετά κοντά (π.χ. μια χειροκίνητη αποθήκευση ακριβώς τη στιγμή που πέφτει το 30"

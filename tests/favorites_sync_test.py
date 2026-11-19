@@ -34,6 +34,7 @@ def open_page(ctx, server, seed):
         + ''.join(f'localStorage.setItem({json.dumps(k)},{json.dumps(v)});' for k, v in seed.items()) + '}')
     page.goto(BASE, wait_until='domcontentloaded')
     page.wait_for_function('window.Cloud && Cloud._loaded===true', timeout=15000)
+    page.evaluate('Cloud._PUSH_MIN_GAP=0')   # this test is about content, not the 30" push throttle
     page.wait_for_timeout(1200)
     return page
 
