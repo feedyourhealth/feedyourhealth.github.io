@@ -207,6 +207,7 @@ function clientHasNewClientNote(c){
   return entries.some(function(e){
     var noteText=(e.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
     if(!noteText) return false;
+    if(typeof clientNoteNeedsReply==='function' && !clientNoteNeedsReply(noteText)) return false; // σημείωση ημέρας ≠ μήνυμα
     if(typeof isNoteReplied!=='function') return true; // δεν μπορούμε να ξέρουμε αν απαντήθηκε → μετράει ως νέα
     return !isNoteReplied(c,e.date);
   });

@@ -428,6 +428,7 @@ function buildApptAttentionDigestHtml(c){
     var unanswered=window.Cloud.allClientLogsFor(c).filter(function(e){
       var t=(e.note||'').replace(/^\[tag:(travel|party|sick)\]\s*/,'').trim();
       if(!t)return false;
+      if(typeof clientNoteNeedsReply==='function' && !clientNoteNeedsReply(t)) return false; // σημείωση ημέρας ≠ μήνυμα
       return !isNoteReplied(c,e.date);
     }).slice(0,3);
     unanswered.forEach(function(e){

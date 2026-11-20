@@ -38,6 +38,7 @@ function collectAllClientMessages(){
         if(tagMatch){ tag=tagMatch[1]; noteRaw=noteRaw.slice(tagMatch[0].length); }
         noteRaw=noteRaw.trim();
         if(!noteRaw) return; // μόνο μέτρηση βάρους, χωρίς κείμενο — δεν είναι "μήνυμα", ήδη φαίνεται αλλού
+        if(typeof clientNoteNeedsReply==='function' && !clientNoteNeedsReply(noteRaw)) return; // σημείωση ημέρας = καταγραφή, όχι μήνυμα
         var replied=(typeof isNoteReplied==='function')&&isNoteReplied(c,e.date);
         var seen=!replied&&(typeof isNoteSeen==='function')&&isNoteSeen(c,e.date);
         out.push({c:c,type:'note',sortKey:e.date,date:e.date,noteRaw:noteRaw,tag:tag,weight:e.weight_kg,

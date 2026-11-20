@@ -24,6 +24,12 @@ var CLIENT_LOG_TAG_DEFS={travel:{icon:'✈️',label:'Ταξίδι'},party:{icon
 // ως fallback ώστε ήδη-απαντημένες σημειώσεις να μη "ξαναφανούν" σε browsers που δεν έχουν
 // ακόμα το νέο πεδίο). 2026-08-14: πριν ζούσε ΜΟΝΟ στο localStorage — αν ο διαιτολόγος άνοιγε
 // την εφαρμογή από άλλη συσκευή, όλα ξαναφαίνονταν "αναπάντητα".
+// 2026-11-20: η σημείωση ημέρας του check-in («έβαλα γαλοπούλα αντί για κοτόπουλο») είναι ΚΑΤΑΓΡΑΦΗ,
+// όχι μήνυμα — όλη η κουβέντα γίνεται στο WhatsApp («Ρώτησέ με» → wa.me από 2026-11-17). Μόνο οι παλιές
+// ❓ ερωτήσεις (το αφαιρεμένο «Γράψε μου εδώ») περιμένουν απάντηση. Οι σημειώσεις ημέρας φαίνονται
+// ακόμα στο «📥 Ιστορικό καταχωρήσεων πελάτη» (clientLogsPanelHtml), απλώς δεν μετράνε ως αναπάντητα
+// σε Μηνύματα / badges / Αρχική / λίστα πελατών / digest ραντεβού.
+function clientNoteNeedsReply(noteText){ return String(noteText||'').indexOf('❓')>=0; }
 function noteReplyKey(token,date){ return 'fyh-note-replied-'+token+'-'+date; }
 function isNoteReplied(c,date){
   if(c && c.noteReplies && c.noteReplies[date]) return true;
