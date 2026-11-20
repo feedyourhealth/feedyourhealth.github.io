@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="990dac6e5e2b">
+<meta name="fyh-build" content="6859b6cda8a6">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -374,7 +374,7 @@ setTimeout(function(){
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
-<script defer src="js/client-list/roster-ui.js?v=b8979239a0"></script>
+<script defer src="js/client-list/roster-ui.js?v=b0aa45d44d"></script>
 <!-- client-list/quick-actions — sidebar quick-action sheets + mobile more-sheet
      (toggleQA/renderMSheetQA…), carved out of app-part1.js. All refs runtime. -->
 <script defer src="js/client-list/quick-actions.js?v=7afa3d7afa"></script>
@@ -384,10 +384,10 @@ setTimeout(function(){
 <script defer src="js/app-part2.js?v=2e8032a552"></script>
 <!-- appointments/* — the "📝 Ραντεβού" tab, carved out of app-part2.js. Pure fns;
      callers (renderMain/swTab, app-part5 portal refresh) are runtime. -->
-<script defer src="js/appointments/appointments.js?v=8e1272a524"></script>
+<script defer src="js/appointments/appointments.js?v=84fed644cf"></script>
 <!-- portal-comms/* — two-way client-portal messaging (replies, seen-tracking, feedback
      panels), carved out of app-part2.js. All refs runtime/typeof-guarded. -->
-<script defer src="js/portal-comms/portal-comms.js?v=a866490abb"></script>
+<script defer src="js/portal-comms/portal-comms.js?v=e62ab53dae"></script>
 <!-- client-editor/* — the client editor's sub-tabs, carved out of app-part2.js.
      tracker.js must precede app-part4.js (its migrateClientSkinfoldBF is called from
      that file's parse-time client-load IIFE). -->
@@ -456,7 +456,7 @@ setTimeout(function(){
 <!-- tabs/* — the standalone nav tabs (Αρχική / Διατροφές / Μηνύματα / Συνταγές / Tips).
      Pure fn declarations, no load-time code. -->
 <script defer src="js/tabs/home-diets.js?v=d7d813e3fc"></script>
-<script defer src="js/tabs/messages.js?v=d8d86fa4e3"></script>
+<script defer src="js/tabs/messages.js?v=b731617779"></script>
 <script defer src="js/tabs/progress.js?v=c7fbb30c64"></script>
 <script defer src="js/tabs/progress-insights.js?v=a0fc6f0f09"></script>
 <script defer src="js/tabs/progress-rejects.js?v=2469e66fc6"></script>
