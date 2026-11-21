@@ -28,6 +28,14 @@ var NOTIF_TYPES=[
 var NOTIF_MODE_LABELS={alert:'Ειδοποίηση',digest:'Σύνοψη',off:'Όχι'};
 
 var _notifOpen=false, _notifView='list', _notifOpenDays={}, _notifRefreshedAt=0, _notifRefreshing=false;
+// ⤢ Πλήρης οθόνη (2026-11-21): το πάνελ γεμίζει την οθόνη, σε 2 στήλες σε φαρδιά οθόνη. Θυμάται την επιλογή.
+var _notifFull=false;
+try{ _notifFull=localStorage.getItem('fyh-notif-full')==='1'; }catch(e){}
+function notifToggleFull(){
+  _notifFull=!_notifFull;
+  try{ localStorage.setItem('fyh-notif-full',_notifFull?'1':'0'); }catch(e){}
+  renderNotifPanel();
+}
 
 // ── Ρυθμίσεις ─────────────────────────────────────────────────────────────
 function notifPrefs(){
@@ -383,9 +391,10 @@ function notifDigestHtml(g,key){
 }
 function notifListHtml(){
   var sp=notifSplit();
-  var h='<div class="nt-sec"><span class="nt-dot nt-dot-red"></span><span class="nt-sec-t nt-sec-red">Χρειάζονται εσένα</span><span class="nt-sec-n">· '+sp.alert.length+'</span></div>';
+  var h='<div class="nt-cols"><div class="nt-col nt-col-alert"><div class="nt-sec"><span class="nt-dot nt-dot-red"></span><span class="nt-sec-t nt-sec-red">Χρειάζονται εσένα</span><span class="nt-sec-n">· '+sp.alert.length+'</span></div>';
   if(!sp.alert.length) h+='<div class="nt-empty">Όλα χειρισμένα 👍</div>';
   else h+=sp.alert.map(notifActionCardHtml).join('');
+  h+='</div><div class="nt-col nt-col-digest">';
   var anyDigest=false;
   for(var off=0;off<NOTIF_DAYS;off++){
     var key=notifDayKey(off), g=notifDigestFor(key,sp.quiet);
@@ -401,7 +410,7 @@ function notifListHtml(){
       +'<span class="nt-day-l">'+notifDayLabel(key)+'</span><span class="nt-day-s">'+notifOneLiner(g)+'</span><span aria-hidden="true">'+(open?'▴':'▾')+'</span></button>';
     if(open) h+='<div class="nt-digest">'+notifDigestHtml(g,key)+'</div>';
   }
-  return h;
+  return h+'</div></div>';
 }
 function notifSettingsHtml(){
   var h='<div class="nt-set-intro">Μόνο ό,τι είναι στο «Ειδοποίηση» ανεβάζει τον κόκκινο αριθμό. Τα υπόλοιπα μπαίνουν ήσυχα στη σύνοψη της ημέρας.</div>';
@@ -452,11 +461,14 @@ function renderNotifPanel(){
       +'<div class="nt-head-r">'
         +(!isSet && n?'<button type="button" class="nt-link-b" onclick="notifMarkAllSeen()">Όλα διαβασμένα</button>':'')
         +(isSet?'':'<button type="button" class="nt-icon-b" aria-label="Ρυθμίσεις ειδοποιήσεων" title="Τι να μου λέει" onclick="notifSetView(\'settings\')">⚙️</button>')
+        +'<button type="button" class="nt-icon-b nt-full-b" aria-pressed="'+_notifFull+'" aria-label="'+(_notifFull?'Μικρό παράθυρο':'Πλήρης οθόνη')+'" title="'+(_notifFull?'Μικρό παράθυρο':'Πλήρης οθόνη')+'" onclick="notifToggleFull()">'+(_notifFull?'⤡':'⤢')+'</button>'
         +'<button type="button" class="nt-icon-b" aria-label="Κλείσιμο" onclick="closeNotifPanel()">✕</button>'
       +'</div></div>'
     +'<div class="nt-body">'+(isSet?notifSettingsHtml():notifListHtml())+'</div>'
     +(isSet?'':('<div class="nt-foot"><button type="button" class="nt-link-b" onclick="notifRefresh(true)">🔄 '+(ago||'Ανανέωση')+'</button>'
       +'<button type="button" class="nt-link-b" onclick="notifGoTab(9)">Όλα τα μηνύματα →</button></div>'));
+  p.classList.toggle('nt-full',_notifFull);
+  p.classList.toggle('nt-settings',isSet);
   p.style.display='flex';
   var nb=p.querySelector('.nt-body'); if(nb) nb.scrollTop=scroll;
 }

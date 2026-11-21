@@ -104,6 +104,18 @@ try:
         check('Όλα καλά σήμερα' in pg.inner_text('#notif-panel'), 'yesterday expands → the comment')
         if SHOTS: pg.screenshot(path=os.path.join(SHOTS, 'notif-panel.png'))
 
+        print('2b. Πλήρης οθόνη')
+        pg.click('#notif-panel .nt-full-b'); pg.wait_for_timeout(200)
+        bb = pg.locator('#notif-panel').bounding_box()
+        check('nt-full' in pg.get_attribute('#notif-panel', 'class') and bb['width'] > 1300 and bb['height'] > 850, f'⤢ → fills the screen ({bb})')
+        ca, cd = pg.locator('.nt-col-alert').bounding_box(), pg.locator('.nt-col-digest').bounding_box()
+        check(ca['x'] < cd['x'] and abs(ca['y'] - cd['y']) < 5, 'two columns side by side')
+        if SHOTS: pg.screenshot(path=os.path.join(SHOTS, 'notif-full.png'))
+        pg.keyboard.press('Escape'); pg.click('#notif-bell'); pg.wait_for_timeout(300)
+        check('nt-full' in pg.get_attribute('#notif-panel', 'class'), 'remembers full screen on reopen')
+        pg.click('#notif-panel .nt-full-b'); pg.wait_for_timeout(200)
+        check(pg.locator('#notif-panel').bounding_box()['width'] <= 420, '⤡ → back to the small panel')
+
         print('3. Το είδα')
         pg.locator('#notif-panel .nt-card', has_text='ερωτηματολόγιο').get_by_role('button', name='👁️ Το είδα').click(); pg.wait_for_timeout(300)
         check(badge() == 2 and pg.locator('#notif-panel .nt-card').count() == 2, 'intake seen → badge 2')
