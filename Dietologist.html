@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="6859b6cda8a6">
+<meta name="fyh-build" content="5ef07da54fab">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -20,7 +20,7 @@
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css?v=595771bce9">
+<link rel="stylesheet" href="css/styles.css?v=27bd1c5286">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -167,6 +167,8 @@ setTimeout(function(){
 
   <button class="backup-btn" onclick="toggleSettingsPanel()" style="color:#025857;border-color:#025857">⚙️ Ρυθμίσεις</button>
 </div>
+<!-- 🔔 Ειδοποιήσεις (js/tabs/notifications.js) — δίπλα στο ↩/↪, το πάνελ φτιάχνεται από JS -->
+<button type="button" id="notif-bell" class="nt-bell" onclick="toggleNotifPanel()" aria-label="Ειδοποιήσεις" aria-expanded="false" aria-haspopup="true" title="Ειδοποιήσεις"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span id="notif-bell-badge" class="nt-bell-badge" style="display:none">0</span></button>
 <div class="main" id="main">
   <!-- ✅ Breadcrumbs Navigation -->
   <div class="breadcrumbs" id="breadcrumbs" style="display:none;">
@@ -346,7 +348,7 @@ setTimeout(function(){
 <script defer src="js/data/sodium-satfat.js?v=d465096769"></script>
 <!-- lib/* — pure leaf helpers (depend only on data/*) -->
 <script defer src="js/lib/bf-norms.js?v=4d2063a063"></script>
-<script defer src="js/lib/helpers.js?v=bd5ac99a55"></script>
+<script defer src="js/lib/helpers.js?v=1ecd44ab31"></script>
 <script defer src="js/lib/food-resolve.js?v=e72652f5e9"></script>
 <!-- calc/* — pure energy & scaling calc (depend on data/* + lib/helpers.js) -->
 <script defer src="js/calc/plan-energy.js?v=9f83ba22fe"></script>
@@ -361,7 +363,7 @@ setTimeout(function(){
      Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
 <script defer src="js/calc/portion-optimizer.js?v=cfe908b388"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
-<script defer src="js/core/persistence.js?v=1ce6a6eb36"></script>
+<script defer src="js/core/persistence.js?v=b38868f38a"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
      (needs snapWholeG, cm, deepClone, DEFAULT_TMPLS — all loaded above) -->
 <script defer src="js/core/templates.js?v=4f045a551d"></script>
@@ -374,14 +376,14 @@ setTimeout(function(){
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
-<script defer src="js/client-list/roster-ui.js?v=b0aa45d44d"></script>
+<script defer src="js/client-list/roster-ui.js?v=685e6b815f"></script>
 <!-- client-list/quick-actions — sidebar quick-action sheets + mobile more-sheet
      (toggleQA/renderMSheetQA…), carved out of app-part1.js. All refs runtime. -->
 <script defer src="js/client-list/quick-actions.js?v=7afa3d7afa"></script>
 <!-- client-list/clients-tab — the ΠΕΛΑΤΕΣ browsing page + bulk group-assign +
      SPORT_INFO, carved out of app-part5-home.js. renderClients is runtime. -->
 <script defer src="js/client-list/clients-tab.js?v=064b51ac61"></script>
-<script defer src="js/app-part2.js?v=2e8032a552"></script>
+<script defer src="js/app-part2.js?v=2a1b3d4929"></script>
 <!-- appointments/* — the "📝 Ραντεβού" tab, carved out of app-part2.js. Pure fns;
      callers (renderMain/swTab, app-part5 portal refresh) are runtime. -->
 <script defer src="js/appointments/appointments.js?v=84fed644cf"></script>
@@ -458,6 +460,7 @@ setTimeout(function(){
 <script defer src="js/tabs/home-diets.js?v=d7d813e3fc"></script>
 <script defer src="js/tabs/messages.js?v=b731617779"></script>
 <script defer src="js/tabs/progress.js?v=c7fbb30c64"></script>
+<script defer src="js/tabs/notifications.js?v=95ae34c550"></script>
 <script defer src="js/tabs/progress-insights.js?v=a0fc6f0f09"></script>
 <script defer src="js/tabs/progress-rejects.js?v=2469e66fc6"></script>
 <script defer src="js/tabs/recipes.js?v=b3bdae9fb5"></script>
@@ -744,7 +747,7 @@ setTimeout(function(){
      Κάθε χρήστης έχει ΜΙΑ γραμμή στον πίνακα user_data (ένα jsonb "συρτάρι").
      Όλα τα δεδομένα (clients, templates, tracking) πάνε σαν ένα πακέτο.
      ═══════════════════════════════════════════════════════════════ -->
-<script defer src="js/app-part7.js?v=6b70a31fcf"></script>
+<script defer src="js/app-part7.js?v=95b5b5a277"></script>
 
 </body>
 </html>

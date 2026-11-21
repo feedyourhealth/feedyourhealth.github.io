@@ -501,5 +501,7 @@ function renderSB(){
   if(typeof updateMessagesNavBadge === 'function') updateMessagesNavBadge();
   // Ίδιο σκεπτικό για το badge του "📈 Πρόοδος" (js/tabs/progress.js).
   if(typeof updateProgressNavBadge === 'function') updateProgressNavBadge();
+  // 🔔 Καμπανάκι ειδοποιήσεων (js/tabs/notifications.js) — μόνο ο αριθμός, όχι το πάνελ.
+  if(typeof updateNotifBell === 'function') updateNotifBell();
 }
 

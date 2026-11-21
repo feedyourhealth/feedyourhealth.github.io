@@ -220,6 +220,7 @@ var CLIENT_MSG_DICTS={
     waitAnd:' και ',
     waitReminder:function(fn,what,temp){return 'Γεια σου '+fn+'! 😊 Περιμένω ακόμα '+what+' για να ολοκληρώσουμε το πλάνο σου. Όποτε μπορείς, στείλε μου εδώ μια φωτογραφία ή το PDF.'+(temp?' Μέχρι τότε συνεχίζουμε κανονικά με το προσωρινό πλάνο 💪':'');},
     waitReminderSubj:'Για το πλάνο σου — Feed Your Health',
+    streakBravo:function(fn,n){return 'Μπράβο '+fn+'! 👏 '+n+' μέρες στη σειρά με το πλάνο σου — συνέχισε έτσι! Feed Your Health 💚';},
     nameday:function(fn,f){return 'Χρόνια πολλά '+fn+' για τη γιορτή σου! 🥳 Να είσαι πάντα υγιής και '+(f?'χαρούμενη':'χαρούμενος')+' — απόλαυσε τη μέρα σου (και το γλυκάκι σου 😉) χωρίς τύψεις! Feed Your Health 💚';}
   },
   en:{
@@ -247,6 +248,7 @@ var CLIENT_MSG_DICTS={
     waitAnd:' and ',
     waitReminder:function(fn,what,temp){return 'Hi '+fn+'! 😊 I’m still waiting for '+what+' so we can finish your plan. Whenever you can, send me a photo or the PDF here.'+(temp?' Until then, we carry on with your temporary plan as normal 💪':'');},
     waitReminderSubj:'About your plan — Feed Your Health',
+    streakBravo:function(fn,n){return 'Well done '+fn+'! 👏 '+n+' days in a row on your plan — keep it up! Feed Your Health 💚';},
     nameday:function(fn){return 'Happy name day '+fn+'! 🥳 Wishing you health and happiness — enjoy your day (and a little treat 😉) guilt-free! Feed Your Health 💚';}
   },
   ru:{
@@ -274,6 +276,7 @@ var CLIENT_MSG_DICTS={
     waitAnd:' и ',
     waitReminder:function(fn,what,temp){return 'Привет, '+fn+'! 😊 Я всё ещё жду '+what+', чтобы мы могли закончить твой план. Когда сможешь, пришли сюда фото или PDF.'+(temp?' А пока продолжаем как обычно по временному плану 💪':'');},
     waitReminderSubj:'По твоему плану — Feed Your Health',
+    streakBravo:function(fn,n){return 'Браво, '+fn+'! 👏 '+n+' дней подряд по плану — так держать! Feed Your Health 💚';},
     nameday:function(fn){return 'С именинами, '+fn+'! 🥳 Желаю здоровья и радости — наслаждайся этим днём (и чем-нибудь сладким 😉) без угрызений совести! Feed Your Health 💚';}
   },
   tr:{
@@ -301,6 +304,7 @@ var CLIENT_MSG_DICTS={
     waitAnd:' ve ',
     waitReminder:function(fn,what,temp){return 'Merhaba '+fn+'! 😊 Planını tamamlayabilmemiz için hâlâ '+what+' bekliyorum. Fırsat bulduğunda buraya bir fotoğraf ya da PDF gönder.'+(temp?' O zamana kadar geçici planla normal şekilde devam ediyoruz 💪':'');},
     waitReminderSubj:'Planın hakkında — Feed Your Health',
+    streakBravo:function(fn,n){return 'Bravo '+fn+'! 👏 '+n+' gün üst üste planına uydun — böyle devam! Feed Your Health 💚';},
     nameday:function(fn){return 'İsim günün kutlu olsun '+fn+'! 🥳 Sağlık ve mutluluk dilerim — günün (ve küçük bir tatlının 😉) tadını vicdan azabı olmadan çıkar! Feed Your Health 💚';}
   }
 };
