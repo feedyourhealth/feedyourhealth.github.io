@@ -46,6 +46,14 @@ function notifSetMode(k,m){
   if(typeof save==='function') save();
   updateNotifBell(); renderNotifPanel();
 }
+// 📧 Βραδινό email (φάση 2): το διαβάζει το scripts/notif_digest.py από το cloud blob — false = σταμάτα.
+function notifEmailOn(){ return notifPrefs().email!==false; }
+function notifSetEmail(on){
+  var p=notifPrefs(); p.email=!!on;
+  if(typeof safeStorageSet==='function') safeStorageSet('notifPrefs',p);
+  if(typeof save==='function') save();
+  renderNotifPanel();
+}
 function notifSetMuted(clientId,on){
   var c=clients.find(function(x){return x.id===clientId;});
   if(!c) return;
@@ -406,6 +414,13 @@ function notifSettingsHtml(){
       }).join('')
       +'</div></div>';
   });
+  var em=notifEmailOn();
+  h+='<div class="nt-set-row nt-set-email"><div class="nt-set-l"><div class="nt-set-t">📧 Βραδινό email στις 21:00</div>'
+    +'<div class="nt-set-s">Η ίδια σύνοψη στο Gmail σου κάθε βράδυ, χωρίς να ανοίξεις το πρόγραμμα. Ακολουθεί τις ρυθμίσεις από πάνω.</div></div>'
+    +'<div class="nt-seg" role="group" aria-label="Βραδινό email">'
+    +'<button type="button" class="nt-seg-b'+(em?' on':'')+'" aria-pressed="'+em+'" onclick="notifSetEmail(true)">Ναι</button>'
+    +'<button type="button" class="nt-seg-b'+(!em?' on':'')+'" aria-pressed="'+(!em)+'" onclick="notifSetEmail(false)">Όχι</button>'
+    +'</div></div>';
   var muted=notifActiveClients().filter(function(c){return c.notifMuted;});
   h+='<div class="nt-set-mute"><div class="nt-set-t">🔇 Σίγαση πελάτη</div>'
     +'<div class="nt-set-s">Για όσους γράφουν πολύ συχνά: ό,τι στέλνουν μπαίνει μόνο στη σύνοψη, χωρίς κόκκινο αριθμό.</div>'

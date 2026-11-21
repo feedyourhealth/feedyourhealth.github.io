@@ -1,0 +1,34 @@
+name: Nightly digest email
+
+# 📧 Βραδινή σύνοψη ειδοποιήσεων (scripts/notif_digest.py) — 21:00 ώρα Κύπρου.
+# Τρέχει 18:00 ΚΑΙ 19:00 UTC· το script στέλνει μόνο από το slot που πέφτει 21:00 Κύπρου
+# (θερινή = UTC+3, χειμερινή = UTC+2). «Run workflow» στο GitHub = αποστολή αμέσως (για δοκιμή).
+on:
+  schedule:
+    - cron: "0 18 * * *"
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Send digest
+        env:
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          DIGEST_TO: ${{ secrets.DIGEST_TO }}
+          DIGEST_USER_ID: ${{ secrets.DIGEST_USER_ID }}
+          DIGEST_SLOT: ${{ github.event_name == 'schedule' && (github.event.schedule == '0 18 * * *' && '18' || '19') || '' }}
+        run: python scripts/notif_digest.py
