@@ -14,10 +14,34 @@
 // ορίζει η ίδια (πάτημα στο κουμπί κάνει κύκλο στις 3 καταστάσεις) — δεν υπάρχει αυτόματο upload/λήψη
 // από τον πελάτη, είναι απλή υπενθύμιση/ένδειξη στην κάρτα του.
 var BLOOD_TEST_STATUS_DEFS={
-  none:{icon:'❌',label:'Δεν έχει σταλεί',bg:'#ffebee',color:'#c62828'},
+  // 2026-11-22: 'none' = η συνηθισμένη κατάσταση (δεν ζητήθηκαν) → ουδέτερο γκρι, όχι κόκκινο ❌ που
+  // διαβαζόταν σαν σφάλμα. ⏳ = ζητήθηκαν και τα περιμένεις, ✅ = ήρθαν.
+  none:{icon:'—',label:'Δεν ζητήθηκαν',bg:'rgba(255,255,255,0.6)',color:'#6b6b6b'},
   pending:{icon:'⏳',label:'Σε αναμονή',bg:'#fff8e1',color:'#8a6100'},
   sent:{icon:'✅',label:'Εστάλησαν',bg:'#e8f5e9',color:'var(--good)'}
 };
+// 🚫 Αποφυγές στη λωρίδα σύνοψης: ομαδοποίηση ανά κατηγορία τροφίμου όταν είναι 3+ από την ίδια
+// («Όσπρια (13)» αντί για 13 ονόματα το ένα κάτω από το άλλο, που ψήλωνε όλη τη λωρίδα στα ~240px).
+// Το πλήρες κείμενο μένει στο title (hover). Επιστρέφει {text, title}.
+function headerExcludeSummary(list){
+  list=(list||[]).filter(Boolean);
+  if(!list.length) return {text:'—',title:''};
+  var byCat={}, order=[];
+  list.forEach(function(n){
+    var cat=(typeof FOODS!=='undefined'&&FOODS[n]&&FOODS[n].cat)||'';
+    var k=cat||('__'+n);
+    if(!byCat[k]){ byCat[k]={cat:cat,items:[]}; order.push(k); }
+    byCat[k].items.push(n);
+  });
+  var parts=[];
+  order.forEach(function(k){
+    var g=byCat[k];
+    if(g.cat && g.items.length>=3) parts.push(g.cat+' ('+g.items.length+')');
+    else g.items.forEach(function(n){ parts.push(n); });
+  });
+  var MAX=4, text=parts.slice(0,MAX).join(', ')+(parts.length>MAX?' +'+(parts.length-MAX)+' ακόμα':'');
+  return {text:text, title:list.join(', ')};
+}
 function cycleBloodTestStatus(){
   var c=getC();if(!c)return;
   var order=['none','pending','sent'];
@@ -228,7 +252,7 @@ function renderMain(){
     +'</div>'
     +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
       +'<span style="font-size:11px;color:#666;font-weight:600">🚫 Αποφυγές</span>'
-      +'<span id="header-exclude" style="font-size:13px;font-weight:600;color:#025857">' + esc((c.foodExclude&&c.foodExclude.length)?c.foodExclude.join(', '):'—') + '</span>'
+      +(function(){ var hx=headerExcludeSummary(c.foodExclude); return '<span id="header-exclude" style="font-size:13px;font-weight:600;color:#025857"'+(hx.title?' title="'+esc(hx.title)+'"':'')+'>' + esc(hx.text) + '</span>'; })()
     +'</div>'
     +'<div id="header-allergy-wrap" style="display:contents">'+((typeof allergyHeaderBoxHtml==='function')?allergyHeaderBoxHtml(c):'')+'</div>'
     // ✅ Αιματολογικές εξετάσεις: χειροκίνητο tri-state κουμπί (δεν πρόκειται περί ανεβάσματος/λήψης

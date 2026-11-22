@@ -562,7 +562,7 @@ function swTab(n){
 
   // ✅ HIDE TEMPLATE SELECTOR EXCEPT IN TAB 1
   var tmplSelRow=document.querySelector('.tmpl-sel-row');
-  if(tmplSelRow)tmplSelRow.style.display=n===1?'block':'none';
+  if(tmplSelRow)tmplSelRow.style.display=n===1?'flex':'none';   // flex: η αναζήτηση/ετικέτα μένουν στη γραμμή όταν ανοίγει η λίστα
 
   // ✅ HIDE MODAL BUTTONS GRID EXCEPT IN TAB 1 (Page 1 only)
   // Buttons: Χρόνοι Γευμάτων, Εβδομαδιαίο Πρόγραμμα, MET Activities, Διατροφή, Ιατρικές Συνθήκες, Συμπληρώματα

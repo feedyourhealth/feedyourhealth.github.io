@@ -176,25 +176,63 @@ function buildTmplSelectorHtml(c){
     // 2026-11-22: όχι πελάτες στον κάδο (εκτός αν είναι ήδη η επιλεγμένη βάση, για να μην αλλάξει σιωπηλά).
     return cl.id!==c.id && hasWeekPlan && (!cl.deleted || sel==='__client_'+cl.id);
   });
-  var sameDietClients=[], otherClients=[];
-  clientsWithPlans.forEach(function(cl){
-    ((cl.dietType||'normal')===(c.dietType||'normal') ? sameDietClients : otherClients).push(cl);
-  });
-  clientsWithPlans=sameDietClients.concat(otherClients);
-  if(clientsWithPlans.length>0){
-    opts+='<optgroup label="━━━ Υπάρχοντα πλάνα πελατών ━━━">';
-    clientsWithPlans.forEach(function(cl){
-      var cGoal=GOAL_LABELS[cl.goalMain]||cl.goalMain;
-      var cName=cl.name||'Νέος πελάτης';
-      var cdb=DIET_TYPE_BADGE[cl.dietType||'normal'];
-      opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+esc(cName)+(cGoal?' — '+esc(cGoal):'')+(cdb?' · '+cdb:'')+'</option>';
-    });
-    opts+='</optgroup>';
+  // 2026-11-22: ~170 επιλογές → δύο ομάδες: ⭐ πελάτες-πρότυπα γεύσης (οι «καλές» εβδομάδες σου) και
+  // όλοι οι άλλοι. Σε κάθε ομάδα: ίδιος τύπος διατροφής πρώτα, μετά πιο πρόσφατο πλάνο πρώτα (πριν ήταν
+  // σειρά δημιουργίας). Δίπλα πόσο παλιό είναι το πλάνο. + αναζήτηση (tmplSelFilter).
+  function planAgeMs(cl){ return (typeof planRenewalBaseMs==='function')?planRenewalBaseMs(cl):(+cl.planGeneratedAt||0); }
+  function rank(cl){ return ((cl.dietType||'normal')===(c.dietType||'normal')?0:1); }
+  clientsWithPlans.sort(function(a,b){ return rank(a)-rank(b) || planAgeMs(b)-planAgeMs(a); });
+  function clientOpt(cl){
+    var cGoal=GOAL_LABELS[cl.goalMain]||cl.goalMain;
+    var cName=cl.name||'Νέος πελάτης';
+    var cdb=DIET_TYPE_BADGE[cl.dietType||'normal'];
+    var t=planAgeMs(cl), days=t?Math.floor((Date.now()-t)/86400000):null;
+    var age=days==null?'':(days<1?' · σήμερα':(days<60?' · πριν '+days+' ημ.':' · πριν '+Math.round(days/30)+' μήνες'));
+    return '<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>'+(cl.isMealTemplate?'⭐ ':'👤 ')+esc(cName)+(cGoal?' — '+esc(cGoal):'')+(cdb?' · '+cdb:'')+age+'</option>';
   }
+  var starred=clientsWithPlans.filter(function(cl){ return cl.isMealTemplate; });
+  var others=clientsWithPlans.filter(function(cl){ return !cl.isMealTemplate; });
+  if(starred.length) opts+='<optgroup label="⭐ Πελάτες-πρότυπα γεύσης ('+starred.length+')">'+starred.map(clientOpt).join('')+'</optgroup>';
+  if(others.length) opts+='<optgroup label="👤 Πλάνα πελατών — πιο πρόσφατα πρώτα ('+others.length+')">'+others.map(clientOpt).join('')+'</optgroup>';
   return '<div class="tmpl-sel-row">'
-    +'<label>📋 Βάση πλάνου:</label>'
-    +'<select class="tmpl-sel-drop" onchange="selectTmplForClient(this.value)">'+opts+'</select>'
+    +'<label for="tmpl-sel-drop">📋 Βάση πλάνου:</label>'
+    +'<input type="search" class="tmpl-sel-search" placeholder="🔍 Αναζήτηση πελάτη ή προτύπου…" aria-label="Αναζήτηση στη βάση πλάνου" oninput="tmplSelFilter(this)" onkeydown="tmplSelSearchKey(event,this)">'
+    +'<select id="tmpl-sel-drop" class="tmpl-sel-drop" onchange="tmplSelFilterReset(this);selectTmplForClient(this.value)">'+opts+'</select>'
+    +'<span class="tmpl-sel-count" aria-live="polite"></span>'
     +'</div>';
+}
+// 🔍 Φιλτράρει τις επιλογές της «Βάσης πλάνου» (χωρίς τόνους/κεφαλαία). Με κείμενο, η λίστα
+// ανοίγει επί τόπου (size) ώστε να φαίνονται τα αποτελέσματα· κλικ ή Enter = επιλογή.
+function tmplSelNorm(s){ s=String(s||'').toLowerCase(); return (typeof normalizeGreekText==='function')?normalizeGreekText(s):s; }
+function tmplSelFilter(inp){
+  var row=inp.closest('.tmpl-sel-row'), sel=row&&row.querySelector('select'), cnt=row&&row.querySelector('.tmpl-sel-count');
+  if(!sel) return;
+  var q=tmplSelNorm(inp.value.trim()), n=0;
+  Array.prototype.forEach.call(sel.options,function(o,i){
+    var show=!q || i===0 || tmplSelNorm(o.textContent).indexOf(q)>-1;
+    o.hidden=!show; if(q && show && i>0) n++;
+  });
+  Array.prototype.forEach.call(sel.querySelectorAll('optgroup'),function(g){
+    g.hidden=!Array.prototype.some.call(g.children,function(o){ return !o.hidden; });
+  });
+  var gVis=Array.prototype.filter.call(sel.querySelectorAll('optgroup'),function(g){ return !g.hidden; }).length;
+  sel.size=q?Math.max(2,Math.min(10,n+1+gVis)):1;   // +1 «Προεπιλεγμένο», + τίτλοι ομάδων
+  // η γραμμή είναι τελευταία πριν τη μόνιμη μπάρα «Δημιουργία πλάνου» — κύλισε ώστε να φαίνεται όλη η λίστα
+  if(q){ try{ row.scrollIntoView({block:'nearest'}); var m=document.querySelector('.main'); if(m) m.scrollTop+=80; }catch(e){} }
+  if(cnt) cnt.textContent=q?(n?n+' αποτελέσματα':'κανένα αποτέλεσμα'):'';
+}
+function tmplSelSearchKey(e,inp){
+  if(e.key!=='Enter' && e.key!=='ArrowDown') return;
+  var sel=inp.closest('.tmpl-sel-row').querySelector('select');
+  var first=Array.prototype.filter.call(sel.options,function(o,i){ return i>0 && !o.hidden; })[0];
+  if(!first) return;
+  e.preventDefault();
+  if(e.key==='ArrowDown'){ sel.focus(); first.selected=true; return; }
+  sel.value=first.value; tmplSelFilterReset(sel); selectTmplForClient(first.value);
+}
+function tmplSelFilterReset(sel){
+  var row=sel.closest('.tmpl-sel-row'), inp=row&&row.querySelector('.tmpl-sel-search');
+  if(inp && inp.value){ inp.value=''; tmplSelFilter(inp); }
 }
 
 function showSaveTmplPanel(){

@@ -2760,3 +2760,11 @@ body.dark-mode .lc-banner-former,body.dark-mode .lc-head-btn.lc-former{backgroun
 .ov-appt-sum::before{content:'▸';display:inline-block;transition:transform .15s}
 .ov-appt-wrap[open] > .ov-appt-sum::before{transform:rotate(90deg)}
 .ov-appt-sum span{font-size:12px;font-weight:400;color:var(--text-muted)}
+
+/* ── Βάση πλάνου: αναζήτηση (diet-panels.js tmplSelFilter, 2026-11-22) ── */
+.tmpl-sel-search{flex:0 1 220px;min-width:150px;padding:5px 9px;border:1px solid #f9a825;border-radius:10px;font-size:11.5px;background:#fff;font-family:inherit}
+.tmpl-sel-search:focus{outline:2px solid var(--teal);outline-offset:1px}
+.tmpl-sel-drop[size]:not([size="1"]){border-radius:8px;padding:2px}
+.tmpl-sel-count{font-size:11px;color:var(--text-muted);white-space:nowrap}
+body.dark-mode .tmpl-sel-search{background:#1a1a1a;border-color:#6b5218;color:#e0e0e0}
+.tmpl-sel-row{align-items:flex-start}
