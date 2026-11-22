@@ -1412,7 +1412,15 @@ function planRenewalBaseMs(c){
   });
   return best;
 }
-function planDaysSinceRenewal(c){ var b=planRenewalBaseMs(c); return b?Math.floor((Date.now()-b)/86400000):null; }
+// Ημερολογιακές μέρες (μεσάνυχτα → μεσάνυχτα, τοπική ώρα): ένα πλάνο που στάλθηκε «πριν 40 μέρες» είναι
+// 40 όλη τη μέρα. Πριν: floor((τώρα − μεσημέρι της ημέρας αποστολής)/24ω) ⇒ 39 πριν τις 12:00, 40 μετά —
+// και το CI (τρέχει UTC πρωί) αποτύγχανε στο lifecycle_test. Math.round απορροφά τις αλλαγές θερινής ώρας.
+function planDaysSinceRenewal(c){
+  var b=planRenewalBaseMs(c); if(!b) return null;
+  var d0=new Date(b); d0.setHours(0,0,0,0);
+  var d1=new Date(); d1.setHours(0,0,0,0);
+  return Math.round((d1-d0)/86400000);
+}
 function dietsNeedsRenewal(c){
   var threshold=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;
   var days=planDaysSinceRenewal(c);
