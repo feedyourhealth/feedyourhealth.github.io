@@ -53,6 +53,18 @@
   --wk-rest-bg:#eee;
   --wk-rest-fg:#6b6b6b;
   --wk-accent-fg:#025857;
+  /* ── Σύστημα εμφάνισης (2026-11-22, βήμα 6) ─────────────────────────────────────────
+     8 χρώματα με ρόλο + 6 μεγέθη γραμμάτων (τίποτα κάτω από 12px σε νέο/μεταφερμένο UI) +
+     3 επίπεδα κουμπιών (.btn.primary / .btn.secondary / .btn.tertiary, ένα primary ανά οθόνη).
+     Τα χρώματα μακροθρεπτικών (--mac-*) μένουν ως έχουν. */
+  --c-text:#1a1a1a;          /* όνομα, τίτλοι */
+  --c-sub:#6b6b6b;           /* υπότιτλοι, ημερομηνίες (= --text-muted) */
+  --c-line:#e0e4e3;          /* διαχωριστικά, περιγράμματα καρτών */
+  --c-good:#2e7d32;  --c-good-bg:#e8f5e9;  --c-good-bd:#c5e1c5;
+  --c-warn:#8a5a00;  --c-warn-bg:#fff6e5;  --c-warn-bd:#f3dcb4;   /* λήγει, περιμένεις */
+  --c-bad:#b71c1c;   --c-bad-bg:#fdecec;   --c-bad-bd:#f3c9c9;    /* μόνο ό,τι χάνεται σήμερα */
+  --c-info:#1565c0;  --c-info-bg:#e8f0fb;
+  --fs-xs:12px; --fs-sm:13px; --fs-md:14px; --fs-lg:16px; --fs-xl:18px; --fs-2xl:22px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a;-webkit-user-select:none;user-select:none}
@@ -806,17 +818,17 @@ body.dark-mode .rd-edit-btn:hover{background:#1a2e2e}
 .ti .tv{font-size:15px;font-weight:700;margin-top:3px;color:var(--teal)}
 .tv.b{color:#1565C0}
 .brow{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.btn{padding:10px 16px;border-radius:10px;border:1px solid #ddd;cursor:pointer;font-size:12px;font-weight:600;background:#fff;color:#333;min-height:36px}
+.btn{padding:9px 14px;border-radius:8px;border:1px solid #ddd;cursor:pointer;font-size:var(--fs-sm);font-weight:600;background:#fff;color:#333;min-height:36px;font-family:inherit;white-space:nowrap}
 .btn:hover{background:#f5f5f5}
 .btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
 .btn.primary:hover{background:var(--teal-hover);box-shadow:0 4px 12px rgba(2,88,87,.2)}
 .btn.info{background:#1565C0;color:#fff;border-color:#1565C0}
 .btn.info:hover{background:#1976D2;box-shadow:0 4px 12px rgba(21,101,192,.2)}
 /* ✅ Secondary buttons (outline style) */
-.btn.secondary{background:transparent;color:var(--teal);border-color:var(--teal)}
+.btn.secondary{background:var(--card-bg);color:var(--teal-dark);border-color:#c8d4d1}
 .btn.secondary:hover{background:var(--teal-tint)}
 /* ✅ Tertiary buttons (text-only) */
-.btn.tertiary{background:transparent;color:#666;border:none}
+.btn.tertiary{background:transparent;color:var(--teal);border:none;padding-inline:8px}
 .btn.tertiary:hover{color:var(--teal)}
 /* ✅ Plan-editor action bar: primary actions stand out, everything else is de-emphasized
    (previously all ~10 buttons here had equal weight in 6 different colors) */
@@ -2781,3 +2793,46 @@ body.dark-mode .tmpl-sel-search{background:#1a1a1a;border-color:#6b5218;color:#e
 .cchip-allergy > div > span{font-size:12px!important}
 body.dark-mode .cchip.warn{background:#3a2c14;border-color:#6b5020;color:#f0dcb4}
 body.dark-mode .cchip.good{background:#1c3320;border-color:#2e5a33;color:#7fcf86}
+
+/* ── Πλάνο: μία γραμμή ενεργειών + μενού «⋯» (render-main.js, βήμα 6) ── */
+.plan-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.plan-toolbar .pt-sp{flex:1}
+.plan-toolbar .plan-stale-chip{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);background:var(--c-warn-bg);border:1px solid var(--c-warn-bd);color:var(--c-warn);border-radius:999px;padding:5px 11px;cursor:pointer;font-family:inherit;font-weight:600}
+.plan-toolbar .plan-export-dropdown{margin-bottom:0}
+.plan-toolbar .plan-export-btn{width:auto}
+.plan-toolbar .plan-export-menu{left:auto;right:0;min-width:200px}
+.pt-more{position:relative}
+.pt-more-menu{display:none;position:absolute;right:0;top:calc(100% + 4px);z-index:60;background:var(--card-bg);border:1px solid var(--c-line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px;min-width:230px}
+.pt-more-menu.open{display:block}
+.pt-more-menu button{display:block;width:100%;text-align:left;background:none!important;color:var(--c-text)!important;border:none;border-radius:6px;padding:8px 10px;font:inherit;font-size:var(--fs-sm);cursor:pointer}
+.pt-more-menu button:hover,.pt-more-menu button:focus-visible{background:var(--teal-tint)!important;outline:none}
+.pt-more-menu hr{border:0;border-top:1px solid var(--c-line);margin:4px 0}
+.pt-more-menu .pt-muted{color:var(--c-sub)!important}
+body.dark-mode .plan-toolbar .plan-stale-chip{background:#3a2c14;border-color:#6b5020;color:#f0dcb4}
+body.dark-mode .btn.secondary{background:transparent;color:#7fdcc8;border-color:#3a5a55}
+.plan-toolbar.plan-links-row{justify-content:flex-start;gap:8px;border-bottom:none;padding-bottom:0}
+.plan-toolbar.plan-links-row .btn.tertiary{font-size:var(--fs-sm);padding:9px 8px;min-height:36px}
+.plan-toolbar.plan-links-row .plan-export-btn{padding:9px 14px;min-height:36px;font-size:var(--fs-sm)}
+/* ── Μετρήσεις: ενέργειες κορυφής (tracker.js, βήμα 6) ── */
+.trk-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.trk-dd{position:relative}
+.pt-more-menu button:disabled{cursor:not-allowed;opacity:.75}
+/* ── Στοιχεία: ενιαίοι τίτλοι ενοτήτων (βήμα 6, 2026-11-22) ──
+   Πριν: κάθε ενότητα με δικό της χρώμα (Ανθρωπομετρία πορτοκαλί, Άθλημα πράσινο, Ιατρικά ροζ…)
+   και χρωματιστή λωρίδα αριστερά. Τώρα: ίδιο χρώμα τίτλου, ίδιο πλαίσιο, εικονίδιο σε απαλό teal. */
+.section-card,.section-card.basic,.section-card.anthropometry,.section-card.activity,.section-card.dietary,.section-card.medical,.section-card.budget,.section-card.goal{border:1px solid var(--c-line);border-left:1px solid var(--c-line);box-shadow:none}
+.section-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06);transform:none}
+.section-header,.section-header.basic,.section-header.anthropometry,.section-header.activity,.section-header.dietary,.section-header.medical,.section-header.budget,.section-header.goal{color:var(--c-text);font-size:15px}
+.section-header > div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section-icon{width:30px;height:30px;border-radius:8px;background:var(--teal-tint);display:inline-grid;place-items:center;font-size:15px;filter:none;opacity:1;flex-shrink:0}
+.sec-collapse-preview{flex-basis:100%;margin-left:40px;font-size:var(--fs-xs);color:var(--c-sub);font-weight:400}
+body.dark-mode .section-card{border-color:#333}
+body.dark-mode .section-header{color:#e0e0e0}
+body.dark-mode .section-icon{background:#1d3330}
+/* ── Αιωρούμενα (βήμα 6): ένα σημείο για μηνύματα, κάτω στη μέση ── */
+#cloud-save-toast{left:50%!important;right:auto!important;bottom:18px!important;transform:translateX(-50%);background:#1a1a1a!important;font-size:var(--fs-xs)!important;padding:6px 12px!important;border-radius:999px!important}
+.app-toast{position:fixed;left:50%;bottom:56px;transform:translateX(-50%);color:#fff;padding:10px 16px;border-radius:10px;font-size:var(--fs-sm);z-index:10000;box-shadow:0 6px 18px rgba(0,0,0,.22);max-width:min(440px,90vw);text-align:center}
+#successToast{top:auto!important;right:auto!important;left:50%!important;bottom:56px!important;transform:translateX(-50%);background:#1a1a1a!important;border-radius:10px!important;font-size:var(--fs-sm)!important;max-width:min(440px,90vw)}
+#successToast{animation:fadeIn .25s ease-out!important}
+.section-header > div{row-gap:0}.section-card{padding:14px 16px}.sec-collapse-preview{margin-top:0}
+.trk-menu{min-width:290px}

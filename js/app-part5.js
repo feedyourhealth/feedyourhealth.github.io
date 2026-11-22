@@ -1301,7 +1301,10 @@ function updateBreadcrumbs(){
 
 // ✅ IMPROVED UX: Onboarding Tour (first time only)
 function initOnboarding(){
-  if(localStorage.getItem('dietologist-tour-done')) return;
+  // Βήμα 6 (2026-11-22): το tip «Πάτα το + για γρήγορες ενέργειες» καταργήθηκε — έβγαινε πάνω δεξιά
+  // πάνω από τα κουμπιά της κεφαλίδας και δεν λέει πια κάτι καινούργιο.
+  try{ localStorage.setItem('dietologist-tour-done','true'); }catch(e){}
+  return;
 
   // Show onboarding tooltip after 1 second
   setTimeout(function(){

@@ -513,3 +513,20 @@ document.addEventListener('click',function(e){
   var dd=document.querySelector('.plan-export-dropdown');
   if(dd && !dd.contains(e.target)) closePlanExportMenu();
 });
+
+// «⋯» στη γραμμή ενεργειών του Πλάνου (render-main.js, βήμα 6 2026-11-22) — ίδιο μοτίβο με το «Εξαγωγή ▾».
+function togglePlanMoreMenu(e){
+  if(e) e.stopPropagation();
+  closePlanExportMenu();
+  var m=document.getElementById('pt-more-menu');
+  if(m) m.classList.toggle('open');
+}
+function closePlanMoreMenu(){
+  var m=document.getElementById('pt-more-menu');
+  if(m) m.classList.remove('open');
+}
+document.addEventListener('click',function(e){
+  var dd=document.querySelector('.pt-more');
+  if(dd && !dd.contains(e.target)) closePlanMoreMenu();
+});
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closePlanMoreMenu(); closePlanExportMenu(); } });

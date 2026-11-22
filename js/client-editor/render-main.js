@@ -470,30 +470,36 @@ function renderMain(){
     +'</div>'
     // ✅ S2: MEAL PLAN VIEW ONLY
     +'<div id="s2" style="display:none">'
-    +'<div class="plan-actions-primary">'
-      // Κύριο = «Στείλε»: αποθηκεύει ήδη αυτόματα στο Ιστορικό πλάνων (2026-11-06)
+    // Βήμα 6 (2026-11-22): μία γραμμή ενεργειών αντί για τρεις. Κύριο = «Στείλε» (αποθηκεύει ήδη
+    // στο Ιστορικό), δευτερεύον = «Αποθήκευση», «📊 Ιστορικό» + «Εξαγωγή ▾», και τα σπάνια σε «⋯»
+    // (εκεί και το «Νέο πλάνο από την αρχή», που αντικαθιστά όλη την εβδομάδα — να μην πατιέται κατά λάθος).
+    +'<div class="plan-toolbar plan-links-row">'
       +'<button class="btn primary" onclick="openPublishModal()" title="Δημιούργησε σύνδεσμο για να δει ο πελάτης το πλάνο στο κινητό του — αποθηκεύεται και στο Ιστορικό πλάνων">&#128241; Στείλε στον πελάτη</button>'
-      +'<button class="btn secondary" onclick="showSavePlanPanel()" title="Αποθήκευση στο Ιστορικό πλάνων χωρίς αποστολή">&#128190; Αποθήκευση Διατροφής</button>'
-    +'</div>'
-    +((window.Cloud && window.Cloud.isStale(c))?'<div class="plan-stale-warning" title="Το πλάνο άλλαξε μετά την τελευταία δημοσίευση. Πάτα «Στείλε στον πελάτη» ξανά για να ενημερωθεί ο σύνδεσμος του πελάτη.">&#9888;&#65039; Ο σύνδεσμος πελάτη είναι ξεπερασμένος</div>':'')
-    +'<div class="plan-links-row">'
-      +'<button class="btn tertiary" onclick="swTab(1)">&#8592; Στοιχεία</button>'
+      +'<button class="btn secondary" onclick="showSavePlanPanel()" title="Αποθήκευση στο Ιστορικό πλάνων χωρίς αποστολή">&#128190; Αποθήκευση</button>'
+      // «🔗 παλιό πλάνο»: φαίνεται ήδη στη γραμμή chips πάνω (clientChipsHtml) — όχι δεύτερη φορά εδώ.
+      +'<span class="pt-sp"></span>'
       // 📊 Ιστορικό πλάνων: πριν δική του υπο-καρτέλα — τώρα από εδώ (2026-11-22, 6 → 4 υπο-καρτέλες)
       +'<button class="btn tertiary" onclick="swTab(4)" title="Όλα τα αποθηκευμένα / σταλμένα πλάνα, σύγκριση, φόρτωση">&#128202; Ιστορικό πλάνων'+((c.savedPlans&&c.savedPlans.length)?' ('+c.savedPlans.length+')':'')+'</button>'
-      +'<button class="btn tertiary regen-plan-btn" onclick="regeneratePlan()" title="Αντικαθιστά ΟΛΗ την εβδομάδα με νέο πλάνο">&#8635; Αναδημιουργία</button>'
-      +'<button class="btn tertiary" id="star-tmpl-btn" onclick="toggleMealTemplate()" title="Χρήση των γευμάτων αυτού του πελάτη ως έμπνευση σε νέα πλάνα">'+(c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης')+'</button>'
-      +'<button class="btn tertiary save-tmpl-btn" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button>'
-    // Εξαγωγή: στην ίδια γραμμή (ήταν δική της γραμμή πλήρους πλάτους)
-    +'<div class="plan-export-dropdown">'
-      +'<button class="btn plan-export-btn" onclick="togglePlanExportMenu(this)">&#8659; Εξαγωγή &#9662;</button>'
-      +'<div class="plan-export-menu" id="plan-export-menu">'
-        +'<button onclick="closePlanExportMenu();exportWord()">Word (.rtf)</button>'
-        +'<button onclick="closePlanExportMenu();exportGoogleDocs()">Google Docs (.docx)</button>'
-        +'<button onclick="closePlanExportMenu();exportPDF()">PDF</button>'
-        +'<button onclick="closePlanExportMenu();exportPDF(\'en\')">PDF (English)</button>'
+      +'<div class="plan-export-dropdown">'
+        +'<button class="btn secondary plan-export-btn" onclick="togglePlanExportMenu(this)">Εξαγωγή &#9662;</button>'
+        +'<div class="plan-export-menu" id="plan-export-menu">'
+          +'<button onclick="closePlanExportMenu();exportPDF()">PDF</button>'
+          +'<button onclick="closePlanExportMenu();exportPDF(\'en\')">PDF (English)</button>'
+          +'<button onclick="closePlanExportMenu();exportWord()">Word (.rtf)</button>'
+          +'<button onclick="closePlanExportMenu();exportGoogleDocs()">Google Docs (.docx)</button>'
+        +'</div>'
       +'</div>'
-    +'</div>'
-    +'</div>'   // .plan-links-row
+      +'<div class="pt-more">'
+        +'<button class="btn secondary" onclick="togglePlanMoreMenu(event)" aria-haspopup="true" aria-label="Περισσότερες ενέργειες" title="Περισσότερες ενέργειες">&#8943;</button>'
+        +'<div class="pt-more-menu" id="pt-more-menu" role="menu">'
+          +'<button class="regen-plan-btn" onclick="closePlanMoreMenu();regeneratePlan()" title="Αντικαθιστά ΟΛΗ την εβδομάδα με νέο πλάνο (το τρέχον μένει στο Ιστορικό)">&#8635; Νέο πλάνο από την αρχή</button>'
+          +'<button id="star-tmpl-btn" onclick="closePlanMoreMenu();toggleMealTemplate()" title="Χρήση των γευμάτων αυτού του πελάτη ως έμπνευση σε νέα πλάνα">'+(c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης')+'</button>'
+          +'<button class="save-tmpl-btn" onclick="closePlanMoreMenu();showSaveTmplPanel()">&#128190; Αποθήκευση ως πρότυπο</button>'
+          +'<hr>'
+          +'<button class="pt-muted" onclick="closePlanMoreMenu();swTab(1)">&#8592; Πίσω στα Στοιχεία</button>'
+        +'</div>'
+      +'</div>'
+    +'</div>'   // .plan-toolbar
     +'<div id="save-tmpl-panel" class="save-tmpl-panel" style="display:none">'
     +'<span class="save-tmpl-lbl">Όνομα:</span>'
     +'<input type="text" id="save-tmpl-name" class="save-tmpl-inp" placeholder="π.χ. Πλάνο Muay Thai 1800kcal...">'

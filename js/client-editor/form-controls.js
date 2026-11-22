@@ -488,6 +488,8 @@ function swTab(n){
   // curTab (js/core/state.js) — ενημερώνεται ΠΡΩΤΑ, πριν από όλα τα early-return branches παρακάτω,
   // ώστε τα background refresh*Cache (js/app-part7.js) να ξέρουν ΠΟΙΟ tab είναι ορατό αυτή τη στιγμή.
   curTab=n;
+  // Βήμα 6: το στρογγυλό «+» μόνο σε Αρχική και Πελάτες (αλλού καθόταν πάνω στο περιεχόμενο)
+  var _fab=document.getElementById('fab-btn'); if(_fab) _fab.style.display=(n===0||n===7)?'':'none';
   if(n===0){ if(typeof renderHome==='function') renderHome(); return; }
   if(n===5){ if(typeof renderDiets==='function') renderDiets(); return; }
   if(n===6){ if(typeof renderRecipes==='function') renderRecipes(); return; }
@@ -578,8 +580,7 @@ function swTab(n){
   if(genPlanRow)genPlanRow.style.display=n===1?'':'none';
   // ✅ genplan-row already hosts a "⋯" quick-actions button on tab 1, so hide the floating
   // circular FAB there to avoid two overlapping fixed bottom controls; other tabs still get it.
-  var fabBtn=document.getElementById('fab-btn');
-  if(fabBtn)fabBtn.style.display=n===1?'none':'';
+  // (το «+» το χειρίζεται πλέον η αρχή του swTab: μόνο Αρχική + Πελάτες)
 
   if(n===1){setupFormEventListeners();}  // ← SET UP EVENT LISTENERS
   if(n===2){renderFoodLib('');var c=getC();if(c){initializeMealTiming(c);}renderWeekTable();renderSuppNotes();}

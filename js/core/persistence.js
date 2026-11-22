@@ -169,8 +169,8 @@ function _doSave(){
   try { _writeFileBackup(false); } catch(e){ console.warn('[BACKUP] file hook', e && e.message); }
   try { if(window.Cloud) window.Cloud.save(); } catch(e){ console.warn('[CLOUD] save hook', e && e.message); }
   if(!okClients || !okTmpls) return; // storage write failed — safeStorageSet already told the user, don't also claim success
-  var t=document.getElementById('autosave-toast');
-  if(t){t.style.opacity='1';clearTimeout(t._ft);t._ft=setTimeout(function(){t.style.opacity='0';},1600);}
+  // Βήμα 6: χωρίς δεύτερο «✓ Αποθηκεύτηκε» πάνω δεξιά σε κάθε αλλαγή — την αποθήκευση την επιβεβαιώνει
+  // ένα μικρό «✓ Αποθηκεύτηκε» κάτω στη μέση όταν φτάσει στο cloud (#cloud-save-toast, app-part7.js).
 }
 function save(){clearTimeout(_saveTimer);_saveTimer=setTimeout(_doSave,800);}
 function saveNow(){clearTimeout(_saveTimer);_doSave();}

@@ -191,7 +191,9 @@ function setTipsLibrary(arr){
 function dietoToast(msg, color){
   try{
     var t=document.createElement('div');
-    t.style.cssText='position:fixed;bottom:20px;right:20px;background:'+(color||'#4CAF50')+';color:#fff;padding:12px 16px;border-radius:8px;font-size:13px;z-index:10000;box-shadow:0 2px 8px rgba(0,0,0,0.25);max-width:340px';
+    // Βήμα 6: όλα τα μηνύματα σε ένα σημείο — κάτω στη μέση (ήταν κάτω δεξιά, πάνω στο «+»)
+    t.className='app-toast';
+    t.style.cssText='background:'+(color||'#1a1a1a')+';';
     t.textContent=msg;
     document.body.appendChild(t);
     setTimeout(function(){t.remove();},3200);
@@ -211,8 +213,7 @@ function toggleMealTemplate(){
   save();
   var b=document.getElementById('star-tmpl-btn');
   if(b){
-    b.style.background=c.isMealTemplate?'#ffb300':'#eee';
-    b.style.color=c.isMealTemplate?'#fff':'#555';
+    // (βήμα 6: το κουμπί είναι πλέον μέσα στο μενού «⋯» — χωρίς δικά του χρώματα)
     b.innerHTML=c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης';
   }
   if(c.isMealTemplate){

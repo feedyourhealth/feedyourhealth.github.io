@@ -235,29 +235,38 @@ function buildTrackerHtml(c){
   var wHtml='<div class="tracker-section">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     +'<div class="tracker-head" style="margin-bottom:0">📐 Ανθρωπομετρία &amp; Σωματική Σύνθεση</div>'
-    +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+    // Βήμα 6 (2026-11-22): 6 κουμπιά σε 4 χρώματα → 1 κύριο («Παρουσίαση», η κίνηση μπροστά στον
+    // πελάτη) + «Αποστολή ▾» (WhatsApp / Email ζωντανού συνδέσμου) + «Εξαγωγή ▾» (Έντυπο / Ιστορικό PDF)
+    // + «Εισαγωγή CSV» ως κουμπί κειμένου. Ίδιες συναρτήσεις, ίδια tooltips.
+    +'<div class="trk-actions">'
     // ✅ «Λειτουργία παρουσίασης» — κρύβει φόρμα, σημειώσεις και ημερολόγιο συμβουλευτικής ώστε να
     // δείχνεις στον πελάτη μόνο τα αποτελέσματα. Σε παρουσίαση μένει μόνο το κουμπί εξόδου.
-    +(c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:'+(P?'#e65100':'#5c6bc0')+';color:#fff;border:none" title="Δείξε στον πελάτη μόνο τα αποτελέσματα — κρύβει φόρμα, σημειώσεις και ημερολόγιο συμβουλευτικής" onclick="toggleTrackerPresent()">'+(P?'✕ Έξοδος παρουσίασης':'🖥️ Παρουσίαση')+'</button>':'')
-    +(P?'':'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV (εργομετρικά)</button>'
-    +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">'
-    +'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Κλινικό PDF στιγμιότυπου — για φάκελο/γιατρό/εκτύπωση. Για τον πελάτη χρησιμοποίησε τα κουμπιά WhatsApp/Email δεξιά (ζωντανό link)." onclick="exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης</button>'
-    // ── αποστολή του εντύπου λιπομέτρησης στον πελάτη (WhatsApp / Email) ────────
-    // πάντα ορατά (το έντυπο βγαίνει και χωρίς εγγραφές tracker), απενεργοποιημένα
-    // μόνο όταν λείπει τηλέφωνο / email από την καρτέλα.
-    +(c.phone?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#25D366;color:#fff;border:none" title="Δημοσίευση ζωντανού συνδέσμου μετρήσεων (metriseis.html) + WhatsApp με έτοιμο μήνυμα — ενημερώνεται μόνος του σε κάθε νέα μέτρηση, χωρίς re-send" onclick="sendLipometriaReport(\'wa\')">📱 WhatsApp</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:var(--text-muted);border:none;cursor:not-allowed" title="Λείπει τηλέφωνο από την καρτέλα του πελάτη — συμπλήρωσέ το στην καρτέλα «Στοιχεία»">📱 WhatsApp</button>')
-    +(c.email?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Δημοσίευση ζωντανού συνδέσμου μετρήσεων (metriseis.html) + Email με έτοιμο μήνυμα — ενημερώνεται μόνος του σε κάθε νέα μέτρηση, χωρίς re-send" onclick="sendLipometriaReport(\'mail\')">📧 Email</button>':'<button class="btn" disabled style="padding:4px 11px;font-size:11px;background:#ddd;color:var(--text-muted);border:none;cursor:not-allowed" title="Λείπει email από την καρτέλα του πελάτη — συμπλήρωσέ το στην καρτέλα «Στοιχεία»">📧 Email</button>')
-    +(c.weightLog&&c.weightLog.length?'<button class="btn" style="padding:4px 11px;font-size:11px;background:#025857;color:#fff;border:none" title="Αποθήκευση/εκτύπωση του ιστορικού μετρήσεων" onclick="exportBodyCompPDF()">📊 Ιστορικό PDF</button>':''))
+    +(c.weightLog.length?'<button class="btn '+(P?'secondary':'primary')+'" title="Δείξε στον πελάτη μόνο τα αποτελέσματα — κρύβει φόρμα, σημειώσεις και ημερολόγιο συμβουλευτικής" onclick="toggleTrackerPresent()">'+(P?'✕ Έξοδος παρουσίασης':'🖥️ Παρουσίαση στον πελάτη')+'</button>':'')
+    +(P?'':
+      // ── Αποστολή: ζωντανός σύνδεσμος μετρήσεων (metriseis.html) — απενεργοποιημένα όταν λείπει τηλέφωνο / email
+      '<div class="trk-dd"><button class="btn secondary" onclick="trkToggleMenu(event,\'trk-send-menu\')" aria-haspopup="true">Αποστολή &#9662;</button>'
+      +'<div class="pt-more-menu trk-menu" id="trk-send-menu" role="menu">'
+      +(c.phone?'<button title="Δημοσίευση ζωντανού συνδέσμου μετρήσεων (metriseis.html) + WhatsApp με έτοιμο μήνυμα — ενημερώνεται μόνος του σε κάθε νέα μέτρηση" onclick="trkCloseMenus();sendLipometriaReport(\'wa\')">📱 Σύνδεσμος μετρήσεων στο WhatsApp</button>':'<button disabled class="pt-muted" title="Λείπει τηλέφωνο από την καρτέλα του πελάτη — συμπλήρωσέ το στα «Στοιχεία»">📱 WhatsApp — λείπει τηλέφωνο</button>')
+      +(c.email?'<button title="Δημοσίευση ζωντανού συνδέσμου μετρήσεων (metriseis.html) + Email με έτοιμο μήνυμα" onclick="trkCloseMenus();sendLipometriaReport(\'mail\')">📧 Σύνδεσμος μετρήσεων με email</button>':'<button disabled class="pt-muted" title="Λείπει email από την καρτέλα του πελάτη — συμπλήρωσέ το στα «Στοιχεία»">📧 Email — λείπει email</button>')
+      +'</div></div>'
+      // ── Εξαγωγή: PDF για φάκελο / γιατρό / εκτύπωση
+      +'<div class="trk-dd"><button class="btn secondary" onclick="trkToggleMenu(event,\'trk-export-menu\')" aria-haspopup="true">Εξαγωγή &#9662;</button>'
+      +'<div class="pt-more-menu trk-menu" id="trk-export-menu" role="menu">'
+      +'<button title="Κλινικό PDF στιγμιότυπου — για φάκελο/γιατρό/εκτύπωση" onclick="trkCloseMenus();exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης (PDF)</button>'
+      +(c.weightLog&&c.weightLog.length?'<button title="Αποθήκευση/εκτύπωση του ιστορικού μετρήσεων" onclick="trkCloseMenus();exportBodyCompPDF()">📊 Ιστορικό μετρήσεων (PDF)</button>':'')
+      +'</div></div>'
+      +'<button class="btn tertiary" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV</button>'
+      +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">')
     +'</div>'
     +'</div>'
     // entry form — kept in the DOM (edit-prefill timers look up its ids) but hidden in presentation mode
     +'<div'+(P?' style="display:none"':'')+'>'
     // ✅ persistent (non-hover) caption for the CSV button — the old title-only tooltip explaining
     // single-file-vs-batch import was invisible until someone hovered over it
-    +'<div style="font-size:10px;color:var(--text-muted);margin:-4px 0 8px">📤 CSV: 1 αρχείο = άμεσος έλεγχος στοιχείων &nbsp;·&nbsp; πολλά αρχεία μαζί = μαζική εισαγωγή ιστορικού</div>'
+    +'<div style="font-size:var(--fs-xs);color:var(--text-muted);margin:-4px 0 8px">📤 CSV: 1 αρχείο = άμεσος έλεγχος στοιχείων &nbsp;·&nbsp; πολλά αρχεία μαζί = μαζική εισαγωγή ιστορικού</div>'
     // ✅ βάση σύγκρισης για όλα τα Δ / τάσεις / ρυθμό στο Έντυπο Λιπομέτρησης — ο διαιτολόγος το
     // επιλέγει πριν πατήσει «Έντυπο / WhatsApp / Email». Μόνο με ≥2 μετρήσεις έχει νόημα.
-    +((c.weightLog&&c.weightLog.length>1)?'<div style="font-size:10px;color:var(--text-muted);margin:-2px 0 8px">📅 Σύγκριση εντύπου λιπομέτρησης με: <select id="lipo-baseline" class="tracker-inp" style="font-size:10px;width:auto;padding:1px 4px"><option value="first">1η μέτρηση</option><option value="prev">προηγούμενη μέτρηση</option>'+(c.planGeneratedAt?'<option value="plan">έναρξη τρέχοντος πλάνου</option>':'')+'</select></div>':'')
+    +((c.weightLog&&c.weightLog.length>1)?'<div style="font-size:var(--fs-xs);color:var(--text-muted);margin:-2px 0 8px">📅 Σύγκριση εντύπου λιπομέτρησης με: <select id="lipo-baseline" class="tracker-inp" style="font-size:10px;width:auto;padding:1px 4px"><option value="first">1η μέτρηση</option><option value="prev">προηγούμενη μέτρηση</option>'+(c.planGeneratedAt?'<option value="plan">έναρξη τρέχοντος πλάνου</option>':'')+'</select></div>':'')
     // ── 📐 Νέα μέτρηση (απλή φόρμα, 2026-11-06): ημερομηνία + βάρος + σημεία δερματοπτυχόμετρου.
     // Ο διαιτολόγος μετρά ΜΟΝΟ με δερματοπτυχόμετρο & ζυγαριά (63/63 μετρήσεις: 0% περιφέρειες/ύπνος/
     // σημειώσεις). Η πλήρης φόρμα μένει από κάτω (κρυφή) — η αποθήκευση γεμίζει τα πεδία της και καλεί
@@ -1242,3 +1251,13 @@ function qmSave(goPlan){
     swTab(2);
   }
 }
+
+// Μενού «Αποστολή ▾» / «Εξαγωγή ▾» στην κορυφή των Μετρήσεων (βήμα 6, 2026-11-22).
+function trkCloseMenus(){ document.querySelectorAll('.trk-menu.open').forEach(function(m){ m.classList.remove('open'); }); }
+function trkToggleMenu(e,id){
+  if(e) e.stopPropagation();
+  var m=document.getElementById(id); if(!m) return;
+  var was=m.classList.contains('open'); trkCloseMenus(); if(!was) m.classList.add('open');
+}
+document.addEventListener('click',function(e){ if(!(e.target.closest&&e.target.closest('.trk-dd'))) trkCloseMenus(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') trkCloseMenus(); });

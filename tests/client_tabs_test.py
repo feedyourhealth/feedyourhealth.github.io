@@ -71,7 +71,7 @@ try:
         check(J('document.getElementById("ov-appt-wrap").open') is True, 'η ενότητα ανοίγει')
         print('3. Ιστορικό πλάνων από το Πλάνο')
         J('swTab(2)'); pg.wait_for_timeout(500)
-        btn = J('[...document.querySelectorAll("#s2 .plan-links-row button")].map(b=>b.textContent).filter(t=>t.indexOf("Ιστορικό")>-1)')
+        btn = J('[...document.querySelectorAll("#s2 .plan-toolbar button")].map(b=>b.textContent).filter(t=>t.indexOf("Ιστορικό")>-1)')
         check(len(btn) == 1, f'κουμπί «Ιστορικό πλάνων» στο Πλάνο ({btn})')
         J('swTab(4)'); pg.wait_for_timeout(300)
         check(J('document.querySelector(".stab.active").id') == 't2', 'Ιστορικό → φωτίζει «Πλάνο»')
