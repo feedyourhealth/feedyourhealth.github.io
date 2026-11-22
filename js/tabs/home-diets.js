@@ -1114,28 +1114,37 @@ function homeOpenMeasure(id){
 }
 // Μενού «⋯» μιας γραμμής της Αρχικής (βήμα 6) — αντί για «🔕 αυτό» / «🔕 όλα».
 function homeRowMenuClose(){ var m=document.getElementById('hm-row-menu'); if(m) m.remove(); }
-function homeRowMenu(e,id,reason){
+// Γενικό μενού «⋯» για γραμμές λιστών (Αρχική, Διατροφές, Πρόοδος). items: [label, fn, muted] ή 'hr'.
+function rowMenuOpen(e,items){
   if(e) e.stopPropagation();
   homeRowMenuClose();
   var btn=e&&e.currentTarget?e.currentTarget:(e&&e.target);
   var m=document.createElement('div');
   m.id='hm-row-menu'; m.className='pt-more-menu open hm-row-menu'; m.setAttribute('role','menu');
-  function item(label,fn,muted){
-    var b=document.createElement('button'); b.type='button'; b.textContent=label; if(muted) b.className='pt-muted';
-    b.addEventListener('click',function(ev){ ev.stopPropagation(); homeRowMenuClose(); fn(); });
+  items.forEach(function(it){
+    if(it==='hr'){ m.appendChild(document.createElement('hr')); return; }
+    var b=document.createElement('button'); b.type='button'; b.textContent=it[0]; if(it[2]) b.className='pt-muted';
+    b.addEventListener('click',function(ev){ ev.stopPropagation(); homeRowMenuClose(); it[1](); });
     m.appendChild(b);
-  }
-  if(reason) item('Κρύψε αυτό το σήμα για 7 μέρες',function(){ homeSnoozeReason(id,reason); });
-  item('Κρύψε τον πελάτη από όλα για 7 μέρες',function(){ homeSnoozeClient(id); });
-  if(typeof lcOpenClientModal==='function') item('⏸ Βάλε σε παύση…',function(){ lcOpenClientModal(id); });
-  if(reason==='renewal'){
-    m.appendChild(document.createElement('hr'));
-    item('↻ Νέο πλάνο από την αρχή (αντικαθιστά την εβδομάδα)',function(){ dietsQuickCreatePlan(id); },true);
-  }
+  });
   document.body.appendChild(m);
   var r=btn&&btn.getBoundingClientRect?btn.getBoundingClientRect():{right:window.innerWidth-20,bottom:100,top:80};
   var top=r.bottom+4; if(top+m.offsetHeight>window.innerHeight-10) top=Math.max(10,r.top-m.offsetHeight-4);
   m.style.position='fixed'; m.style.top=top+'px'; m.style.left=Math.max(10,r.right-m.offsetWidth)+'px';
+}
+function homeRowMenu(e,id,reason){
+  var items=[];
+  if(reason) items.push(['Κρύψε αυτό το σήμα για 7 μέρες',function(){ homeSnoozeReason(id,reason); }]);
+  items.push(['Κρύψε τον πελάτη από όλα για 7 μέρες',function(){ homeSnoozeClient(id); }]);
+  if(typeof lcOpenClientModal==='function') items.push(['⏸ Βάλε σε παύση…',function(){ lcOpenClientModal(id); }]);
+  if(reason==='renewal'){
+    items.push('hr');
+    items.push(['↻ Νέο πλάνο από την αρχή (αντικαθιστά την εβδομάδα)',function(){ dietsQuickCreatePlan(id); },true]);
+  }
+  rowMenuOpen(e,items);
+}
+function homeMoreBtnHtml(id,reason){
+  return '<button type="button" class="hm-more-btn" aria-haspopup="true" title="Αργότερα / παύση" aria-label="Αργότερα / παύση" onclick="homeRowMenu(event,\''+id+'\''+(reason?',\''+reason+'\'':'')+')">⋯</button>';
 }
 document.addEventListener('click',function(e){ var m=document.getElementById('hm-row-menu'); if(m && !m.contains(e.target)) homeRowMenuClose(); });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') homeRowMenuClose(); });
@@ -1582,7 +1591,8 @@ function renderDiets(){
     // Προτεραιότητα: "χωρίς πλάνο" > "ξεπερασμένος σύνδεσμος" > "χρειάζεται ανανέωση" — ένας πελάτης
     // με άδειο weekPlan αλλά παλιό δημοσιευμένο hash θα δείξει isStale()=true κι αυτός, αλλά χρειάζεται
     // νέο πλάνο πρώτα, όχι απλή επαναδημοσίευση του κενού.
-    var snoozeBtn='<button type="button" class="hm-action-btn" style="background:#F1EFE8;color:#5F5E5A" onclick="event.stopPropagation();homeSnoozeClient(\''+c.id+'\')" title="Απόκρυψη για 7 ημέρες">🔕</button>';
+    // «⋯» (2026-11-22) αντί για σκέτο 🔕: ίδιο μενού με την Αρχική, με κείμενο που λέει τι κάνει.
+    var snoozeBtn=homeMoreBtnHtml(c.id,!dietsHasPlan(c)?'noplan':(window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)?'':'renewal'));
     if(!dietsHasPlan(c)){
       return dietsRow(c, 'χωρίς πλάνο ακόμα', '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>'+snoozeBtn, 'red');
     }

@@ -229,6 +229,15 @@ function progressMuteButtonHtml(c,compact){
     +(open?progressMutePopoverOptionsHtml(c.id):'')
     +'</span>';
 }
+function progressRowMenu(e,id){
+  var c=clients.find(function(x){return x.id===id;}); if(!c) return;
+  var items=[['✉️ Άνοιγμα στα Μηνύματα',function(){ progressOpenMessages(c.name); }]];
+  if(progressIsMuted(c)) items.push(['↩️ Επαναφορά στη λίστα (σίγαση: '+progressMuteLabel(c)+')',function(){ progressUnmuteClient(id); }]);
+  else { items.push(['🔇 Σίγαση στην Πρόοδο για 30 ημέρες',function(){ progressMuteClient(id,false); }]);
+         items.push(['🔇 Σίγαση στην Πρόοδο μόνιμα',function(){ progressMuteClient(id,true); }]); }
+  if(typeof lcOpenClientModal==='function') items.push(['⏸ Βάλε σε παύση…',function(){ lcOpenClientModal(id); }]);
+  rowMenuOpen(e,items);
+}
 function progressMutePopoverOptionsHtml(id){
   return '<div class="progress-mute-pop" onclick="event.stopPropagation()">'
     +'<button type="button" class="progress-mute-opt" onclick="progressMuteClient(\''+id+'\',false)">Σίγαση για 30 ημέρες<small>Ξαναφαίνεται μόνη της μετά</small></button>'
@@ -382,8 +391,8 @@ function progressRowHtml(x,bulkMode){
     +progressRowMetaLineHtml(x)
     +'</div>'
     +(x.flags.indexOf('nudge')>-1?'<button type="button" class="hm-action-btn" style="margin-top:2px" title="Στείλε υπενθύμιση (WhatsApp/email)" onclick="event.stopPropagation();progressSendNudge(\''+c.id+'\')">🔔 Υπενθύμιση</button>':'')
-    +'<button type="button" class="hm-action-btn" style="background:#f0f7f7;color:var(--teal);margin-top:2px" title="Άνοιγμα στα Μηνύματα" onclick="event.stopPropagation();progressOpenMessages(\''+escJsAttr(c.name)+'\')">✉️</button>'
-    +progressMuteButtonHtml(c,true)
+    // «⋯» (2026-11-22) αντί για σκέτα εικονίδια ✉️ / 🔇: μενού με κείμενο (Μηνύματα, σίγαση, παύση).
+    +'<button type="button" class="hm-more-btn" style="margin-top:2px" aria-haspopup="true" title="Μηνύματα / σίγαση / παύση" aria-label="Μηνύματα / σίγαση / παύση" onclick="progressRowMenu(event,\''+c.id+'\')">⋯</button>'
     +'</div>';
 }
 function progressSummaryHtml(all){
