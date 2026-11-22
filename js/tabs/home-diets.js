@@ -80,7 +80,9 @@ function homeClientsNeedingAttention(){
     if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)){
       var daysOld=planDaysSinceRenewal(c);
       out.push({c:c,tier:1,gap:daysOld,reason:'renewal',label:'τελευταίο πλάνο πριν '+daysOld+' ημέρες',
-        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')" title="Φτιάχνει νέο πλάνο από την αρχή και αντικαθιστά το τρέχον (το παλιό μένει στο Ιστορικό πλάνων). Για ίδια γεύματα με νέες ποσότητες: μέτρηση → «⚖️ Προσαρμογή & αποστολή».">Νέο πλάνο από την αρχή</button>'});
+        // Βήμα 6: η συνηθισμένη ανανέωση = μέτρηση → «⚖️ Προσαρμογή & αποστολή». Το «Νέο πλάνο από την
+        // αρχή» (αντικαθιστά όλη την εβδομάδα) μένει στο «⋯» της γραμμής.
+        action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeOpenMeasure(\''+c.id+'\')" title="Ανοίγει τις Μετρήσεις: νέα μέτρηση → «Αποθήκευση & → Πλάνο» → «⚖️ Προσαρμογή & αποστολή»">📐 Μέτρηση &amp; πλάνο</button>'});
       return;
     }
     var wl=c.weightLog||[];
@@ -102,13 +104,11 @@ function homeClientsNeedingAttention(){
   });
   // [6] Per-reason snooze: κρύψε τις γραμμές που ο διαιτολόγος «σίγασε» μόνο για το συγκεκριμένο σήμα.
   out=out.filter(function(x){ return !_homeReasonSnoozed(x.c, x.reason); });
+  // Βήμα 6 (2026-11-22): τα «🔕 αυτό» / «🔕 όλα» (10px, χωρίς εξήγηση) → ένα «⋯» με μενού που λέει
+  // τι κάνει κάθε επιλογή (homeRowMenu): μόνο αυτό το σήμα 7 μέρες · κανένα σήμα 7 μέρες · παύση…
   out.forEach(function(x){
-    var snz='style="background:#F1EFE8;color:#5F5E5A"';
-    var perReason=x.reason
-      ? '<button type="button" class="hm-action-btn" '+snz+' onclick="event.stopPropagation();homeSnoozeReason(\''+x.c.id+'\',\''+x.reason+'\')" title="Απόκρυψη ΑΥΤΟΥ του σήματος για 7 ημέρες">🔕 αυτό</button>'
-      : '';
-    x.action=(x.action||'')+perReason
-      +'<button type="button" class="hm-action-btn" '+snz+' onclick="event.stopPropagation();homeSnoozeClient(\''+x.c.id+'\')" title="Απόκρυψη του πελάτη από ΚΑΘΕ σήμα για 7 ημέρες">🔕 όλα</button>';
+    x.action=(x.action||'')
+      +'<button type="button" class="hm-more-btn" aria-haspopup="true" aria-label="Αργότερα / παύση" title="Αργότερα / παύση" onclick="event.stopPropagation();homeRowMenu(event,\''+x.c.id+'\',\''+(x.reason||'')+'\')">&#8943;</button>';
   });
   out.sort(function(a,b){ return a.tier!==b.tier ? a.tier-b.tier : b.gap-a.gap; });
   return out;
@@ -531,12 +531,12 @@ function homeWeekdayHeatmapHtml(vals){
   var BLUE=['#E6F1FB','#B5D4F4','#85B7EB','#0C447C'], TEAL=['#E1F5EE','#9FE1CB','#5DCAA5','#085041'];
   var logs=vals.map(function(v){return v.log;}), adhs=vals.map(function(v){return v.adh;});
   var cell=function(v,arr,ramp,tip){
-    return '<div title="'+tip+'" style="flex:1;text-align:center;font-size:10px;font-weight:700;padding:5px 0;border-radius:6px;'
+    return '<div title="'+tip+'" style="flex:1;text-align:center;font-size:12px;font-weight:700;padding:5px 0;border-radius:6px;'
       +homeWeekdayRelShade(v,arr,ramp)+'">'+(v==null?'—':v+'%')+'</div>';
   };
-  var lbl=function(t){return '<div style="width:74px;flex:none;font-size:10px;color:#888;align-self:center">'+t+'</div>';};
+  var lbl=function(t){return '<div style="width:74px;flex:none;font-size:12px;color:#888;align-self:center">'+t+'</div>';};
   var row=function(inner){return '<div style="display:flex;gap:5px;margin-top:4px">'+inner+'</div>';};
-  var head=lbl('')+names.map(function(n){return '<div style="flex:1;text-align:center;font-size:10px;color:#888">'+n+'</div>';}).join('');
+  var head=lbl('')+names.map(function(n){return '<div style="flex:1;text-align:center;font-size:12px;color:#888">'+n+'</div>';}).join('');
   var logRow=lbl('Κατέγραψαν')+vals.map(function(v,i){
     return cell(v.log,logs,BLUE,names[i]+': έκαναν check-in κατά μ.ό. '+v.avgLogged+' από '+v.avgElig+' πελάτες');
   }).join('');
@@ -546,11 +546,11 @@ function homeWeekdayHeatmapHtml(vals){
   var nRow=lbl('Πλήθος · τάση')+vals.map(function(v){
     var t='';
     if(v.trend!=null) t=' <span style="color:'+(v.trend>0?'#3B6D11':'#A32D2D')+'">'+(v.trend>0?'▲':'▼')+Math.abs(v.trend)+'</span>';
-    return '<div style="flex:1;text-align:center;font-size:10px;color:#888;white-space:nowrap">'+v.avgLogged+'/'+v.avgElig+t+'</div>';
+    return '<div style="flex:1;text-align:center;font-size:12px;color:#888;white-space:nowrap">'+v.avgLogged+'/'+v.avgElig+t+'</div>';
   }).join('');
   return '<div class="hm-card hm-card-info"><div class="hm-card-title">🗓 Τήρηση ανά ημέρα (4 εβδ.)</div>'
     +row(head)+row(logRow)+row(adhRow)+row(nRow)
-    +'<div style="font-size:10px;color:#888;margin-top:6px;line-height:1.4">'
+    +'<div style="font-size:12px;color:#888;margin-top:6px;line-height:1.4">'
     +'<b>Κατέγραψαν</b> = % πελατών με check-in εκείνη τη μέρα · <b>Τήρησαν</b> = μέση τήρηση από όσους κατέγραψαν · '
     +'πλήθος = μ.ό. ανά εβδομάδα · ▲▼ = τελευταίες 2 εβδ. vs προηγούμενες 2 · πιο έντονο χρώμα = χειρότερη μέρα</div></div>';
 }
@@ -731,11 +731,12 @@ function homeAttentionBuckets(attn, stale){
   return {red:red,amber:amber,green:green,activity:activity};
 }
 var _homeBucketSel='red';
+// Βήμα 6: όνομα + αιτία σε δύο γραμμές (hm-row-main) — διαβάζονται μαζί, χωρίς να κοιτάς δεξιά.
 function homeBucketRow(x,accent){
-  return '<div class="hm-row" onclick="selectClient(\''+x.c.id+'\')">'
+  return '<div class="hm-row hm-row2" onclick="selectClient(\''+x.c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(x.c.name)+'</div>'
-    +'<span class="hm-row-name">'+esc(x.c.name||'Νέος πελάτης')+'</span>'
-    +'<span class="hm-row-sub">'+x.label+'</span>'
+    +'<div class="hm-row-main"><span class="hm-row-name">'+esc(x.c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-row-sub">'+x.label+'</span></div>'
     +(x.action||'')
     +'</div>';
 }
@@ -752,7 +753,7 @@ function homeBucketListInnerHtml(buckets){
   var accent=_homeBucketSel==='red'?'red':(_homeBucketSel==='amber'?'amber':'teal');
   var items=buckets[_homeBucketSel]||[];
   var head='<div class="hm-card-title">'+(HM_BUCKET_TITLES[_homeBucketSel]||'')
-    +' <span style="font-weight:400;font-size:10px;color:var(--text-muted)">('+items.length+')</span></div>';
+    +' <span style="font-weight:400;font-size:12px;color:var(--text-muted)">('+items.length+')</span></div>';
   return head+(items.length
     ? items.map(function(x){return homeBucketRow(x,accent);}).join('')
     : '<div class="hm-empty">Κανένας πελάτης σε αυτή την κατηγορία 👍</div>');
@@ -890,7 +891,8 @@ function homeApproachingRenewal(){
 function homeApproachingRenewalRow(x){
   var sub=x.daysLeft===1?'ανανέωση αύριο':'ανανέωση σε '+x.daysLeft+' ημέρες';
   return homeRow(x.c, sub, 'amber',
-    '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+x.c.id+'\')" title="Φτιάχνει νέο πλάνο από την αρχή και αντικαθιστά το τρέχον (το παλιό μένει στο Ιστορικό πλάνων). Για ίδια γεύματα με νέες ποσότητες: μέτρηση → «⚖️ Προσαρμογή & αποστολή».">Νέο πλάνο από την αρχή</button>');
+    '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeOpenMeasure(\''+x.c.id+'\')" title="Ανοίγει τις Μετρήσεις: νέα μέτρηση → «Αποθήκευση & → Πλάνο» → «⚖️ Προσαρμογή & αποστολή»">📐 Μέτρηση &amp; πλάνο</button>'
+    +'<button type="button" class="hm-more-btn" aria-haspopup="true" aria-label="Αργότερα / παύση" title="Αργότερα / παύση" onclick="event.stopPropagation();homeRowMenu(event,\''+x.c.id+'\',\'renewal\')">&#8943;</button>');
 }
 
 // Πάει στη σελίδα Πελάτες με καθαρά φίλτρα + μόνο το ζητούμενο status, ώστε ο αριθμός που έδειξε το
@@ -1096,13 +1098,48 @@ function sendClientGreeting(clientId,kind,channel){
 }
 
 function homeRow(c,sub,accent,actionHtml){
-  return '<div class="hm-row" onclick="selectClient(\''+c.id+'\')">'
+  return '<div class="hm-row hm-row2" onclick="selectClient(\''+c.id+'\')">'
     +'<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'
-    +'<span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
-    +'<span class="hm-row-sub">'+sub+'</span>'
+    +'<div class="hm-row-main"><span class="hm-row-name">'+esc(c.name||'Νέος πελάτης')+'</span>'
+    +'<span class="hm-row-sub">'+sub+'</span></div>'
     +(actionHtml||'')
     +'</div>';
 }
+
+// «📐 Μέτρηση & πλάνο» στις γραμμές ανανέωσης: ανοίγει τις Μετρήσεις με τον κέρσορα στο βάρος.
+function homeOpenMeasure(id){
+  selectClient(id);
+  swTab(3);
+  setTimeout(function(){ var w=document.getElementById('qm-weight'); if(w) try{ w.focus(); }catch(e){} },150);
+}
+// Μενού «⋯» μιας γραμμής της Αρχικής (βήμα 6) — αντί για «🔕 αυτό» / «🔕 όλα».
+function homeRowMenuClose(){ var m=document.getElementById('hm-row-menu'); if(m) m.remove(); }
+function homeRowMenu(e,id,reason){
+  if(e) e.stopPropagation();
+  homeRowMenuClose();
+  var btn=e&&e.currentTarget?e.currentTarget:(e&&e.target);
+  var m=document.createElement('div');
+  m.id='hm-row-menu'; m.className='pt-more-menu open hm-row-menu'; m.setAttribute('role','menu');
+  function item(label,fn,muted){
+    var b=document.createElement('button'); b.type='button'; b.textContent=label; if(muted) b.className='pt-muted';
+    b.addEventListener('click',function(ev){ ev.stopPropagation(); homeRowMenuClose(); fn(); });
+    m.appendChild(b);
+  }
+  if(reason) item('Κρύψε αυτό το σήμα για 7 μέρες',function(){ homeSnoozeReason(id,reason); });
+  item('Κρύψε τον πελάτη από όλα για 7 μέρες',function(){ homeSnoozeClient(id); });
+  if(typeof lcOpenClientModal==='function') item('⏸ Βάλε σε παύση…',function(){ lcOpenClientModal(id); });
+  if(reason==='renewal'){
+    m.appendChild(document.createElement('hr'));
+    item('↻ Νέο πλάνο από την αρχή (αντικαθιστά την εβδομάδα)',function(){ dietsQuickCreatePlan(id); },true);
+  }
+  document.body.appendChild(m);
+  var r=btn&&btn.getBoundingClientRect?btn.getBoundingClientRect():{right:window.innerWidth-20,bottom:100,top:80};
+  var top=r.bottom+4; if(top+m.offsetHeight>window.innerHeight-10) top=Math.max(10,r.top-m.offsetHeight-4);
+  m.style.position='fixed'; m.style.top=top+'px'; m.style.left=Math.max(10,r.right-m.offsetWidth)+'px';
+}
+document.addEventListener('click',function(e){ var m=document.getElementById('hm-row-menu'); if(m && !m.contains(e.target)) homeRowMenuClose(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') homeRowMenuClose(); });
+window.addEventListener('scroll',homeRowMenuClose,true);
 
 // Επιστρέφει '' όταν δεν υπάρχει τίποτα να δείξει — οι κάρτες της Αρχικής εμφανίζονται μόνο όταν έχουν
 // πραγματική εκκρεμότητα, αντί να γεμίζουν τη σελίδα με μόνιμα "όλα εντάξει 👍" καρτέλες.
@@ -1131,7 +1168,7 @@ function homeCard(title,items,moreLabel,variant,maxRows){
 function homeProgressPointerCard(){
   return '<div class="hm-card" style="background:linear-gradient(135deg,var(--teal-tint),var(--card-bg));cursor:pointer" onclick="swTab(10)" onkeydown="if(event.key===\'Enter\')swTab(10)" role="button" tabindex="0">'
     +'<div class="hm-card-title" style="margin-bottom:4px">📈 Σκορ τήρησης, τάσεις &amp; ιστορικό ανά πελάτη</div>'
-    +'<div style="font-size:11.5px;color:var(--text-muted)">Λίστα όλων, φίλτρα ανά σήμα, γράφημα 10 εβδομάδων — στο tab «Πρόοδος» →</div>'
+    +'<div style="font-size:12px;color:var(--text-muted)">Λίστα όλων, φίλτρα ανά σήμα, γράφημα 10 εβδομάδων — στο tab «Πρόοδος» →</div>'
     +'</div>';
 }
 
@@ -1246,15 +1283,15 @@ function renderHome(){
       +'<div style="display:flex;gap:12px;max-width:560px;margin:0 auto 24px;text-align:left">'
         +'<div style="flex:1;background:var(--teal-tint);border-radius:10px;padding:12px">'
           +'<div style="font-size:12px;font-weight:700;color:var(--teal)">① Πρόσθεσε πελάτη</div>'
-          +'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">όνομα, φύλο, στόχος</div>'
+          +'<div style="font-size:12px;color:var(--text-muted);margin-top:4px">όνομα, φύλο, στόχος</div>'
         +'</div>'
         +'<div style="flex:1;background:var(--panel-bg);border-radius:10px;padding:12px">'
           +'<div style="font-size:12px;font-weight:700;color:var(--text-muted)">② Δημιούργησε πλάνο</div>'
-          +'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">αυτόματα, 1 κλικ</div>'
+          +'<div style="font-size:12px;color:var(--text-muted);margin-top:4px">αυτόματα, 1 κλικ</div>'
         +'</div>'
         +'<div style="flex:1;background:var(--panel-bg);border-radius:10px;padding:12px">'
           +'<div style="font-size:12px;font-weight:700;color:var(--text-muted)">③ Στείλε link</div>'
-          +'<div style="font-size:11px;color:var(--text-muted);margin-top:4px">WhatsApp / Email</div>'
+          +'<div style="font-size:12px;color:var(--text-muted);margin-top:4px">WhatsApp / Email</div>'
         +'</div>'
       +'</div>'
       +'<button class="btn primary" onclick="addClient()" style="font-size:14px;padding:12px 24px;">+ Δημιουργήστε Πρώτο Πελάτη</button>'
@@ -1556,7 +1593,7 @@ function renderDiets(){
     // ✅ 2026-08-22: class="renewal-days-inp" — το inline style κάτω μένει ως desktop/mouse
     // baseline (compact 34px), το class δίνει ένα touch-only μεγέθυνσης hook (css/styles.css,
     // @media(hover:none)) χωρίς να πειράζει την πυκνή desktop εμφάνιση.
-    var thresholdInp='<span style="font-size:10px;color:var(--text-muted);margin-left:6px;white-space:nowrap" title="Όριο ανανέωσης για αυτόν τον πελάτη" onclick="event.stopPropagation()">⚙ <input type="number" class="renewal-days-inp" value="'+(c.renewalDays||PLAN_RENEWAL_DAYS)+'" min="7" max="120" style="width:34px;font-size:10px;padding:1px 3px;border:1px solid var(--border-light);border-radius:4px" onchange="setClientRenewalDays(\''+c.id+'\',this.value)"> ημ.</span>';
+    var thresholdInp='<span style="font-size:12px;color:var(--text-muted);margin-left:6px;white-space:nowrap" title="Όριο ανανέωσης για αυτόν τον πελάτη" onclick="event.stopPropagation()">⚙ <input type="number" class="renewal-days-inp" value="'+(c.renewalDays||PLAN_RENEWAL_DAYS)+'" min="7" max="120" style="width:34px;font-size:12px;padding:1px 3px;border:1px solid var(--border-light);border-radius:4px" onchange="setClientRenewalDays(\''+c.id+'\',this.value)"> ημ.</span>';
     return dietsRow(c, 'τελευταίο πλάνο πριν '+daysOld+' ημέρες'+thresholdInp, '<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')" title="Φτιάχνει νέο πλάνο από την αρχή και αντικαθιστά το τρέχον (το παλιό μένει στο Ιστορικό πλάνων). Για ίδια γεύματα με νέες ποσότητες: μέτρηση → «⚖️ Προσαρμογή & αποστολή».">Νέο πλάνο από την αρχή</button>'+snoozeBtn, 'red');
   }, 'Όλοι είναι εντάξει 👍', 'danger');
 

@@ -80,6 +80,21 @@ try:
         check(J('homeAttentionBuckets().green.map(x=>x.c.name)').count('Ελένη Παύση') == 0, 'σε παύση ≠ «Ενεργοί, εντάξει»')
         check(J(f'clientNeedsAttention({C(OLD+"_1")})') is False, 'clientNeedsAttention false για προτεινόμενο Πρώην')
 
+        print('3β. Γραμμές «Σήμερα»: δύο σειρές, «⋯» αντί για «🔕 αυτό/όλα»')
+        J(f'(()=>{{const c={C("cA")}; c.planGeneratedAt=Date.now()-40*864e5; c.savedPlans=[]; c.weightLog=[{{date:"{ago(40)}",weight:65,bf:0}}]; renderHome();}})()'); pg.wait_for_timeout(400)
+        row = J('(()=>{const r=[...document.querySelectorAll("#hm-bucket-list .hm-row2")].find(r=>r.textContent.indexOf("Άννα Πρόσφατη")>-1); return r?{sub:r.querySelector(".hm-row-sub").textContent, btns:[...r.querySelectorAll("button")].map(b=>b.textContent.trim())}:null})()')
+        check(row and row['sub'] == 'τελευταίο πλάνο πριν 40 ημέρες', f'αιτία κάτω από το όνομα ({row})')
+        check(row and row['btns'] == ['📐 Μέτρηση & πλάνο', '⋯'], f'κουμπιά: «Μέτρηση & πλάνο» + «⋯» ({row and row["btns"]})')
+        check('αυτό' not in J('document.getElementById("hm-bucket-list").innerText'), 'όχι πια «🔕 αυτό / όλα»')
+        J('[...document.querySelectorAll("#hm-bucket-list .hm-row2")].find(r=>r.textContent.indexOf("Άννα Πρόσφατη")>-1).querySelector(".hm-more-btn").click()'); pg.wait_for_timeout(200)
+        items = J('[...document.querySelectorAll("#hm-row-menu button")].map(b=>b.textContent)')
+        check(items[:3] == ['Κρύψε αυτό το σήμα για 7 μέρες', 'Κρύψε τον πελάτη από όλα για 7 μέρες', '⏸ Βάλε σε παύση…'] and 'Νέο πλάνο από την αρχή' in items[-1], f'μενού «⋯» ({items})')
+        J('document.querySelector("#hm-row-menu button").click()'); pg.wait_for_timeout(300)
+        check('Άννα Πρόσφατη' not in J('document.getElementById("hm-bucket-list").innerText') and not J('document.getElementById("hm-row-menu")'), '«Κρύψε αυτό το σήμα» → η γραμμή φεύγει, το μενού κλείνει')
+        J(f'homeOpenMeasure("cA")'); pg.wait_for_timeout(500)
+        check(J('document.querySelector(".stab.active").id') == 't3', '«Μέτρηση & πλάνο» → καρτέλα Μετρήσεις')
+        J(f'{C("cA")}.attentionSnoozeReasons={{}}; curId=null; swTab(0)'); pg.wait_for_timeout(300)   # ξε-σίγαση για τα επόμενα βήματα
+
         print('4. Παράθυρο ελέγχου: Βασίλης → Πρώην, Γεωργία → παύση 1 μήνα')
         pg.click('.lc-suggest button'); pg.wait_for_timeout(300)
         check(J('document.querySelectorAll("#lc-overlay .lc-row").length') == 2, '2 γραμμές στο παράθυρο')

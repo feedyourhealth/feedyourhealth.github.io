@@ -166,15 +166,15 @@ function progressBadge(c){
   // Πριν επέστρεφε '' εδώ — η θέση του badge εξαφανιζόταν σιωπηλά, χωρίς εξήγηση γιατί λείπει η
   // αξιολόγηση (2026-08-06: μόνο 2/15 κάρτες στο πραγματικό στιγμιότυπο είχαν ποσοστό, οι υπόλοιποι
   // δεν εξηγούσαν τον λόγο). Τώρα η θέση εμφανίζεται ΠΑΝΤΑ με κάποιο νόημα.
-  if(!c.shareToken) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Χωρίς portal link</span>';
+  if(!c.shareToken) return '<span style="background:#F1EFE8;color:#444441;font-size:12px;font-weight:600;padding:1px 7px;border-radius:10px;white-space:nowrap">Χωρίς portal link</span>';
   var rows=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
-  if(!rows.length) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Χωρίς check-in ακόμα</span>';
+  if(!rows.length) return '<span style="background:#F1EFE8;color:#444441;font-size:12px;font-weight:600;padding:1px 7px;border-radius:10px;white-space:nowrap">Χωρίς check-in ακόμα</span>';
   var gap=ckDaysSinceLast(rows);
-  if(gap>=2) return '<span style="background:#FCEBEB;color:#791F1F;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">⚠ '+gap+'ημ. χωρίς check-in</span>';
+  if(gap>=2) return '<span style="background:#FCEBEB;color:#791F1F;font-size:12px;font-weight:600;padding:1px 7px;border-radius:10px;white-space:nowrap">⚠ '+gap+'ημ. χωρίς check-in</span>';
   var byDate=ckRowsByDate(rows), score=ckWeekScore(byDate,0);
-  if(score==null) return '<span style="background:#F1EFE8;color:#444441;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">Χωρίς check-in ακόμα</span>';
+  if(score==null) return '<span style="background:#F1EFE8;color:#444441;font-size:12px;font-weight:600;padding:1px 7px;border-radius:10px;white-space:nowrap">Χωρίς check-in ακόμα</span>';
   var ok=score>=85;
-  return '<span style="background:'+(ok?'#E8F5E9':'#FAEEDA')+';color:'+(ok?'#1E5E24':'#633806')+';font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap">'+score+'%</span>';
+  return '<span style="background:'+(ok?'#E8F5E9':'#FAEEDA')+';color:'+(ok?'#1E5E24':'#633806')+';font-size:12px;font-weight:600;padding:1px 7px;border-radius:10px;white-space:nowrap">'+score+'%</span>';
 }
 
 // Πελάτης με τουλάχιστον μία καταχώρηση ραντεβού σημειωμένη 🚩 για παρακολούθηση. Μένει true μέχρι
@@ -415,7 +415,7 @@ function renderSB(){
       var _grpPct=Math.round(_grpHealthyN/_grpWithLink.length*100);
       html+='<div style="display:flex;align-items:center;gap:10px;background:var(--panel-bg);border:1px solid var(--border-light);border-radius:12px;padding:8px 14px;margin-bottom:12px">'
         +pctRing(_grpPct,{size:34,thickness:5,color:pctStatusColor(_grpPct),track:'var(--border-light)',label:false})
-        +'<span style="font-size:11.5px;color:var(--text-muted)"><b style="color:var(--text-strong)">'+_grpPct+'%</b> ενημερωμένοι σύνδεσμοι στην ομάδα «'+esc(_clientFilterGroup)+'» ('+_grpHealthyN+'/'+_grpWithLink.length+')</span>'
+        +'<span style="font-size:12px;color:var(--text-muted)"><b style="color:var(--text-strong)">'+_grpPct+'%</b> ενημερωμένοι σύνδεσμοι στην ομάδα «'+esc(_clientFilterGroup)+'» ('+_grpHealthyN+'/'+_grpWithLink.length+')</span>'
         +'</div>';
     }
   }

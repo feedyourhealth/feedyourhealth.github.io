@@ -2836,3 +2836,28 @@ body.dark-mode .section-icon{background:#1d3330}
 #successToast{animation:fadeIn .25s ease-out!important}
 .section-header > div{row-gap:0}.section-card{padding:14px 16px}.sec-collapse-preview{margin-top:0}
 .trk-menu{min-width:290px}
+
+/* ── Αρχική & Πελάτες (βήμα 6, 2026-11-22) ───────────────────────────────────────────
+   Γραμμές σε 2 σειρές, δευτερεύοντα κουμπιά ενεργειών, «⋯» αντί για «🔕 αυτό/όλα», και κανένα
+   γράμμα κάτω από 12px στις κλάσεις αυτών των οθονών (ήταν 9–11,5px). */
+.hm-row2{align-items:center;gap:10px;padding:9px 4px}
+.hm-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.hm-row-main .hm-row-name{flex:none;font-size:var(--fs-sm)}
+.hm-row-main .hm-row-sub{white-space:normal}
+.hm-avatar{width:28px;height:28px;font-size:11px}
+.hm-action-btn{background:var(--card-bg);color:var(--teal-dark);border:1px solid #c8d4d1;border-radius:8px;padding:7px 11px;font-size:var(--fs-xs)}
+.hm-action-btn:hover{background:var(--teal-tint);color:var(--teal-dark)}
+.hm-more-btn{width:32px;height:32px;flex-shrink:0;border:1px solid var(--c-line);background:var(--card-bg);border-radius:8px;color:var(--c-sub);font-size:16px;line-height:1;cursor:pointer;font-family:inherit}
+.hm-more-btn:hover,.hm-more-btn:focus-visible{border-color:var(--teal);color:var(--teal);outline:none}
+.hm-row-menu{min-width:260px;z-index:100001}
+body.dark-mode .hm-action-btn{background:transparent;color:#7fdcc8;border-color:#3a5a55}
+body.dark-mode .hm-more-btn{background:transparent;border-color:#444;color:#aaa}
+/* κανένα γράμμα κάτω από 12px σε Αρχική / Πελάτες */
+.clients-count-line,.client-quick-chip,.clients-table thead th,.clients-section-toggle,.clients-muted-block .clients-section-toggle,
+.cc-sub,.cc-group-tag,.cc-ea-badge,.cc-status,.cc-lastaccess,.cc-muted-sub,.cc-muted-actions button,.clients-section-title,.client-search-inp,
+.hm-stat-lbl,.hm-stat-names,.hm-stat-wow,.hm-zone-h,.hm-zone-n,.hm-zone-h .sec-count,.hm-row-sub,.hm-trend-badge,.hm-act-score,.hm-act-sig,
+.hm-act-goto,.hm-act-trend,.hm-act-score .hm-pillars,.hm-churn-had,.hm-plan-action-badge,.hm-empty,.hm-card-count,.hm-group-chip,
+.hm-filter-eyebrow,.hm-cluster-h,.wait-chip,.hm-wait-meta,.wait-banner-sent,.wait-pill,.lc-row-sub,.lc-badge,.lc-opt span{font-size:var(--fs-xs)}
+.cc-status,.cc-lastaccess{font-weight:600;padding:1px 7px}
+.cc-bottom{gap:4px;row-gap:4px}
+.hm-today-grid .hm-card-scroll{max-height:330px}
