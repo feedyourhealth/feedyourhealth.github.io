@@ -972,6 +972,7 @@ function finishBatchErgoImport(texts){
       var fields={tricep:r.tricep||0,subscapular:r.subscapular||0,abdomen:r.abdomen||0,suprailiac:r.suprailiac||0,thigh:r.thigh||0};
       var res=calcSkinfoldBF('jp4',c.sex||'M',age,fields);
       c.weightLog.push({date:r.testDate,weight:r.weight,bf:res.bf||0,waist:0,hip:0,arm:0,sleep:0,energy:0,compliance:0,notes:'',sfProtocol:'jp4',sfFields:fields,bfMethod:'caliper'});
+      if(typeof lcBackToActive==='function') lcBackToActive(c,'νέα μέτρηση',r.testDate);   // μόνο αν η μέτρηση είναι πρόσφατη
     });
     c.weightLog.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
 
@@ -1041,6 +1042,8 @@ function addWeightEntry(){
     _weightEditIdx=-1;
   } else {
     c.weightLog.push(entry);
+    // Νέα μέτρηση σε Πρώην / Σε παύση ⇒ ξανά Ενεργός (js/client-list/lifecycle.js)
+    if(typeof lcBackToActive==='function') lcBackToActive(c,'νέα μέτρηση',entry.date);
   }
   // ✅ was `a.date<b.date?-1:1`, which returns 1 (not 0) for equal dates — two entries logged on
   // the same day could non-deterministically swap order on every re-render/re-sort

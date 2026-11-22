@@ -243,6 +243,8 @@
             // 📊 η έκδοση που πήρε ο πελάτης μπαίνει πάντα στο Ιστορικό πλάνων (js/client-editor/plan-history.js)
             var hist=null;
             try{ if(typeof recordPlanSent==='function') hist=recordPlanSent(c); }catch(e){ console.warn('[plan-history] record failed',e); }
+            // Νέο πλάνο σε Πρώην / Σε παύση ⇒ ξανά Ενεργός (js/client-list/lifecycle.js)
+            try{ if(typeof lcBackToActive==='function') lcBackToActive(c,'στάλθηκε νέο πλάνο'); }catch(e){}
             try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
             return {url:self.PORTAL_BASE+'?t='+tok, expiresAt:expiresAt, history:hist};
           });
@@ -1699,10 +1701,15 @@
       var self=this;
       var tokens=[];
       (window.clients||[]).forEach(function(c){ if(!c.deleted) tokens=tokens.concat(self.checkinTokensFor(c)); });
-      if(!tokens.length) return Promise.resolve();
+      if(!tokens.length){ self._checkinsLoaded=true; return Promise.resolve(); }
       return this.fetchAllCheckins(tokens).then(function(byToken){
         if(!byToken) return;   // αποτυχία — κράτα το προηγούμενο cache αντί για μισά/κενά δεδομένα
         self._checkinsCache=byToken;
+        // 2026-11-22 Ενεργός/Σε παύση/Πρώην (js/client-list/lifecycle.js): οι προτάσεις «Πρώην» περιμένουν
+        // να έρθουν και τα 3 caches (αλλιώς η «τελευταία δραστηριότητα» θα έβγαινε ψευδώς παλιά), και
+        // ένας Πρώην που ξαναέκανε check-in επιστρέφει μόνος του στους Ενεργούς.
+        self._checkinsLoaded=true;
+        if(typeof lcAfterPortalRefresh==='function') lcAfterPortalRefresh();
         if(typeof renderSB==='function') renderSB();
         if(curId===null && curTab===0 && typeof renderHome==='function') renderHome();
         // ✅ 2026-08-01: το feedback πελάτη (progress/notes/plan-feedback) μετακόμισε στο "📝 Ραντεβού"
@@ -1751,10 +1758,12 @@
     refreshClientLogsCache:function(){
       var self=this;
       var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
-      if(!tokens.length) return Promise.resolve();
+      if(!tokens.length){ self._clientLogsLoaded=true; return Promise.resolve(); }
       return this.fetchAllClientLogs(tokens).then(function(byToken){
         if(!byToken) return;   // αποτυχία — κράτα το προηγούμενο cache αντί για μισά/κενά δεδομένα
         self._clientLogsCache=byToken;
+        self._clientLogsLoaded=true;   // βλ. refreshCheckinsCache (lifecycle.js)
+        if(typeof lcAfterPortalRefresh==='function') lcAfterPortalRefresh();
         // ✅ 2026-08-01: πριν έλειπε από εδώ (μόνο το refreshCheckinsCache το έκανε) — το 💬 badge στη
         // λίστα πελατών/Αρχική διαβάζει clientHasNewClientNote() που εξαρτάται ΑΚΡΙΒΩΣ από αυτό το
         // cache, οπότε χωρίς αυτό το badge έμενε στο παλιό αποτέλεσμα μέχρι να τρέξει τυχαία κάποιο
@@ -1788,10 +1797,12 @@
     refreshPlanFeedbackCache:function(){
       var self=this;
       var tokens=(window.clients||[]).filter(function(c){return c.shareToken && !c.deleted;}).map(function(c){return c.shareToken;});
-      if(!tokens.length) return Promise.resolve();
+      if(!tokens.length){ self._planFeedbackLoaded=true; return Promise.resolve(); }
       return this.fetchAllPlanFeedback(tokens).then(function(byToken){
         if(!byToken) return;   // αποτυχία — κράτα το προηγούμενο cache αντί για μισά/κενά δεδομένα
         self._planFeedbackCache=byToken;
+        self._planFeedbackLoaded=true;   // βλ. refreshCheckinsCache (lifecycle.js)
+        if(typeof lcAfterPortalRefresh==='function') lcAfterPortalRefresh();
         // ✅ 2026-08-01: πριν έλειπε από εδώ (μόνο το refreshCheckinsCache το έκανε) — το 😕 badge
         // στη λίστα πελατών/Αρχική εξαρτάται ΑΚΡΙΒΩΣ από αυτό το cache (clientHasLowPlanFeedback).
         if(typeof renderSB==='function') renderSB();

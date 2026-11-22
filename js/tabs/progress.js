@@ -87,6 +87,10 @@ function progressRosterData(){
     var contactDays=c.lastDietologistContact?Math.floor((Date.now()-c.lastDietologistContact)/86400000):null;
 
     var isMuted=progressIsMuted(c);
+    // ⏸ σε παύση / 💤 χωρίς δραστηριότητα 60+ μέρες (js/client-list/lifecycle.js): όπως η σίγαση, καμία
+    // σημαία προσοχής — μόνο η δική τους, ώστε να φαίνονται στο chip αλλά να μη ζητάνε υπενθύμιση.
+    var lcSt=(typeof lcIsPaused==='function'&&lcIsPaused(c))?'paused':((typeof lcIsQuiet==='function'&&lcIsQuiet(c))?'dormant':null);
+    if(lcSt) isMuted=true;
     var flags=[];
     var isLow=false, needsNudge=false;
     // Ενόσω σιγασμένος, ΚΑΜΙΑ από τις σημαίες προσοχής δεν υπολογίζεται πια — αυτό είναι το νόημα
@@ -105,7 +109,7 @@ function progressRosterData(){
       if(firstWeekIds[c.id]) flags.push('new');
       if(expDays!=null && expDays<=PROGRESS_EXPIRING_DAYS) flags.push('exp');
     } else {
-      flags.push('muted');
+      flags.push(lcSt||'muted');
     }
     // Βαρύτητα για την προεπιλεγμένη ταξινόμηση "χρειάζεται προσοχή πρώτα" — σιγασμένος πελάτης
     // βυθίζεται στο τέλος (κάτω κι από το ουδέτερο 0), δεν ανταγωνίζεται ποτέ πια για προσοχή.
@@ -116,13 +120,13 @@ function progressRosterData(){
   });
 }
 
-var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', nudge:'🔔 Χρειάζονται υπενθύμιση', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει', muted:'🔇 Σε σίγαση'};
+var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', nudge:'🔔 Χρειάζονται υπενθύμιση', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει', muted:'🔇 Σε σίγαση', paused:'⏸ Σε παύση', dormant:'💤 Ανενεργοί 60+ μέρες'};
 // Σειρά προτεραιότητας όταν ένας πελάτης έχει πάνω από 1 σημαία — ποια εμφανίζεται πρώτη/τονισμένη
 // στη γραμμή λίστας (idea #1, mockup συζήτησης 2026-09-15). Ίδια ιεράρχηση με το βάρος ταξινόμησης
 // στο progressRosterData (gone > low > exp) + το 'new' στο τέλος (πληροφοριακό, όχι προειδοποίηση).
 // 'muted' δεν συνυπάρχει ποτέ με τις άλλες (progressRosterData τις αποκλείει ενόσω σιγασμένος), αλλά
 // πρέπει να βρίσκεται εδώ αλλιώς progressRowUrgentLineHtml θα έβρισκε 'ordered' άδειο.
-var PROGRESS_FLAG_PRIORITY=['gone','low','nudge','exp','new','muted'];
+var PROGRESS_FLAG_PRIORITY=['gone','low','nudge','exp','new','muted','paused','dormant'];
 // Ίδιοι χρωματικοί τόνοι με τα ήδη υπάρχοντα hm-act-score-bad/-warn (css/styles.css) — 'new' παίρνει
 // το ουδέτερο teal του app αντί για κόκκινο/πορτοκαλί, μια πρώτη εβδομάδα δεν είναι πρόβλημα.
 var PROGRESS_FLAG_COLOR={gone:'#791F1F', low:'#791F1F', nudge:'#633806', exp:'#633806', new:'var(--teal)'};
@@ -150,6 +154,12 @@ function progressRowUrgentLineHtml(x){
   // σωστά το dark mode, ίδιο με το .hm-row-sub/.hm-empty.
   if(x.flags.indexOf('muted')>-1){
     return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:var(--text-muted)">🔇 Σε σίγαση · '+progressMuteLabel(x.c)+'</div>';
+  }
+  if(x.flags.indexOf('paused')>-1){
+    return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:var(--text-muted)">⏸ Σε παύση'+(x.c.pausedUntil&&typeof lcFmtDM==='function'?' έως '+lcFmtDM(x.c.pausedUntil):'')+'</div>';
+  }
+  if(x.flags.indexOf('dormant')>-1){
+    return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:var(--text-muted)">💤 Χωρίς δραστηριότητα 60+ μέρες · πρόταση για Πρώην στην Αρχική</div>';
   }
   if(!x.flags.length) return '';
   var ordered=PROGRESS_FLAG_PRIORITY.filter(function(f){return x.flags.indexOf(f)>-1;});
@@ -328,7 +338,7 @@ function progressResultsHtml(all){
   if(!shown.length) return '<div class="hm-card"><div class="hm-empty">Κανένας πελάτης'+(_progressSearch.trim()?' για "'+esc(_progressSearch.trim())+'"':'')+'.</div></div>';
   // "🔇 Σε σίγαση" εξαιρείται από το bulk-select/nudge — δεν βγάζει νόημα μαζική υπενθύμιση ΑΚΡΙΒΩΣ
   // στους πελάτες που ο διαιτολόγος μόλις σήμανε ότι δεν θα συνεχίσουν.
-  var bulkMode=_progressFilter!=='all' && _progressFilter!=='muted';
+  var bulkMode=_progressFilter!=='all' && _progressFilter!=='muted' && _progressFilter!=='paused' && _progressFilter!=='dormant';
   var bulkBarHtml='';
   if(bulkMode){
     var selCount=shown.filter(function(x){return _progressSelected[x.c.id];}).length;
@@ -354,7 +364,7 @@ function progressOpenMessages(name){
 // εδώ δεν χρειάζεται να «τραβήξει» όλο τον χώρο της σειράς, μοιράζεται τη σειρά με group tag/σκορ/τάση.
 function progressRowHtml(x,bulkMode){
   var c=x.c;
-  var isMuted=x.flags.indexOf('muted')>-1;
+  var isMuted=x.flags.indexOf('muted')>-1 || x.flags.indexOf('paused')>-1 || x.flags.indexOf('dormant')>-1;
   var checkboxHtml=bulkMode?('<input type="checkbox" style="margin-top:7px;flex-shrink:0" onclick="event.stopPropagation()" onchange="progressToggleSelect(\''+c.id+'\',this.checked)"'+(_progressSelected[c.id]?' checked':'')+'>'):'';
   // Σιγασμένος: ουδέτερο (μη-teal) avatar + γκριζαρισμένο block ταυτότητας/σκορ — τα κουμπιά ενεργειών
   // ΕΞΩ από αυτό το block, μένουν πάντα πλήρως ορατά/πατήσιμα.
@@ -423,9 +433,10 @@ function renderProgress(){
     +'</select>';
   listHtml+='</div>';
   listHtml+='<div id="progress-filters" style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap">'
-    +['all','nudge','low','gone','new','exp','muted'].map(function(k){
+    +['all','nudge','low','gone','new','exp','muted','paused','dormant'].map(function(k){
       var label=k==='all'?'Όλοι':PROGRESS_FLAG_LABELS[k];
       var cnt=k==='all'?all.length:all.filter(function(x){return x.flags.indexOf(k)>-1;}).length;
+      if((k==='paused'||k==='dormant') && !cnt && _progressFilter!==k) return '';   // μόνο όταν υπάρχουν
       return '<span class="appt-fchip'+(k===_progressFilter?' active':'')+'" onclick="progressSetFilter(\''+k+'\',this)">'+label+' ('+cnt+')</span>';
     }).join('')
     +'</div>';

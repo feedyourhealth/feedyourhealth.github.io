@@ -25,6 +25,9 @@ function homeClientsNeedingAttention(){
   var WEIGHT_GAP_DAYS=30, CHECKIN_GAP_DAYS=2, INTAKE_PENDING_DAYS=3;
   var now=Date.now();
   var out=[];
+  // ⏸/💤 (js/client-list/lifecycle.js): σε παύση ή προτεινόμενοι για Πρώην — κρατάνε μόνο τα σήματα
+  // που έρχονται από τον ίδιο τον πελάτη (🚩/😕/💬), όχι τα διαχειριστικά (πλάνο, μέτρηση, check-in).
+  var _lcQuiet=(typeof lcQuietMap==='function')?lcQuietMap():{};
   clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
     if(c.attentionSnoozeUntil && now<c.attentionSnoozeUntil) return;
     var flaggedAppt=(c.appointments||[]).slice().reverse().find(function(a){return a.flagged;});
@@ -53,6 +56,7 @@ function homeClientsNeedingAttention(){
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();selectClient(\''+c.id+'\');swTab(TAB_APPOINTMENTS);">Δες σημείωση</button>'});
       return;
     }
+    if(_lcQuiet[c.id]) return;
     // 📋 Ερωτηματολόγιο εισαγωγής στάλθηκε αλλά δεν συμπληρώθηκε ακόμα (Upgrades Phase 2d).
     // Έρχεται ΠΡΙΝ το "χωρίς πλάνο": δεν μπορείς να ετοιμάσεις πλάνο όσο εκκρεμεί το ερωτηματολόγιο.
     // c.intakeSentAt / c.intakeStatus συντηρούνται από Cloud.sendIntake + fetchIntakeStatus +
@@ -199,7 +203,8 @@ function homeRedsRow(c){
 
 // Πελάτες με δημοσιευμένο σύνδεσμο portal που δείχνει πλέον ξεπερασμένο πλάνο.
 function homeStaleLinks(){
-  return clients.filter(function(c){return !c.deleted && !c.archived && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c);});
+  var _lcQuiet=(typeof lcQuietMap==='function')?lcQuietMap():{};
+  return clients.filter(function(c){return !c.deleted && !c.archived && !_lcQuiet[c.id] && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c);});
 }
 
 function fmtDateLocal(d){
@@ -500,7 +505,8 @@ function homeClientsNeedingFeedbackReminder(){
   if(!isFeedbackReminderWindow()) return [];
   var weekStart=ckWeekDates(0)[0];
   if(!window.Cloud || typeof window.Cloud.planFeedbackFor!=='function') return [];
-  return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;})
+  var _lcQuiet=(typeof lcQuietMap==='function')?lcQuietMap():{};
+  return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken && !_lcQuiet[c.id];})
     .filter(function(c){
       var latest=window.Cloud.planFeedbackFor(c)[0];
       return !(latest && latest.week_start===weekStart);
@@ -656,7 +662,8 @@ function homeAttentionBuckets(attn, stale){
       action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeQuickRepublish(\''+c.id+'\',this)">Ξαναδημοσίευσε</button>'});}
   });
   var amberIds={}; amber.forEach(function(x){amberIds[x.c.id]=true;});
-  var green=clients.filter(function(c){return !c.deleted&&!c.archived&&!redIds[c.id]&&!amberIds[c.id];})
+  var _lcQuietG=(typeof lcQuietMap==='function')?lcQuietMap():{};   // σε παύση / προτεινόμενοι Πρώην δεν είναι «εντάξει»
+  var green=clients.filter(function(c){return !c.deleted&&!c.archived&&!redIds[c.id]&&!amberIds[c.id]&&!_lcQuietG[c.id];})
     .map(function(c){return {c:c,label:'ενεργό πλάνο, όλα εντάξει'};});
   return {red:red,amber:amber,green:green,activity:activity};
 }
@@ -805,7 +812,8 @@ function homeTasteLibraryCardHtml(status){
 var RENEWAL_WARNING_DAYS=5;
 function homeApproachingRenewal(){
   var out=[];
-  clients.filter(function(c){return !c.deleted && !c.archived;}).forEach(function(c){
+  var _lcQuiet=(typeof lcQuietMap==='function')?lcQuietMap():{};
+  clients.filter(function(c){return !c.deleted && !c.archived && !_lcQuiet[c.id];}).forEach(function(c){
     if(c.attentionSnoozeUntil && Date.now()<c.attentionSnoozeUntil) return;
     if(!c.planGeneratedAt || !dietsHasPlan(c) || dietsNeedsRenewal(c)) return;
     var threshold=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;
@@ -1273,7 +1281,8 @@ function renderHome(){
   };
   // [2] Τα πλακίδια είναι φίλτρο — μία ιεραρχία: πλακίδιο επιλέγει, η λίστα από κάτω δείχνει το επιλεγμένο.
   html+=homeSectionHtml('buckets','🎯 Πελάτες ανά κατάσταση',
-    '<p class="hm-filter-eyebrow">Φίλτρο — διάλεξε πλακίδιο· η λίστα από κάτω δείχνει το επιλεγμένο</p>'
+    (typeof lcHomeCardHtml==='function'?lcHomeCardHtml():'')
+    +'<p class="hm-filter-eyebrow">Φίλτρο — διάλεξε πλακίδιο· η λίστα από κάτω δείχνει το επιλεγμένο</p>'
     +'<div class="hm-tiles">'
     +_hmTile('red','red',buckets.red.length,'🔴 Χρειάζονται προσοχή')
     +_hmTile('amber','amber',buckets.amber.length,'🟡 Μπαγιατεμένα πλάνα')
@@ -1372,7 +1381,8 @@ function setClientRenewalDays(clientId,val){
 // Χωρίς πλάνο ακόμα, ή με δημοσιευμένο σύνδεσμο που δείχνει ξεπερασμένο πλάνο, ή πλάνο που χρειάζεται ανανέωση.
 // Πελάτες σε αναβολή (homeSnoozeClient) εξαιρούνται προσωρινά — η υποκείμενη κατάσταση δεν αλλάζει.
 function dietsNeedsAction(){
-  return clients.filter(function(c){return !c.deleted && !c.archived;})
+  var _lcQuiet=(typeof lcQuietMap==='function')?lcQuietMap():{};
+  return clients.filter(function(c){return !c.deleted && !c.archived && !_lcQuiet[c.id];})
     .filter(function(c){ return !(c.attentionSnoozeUntil && Date.now()<c.attentionSnoozeUntil); })
     .filter(function(c){ return !dietsHasPlan(c) || (window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)) || dietsNeedsRenewal(c); });
 }

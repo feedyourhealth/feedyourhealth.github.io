@@ -120,6 +120,7 @@ function clientQuickChipsHtml(base){
   var noplanCount=base.filter(function(c){return !(c.weekPlan && Object.keys(c.weekPlan).length>0);}).length;
   var todayCount=base.filter(function(c){return c.lastAccess && Math.floor((Date.now()-c.lastAccess)/86400000)===0;}).length;
   var waitCount=base.filter(clientIsWaiting).length;
+  var pausedCount=(typeof lcIsPaused==='function')?base.filter(lcIsPaused).length:0;
   var isAll=(_clientFilterQuick===''&&_clientFilterStatus!=='noplan');
   function chip(key,label,count,active){
     return '<button type="button" class="client-quick-chip'+(active?' active':'')+'" onclick="setClientQuickFilter(\''+key+'\')">'
@@ -131,6 +132,7 @@ function clientQuickChipsHtml(base){
     +chip('noplan','⭕ Χωρίς πλάνο',noplanCount,_clientFilterStatus==='noplan')
     +chip('today','🕐 Ενεργοί σήμερα',todayCount,_clientFilterQuick==='today')
     +(waitCount?chip('waiting','⏳ Σε αναμονή',waitCount,_clientFilterQuick==='waiting'):'')
+    +(pausedCount?chip('paused','⏸ Σε παύση',pausedCount,_clientFilterQuick==='paused'):'')
     +'</div>';
 }
 
@@ -229,6 +231,8 @@ function clientCriticalEA(c){
 function clientNeedsAttention(c){
   if(clientHasFlaggedAppointment(c)) return true;
   if(clientHasLowPlanFeedback(c)) return true;
+  // ⏸/💤 σε παύση ή προτεινόμενος για Πρώην (lifecycle.js): μόνο τα σήματα του ίδιου του πελάτη μετράνε
+  if(typeof lcIsQuiet==='function' && lcIsQuiet(c)) return false;
   if(typeof dietsHasPlan==='function' && !dietsHasPlan(c)) return true;
   if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) return true;
   if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)) return true;
@@ -283,7 +287,7 @@ function clientCardHtml(c){
     +goalRingHtml
     +(_clientBulkMode?'':(
       '<div class="cc-actions">'
-      +'<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
+      +'<button class="carch" title="Μετακίνηση στους Πρώην πελάτες" aria-label="Μετακίνηση στους Πρώην πελάτες" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
       +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
       +'</div>'
     ))
@@ -293,6 +297,7 @@ function clientCardHtml(c){
     +progressBadge(c)
     +lastAccessChipHtml(c.lastAccess)
     +clientWaitBadgeHtml(c)
+    +(typeof lcBadgeHtml==='function'?lcBadgeHtml(c):'')
     +'</div>'
     +'</div>';
 }
@@ -309,6 +314,7 @@ function clientRowHtml(c){
     +(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')
     +(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')
     +(clientIsWaiting(c)?' '+clientWaitBadgeHtml(c):'')
+    +(typeof lcBadgeHtml==='function'&&lcIsPaused(c)?' '+lcBadgeHtml(c):'')
     +(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'');
   // ✅ audit fix (2026-08-24, finding #1): ίδιο data-client-id με το clientCardHtml — για το
   // δεξί-κλικ context menu στην προβολή "Λίστα".
@@ -326,7 +332,7 @@ function clientRowHtml(c){
     +'<td>'+progressBadge(c)+'</td>'
     +'<td>'+lastAccessChipHtml(c.lastAccess)+'</td>'
     +'<td class="cr-actions">'+(_clientBulkMode?'':(
-      '<button class="carch" title="Αρχειοθέτηση" aria-label="Αρχειοθέτηση πελάτη" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
+      '<button class="carch" title="Μετακίνηση στους Πρώην πελάτες" aria-label="Μετακίνηση στους Πρώην πελάτες" onclick="event.stopPropagation();archiveClient(\''+c.id+'\')">📦</button>'
       +'<button class="cdel" aria-label="Διαγραφή πελάτη" onclick="event.stopPropagation();deleteClient(\''+c.id+'\')">✕</button>'
     ))+'</td>'
     +'</tr>';
@@ -359,6 +365,7 @@ function renderSB(){
     if(_clientFilterQuick==='attention' && !clientNeedsAttention(c)) return false;
     if(_clientFilterQuick==='today' && !(c.lastAccess && Math.floor((Date.now()-c.lastAccess)/86400000)===0)) return false;
     if(_clientFilterQuick==='waiting' && !clientIsWaiting(c)) return false;
+    if(_clientFilterQuick==='paused' && !(typeof lcIsPaused==='function' && lcIsPaused(c))) return false;
     return true;
   });
   // ✅ Sort according to the selected mode (default: most recent visit first)
@@ -460,15 +467,18 @@ function renderSB(){
     archivedClients.forEach(function(c){
       _secHtml+='<div class="client-card cc-muted">'
         +'<div class="cc-name cc-muted-name">'+esc(c.name||'Νέος πελάτης')+'</div>'
-        +'<div class="cc-sub cc-muted-sub">Αρχειοθετήθηκε</div>'
+        +'<div class="cc-sub cc-muted-sub">Πρώην'+(c.archivedAt&&typeof lcFmtDM==='function'?' από '+lcFmtDM(c.archivedAt):'')+'</div>'
         +'<div class="cc-muted-actions">'
-        +'<button class="cc-restore" onclick="event.stopPropagation();unarchiveClient(\''+c.id+'\');renderSB()">↶ Επαναφορά</button>'
+        // Άνοιγμα χωρίς αλλαγή κατάστασης (η καρτέλα δείχνει λωρίδα «Πρώην» + επαναφορά).
+        // «Στους Ενεργούς» μέσω lcClientSet ώστε να μην ξαναπροταθεί αμέσως για Πρώην (lifecycle.js).
+        +'<button class="cc-restore" onclick="event.stopPropagation();selectClient(\''+c.id+'\')">Άνοιγμα</button>'
+        +'<button class="cc-restore" onclick="event.stopPropagation();lcClientSet(\''+c.id+'\',\'active\')">↶ Στους Ενεργούς</button>'
         +'<button class="cc-permadelete" onclick="event.stopPropagation();deleteClient(\''+c.id+'\');renderSB()">🗑️ Διαγραφή</button>'
         +'</div>'
         +'</div>';
     });
     _secHtml+='</div>';
-    html+=clientsSectionHtml('clientsArchivedCollapsed','clients-muted-block','📦 Αρχειοθετημένοι',archivedClients.length,_secHtml);
+    html+='<div id="lc-former-anchor"></div>'+clientsSectionHtml('clientsArchivedCollapsed','clients-muted-block','📦 Πρώην πελάτες',archivedClients.length,_secHtml);
   }
 
   // ✅ TRASH SECTION: Show deleted clients
