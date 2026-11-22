@@ -284,16 +284,22 @@ function renderWeekTable(){
           +' oninput="showChipSug(this)" onfocus="showChipSug(this)" onblur="closeDD()">'
           +'</div>'
           +'</div>'
+          // 2026-11-22: ποσότητα + μονάδα μόνες τους στη 2η γραμμή, στοιχισμένες αριστερά. Τα κουμπιά που
+          // φαίνονται μόνο στο hover (📖 🔽 ≡ 🔄 ✕) πήγαν σε .chip-tools (absolute, πάνω δεξιά) — πριν έπιαναν
+          // χώρο ακόμα και αόρατα, και σε οθόνη ≤1440px η γραμμή ξεχείλιζε αριστερά: η ποσότητα έβγαινε
+          // έξω από την κάρτα και φαινόταν σαν να ανήκει στη διπλανή μέρα.
           +'<div class="chip-r2">'
-          +hasIng
-          +hasExpand
-          +(hasSrv?'<button class="chip-srv" onmousedown="event.preventDefault();showPortions(this,'+d+','+mi+','+fi+')" aria-label="Μερίδες">&#8801;</button>':'')
           +'<input class="chip-g" type="number" min="0" step="'+(displayUnit==='g'||!fu||subUnitWhole?'1':'0.1')+'" max="'+chipMax+'" value="'+chipVal+'" onchange="'+chipChg+'">'
           +'<button class="chip-unit-btn" onclick="cycleUnit('+d+','+mi+','+fi+')" title="Αλλαγή μονάδας" aria-label="Αλλαγή μονάδας">'+chipUnit+'</button>'
           +(fu&&fu.u==='μερίδ.'?'<span class="chip-ghint">('+food.g+'g)</span>':'')
+          +'</div>'
+          +'<span class="chip-tools">'
+          +hasIng
+          +hasExpand
+          +(hasSrv?'<button class="chip-srv" onmousedown="event.preventDefault();showPortions(this,'+d+','+mi+','+fi+')" aria-label="Μερίδες">&#8801;</button>':'')
           +'<button class="chip-swap-btn" onclick="showMealAlternatives('+d+','+mi+')" title="Εναλλακτικό γεύμα" aria-label="Εναλλακτικό γεύμα">🔄</button>'
           +'<button class="chip-del" onclick="delF('+d+','+mi+','+fi+')" aria-label="Διαγραφή τροφίμου">&#10005;</button>'
-          +'</div>'
+          +'</span>'
           +'</div>';
         // Recipe ingredients — visible only in print/PDF
         if(FOODS[food.n]&&FOODS[food.n].ingredients){

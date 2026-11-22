@@ -414,7 +414,7 @@ function buildTrackerHtml(c){
         +'<span style="font-size:11px;font-weight:700;color:#025857">📈 Σύνοψη προόδου</span>'
         +'<span style="font-size:11px">Βάρος: <b style="color:'+wCol+'">'+(wDiff>0?'+':'')+wDiff+' kg</b> ('+first.weight+'→'+last.weight+'kg)</span>'
         +(bfDiff!==null?'<span style="font-size:11px">Λίπος: <b style="color:'+(bfDiff<0?'var(--good)':'#c62828')+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>':'')
-        +(lbmDiff!==null?'<span style="font-size:11px">Lean Mass: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>':'')
+        +(lbmDiff!==null?'<span style="font-size:11px">Άλιπη μάζα: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>':'')
         +(lastBMI!=null?'<span style="font-size:11px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+(bmiStatus?' ('+bmiStatus+')':'')+'</b></span>':'')
         +'<span style="font-size:10px;color:var(--text-muted);margin-left:auto">'+sorted2.length+' μετρήσεις</span>'
         +'</div>'
@@ -430,8 +430,8 @@ function buildTrackerHtml(c){
           +'</div>'
           +'</div>'
           +'<div style="display:flex;gap:15px;font-size:9px;margin-top:4px">'
-          +'<span><span style="display:inline-block;width:12px;height:12px;background:#1565C0;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Lean Mass: '+lastLBM+' kg ('+(lastLBM/last.weight*100).toFixed(1)+'%)</span>'
-          +'<span><span style="display:inline-block;width:12px;height:12px;background:#ff9999;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Fat Mass: '+lastFM+' kg ('+last.bf+'%)</span>'
+          +'<span><span style="display:inline-block;width:12px;height:12px;background:#1565C0;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Άλιπη μάζα: '+lastLBM+' kg ('+(lastLBM/last.weight*100).toFixed(1)+'%)</span>'
+          +'<span><span style="display:inline-block;width:12px;height:12px;background:#ff9999;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Λιπώδης μάζα: '+lastFM+' kg ('+last.bf+'%)</span>'
           +'</div>'
           +'</div>':'')
         +trackerInsightsHtml(c,sorted2)
@@ -597,7 +597,7 @@ function initTrendCharts(c){
       options: {
         responsive: true,
         maintainAspectRatio: true,
-        plugins: { legend: { display: true, labels: { font: { size: 11 }, color: '#666' } }, title: { display: true, text: '📈 Weight Trend', font: { size: 13, weight: 'bold' }, color: '#025857' } },
+        plugins: { legend: { display: true, labels: { font: { size: 11 }, color: '#666' } }, title: { display: true, text: '📈 Πορεία βάρους', font: { size: 13, weight: 'bold' }, color: '#025857' } },
         scales: { y: { beginAtZero: false, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
       }
     });
@@ -613,7 +613,7 @@ function initTrendCharts(c){
       data: {
         labels: dates,
         datasets: [{
-          label: 'Body Fat %',
+          label: 'Λίπος %',
           data: bfs,
           borderColor: '#ff6b35',
           backgroundColor: 'rgba(255,107,53,0.1)',
@@ -627,7 +627,7 @@ function initTrendCharts(c){
       options: {
         responsive: true,
         maintainAspectRatio: true,
-        plugins: { legend: { display: true, labels: { font: { size: 11 }, color: '#666' } }, title: { display: true, text: '📊 Body Fat % Trend', font: { size: 13, weight: 'bold' }, color: '#ff6b35' } },
+        plugins: { legend: { display: true, labels: { font: { size: 11 }, color: '#666' } }, title: { display: true, text: '📊 Πορεία λίπους %', font: { size: 13, weight: 'bold' }, color: '#ff6b35' } },
         scales: { y: { beginAtZero: false, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
       }
     });

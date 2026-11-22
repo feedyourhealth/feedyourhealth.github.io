@@ -167,12 +167,14 @@ function buildTmplSelectorHtml(c){
   sameDietTmpls.concat(otherTmpls).forEach(function(ct){
     var gl=GOAL_LABELS[ct.goal]||ct.goal;
     var db=DIET_TYPE_BADGE[ct.dietType||'normal'];
-    opts+='<option value="'+ct.id+'"'+(sel===ct.id?' selected':'')+'>⭐ '+esc(ct.name)+' — '+gl+(db?' · '+db:'')+' ('+esc(ct.createdAt)+')</option>';
+    // 2026-11-22: χωρίς στόχο έβγαινε «— undefined» — παραλείπεται το κομμάτι αντί για κενό/undefined.
+    opts+='<option value="'+ct.id+'"'+(sel===ct.id?' selected':'')+'>⭐ '+esc(ct.name)+(gl?' — '+esc(gl):'')+(db?' · '+db:'')+(ct.createdAt?' ('+esc(ct.createdAt)+')':'')+'</option>';
   });
   // Existing clients' plans (as basis for new plans) — same-diet clients first, same reasoning.
   var clientsWithPlans=clients.filter(function(cl){
     var hasWeekPlan=Object.keys(cl.weekPlan||{}).length>0;
-    return cl.id!==c.id && hasWeekPlan;
+    // 2026-11-22: όχι πελάτες στον κάδο (εκτός αν είναι ήδη η επιλεγμένη βάση, για να μην αλλάξει σιωπηλά).
+    return cl.id!==c.id && hasWeekPlan && (!cl.deleted || sel==='__client_'+cl.id);
   });
   var sameDietClients=[], otherClients=[];
   clientsWithPlans.forEach(function(cl){
@@ -185,7 +187,7 @@ function buildTmplSelectorHtml(c){
       var cGoal=GOAL_LABELS[cl.goalMain]||cl.goalMain;
       var cName=cl.name||'Νέος πελάτης';
       var cdb=DIET_TYPE_BADGE[cl.dietType||'normal'];
-      opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+esc(cName)+' — '+cGoal+(cdb?' · '+cdb:'')+'</option>';
+      opts+='<option value="__client_'+cl.id+'"'+(sel==='__client_'+cl.id?' selected':'')+'>👤 '+esc(cName)+(cGoal?' — '+esc(cGoal):'')+(cdb?' · '+cdb:'')+'</option>';
     });
     opts+='</optgroup>';
   }

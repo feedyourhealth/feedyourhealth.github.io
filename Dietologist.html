@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="06ea9c583efe">
+<meta name="fyh-build" content="c58c2701b1be">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -20,7 +20,7 @@
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css?v=55318ee9ee">
+<link rel="stylesheet" href="css/styles.css?v=d77a954ec7">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -393,7 +393,7 @@ setTimeout(function(){
 <!-- client-editor/* — the client editor's sub-tabs, carved out of app-part2.js.
      tracker.js must precede app-part4.js (its migrateClientSkinfoldBF is called from
      that file's parse-time client-load IIFE). -->
-<script defer src="js/client-editor/tracker.js?v=0f19e2f19e"></script>
+<script defer src="js/client-editor/tracker.js?v=445900e0c8"></script>
 <script defer src="js/client-editor/tracker-results.js?v=8b4fc9e326"></script>
 <script defer src="js/client-editor/day-targets.js?v=ac18e90038"></script>
 <script defer src="js/client-editor/form-controls.js?v=326dad8ee9"></script>
@@ -401,7 +401,7 @@ setTimeout(function(){
 <!-- client-editor/overview — the "📇 Επισκόπηση" client sub-tab: read-only status
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
-<script defer src="js/client-editor/overview.js?v=d2650b1a3b"></script>
+<script defer src="js/client-editor/overview.js?v=8bca63e923"></script>
 <!-- client-editor/inline-sections — unfolds the 5 "modal" settings (Χρόνοι Γευμάτων /
      MET / Διατροφή / Ιατρικές / Συμπληρώματα) into inline collapsible section-cards in
      s1's #modal-btns-grid. Reuses the existing modal save fns (same input IDs). -->
@@ -414,7 +414,7 @@ setTimeout(function(){
 <script defer src="js/client-editor/food-diary.js?v=54c8b190b5"></script>
 <!-- client-editor/diet-panels — template editor (plan history → plan-history.js), the last
      of the old app-part1.js (now removed). Only `var curTmplGoal` at parse time. -->
-<script defer src="js/client-editor/diet-panels.js?v=13a1b996b5"></script>
+<script defer src="js/client-editor/diet-panels.js?v=1abb5bac4e"></script>
 <!-- client-editor/plan-history — 📊 Ιστορικό πλάνων (s4): auto-save on publish, backups, chart, compare. -->
 <script defer src="js/client-editor/plan-history.js?v=c3d018eb74"></script>
 <script defer src="js/client-editor/plan-history-athlete.js?v=193cb7944e"></script>
@@ -435,7 +435,7 @@ setTimeout(function(){
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
 <script defer src="js/plan-gen/gen-plan.js?v=817656fa17"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
-<script defer src="js/plan-gen/week-table.js?v=4e7c5163f2"></script>
+<script defer src="js/plan-gen/week-table.js?v=f363943e49"></script>
 <script defer src="js/plan-gen/household.js?v=12f22e4504"></script>
 <script defer src="js/plan-gen/food-selector.js?v=de432f65e1"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=fbeaed85c9"></script>
@@ -662,8 +662,7 @@ setTimeout(function(){
     <!-- App Info -->
     <div style="background:var(--panel-bg);padding:12px;border-radius:8px;text-align:center;color:#666;font-size:12px;">
       <div style="margin-bottom:4px;"><strong>Εργαλείο Διαιτολόγου v3.0</strong></div>
-      <div>Τελευταία ενημέρωση: Ιούνιος 2026</div>
-      <div style="margin-top:8px;font-size:11px;color:var(--text-muted);">Όλα τα δεδομένα αποθηκεύονται τοπικά στον υπολογιστή σας</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--text-muted);">Τα δεδομένα αποθηκεύονται στο cloud, με αντίγραφο στον browser και (αν το όρισες) στον φάκελο backup</div>
     </div>
 
     <!-- Λογαριασμός -->

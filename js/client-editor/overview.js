@@ -99,7 +99,9 @@ function buildOverviewHtml(c){
   // saved plans (the dietitian's plan history)
   (c.savedPlans||[]).forEach(function(p){
     var when=p.date||p.createdAt;
-    push(when,'plan','📱 Πλάνο #'+(p.number||'?')+(p.kind==='sent'?' στάλθηκε':' αποθηκεύτηκε'), p.note?esc(p.note):'');
+    // 2026-11-22: σχόλιο που είναι σκέτος αριθμός («1», «2» — συνηθισμένο στην πράξη) λέει το ίδιο με το #N.
+    var pNote=String(p.note||'').trim();
+    push(when,'plan','📱 Πλάνο #'+(p.number||'?')+(p.kind==='sent'?' στάλθηκε':' αποθηκεύτηκε'), (pNote&&!/^\d+$/.test(pNote))?esc(pNote):'');
   });
   // last generation, if newer than any saved plan
   if(c.planGeneratedAt){
@@ -126,7 +128,17 @@ function buildOverviewHtml(c){
   clogs.forEach(function(l){
     var bits=[];
     if(l.weight_kg!=null) bits.push('βάρος (δικό του) '+dec(l.weight_kg)+' kg');
-    if(l.note) bits.push('«'+esc(l.note)+'»');
+    // 2026-11-22: το portal γράφει την ετικέτα ημέρας ως πρόθεμα «[tag:party] » — εδώ έβγαινε ωμό.
+    // Ίδια ανάλυση με portal-comms.js / messages.js.
+    var noteRaw=l.note||'', tagTxt='';
+    var tm=/^\[tag:(travel|party|sick)\]\s*/.exec(noteRaw);
+    if(tm){
+      var td=(typeof CLIENT_LOG_TAG_DEFS!=='undefined'&&CLIENT_LOG_TAG_DEFS[tm[1]])||null;
+      noteRaw=noteRaw.slice(tm[0].length);
+      if(td) tagTxt=td.icon+' '+td.label;
+    }
+    if(tagTxt) bits.push(esc(tagTxt));
+    if(noteRaw) bits.push('«'+esc(noteRaw)+'»');
     if(!bits.length) return;
     push(l.date,'msg','💬 Καταχώρηση πελάτη', bits.join(' · '));
   });
