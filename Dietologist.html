@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="2f25b241d9f9">
+<meta name="fyh-build" content="e7a0b2343b2d">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -20,7 +20,7 @@
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css?v=977bec12e4">
+<link rel="stylesheet" href="css/styles.css?v=d7b9b3a386">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -361,7 +361,7 @@ setTimeout(function(){
 <script defer src="js/calc/micronutrients.js?v=67408a9c0e"></script>
 <!-- calc/portion-optimizer — «⚖️ Προσαρμογή ποσοτήτων»: grams-only fit to the day macro targets.
      Zero load-time code; UI deps (getC, renderWeekTable, getDayTgtEff…) resolve at call time. -->
-<script defer src="js/calc/portion-optimizer.js?v=71ab70ca1d"></script>
+<script defer src="js/calc/portion-optimizer.js?v=37eb4b963f"></script>
 <!-- core/* — state persistence: storage, debounced save, tab-lock, backup, auto-save -->
 <script defer src="js/core/persistence.js?v=890201f1fe"></script>
 <!-- core/templates — load-time DEFAULT_TMPLS normalisation + TMPLS + TRACKING_DATA
@@ -373,7 +373,7 @@ setTimeout(function(){
 <!-- client-list/waiting — ⏳ «Σε αναμονή» ανά πελάτη (c.waitItems): παράθυρο, υπενθύμιση,
      κάρτα Αρχικής/λωρίδα πελάτη/ετικέτα λίστας. Πριν το roster-ui: το renderSB το διαβάζει. -->
 <script defer src="js/client-list/waiting.js?v=60586ddde6"></script>
-<script defer src="js/client-list/lifecycle.js?v=864f875a48"></script>
+<script defer src="js/client-list/lifecycle.js?v=7265acf5db"></script>
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
@@ -397,8 +397,8 @@ setTimeout(function(){
 <script defer src="js/client-editor/tracker.js?v=457c49acb4"></script>
 <script defer src="js/client-editor/tracker-results.js?v=87cdd456e0"></script>
 <script defer src="js/client-editor/day-targets.js?v=336711f8bc"></script>
-<script defer src="js/client-editor/form-controls.js?v=d92abd6a8a"></script>
-<script defer src="js/client-editor/render-main.js?v=b07d363534"></script>
+<script defer src="js/client-editor/form-controls.js?v=cc541d08d3"></script>
+<script defer src="js/client-editor/render-main.js?v=d385f99b5e"></script>
 <!-- client-editor/overview — the "📇 Επισκόπηση" client sub-tab: read-only status
      header + chronological history feed + right rail, all recomputed from c.* and the
      window.Cloud portal caches on each open. selectClient() lands here. -->
@@ -436,12 +436,13 @@ setTimeout(function(){
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
 <script defer src="js/plan-gen/gen-plan.js?v=817656fa17"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
-<script defer src="js/plan-gen/week-table.js?v=3f9fa0f0b0"></script>
+<script defer src="js/plan-gen/week-table.js?v=adccef1608"></script>
+<script defer src="js/plan-gen/plan-insights.js?v=e30c91f621"></script>
 <script defer src="js/plan-gen/household.js?v=d1e4f63455"></script>
 <script defer src="js/plan-gen/food-selector.js?v=735c224213"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=8ebc7a4412"></script>
 <script defer src="js/plan-gen/micronutrient-html.js?v=8e56c2b89f"></script>
-<script defer src="js/plan-gen/publish-modal.js?v=908c2976f5"></script>
+<script defer src="js/plan-gen/publish-modal.js?v=1733aae7d4"></script>
 <script defer src="js/plan-gen/food-lib-favorites.js?v=f11fba7658"></script>
 <!-- reports/* — plan & body-comp exports (PDF/Word/GDocs), backup I/O. Pure fns,
      no load-time code; refs resolve at click time. -->
@@ -460,7 +461,7 @@ setTimeout(function(){
      Pure fn declarations, no load-time code. -->
 <script defer src="js/tabs/home-diets.js?v=245f44032a"></script>
 <script defer src="js/tabs/messages.js?v=5588553b9f"></script>
-<script defer src="js/tabs/progress.js?v=63aaf4484a"></script>
+<script defer src="js/tabs/progress.js?v=79a3bffcc0"></script>
 <script defer src="js/tabs/notifications.js?v=0538d9fb51"></script>
 <script defer src="js/tabs/progress-insights.js?v=a0fc6f0f09"></script>
 <script defer src="js/tabs/progress-rejects.js?v=2469e66fc6"></script>
@@ -747,7 +748,7 @@ setTimeout(function(){
      Κάθε χρήστης έχει ΜΙΑ γραμμή στον πίνακα user_data (ένα jsonb "συρτάρι").
      Όλα τα δεδομένα (clients, templates, tracking) πάνε σαν ένα πακέτο.
      ═══════════════════════════════════════════════════════════════ -->
-<script defer src="js/app-part7.js?v=8538c5edb2"></script>
+<script defer src="js/app-part7.js?v=60c4d50e7f"></script>
 
 </body>
 </html>

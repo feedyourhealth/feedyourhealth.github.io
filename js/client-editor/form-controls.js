@@ -488,6 +488,8 @@ function swTab(n){
   // curTab (js/core/state.js) — ενημερώνεται ΠΡΩΤΑ, πριν από όλα τα early-return branches παρακάτω,
   // ώστε τα background refresh*Cache (js/app-part7.js) να ξέρουν ΠΟΙΟ tab είναι ορατό αυτή τη στιγμή.
   curTab=n;
+  // 📲 πάνελ «Ο πελάτης» (plan-gen/plan-insights.js) ανήκει μόνο στο Πλάνο
+  if(n!==2 && typeof piHidePanel==='function') piHidePanel();
   // Βήμα 6: το στρογγυλό «+» μόνο σε Αρχική και Πελάτες (αλλού καθόταν πάνω στο περιεχόμενο)
   var _fab=document.getElementById('fab-btn'); if(_fab) _fab.style.display=(n===0||n===7)?'':'none';
   if(n===0){ if(typeof renderHome==='function') renderHome(); return; }
@@ -762,7 +764,9 @@ function getSecState(c){
       daytgt: true,
       // ✅ Τα 5 πρώην-modal (js/client-editor/inline-sections.js): κλειστά αφού συμπληρωθούν,
       // ανοιχτά σε νέο πελάτη ώστε να μη «κρυφτεί» πεδίο που δεν έχει μπει ακόμη.
-      mealtimes: !!(c.mealTimes && c.mealTimes.breakfast),
+      // 2026-11-22 (δεδομένα χρήσης: ώρες γευμάτων σε 18/82 πελάτες): πάντα κλειστό — αν δεν
+      // συμπληρωθεί ισχύουν οι προεπιλογές, άρα δεν «κρύβεται» κάτι που λείπει.
+      mealtimes: true,
       mettrain: !!(c.metActivities && c.metActivities.length),
       dietsec: true,
       medical: true,

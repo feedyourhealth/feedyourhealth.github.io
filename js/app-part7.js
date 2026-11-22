@@ -1054,7 +1054,7 @@
         age:c.age||null,
         height:c.height||null,
         publishedAt:new Date().toISOString(),
-        coachNote:(c.portalNote||'').trim(),
+        coachNote:((typeof portalNoteFor==='function')?portalNoteFor(c):(c.portalNote||'')).trim(),
         contact:hasContact?{wa:clinic.wa||'',tel:clinic.tel||'',email:clinic.email||''}:null,
         // #5 — το metriseis.html ανοίγει από την καρτέλα Πρόοδος του πλάνου (ίδιο origin, δικό του
         // token). null όσο ο διαιτολόγος δεν έχει δημοσιεύσει έντυπο μετρήσεων για τον πελάτη.

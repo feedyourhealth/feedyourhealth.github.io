@@ -139,8 +139,9 @@ function renderWeekTable(){
   var legendToggle='<details class="plan-legend"><summary>🎨 Χρώματα</summary>'+foodDotLegend+'</details>';
   var addMealBar='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px;flex-wrap:wrap">'
     +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+legendToggle+dblHint+'</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+((typeof frBtnHtml==='function')?frBtnHtml(c):'')+((typeof piToggleBtnHtml==='function')?piToggleBtnHtml(c):'')
     +'<button onclick="openAddMealSlotModal()" title="Πρόσθεσε ένα έξτρα γεύμα (π.χ. ένα ακόμα ενδιάμεσο/σνακ) σε όλες τις ημέρες" style="background:#025857;color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">➕ Προσθήκη γεύματος</button>'
-    +'</div>';
+    +'</div></div>';
   // ⚠️ «Οι στόχοι άλλαξαν» — πάνω από «Προσθήκη γεύματος» (calc/portion-optimizer.js)
   var tgtBanner=(typeof poTargetsBannerHtml==='function')?poTargetsBannerHtml(c):'';
   var html=summaryCard+buildHouseholdPlanBar(c)+tgtBanner+addMealBar+'<table class="week-table"><thead><tr><th>Γεύμα</th>';
@@ -205,6 +206,8 @@ function renderWeekTable(){
       +timingBadge
       +'<button onclick="renameMealSlot('+mi+')" title="Μετονομασία γεύματος" aria-label="Μετονομασία γεύματος" style="background:none;border:none;cursor:pointer;font-size:12px;opacity:0.55;margin-left:6px" class="meal-slot-ctl">✏️</button>'
       +'<button onclick="deleteMealSlot('+mi+')" title="Διαγραφή γεύματος (όλες τις ημέρες)" aria-label="Διαγραφή γεύματος (όλες τις ημέρες)" style="background:none;border:none;cursor:pointer;font-size:12px;opacity:0.55" class="meal-slot-ctl">🗑️</button>'
+      // 📲 τήρηση ανά γεύμα + «αλλάζει συχνά» από το link (plan-gen/plan-insights.js)
+      +((typeof piSlotHeaderHtml==='function')?piSlotHeaderHtml(c,mi):'')
       +'</td></tr>';
     var rowBg=(mi%2===0)?'background:var(--panel-bg)':'background:var(--card-bg)';
     html+='<tr style="'+rowBg+'"><td class="meal-label" style="visibility:hidden"></td>';
@@ -220,6 +223,7 @@ function renderWeekTable(){
         html+='<span class="meal-drag-handle" title="Σύρε ΟΛΟΚΛΗΡΟ το γεύμα σε άλλη ημέρα/γεύμα (αντιγραφή)" aria-label="Σύρε ολόκληρο το γεύμα (αντιγραφή)">&#10303;</span>';
       }
       html+=mealSourceBadge(c.weekPlan[d]&&c.weekPlan[d][mi]);
+      if(typeof piCellBadgesHtml==='function') html+=piCellBadgesHtml(c,d,mi);
       if(hhIsShared(c,c.weekPlan[d]&&c.weekPlan[d][mi],d)) html+='<span class="meal-source-badge" style="display:block;font-size:12px;font-weight:600;padding:1px 5px;border-radius:6px;margin-bottom:3px;background:#E2EEE5;color:#014545;width:fit-content" title="Κοινό γεύμα νοικοκυριού — εμφανίζεται στο link κουζίνας">🏠 Κοινό</span>';
       // Γραμμή-τίτλος έτοιμου/branded γεύματος — ό,τι βλέπει κι ο πελάτης στο link/PDF, με κουμπί × για αφαίρεση.
       var _mObj=c.weekPlan[d]&&c.weekPlan[d][mi];
@@ -576,6 +580,7 @@ function renderWeekTable(){
     +'<span class="pq-more">λεπτομέρειες</span></summary>'
     +'<div class="pq-body">'+scoreHtml+fiberBannerHtml+validationHtml+'</div></details>';
   con.innerHTML=qualityHtml+swapBannerHtml+nutBannerHtml+protoWarnHtml+protoPortionHtml+tunaWarnHtml+html;
+  if(typeof piRenderPanel==='function') piRenderPanel(c);
   // «💾 Αποθήκευση & → Πλάνο» (tracker.js qmSave): μόλις εμφανιστεί το «⚠️ Οι στόχοι άλλαξαν», κύλισε εκεί.
   if(window._poScrollToBanner){
     var _tb=document.getElementById('po-tgt-banner');

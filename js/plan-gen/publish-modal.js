@@ -91,6 +91,20 @@ var PUBLISH_MSG_DICTS={
        subj:'Beslenme planın — Feed Your Health',
        body:function(fname,url){return 'Merhaba '+fname+'!\n\nİşte kişisel beslenme planın. Telefonundan aç:\n\n'+url+'\n\nBurada beslenme planını, alışveriş listeni, takviyelerini, su tüketimini ve ilerlemeni bulacaksın.\n\nSaygılarımla,\nFeed Your Health';} }
 };
+// ✍️ Έτοιμο προσωπικό μήνυμα (2026-11-22, πρόταση 8 από τα δεδομένα χρήσης: 61 πελάτες είχαν
+// «Πάμε δυνατά!!» / «Lets go!!» γραμμένο με το χέρι). Μπαίνει μόνο όταν c.portalNote δεν έχει
+// οριστεί ποτέ (undefined/null)· κενό '' = ο διαιτολόγος το έσβησε σκόπιμα → σεβόμαστε το κενό.
+var PORTAL_NOTE_DEFAULT={el:'Πάμε δυνατά!!', en:'Let\'s go!!', ru:'Вперёд, у тебя всё получится!', tr:'Haydi, başarabilirsin!'};
+var PORTAL_NOTE_CHIPS={
+  el:['Πάμε δυνατά!!','Μπράβο για την πρόοδο!','Εστίασε στο πρωινό αυτή την εβδομάδα.'],
+  en:['Let\'s go!!','Great progress, well done!','Focus on breakfast this week.']
+};
+function portalNoteLang(c){ return (['en','ru','tr'].indexOf(c&&c.lang)>-1)?c.lang:'el'; }
+function portalNoteFor(c){
+  if(!c) return '';
+  if(c.portalNote==null) return PORTAL_NOTE_DEFAULT[portalNoteLang(c)];
+  return String(c.portalNote);
+}
 function publishHandoffMsg(c,url){
   var d=PUBLISH_MSG_DICTS[c.lang]||PUBLISH_MSG_DICTS.el;
   var fname=(c.name||'').split(' ')[0];
@@ -170,7 +184,11 @@ function openPublishModal(){
       +'<div class="sf-header" onclick="togglePublishSettings()"><span>⚙️ Ρυθμίσεις πελάτη <span style="font-size:12px;font-weight:400;color:#9fb5b0">— μήνυμα Αρχικής, στόχοι Προόδου</span></span><span id="publish-settings-chevron" class="sec-chevron'+(settingsOpen?' open':'')+'">▸</span></div>'
       +'<div id="publish-settings-body" style="display:'+(settingsOpen?'block':'none')+';margin-top:10px">'
       +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">✍️ Προσωπικό μήνυμα στον πελάτη <span style="color:#9fb5b0">(προαιρετικό)</span></div>'
-      +'<textarea id="portal-note" rows="2" placeholder="π.χ. Μπράβο για την πρόοδο! Εστίασε στο πρωινό αυτή την εβδομάδα." style="width:100%;box-sizing:border-box;font-size:13px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;resize:vertical;font-family:inherit;color:#1a3330;margin-bottom:4px">'+esc(c.portalNote||'')+'</textarea>'
+      +'<textarea id="portal-note" rows="2" placeholder="π.χ. Μπράβο για την πρόοδο! Εστίασε στο πρωινό αυτή την εβδομάδα." style="width:100%;box-sizing:border-box;font-size:13px;padding:9px 10px;border:1px solid #c5ddd8;border-radius:8px;resize:vertical;font-family:inherit;color:#1a3330;margin-bottom:4px">'+esc(portalNoteFor(c))+'</textarea>'
+      +'<div id="portal-note-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px">'
+      +(PORTAL_NOTE_CHIPS[portalNoteLang(c)]||[PORTAL_NOTE_DEFAULT[portalNoteLang(c)]]).map(function(t){
+        return '<button type="button" class="pn-chip" data-t="'+esc(t)+'" style="font:inherit;font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid #c5ddd8;background:#eef6f3;color:#014545;cursor:pointer;width:auto;min-height:0">'+esc(t)+'</button>';
+      }).join('')+'</div>'
       +'<div style="font-size:12px;color:#9fb5b0;margin:0 0 8px;line-height:1.3">Φαίνεται μόνο στην Αρχική του πελάτη στο portal — δεν μπαίνει στο μήνυμα WhatsApp/Viber/Email.</div>'
       +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">🎯 Στόχοι για την καρτέλα Πρόοδος <span style="color:#9fb5b0">(προαιρετικό)</span></div>'
       +(c.goalWeight?'':'<div style="font-size:12px;color:#e08a00;margin:-2px 0 8px;line-height:1.4">⚠️ Χωρίς στόχο βάρους ο πελάτης δεν θα δει την κάρτα στόχου στην Αρχική του.</div>')
@@ -206,6 +224,9 @@ function openPublishModal(){
       +'<div style="font-size:12px;color:#9fb5b0;line-height:1.4;margin-top:4px">Σβήνει τον τρέχοντα σύνδεσμο και φτιάχνει καινούριο — χρήσιμο αν ο πελάτης έχει συμπληρώσει νερό/συμπληρώματα/σημειώσεις που θες να «καθαρίσουν». Ο παλιός σύνδεσμος σταματάει να δουλεύει αμέσως.</div>';
     // Αποθήκευση προσωπικού μηνύματος → ξαναδημοσίευση ώστε να μπει στο snapshot
     var noteSave=document.getElementById('portal-note-save'), noteEl=document.getElementById('portal-note');
+    Array.prototype.forEach.call(document.querySelectorAll('#portal-note-chips .pn-chip'),function(b){
+      b.onclick=function(){ if(noteEl){ noteEl.value=b.getAttribute('data-t'); noteEl.focus(); } };
+    });
     if(noteSave&&noteEl){ noteSave.onclick=function(){
       c.portalNote=noteEl.value;
       var gwEl=document.getElementById('portal-goalweight'), gbfEl=document.getElementById('portal-goalbf'), bandsEl=document.getElementById('portal-showbfbands');

@@ -57,6 +57,45 @@ function lcLastActivity(c){
   return best;
 }
 
+// 📵 Χρήση του link από τον πελάτη (2026-11-22, δεδομένα χρήσης: 19/82 ενεργοί δεν τσέκαραν ποτέ
+// τίποτα, 19 σταμάτησαν 30+ μέρες). Η «Χρειάζονται υπενθύμιση» πιάνει μόνο όσους είχαν ξεκινήσει.
+//   {state:'never',  days}  — ΚΑΜΙΑ σημείωση (γεύμα/νερό/συμπλήρωμα), πλάνο σταλμένο πριν ≥ LINK_NEVER_MIN_DAYS
+//   {state:'stopped',days}  — σημείωνε, τελευταία φορά πριν ≥ LINK_STOPPED_DAYS
+//   {state:'active', days}  — αλλιώς
+// null = δεν ξέρουμε (χωρίς link/πλάνο, πρώην, ή τα check-ins δεν έχουν φορτώσει ακόμα).
+var LINK_NEVER_MIN_DAYS=3, LINK_STOPPED_DAYS=14;
+function lcFirstSentKey(c){
+  var keys=[];
+  (c.savedPlans||[]).forEach(function(p){
+    if(p.sentDates && p.sentDates.length) keys=keys.concat(p.sentDates);
+    else if(p.date) keys.push(p.date);
+  });
+  if(c.planGeneratedAt) keys.push(lcDateKey(new Date(+c.planGeneratedAt)));
+  keys=keys.filter(Boolean).map(function(k){ return String(k).slice(0,10); }).sort();
+  return keys[0]||null;
+}
+function linkUsage(c){
+  var C=window.Cloud;
+  if(!c || c.deleted || c.archived || !c.shareToken || !c._publishedPlanHash) return null;
+  if(!C || typeof C.checkinsFor!=='function' || (C.enabled && C.user && !C._checkinsLoaded)) return null;
+  var first=lcFirstSentKey(c); if(!first) return null;
+  var today=lcDateKey(), DAY=LC_DAY;
+  var since=function(k){ return Math.round((lcParse(today)-lcParse(k))/DAY); };
+  var act=C.checkinsFor(c).filter(function(r){ return (r.meals_done||0)>0 || (r.water_glasses||0)>0 || (r.supps_done||0)>0; })
+    .map(function(r){ return r.date; });
+  if(typeof C.mealLogFor==='function'){
+    var ml=C.mealLogFor(c);
+    Object.keys(ml).forEach(function(k){ var m=ml[k]||{}; if(Object.keys(m).some(function(i){ return m[i]; })) act.push(k); });
+  }
+  act.sort();
+  if(!act.length){
+    var d=since(first);
+    return d>=LINK_NEVER_MIN_DAYS?{state:'never',days:d}:null;
+  }
+  var gap=since(act[act.length-1]);
+  return {state:gap>=LINK_STOPPED_DAYS?'stopped':'active', days:gap};
+}
+
 // Οι προτάσεις περιμένουν τα 3 caches του συνδέσμου (αλλιώς η δραστηριότητα θα φαινόταν ψευδώς παλιά).
 function lcPortalReady(){
   var C=window.Cloud;

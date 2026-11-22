@@ -91,7 +91,7 @@ function progressRosterData(){
     // σημαία προσοχής — μόνο η δική τους, ώστε να φαίνονται στο chip αλλά να μη ζητάνε υπενθύμιση.
     var lcSt=(typeof lcIsPaused==='function'&&lcIsPaused(c))?'paused':((typeof lcIsQuiet==='function'&&lcIsQuiet(c))?'dormant':null);
     if(lcSt) isMuted=true;
-    var flags=[];
+    var flags=[], neverDays=null;
     var isLow=false, needsNudge=false;
     // Ενόσω σιγασμένος, ΚΑΜΙΑ από τις σημαίες προσοχής δεν υπολογίζεται πια — αυτό είναι το νόημα
     // της σίγασης (ο διαιτολόγος ήδη ξέρει, δεν χρειάζεται να ξαναειδοποιείται). Η μόνη σημαία που
@@ -107,29 +107,32 @@ function progressRosterData(){
       needsNudge = (typeof attnNudge==='function') ? !!attnNudge(c) : false;
       if(needsNudge) flags.push('nudge');
       if(firstWeekIds[c.id]) flags.push('new');
+      // 📵 Δεν ξεκίνησε ποτέ το link (linkUsage, js/client-list/lifecycle.js) — 2026-11-22.
+      var lu=(typeof linkUsage==='function')?linkUsage(c):null;
+      if(lu && lu.state==='never'){ flags.push('never'); neverDays=lu.days; }
       if(expDays!=null && expDays<=PROGRESS_EXPIRING_DAYS) flags.push('exp');
     } else {
       flags.push(lcSt||'muted');
     }
     // Βαρύτητα για την προεπιλεγμένη ταξινόμηση "χρειάζεται προσοχή πρώτα" — σιγασμένος πελάτης
     // βυθίζεται στο τέλος (κάτω κι από το ουδέτερο 0), δεν ανταγωνίζεται ποτέ πια για προσοχή.
-    var weight=isMuted?-1:(stoppedIds[c.id]?3:((isLow||needsNudge)?2:((expDays!=null&&expDays<=PROGRESS_EXPIRING_DAYS)?1:0)));
+    var weight=isMuted?-1:(stoppedIds[c.id]?3:((isLow||needsNudge||neverDays!=null)?2:((expDays!=null&&expDays<=PROGRESS_EXPIRING_DAYS)?1:0)));
 
     return {c:c, score:score, prevScore:prevScore, pillars:pillars, streak:streak, gap:gap,
-      wDelta:wDelta, expDays:expDays, flags:flags, weight:weight, contactDays:contactDays};
+      wDelta:wDelta, expDays:expDays, flags:flags, weight:weight, contactDays:contactDays, neverDays:neverDays};
   });
 }
 
-var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', nudge:'🔔 Χρειάζονται υπενθύμιση', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει', muted:'🔇 Σε σίγαση', paused:'⏸ Σε παύση', dormant:'💤 Ανενεργοί 60+ μέρες'};
+var PROGRESS_FLAG_LABELS={low:'⚠️ Χαμηλή τήρηση', gone:'📉 Σταμάτησαν', nudge:'🔔 Χρειάζονται υπενθύμιση', never:'📵 Δεν ξεκίνησαν το link', new:'🌱 Πρώτη εβδομάδα', exp:'⏳ Πλάνο λήγει', muted:'🔇 Σε σίγαση', paused:'⏸ Σε παύση', dormant:'💤 Ανενεργοί 60+ μέρες'};
 // Σειρά προτεραιότητας όταν ένας πελάτης έχει πάνω από 1 σημαία — ποια εμφανίζεται πρώτη/τονισμένη
 // στη γραμμή λίστας (idea #1, mockup συζήτησης 2026-09-15). Ίδια ιεράρχηση με το βάρος ταξινόμησης
 // στο progressRosterData (gone > low > exp) + το 'new' στο τέλος (πληροφοριακό, όχι προειδοποίηση).
 // 'muted' δεν συνυπάρχει ποτέ με τις άλλες (progressRosterData τις αποκλείει ενόσω σιγασμένος), αλλά
 // πρέπει να βρίσκεται εδώ αλλιώς progressRowUrgentLineHtml θα έβρισκε 'ordered' άδειο.
-var PROGRESS_FLAG_PRIORITY=['gone','low','nudge','exp','new','muted','paused','dormant'];
+var PROGRESS_FLAG_PRIORITY=['gone','low','nudge','never','exp','new','muted','paused','dormant'];
 // Ίδιοι χρωματικοί τόνοι με τα ήδη υπάρχοντα hm-act-score-bad/-warn (css/styles.css) — 'new' παίρνει
 // το ουδέτερο teal του app αντί για κόκκινο/πορτοκαλί, μια πρώτη εβδομάδα δεν είναι πρόβλημα.
-var PROGRESS_FLAG_COLOR={gone:'#791F1F', low:'#791F1F', nudge:'#633806', exp:'#633806', new:'var(--teal)'};
+var PROGRESS_FLAG_COLOR={gone:'#791F1F', low:'#791F1F', nudge:'#633806', never:'#633806', exp:'#633806', new:'var(--teal)'};
 // Ο πιο αδύναμος πυλώνας ΑΥΤΗΣ της εβδομάδας για έναν πελάτη — ίδιο κατώφλι-ανεξάρτητη λογική με το
 // progressWeakPillarCalloutHtml (client-detail chart panel), εδώ σε συμπτυγμένη μορφή μιας γραμμής
 // για τη λίστα ρίζας, ώστε το "⚠️ Χαμηλή τήρηση" να μην είναι απλά μια ετικέτα αλλά να λέει ΤΙ.
@@ -169,6 +172,7 @@ function progressRowUrgentLineHtml(x){
     var w=progressWeakestPillarTxt(x.pillars);
     if(w) extra=' <span style="color:#999;font-weight:400">· '+w+' πιο αδύναμος πυλώνας</span>';
   }
+  if(top==='never' && x.neverDays!=null) extra=' <span style="color:#999;font-weight:400">· κανένα ✅ από την αποστολή, πριν '+x.neverDays+' ημέρες</span>';
   if(top==='nudge' && x.gap!=null) extra=' <span style="color:#999;font-weight:400">· σιωπή '+x.gap+' ημέρες</span>';
   // 'gone' είναι υποσύνολο του 'nudge' (ίδιος πελάτης, πιο αυστηρό κριτήριο) — δεν ξαναγράφεται ως «υπόλοιπη» σημαία.
   var rest=ordered.slice(1).filter(function(f){return !(top==='gone' && f==='nudge');});
@@ -444,7 +448,7 @@ function renderProgress(){
     +'</select>';
   listHtml+='</div>';
   listHtml+='<div id="progress-filters" style="display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap">'
-    +['all','nudge','low','gone','new','exp','muted','paused','dormant'].map(function(k){
+    +['all','nudge','never','low','gone','new','exp','muted','paused','dormant'].map(function(k){
       var label=k==='all'?'Όλοι':PROGRESS_FLAG_LABELS[k];
       var cnt=k==='all'?all.length:all.filter(function(x){return x.flags.indexOf(k)>-1;}).length;
       if((k==='paused'||k==='dormant') && !cnt && _progressFilter!==k) return '';   // μόνο όταν υπάρχουν

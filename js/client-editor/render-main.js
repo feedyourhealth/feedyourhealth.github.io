@@ -160,6 +160,10 @@ function clientChipsHtml(c){
       if(sc!=null) out.push(chip('📶 Τήρηση '+sc+'%'+(st?' · σερί '+st:''), sc<45?'warn':''));
     }
   }
+  // 📵/⏸ Χρήση του link (linkUsage, js/client-list/lifecycle.js) — για συζήτηση στο ραντεβού.
+  var lu=(typeof linkUsage==='function')?linkUsage(c):null;
+  if(lu && lu.state==='never') out.push(chip('📵 Δεν ξεκίνησε το link','warn',' title="Κανένα ✅ από την αποστολή του πρώτου πλάνου, πριν '+lu.days+' ημέρες"'));
+  else if(lu && lu.state==='stopped') out.push(chip('⏸ Link: σταμάτησε πριν '+lu.days+' ημ.','warn',' title="Τελευταίο ✅ πριν '+lu.days+' ημέρες"'));
   if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) out.push('<button type="button" class="cchip cchip-btn warn" onclick="swTab(2);openPublishModal()" title="Το πλάνο άλλαξε μετά την αποστολή — ξαναστείλε για να ενημερωθεί ο σύνδεσμος">🔗 Σύνδεσμος: παλιό πλάνο</button>');
   return '<div id="client-chips" class="client-chips">'+out.join('')+'</div>';
 }

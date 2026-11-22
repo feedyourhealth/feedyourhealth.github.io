@@ -2895,3 +2895,61 @@ body.dark-mode .set-btn-danger{color:#ef9a9a;border-color:#6b3a36}
 .tr-cmp .tr-sf-sum td{font-weight:700;border-bottom:none}
 .tr-cmp .tr-sf-sum:first-of-type td,.tr-cmp tr.tr-sf-sum + tr.tr-sf-sum td{border-top:0}
 .tr-sf-mm{color:var(--text-muted);font-size:12px}
+
+/* ── 📲 «Ο πελάτης στο link» μέσα στο Πλάνο (plan-gen/plan-insights.js, 2026-11-22) ── */
+.pi-slot{display:inline-block;margin-left:10px;font-size:12px;font-weight:600;color:var(--good);background:var(--success-tint);border-radius:999px;padding:1px 8px;vertical-align:middle}
+.pi-slot.pi-low{color:#8a5a00;background:#fff6e5}
+button.pi-mk,button.pi-cell,button.pi-toggle,button.pi-btn,button.pi-x{width:auto;min-height:0;font-family:inherit;cursor:pointer}
+button.pi-mk{margin-left:6px;font-size:12px;font-weight:700;color:var(--wk-accent-fg);background:var(--teal-tint);border:1px solid #b5dcd6;border-radius:999px;padding:1px 8px;vertical-align:middle}
+button.pi-cell{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;border-radius:6px;padding:1px 6px;margin-bottom:3px;text-align:left}
+button.pi-cell-sw{color:var(--wk-accent-fg);background:var(--teal-tint);border:1px solid #b5dcd6}
+button.pi-cell-rj{color:#9b2c2c;background:#fdecea;border:1px solid #f3c5c0}
+button.pi-toggle{font-size:12px;font-weight:600;padding:7px 12px;border-radius:6px;border:1px solid #b5dcd6;background:var(--teal-tint);color:var(--wk-accent-fg)}
+button.pi-toggle.on{background:#025857;color:#fff;border-color:#025857}
+.pi-panel{position:fixed;top:0;right:0;bottom:0;width:330px;z-index:900;background:var(--card-bg);border-left:1px solid var(--border-light);box-shadow:-6px 0 18px rgba(0,0,0,.08);overflow-y:auto;padding:14px 14px calc(18px + env(safe-area-inset-bottom,0px));font-size:13px;color:var(--text-strong);display:flex;flex-direction:column;gap:8px}
+body.pi-open .main{padding-right:346px}
+.pi-hd{display:flex;align-items:center;gap:8px;font-size:14px}
+.pi-hd b{flex:1;min-width:0}
+button.pi-x{background:none;border:none;font-size:15px;color:var(--text-muted);padding:2px 6px}
+.pi-sub,.pi-muted{font-size:12px;color:var(--text-muted)}
+.pi-empty{font-size:13px;color:var(--text-muted);line-height:1.5}
+.pi-warn{font-size:12px;font-weight:600;color:#8a5a00;background:#fff6e5;border-radius:8px;padding:6px 9px}
+.pi-kv{display:flex;justify-content:space-between;gap:8px;font-variant-numeric:tabular-nums}
+.pi-kv span{color:var(--text-muted)}
+.pi-sec{margin-top:6px;font-size:12px;font-weight:700;letter-spacing:.03em;color:var(--wk-accent-fg)}
+.pi-bar{display:grid;grid-template-columns:92px 1fr 36px;gap:6px;align-items:center;font-size:12px;font-variant-numeric:tabular-nums}
+.pi-bar-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pi-bar-t{height:7px;border-radius:4px;background:var(--panel-bg);overflow:hidden}
+.pi-bar-t i{display:block;height:100%;background:#2e9d6a;border-radius:4px}
+.pi-bar-t i.lo{background:#e0a030}
+.pi-bar-v{text-align:right}
+.pi-bar-n{font-size:12px;color:var(--text-muted);margin:-4px 0 0 98px}
+.pi-card{border:1px solid var(--border-light);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:4px;transition:box-shadow .3s}
+.pi-card.pi-hl{box-shadow:0 0 0 2px #025857}
+.pi-acts{display:flex;gap:6px;flex-wrap:wrap}
+button.pi-btn{font-size:12px;font-weight:600;padding:5px 10px;border-radius:7px;border:1px solid var(--border-light);background:var(--card-bg);color:var(--text-strong)}
+button.pi-btn.pri{background:#025857;border-color:#025857;color:#fff}
+.pi-note{font-size:12px;line-height:1.45}
+@media (max-width:1099px){
+  body.pi-open .main{padding-right:16px}
+  .pi-panel{top:auto;left:0;width:auto;max-height:55vh;border-left:0;border-top:1px solid var(--border-light);border-radius:14px 14px 0 0;box-shadow:0 -6px 18px rgba(0,0,0,.12)}
+}
+@media (max-width:767px){ .pi-panel{bottom:calc(60px + env(safe-area-inset-bottom,0px))} }
+@media (prefers-reduced-motion:reduce){ .pi-card{transition:none} }
+body.dark-mode .pi-slot.pi-low,body.dark-mode .pi-warn{background:#3a2c14;color:#f0dcb4}
+body.dark-mode button.pi-cell-rj{background:#3a1b19;border-color:#6b2f2a;color:#f2b8b2}
+body.dark-mode button.pi-toggle.on,body.dark-mode button.pi-btn.pri{background:#0f766e;border-color:#0f766e}
+body.dark-mode .pi-card.pi-hl{box-shadow:0 0 0 2px #3fb8aa}
+/* 🌱 Φρεσκάρισμα (plan-insights.js) */
+.fr-overlay{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px}
+.fr-box{background:var(--card-bg);color:var(--text-strong);border-radius:14px;max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.fr-list{display:flex;flex-direction:column;gap:6px}
+.fr-row{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;border:1px solid var(--border-light);border-radius:10px;padding:9px 10px;cursor:pointer;line-height:1.5}
+.fr-row input{margin-top:3px;width:auto;min-height:0}
+.fr-txt{min-width:0}
+.fr-from{text-decoration:line-through;color:var(--text-muted)}
+.pi-tg{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:0 8px}
+.pi-tg-teal{background:var(--teal-tint);color:var(--wk-accent-fg)}
+.pi-tg-amber{background:#fff6e5;color:#8a5a00}
+body.dark-mode .pi-tg-amber{background:#3a2c14;color:#f0dcb4}
+button.pi-btn:disabled{opacity:.5;cursor:default}

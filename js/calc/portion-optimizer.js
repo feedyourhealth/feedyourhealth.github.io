@@ -504,6 +504,7 @@ function poTargetsBannerHtml(c){
     +'<div class="po-tgt-btns">'
     +'<button type="button" class="po-tgt-go" onclick="poTargetsAdjust(true)" title="Προσαρμογή ποσοτήτων ('+_poJoinDays(btnDays,true)+') και άνοιγμα της αποστολής στον πελάτη">⚖️ Προσαρμογή &amp; αποστολή</button>'
     +'<button type="button" class="po-tgt-no po-tgt-only" onclick="poTargetsAdjust()" title="Προσαρμογή ποσοτήτων μόνο σε αυτές τις ημέρες — δεν αλλάζουν τρόφιμα">⚖️ Μόνο προσαρμογή '+_poJoinDays(btnDays,true)+'</button>'
+    +((typeof frOpen==='function')?'<button type="button" class="po-tgt-no" onclick="frOpen()" title="Προτάσεις για 2-3 αλλαγές γευμάτων για ποικιλία, με τις ίδιες θερμίδες">🌱 Φρεσκάρισμα…</button>':'')
     +'<button type="button" class="po-tgt-no po-tgt-dismiss" onclick="poTargetsDismiss()" title="Κλείνει το πλαίσιο χωρίς να αλλάξει τίποτα">Θα το κάνω μόνος μου ✕</button>'
     +'</div></div>';
 }
