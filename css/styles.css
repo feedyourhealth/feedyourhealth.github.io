@@ -2768,3 +2768,16 @@ body.dark-mode .lc-banner-former,body.dark-mode .lc-head-btn.lc-former{backgroun
 .tmpl-sel-count{font-size:11px;color:var(--text-muted);white-space:nowrap}
 body.dark-mode .tmpl-sel-search{background:#1a1a1a;border-color:#6b5218;color:#e0e0e0}
 .tmpl-sel-row{align-items:flex-start}
+
+/* ── 🏷 Κεφαλίδα πελάτη: chips (render-main.js clientChipsHtml, 2026-11-22) ── */
+.client-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 10px}
+.cchip{display:inline-flex;align-items:center;gap:4px;font-size:12px;line-height:1.3;color:var(--text-strong);background:var(--card-bg);border:1px solid var(--border-light);border-radius:999px;padding:4px 10px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-family:inherit}
+.cchip.good{background:var(--success-tint);border-color:#c5e1c5;color:var(--good)}
+.cchip.warn{background:#fff6e5;border-color:#f3dcb4;color:#8a5a00}
+.cchip-btn{cursor:pointer}
+.cchip-btn:hover{border-color:var(--teal)}
+.cchip-allergy:empty{display:none}
+.cchip-allergy > div{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:6px!important;padding:4px 10px!important;border-radius:999px!important;font-size:12px}
+.cchip-allergy > div > span{font-size:12px!important}
+body.dark-mode .cchip.warn{background:#3a2c14;border-color:#6b5020;color:#f0dcb4}
+body.dark-mode .cchip.good{background:#1c3320;border-color:#2e5a33;color:#7fcf86}

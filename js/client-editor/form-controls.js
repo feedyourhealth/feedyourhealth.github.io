@@ -522,6 +522,8 @@ function swTab(n){
   var s4=document.getElementById('s4');if(s4)s4.style.display='none';
   var s0ov=document.getElementById('s0ov');if(s0ov)s0ov.style.display='none';
   var ovAppt=document.getElementById('ov-appt-wrap');if(ovAppt)ovAppt.style.display='none';
+  // 🏷 chips πελάτη: όχι στην Επισκόπηση (έχει δική της σύνοψη πάνω-πάνω)
+  var cChips=document.getElementById('client-chips');if(cChips)cChips.style.display=(n===TAB_OVERVIEW||n===TAB_APPOINTMENTS)?'none':'flex';
 
   // ✅ THEN SHOW ONLY THE SELECTED PAGE
   // 📇 Επισκόπηση — rebuilt fresh each open (buildOverviewHtml reads the async portal caches).

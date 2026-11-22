@@ -103,8 +103,8 @@ function progressRosterData(){
       if(stoppedIds[c.id]) flags.push('gone');
       // Ήδη «πέρασε» υπενθύμιση από τον διαιτολόγο μετά το τελευταίο check-in (contactDays<gap) και δεν
       // έχουν περάσει ακόμα PROGRESS_NUDGE_RECONTACT_DAYS ⇒ δεν ξαναμπαίνει στη λίστα.
-      var nudgedRecently=contactDays!=null && contactDays<gap && contactDays<PROGRESS_NUDGE_RECONTACT_DAYS;
-      needsNudge = rows.length>0 && dietsHasPlan(c) && isFinite(gap) && gap>=PROGRESS_NUDGE_MIN_GAP && !nudgedRecently;
+      // Κοινός κανόνας με την Αρχική «🔔 Υπενθύμισε» (attnNudge, home-diets.js)
+      needsNudge = (typeof attnNudge==='function') ? !!attnNudge(c) : false;
       if(needsNudge) flags.push('nudge');
       if(firstWeekIds[c.id]) flags.push('new');
       if(expDays!=null && expDays<=PROGRESS_EXPIRING_DAYS) flags.push('exp');
@@ -395,7 +395,9 @@ function progressSummaryHtml(all){
     +'<div class="hm-stat"><div class="hm-stat-num">'+(avg==null?'—':avg+'%')+'</div><div class="hm-stat-lbl">Μ.Ο. τήρησης (εβδ.)</div></div>'
     +'<div class="hm-stat"><div class="hm-stat-num">'+withScore.length+'</div><div class="hm-stat-lbl">Ενεργοί με check-in</div></div>'
     +'<div class="hm-stat hm-stat-clickable" onclick="swTab(5)" onkeydown="if(event.key===\'Enter\')swTab(5)" role="button" tabindex="0" title="Άνοιγμα Διατροφές"><div class="hm-stat-num">'+expiring+'</div><div class="hm-stat-lbl">Πλάνα λήγουν ('+PROGRESS_EXPIRING_DAYS+' ημ.)</div></div>'
-    +'<div class="hm-stat"><div class="hm-stat-num">'+attention+'</div><div class="hm-stat-lbl">Χρειάζονται προσοχή</div></div>'
+    // 2026-11-22: ήταν «Χρειάζονται προσοχή» — αλλά μετρούσε μόνο χαμηλή τήρηση/σταμάτησαν, άλλο από
+    // το «Χρειάζονται προσοχή» της Αρχικής/Πελατών. Νέο όνομα = αυτό που πραγματικά μετράει.
+    +'<div class="hm-stat"><div class="hm-stat-num">'+attention+'</div><div class="hm-stat-lbl">Χαμηλή τήρηση ή σταμάτησαν</div></div>'
     +'</div></div></div>';
 }
 

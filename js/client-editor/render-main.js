@@ -129,6 +129,41 @@ function refreshGenChecklist(){
   if(fresh) box.replaceWith(fresh);
 }
 
+// 🏷 Κεφαλίδα πελάτη σε μία γραμμή chips (2026-11-22) — αντικαθιστά τη λωρίδα των 7 καρτών των Στοιχείων.
+// Κρατάει τα ίδια ids (header-measures/-goal/-sport/-diet/-exclude/-bloodtest/-allergy-wrap) ώστε
+// οι ζωντανές ενημερώσεις (form-controls.js, exclusions.js refreshAllergyUI) να δουλεύουν όπως πριν.
+function clientChipsHtml(c){
+  function chip(inner,cls,attrs){ return '<span class="cchip'+(cls?' '+cls:'')+'"'+(attrs||'')+'>'+inner+'</span>'; }
+  var out=[];
+  var bmi=(c.weight&&c.height)?Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10:null;
+  out.push(chip('⚖️ <span id="header-measures">'+(c.weight||'—')+'kg / '+(c.height||'—')+'cm'+(bmi?' (BMI: '+bmi+')':'')+'</span>'+((c.bf>0)?' · '+String(c.bf).replace('.',',')+'% λίπος':'')));
+  var wl=(c.weightLog||[]).filter(function(e){ return e&&e.weight; });
+  if(wl.length>=2){
+    var d=Math.round((wl[wl.length-1].weight-wl[0].weight)*10)/10;
+    if(d) out.push(chip((d<0?'▼ ':'▲ ')+String(Math.abs(d)).replace('.',',')+' kg από την αρχή', (d<0)===(c.goalMain!=='gain')?'good':'warn'));
+  }
+  var goalTxt=c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας',running:'Δρομείς'}[c.goalMain]||c.goalMain):'χωρίς στόχο';
+  var kcal=null; try{ if(typeof calcTDEE==='function'){ var t=calcTDEE(c); kcal=t&&!t.incomplete&&t.target?Math.round(t.target):null; } }catch(e){}
+  out.push(chip('🎯 <span id="header-goal">'+esc(goalTxt)+(c.goal&&parseInt(c.goal)?' ('+(parseInt(c.goal)>=0?'+':'')+parseInt(c.goal)+')':'')+'</span>'+(kcal?' · '+kcal+' kcal':''), c.goalMain?'':'warn'));
+  if(c.sport && SPORT_PROFILES[c.sport]) out.push(chip('🏅 <span id="header-sport">'+esc(SPORT_PROFILES[c.sport].name)+'</span>'));
+  var dietLbl=({vegetarian:'Χορτοφαγική',vegan:'Vegan',keto:'Κετογονική',orthodox_fasting:'Ορθόδοξη Νηστεία',intermittent_fasting:'Διαλείπουσα Νηστεία',bodybuilding_clean:'Bodybuilding Clean',kids_10_14:'Παιδιά 10-14',mediterranean:'🫒 Μεσογειακή'})[c.dietType];
+  if(dietLbl) out.push(chip('🥗 <span id="header-diet">'+esc(dietLbl)+'</span>'));
+  var hx=headerExcludeSummary(c.foodExclude);
+  if(hx.title) out.push(chip('🚫 <span id="header-exclude">'+esc(hx.text)+'</span>','',' title="'+esc(hx.title)+'"'));
+  out.push('<span id="header-allergy-wrap" class="cchip-allergy">'+((typeof allergyHeaderBoxHtml==='function')?allergyHeaderBoxHtml(c):'')+'</span>');
+  var bt=BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus]||BLOOD_TEST_STATUS_DEFS.none;
+  out.push('<button type="button" class="cchip cchip-btn'+(c.bloodTestStatus==='pending'?' warn':(c.bloodTestStatus==='sent'?' good':''))+'" onclick="cycleBloodTestStatus()" title="Αιματολογικές εξετάσεις — πάτα για αλλαγή κατάστασης">🩸 Αιματολογικές: <span id="header-bloodtest">'+bt.icon+' '+bt.label+'</span></button>');
+  if(c.shareToken && window.Cloud && typeof window.Cloud.checkinsFor==='function' && typeof ckRowsByDate==='function'){
+    var rows=window.Cloud.checkinsFor(c);
+    if(rows.length){
+      var by=ckRowsByDate(rows), sc=ckWeekScore(by,0), st=ckStreak(by);
+      if(sc!=null) out.push(chip('📶 Τήρηση '+sc+'%'+(st?' · σερί '+st:''), sc<45?'warn':''));
+    }
+  }
+  if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) out.push('<button type="button" class="cchip cchip-btn warn" onclick="swTab(2);openPublishModal()" title="Το πλάνο άλλαξε μετά την αποστολή — ξαναστείλε για να ενημερωθεί ο σύνδεσμος">🔗 Σύνδεσμος: παλιό πλάνο</button>');
+  return '<div id="client-chips" class="client-chips">'+out.join('')+'</div>';
+}
+
 // 📈 Παρακολούθηση κάτω από την Επισκόπηση — ανοιχτή/κλειστή, θυμάται ανά browser (προεπιλογή ανοιχτή).
 function ovApptOpen(){ try{ return localStorage.getItem('fyh_ov_appt_open')!=='0'; }catch(e){ return true; } }
 function ovApptRemember(open){ try{ localStorage.setItem('fyh_ov_appt_open',open?'1':'0'); }catch(e){} }
@@ -198,6 +233,9 @@ function renderMain(){
     // ο wrapper δεν αλλάζει τίποτα οπτικά — το ::after fade είναι κρυφό εκεί.
     // ⏳ Λωρίδα «Περιμένεις: …» (js/client-list/waiting.js) — πάνω από τα tabs ώστε να φαίνεται σε όποιο κι αν ανοίξεις.
     // ⏸/📦 Λωρίδα «Σε παύση» / «Πρώην πελάτης» (js/client-list/lifecycle.js)
+    // 🏷 Γραμμή chips (βάρος, στόχος, αποφυγές, αλλεργίες, αιματολογικές, τήρηση, σύνδεσμος) — σε
+    // Στοιχεία / Πλάνο / Μετρήσεις· κρύβεται στην Επισκόπηση, που έχει δική της σύνοψη (swTab).
+    +clientChipsHtml(c)
     +'<div id="lc-banner-slot">'+(typeof lcBannerHtml==='function'?lcBannerHtml(c):'')+'</div>'
     +'<div id="wait-banner-slot">'+(typeof waitBannerHtml==='function'?waitBannerHtml(c):'')+'</div>'
     +'<div class="stabs-wrap"><div class="stabs"><button class="stab" id="t0ov" onclick="swTab('+TAB_OVERVIEW+')">📇 Επισκόπηση</button><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία</button><button class="stab" id="t2" onclick="swTab(2)">Πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Μετρήσεις</button></div></div>'
@@ -228,40 +266,7 @@ function renderMain(){
     +'</div>'
     +'</div>':'')
 
-    // ✅ SUMMARY CARD (Client Overview with Goal)
-    +'<div style="background:linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);border:1.5px solid #c8e6c9;border-radius:12px;padding:14px 16px;margin-bottom:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05)">'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">👤 Πελάτης</span>'
-      +'<span style="font-size:13px;font-weight:700;color:#025857">' + esc(c.name||'—') + '</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">📊 Μέτρα</span>'
-      +'<span id="header-measures" style="font-size:13px;font-weight:600;color:#025857">' + (c.weight||'—') + 'kg / ' + (c.height||'—') + 'cm' + (c.weight&&c.height?' (BMI: '+Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10+')':'') + '</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">🎯 Στόχος</span>'
-      +'<span id="header-goal" style="font-size:13px;font-weight:600;color:#025857">' + (c.goalMain?({loss:'Απώλεια βάρους',maintain:'Διατήρηση',gain:'Αύξηση μάζας',running:'Δρομείς'}[c.goalMain]||c.goalMain):'—') + (c.goal&&parseInt(c.goal)?' ('+(parseInt(c.goal)>=0?'+':'')+parseInt(c.goal)+' kcal)':'') + '</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">🏅 Άθλημα</span>'
-      +'<span id="header-sport" style="font-size:13px;font-weight:600;color:#025857">' + esc(c.sport&&SPORT_PROFILES[c.sport]?SPORT_PROFILES[c.sport].name:'—') + '</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">🥗 Διατροφή</span>'
-      +'<span id="header-diet" style="font-size:13px;font-weight:600;color:#025857">' + esc(({normal:'Κανονική',vegetarian:'Χορτοφαγική',vegan:'Vegan',keto:'Κετογονική',orthodox_fasting:'Ορθόδοξη Νηστεία',intermittent_fasting:'Διαλείπουσα Νηστεία',bodybuilding_clean:'Bodybuilding Clean',kids_10_14:'Παιδιά 10-14',mediterranean:'🫒 Μεσογειακή'}[c.dietType]||'Κανονική')) + '</span>'
-    +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:rgba(255,255,255,0.6);border-radius:8px">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">🚫 Αποφυγές</span>'
-      +(function(){ var hx=headerExcludeSummary(c.foodExclude); return '<span id="header-exclude" style="font-size:13px;font-weight:600;color:#025857"'+(hx.title?' title="'+esc(hx.title)+'"':'')+'>' + esc(hx.text) + '</span>'; })()
-    +'</div>'
-    +'<div id="header-allergy-wrap" style="display:contents">'+((typeof allergyHeaderBoxHtml==='function')?allergyHeaderBoxHtml(c):'')+'</div>'
-    // ✅ Αιματολογικές εξετάσεις: χειροκίνητο tri-state κουμπί (δεν πρόκειται περί ανεβάσματος/λήψης
-    // αρχείου από τον πελάτη — η δ/γείος απλά σημειώνει τι της έχει σταλεί). Κλικ = επόμενη κατάσταση.
-    +'<button type="button" onclick="cycleBloodTestStatus()" title="Πάτα για αλλαγή κατάστασης" style="text-align:left;cursor:pointer;border:none;display:flex;flex-direction:column;gap:2px;padding:8px;background:'+BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].bg+';border-radius:8px;font-family:inherit">'
-      +'<span style="font-size:11px;color:#666;font-weight:600">🩸 Αιματολογικές</span>'
-      +'<span id="header-bloodtest" style="font-size:13px;font-weight:700;color:'+BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].color+'">' + BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].icon + ' ' + BLOOD_TEST_STATUS_DEFS[c.bloodTestStatus].label + '</span>'
-    +'</button>'
-    +'</div>'
+    // ✅ SUMMARY CARD → μετακόμισε στη γραμμή chips κάτω από το όνομα (clientChipsHtml, 2026-11-22).
 
     // ✅ SECTION 1: ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ (Όνομα, Φύλο, Ηλικία) — collapsible, collapsed by default once filled in
     +'<div class="section-card basic">'

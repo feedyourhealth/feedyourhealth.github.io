@@ -22,7 +22,7 @@
 // ή με πλάνο 30+ ημερών δεν εμφανιζόταν πουθενά στην Αρχική πριν αν είχε πρόσφατη μέτρηση βάρους.
 // Ο ξεπερασμένος σύνδεσμος portal εξαιρείται σκόπιμα εδώ (έχει ήδη δική του κάρτα με δικό της κουμπί).
 function homeClientsNeedingAttention(){
-  var WEIGHT_GAP_DAYS=30, CHECKIN_GAP_DAYS=2, INTAKE_PENDING_DAYS=3;
+  var WEIGHT_GAP_DAYS=30, INTAKE_PENDING_DAYS=3;   // σιωπή check-in: ATTN_NUDGE_MIN_GAP (κοινό με Πρόοδο)
   var now=Date.now();
   var out=[];
   // ⏸/💤 (js/client-list/lifecycle.js): σε παύση ή προτεινόμενοι για Πρώην — κρατάνε μόνο τα σήματα
@@ -57,6 +57,8 @@ function homeClientsNeedingAttention(){
       return;
     }
     if(_lcQuiet[c.id]) return;
+    // 🔇 σίγαση από την Πρόοδο = ίδιο νόημα εδώ: μόνο τα σήματα του πελάτη (πάνω) μένουν
+    if(typeof progressIsMuted==='function' && progressIsMuted(c)) return;
     // 📋 Ερωτηματολόγιο εισαγωγής στάλθηκε αλλά δεν συμπληρώθηκε ακόμα (Upgrades Phase 2d).
     // Έρχεται ΠΡΙΝ το "χωρίς πλάνο": δεν μπορείς να ετοιμάσεις πλάνο όσο εκκρεμεί το ερωτηματολόγιο.
     // c.intakeSentAt / c.intakeStatus συντηρούνται από Cloud.sendIntake + fetchIntakeStatus +
@@ -88,10 +90,11 @@ function homeClientsNeedingAttention(){
       out.push({c:c,tier:2,gap:gapDays,reason:'weightgap',label:isFinite(gapDays)?(gapDays+' ημ. χωρίς μέτρηση'):'καμία μέτρηση ακόμα'});
       return;
     }
-    if(c.shareToken && window.Cloud && window.Cloud.checkinsFor){
-      var rows=window.Cloud.checkinsFor(c);
-      var ckGap=rows.length?ckDaysSinceLast(rows):Infinity;
-      if(rows.length && ckGap>=CHECKIN_GAP_DAYS){
+    // Κοινός κανόνας με την Πρόοδο («🔔 Χρειάζονται υπενθύμιση»): attnNudge (πιο κάτω).
+    var _nudge=attnNudge(c);
+    if(_nudge){
+      var ckGap=_nudge.gap;
+      {
         out.push({c:c,tier:3,gap:ckGap,reason:'checkingap',label:'χωρίς check-in στο portal '+ckGap+' ημέρες',
           action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();sendActivityNudge(\''+c.id+'\')">🔔 Υπενθύμιση</button>'});
       }
@@ -264,7 +267,7 @@ function homeRedsRow(c){
 // Πελάτες με δημοσιευμένο σύνδεσμο portal που δείχνει πλέον ξεπερασμένο πλάνο.
 function homeStaleLinks(){
   var _lcQuiet=(typeof lcQuietMap==='function')?lcQuietMap():{};
-  return clients.filter(function(c){return !c.deleted && !c.archived && !_lcQuiet[c.id] && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c);});
+  return clients.filter(function(c){return !c.deleted && !c.archived && !_lcQuiet[c.id] && !attnQuiet(c) && window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c);});   // ίδια «ησυχία» με Διατροφές (attnQuiet)
 }
 
 function fmtDateLocal(d){
@@ -1421,6 +1424,41 @@ function planDaysSinceRenewal(c){
   var d1=new Date(); d1.setHours(0,0,0,0);
   return Math.round((d1-d0)/86400000);
 }
+// ── Κοινοί κανόνες «προσοχής» (2026-11-22) ─────────────────────────────────────────────────
+// Μία πηγή για Αρχική «Σήμερα», Πελάτες, Διατροφές, Πρόοδο. Πριν κάθε οθόνη είχε δικό της
+// αντίγραφο με λίγο διαφορετικούς κανόνες (2 vs 3 μέρες σιωπής, άλλη σίγαση), άρα άλλους αριθμούς.
+var ATTN_NUDGE_MIN_GAP=3;          // μέρες χωρίς check-in για «🔔 Υπενθύμισε» (ήταν 2 στην Αρχική, 3 στην Πρόοδο)
+var ATTN_NUDGE_RECONTACT_DAYS=7;   // αν του έστειλες ήδη μετά το τελευταίο check-in, όχι ξανά πριν περάσουν τόσες
+// Ήσυχος = σε παύση / ανενεργός 60+ (lifecycle.js) ή «🔇 σίγαση» της Προόδου ή «🔕 όλα» της Αρχικής.
+function attnQuiet(c){
+  if(!c) return true;
+  if(c.attentionSnoozeUntil && Date.now()<c.attentionSnoozeUntil) return true;
+  if(typeof progressIsMuted==='function' && progressIsMuted(c)) return true;
+  if(typeof lcIsQuiet==='function' && lcIsQuiet(c)) return true;
+  return false;
+}
+// Τι θέλει το πλάνο του: 'noplan' | 'stale' (ο σύνδεσμος δείχνει παλιό πλάνο) | 'renewal' | null.
+// Σέβεται και το «🔕 αυτό» ανά σήμα της Αρχικής.
+function attnPlanReason(c){
+  if(!c || c.deleted || c.archived || attnQuiet(c)) return null;
+  if(!dietsHasPlan(c)) return _homeReasonSnoozed(c,'noplan')?null:'noplan';
+  if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) return 'stale';
+  if(dietsNeedsRenewal(c)) return _homeReasonSnoozed(c,'renewal')?null:'renewal';
+  return null;
+}
+// «🔔 Υπενθύμισε»: είχε ξεκινήσει check-ins, έχει πλάνο, ATTN_NUDGE_MIN_GAP+ μέρες σιωπή, και δεν
+// του έστειλες ήδη μετά το τελευταίο check-in (c.lastDietologistContact). → {gap} ή null.
+function attnNudge(c){
+  if(!c || c.deleted || c.archived || !c.shareToken || attnQuiet(c) || !dietsHasPlan(c)) return null;
+  if(!window.Cloud || typeof window.Cloud.checkinsFor!=='function') return null;
+  var rows=window.Cloud.checkinsFor(c);
+  if(!rows.length) return null;
+  var gap=ckDaysSinceLast(rows);
+  if(!isFinite(gap) || gap<ATTN_NUDGE_MIN_GAP) return null;
+  var contactDays=c.lastDietologistContact?Math.floor((Date.now()-c.lastDietologistContact)/86400000):null;
+  if(contactDays!=null && contactDays<gap && contactDays<ATTN_NUDGE_RECONTACT_DAYS) return null;
+  return {gap:gap};
+}
 function dietsNeedsRenewal(c){
   var threshold=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;
   var days=planDaysSinceRenewal(c);
@@ -1440,10 +1478,8 @@ function setClientRenewalDays(clientId,val){
 // Χωρίς πλάνο ακόμα, ή με δημοσιευμένο σύνδεσμο που δείχνει ξεπερασμένο πλάνο, ή πλάνο που χρειάζεται ανανέωση.
 // Πελάτες σε αναβολή (homeSnoozeClient) εξαιρούνται προσωρινά — η υποκείμενη κατάσταση δεν αλλάζει.
 function dietsNeedsAction(){
-  var _lcQuiet=(typeof lcQuietMap==='function')?lcQuietMap():{};
-  return clients.filter(function(c){return !c.deleted && !c.archived && !_lcQuiet[c.id];})
-    .filter(function(c){ return !(c.attentionSnoozeUntil && Date.now()<c.attentionSnoozeUntil); })
-    .filter(function(c){ return !dietsHasPlan(c) || (window.Cloud&&window.Cloud.isStale&&window.Cloud.isStale(c)) || dietsNeedsRenewal(c); });
+  // Κοινός κανόνας με την Αρχική «📄 Πλάνο & ανανεώσεις» + «🔗 Ξαναδημοσίευσε» (attnPlanReason)
+  return clients.filter(function(c){ return !!attnPlanReason(c); });
 }
 // Ενεργός πελάτης με τρέχον πλάνο που δεν χρειάζεται ενέργεια.
 function dietsActive(){
