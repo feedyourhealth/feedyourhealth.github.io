@@ -79,7 +79,10 @@ try:
         FAVS = J("(function(){var f=%s.map(p=>FOODS[p[0]]?p[0]:resolveFood(p[0]));return f.sort();})()" % json.dumps(FAV))   # Μέλι → Μέλι άβραστο
 
         print('1. Δημοσίευση: το αγαπημένο βγαίνει 1ο στο Πρωινό')
-        check(J("Object.keys(Cloud._mealLogCache).length") == 0, 'meal-log cache empty before publish (Πρόοδος not opened)')
+        # Από 2026-11-22 το cache φορτώνει ήδη στη σύνδεση (για το backup)· το αδειάζουμε ώστε να
+        # ελέγχεται ακόμα ότι η δημοσίευση φέρνει μόνη της τις επιλογές του πελάτη.
+        J("Cloud._mealLogCache={}; Cloud._altRejCache={}")
+        check(J("Object.keys(Cloud._mealLogCache).length") == 0, 'meal-log cache empty before publish (publish must fetch it itself)')
         snap = publish('c1')
         bf = [d['meals'][0]['alternates'] for d in snap['days']]
         check(all(len(a) == 3 for a in bf), f'3 breakfast alternates every day ({[len(a) for a in bf]})')
