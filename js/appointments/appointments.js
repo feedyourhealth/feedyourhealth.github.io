@@ -546,7 +546,7 @@ function buildAppointmentsHtml(c){
     wDeltaHtml='<span style="color:'+(wd<0?'var(--good)':wd>0?'#c62828':'#888')+'">'+(wd>0?'↑':wd<0?'↓':'→')+' '+Math.abs(wd)+' kg από '+fmtDateShortAppt(prevW.date)+'</span>';
   }
   var hasActive=c.weekPlan&&Object.keys(c.weekPlan).length>0;
-  var planDaysOld=c.planGeneratedAt?Math.floor((Date.now()-c.planGeneratedAt)/86400000):null;
+  var planDaysOld=(typeof planDaysSinceRenewal==='function')?planDaysSinceRenewal(c):(c.planGeneratedAt?Math.floor((Date.now()-c.planGeneratedAt)/86400000):null);
   var daysLeft=daysUntilEvent(c.eventDate);
   var lastAppt=c.appointments.length?c.appointments[c.appointments.length-1]:null;
   var daysSinceAppt=lastAppt?Math.floor((Date.now()-new Date(lastAppt.date))/86400000):null;
@@ -642,7 +642,7 @@ function buildAppointmentsHtml(c){
   // ── Κάρτα 2 extra: τρέχων μέσος στόχος θερμίδων (apptCurrentKcalTarget — ίδιος υπολογισμός με
   // το avgTarget στην καρτέλα "Πλάνο") ──
   var kcalTargetNow=apptCurrentKcalTarget(c);
-  var planSub=(planDaysOld!=null?planDaysOld+' ημέρες από δημιουργία':'—')+(kcalTargetNow?' · 🎯 '+kcalTargetNow+' kcal/ημ':'');
+  var planSub=(planDaysOld!=null?planDaysOld+' ημέρες από το τελευταίο πλάνο':'—')+(kcalTargetNow?' · 🎯 '+kcalTargetNow+' kcal/ημ':'');
 
   // ── Κάρτα 4 extra: προβολή "με τον τρέχοντα ρυθμό βάρους, στόχος σε ~X μέρες" έναντι countdown
   // αγώνα/weigh-in — μόνο όταν υπάρχουν goalWeight + τουλάχιστον 2 μετρήσεις με αρκετή απόσταση

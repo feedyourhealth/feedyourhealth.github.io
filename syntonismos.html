@@ -360,12 +360,23 @@ async function clearAct(key){
 }
 
 // ── Η ουρά: ίδια σήματα με Αρχική / Πρόοδο / Μηνύματα του app ──
+function planRenewalBaseMs(c){
+  let best=+c.planGeneratedAt||0;const now=Date.now();
+  const d=s=>{if(!s)return 0;const t=Date.parse(String(s).length===10?s+'T12:00:00':s);return (isNaN(t)||t>now+864e5)?0:t;};
+  (c.savedPlans||[]).forEach(p=>{best=Math.max(best,d(p.date||p.createdAt));(p.sentDates||[]).forEach(x=>{best=Math.max(best,d(x));});});
+  return best;
+}
 function clientInfo(c){
   const rows=rowsFor(c),by={};rows.forEach(r=>{by[r.date]=r;});
   const last=rows.length?rows[rows.length-1].date:null;
   const hasPlan=!!(c.weekPlan&&Object.keys(c.weekPlan).length);
   let expDays=null;
-  if(c.planGeneratedAt&&hasPlan){const th=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;expDays=th-Math.floor((Date.now()-c.planGeneratedAt)/86400000);}
+  // ίδιο ρολόι ανανέωσης με το app (planRenewalBaseMs, js/tabs/home-diets.js): η πιο πρόσφατη από
+  // δημιουργία / αποθήκευση / αποστολή πλάνου — όχι μόνο η πλήρης δημιουργία.
+  const renewBase=planRenewalBaseMs(c);
+  // ⏸ σε παύση (lifecycle.js στο app): καμία υπενθύμιση ανανέωσης μέχρι την ημερομηνία
+  const paused=!!(c.pausedUntil&&c.pausedUntil>=new Date().toLocaleDateString('sv'));
+  if(renewBase&&hasPlan&&!paused){const th=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;expDays=th-Math.floor((Date.now()-renewBase)/86400000);}
   const wl=(c.weightLog||[]).filter(e=>e&&e.weight);
   return {rows,by,last,gap:last?daysSince(last):Infinity,hasPlan,expDays,
     score:rows.length?weekScore(by,0):null,prev:rows.length?weekScore(by,-1):null,
@@ -438,7 +449,7 @@ function buildItems(){
         off.push(['noplan:'+'x','Δεν έχει πλάνο ακόμα']);
       }
       if(I.expDays!=null&&I.expDays<=EXPIRING_DAYS&&!reasonSnoozed(c,'renewal')){
-        off.push(['renew:'+String(c.planGeneratedAt),I.expDays<0?'Το πλάνο πέρασε τις '+(c.renewalDays||PLAN_RENEWAL_DAYS)+' μέρες (πριν '+nDays(-I.expDays)+')':I.expDays===0?'Το πλάνο θέλει ανανέωση σήμερα':'Το πλάνο θέλει ανανέωση σε '+nDays(I.expDays)]);
+        off.push(['renew:'+String(planRenewalBaseMs(c)),I.expDays<0?'Το πλάνο πέρασε τις '+(c.renewalDays||PLAN_RENEWAL_DAYS)+' μέρες (πριν '+nDays(-I.expDays)+')':I.expDays===0?'Το πλάνο θέλει ανανέωση σήμερα':'Το πλάνο θέλει ανανέωση σε '+nDays(I.expDays)]);
       }
       if(c.shareToken&&linksOk){
         const L=LINKS[c.shareToken];

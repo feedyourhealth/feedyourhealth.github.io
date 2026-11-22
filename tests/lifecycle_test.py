@@ -119,6 +119,16 @@ try:
         rd = J(f'progressRosterData().find(x=>x.c.id==="{OLD}_4").flags')
         check(rd == ['paused'], f'flags = [paused] ({rd})')
 
+        print('9. Ρολόι ανανέωσης: μετράει από την τελευταία αποστολή/αποθήκευση, όχι μόνο από τη δημιουργία')
+        J(f'''(()=>{{const c={C("cA")}; c.planGeneratedAt=Date.now()-100*864e5;
+           c.savedPlans=[{{number:1,date:"{ago(100)}",kind:"manual",weekPlan:{{}}}},{{number:2,date:"{ago(50)}",kind:"sent",sentDates:["{ago(50)}","{ago(3)}"],weekPlan:{{}}}}];}})()''')
+        check(J(f'planDaysSinceRenewal({C("cA")})') == 3, 'πλάνο ξαναστάλθηκε πριν 3 μέρες → 3 ημέρες')
+        check(J(f'dietsNeedsRenewal({C("cA")})') is False, 'δεν θέλει ανανέωση (πριν: «το πλάνο έγινε πριν 100 ημέρες»)')
+        J(f'{C("cA")}.savedPlans[1].sentDates=["{ago(40)}"]'); J('lcInvalidate()')
+        lab = [x['label'] for x in J('homeClientsNeedingAttention().map(x=>({id:x.c.id,label:x.label}))') if x['id'] == 'cA']
+        check(lab == ['τελευταίο πλάνο πριν 40 ημέρες'], f'40 μέρες από την αποστολή → «τελευταίο πλάνο πριν 40 ημέρες» ({lab})')
+        check(J(f'progressDaysUntilExpiry({C("cA")})') == -10, 'Πρόοδος: ίδιο ρολόι (30−40 = −10)')
+
         check(not errors, f'κανένα console error ({errors[:3]})')
         br.close()
 finally:

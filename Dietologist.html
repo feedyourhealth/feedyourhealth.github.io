@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="f70a567bc1a2">
+<meta name="fyh-build" content="31538d98bff1">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -387,7 +387,7 @@ setTimeout(function(){
 <script defer src="js/app-part2.js?v=2a1b3d4929"></script>
 <!-- appointments/* — the "📝 Ραντεβού" tab, carved out of app-part2.js. Pure fns;
      callers (renderMain/swTab, app-part5 portal refresh) are runtime. -->
-<script defer src="js/appointments/appointments.js?v=84fed644cf"></script>
+<script defer src="js/appointments/appointments.js?v=a4cf1d5e8c"></script>
 <!-- portal-comms/* — two-way client-portal messaging (replies, seen-tracking, feedback
      panels), carved out of app-part2.js. All refs runtime/typeof-guarded. -->
 <script defer src="js/portal-comms/portal-comms.js?v=e62ab53dae"></script>
@@ -458,9 +458,9 @@ setTimeout(function(){
 <script defer src="js/tracking/tracking.js?v=1dcc15d626"></script>
 <!-- tabs/* — the standalone nav tabs (Αρχική / Διατροφές / Μηνύματα / Συνταγές / Tips).
      Pure fn declarations, no load-time code. -->
-<script defer src="js/tabs/home-diets.js?v=76366ebb7d"></script>
+<script defer src="js/tabs/home-diets.js?v=d6d8380ef0"></script>
 <script defer src="js/tabs/messages.js?v=b731617779"></script>
-<script defer src="js/tabs/progress.js?v=f6d44607dd"></script>
+<script defer src="js/tabs/progress.js?v=10c81fc1e3"></script>
 <script defer src="js/tabs/notifications.js?v=0538d9fb51"></script>
 <script defer src="js/tabs/progress-insights.js?v=a0fc6f0f09"></script>
 <script defer src="js/tabs/progress-rejects.js?v=2469e66fc6"></script>

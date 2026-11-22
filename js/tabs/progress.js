@@ -57,9 +57,9 @@ function progressMuteLabel(c){
 // Ημέρες μέχρι να χρειαστεί νέο πλάνο (null αν δεν υπάρχει ενεργό πλάνο) — ίδιος υπολογισμός με το
 // homePlansExpiringSoon(), απλά ανά πελάτη αντί για μόνο το άθροισμα.
 function progressDaysUntilExpiry(c){
-  if(!c.planGeneratedAt || !dietsHasPlan(c)) return null;
+  if(!planRenewalBaseMs(c) || !dietsHasPlan(c)) return null;   // ίδιο ρολόι ανανέωσης με την Αρχική (home-diets.js)
   var threshold=c.renewalDays>0?c.renewalDays:PLAN_RENEWAL_DAYS;
-  return threshold-Math.floor((Date.now()-c.planGeneratedAt)/86400000);
+  return threshold-planDaysSinceRenewal(c);
 }
 
 // Μία εγγραφή ανά μη-διαγραμμένο/μη-αρχειοθετημένο πελάτη — ΧΩΡΙΣ το φίλτρο "μόνο όσοι έχουν ήδη
