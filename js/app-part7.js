@@ -665,6 +665,32 @@
       };
       function shortName(n){return String(n||'').replace(/\s*\([^)]*\)\s*/g,' ').replace(/\s+/g,' ').trim();}
       function macro(n,g){return (typeof cm==='function')?cm(n,g):{k:0,p:0,c:0,f:0};}
+      // Στρογγύλεμα γραμμαρίων για τον σύνδεσμο: ≥100 → δεκάδα, ≥20 → πεντάδα, κάτω από 20 ως έχει.
+      function linkRoundG(g){ g=+g||0; return g>=100?Math.round(g/10)*10:(g>=20?Math.round(g/5)*5:Math.round(g)); }
+      // Όνομα πιάτου για την κάρτα γεύματος του συνδέσμου (βλ. dm.forEach παρακάτω). `foods` = τα ήδη
+      // μεταφρασμένα τρόφιμα του snapshot (ίδια σειρά με meal.foods).
+      // «&» και όχι «με»: τα ονόματα τροφίμων είναι σε ονομαστική («Φακές με Τόνος» ✗).
+      function linkMealTitle(meal,foods){
+        var mf=meal.foods||[];
+        var topOf=function(list){var b=null,bk=-1;list.forEach(function(f){var k=macro(f.n,f.g).k||0;if(k>bk){bk=k;b=f.n;}});return b;};
+        if(lang==='el'&&meal.recipeId&&typeof findRecipeById==='function'){
+          var r=null; try{r=findRecipeById(meal.recipeId);}catch(e){}
+          // Μόνο αν η συνταγή ταιριάζει ακόμα με το γεύμα (τα υλικά μπορεί να άλλαξαν μετά): το κύριο
+          // υλικό της συνταγής είναι στο γεύμα, το κύριο υλικό του γεύματος είναι στη συνταγή, και
+          // τουλάχιστον τα μισά υλικά της συνταγής υπάρχουν.
+          if(r&&r.name&&(r.foods||[]).length){
+            var names=mf.map(function(f){return f.n;}),rn=r.foods.map(function(x){return x.n;});
+            var hit=rn.filter(function(n){return names.indexOf(n)>=0;}).length;
+            if(hit*2>=rn.length&&names.indexOf(topOf(r.foods))>=0&&rn.indexOf(topOf(mf))>=0) return r.name;
+          }
+        }
+        var idx=mf.map(function(f,i){return {i:i,k:macro(f.n,f.g).k||0,g:+f.g||0};});
+        var main=idx.filter(function(x){return x.g>=20;});
+        if(!main.length) main=idx;
+        main=main.sort(function(a,b){return b.k-a.k;}).slice(0,2).sort(function(a,b){return a.i-b.i;});
+        var nm=main.map(function(x){return foods[x.i]?shortName(foods[x.i].name):'';}).filter(Boolean);
+        return nm.join(' & ');
+      }
 
       // Αποκλεισμοί/αλλεργίες του πελάτη — ίδια λίστα με αυτή που ήδη φιλτράρει τον γεννήτορα πλάνου,
       // ώστε μια «εναλλακτική» πρόταση από τη βιβλιοθήκη ΑΛΛΟΥ πελάτη να μην περιέχει κάτι που αυτός αποφεύγει.
@@ -828,14 +854,18 @@
           (meal.foods||[]).forEach(function(f){
             var v=macro(f.n,f.g);
             mk+=v.k; mp+=v.p; mc+=v.c; mf+=v.f; mfi+=(v.fi||0);
-            var q=fmtQ(f);
-            foods.push(ckFood({name:fName(f.n), qty:q.main, sub:q.sub||'', g:Math.round(f.g)},f.n));
+            // Στρογγυλές ποσότητες ΜΟΝΟ για τον σύνδεσμο (2026-11-22): 207 → 210 γρ., 47 → 45 γρ.· οι
+            // θερμίδες/μακρο (mk…) μένουν από τα ακριβή γραμμάρια. «<¼ φλ. (15γρ.)» → σκέτο «15γρ.».
+            var gR=linkRoundG(f.g);
+            var q=fmtQ({n:f.n,g:gR,u:f.u});
+            if(/^<¼/.test(q.main)) q={main:gR+gLbl,sub:''};
+            foods.push(ckFood({name:fName(f.n), qty:q.main, sub:q.sub||'', g:gR},f.n));
           });
           dayK+=mk; dP+=mp; dC+=mc; dF+=mf; dFi+=mfi;
-          // Ε14: δίπλα σε κάθε τρόφιμο στην κάρτα "Η διατροφή μου σήμερα" της Αρχικής, ώστε ο πελάτης
-          // να βλέπει τη μερίδα χωρίς να ανοίγει το tab Πλάνο. Τρόφιμα με μονάδα εμφάνισης (τεμ./φέτα/φλ.
-          // — x.sub μη κενό) δείχνουν όπως στο tab Πλάνο: «Αυγά 3 τεμ. (165γρ.)»· τα υπόλοιπα μόνο γραμμάρια.
-          var title=foods.map(function(x){return shortName(x.name)+(x.sub?' '+x.qty+' '+x.sub:' ('+x.g+' '+gLbl+')');}).slice(0,3).join(', ')+(foods.length>3?'…':'');
+          // Τίτλος κάρτας = όνομα πιάτου (2026-11-22), όχι τα 3 πρώτα υλικά με ποσότητες (τα υλικά
+          // γράφονται ήδη από κάτω). Ο τίτλος της συνταγής όταν το γεύμα είναι συνταγή (μόνο ελληνικά —
+          // οι συνταγές δεν έχουν μετάφραση), αλλιώς τα 2 κύρια υλικά (περισσότερες θερμίδες, ≥20 γρ.).
+          var title=linkMealTitle(meal,foods);
           var alternates=[], altSpares=[];
           if(altPool){
             // 6 = 3 ορατές + 3 ρεζέρβες (altSpares): όταν ο πελάτης πατά 👎 «Όχι για μένα» σε μία, το
