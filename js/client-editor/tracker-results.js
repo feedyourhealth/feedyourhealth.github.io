@@ -144,7 +144,15 @@ function trStoryHtml(c,sorted,cmp){
 }
 
 // ── 4. KPI tiles with delta chip + sparkline ─────────────────────────────────────────
-function trTilesHtml(c,sorted,cmp,isMinor){
+// `dual` (η δική σου οθόνη, όχι η Παρουσίαση): κάθε πλακίδιο δείχνει ΚΑΙ τις δύο αλλαγές —
+// «από <προηγούμενη>» και «από την αρχή» — ώστε να μη χρειάζεται ο επιλογέας για να τις δεις.
+function trDualDeltaHtml(m,sorted){
+  var pp=trPair(sorted,m.get,'prev',m.bf),pf=trPair(sorted,m.get,'first',m.bf);
+  if(!pp||pp.bv==null)return '';
+  var row=function(lbl,p){return '<div class="tr-dd"><span>'+lbl+'</span>'+trDeltaChip(m,p)+'</div>';};
+  return row('από '+_fmtDateGr(pp.B.date).replace(/\/\d{4}$/,''),pp)+(pf&&pf.B&&pf.B!==pp.B?row('από αρχή',pf):'');
+}
+function trTilesHtml(c,sorted,cmp,isMinor,dual){
   var ms=trMetrics(c,sorted),out=[];
   var BORDER={weight:'#2e7d32',bf:'#ff9999',fm:'#d9534f',lm:'#1565C0',waist:'#9c27b0',hip:'#f57c00',arm:'#00897b'};
   ms.forEach(function(m){
@@ -152,7 +160,7 @@ function trTilesHtml(c,sorted,cmp,isMinor){
     out.push('<div style="background:var(--card-bg);padding:8px 10px;border-radius:7px;border-left:3px solid '+BORDER[m.k]+';min-width:0">'
       +'<div style="font-size:12px;color:#666">'+m.lbl+'</div>'
       +'<div style="font-size:16px;font-weight:700;color:#025857;margin:1px 0 3px">'+(+p.lv.toFixed(m.dec))+m.u+'</div>'
-      +trDeltaChip(m,p)+trSparkSvg(p.series)+'</div>');
+      +(dual?trDualDeltaHtml(m,sorted):trDeltaChip(m,p))+trSparkSvg(p.series)+'</div>');
   });
   var L=sorted[sorted.length-1];
   if(c.height>0){
@@ -320,6 +328,38 @@ function trSkinfoldMapHtml(sorted,cmp){
     +'<div style="font-size:12px;color:var(--text-muted);margin-top:5px">Πιο σκούρο πράσινο = μεγαλύτερη μείωση· πορτοκαλί = αύξηση.</div></div>';
 }
 
+// «📐 Πού αλλάζει το λίπος» — η δική σου οθόνη (όχι Παρουσίαση): ένας πίνακας με δύο στήλες,
+// «από <προηγούμενη>» και «από την αρχή», ανά σημείο + Κορμός / Άκρα. Αντικαθιστά το «Από πού
+// φεύγει» (μόνο μία σύγκριση) και το «Πού χάνει λίπος» (μόνο από την αρχή) — έλεγαν το ίδιο.
+// Η φιγούρα χρωματίζεται με την αλλαγή «από την αρχή».
+function trSfDualHtml(sorted){
+  var sf=sorted.filter(function(e){return e.sfFields&&Object.keys(e.sfFields).some(function(k){return e.sfFields[k]>0;});});
+  if(sf.length<2)return '';
+  var L=sf[sf.length-1],P=sf[sf.length-2],F=sf[0],two=F!==P;
+  var keys=Object.keys(TRACKER_SF_LBL).filter(function(k){return L.sfFields[k]>0&&P.sfFields[k]>0;});
+  if(!keys.length)return '';
+  var pct=function(A,k){var a=A.sfFields[k];return a>0?Math.round((L.sfFields[k]-a)/a*100):null;};
+  var grp=function(A,list){var ks=keys.filter(function(k){return list.indexOf(k)>=0&&A.sfFields[k]>0;});if(!ks.length)return null;
+    var s0=ks.reduce(function(s,k){return s+A.sfFields[k];},0),s1=ks.reduce(function(s,k){return s+L.sfFields[k];},0);return Math.round((s1-s0)/s0*100);};
+  var colOf=function(p){return p==null?'#b0bec5':p<=-15?'#00796b':p<=-5?'#4db6ac':p<5?'#b0bec5':'#f57c00';};
+  var cell=function(p){return '<td>'+(p==null?'—':_trChip(p<=-5?'good':p<5?'noise':'bad',_sgn(p)+'%'))+'</td>';};
+  var dots='',rows=keys.map(function(k){
+    var pf=pct(F,k),pos=TR_SF_POS[k];
+    if(pos)dots+='<circle cx="'+pos[0]+'" cy="'+pos[1]+'" r="6" fill="'+colOf(two?pf:pct(P,k))+'" stroke="#fff" stroke-width="1.5"><title>'+TRACKER_SF_LBL[k]+'</title></circle>';
+    return '<tr><td>'+TRACKER_SF_LBL[k]+' <span class="tr-sf-mm">'+L.sfFields[k]+' mm</span></td>'+cell(pct(P,k))+(two?cell(pf):'')+'</tr>';
+  });
+  var gT=[grp(P,TRACKER_SF_TRUNK),grp(F,TRACKER_SF_TRUNK)],gL=[grp(P,TRACKER_SF_LIMB),grp(F,TRACKER_SF_LIMB)];
+  if(gT[0]!=null||gL[0]!=null){
+    rows.push('<tr class="tr-sf-sum"><td>Κορμός</td>'+cell(gT[0])+(two?cell(gT[1]):'')+'</tr>');
+    rows.push('<tr class="tr-sf-sum"><td>Άκρα</td>'+cell(gL[0])+(two?cell(gL[1]):'')+'</tr>');
+  }
+  var dm=function(e){return _fmtDateGr(e.date).replace(/\/\d{4}$/,'');};
+  return '<div style="'+_TR_BOX+'">'+_trHead('📐 Πού αλλάζει το λίπος','δερματοπτυχές')
+    +'<div style="display:flex;gap:12px;align-items:flex-start">'+_trBodySvg(dots,'Χάρτης δερματοπτυχών')
+    +'<div style="flex:1;min-width:0;overflow-x:auto"><table class="tr-cmp"><thead><tr><th></th><th>από '+dm(P)+'</th>'+(two?'<th>από αρχή ('+dm(F)+')</th>':'')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></div></div>'
+    +'<div style="font-size:12px;color:var(--text-muted);margin-top:5px">Χρώμα στη φιγούρα = αλλαγή '+(two?'από την αρχή':'από την προηγούμενη')+': πιο σκούρο πράσινο = μεγαλύτερη μείωση· πορτοκαλί = αύξηση.</div></div>';
+}
+
 // ── 13. Before / now card (+ PNG for WhatsApp) ────────────────────────────────────────
 function _trCardData(c,sorted,cmp){
   if(sorted.length<2)return null;
@@ -390,28 +430,30 @@ function shareTrackerCard(){
 }
 
 // ── Comparison switch (2) ─────────────────────────────────────────────────────────────
-function trCmpSwitchHtml(sorted){
+function trCmpSwitchHtml(sorted,dual){
   if(sorted.length<2)return '';
   var b=function(v,lbl){var on=_trackerCmp===v;return '<button class="btn" onclick="setTrackerCmp(\''+v+'\')" style="padding:3px 10px;font-size:12px;'+(on?'background:#025857;color:#fff;border:1px solid #025857':'background:var(--card-bg);color:#025857;border:1px solid #c5ddd8')+'">'+lbl+'</button>';};
-  return '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:12px;color:#666">Σύγκριση με:</span>'
+  // dual (η δική σου οθόνη): τα πλακίδια και οι πίνακες δείχνουν ήδη και τις δύο συγκρίσεις· ο
+  // επιλογέας ρυθμίζει μόνο ό,τι δείχνεις/στέλνεις στον πελάτη (κείμενο, Πριν/Τώρα, Παρουσίαση).
+  return '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:12px;color:#666"'+(dual?' title="Τα πλακίδια δείχνουν και τις δύο αλλαγές. Αυτό ρυθμίζει το «Με απλά λόγια», την κάρτα Πριν / Τώρα και την Παρουσίαση."':'')+'>'+(dual?'Για τον πελάτη, σύγκριση με:':'Σύγκριση με:')+'</span>'
     +b('prev','Προηγούμενη ('+_fmtDateGr(sorted[sorted.length-2].date)+')')+b('first','1η μέτρηση ('+_fmtDateGr(sorted[0].date)+')')+'</div>';
 }
 
 // The whole dashboard. `extraHtml` = dietitian-only block (target weights) shown under the tiles
 // outside presentation mode.
 function trackerResultsHtml(c,isMinor,extraHtml){
-  var sorted=trSorted(c);
+  var sorted=trSorted(c),dual=!_trackerPresent;
   if(!sorted.length)return '';
   var cmp=sorted.length>1?_trackerCmp:'prev',L=sorted[sorted.length-1];
   var age=c.birthDate?ageAtDate(c.birthDate):c.age;
   var pair=[trGoalBarHtml(c,sorted),trZoneBarHtml(c,sorted,cmp,isMinor,age)].filter(Boolean);
-  var info=[trFatLeanHtml(sorted),trCircHtml(c,sorted,cmp),trSkinfoldMapHtml(sorted,cmp)].filter(Boolean);
+  var info=[trFatLeanHtml(sorted),trCircHtml(c,sorted,cmp),(dual?trSfDualHtml(sorted):trSkinfoldMapHtml(sorted,cmp))].filter(Boolean);
   var grid=function(a){return a.length?'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin-bottom:10px">'+a.join('')+'</div>':'';};
   return '<div style="background:#f7fbfa;border:1px solid #c5ddd8;border-radius:10px;padding:12px;margin-bottom:12px">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
-    +'<div style="font-size:12px;font-weight:700;color:#025857">📊 Αποτελέσματα — '+_fmtDateGr(L.date)+'</div>'+trCmpSwitchHtml(sorted)+'</div>'
+    +'<div style="font-size:12px;font-weight:700;color:#025857">📊 Αποτελέσματα — '+_fmtDateGr(L.date)+'</div>'+trCmpSwitchHtml(sorted,dual)+'</div>'
     +trStoryHtml(c,sorted,cmp)
-    +trTilesHtml(c,sorted,cmp,isMinor)
+    +trTilesHtml(c,sorted,cmp,isMinor,dual)
     +(extraHtml||'')
     +grid(pair)
     +trMilestonesHtml(c,sorted,age,isMinor)
