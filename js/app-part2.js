@@ -20,6 +20,10 @@ function goToApp(){
     if(window.Cloud && typeof window.Cloud.refreshFoodDiaryStatuses==='function') window.Cloud.refreshFoodDiaryStatuses();
     // 🔔 η σύνοψη ειδοποιήσεων δείχνει και προπονήσεις (js/tabs/notifications.js)
     if(window.Cloud && typeof window.Cloud.refreshWorkoutLogCache==='function') window.Cloud.refreshWorkoutLogCache();
+    // 2026-11-22: και «ποια γεύματα έφαγε» + «Όχι για μένα» — αλλιώς φόρτωναν μόνο όταν άνοιγε η
+    // Πρόοδος, και το backup του φακέλου (portalData) τα έγραφε άδεια.
+    if(window.Cloud && typeof window.Cloud.refreshMealLogCache==='function') window.Cloud.refreshMealLogCache();
+    if(window.Cloud && typeof window.Cloud.refreshAltRejectCache==='function') window.Cloud.refreshAltRejectCache();
     if(typeof updateNotifBell==='function') updateNotifBell();
     // 2026-08-23: κρατά τα παραπάνω 4 caches ζωντανά όσο ο διαιτολόγος έχει ανοιχτή την εφαρμογή —
     // πριν ανανεώνονταν μόνο εδώ, στο login, βλ. js/app-part1.js.

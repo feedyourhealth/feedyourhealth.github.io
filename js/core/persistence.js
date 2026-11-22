@@ -342,7 +342,7 @@ function _buildFileBackupObj(){
 function _portalDataSignature(){
   var p = _portalBackupData();
   if(!p) return '';
-  try { return ':' + JSON.stringify(p.checkins).length + ':' + JSON.stringify(p.clientLogs).length + ':' + JSON.stringify(p.planFeedback).length + ':' + JSON.stringify(p.workoutLog).length; }
+  try { return ':' + JSON.stringify(p.checkins).length + ':' + JSON.stringify(p.clientLogs).length + ':' + JSON.stringify(p.planFeedback).length + ':' + JSON.stringify(p.workoutLog).length + ':' + JSON.stringify(p.mealLog).length + ':' + JSON.stringify(p.altRejects).length; }
   catch(e){ return ''; }
 }
 
@@ -906,7 +906,7 @@ function stopAutoSaveInterval(){
 // δεν φαίνονται". Κάθε refresh*Cache() ήδη ξανασχεδιάζει μόνο του ό,τι χρειάζεται όταν τελειώσει
 // (renderSB/renderHome/#s3b, βλ. js/app-part2.js), οπότε αυτό το interval απλά τα ξανατρέχει
 // περιοδικά στο παρασκήνιο — καμία αλλαγή στο ίδιο το UI αν δεν βρεθεί κάτι νέο.
-var _portalPollInterval=null;
+var _portalPollInterval=null, _portalPollTick=0;
 function startPortalPollInterval(){
   if(_portalPollInterval) clearInterval(_portalPollInterval);
   _portalPollInterval=setInterval(function(){
@@ -918,6 +918,13 @@ function startPortalPollInterval(){
     if(typeof window.Cloud.refreshIntakeStatuses==='function') window.Cloud.refreshIntakeStatuses();
     if(typeof window.Cloud.refreshFoodDiaryStatuses==='function') window.Cloud.refreshFoodDiaryStatuses();
     if(typeof window.Cloud.refreshWorkoutLogCache==='function') window.Cloud.refreshWorkoutLogCache();
+    // «ποια γεύματα έφαγε» + «Όχι για μένα»: κάθε 15 λεπτά (κάθε 8ος γύρος), όχι κάθε 2 — είναι
+    // μεγαλύτεροι πίνακες και χρειάζονται κυρίως για το backup του φακέλου (portalData).
+    _portalPollTick=(_portalPollTick+1)%8;
+    if(_portalPollTick===0){
+      if(typeof window.Cloud.refreshMealLogCache==='function') window.Cloud.refreshMealLogCache();
+      if(typeof window.Cloud.refreshAltRejectCache==='function') window.Cloud.refreshAltRejectCache();
+    }
   }, 120000);  // 2 λεπτά
 }
 function stopPortalPollInterval(){
