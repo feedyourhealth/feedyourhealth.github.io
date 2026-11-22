@@ -455,7 +455,9 @@ function phChartSvg(c,plans,periods){
 
 /* ── main render ───────────────────────────────────────────────────────── */
 function buildPlanHistoryHtml(c){
-  var dbg='<div style="margin:8px 20px 0;display:flex;justify-content:flex-end">'
+  // 2026-11-22: το Ιστορικό ανοίγει πλέον από κουμπί μέσα στο «Πλάνο» (όχι δική του υπο-καρτέλα) — άρα επιστροφή εδώ.
+  var dbg='<div style="margin:8px 20px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
+    +'<button class="btn tertiary" style="padding:5px 10px;font-size:12px" onclick="swTab(2)">&#8592; Πίσω στο Πλάνο</button>'
     +'<button class="btn tertiary" style="padding:5px 10px;font-size:11px" onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" title="Ελέγχει αν υπάρχουν πλάνα σε τοπικό backup που λείπουν από το ιστορικό αυτού του πελάτη">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
     +'</div>';
   if((!c.savedPlans||!c.savedPlans.length)&&!(c.planBackups||[]).length&&!(typeof phaIsAthlete==='function'&&phaIsAthlete(c))){

@@ -105,6 +105,9 @@ function refreshGenChecklist(){
   if(fresh) box.replaceWith(fresh);
 }
 
+// 📈 Παρακολούθηση κάτω από την Επισκόπηση — ανοιχτή/κλειστή, θυμάται ανά browser (προεπιλογή ανοιχτή).
+function ovApptOpen(){ try{ return localStorage.getItem('fyh_ov_appt_open')!=='0'; }catch(e){ return true; } }
+function ovApptRemember(open){ try{ localStorage.setItem('fyh_ov_appt_open',open?'1':'0'); }catch(e){} }
 function renderMain(){
   var c=getC();if(!c)return;
   // ⚠️ Έλεγχος αν άλλαξαν οι στόχοι ημέρας → κίτρινο πλαίσιο στο πλάνο (calc/portion-optimizer.js)
@@ -165,7 +168,7 @@ function renderMain(){
   // σε μία σειρά· ζωντανά μετρήθηκε 399px περιεχόμενο σε 355px χώρο, το όνομα συμπιεζόταν στα
   // 144px. Τα classes δίνουν hook στο css/styles.css (@media(max-width:767px)) να σπάει σε 2 σειρές
   // αντί να τα στριμώχνει· χωρίς αλλαγή στο desktop layout (τα inline styles μένουν ίδια).
-  var html='<div class="client-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div class="client-header-actions" style="display:flex;gap:8px;align-items:center;">'+(typeof lcHeaderBtnHtml==='function'?lcHeaderBtnHtml(c):'')+(typeof waitHeaderBtnHtml==='function'?waitHeaderBtnHtml(c):'')+'<button class="btn" id="undoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="undo()" title="Αναίρεση (Ctrl+Z)">↶ Αναίρεση</button><button class="btn" id="redoBtn" style="background:#7cb342;color:white;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;font-weight:bold;" onclick="redo()" title="Επανάληψη (Ctrl+Y)">↷ Επανάληψη</button><button class="btn" style="background:#eee;color:#555;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
+  var html='<div class="client-header-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e0e0e0;"><div style="flex:1"><h2 id="client-header-name" style="margin:0;color:#025857;font-size:18px;">👤 '+esc(c.name)+'</h2></div><div class="client-header-actions" style="display:flex;gap:8px;align-items:center;">'+(typeof lcHeaderBtnHtml==='function'?lcHeaderBtnHtml(c):'')+(typeof waitHeaderBtnHtml==='function'?waitHeaderBtnHtml(c):'')+'<button class="btn client-hdr-ic" id="undoBtn" onclick="undo()" title="Αναίρεση (Ctrl+Z)" aria-label="Αναίρεση">↶</button><button class="btn client-hdr-ic" id="redoBtn" onclick="redo()" title="Επανάληψη (Ctrl+Y)" aria-label="Επανάληψη">↷</button><button class="btn" style="background:#eee;color:#555;border:none;cursor:pointer;padding:8px 12px;border-radius:4px;" onclick="logout()">← Έξοδος</button></div></div>'
     // ✅ 2026-08-22: .stabs-wrap + .stabs-fade — σε κινητό (≤767px) η μπάρα γίνεται οριζόντιο scroll strip
     // αντί να τυλίγεται σε 2-3 σειρές (βλ. css/styles.css, .stabs στο @media(max-width:767px)). Στο desktop
     // ο wrapper δεν αλλάζει τίποτα οπτικά — το ::after fade είναι κρυφό εκεί.
@@ -173,7 +176,7 @@ function renderMain(){
     // ⏸/📦 Λωρίδα «Σε παύση» / «Πρώην πελάτης» (js/client-list/lifecycle.js)
     +'<div id="lc-banner-slot">'+(typeof lcBannerHtml==='function'?lcBannerHtml(c):'')+'</div>'
     +'<div id="wait-banner-slot">'+(typeof waitBannerHtml==='function'?waitBannerHtml(c):'')+'</div>'
-    +'<div class="stabs-wrap"><div class="stabs"><button class="stab" id="t0ov" onclick="swTab('+TAB_OVERVIEW+')">📇 Επισκόπηση</button><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία πελάτη</button><button class="stab" id="t2" onclick="swTab(2)">Πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Ανθρωπομετρία</button><button class="stab" id="t3b" onclick="swTab('+TAB_APPOINTMENTS+')">📈 Παρακολούθηση</button><button class="stab" id="t4" onclick="swTab(4)">📊 Ιστορικό πλάνων</button></div></div>'
+    +'<div class="stabs-wrap"><div class="stabs"><button class="stab" id="t0ov" onclick="swTab('+TAB_OVERVIEW+')">📇 Επισκόπηση</button><button class="stab active" id="t1" onclick="swTab(1)">Στοιχεία</button><button class="stab" id="t2" onclick="swTab(2)">Πλάνο</button><button class="stab" id="t3" onclick="swTab(3)">📐 Μετρήσεις</button></div></div>'
     +'<div id="s0ov" style="display:none"></div>'
     +'<div id="s1">'
 
@@ -446,6 +449,8 @@ function renderMain(){
     +((window.Cloud && window.Cloud.isStale(c))?'<div class="plan-stale-warning" title="Το πλάνο άλλαξε μετά την τελευταία δημοσίευση. Πάτα «Στείλε στον πελάτη» ξανά για να ενημερωθεί ο σύνδεσμος του πελάτη.">&#9888;&#65039; Ο σύνδεσμος πελάτη είναι ξεπερασμένος</div>':'')
     +'<div class="plan-links-row">'
       +'<button class="btn tertiary" onclick="swTab(1)">&#8592; Στοιχεία</button>'
+      // 📊 Ιστορικό πλάνων: πριν δική του υπο-καρτέλα — τώρα από εδώ (2026-11-22, 6 → 4 υπο-καρτέλες)
+      +'<button class="btn tertiary" onclick="swTab(4)" title="Όλα τα αποθηκευμένα / σταλμένα πλάνα, σύγκριση, φόρτωση">&#128202; Ιστορικό πλάνων'+((c.savedPlans&&c.savedPlans.length)?' ('+c.savedPlans.length+')':'')+'</button>'
       +'<button class="btn tertiary regen-plan-btn" onclick="regeneratePlan()" title="Αντικαθιστά ΟΛΗ την εβδομάδα με νέο πλάνο">&#8635; Αναδημιουργία</button>'
       +'<button class="btn tertiary" id="star-tmpl-btn" onclick="toggleMealTemplate()" title="Χρήση των γευμάτων αυτού του πελάτη ως έμπνευση σε νέα πλάνα">'+(c.isMealTemplate?'⭐ Πρότυπο γεύσης':'☆ Όρισε ως πρότυπο γεύσης')+'</button>'
       +'<button class="btn tertiary save-tmpl-btn" onclick="showSaveTmplPanel()">&#128190; Αποθ. ως πρότυπο</button>'
@@ -483,7 +488,12 @@ function renderMain(){
     +'<div id="lib-list"></div></div></div></div>'
     +'<div id="supp-notes"></div></div>'
     +'<div id="s3" style="display:none">'+buildTrackerHtml(c)+'</div>'
+    // 📈 Παρακολούθηση: πριν δική της υπο-καρτέλα — τώρα ενότητα κάτω από την Επισκόπηση (swTab δείχνει
+    // και τα δύο). Το #s3b μένει ίδιο ώστε τα refresh*Cache (app-part7.js) να συνεχίζουν να το ξαναγράφουν.
+    +'<details id="ov-appt-wrap" class="ov-appt-wrap" style="display:none"'+(ovApptOpen()?' open':'')+' ontoggle="ovApptRemember(this.open)">'
+    +'<summary class="ov-appt-sum">📈 Παρακολούθηση &amp; ραντεβού <span>καταχώρηση ραντεβού, προτιμήσεις τροφίμων, πρόοδος συνδέσμου</span></summary>'
     +'<div id="s3b" style="display:none">'+buildAppointmentsHtml(c)+'</div>'
+    +'</details>'
     +'<div id="s4" style="display:none">'+buildPlanHistoryHtml(c)+'</div>';
   document.getElementById('main').innerHTML=html;
 

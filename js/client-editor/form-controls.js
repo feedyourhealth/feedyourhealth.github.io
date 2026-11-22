@@ -507,11 +507,12 @@ function swTab(n){
   // for why this is needed (it defaults back to tab 1 otherwise).
   window._lastTabN=n;
   var t1=document.getElementById('t1');if(t1)t1.classList.toggle('active',n===1);
-  var t2=document.getElementById('t2');if(t2)t2.classList.toggle('active',n===2);
+  // 2026-11-22: 4 υπο-καρτέλες — το Ιστορικό πλάνων (4) ανήκει στο «Πλάνο», η Παρακολούθηση στην «Επισκόπηση»
+  var t2=document.getElementById('t2');if(t2)t2.classList.toggle('active',n===2||n===4);
   var t3=document.getElementById('t3');if(t3)t3.classList.toggle('active',n===3);
   var t3b=document.getElementById('t3b');if(t3b)t3b.classList.toggle('active',n===TAB_APPOINTMENTS);
   var t4=document.getElementById('t4');if(t4)t4.classList.toggle('active',n===4);
-  var t0ov=document.getElementById('t0ov');if(t0ov)t0ov.classList.toggle('active',n===TAB_OVERVIEW);
+  var t0ov=document.getElementById('t0ov');if(t0ov)t0ov.classList.toggle('active',n===TAB_OVERVIEW||n===TAB_APPOINTMENTS);
 
   // ✅ HIDE ALL PAGES FIRST
   var s1=document.getElementById('s1');if(s1)s1.style.display='none';
@@ -520,10 +521,14 @@ function swTab(n){
   var s3b=document.getElementById('s3b');if(s3b)s3b.style.display='none';
   var s4=document.getElementById('s4');if(s4)s4.style.display='none';
   var s0ov=document.getElementById('s0ov');if(s0ov)s0ov.style.display='none';
+  var ovAppt=document.getElementById('ov-appt-wrap');if(ovAppt)ovAppt.style.display='none';
 
   // ✅ THEN SHOW ONLY THE SELECTED PAGE
   // 📇 Επισκόπηση — rebuilt fresh each open (buildOverviewHtml reads the async portal caches).
-  if(n===TAB_OVERVIEW && s0ov){var _cov=getC();if(_cov)s0ov.innerHTML=buildOverviewHtml(_cov);s0ov.style.display='block';}
+  // Επισκόπηση = επισκόπηση + από κάτω η Παρακολούθηση (#s3b μέσα στο #ov-appt-wrap). Το
+  // swTab(TAB_APPOINTMENTS) (κουμπιά «Δες ραντεβού», Μηνύματα, γρήγορη σημείωση) ανοίγει το ίδιο
+  // και κατεβαίνει στην Παρακολούθηση.
+  if((n===TAB_OVERVIEW||n===TAB_APPOINTMENTS) && s0ov){var _cov=getC();if(_cov)s0ov.innerHTML=buildOverviewHtml(_cov);s0ov.style.display='block';}
   if(n===1 && s1)s1.style.display='block';
   if(n===2 && s2)s2.style.display='block';
   // ✅ Rebuild s3 fresh every time it's opened — the client-logs cache can finish loading
@@ -535,7 +540,8 @@ function swTab(n){
   // 2026-08-23: ίδιος λόγος με το n===9 tab παραπάνω — το άνοιγμα του Ραντεβού tab ζωγράφιζε μόνο
   // ό,τι ήδη υπήρχε στη μνήμη· τώρα τρέχει και refreshClientPortalFeedback στο παρασκήνιο ώστε ένα
   // πρόσφατο μήνυμα/feedback/check-in αυτού του πελάτη να μη μείνει κρυμμένο μέχρι χειροκίνητη ανανέωση.
-  if(n===TAB_APPOINTMENTS && s3b){var _c100=getC();if(_c100)s3b.innerHTML=buildAppointmentsHtml(_c100);s3b.style.display='block';if(typeof refreshClientPortalFeedback==='function')refreshClientPortalFeedback(null);}
+  if((n===TAB_APPOINTMENTS||n===TAB_OVERVIEW) && s3b){var _c100=getC();if(_c100)s3b.innerHTML=buildAppointmentsHtml(_c100);s3b.style.display='block';if(ovAppt)ovAppt.style.display='block';if(typeof refreshClientPortalFeedback==='function')refreshClientPortalFeedback(null);}
+  if(n===TAB_APPOINTMENTS && ovAppt){ ovAppt.open=true; setTimeout(function(){ try{ ovAppt.scrollIntoView({behavior:'smooth',block:'start'}); }catch(e){} },60); }
   if(n===4 && s4)s4.style.display='block';
 
   // ✅ HIDE FORM SECTIONS EXCEPT IN TAB 1 (Page 1 only - Στοιχεία Πελάτη)
