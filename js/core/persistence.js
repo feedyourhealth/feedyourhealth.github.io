@@ -313,6 +313,39 @@ function _buildBackupObj(){
   };
 }
 
+// 2026-11-22: ό,τι έστειλαν οι πελάτες από τον σύνδεσμο (check-ins, μηνύματα/βάρος, αξιολογήσεις,
+// «Αυτό έφαγα», προπονήσεις, «Όχι για μένα») ζει ΜΟΝΟ στο Supabase. Μπαίνει στα αρχεία backup
+// (φάκελος + «Εξαγωγή») ως ΑΡΧΕΙΟ ανάγνωσης, ώστε να μη χαθεί αν πάθει κάτι η βάση. Δεν επαναφέρεται
+// (_applyBackupData αγνοεί το κλειδί) και δεν μπαίνει στα snapshots (θα τα φούσκωνε). Παίρνει ό,τι είναι
+// ήδη φορτωμένο στη μνήμη (ανανεώνεται κάθε 2 λεπτά) — καμία επιπλέον κλήση στη βάση.
+function _portalBackupData(){
+  var C = window.Cloud;
+  if(!C || !(C._checkinsLoaded && C._clientLogsLoaded && C._planFeedbackLoaded)) return null;
+  function pick(k){ var o = C[k]; return (o && typeof o === 'object') ? o : {}; }
+  return {
+    note: 'Αρχείο δεδομένων από τον σύνδεσμο πελάτη (ανά token). Μόνο για ανάγνωση — δεν επαναφέρεται.',
+    savedAt: new Date().toISOString(),
+    checkins: pick('_checkinsCache'),
+    clientLogs: pick('_clientLogsCache'),
+    planFeedback: pick('_planFeedbackCache'),
+    mealLog: pick('_mealLogCache'),
+    workoutLog: pick('_workoutLogCache'),
+    altRejects: pick('_altRejCache')
+  };
+}
+function _buildFileBackupObj(){
+  var o = _buildBackupObj();
+  var p = _portalBackupData();
+  if(p) o.portalData = p;
+  return o;
+}
+function _portalDataSignature(){
+  var p = _portalBackupData();
+  if(!p) return '';
+  try { return ':' + JSON.stringify(p.checkins).length + ':' + JSON.stringify(p.clientLogs).length + ':' + JSON.stringify(p.planFeedback).length + ':' + JSON.stringify(p.workoutLog).length; }
+  catch(e){ return ''; }
+}
+
 function _currentClinicContact(){
   var C = (window.Cloud && window.Cloud.CLINIC) || {};
   function ls(k){ try { return localStorage.getItem(k) || ''; } catch(e){ return ''; } }
@@ -822,13 +855,13 @@ function _writeToDir(name, content){
 
 function _writeFileBackup(force){
   if(!_backupDirHandle) return;
-  var sig = _dataSignature();
+  var sig = _dataSignature() + _portalDataSignature();   // + νέα check-ins/μηνύματα πελατών (portalData)
   var now = Date.now();
   if(!force && sig === _lastFileBackupSig) return;          // no change since last file backup
   if(!force && (now - _lastFileBackupTime) < 60000) return; // throttle: at most once per minute
   _ensureDirPermission(function(granted){
     if(!granted) return;
-    var json = JSON.stringify(_buildBackupObj(), null, 2);
+    var json = JSON.stringify(_buildFileBackupObj(), null, 2);
     _writeToDir('Dietologist_Backup_latest.json', json);                                  // always-current copy
     _writeToDir('Dietologist_Backup_' + new Date().toISOString().slice(0,10) + '.json', json); // daily rotating copy
     _lastFileBackupSig = sig;
@@ -901,7 +934,7 @@ function stopPortalPollInterval(){
 function exportData(){
   // Create export object with timestamp
   // Ίδιο πλήρες περιεχόμενο με τα αυτόματα backups (βλ. _buildBackupObj).
-  var exportObj=deepClone(_buildBackupObj());
+  var exportObj=deepClone(_buildFileBackupObj());   // + portalData (αρχείο συνδέσμου πελατών)
   exportObj.backupCount=(safeStorageGet('backup_count') || 0) + 1;
 
   // Create blob and download

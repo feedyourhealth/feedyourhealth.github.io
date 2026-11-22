@@ -129,6 +129,13 @@ try:
         check(lab == ['τελευταίο πλάνο πριν 40 ημέρες'], f'40 μέρες από την αποστολή → «τελευταίο πλάνο πριν 40 ημέρες» ({lab})')
         check(J(f'progressDaysUntilExpiry({C("cA")})') == -10, 'Πρόοδος: ίδιο ρολόι (30−40 = −10)')
 
+        print('10. Backup: τα δεδομένα του συνδέσμου πελάτη μπαίνουν στο αρχείο (όχι στα snapshots)')
+        fb = J('(()=>{const o=_buildFileBackupObj();return {has:!!o.portalData, ck:Object.keys((o.portalData||{}).checkins||{}), plain:("portalData" in _buildBackupObj())}})()')
+        check(fb['has'] and ('tok_' + OLD + '_2') in fb['ck'], f'portalData.checkins στο αρχείο backup ({fb["ck"]})')
+        check(fb['plain'] is False, 'όχι στο _buildBackupObj (snapshots / cloud)')
+        res = J('(()=>{const before=clients.length; _applyBackupData(_buildFileBackupObj(),"replace"); return clients.length===before})()')
+        check(res is True, 'επαναφορά αρχείου με portalData δουλεύει κανονικά')
+
         check(not errors, f'κανένα console error ({errors[:3]})')
         br.close()
 finally:

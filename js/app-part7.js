@@ -1710,6 +1710,8 @@
         // ένας Πρώην που ξαναέκανε check-in επιστρέφει μόνος του στους Ενεργούς.
         self._checkinsLoaded=true;
         if(typeof lcAfterPortalRefresh==='function') lcAfterPortalRefresh();
+        // νέα check-ins → και στο αρχείο backup του φακέλου (portalData, persistence.js· throttle 1/λεπτό)
+        if(typeof _writeFileBackup==='function') try{ _writeFileBackup(false); }catch(e){}
         if(typeof renderSB==='function') renderSB();
         if(curId===null && curTab===0 && typeof renderHome==='function') renderHome();
         // ✅ 2026-08-01: το feedback πελάτη (progress/notes/plan-feedback) μετακόμισε στο "📝 Ραντεβού"
