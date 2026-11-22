@@ -108,11 +108,11 @@ function buildHouseholdSectionHtml(c){
   var members=hhMembers(c);
   if(members.length<2) members=[];   // μόνος του (τα άλλα μέλη διαγράφηκαν) = χωρίς νοικοκυριό
   var chipCss='display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12px;border:1px solid var(--border-light,#c5ddd8);background:var(--card-bg,#fff);color:var(--text-strong,#014545)';
-  var h='<div class="fg"><div class="fgrp"><label>🏠 Νοικοκυριό <span style="color:#9fb5b0;font-weight:400;font-size:11px">(τρώνε μαζί: ζευγάρι, αδέρφια, οικογένεια)</span></label>';
+  var h='<div class="fg"><div class="fgrp"><label>🏠 Νοικοκυριό <span style="color:#9fb5b0;font-weight:400;font-size:12px">(τρώνε μαζί: ζευγάρι, αδέρφια, οικογένεια)</span></label>';
   if(members.length){
     h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">'
       +'<b style="font-size:13px;color:var(--text-strong,#014545)">'+esc(c.householdName||'Νοικοκυριό')+'</b>'
-      +'<button type="button" class="btn" style="padding:3px 8px;font-size:11px" onclick="hhRename()" title="Μετονομασία">✏️</button></div>'
+      +'<button type="button" class="btn" style="padding:3px 8px;font-size:12px" onclick="hhRename()" title="Μετονομασία">✏️</button></div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">';
     members.forEach(function(x){
       var me=x.id===c.id;
@@ -134,7 +134,7 @@ function buildHouseholdSectionHtml(c){
   if(members.length){
     h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'
       +'<button type="button" class="btn" style="padding:6px 10px;font-size:12px;background:#E2EEE5;color:#014545;border:1px solid #c5ddd8" onclick="openKitchenLinkModal()">🏠 Link κουζίνας</button></div>'
-      +'<div style="font-size:11px;color:#9fb5b0;margin-top:6px;line-height:1.4">Κάθε μέλος έχει το δικό του πλάνο. Στο πλάνο, από το ⋮ ενός γεύματος ή μιας ημέρας: «↔️ Εφαρμογή σε…».</div>';
+      +'<div style="font-size:12px;color:#9fb5b0;margin-top:6px;line-height:1.4">Κάθε μέλος έχει το δικό του πλάνο. Στο πλάνο, από το ⋮ ενός γεύματος ή μιας ημέρας: «↔️ Εφαρμογή σε…».</div>';
   }
   return h+'</div></div>';
 }
@@ -218,9 +218,9 @@ function openHouseholdApply(mode, d, mi){
   var rows=others.map(function(x){
     var conf=hhConflicts(x, foods), hasPlan=x.weekPlan&&x.weekPlan[d]&&x.weekPlan[d].length;
     var slotMissing=hasPlan&&mode==='meal'&&hhMatchSlot(srcMeals,mi,x.weekPlan[d])<0;
-    var note=!hasPlan?'<div style="font-size:11px;color:#c0392b">Δεν έχει ακόμη πλάνο — φτιάξε πρώτα το δικό του.</div>'
-      :slotMissing?'<div style="font-size:11px;color:#c0392b">Δεν έχει γεύμα «'+esc(srcMeals[mi].name)+'» εκείνη τη μέρα.</div>'
-      :conf.length?'<div style="font-size:11px;color:#e08a00">⚠️ Δεν τρώει: '+esc(conf.join(', '))+'</div>':'';
+    var note=!hasPlan?'<div style="font-size:12px;color:#c0392b">Δεν έχει ακόμη πλάνο — φτιάξε πρώτα το δικό του.</div>'
+      :slotMissing?'<div style="font-size:12px;color:#c0392b">Δεν έχει γεύμα «'+esc(srcMeals[mi].name)+'» εκείνη τη μέρα.</div>'
+      :conf.length?'<div style="font-size:12px;color:#e08a00">⚠️ Δεν τρώει: '+esc(conf.join(', '))+'</div>':'';
     var ok=hasPlan&&!slotMissing;
     return '<label style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #eef4f2;cursor:'+(ok?'pointer':'default')+'">'
       +'<input type="checkbox" class="hh-apply-cb" value="'+esc(x.id)+'"'+(ok&&!conf.length?' checked':'')+(ok?'':' disabled')+' style="margin-top:3px">'
@@ -236,7 +236,7 @@ function openHouseholdApply(mode, d, mi){
     +'<div style="font-size:13px;color:#5a8a82;margin-bottom:10px">Αντιγράφει '+esc(what)+' με <b>τα ίδια τρόφιμα</b> και ποσότητες προσαρμοσμένες στον καθένα. Μετά τα πλάνα μένουν ανεξάρτητα.</div>'
     +rows
     +(mode==='meal'?'<label style="display:flex;gap:8px;align-items:center;font-size:12px;margin-top:10px;cursor:pointer"><input type="checkbox" id="hh-apply-week"> Και στις άλλες ημέρες, όπου το «'+esc(srcMeals[mi].name)+'» είναι κοινό;</label>'
-      +'<div style="font-size:11px;color:#9fb5b0;margin:2px 0 0 22px">Αντιγράφει το «'+esc(srcMeals[mi].name)+'» κάθε ημέρας του/της '+esc(hhFirstName(c))+' στην ίδια ημέρα των άλλων. Όπου υπάρχει τρόφιμο που κάποιος δεν τρώει, εκείνη η ημέρα παραλείπεται γι\' αυτόν.</div>':'')
+      +'<div style="font-size:12px;color:#9fb5b0;margin:2px 0 0 22px">Αντιγράφει το «'+esc(srcMeals[mi].name)+'» κάθε ημέρας του/της '+esc(hhFirstName(c))+' στην ίδια ημέρα των άλλων. Όπου υπάρχει τρόφιμο που κάποιος δεν τρώει, εκείνη η ημέρα παραλείπεται γι\' αυτόν.</div>':'')
     +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">'
     +'<button class="btn" onclick="document.getElementById(\'hh-apply-overlay\').remove()">Άκυρο</button>'
     +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857" onclick="confirmHouseholdApply(\''+mode+'\','+d+','+(mi==null?-1:mi)+')">Εφαρμογή</button></div></div>';
@@ -286,7 +286,7 @@ function hhShowUndoToast(srcId, srcBefore, before, done, targets, skipped){
   t.innerHTML='<span>✓ Εφαρμόστηκε σε '+esc(targets.map(hhFirstName).join(', '))+' ('+done+(done===1?' γεύμα':' γεύματα')+')'
     +(skipped.length?'<br><span style="opacity:.85">Παραλείφθηκαν: '+esc(skipped.join(', '))+'</span>':'')
     +'<br><span style="opacity:.85">Αν θες, πάτα ⚖️ στο πλάνο τους για ακριβή στόχους.</span></span>'
-    +'<button style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Αναίρεση</button>';
+    +'<button style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Αναίρεση</button>';
   document.body.appendChild(t);
   var timer=setTimeout(function(){ t.remove(); },10000);
   t.querySelector('button').onclick=function(){

@@ -77,7 +77,7 @@ function bfGaugeHtml(bf,sex,isMinor,goalBF,age){
     zoneLbl=GLBL[gv.key];zoneCol=gv.col;
     headerTxt='🎯 Θέση %BF — υγιές εύρος για '+(sex==='F'?'γυναίκα':'άνδρα')+' '+gv.ageBand+' ετών';
     stampTxt='υγιή εύρη %BF κατά ηλικία & φύλο (Gallagher 2000) — όχι διάγνωση';
-    extraLine='<div style="text-align:center;font-size:10px;color:var(--text-muted);margin-top:1px">Υγιές εύρος: '+hLo+'–'+hHi+'%</div>';
+    extraLine='<div style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:1px">Υγιές εύρος: '+hLo+'–'+hHi+'%</div>';
   } else {
     // Χωρίς ηλικία — 5-band ACE/ACSM (χωρίς διόρθωση ηλικίας).
     var aceBands=BF_BANDS(sex);
@@ -109,12 +109,12 @@ function bfGaugeHtml(bf,sex,isMinor,goalBF,age){
     goalTick='<div class="bf-gauge-goal" style="transform:rotate('+gAngle+'deg)"></div>';
   }
   return '<div style="margin-top:10px;padding:10px 10px 12px;background:var(--card-bg);border:1px solid var(--border-light);border-radius:8px">'
-    +'<div style="font-size:10px;color:var(--text-muted);margin-bottom:2px">'+headerTxt+'</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);margin-bottom:2px">'+headerTxt+'</div>'
     +'<div class="bf-gauge-wrap"><div class="bf-gauge-arc" style="background:'+gradient+'"></div>'+goalTick+'<div class="bf-gauge-needle" style="transform:rotate('+angle+'deg)"></div></div>'
     +'<div style="text-align:center;font-size:13px;font-weight:700;color:'+zoneCol+'">'+bf+'% — '+zoneLbl+'</div>'
     +extraLine
-    +(goalBF>0?'<div style="text-align:center;font-size:10px;color:var(--text-muted);margin-top:1px">🎯 Στόχος: '+goalBF+'%</div>':'')
-    +'<div style="text-align:center;font-size:9px;color:var(--text-muted);margin-top:3px">'+stampTxt+'</div>'
+    +(goalBF>0?'<div style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:1px">🎯 Στόχος: '+goalBF+'%</div>':'')
+    +'<div style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:3px">'+stampTxt+'</div>'
     +'</div>';
 }
 // Ποσοστό προόδου προς τον στόχο βάρους — ίδιος ακριβώς υπολογισμός με το goalBarHtml στην

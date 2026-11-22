@@ -597,12 +597,12 @@ function showAutoRecalculationNotification(c){
   var msg='<span style="font-size:14px;margin-right:8px">✓</span><span><strong>Ενημέρωση Ρυθμίσεων</strong>';
 
   if(changes.tdeeChanged){
-    msg+='<br><span style="font-size:11px;color:#1b5e20;margin-top:4px;display:block">'
+    msg+='<br><span style="font-size:12px;color:#1b5e20;margin-top:4px;display:block">'
       +'TDEE: '+changes.oldTDEE+' → '+changes.newTDEE+' kcal'
       +'</span>';
   }
   if(changes.sportChanged){
-    msg+='<br><span style="font-size:11px;color:#1b5e20;display:block">'
+    msg+='<br><span style="font-size:12px;color:#1b5e20;display:block">'
       +'Macros ενημερώθηκαν'
       +'</span>';
   }

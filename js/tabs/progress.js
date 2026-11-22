@@ -153,13 +153,13 @@ function progressRowUrgentLineHtml(x){
   // ενήμερη απόφαση του διαιτολόγου. var(--text-muted) αντί για hardcoded χρώμα ώστε να ακολουθεί
   // σωστά το dark mode, ίδιο με το .hm-row-sub/.hm-empty.
   if(x.flags.indexOf('muted')>-1){
-    return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:var(--text-muted)">🔇 Σε σίγαση · '+progressMuteLabel(x.c)+'</div>';
+    return '<div style="margin-top:3px;font-size:12px;font-weight:600;color:var(--text-muted)">🔇 Σε σίγαση · '+progressMuteLabel(x.c)+'</div>';
   }
   if(x.flags.indexOf('paused')>-1){
-    return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:var(--text-muted)">⏸ Σε παύση'+(x.c.pausedUntil&&typeof lcFmtDM==='function'?' έως '+lcFmtDM(x.c.pausedUntil):'')+'</div>';
+    return '<div style="margin-top:3px;font-size:12px;font-weight:600;color:var(--text-muted)">⏸ Σε παύση'+(x.c.pausedUntil&&typeof lcFmtDM==='function'?' έως '+lcFmtDM(x.c.pausedUntil):'')+'</div>';
   }
   if(x.flags.indexOf('dormant')>-1){
-    return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:var(--text-muted)">💤 Χωρίς δραστηριότητα 60+ μέρες · πρόταση για Πρώην στην Αρχική</div>';
+    return '<div style="margin-top:3px;font-size:12px;font-weight:600;color:var(--text-muted)">💤 Χωρίς δραστηριότητα 60+ μέρες · πρόταση για Πρώην στην Αρχική</div>';
   }
   if(!x.flags.length) return '';
   var ordered=PROGRESS_FLAG_PRIORITY.filter(function(f){return x.flags.indexOf(f)>-1;});
@@ -173,7 +173,7 @@ function progressRowUrgentLineHtml(x){
   // 'gone' είναι υποσύνολο του 'nudge' (ίδιος πελάτης, πιο αυστηρό κριτήριο) — δεν ξαναγράφεται ως «υπόλοιπη» σημαία.
   var rest=ordered.slice(1).filter(function(f){return !(top==='gone' && f==='nudge');});
   var restHtml=rest.length?(' <span style="color:#999;font-weight:400">· '+rest.map(function(f){return PROGRESS_FLAG_LABELS[f];}).join(' · ')+'</span>'):'';
-  return '<div style="margin-top:3px;font-size:11.5px;font-weight:600;color:'+PROGRESS_FLAG_COLOR[top]+'">'+PROGRESS_FLAG_LABELS[top]+extra+restHtml+'</div>';
+  return '<div style="margin-top:3px;font-size:12px;font-weight:600;color:'+PROGRESS_FLAG_COLOR[top]+'">'+PROGRESS_FLAG_LABELS[top]+extra+restHtml+'</div>';
 }
 // 3η γραμμή: όλα τα υπόλοιπα (σερί/τελ. check-in/Δ βάρους/επικοινωνία) σε ουδέτερο γκρι — δεν
 // ανταγωνίζονται πια με το σκορ/σημαία της 1ης-2ης γραμμής για προσοχή.
@@ -565,7 +565,7 @@ function progressWeakPillarCalloutHtml(rows){
 function progressAdherenceChartPanel(c,rows){
   return '<div class="hm-card" style="margin-bottom:14px">'
     +'<div class="hm-card-title">📈 Τήρηση — τελευταίες '+PROGRESS_CHART_WEEKS+' εβδομάδες'
-    +'<span style="margin-left:auto;font-weight:400;font-size:10.5px;color:var(--text-muted)">'
+    +'<span style="margin-left:auto;font-weight:400;font-size:12px;color:var(--text-muted)">'
     +'<span style="color:#025857">●</span> Διατροφή &nbsp; <span style="color:#1565C0">●</span> Νερό &nbsp; <span style="color:#EF9F27">●</span> Συμπληρώματα &nbsp; <span style="color:#999">┊</span> Ραντεβού'
     +'</span></div>'
     +progressWeakPillarCalloutHtml(rows)
@@ -669,7 +669,7 @@ function progressWeeklyConsistencyHtml(c,rows){
   var visible=weeks.slice(0,PROGRESS_WEEKS_VISIBLE), older=weeks.slice(PROGRESS_WEEKS_VISIBLE);
   var avg=scoreN?Math.round(scoreSum/scoreN):null;
   function tile(lbl,val,danger){ return '<div class="pr-wk-tile"><div class="pr-wk-tl">'+lbl+'</div><div class="pr-wk-tv"'+(danger?' style="color:#c62828"':'')+'>'+val+'</div></div>'; }
-  var html=head+'<span style="margin-left:auto;font-weight:400;font-size:10.5px;color:var(--text-muted)">από '+progressShortDate(rows[0].date)+'/'+rows[0].date.slice(0,4)+' · '+weeks.length+' εβδομάδες</span></div>';
+  var html=head+'<span style="margin-left:auto;font-weight:400;font-size:12px;color:var(--text-muted)">από '+progressShortDate(rows[0].date)+'/'+rows[0].date.slice(0,4)+' · '+weeks.length+' εβδομάδες</span></div>';
   html+='<div class="pr-wk-tiles">'
     +tile('Μ.Ο. σκορ',avg==null?'—':avg+'%')
     +tile('Μέρες με καταχώρηση',daysWith+' / '+daysTotal)
@@ -951,7 +951,7 @@ function progressTimelineHtml(items,clientId){
       +(e.milestone?';background:#fafcfc;border-radius:6px':'');
     return '<div class="hm-row" style="'+rowStyle+'">'
       +'<span style="width:20px;flex-shrink:0">'+e.icon+'</span>'
-      +'<span style="flex:1;min-width:0"><b style="font-size:12px">'+e.title+(e.mine?' <span style="font-size:9px;font-weight:700;color:var(--teal);background:#e2eee5;padding:1px 6px;border-radius:999px;margin-left:4px">εσύ</span>':'')+'</b>'
+      +'<span style="flex:1;min-width:0"><b style="font-size:12px">'+e.title+(e.mine?' <span style="font-size:12px;font-weight:700;color:var(--teal);background:#e2eee5;padding:1px 6px;border-radius:999px;margin-left:4px">εσύ</span>':'')+'</b>'
       +(e.detail?'<div class="hm-row-sub" style="white-space:normal">'+e.detail+'</div>':'')
       +'</span>'
       +'<span class="hm-row-sub">'+esc(e.date)+'</span>'
@@ -1032,8 +1032,8 @@ function progressGoalProgressHtml(c){
     ?'<div style="height:7px;border-radius:99px;background:#E2EEE5;overflow:hidden;margin-top:6px"><div style="height:100%;width:'+s.goalPct+'%;background:'+(s.goalDone?'var(--good)':'var(--teal)')+'"></div></div>'
     :'';
   return '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#f0f7f7;border-radius:10px;padding:10px 14px;margin-bottom:10px">'
-    +'<div><div style="font-size:20px;font-weight:700;color:var(--teal)">'+s.lastWeight+' kg</div><div style="font-size:10.5px;color:var(--text-muted)">τελευταία μέτρηση</div></div>'
-    +'<div style="flex:1;min-width:140px">'+barHtml+'<div style="font-size:10px;color:var(--text-muted);margin-top:4px"><b style="color:'+(s.goalDone?'var(--good)':'var(--teal)')+'">'+s.goalTxt+'</b>'+(s.goalPct!=null?' · '+s.goalPct+'% της διαδρομής προς τον στόχο ('+c.goalWeight+' kg)':' · στόχος '+c.goalWeight+' kg')+'</div></div>'
+    +'<div><div style="font-size:20px;font-weight:700;color:var(--teal)">'+s.lastWeight+' kg</div><div style="font-size:12px;color:var(--text-muted)">τελευταία μέτρηση</div></div>'
+    +'<div style="flex:1;min-width:140px">'+barHtml+'<div style="font-size:12px;color:var(--text-muted);margin-top:4px"><b style="color:'+(s.goalDone?'var(--good)':'var(--teal)')+'">'+s.goalTxt+'</b>'+(s.goalPct!=null?' · '+s.goalPct+'% της διαδρομής προς τον στόχο ('+c.goalWeight+' kg)':' · στόχος '+c.goalWeight+' kg')+'</div></div>'
     +'</div>';
 }
 function progressWeightPanelHtml(c){
@@ -1059,7 +1059,7 @@ function progressWeightPanelHtml(c){
 // εκεί ανέγγιχτο.
 function progressCompactSummaryHtml(c){
   if(!c.shareToken) return '';
-  var openLink='<a href="javascript:void(0)" onclick="swTab(10);openProgressClient(\''+c.id+'\')" style="font-size:11px;font-weight:600;color:var(--teal);white-space:nowrap">Πλήρες ιστορικό (γράφημα 10 εβδ., timeline) →</a>';
+  var openLink='<a href="javascript:void(0)" onclick="swTab(10);openProgressClient(\''+c.id+'\')" style="font-size:12px;font-weight:600;color:var(--teal);white-space:nowrap">Πλήρες ιστορικό (γράφημα 10 εβδ., timeline) →</a>';
   var rows=(window.Cloud&&window.Cloud.checkinsFor)?window.Cloud.checkinsFor(c):[];
   if(!rows.length){
     return '<div class="tracker-section"><div class="tracker-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">'
@@ -1071,8 +1071,8 @@ function progressCompactSummaryHtml(c){
   var trendChip='';
   if(score!=null && prevScore!=null){
     var dS=score-prevScore;
-    if(dS>=CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:var(--good)">▲ +'+dS+'</span>';
-    else if(dS<=-CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:#c62828">▼ '+dS+'</span>';
+    if(dS>=CK_TREND_MIN_PP) trendChip=' <span style="font-size:12px;font-weight:700;color:var(--good)">▲ +'+dS+'</span>';
+    else if(dS<=-CK_TREND_MIN_PP) trendChip=' <span style="font-size:12px;font-weight:700;color:#c62828">▼ '+dS+'</span>';
   }
   return '<div class="tracker-section">'
     +'<div class="tracker-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">'

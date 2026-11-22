@@ -147,11 +147,11 @@ function displayFoodDistributionResults(validation) {
   html += '<strong>📊 Διατροφική Κατανομή Γευμάτων:</strong><br>';
 
   if(validation.passes.length > 0) {
-    html += '<div style="color:var(--good);font-size:11px;line-height:1.6;">' + validation.passes.join('<br>') + '</div>';
+    html += '<div style="color:var(--good);font-size:12px;line-height:1.6;">' + validation.passes.join('<br>') + '</div>';
   }
 
   if(validation.violations.length > 0) {
-    html += '<div style="color:var(--bad-fg);font-size:11px;margin-top:6px;line-height:1.6;">' + validation.violations.join('<br>') + '</div>';
+    html += '<div style="color:var(--bad-fg);font-size:12px;margin-top:6px;line-height:1.6;">' + validation.violations.join('<br>') + '</div>';
   } else {
     html += '<div style="color:var(--good);font-weight:600;margin-top:6px;">✓ Όλα τα κριτήρια ικανοποιούνται!</div>';
   }

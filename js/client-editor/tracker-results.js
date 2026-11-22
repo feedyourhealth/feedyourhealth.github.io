@@ -70,7 +70,7 @@ function _trFmtD(d,dec){ return (d>0?'+':d<0?'−':'±')+Math.abs(d).toFixed(dec
 var TR_CHIP={good:['#e8f5e9','#2e7d32'],bad:['#fdecea','#c62828'],neu:['#eef2f7','#456'],noise:['#f1f1f1','#777']};
 function _trChip(kind,txt,title){
   var k=TR_CHIP[kind];
-  return '<span style="display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:9px;background:'+k[0]+';color:'+k[1]+';white-space:nowrap"'+(title?' title="'+esc(title)+'"':'')+'>'+txt+'</span>';
+  return '<span style="display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:9px;background:'+k[0]+';color:'+k[1]+';white-space:nowrap"'+(title?' title="'+esc(title)+'"':'')+'>'+txt+'</span>';
 }
 // Delta chip for a metric pair. Grey when within measurement noise or when %BF methods differ.
 function trDeltaChip(m,p){
@@ -86,11 +86,11 @@ function trTableDelta(e,prev,m){
   if(!prev)return '';
   var a=m.get(e),b=m.get(prev);
   if(a==null||b==null)return '';
-  if(m.bf&&trMethodMismatch(e,prev))return ' <span style="font-size:9px;color:#b26a00" title="Διαφορετική μέθοδος από την προηγούμενη μέτρηση">≠</span>';
+  if(m.bf&&trMethodMismatch(e,prev))return ' <span style="font-size:12px;color:#b26a00" title="Διαφορετική μέθοδος από την προηγούμενη μέτρηση">≠</span>';
   var d=+(a-b).toFixed(1);
   var good=m.dir==='lower'?d<0:m.dir==='higher'?d>0:null;
   var col=Math.abs(d)<m.noise?'#999':good===null?'#456':good?'#2e7d32':'#c62828';
-  return ' <span style="font-size:9.5px;font-weight:700;color:'+col+'">'+_trFmtD(d,1)+'</span>';
+  return ' <span style="font-size:12px;font-weight:700;color:'+col+'">'+_trFmtD(d,1)+'</span>';
 }
 
 function trSparkSvg(series){
@@ -104,7 +104,7 @@ function trSparkSvg(series){
 }
 
 var _TR_BOX='background:var(--card-bg);border:1px solid var(--border-light);border-radius:9px;padding:10px 12px;min-width:0';
-function _trHead(t,sub){ return '<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:8px">'+t+(sub?' <span style="font-weight:400;color:#9fb5b0">'+sub+'</span>':'')+'</div>'; }
+function _trHead(t,sub){ return '<div style="font-size:12px;font-weight:700;color:#025857;margin-bottom:8px">'+t+(sub?' <span style="font-weight:400;color:#9fb5b0">'+sub+'</span>':'')+'</div>'; }
 
 // ── 8. «Με απλά λόγια» ──────────────────────────────────────────────────────────────
 function trStoryHtml(c,sorted,cmp){
@@ -139,7 +139,7 @@ function trStoryHtml(c,sorted,cmp){
   var pos=good>0&&bad===0;
   var bg=pos?'#e8f5e9':'#f0f9f8',bd=pos?'#a5d6a7':'#c5ddd8',col=pos?'#1b5e20':'#025857';
   return '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:9px;padding:10px 14px;margin-bottom:10px">'
-    +'<div style="font-size:11px;font-weight:700;color:'+col+';margin-bottom:4px">💬 Με απλά λόγια</div>'
+    +'<div style="font-size:12px;font-weight:700;color:'+col+';margin-bottom:4px">💬 Με απλά λόγια</div>'
     +'<div style="font-size:13px;line-height:1.55;color:'+col+'">'+s1+(s2?' '+s2:'')+(s3?' '+s3:'')+'</div></div>';
 }
 
@@ -150,7 +150,7 @@ function trTilesHtml(c,sorted,cmp,isMinor){
   ms.forEach(function(m){
     var p=trPair(sorted,m.get,cmp,m.bf);if(!p)return;
     out.push('<div style="background:var(--card-bg);padding:8px 10px;border-radius:7px;border-left:3px solid '+BORDER[m.k]+';min-width:0">'
-      +'<div style="font-size:10px;color:#666">'+m.lbl+'</div>'
+      +'<div style="font-size:12px;color:#666">'+m.lbl+'</div>'
       +'<div style="font-size:16px;font-weight:700;color:#025857;margin:1px 0 3px">'+(+p.lv.toFixed(m.dec))+m.u+'</div>'
       +trDeltaChip(m,p)+trSparkSvg(p.series)+'</div>');
   });
@@ -159,12 +159,12 @@ function trTilesHtml(c,sorted,cmp,isMinor){
     var bmi=+(L.weight/((c.height/100)*(c.height/100))).toFixed(1);
     var cat=isMinor?'':bmi<18.5?'λιποβαρές':bmi<25?'φυσιολογικό':bmi<30?'υπέρβαρο':'παχυσαρκία';
     var bcol=isMinor?'#999':bmi<18.5?'#ff6b35':bmi<25?'#2e7d32':bmi<30?'#ff9800':'#c62828';
-    out.push('<div style="background:var(--card-bg);padding:8px 10px;border-radius:7px;border-left:3px solid '+bcol+'"><div style="font-size:10px;color:#666">BMI</div><div style="font-size:16px;font-weight:700;color:'+bcol+'">'+bmi+'</div>'+(cat?'<div style="font-size:10px;color:'+bcol+'">'+cat+'</div>':'')+'</div>');
+    out.push('<div style="background:var(--card-bg);padding:8px 10px;border-radius:7px;border-left:3px solid '+bcol+'"><div style="font-size:12px;color:#666">BMI</div><div style="font-size:16px;font-weight:700;color:'+bcol+'">'+bmi+'</div>'+(cat?'<div style="font-size:12px;color:'+bcol+'">'+cat+'</div>':'')+'</div>');
   }
-  else out.push('<div style="background:var(--card-bg);padding:8px 10px;border-radius:7px;border-left:3px solid #ccc"><div style="font-size:10px;color:#666">BMI</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Χρειάζεται ύψος — συμπλήρωσέ το στα Στοιχεία πελάτη</div></div>');
+  else out.push('<div style="background:var(--card-bg);padding:8px 10px;border-radius:7px;border-left:3px solid #ccc"><div style="font-size:12px;color:#666">BMI</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px">Χρειάζεται ύψος — συμπλήρωσέ το στα Στοιχεία πελάτη</div></div>');
   var lmP=trPair(sorted,function(e){return e.bf>0?e.weight*(1-e.bf/100):null;},cmp);
   var ff=lmP?trackerFfmi(+lmP.lv.toFixed(1),c.height,c.sex||'M',isMinor):null;
-  if(ff)out.push('<div style="background:var(--card-bg);padding:8px 10px;border-radius:7px;border-left:3px solid '+ff.col+'" title="FFMI = άλιπη μάζα / ύψος²"><div style="font-size:10px;color:#666">FFMI</div><div style="font-size:16px;font-weight:700;color:'+ff.col+'">'+ff.v+'</div>'+(ff.cat?'<div style="font-size:10px;color:'+ff.col+'">'+ff.cat+'</div>':'')+'</div>');
+  if(ff)out.push('<div style="background:var(--card-bg);padding:8px 10px;border-radius:7px;border-left:3px solid '+ff.col+'" title="FFMI = άλιπη μάζα / ύψος²"><div style="font-size:12px;color:#666">FFMI</div><div style="font-size:16px;font-weight:700;color:'+ff.col+'">'+ff.v+'</div>'+(ff.cat?'<div style="font-size:12px;color:'+ff.col+'">'+ff.cat+'</div>':'')+'</div>');
   return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin-bottom:10px">'+out.join('')+'</div>';
 }
 
@@ -181,8 +181,8 @@ function trGoalBarHtml(c,sorted){
   else eta='Απομένουν <b>'+Math.abs(+(g-n).toFixed(1))+' kg</b> ως τον στόχο.';
   return '<div style="'+_TR_BOX+'">'+_trHead('🎯 Πορεία προς τον στόχο')
     +'<div style="height:14px;background:#e8eeed;border-radius:7px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:#2e7d32;border-radius:7px"></div></div>'
-    +'<div style="display:flex;justify-content:space-between;gap:6px;font-size:10.5px;color:#666;margin-top:5px"><span>Αρχή '+s+' kg</span><span style="color:#025857;font-weight:700">Τώρα '+n+' kg · '+pct+'%</span><span>Στόχος '+g+' kg</span></div>'
-    +'<div style="font-size:11px;margin-top:6px;line-height:1.4;color:#444">'+eta+'</div></div>';
+    +'<div style="display:flex;justify-content:space-between;gap:6px;font-size:12px;color:#666;margin-top:5px"><span>Αρχή '+s+' kg</span><span style="color:#025857;font-weight:700">Τώρα '+n+' kg · '+pct+'%</span><span>Στόχος '+g+' kg</span></div>'
+    +'<div style="font-size:12px;margin-top:6px;line-height:1.4;color:#444">'+eta+'</div></div>';
 }
 
 // ── 10. Age-adjusted %BF zone bar (replaces the two-needle gauge) ─────────────────────
@@ -195,15 +195,15 @@ function trZoneBarHtml(c,sorted,cmp,isMinor,age){
   var X=function(v){return Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));};
   var segs=[[lo,gv.healthy[0],'#90caf9','κάτω από υγιές'],[gv.healthy[0],gv.healthy[1],'#a5d6a7','υγιές'],[gv.healthy[1],gv.obeseLo,'#ffcc80','αυξημένο'],[gv.obeseLo,hi,'#ef9a9a','υψηλό']];
   var bar=segs.map(function(s){return '<div style="position:absolute;top:18px;height:14px;left:'+X(s[0])+'%;width:'+(X(s[1])-X(s[0]))+'%;background:'+s[2]+'"></div>'
-    +'<div style="position:absolute;top:36px;left:'+X(s[0])+'%;width:'+(X(s[1])-X(s[0]))+'%;text-align:center;font-size:9.5px;color:#666;white-space:nowrap;overflow:hidden">'+s[3]+'</div>';}).join('');
+    +'<div style="position:absolute;top:36px;left:'+X(s[0])+'%;width:'+(X(s[1])-X(s[0]))+'%;text-align:center;font-size:12px;color:#666;white-space:nowrap;overflow:hidden">'+s[3]+'</div>';}).join('');
   var cur='<div style="position:absolute;top:12px;height:26px;width:3px;margin-left:-1px;background:#263238;left:'+X(bfP.lv)+'%"></div>'
-    +'<div style="position:absolute;top:-2px;transform:translateX(-50%);left:'+X(bfP.lv)+'%;font-size:11px;font-weight:700;color:#263238;white-space:nowrap">εσύ '+(+bfP.lv.toFixed(1))+'%</div>';
+    +'<div style="position:absolute;top:-2px;transform:translateX(-50%);left:'+X(bfP.lv)+'%;font-size:12px;font-weight:700;color:#263238;white-space:nowrap">εσύ '+(+bfP.lv.toFixed(1))+'%</div>';
   var base='';
   if(bfP.bv!=null&&!trMethodMismatch(bfP.L,bfP.B))base='<div title="'+(cmp==='first'?'1η μέτρηση':'Προηγούμενη')+': '+bfP.bv+'%" style="position:absolute;top:14px;height:22px;border-left:2px dashed #78909c;left:'+X(bfP.bv)+'%"></div>';
   var goal=c.goalBF>0?'<div title="Στόχος '+c.goalBF+'%" style="position:absolute;top:20px;width:10px;height:10px;margin-left:-5px;background:#025857;transform:rotate(45deg);border:1px solid #fff;left:'+X(c.goalBF)+'%"></div>':'';
   return '<div style="'+_TR_BOX+'">'+_trHead('📍 Λίπος σε σχέση με '+(sex==='F'?'γυναίκες':'άνδρες')+' '+gv.ageBand+' ετών')
     +'<div style="position:relative;height:52px;margin:0 4px">'+bar+base+goal+cur+'</div>'
-    +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px;line-height:1.5">Υγιές εύρος '+gv.healthy[0]+'–'+gv.healthy[1]+'%'
+    +'<div style="font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.5">Υγιές εύρος '+gv.healthy[0]+'–'+gv.healthy[1]+'%'
     +(base?' · διακεκομμένη = '+(cmp==='first'?'1η μέτρηση':'προηγούμενη')+' ('+bfP.bv+'%)':'')+(goal?' · ◆ στόχος '+c.goalBF+'%':'')
     +' · Gallagher 2000, όχι διάγνωση</div></div>';
 }
@@ -249,7 +249,7 @@ function trMilestonesHtml(c,sorted,age,isMinor){
   if(!ms.filter(function(m){return !m.locked;}).length)return '';
   return '<div style="'+_TR_BOX+';margin-bottom:10px">'+_trHead('🏅 Ορόσημα')
     +'<div style="display:flex;flex-wrap:wrap;gap:6px">'+ms.map(function(m){
-      return '<span style="font-size:11.5px;padding:4px 10px;border-radius:14px;'+(m.locked?'background:#f1f1f1;color:#888;border:1px dashed #ccc':'background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;font-weight:700')+'">'+m.ic+' '+m.t+'</span>';
+      return '<span style="font-size:12px;padding:4px 10px;border-radius:14px;'+(m.locked?'background:#f1f1f1;color:#888;border:1px dashed #ccc':'background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7;font-weight:700')+'">'+m.ic+' '+m.t+'</span>';
     }).join('')+'</div></div>';
 }
 
@@ -261,12 +261,12 @@ function trFatLeanHtml(sorted){
   return '<div style="'+_TR_BOX+'">'+_trHead('📊 Λίπος & άλιπη μάζα ανά επίσκεψη')
     +bfE.map(function(e,i){
       var fm=+(e.weight*e.bf/100).toFixed(1),lm=+(e.weight-fm).toFixed(1),mm=i>0&&trMethodMismatch(e,bfE[i-1]);
-      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="width:62px;font-size:10px;color:#666;white-space:nowrap">'+_fmtDateGr(e.date).replace(/\/\d{4}$/,'')+(mm?' <span title="Άλλη μέθοδος μέτρησης" style="color:#b26a00">≠</span>':'')+'</span>'
+      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="width:62px;font-size:12px;color:#666;white-space:nowrap">'+_fmtDateGr(e.date).replace(/\/\d{4}$/,'')+(mm?' <span title="Άλλη μέθοδος μέτρησης" style="color:#b26a00">≠</span>':'')+'</span>'
         +'<div style="flex:1;display:flex;gap:1px;height:15px"><div style="width:'+(lm/mx*100)+'%;background:#1565C0;border-radius:3px 0 0 3px;color:#fff;font-size:8.5px;font-weight:700;display:flex;align-items:center;padding-left:4px;overflow:hidden;white-space:nowrap">'+lm+'</div>'
         +'<div style="width:'+(fm/mx*100)+'%;background:#ff9999;border-radius:0 3px 3px 0"></div></div>'
-        +'<span style="width:48px;text-align:right;font-size:10.5px;font-weight:700;color:#d9534f">'+fm+' kg</span></div>';
+        +'<span style="width:48px;text-align:right;font-size:12px;font-weight:700;color:#d9534f">'+fm+' kg</span></div>';
     }).join('')
-    +'<div style="display:flex;gap:12px;font-size:10px;color:#666;margin-top:6px"><span><span style="display:inline-block;width:10px;height:10px;background:#1565C0;border-radius:2px;vertical-align:middle"></span> Άλιπη μάζα</span><span><span style="display:inline-block;width:10px;height:10px;background:#ff9999;border-radius:2px;vertical-align:middle"></span> Λίπος (kg δεξιά)</span></div></div>';
+    +'<div style="display:flex;gap:12px;font-size:12px;color:#666;margin-top:6px"><span><span style="display:inline-block;width:10px;height:10px;background:#1565C0;border-radius:2px;vertical-align:middle"></span> Άλιπη μάζα</span><span><span style="display:inline-block;width:10px;height:10px;background:#ff9999;border-radius:2px;vertical-align:middle"></span> Λίπος (kg δεξιά)</span></div></div>';
 }
 
 // Simple front-view figure shared by the circumference + skinfold infographics. `extra` = SVG
@@ -287,13 +287,13 @@ function trCircHtml(c,sorted,cmp){
   ms.forEach(function(m){
     var p=trPair(sorted,m.get,cmp);if(!p)return;
     svg+=lines[m.k];
-    rows.push('<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border-light)"><span style="font-size:11px">'+m.lbl+' <b style="color:#025857">'+p.lv+' cm</b></span>'+trDeltaChip(m,p)+'</div>');
+    rows.push('<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border-light)"><span style="font-size:12px">'+m.lbl+' <b style="color:#025857">'+p.lv+' cm</b></span>'+trDeltaChip(m,p)+'</div>');
   });
   if(!rows.length)return '';
   var wP=trPair(sorted,function(e){return e.waist>0?e.waist:null;},cmp),whtr='';
   if(wP&&c.height>0){
     var r=+(wP.lv/c.height).toFixed(2);
-    whtr='<div style="font-size:10.5px;margin-top:6px;color:'+(r<0.5?'#2e7d32':'#e65100')+'">Λόγος μέσης/ύψους <b>'+r+'</b> — '+(r<0.5?'κάτω από το όριο κινδύνου 0.5':'πάνω από το όριο κινδύνου 0.5')+'</div>';
+    whtr='<div style="font-size:12px;margin-top:6px;color:'+(r<0.5?'#2e7d32':'#e65100')+'">Λόγος μέσης/ύψους <b>'+r+'</b> — '+(r<0.5?'κάτω από το όριο κινδύνου 0.5':'πάνω από το όριο κινδύνου 0.5')+'</div>';
   }
   return '<div style="'+_TR_BOX+'">'+_trHead('📏 Περιφέρειες')
     +'<div style="display:flex;gap:12px;align-items:center">'+_trBodySvg(svg,'Σημεία μέτρησης περιφερειών')+'<div style="flex:1;min-width:0">'+rows.join('')+whtr+'</div></div></div>';
@@ -312,12 +312,12 @@ function trSkinfoldMapHtml(sorted,cmp){
   keys.forEach(function(k){
     var p=Math.round((b[k]-a[k])/a[k]*100),pos=TR_SF_POS[k];
     if(pos)dots+='<circle cx="'+pos[0]+'" cy="'+pos[1]+'" r="6" fill="'+colOf(p)+'" stroke="#fff" stroke-width="1.5"><title>'+TRACKER_SF_LBL[k]+' '+_sgn(p)+'%</title></circle>';
-    rows.push('<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border-light);font-size:11px"><span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+colOf(p)+';vertical-align:middle"></span> '+TRACKER_SF_LBL[k]+' <span style="color:#888">'+a[k]+'→'+b[k]+' mm</span></span>'
+    rows.push('<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid var(--border-light);font-size:12px"><span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+colOf(p)+';vertical-align:middle"></span> '+TRACKER_SF_LBL[k]+' <span style="color:#888">'+a[k]+'→'+b[k]+' mm</span></span>'
       +_trChip(p<=-5?'good':p<5?'noise':'bad',_sgn(p)+'%')+'</div>');
   });
   return '<div style="'+_TR_BOX+'">'+_trHead('📐 Από πού φεύγει το λίπος',_fmtDateGr(B.date)+' → '+_fmtDateGr(L.date))
     +'<div style="display:flex;gap:12px;align-items:center">'+_trBodySvg(dots,'Χάρτης δερματοπτυχών')+'<div style="flex:1;min-width:0">'+rows.join('')+'</div></div>'
-    +'<div style="font-size:10px;color:var(--text-muted);margin-top:5px">Πιο σκούρο πράσινο = μεγαλύτερη μείωση· πορτοκαλί = αύξηση.</div></div>';
+    +'<div style="font-size:12px;color:var(--text-muted);margin-top:5px">Πιο σκούρο πράσινο = μεγαλύτερη μείωση· πορτοκαλί = αύξηση.</div></div>';
 }
 
 // ── 13. Before / now card (+ PNG for WhatsApp) ────────────────────────────────────────
@@ -338,14 +338,14 @@ var _TR_MONTHS=['Ιανουάριος','Φεβρουάριος','Μάρτιος'
 function _trMonthLbl(iso){ var p=String(iso).split('-'); return p.length===3?_TR_MONTHS[(+p[1])-1]+' '+p[0]:iso; }
 function trBeforeAfterHtml(c,sorted,cmp){
   var d=_trCardData(c,sorted,cmp);if(!d)return '';
-  var col=function(e,lbl,hl){return '<div style="text-align:center;min-width:0"><div style="font-size:10px;color:#888">'+lbl+'</div><div style="font-size:22px;font-weight:800;color:'+(hl?'#2e7d32':'#025857')+'">'+e.weight+'<span style="font-size:12px"> kg</span></div>'+(d.showBf?'<div style="font-size:11px;color:'+(hl?'#2e7d32':'#666')+'">'+e.bf+'% λίπος</div>':'')+'</div>';};
+  var col=function(e,lbl,hl){return '<div style="text-align:center;min-width:0"><div style="font-size:12px;color:#888">'+lbl+'</div><div style="font-size:22px;font-weight:800;color:'+(hl?'#2e7d32':'#025857')+'">'+e.weight+'<span style="font-size:12px"> kg</span></div>'+(d.showBf?'<div style="font-size:12px;color:'+(hl?'#2e7d32':'#666')+'">'+e.bf+'% λίπος</div>':'')+'</div>';};
   return '<div style="'+_TR_BOX+';margin-bottom:10px">'+_trHead('🖼️ Πριν / Τώρα','κάρτα για τον πελάτη')
     +'<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
     +'<div style="flex:1;min-width:240px;max-width:380px;border:1px solid #c5ddd8;border-radius:12px;padding:12px;background:#f7fbfa">'
     +'<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center">'+col(d.B,_trMonthLbl(d.B.date),false)+'<span style="font-size:18px;color:#9fb5b0">→</span>'+col(d.L,_trMonthLbl(d.L.date),true)+'</div>'
-    +(d.lines.length?'<div style="text-align:center;font-size:11.5px;font-weight:700;color:#025857;margin-top:8px">'+d.lines.join(' · ')+'</div>':'')
+    +(d.lines.length?'<div style="text-align:center;font-size:12px;font-weight:700;color:#025857;margin-top:8px">'+d.lines.join(' · ')+'</div>':'')
     +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:6px"><button class="btn" style="padding:5px 12px;font-size:11px;background:#25D366;color:#fff;border:none" onclick="shareTrackerCard()" title="Φτιάχνει εικόνα PNG της κάρτας· στο tablet/κινητό ανοίγει απευθείας η κοινοποίηση (WhatsApp κ.λπ.), αλλιώς κατεβαίνει για επισύναψη">📷 Εικόνα για WhatsApp</button></div>'
+    +'<div style="display:flex;flex-direction:column;gap:6px"><button class="btn" style="padding:5px 12px;font-size:12px;background:#25D366;color:#fff;border:none" onclick="shareTrackerCard()" title="Φτιάχνει εικόνα PNG της κάρτας· στο tablet/κινητό ανοίγει απευθείας η κοινοποίηση (WhatsApp κ.λπ.), αλλιώς κατεβαίνει για επισύναψη">📷 Εικόνα για WhatsApp</button></div>'
     +'</div></div>';
 }
 function _trCardCanvas(c,d){
@@ -392,8 +392,8 @@ function shareTrackerCard(){
 // ── Comparison switch (2) ─────────────────────────────────────────────────────────────
 function trCmpSwitchHtml(sorted){
   if(sorted.length<2)return '';
-  var b=function(v,lbl){var on=_trackerCmp===v;return '<button class="btn" onclick="setTrackerCmp(\''+v+'\')" style="padding:3px 10px;font-size:11px;'+(on?'background:#025857;color:#fff;border:1px solid #025857':'background:var(--card-bg);color:#025857;border:1px solid #c5ddd8')+'">'+lbl+'</button>';};
-  return '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:10.5px;color:#666">Σύγκριση με:</span>'
+  var b=function(v,lbl){var on=_trackerCmp===v;return '<button class="btn" onclick="setTrackerCmp(\''+v+'\')" style="padding:3px 10px;font-size:12px;'+(on?'background:#025857;color:#fff;border:1px solid #025857':'background:var(--card-bg);color:#025857;border:1px solid #c5ddd8')+'">'+lbl+'</button>';};
+  return '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:12px;color:#666">Σύγκριση με:</span>'
     +b('prev','Προηγούμενη ('+_fmtDateGr(sorted[sorted.length-2].date)+')')+b('first','1η μέτρηση ('+_fmtDateGr(sorted[0].date)+')')+'</div>';
 }
 

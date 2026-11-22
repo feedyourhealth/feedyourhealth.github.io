@@ -222,53 +222,53 @@ function openMedicalConditionsModal(){
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-diabetes-modal" '+(c.medConditions?.diabetes?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🍬 Διαβήτης</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'diabetes\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'diabetes\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-hypertension-modal" '+(c.medConditions?.hypertension?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🩸 Υψηλή Πίεση</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hypertension\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hypertension\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-cholesterol-modal" '+(c.medConditions?.cholesterol?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🩸 Υψηλή Χοληστερόλη</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'cholesterol\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'cholesterol\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-celiac-modal" '+(c.medConditions?.celiac?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🌾 Κοιλιοκάκη</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'celiac\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'celiac\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-ibs-modal" '+(c.medConditions?.ibs?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🔄 IBS</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ibs\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ibs\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-fodmap-modal" '+(c.medConditions?.fodmap?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🌿 IBS — Low-FODMAP (φάση αποκλεισμού)</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'fodmap\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'fodmap\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-lactose-modal" '+(c.medConditions?.lactose?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🥛 Δυσανεξία Λακτόζης</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'lactose\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-ironDeficiency-modal" '+(c.medConditions?.ironDeficiency?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">🔋 Σιδηροπενία / Αναιμία (Αθλητές)</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ironDeficiency\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'ironDeficiency\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'<label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--panel-bg);border-radius:6px;cursor:pointer">'
     +'<input type="checkbox" id="chk-hydration-modal" '+(c.medConditions?.hydration?'checked':'')+' style="width:18px;height:18px">'
     +'<span style="font-weight:600">💧 Ενυδάτωση & Ηλεκτρολύτες (Αθλητές)</span>'
-    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hydration\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
+    +'<button type="button" onclick="event.stopPropagation();event.preventDefault();showMedicalProtocol(\'hydration\')" style="margin-left:auto;background:var(--card-bg);border:1px solid #025857;color:#025857;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap">📋 Πρωτόκολλο</button>'
     +'</label>'
     +'</div>'
     +'<div style="border-top:2px solid #ddd;padding-top:15px;margin-bottom:20px">'
     +'<label for="medications-modal" style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">💊 Φάρμακα / συμπληρώματα:</label>'
     +'<textarea id="medications-modal" style="width:100%;padding:10px;border:1px solid var(--border-light);border-radius:4px;font-size:14px;height:64px" placeholder="π.χ. Λεβοθυροξίνη 50mcg το πρωί — ή κενό">'+esc(c.medications||'')+'</textarea>'
-    +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Σημείωση αναφοράς — δεν αλλάζει αυτόματα το πλάνο. Συμπληρώνεται και από το ερωτηματολόγιο εισαγωγής.</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Σημείωση αναφοράς — δεν αλλάζει αυτόματα το πλάνο. Συμπληρώνεται και από το ερωτηματολόγιο εισαγωγής.</div>'
     +'</div>'
     +'<div style="border-top:2px solid #ddd;padding-top:15px">'
     +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:10px">👩 Μητρικός Κύκλος (Γυναίκες):</label>'
@@ -413,27 +413,27 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
   if(!cats||!cats.length)return '';
   exceptionDays=exceptionDays||{};
   var autoN=dietAutoExcludedFoods(dietType).length;
-  var autoNoteHtml='<div style="margin-bottom:12px;padding:8px 10px;background:#E2EEE5;border-radius:6px;font-size:11.5px;color:#025857">'
+  var autoNoteHtml='<div style="margin-bottom:12px;padding:8px 10px;background:#E2EEE5;border-radius:6px;font-size:12px;color:#025857">'
     +'🔒 <b>'+esc(DIET_TYPE_LOCK_LBL[dietType]||dietType)+' · '+autoN+' τρόφιμα αποκλείονται αυτόματα</b> ('+esc(cats.join(', '))+')'
     +' — δεν χρειάζεται να τα επιλέξεις στους αποκλεισμούς. Εφαρμόζονται στο πλάνο και στις εναλλακτικές του λινκ.</div>';
   var feastPresetHtml='';
   if(dietType==='orthodox_fasting'){
     var feastOptions=FASTING_FEAST_PRESETS.map(function(f,i){return '<option value="'+i+'">'+esc(f.name)+'</option>';}).join('');
     var dayOptions=DAYS.map(function(d,i){return '<option value="'+i+'">'+esc(d)+'</option>';}).join('');
-    feastPresetHtml='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:#f7faf9;border-radius:6px;font-size:11px">'
+    feastPresetHtml='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:#f7faf9;border-radius:6px;font-size:12px">'
       +'<span style="font-weight:600;color:#025857">🐟 Γνωστή γιορτή:</span>'
-      +'<select id="exc-feast-select" style="padding:3px 5px;border:1px solid var(--border-light);border-radius:4px;font-size:11px">'+feastOptions+'</select>'
+      +'<select id="exc-feast-select" style="padding:3px 5px;border:1px solid var(--border-light);border-radius:4px;font-size:12px">'+feastOptions+'</select>'
       +'<span style="color:#666">σε ημέρα</span>'
-      +'<select id="exc-feast-day" style="padding:3px 5px;border:1px solid var(--border-light);border-radius:4px;font-size:11px">'+dayOptions+'</select>'
-      +'<button type="button" onclick="applyFastingFeastPreset()" style="padding:3px 10px;background:#025857;color:#fff;border:none;border-radius:4px;font-size:11px;cursor:pointer">Εφαρμογή</button>'
+      +'<select id="exc-feast-day" style="padding:3px 5px;border:1px solid var(--border-light);border-radius:4px;font-size:12px">'+dayOptions+'</select>'
+      +'<button type="button" onclick="applyFastingFeastPreset()" style="padding:3px 10px;background:#025857;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer">Εφαρμογή</button>'
       +'</div>';
   }
-  var head='<th style="text-align:left;padding:4px 6px;font-weight:600;color:var(--text-strong);font-size:11px">Ημέρα</th>'
-    +cats.map(function(cat){return '<th style="padding:4px 6px;font-weight:600;color:var(--text-strong);font-size:11px">'+esc(cat)+'</th>';}).join('');
+  var head='<th style="text-align:left;padding:4px 6px;font-weight:600;color:var(--text-strong);font-size:12px">Ημέρα</th>'
+    +cats.map(function(cat){return '<th style="padding:4px 6px;font-weight:600;color:var(--text-strong);font-size:12px">'+esc(cat)+'</th>';}).join('');
   // "Select all days" row — one checkbox per category column, checks/unchecks that category for
   // all 7 days at once (e.g. the client isn't strict about dairy at all → one click instead of 7).
   var allDaysRow='<tr>'
-    +'<td style="padding:4px 6px;font-size:11px;font-weight:600;color:#025857">Όλες οι μέρες</td>'
+    +'<td style="padding:4px 6px;font-size:12px;font-weight:600;color:#025857">Όλες οι μέρες</td>'
     +cats.map(function(cat){
       var catEsc=cat.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return '<td style="text-align:center;padding:4px 6px"><input type="checkbox" onchange="toggleExcCategoryAllDays(this,\''+catEsc+'\')"></td>';
@@ -452,7 +452,7 @@ function buildDietExceptionsHtml(dietType, exceptionDays){
   });
   return autoNoteHtml+'<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">📅 Εξαιρέσεις ανά ημέρα:</label>'
-    +'<div style="font-size:11px;color:#666;margin-bottom:6px">Τσέκαρε την κατηγορία που επιτρέπεται εκείνη τη μέρα (π.χ. ψάρι σε γιορτή νηστείας) — το πλάνο θα προσπαθήσει να βάλει αντίστοιχο γεύμα αυτόματα εκείνη την ημέρα. Με «Όλες οι μέρες» επιλέγεις μια κατηγορία για όλη την εβδομάδα με ένα κλικ.</div>'
+    +'<div style="font-size:12px;color:#666;margin-bottom:6px">Τσέκαρε την κατηγορία που επιτρέπεται εκείνη τη μέρα (π.χ. ψάρι σε γιορτή νηστείας) — το πλάνο θα προσπαθήσει να βάλει αντίστοιχο γεύμα αυτόματα εκείνη την ημέρα. Με «Όλες οι μέρες» επιλέγεις μια κατηγορία για όλη την εβδομάδα με ένα κλικ.</div>'
     +feastPresetHtml
     +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
     +'<thead><tr>'+head+'</tr>'+allDaysRow+'</thead><tbody>'+rows+'</tbody></table>'
@@ -515,15 +515,15 @@ function openDietModal(){
     +'<button onclick="openFoodPickerModal()" style="width:100%;padding:12px;background:#025857;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:14px;margin-bottom:8px">'
     +'📋 Επιλέξτε τρόφιμα που δεν του αρέσουν ('+(c.foodExclude?.length||0)+')'
     +'</button>'
-    +'<div style="font-size:11px;color:#666;padding:8px;background:#FFF3E0;border-radius:4px">'
+    +'<div style="font-size:12px;color:#666;padding:8px;background:#FFF3E0;border-radius:4px">'
     +(c.foodExclude&&c.foodExclude.length>0?'✓ '+c.foodExclude.slice(0,3).join(', ')+(c.foodExclude.length>3?'...':''):'💡 Κάνε κλικ για να επιλέξεις τρόφιμα')
     +'</div>'
     +'</div>'
     +'<div style="margin-bottom:20px">'
     +'<label style="font-weight:600;color:var(--text-strong);display:block;margin-bottom:8px">💡 Προτιμήσεις (comma-separated):</label>'
     +'<textarea id="preferences-modal" oninput="updatePreferencesDetectedHint()" style="width:100%;padding:10px;border:1px solid var(--border-light);border-radius:4px;font-size:14px;height:80px;font-family:monospace" placeholder="π.χ. Όχι κόκκινο κρέας, Περισσότερο ψάρι">'+(c.preferences||'')+'</textarea>'
-    +'<div id="preferences-detected-hint" style="font-size:11px;color:#025857;margin-top:6px"></div>'
-    +'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Μόνο ρητές φράσεις αποφυγής (π.χ. «Όχι…», «Αποφυγή…») μετατρέπονται αυτόματα σε αποκλεισμό τροφίμων — όλα τα άλλα παραμένουν απλή σημείωση.</div>'
+    +'<div id="preferences-detected-hint" style="font-size:12px;color:#025857;margin-top:6px"></div>'
+    +'<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Μόνο ρητές φράσεις αποφυγής (π.χ. «Όχι…», «Αποφυγή…») μετατρέπονται αυτόματα σε αποκλεισμό τροφίμων — όλα τα άλλα παραμένουν απλή σημείωση.</div>'
     +'</div>'
     +'<div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">'
     +'<button onclick="closeDietModal()" style="padding:10px 20px;background:#eee;border:none;border-radius:6px;cursor:pointer">❌ Κλείσιμο</button>'
@@ -610,7 +610,7 @@ function buildFoodDayExceptionsHtml(c){
   }
   var dayAbbr=DAYS.map(function(d){return d.substring(0,3);});
   var exc=c.dietFoodExceptionDays||{};
-  var html='<div style="font-size:11px;color:#666;margin-bottom:10px">Τσέκαρε τις μέρες που επιτρέπεται ΣΥΓΚΕΚΡΙΜΕΝΑ αυτό το τρόφιμο (π.χ. μόνο «Χταπόδι» σε γιορτή, όχι όλη η κατηγορία Ψάρια).</div>';
+  var html='<div style="font-size:12px;color:#666;margin-bottom:10px">Τσέκαρε τις μέρες που επιτρέπεται ΣΥΓΚΕΚΡΙΜΕΝΑ αυτό το τρόφιμο (π.χ. μόνο «Χταπόδι» σε γιορτή, όχι όλη η κατηγορία Ψάρια).</div>';
   cats.forEach(function(cat){
     var foodsInCat=Object.keys(FOODS).filter(function(n){return FOODS[n]&&FOODS[n].cat===cat;}).sort();
     if(!foodsInCat.length)return;
@@ -622,7 +622,7 @@ function buildFoodDayExceptionsHtml(c){
         +'<div style="display:flex;gap:4px">';
       dayAbbr.forEach(function(abbr,d){
         var allowed=(exc[d]||exc[String(d)]||[]).indexOf(foodName)!==-1;
-        html+='<label title="'+DAYS[d]+'" style="display:flex;flex-direction:column;align-items:center;font-size:9px;color:#666;cursor:pointer">'
+        html+='<label title="'+DAYS[d]+'" style="display:flex;flex-direction:column;align-items:center;font-size:12px;color:#666;cursor:pointer">'
           +abbr
           +'<input type="checkbox" data-food-day-exc="'+esc(foodName)+'" data-food-day-exc-day="'+d+'" '+(allowed?'checked':'')+' style="width:13px;height:13px;cursor:pointer;margin-top:2px">'
           +'</label>';
@@ -706,7 +706,7 @@ function openFoodPickerModal(){
     var catLocked=lockCats.indexOf(cat)!==-1;
     contentHtml+='<div style="margin-bottom:20px">'
       +'<div style="font-weight:700;color:#025857;padding:10px;background:#E2EEE5;border-radius:6px;margin-bottom:10px">📁 '+cat
-      +(catLocked?' <span style="font-weight:600;font-size:11px;color:#666">— 🔒 αποκλείεται αυτόματα ('+esc(lockLbl)+')</span>':'')
+      +(catLocked?' <span style="font-weight:600;font-size:12px;color:#666">— 🔒 αποκλείεται αυτόματα ('+esc(lockLbl)+')</span>':'')
       +'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-left:10px">';
 
@@ -716,7 +716,7 @@ function openFoodPickerModal(){
         // enforces it on its own — see dietAutoExcludedFoods).
         contentHtml+='<label title="Αποκλείεται αυτόματα από τον τύπο διατροφής" style="display:flex;align-items:center;gap:8px;padding:6px;border-radius:4px;opacity:.6;cursor:not-allowed">'
           +'<input type="checkbox" data-food-locked value="'+esc(foodName)+'" checked disabled style="width:16px;height:16px">'
-          +'<span style="font-size:13px">'+foodName+' <span style="font-size:10px;color:#025857;font-weight:600;white-space:nowrap">🔒 '+esc(lockLbl)+'</span></span>'
+          +'<span style="font-size:13px">'+foodName+' <span style="font-size:12px;color:#025857;font-weight:600;white-space:nowrap">🔒 '+esc(lockLbl)+'</span></span>'
           +'</label>';
         return;
       }

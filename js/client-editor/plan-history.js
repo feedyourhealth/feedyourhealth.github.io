@@ -339,7 +339,7 @@ function phEnsureStyle(){
     +'.ph-chip.on{background:#025857;color:#fff;font-weight:600}'
     +'.ph-chips{display:flex;gap:4px;background:var(--panel-bg);border:1px solid var(--border-light);border-radius:999px;padding:3px}'
     +'.ph-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}'
-    +'.ph-sum .l{font-size:11.5px;color:var(--text-muted)} .ph-sum .v{font-size:16px;font-weight:700} .ph-sum .s{font-size:11.5px}'
+    +'.ph-sum .l{font-size:12px;color:var(--text-muted)} .ph-sum .v{font-size:16px;font-weight:700} .ph-sum .s{font-size:12px}'
     +'.ph-row{display:flex;gap:12px}'
     +'.ph-rail{width:14px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}'
     +'.ph-dot{width:10px;height:10px;border-radius:50%;background:#025857;margin-top:6px;flex-shrink:0}'
@@ -348,19 +348,19 @@ function phEnsureStyle(){
     +'.ph-line{flex:1;width:2px;background:var(--border-light);margin-top:4px}'
     +'.ph-body{flex:1;min-width:0;padding-bottom:14px}'
     +'.ph-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:13px;cursor:pointer}'
-    +'.ph-date{font-size:11.5px;color:var(--text-muted);min-width:76px}'
+    +'.ph-date{font-size:12px;color:var(--text-muted);min-width:76px}'
     +'.ph-title{font-weight:700;color:#025857}'
-    +'.ph-badge{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}'
+    +'.ph-badge{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}'
     +'.ph-b-act{background:#025857;color:#fff}.ph-b-sent{background:#e0eefa;color:#1d4f7a}.ph-b-man{background:#eef2f2;color:#3d4a4a}.ph-b-diet{background:#f3e8fb;color:#5b2a86}'
     +'.ph-pill{font-weight:700;padding:2px 8px;border-radius:6px;font-size:12px}'
     +'.ph-det{margin-top:10px;background:var(--panel-bg);border:1px solid var(--border-light);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px}'
     +'.ph-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}'
     +'.ph-sec{display:flex;flex-direction:column;gap:8px}'
-    +'.ph-lbl{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase}'
+    +'.ph-lbl{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:.04em;text-transform:uppercase}'
     +'.ph-tiles{display:grid;gap:8px}'
     +'.ph-tile{background:var(--card-bg);border:1px solid var(--border-light);border-radius:8px;padding:8px 10px}'
-    +'.ph-tile .l{font-size:11px;color:var(--text-muted)} .ph-tile .v{font-size:16px;font-weight:700} .ph-tile .s{font-size:11.5px;font-weight:600;color:#025857}'
-    +'.ph-ratio{display:flex;height:20px;border-radius:6px;overflow:hidden;font-size:10.5px;font-weight:700;color:#fff}'
+    +'.ph-tile .l{font-size:12px;color:var(--text-muted)} .ph-tile .v{font-size:16px;font-weight:700} .ph-tile .s{font-size:12px;font-weight:600;color:#025857}'
+    +'.ph-ratio{display:flex;height:20px;border-radius:6px;overflow:hidden;font-size:12px;font-weight:700;color:#fff}'
     +'.ph-ratio div{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden}'
     +'.ph-tag{border-radius:6px;padding:4px 8px;font-size:12px;font-weight:600}'
     +'.ph-add{background:#e5f2ec;color:#1b5e3f}.ph-rem{background:#fbe9e3;color:#8a2f12}.ph-chg{background:var(--card-bg);border:1px solid var(--border-light);font-weight:400}'
@@ -372,13 +372,13 @@ function phEnsureStyle(){
     +'.ph-menu-list{position:absolute;right:0;top:38px;z-index:50;min-width:220px;background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:6px;display:flex;flex-direction:column}'
     +'.ph-menu-list button{text-align:left;border:0;background:transparent;font:inherit;font-size:13px;padding:9px 12px;border-radius:6px;cursor:pointer;color:inherit}'
     +'.ph-menu-list button:hover{background:var(--panel-bg)} .ph-menu-list .danger{color:#c62828}'
-    +'.ph-meals{display:none;padding:10px;background:var(--card-bg);border-radius:6px;border:1px solid var(--border-light);max-height:400px;overflow-y:auto;font-size:11.5px}'
+    +'.ph-meals{display:none;padding:10px;background:var(--card-bg);border-radius:6px;border:1px solid var(--border-light);max-height:400px;overflow-y:auto;font-size:12px}'
     +'#plan-compare-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10001;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px}'
     +'.phc-box{background:var(--card-bg);border-radius:12px;width:100%;max-width:1080px;padding:20px 22px;box-shadow:0 12px 40px rgba(0,0,0,.3);display:flex;flex-direction:column;gap:14px}'
     +'.phc-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px}'
     +'@media (max-width:820px){.phc-grid{grid-template-columns:1fr}}'
     +'.phc-tr{display:grid;grid-template-columns:1.3fr 1fr 1fr .9fr;gap:8px;font-size:12.5px;padding:8px 0;border-bottom:1px solid var(--border-light)}'
-    +'.phc-tr.h{font-size:11.5px;font-weight:700;color:var(--text-muted)}'
+    +'.phc-tr.h{font-size:12px;font-weight:700;color:var(--text-muted)}'
     +'.phc-sel{font:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--border-light);border-radius:8px;background:var(--card-bg);color:inherit;min-height:36px;max-width:100%}';
   document.head.appendChild(st);
   if(!window._phMenuCloser){
@@ -458,7 +458,7 @@ function buildPlanHistoryHtml(c){
   // 2026-11-22: το Ιστορικό ανοίγει πλέον από κουμπί μέσα στο «Πλάνο» (όχι δική του υπο-καρτέλα) — άρα επιστροφή εδώ.
   var dbg='<div style="margin:8px 20px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
     +'<button class="btn tertiary" style="padding:5px 10px;font-size:12px" onclick="swTab(2)">&#8592; Πίσω στο Πλάνο</button>'
-    +'<button class="btn tertiary" style="padding:5px 10px;font-size:11px" onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" title="Ελέγχει αν υπάρχουν πλάνα σε τοπικό backup που λείπουν από το ιστορικό αυτού του πελάτη">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
+    +'<button class="btn tertiary" style="padding:5px 10px;font-size:12px" onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" title="Ελέγχει αν υπάρχουν πλάνα σε τοπικό backup που λείπουν από το ιστορικό αυτού του πελάτη">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
     +'</div>';
   if((!c.savedPlans||!c.savedPlans.length)&&!(c.planBackups||[]).length&&!(typeof phaIsAthlete==='function'&&phaIsAthlete(c))){
     return dbg+'<div style="padding:20px;text-align:center;color:var(--text-muted)"><div style="font-size:16px;font-weight:600;margin-bottom:10px">📊 Ιστορικό Πλάνων</div><p>Δεν υπάρχουν αποθηκευμένα πλάνα ακόμα.<br>Κάθε πλάνο που στέλνεις στον πελάτη μπαίνει εδώ αυτόματα· μπορείς και να πατήσεις «Αποθήκευση Διατροφής».</p></div>';
@@ -525,13 +525,13 @@ function buildPlanHistoryHtmlInner(c){
     // chart
     html+='<div class="ph-card" style="display:flex;flex-direction:column;gap:8px">'
       +'<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px"><h3 class="ph-h">Θερμίδες πλάνου και βάρος στον χρόνο</h3>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:14px;font-size:11.5px">'
+      +'<div style="display:flex;flex-wrap:wrap;gap:14px;font-size:12px">'
       +'<span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:3px;background:#025857;display:inline-block"></span>kcal πλάνου</span>'
       +'<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#c2410c;display:inline-block"></span>Βάρος</span>'
       +'<span style="display:flex;align-items:center;gap:6px"><span style="width:14px;height:10px;background:rgba(2,88,87,.15);display:inline-block"></span>τήρηση</span>'
       +'</div></div>'
       +phChartSvg(c,plans,periods)
-      +'<div class="ph-muted" style="font-size:11.5px">Η γραμμή kcal κρατάει την τιμή μέχρι το επόμενο πλάνο· το πλάτος κάθε σκαλοπατιού είναι πόσο ίσχυσε. Οι σκιασμένες μπάρες = τήρηση από το link.</div>'
+      +'<div class="ph-muted" style="font-size:12px">Η γραμμή kcal κρατάει την τιμή μέχρι το επόμενο πλάνο· το πλάτος κάθε σκαλοπατιού είναι πόσο ίσχυσε. Οι σκιασμένες μπάρες = τήρηση από το link.</div>'
       +'</div>';
   }
 
@@ -560,15 +560,15 @@ function buildPlanHistoryHtmlInner(c){
         +'<span style="font-weight:600">↩︎ Αυτόματο backup · '+((b.macros&&b.macros.k)||0)+' kcal</span>'
         +'<span class="ph-muted">'+esc(b.reason||'')+'</span>'
         +'<span style="margin-left:auto;display:flex;gap:6px">'
-        +'<button class="btn secondary" style="font-size:11.5px;padding:5px 10px;min-height:auto" onclick="restorePlanBackup(\''+esc(b.id)+'\')">Επαναφορά</button>'
-        +'<button class="btn tertiary" style="font-size:11.5px;padding:5px 8px;min-height:auto" title="Διαγραφή backup" aria-label="Διαγραφή backup" onclick="deletePlanBackup(\''+esc(b.id)+'\')">✕</button>'
+        +'<button class="btn secondary" style="font-size:12px;padding:5px 10px;min-height:auto" onclick="restorePlanBackup(\''+esc(b.id)+'\')">Επαναφορά</button>'
+        +'<button class="btn tertiary" style="font-size:12px;padding:5px 8px;min-height:auto" title="Διαγραφή backup" aria-label="Διαγραφή backup" onclick="deletePlanBackup(\''+esc(b.id)+'\')">✕</button>'
         +'</span></div></div></div>';
       return;
     }
     html+=phPlanItemHtml(c,it.p,it.i,plans,periods,curHash,lastItem);
   });
   html+='</div>';
-  if(backups.length)html+='<div class="ph-muted" style="font-size:11px">Τα backups κρατιούνται αυτόματα όταν ένα μη αποθηκευμένο πλάνο αντικαθίσταται (τα '+PH_MAX_BACKUPS+' τελευταία, έως '+PH_BACKUP_DAYS+' μέρες).</div>';
+  if(backups.length)html+='<div class="ph-muted" style="font-size:12px">Τα backups κρατιούνται αυτόματα όταν ένα μη αποθηκευμένο πλάνο αντικαθίσταται (τα '+PH_MAX_BACKUPS+' τελευταία, έως '+PH_BACKUP_DAYS+' μέρες).</div>';
   html+='</div>';
   return html;
 }
@@ -751,8 +751,8 @@ function phCompareHtml(c,plans,idA,idB){
       +'<div style="flex:1;height:'+Math.round(dA[d]*100/mx)+'%;background:#8fb3b3;border-radius:3px 3px 0 0"></div>'
       +'<div style="flex:1;height:'+Math.round(dB[d]*100/mx)+'%;background:#025857;border-radius:3px 3px 0 0"></div></div>';
   }
-  t+='</div><div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;font-size:11px;text-align:center" class="ph-muted">'+PH_DAYS_SHORT.map(function(x){return '<span>'+x+'</span>';}).join('')+'</div>'
-    +'<div style="display:flex;gap:14px;font-size:11px"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#8fb3b3;display:inline-block"></span>#'+A.number+'</span><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#025857;display:inline-block"></span>#'+B.number+'</span></div></div>';
+  t+='</div><div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;font-size:12px;text-align:center" class="ph-muted">'+PH_DAYS_SHORT.map(function(x){return '<span>'+x+'</span>';}).join('')+'</div>'
+    +'<div style="display:flex;gap:14px;font-size:12px"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#8fb3b3;display:inline-block"></span>#'+A.number+'</span><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;background:#025857;display:inline-block"></span>#'+B.number+'</span></div></div>';
   t+='</div>';
   // food diff
   var df=phDiff(A.weekPlan,B.weekPlan);

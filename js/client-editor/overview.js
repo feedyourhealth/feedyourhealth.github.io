@@ -167,7 +167,7 @@ function buildOverviewHtml(c){
   var feedHtml = ev.length ? ev.map(function(e){
     return '<div style="position:relative;margin-bottom:14px">'
       +'<span style="position:absolute;left:-26px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--card-bg);border:3px solid '+(DOT[e.kind]||'#bbb')+'"></span>'
-      +'<div style="font-size:11px;font-weight:700;color:#7aa6a2;margin-bottom:3px">'+esc(ovDateShort(new Date(e.ts))).toUpperCase()+'</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#7aa6a2;margin-bottom:3px">'+esc(ovDateShort(new Date(e.ts))).toUpperCase()+'</div>'
       +'<div style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:11px 13px">'
         +'<div style="font-size:13px;font-weight:600;color:var(--text-strong)">'+e.title+'</div>'
         +(e.detail?'<div style="font-size:12px;color:#5c6b68;margin-top:3px">'+e.detail+'</div>':'')
@@ -231,7 +231,7 @@ function buildOverviewHtml(c){
     +'<div style="border:1px dashed #cbd8d5;border-radius:8px;background:var(--panel-bg);padding:9px 10px;font-size:12px;color:#5c6b68;white-space:pre-wrap;min-height:44px">'
       +(esc(c.preferences||'').trim()||'—')
     +'</div>'
-    +(lastApptNote?'<div style="font-size:11.5px;color:#7a8b88;margin-top:8px">Τελευταίο ραντεβού: «'+esc(lastApptNote)+'»</div>':'')
+    +(lastApptNote?'<div style="font-size:12px;color:#7a8b88;margin-top:8px">Τελευταίο ραντεβού: «'+esc(lastApptNote)+'»</div>':'')
     +'</div>';
 
   // ── status header pills ──
@@ -257,7 +257,7 @@ function buildOverviewHtml(c){
     +'.ov-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}'
     +'@media(max-width:900px){.ov-grid{grid-template-columns:1fr}}'
     +'.ov-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.72);border:1px solid #cfe3dd;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;color:#025857}'
-    +'.ov-mini{font:inherit;font-size:11px;font-weight:700;background:#eef6f4;color:#025857;border:1px solid #cde2dc;border-radius:6px;padding:5px 9px;cursor:pointer}'
+    +'.ov-mini{font:inherit;font-size:12px;font-weight:700;background:#eef6f4;color:#025857;border:1px solid #cde2dc;border-radius:6px;padding:5px 9px;cursor:pointer}'
     +'.ov-mini:hover{background:#e0efeb}'
     +'.ov-feed{position:relative;padding-left:26px}'
     +'.ov-feed::before{content:"";position:absolute;left:7px;top:4px;bottom:8px;width:2px;background:var(--border-light)}'

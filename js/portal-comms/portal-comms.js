@@ -170,7 +170,7 @@ function clientLogsPanelHtml(c){
     if(tagMatch){
       var td=CLIENT_LOG_TAG_DEFS[tagMatch[1]];
       noteRaw=noteRaw.slice(tagMatch[0].length);
-      tagHtml='<span style="background:#e8f5e9;color:#014545;border-radius:999px;padding:2px 8px;font-size:10px;margin-right:6px;white-space:nowrap">'+td.icon+' '+td.label+'</span>';
+      tagHtml='<span style="background:#e8f5e9;color:#014545;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:6px;white-space:nowrap">'+td.icon+' '+td.label+'</span>';
     }
     var n=noteRaw?('<span style="color:#666">'+esc(noteRaw)+'</span>'):'';
     var replyBtn='';
@@ -179,12 +179,12 @@ function clientLogsPanelHtml(c){
       var noteJs=escJsAttr(noteRaw);
       replyBtn='<button type="button" class="note-reply-btn'+(replied?' replied':'')+'" onclick="event.stopPropagation();replyToClientNote(\''+c.id+'\',\''+e.date+'\',\''+noteJs+'\')">↩️ Απάντησε'+(replied?' ✓':'')+'</button>';
     }
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:11px">'
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee;font-size:12px">'
       +'<div style="flex:1;min-width:0">'+tagHtml+'<span>'+matchBadge+e.date+' — '+w+(w&&n?' · ':'')+n+'</span></div>'
       +replyBtn+'</div>';
   }).join('');
   return '<div class="tracker-section" style="background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
-    +'<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:4px">📥 Ιστορικό καταχωρήσεων πελάτη <span style="font-weight:400;color:#666">(δικά του μέτρα — για σύγκριση, δεν επηρεάζουν το ιστορικό σου)</span></div>'
+    +'<div style="font-size:12px;font-weight:700;color:#025857;margin-bottom:4px">📥 Ιστορικό καταχωρήσεων πελάτη <span style="font-weight:400;color:#666">(δικά του μέτρα — για σύγκριση, δεν επηρεάζουν το ιστορικό σου)</span></div>'
     +rows+'</div>';
 }
 
@@ -212,9 +212,9 @@ function planFeedbackPanelHtml(c){
     var trendHtml='';
     if(val>0&&prevVal>0&&val!==prevVal){
       var up=val>prevVal;
-      trendHtml='<span title="'+(up?'Καλύτερα':'Χειρότερα')+' από προηγούμενη εβδομάδα ('+prevVal+'→'+val+')" style="font-size:11px;font-weight:700;color:'+(up?'var(--good)':'#c62828')+'">'+(up?'▲':'▼')+'</span>';
+      trendHtml='<span title="'+(up?'Καλύτερα':'Χειρότερα')+' από προηγούμενη εβδομάδα ('+prevVal+'→'+val+')" style="font-size:12px;font-weight:700;color:'+(up?'var(--good)':'#c62828')+'">'+(up?'▲':'▼')+'</span>';
     }
-    var tags=(reasons[key]||[]).map(function(r){return '<span style="background:#fbe9e7;color:#c0392b;border-radius:999px;padding:2px 8px;font-size:10px;margin-left:4px;white-space:nowrap">'+esc(r)+'</span>';}).join('');
+    var tags=(reasons[key]||[]).map(function(r){return '<span style="background:#fbe9e7;color:#c0392b;border-radius:999px;padding:2px 8px;font-size:12px;margin-left:4px;white-space:nowrap">'+esc(r)+'</span>';}).join('');
     var replyBtn='';
     if(val>0&&val<=2){
       var rowReplied=isPfReplied(c,latest.week_start,key);
@@ -241,7 +241,7 @@ function planFeedbackPanelHtml(c){
     var rowClass=histRecent.length>1?'pf-row':'';
     var rowClick=histRecent.length>1?(' onclick="var h=document.getElementById(\''+histId+'\');if(h)h.classList.toggle(\'open\')"'):'';
     return '<div>'
-      +'<div class="'+rowClass+'"'+rowClick+' style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:11px;flex-wrap:wrap">'
+      +'<div class="'+rowClass+'"'+rowClick+' style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;font-size:12px;flex-wrap:wrap">'
       +'<span style="width:150px;flex-shrink:0;color:#444">'+PF_ROW_LABELS[key]+'</span>'
       +'<span style="letter-spacing:1px;font-size:13px">'+pfStarsReadonly(val)+'</span>'+trendHtml+tags+replyBtn+expHint+'</div>'
       +histHtml
@@ -249,7 +249,7 @@ function planFeedbackPanelHtml(c){
   }).join('');
   var nps=latest.continue_likelihood;
   var npsColor=nps==null?'#999':(nps>=8?'var(--good)':(nps>=5?'#c77d11':'#c0392b'));
-  var npsBadge=nps==null?'':('<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:'+npsColor+'22;color:'+npsColor+'">'+nps+'/10 πιθανότητα συνέχισης</span>');
+  var npsBadge=nps==null?'':('<span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:'+npsColor+'22;color:'+npsColor+'">'+nps+'/10 πιθανότητα συνέχισης</span>');
   var npsReplyBtn='';
   if(nps!=null && typeof PF_ATTENTION_NPS_MAX!=='undefined' && nps<=PF_ATTENTION_NPS_MAX){
     var npsReplied=isPfReplied(c,latest.week_start,null);
@@ -263,11 +263,11 @@ function planFeedbackPanelHtml(c){
     var h=v==null?4:Math.max(4,Math.round(v/10*40));
     histBars+='<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">'
       +'<div style="width:100%;max-width:22px;height:'+h+'px;background:'+(isLast?'#025857':'#cfe8e0')+';border-radius:4px 4px 0 0"></div>'
-      +'<span style="font-size:9px;color:#888">'+esc((e.week_start||'').slice(5))+'</span></div>';
+      +'<span style="font-size:12px;color:#888">'+esc((e.week_start||'').slice(5))+'</span></div>';
   });
   return '<div class="tracker-section" style="background:#f1f8f6;border:1px solid #cfe8e0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">'
-    +'<div style="font-size:11px;font-weight:700;color:#025857">⭐ Feedback πλάνου <span style="font-weight:400;color:#666">(εβδομάδα '+esc(latest.week_start)+')</span></div>'
+    +'<div style="font-size:12px;font-weight:700;color:#025857">⭐ Feedback πλάνου <span style="font-weight:400;color:#666">(εβδομάδα '+esc(latest.week_start)+')</span></div>'
     +'<div style="display:flex;align-items:center;gap:6px">'+npsBadge+npsReplyBtn+'</div></div>'
     +rowsHtml
     +(entries.length>1?('<div style="display:flex;align-items:flex-end;gap:6px;height:44px;margin-top:10px">'+histBars+'</div>'):'')
@@ -289,9 +289,9 @@ function dislikedRecipesPanelHtml(c){
     var recipe=(typeof findRecipeById==='function')?findRecipeById(id):null;
     var entry=(typeof TRACKING_DATA!=='undefined'&&TRACKING_DATA.recipes)?TRACKING_DATA.recipes[id]:null;
     var label=recipe?recipe.name:(entry?entry.name:id);
-    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #f3d4d0;font-size:11.5px">'
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #f3d4d0;font-size:12px">'
       +'<span style="color:#444" title="'+esc(id)+'">'+esc(label)+'</span>'
-      +'<button type="button" class="btn" style="padding:3px 9px;font-size:10.5px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="restoreDislikedRecipe(\''+esc(id).replace(/'/g,"\\'")+'\')">↩️ Επαναφορά</button>'
+      +'<button type="button" class="btn" style="padding:3px 9px;font-size:12px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="restoreDislikedRecipe(\''+esc(id).replace(/'/g,"\\'")+'\')">↩️ Επαναφορά</button>'
       +'</div>';
   }).join('');
   // 🗒️ Renders inside buildTrackerHtml (Ανθρωπομετρία tab) even though this is a meal-preference
@@ -302,8 +302,8 @@ function dislikedRecipesPanelHtml(c){
   // just this small tab as today. Added a subtitle so it doesn't read as randomly dropped here
   // in the meantime — a real move needs to look at that s1/s2 render path first.
   return '<div class="tracker-section" style="background:#fdf3f2;border:1px solid #f3d4d0;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
-    +'<div style="font-size:11px;font-weight:700;color:#c0392b;margin-bottom:2px">👎 Συνταγές που δεν άρεσαν ('+ids.length+')</div>'
-    +'<div style="font-size:9.5px;color:#c0392b;opacity:.75;margin-bottom:6px">Προτίμηση γεύματος, όχι σωματομετρία — εμφανίζεται εδώ για ευκολία όσο επεξεργάζεσαι αυτόν τον πελάτη</div>'
+    +'<div style="font-size:12px;font-weight:700;color:#c0392b;margin-bottom:2px">👎 Συνταγές που δεν άρεσαν ('+ids.length+')</div>'
+    +'<div style="font-size:12px;color:#c0392b;opacity:.75;margin-bottom:6px">Προτίμηση γεύματος, όχι σωματομετρία — εμφανίζεται εδώ για ευκολία όσο επεξεργάζεσαι αυτόν τον πελάτη</div>'
     +rowsHtml
     +'</div>';
 }

@@ -95,7 +95,7 @@ function msgRowHtml(m,compact){
     var tagHtml='';
     if(m.tag && typeof CLIENT_LOG_TAG_DEFS!=='undefined' && CLIENT_LOG_TAG_DEFS[m.tag]){
       var td=CLIENT_LOG_TAG_DEFS[m.tag];
-      tagHtml='<span style="background:#e8f5e9;color:#014545;border-radius:999px;padding:2px 8px;font-size:10px;margin-right:6px;white-space:nowrap">'+td.icon+' '+td.label+'</span>';
+      tagHtml='<span style="background:#e8f5e9;color:#014545;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:6px;white-space:nowrap">'+td.icon+' '+td.label+'</span>';
     }
     var weightHtml=m.weight?(' · <b>'+m.weight+' kg</b>'):'';
     // ❓ = ερώτηση από το «Ρώτησέ με → Γράψε μου εδώ» του link (plan.html sendAskInApp).
@@ -109,7 +109,7 @@ function msgRowHtml(m,compact){
       noteTextHtml='<span class="msg-note-body" data-expanded="0">'
         +'<span class="msg-note-short">'+shortTxt+'</span>'
         +'<span class="msg-note-full" style="display:none">'+esc(m.noteRaw)+'</span>'
-        +' <button type="button" style="background:none;border:none;color:var(--teal);font-size:10.5px;font-weight:600;cursor:pointer;padding:0" onclick="event.stopPropagation();var w=this.parentElement;var exp=w.getAttribute(\'data-expanded\')===\'1\';w.setAttribute(\'data-expanded\',exp?\'0\':\'1\');w.querySelector(\'.msg-note-short\').style.display=exp?\'inline\':\'none\';w.querySelector(\'.msg-note-full\').style.display=exp?\'none\':\'inline\';this.textContent=exp?\'περισσότερα ▾\':\'λιγότερα ▴\';">περισσότερα ▾</button>'
+        +' <button type="button" style="background:none;border:none;color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;padding:0" onclick="event.stopPropagation();var w=this.parentElement;var exp=w.getAttribute(\'data-expanded\')===\'1\';w.setAttribute(\'data-expanded\',exp?\'0\':\'1\');w.querySelector(\'.msg-note-short\').style.display=exp?\'inline\':\'none\';w.querySelector(\'.msg-note-full\').style.display=exp?\'none\':\'inline\';this.textContent=exp?\'περισσότερα ▾\':\'λιγότερα ▴\';">περισσότερα ▾</button>'
         +'</span>';
     } else {
       noteTextHtml=esc(m.noteRaw);
@@ -123,9 +123,9 @@ function msgRowHtml(m,compact){
     bodyHtml=m.lowKeys.map(function(k){
       var reasons=((e.low_rating_reasons||{})[k]||[]).join(', ');
       var lbl=(PF_ROW_LABELS[k]||k)+' '+e[k]+'★'+(reasons?(' · '+reasons):'');
-      return '<span style="background:#fbe9e7;color:#c0392b;border-radius:999px;padding:2px 8px;font-size:10px;margin-right:4px;display:inline-block;margin-bottom:2px;white-space:nowrap">'+esc(lbl)+'</span>';
+      return '<span style="background:#fbe9e7;color:#c0392b;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:4px;display:inline-block;margin-bottom:2px;white-space:nowrap">'+esc(lbl)+'</span>';
     }).join('')
-    +(m.lowNps?'<span style="background:#fff3e0;color:#e65100;border-radius:999px;padding:2px 8px;font-size:10px;display:inline-block;margin-bottom:2px">πιθανότητα συνέχισης '+e.continue_likelihood+'/10</span>':'');
+    +(m.lowNps?'<span style="background:#fff3e0;color:#e65100;border-radius:999px;padding:2px 8px;font-size:12px;display:inline-block;margin-bottom:2px">πιθανότητα συνέχισης '+e.continue_likelihood+'/10</span>':'');
     subline=(urgent?'⏳ 😕 εβδ. ':'😕 εβδ. ')+m.date+' · '+ageTxt;
     replyOnclick="replyToPlanFeedback('"+c.id+"','"+e.week_start+"',null);setTimeout(function(){if(typeof renderSB==='function')renderSB();renderMessages();},50);";
   }
@@ -143,7 +143,7 @@ function msgRowHtml(m,compact){
     +(compact?'':('<div class="hm-avatar hm-avatar-'+accent+'">'+initials(c.name)+'</div>'))
     +'<div style="flex:1;min-width:0">'
       +'<div>'+nameHtml+'<span class="hm-row-sub">'+subline+'</span></div>'
-      +'<div style="font-size:11.5px;color:#666;margin-top:2px;white-space:normal">'+bodyHtml+'</div>'
+      +'<div style="font-size:12px;color:#666;margin-top:2px;white-space:normal">'+bodyHtml+'</div>'
     +'</div>'
     +'<div style="display:flex;align-items:center;flex-shrink:0">'+actionsHtml+'</div>'
     +'</div>';
@@ -163,7 +163,7 @@ function msgGroupCardHtml(g){
   return '<div class="hm-card" style="margin-bottom:12px">'
     +'<div class="hm-card-title" style="cursor:pointer" onclick="selectClient(\''+g.c.id+'\');swTab(TAB_APPOINTMENTS);">'
       +'<div class="hm-avatar hm-avatar-'+(anyUnhandled?'red':'teal')+'">'+initials(g.c.name)+'</div>'
-      +esc(g.c.name||'Νέος πελάτης')+' <span style="font-weight:400;color:var(--text-muted);font-size:11px">('+g.items.length+')</span>'
+      +esc(g.c.name||'Νέος πελάτης')+' <span style="font-weight:400;color:var(--text-muted);font-size:12px">('+g.items.length+')</span>'
     +'</div>'
     +g.items.map(function(m){return msgRowHtml(m,true);}).join('')
     +'</div>';
@@ -258,7 +258,7 @@ function renderMessages(filter){
     html+='<div style="display:flex;align-items:center;gap:12px;background:var(--teal-tint);border:1px solid #c5ddd8;border-radius:12px;padding:10px 16px;margin-bottom:14px;max-width:340px">'
       +pctRing(handledPct,{size:52,thickness:7,color:'var(--teal)',track:'#fff'})
       +'<div><div style="font-weight:700;font-size:12.5px">Χειρισμένα μηνύματα</div>'
-      +'<div style="font-size:10.5px;color:var(--text-muted)">'+handledN+' από '+all.length+' — απαντημένα ή αναγνωσμένα</div></div>'
+      +'<div style="font-size:12px;color:var(--text-muted)">'+handledN+' από '+all.length+' — απαντημένα ή αναγνωσμένα</div></div>'
       +'</div>';
   }
   html+='<input type="text" id="msg-search" class="client-search-inp" style="max-width:260px" placeholder="🔍 Αναζήτηση πελάτη..." value="'+esc(_msgSearch)+'" oninput="msgSetSearch(this.value)">';

@@ -37,18 +37,18 @@ function getMicronutrientHtml(c){
   });
 
   // ════ ENHANCED: DETAILED TABLE WITH ALL MICRONUTRIENTS ════
-  var html='<div style="background:var(--card-bg);border-radius:8px;padding:0;margin-top:8px;font-size:11px;border:1px solid var(--border-light)">';
+  var html='<div style="background:var(--card-bg);border-radius:8px;padding:0;margin-top:8px;font-size:12px;border:1px solid var(--border-light)">';
 
   // Header summary
   html+='<div style="background:var(--panel-bg);padding:12px;border-bottom:1px solid #ddd;">';
   html+='<div style="font-weight:700;color:var(--text-strong);margin-bottom:8px;font-size:12px;">📊 Ανάλυση Μικροθρεπτικών (Ημερήσιος Μέσος Όρος 7 Ημερών)</div>';
 
   if(criticalCount>0||lowCount>0){
-    html+='<div style="background:#fff3e0;border-left:3px solid #ff9800;padding:8px;border-radius:3px;color:#e65100;font-size:10px;">'
+    html+='<div style="background:#fff3e0;border-left:3px solid #ff9800;padding:8px;border-radius:3px;color:#e65100;font-size:12px;">'
       +'<b>⚠️ '+criticalCount+' κρίσιμα</b>, <b>'+lowCount+' χαμηλά</b> — Χρειάζεται προσοχή'
       +'</div>';
   } else {
-    html+='<div style="background:#e8f5e9;border-left:3px solid #4caf50;padding:8px;border-radius:3px;color:var(--good);font-size:10px;">'
+    html+='<div style="background:#e8f5e9;border-left:3px solid #4caf50;padding:8px;border-radius:3px;color:var(--good);font-size:12px;">'
       +'<b>✅ Επαρκής</b> — Όλα τα μικροθρεπτικά στο στόχο'
       +'</div>';
   }
@@ -109,11 +109,11 @@ function getMicronutrientHtml(c){
   rows.forEach(function(row){
     html+='<tr style="border-bottom:1px solid #eee;background:'+row.bg+';">';
     html+='<td style="padding:8px 10px;"><strong>'+row.label+'</strong></td>';
-    html+='<td style="padding:8px 10px;text-align:center;">'+row.actual+' <span style="font-size:9px;color:#666;">'+row.unit+'</span></td>';
-    html+='<td style="padding:8px 10px;text-align:center;"><span style="font-size:10px;color:#666;">'+row.target+' '+row.unit+'</span></td>';
+    html+='<td style="padding:8px 10px;text-align:center;">'+row.actual+' <span style="font-size:12px;color:#666;">'+row.unit+'</span></td>';
+    html+='<td style="padding:8px 10px;text-align:center;"><span style="font-size:12px;color:#666;">'+row.target+' '+row.unit+'</span></td>';
     html+='<td style="padding:8px 10px;text-align:center;"><strong style="font-size:12px;'+(row.pct>=90?'color:var(--good);':row.pct>=65?'color:#e65100;':'color:#d32f2f;')+'">'+row.pct+'%</strong></td>';
     var statusLabel=row.status==='critical'?'Κρίσιμο':row.status==='low'?'Χαμηλό':'Επαρκές';
-    html+='<td style="padding:8px 10px;text-align:center;"><span style="font-size:13px;">'+row.icon+'</span> <span style="font-size:9px;color:#666;">'+statusLabel+'</span></td>';
+    html+='<td style="padding:8px 10px;text-align:center;"><span style="font-size:13px;">'+row.icon+'</span> <span style="font-size:12px;color:#666;">'+statusLabel+'</span></td>';
     html+='</tr>';
   });
 
@@ -135,7 +135,7 @@ function getMicronutrientHtml(c){
       +'<div class="day-header-totals" style="margin-top:6px;">'
       +'<div class="day-total-item kcal">'+dayTotals.k+' kcal</div>'
       +'</div>'
-      +'<div style="margin-top:4px;font-size:10px;color:#666">'
+      +'<div style="margin-top:4px;font-size:12px;color:#666">'
       +'Π: '+dayTotals.p+'g | Λ: '+dayTotals.f+'g | Υ: '+dayTotals.c+'g'
       +'</div>'
       +'</div>'
@@ -145,7 +145,7 @@ function getMicronutrientHtml(c){
   html+='</div>';
 
   // Footer note
-  html+='<div style="background:var(--panel-bg);padding:10px;border-top:1px solid #ddd;border-radius:0 0 8px 8px;font-size:9px;color:#666;line-height:1.5;">';
+  html+='<div style="background:var(--panel-bg);padding:10px;border-top:1px solid #ddd;border-radius:0 0 8px 8px;font-size:12px;color:#666;line-height:1.5;">';
   html+='<strong>📌 Σημειώσεις:</strong> Τα ποσοστά βασίζονται σε '+(useAthletic?'<strong>αθλητικούς</strong>':'<strong>κανονικούς</strong>')+' στόχους. Για ελλείψεις <strong>≥25%</strong>, εξετάστε τα συμπληρώματα στην ενότητα 💊 <strong>Προτάσεις</strong>.';
   html+='</div>';
 

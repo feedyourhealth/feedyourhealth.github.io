@@ -584,18 +584,18 @@ function showMealAlternatives(dayIndex, mealIndex){
   validAlternativesData.forEach(function(data, displayIdx){
     var altData = alternatives[data.index];
     var isSaved = altData && altData.isSavedCombo;
-    var badgeHtml = isSaved ? '<span style="background:#ff9800;color:white;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:bold;margin-left:6px">⭐ Αγαπημένο</span>' : '';
+    var badgeHtml = isSaved ? '<span style="background:#ff9800;color:white;padding:2px 6px;border-radius:3px;font-size:12px;font-weight:bold;margin-left:6px">⭐ Αγαπημένο</span>' : '';
 
     modalHtml += '<div style="background:' + (isSaved ? '#fff3e0' : '#f5f5f5') + ';border:' + (isSaved ? '2px solid #ff9800' : '1px solid #ddd') + ';border-radius:6px;padding:10px;margin-bottom:10px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
       +'<div><b style="color:#025857">Επιλογή ' + (displayIdx+1) + '</b>' + badgeHtml + '</div>'
-      +'<div style="font-size:11px;color:#666">'
+      +'<div style="font-size:12px;color:#666">'
       + Math.round(data.calories) + ' kcal (±' + data.calorieDeviation.toFixed(1) + '%) | '
       + 'P: ' + Math.round(data.protein) + 'g (±' + data.proteinDeviation.toFixed(1) + '%)'
       +'</div>'
       +'</div>'
       +'<div style="font-size:12px;color:var(--text-strong);margin-bottom:10px">' + data.scaled.foods.map(f => f.n + ' ' + Math.round(f.g) + 'g').join(' + ') + '</div>'
-      +'<button onclick="replaceMeal(' + dayIndex + ',' + mealIndex + ',' + data.index + ')" style="background:#4caf50;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:11px">✓ Επιλέξ αυτή</button>'
+      +'<button onclick="replaceMeal(' + dayIndex + ',' + mealIndex + ',' + data.index + ')" style="background:#4caf50;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px">✓ Επιλέξ αυτή</button>'
       +'</div>';
 
     // Store SCALED version for replacement
@@ -605,7 +605,7 @@ function showMealAlternatives(dayIndex, mealIndex){
   // Note: All alternatives are now shown (no filtering)
 
   modalHtml += '<div style="margin-top:15px;padding-top:15px;border-top:1px solid #ddd">'
-    +'<button onclick="closeAltModal()" style="background:#888;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:11px">× Κράτησε το αρχικό</button>'
+    +'<button onclick="closeAltModal()" style="background:#888;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:12px">× Κράτησε το αρχικό</button>'
     +'</div></div>';
 
   // Store alternatives for replaceMeal function

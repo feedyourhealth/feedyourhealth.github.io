@@ -501,7 +501,7 @@ function buildExcludeHtml(c){
     +'<input class="excl-inp" id="excl-inp" placeholder="Αναζήτηση τροφίμου για αποκλεισμό..." oninput="showExclSug(this)" onblur="setTimeout(function(){var s=document.getElementById(\'excl-sug\');if(s)s.classList.remove(\'open\');},200)" autocomplete="off">'
     +'<div class="excl-sug" id="excl-sug"></div>'
     +'</div>'
-    +(hasExcl?'<div class="excl-tags">'+tags+'</div>':'<div style="font-size:10px;color:var(--text-muted);margin-top:2px">Κανένα τρόφιμο αποκλεισμένο — χρησιμοποιούνται όλα</div>')
+    +(hasExcl?'<div class="excl-tags">'+tags+'</div>':'<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Κανένα τρόφιμο αποκλεισμένο — χρησιμοποιούνται όλα</div>')
     +'</div>';
 }
 
@@ -841,8 +841,8 @@ function commitAllergyNote(){
 function _allergySuggestHtml(c){
   var sug=allergyTextSuggestions(c.allergies, c);
   if(!sug.length) return '';
-  return '<span style="font-size:11px;color:#8a1c1c">Μήπως εννοείς: </span>'+sug.map(function(d){
-    return '<button type="button" onclick="toggleAllergyGroup(\''+d.key+'\')" style="margin:2px 4px 0 0;padding:2px 8px;border:1px dashed #c62828;background:#fff;color:#c62828;border-radius:999px;font-size:11px;cursor:pointer">+ '+d.icon+' '+esc(d.label)+'</button>';
+  return '<span style="font-size:12px;color:#8a1c1c">Μήπως εννοείς: </span>'+sug.map(function(d){
+    return '<button type="button" onclick="toggleAllergyGroup(\''+d.key+'\')" style="margin:2px 4px 0 0;padding:2px 8px;border:1px dashed #c62828;background:#fff;color:#c62828;border-radius:999px;font-size:12px;cursor:pointer">+ '+d.icon+' '+esc(d.label)+'</button>';
   }).join('');
 }
 function buildAllergyHtml(c){
@@ -858,7 +858,7 @@ function buildAllergyHtml(c){
   var pendOther=intakePendingAllergyOther(c);
   var pendHtml='';
   if(pending.length || pendOther){
-    var ignBtn=function(k,txt){ return '<button type="button" onclick="ignoreIntakeAllergy(\''+k+'\')" title="Να μην εφαρμοστεί" style="padding:4px 8px;background:#fff;color:#7a4f00;border:1px solid #f0c36d;border-radius:6px;font-size:11px;cursor:pointer">Όχι '+txt+'</button>'; };
+    var ignBtn=function(k,txt){ return '<button type="button" onclick="ignoreIntakeAllergy(\''+k+'\')" title="Να μην εφαρμοστεί" style="padding:4px 8px;background:#fff;color:#7a4f00;border:1px solid #f0c36d;border-radius:6px;font-size:12px;cursor:pointer">Όχι '+txt+'</button>'; };
     pendHtml='<div style="margin:2px 0 8px;padding:8px 10px;background:#fff3cd;border:1px solid #f0c36d;border-radius:8px;font-size:12px;color:#7a4f00">'
       +'📄 Στο ερωτηματολόγιο δήλωσε αλλεργία σε: <b>'+pending.map(function(k){ var d=allergyDef(k); return d.icon+' '+esc(d.label); }).concat(pendOther?['«'+esc(pendOther)+'»']:[]).join(', ')+'</b>'
       +'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'
@@ -869,13 +869,13 @@ function buildAllergyHtml(c){
   }
   var hits=planAllergenHits(c);
   var hitsHtml=hits.length?('<div style="margin:6px 0 0;font-size:12px;color:#c62828;font-weight:600">⛔ Στο τωρινό πλάνο υπάρχουν: '+esc(hits.map(function(h){ return h.n; }).join(', '))
-      +' <button type="button" onclick="commitAllergyNote()" style="margin-left:4px;padding:2px 8px;background:#c62828;color:#fff;border:none;border-radius:6px;font-size:11px;cursor:pointer">Αντικατάσταση τώρα</button></div>'):'';
+      +' <button type="button" onclick="commitAllergyNote()" style="margin-left:4px;padding:2px 8px;background:#c62828;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer">Αντικατάσταση τώρα</button></div>'):'';
   return '<div id="allergy-block" style="margin-bottom:14px;padding:10px 12px;border:2px solid #e6b3b3;background:#fff7f7;border-radius:10px">'
     +'<div style="font-weight:700;color:#c62828;font-size:13px;margin-bottom:2px">⚠️ Αλλεργίες</div>'
-    +'<div style="font-size:11px;color:#8a1c1c;margin-bottom:8px">Ισχύουν πάντα: δεν μπαίνουν ποτέ στο πλάνο, στις εναλλακτικές ή στις αντικαταστάσεις.</div>'
+    +'<div style="font-size:12px;color:#8a1c1c;margin-bottom:8px">Ισχύουν πάντα: δεν μπαίνουν ποτέ στο πλάνο, στις εναλλακτικές ή στις αντικαταστάσεις.</div>'
     +pendHtml
     +'<div style="display:flex;flex-wrap:wrap">'+chips+'</div>'
-    +'<label style="display:block;font-size:11.5px;font-weight:600;color:#8a1c1c;margin:4px 0 4px">Άλλες αλλεργίες (π.χ. ακτινίδιο, σέλινο)</label>'
+    +'<label style="display:block;font-size:12px;font-weight:600;color:#8a1c1c;margin:4px 0 4px">Άλλες αλλεργίες (π.χ. ακτινίδιο, σέλινο)</label>'
     +'<input type="text" id="allergy-note" value="'+esc(c.allergies||'')+'" oninput="updateAllergyNote(this.value)" onblur="commitAllergyNote()" placeholder="χωρίζεις με κόμμα" style="width:100%;padding:7px 9px;border:1px solid #e6b3b3;border-radius:6px;font-size:12.5px;box-sizing:border-box">'
     +'<div id="allergy-suggest" style="margin-top:4px">'+_allergySuggestHtml(c)+'</div>'
     +hitsHtml
@@ -889,9 +889,9 @@ function allergyHeaderBoxHtml(c){
   if(c && c.allergies && String(c.allergies).trim()) txt.push(String(c.allergies).trim());
   if(!txt.length && !pending.length) return '';
   return '<div style="display:flex;flex-direction:column;gap:2px;padding:8px;background:#fdecea;border:1px solid #f2b8b8;border-radius:8px">'
-    +'<span style="font-size:11px;color:#c62828;font-weight:700">⚠️ Αλλεργίες</span>'
+    +'<span style="font-size:12px;color:#c62828;font-weight:700">⚠️ Αλλεργίες</span>'
     +'<span style="font-size:13px;font-weight:700;color:#c62828">'+esc(txt.join(', ')||'—')+'</span>'
-    +(pending.length?'<span style="font-size:11px;color:#7a4f00;font-weight:600">📄 '+pending.length+' από ερωτηματολόγιο — δεν εφαρμόστηκαν</span>':'')
+    +(pending.length?'<span style="font-size:12px;color:#7a4f00;font-weight:600">📄 '+pending.length+' από ερωτηματολόγιο — δεν εφαρμόστηκαν</span>':'')
     +'</div>';
 }
 function refreshAllergyUI(){

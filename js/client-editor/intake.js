@@ -61,7 +61,7 @@ function buildIntakeCardHtml(c){
   return '<div class="section-card" id="sec-intake" style="margin-top:12px">'
     +'<div class="section-header" style="cursor:default"><div><span class="section-icon">📋</span>Ερωτηματολόγιο εισαγωγής</div></div>'
     +'<div style="padding:2px 2px 4px">'
-    +(hasCloud?'':'<div style="font-size:11px;color:#e08a00;margin-bottom:8px">Χρειάζεται σύνδεση στο cloud για να στείλεις ερωτηματολόγιο.</div>')
+    +(hasCloud?'':'<div style="font-size:12px;color:#e08a00;margin-bottom:8px">Χρειάζεται σύνδεση στο cloud για να στείλεις ερωτηματολόγιο.</div>')
     +'<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#5a8a82;font-family:ui-monospace,Menlo,monospace;margin-bottom:10px">'
       +'<span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex:none"></span>'+esc(line)+'</div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+actions+'</div>'
@@ -279,8 +279,8 @@ function intakeSetRepro(which){
 
 // small trailing button for a read-back row
 function intakeRowBtn(onclick, label, done){
-  if(done) return '<span style="font-size:10.5px;color:#2e7d32;white-space:nowrap">✓ '+esc(done)+'</span>';
-  return '<button type="button" class="btn" style="padding:1px 7px;font-size:10.5px;background:var(--card-bg);color:#025857;border:1px solid #c5ddd8;white-space:nowrap;vertical-align:baseline" onclick="'+onclick+'">'+esc(label)+'</button>';
+  if(done) return '<span style="font-size:12px;color:#2e7d32;white-space:nowrap">✓ '+esc(done)+'</span>';
+  return '<button type="button" class="btn" style="padding:1px 7px;font-size:12px;background:var(--card-bg);color:#025857;border:1px solid #c5ddd8;white-space:nowrap;vertical-align:baseline" onclick="'+onclick+'">'+esc(label)+'</button>';
 }
 
 function buildIntakeReadbackHtml(c){
@@ -288,9 +288,9 @@ function buildIntakeReadbackHtml(c){
   var cache=(window.INTAKE_PAYLOAD_CACHE||{});
   var p = Object.prototype.hasOwnProperty.call(cache,c.intakeToken) ? cache[c.intakeToken] : undefined;
   if(p===undefined)
-    return '<div style="font-size:11.5px;color:#9fb5b0;margin-top:12px">Φόρτωση απαντήσεων…</div>';
+    return '<div style="font-size:12px;color:#9fb5b0;margin-top:12px">Φόρτωση απαντήσεων…</div>';
   if(p===null)
-    return '<div style="font-size:11.5px;color:#c0392b;margin-top:12px">Δεν φορτώθηκαν οι απαντήσεις — πάτα «↻ Ανανέωση».</div>';
+    return '<div style="font-size:12px;color:#c0392b;margin-top:12px">Δεν φορτώθηκαν οι απαντήσεις — πάτα «↻ Ανανέωση».</div>';
 
   var prof=p.profile||{}, hab=p.habits||{};
   var applied=c.intakeApplied||{};
@@ -307,7 +307,7 @@ function buildIntakeReadbackHtml(c){
     // profile fields the "Εφαρμογή στην καρτέλα" button can write (name/pregnancy are excluded)
     var canApplyProfile=diff.some(function(r){ return ['Ημ. γέννησης','Ύψος','Βάρος'].indexOf(r[0])!==-1; });
     diffHtml='<div style="margin:10px 0 4px;padding:8px 10px;border:1px solid #f0d8a8;background:#fff9ec;border-radius:8px">'
-      +'<div style="font-size:11px;font-weight:700;color:#a15c00;margin-bottom:4px">🔺 Διαφορετικό από την καρτέλα</div>'
+      +'<div style="font-size:12px;font-weight:700;color:#a15c00;margin-bottom:4px">🔺 Διαφορετικό από την καρτέλα</div>'
       +diff.map(function(r){
         return '<div style="font-size:12px;color:#7a5a1e;line-height:1.5"><b>'+esc(r[0])+':</b> '+esc(r[1])+' → <b>'+esc(r[2])+'</b></div>';
       }).join('')
@@ -324,11 +324,11 @@ function buildIntakeReadbackHtml(c){
   var avoidBtn = applicableAvoid.length ? intakeRowBtn('intakeApplyAvoid()','✓ Εφαρμογή', applied.avoid?'Εφαρμόστηκε':'') : '';
   // «Εγκυμοσύνη/θηλασμός: Ναι» είναι μία ερώτηση για δύο καταστάσεις — ο διαιτολόγος διαλέγει ποια.
   var reproBtns = !p.pregnancyBreastfeeding ? '' :
-    (c.pregnant ? '<span style="font-size:10.5px;color:#2e7d32;white-space:nowrap">✓ 🤰 Έγκυος</span>'
-    : c.lactating ? '<span style="font-size:10.5px;color:#2e7d32;white-space:nowrap">✓ 🤱 Θηλάζει</span>'
+    (c.pregnant ? '<span style="font-size:12px;color:#2e7d32;white-space:nowrap">✓ 🤰 Έγκυος</span>'
+    : c.lactating ? '<span style="font-size:12px;color:#2e7d32;white-space:nowrap">✓ 🤱 Θηλάζει</span>'
     : (intakeRowBtn("intakeSetRepro('pregnant')",'🤰 Έγκυος','')+' '+intakeRowBtn("intakeSetRepro('lactating')",'🤱 Θηλάζει','')));
-  var condHint = conds.length ? '<span style="font-size:10.5px;color:#9fb5b0;white-space:nowrap">→ 🩺 Ιατρικές Συνθήκες</span>' : '';
-  var allergNote = (allergTxt && allergPending) ? '<div style="font-size:10px;color:#c62828;margin:0 0 2px 136px">Δεν έχουν εφαρμοστεί — «✓ Εφαρμογή» τις περνά στις ⚠️ Αλλεργίες (Διατροφή &amp; αποφυγές).</div>' : '';
+  var condHint = conds.length ? '<span style="font-size:12px;color:#9fb5b0;white-space:nowrap">→ 🩺 Ιατρικές Συνθήκες</span>' : '';
+  var allergNote = (allergTxt && allergPending) ? '<div style="font-size:12px;color:#c62828;margin:0 0 2px 136px">Δεν έχουν εφαρμοστεί — «✓ Εφαρμογή» τις περνά στις ⚠️ Αλλεργίες (Διατροφή &amp; αποφυγές).</div>' : '';
 
   var body=''
     +intakeReadRow('Στόχος', goalTxt)
@@ -353,7 +353,7 @@ function buildIntakeReadbackHtml(c){
     +'<summary style="cursor:pointer;font-size:12px;font-weight:700;color:#025857;list-style:none">📄 Απαντήσεις πελάτη</summary>'
     +diffHtml
     +'<div style="margin-top:6px">'+body+'</div>'
-    +'<button type="button" class="btn" style="width:100%;margin-top:10px;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px" onclick="copyIntakeSummary(this)">📋 Αντιγραφή σύνοψης (για επικόλληση στις σημειώσεις)</button>'
+    +'<button type="button" class="btn" style="width:100%;margin-top:10px;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:12px" onclick="copyIntakeSummary(this)">📋 Αντιγραφή σύνοψης (για επικόλληση στις σημειώσεις)</button>'
     +'</details>';
 }
 
@@ -488,7 +488,7 @@ function renderIntakeLinkView(c){
   var gmail='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(c.email||'')+'&su='+encodeURIComponent(hm.subj)+'&body='+encodeURIComponent(hm.ebody);
   var mailto='mailto:'+encodeURIComponent(c.email||'').replace(/%40/g,'@')+'?subject='+encodeURIComponent(hm.subj)+'&body='+encodeURIComponent(hm.ebody);
   var submittedNote = (c.intakeStatus==='submitted')
-    ? '<div style="font-size:11.5px;color:#2e7d32;margin:0 0 10px">✓ Ο πελάτης έχει ήδη υποβάλει αυτό το ερωτηματολόγιο. Νέα αποστολή θα δημιουργήσει νέο, κενό.</div>' : '';
+    ? '<div style="font-size:12px;color:#2e7d32;margin:0 0 10px">✓ Ο πελάτης έχει ήδη υποβάλει αυτό το ερωτηματολόγιο. Νέα αποστολή θα δημιουργήσει νέο, κενό.</div>' : '';
 
   body.innerHTML=submittedNote
     +'<div style="font-size:12px;color:#5a8a82;margin-bottom:6px">Σύνδεσμος πελάτη <span style="color:#9fb5b0">('+(lg==='en'?'English':'Ελληνικά')+')</span></div>'
@@ -497,15 +497,15 @@ function renderIntakeLinkView(c){
       +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="copyIntakeUrl(this)">Αντιγραφή</button>'
     +'</div>'
     +'<a href="'+esc(wa)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📱 WhatsApp'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
-    +(phone?'':'<div style="font-size:11px;color:#e08a00;margin:0 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει τηλέφωνο στην καρτέλα — δεν θα ανοίξει συνομιλία με συγκεκριμένο παραλήπτη.</div>')
+    +(phone?'':'<div style="font-size:12px;color:#e08a00;margin:0 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει τηλέφωνο στην καρτέλα — δεν θα ανοίξει συνομιλία με συγκεκριμένο παραλήπτη.</div>')
     +'<a href="'+esc(gmail)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#c2483a;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">✉️ Gmail στον browser</a>'
     +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📧 Πρόγραμμα Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
-    +(c.email?'':'<div style="font-size:11px;color:#e08a00;margin:0 0 6px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα.</div>')
+    +(c.email?'':'<div style="font-size:12px;color:#e08a00;margin:0 0 6px;line-height:1.4">⚠️ Δεν έχεις βάλει email στην καρτέλα.</div>')
     +'<textarea id="intake-msg" style="position:absolute;left:-9999px;top:-9999px" readonly>'+esc(hm.msg)+'</textarea>'
-    +'<button type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:10px" onclick="copyIntakeMsg(this)">📋 Δεν άνοιξε κανένα; Αντιγραφή μηνύματος</button>'
-    +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5;margin-bottom:12px">Ο σύνδεσμος <b>δεν λήγει</b>. Κλειδώνει μόλις τον υποβάλει ο πελάτης — μία φορά.</div>'
+    +'<button type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:12px;margin-bottom:10px" onclick="copyIntakeMsg(this)">📋 Δεν άνοιξε κανένα; Αντιγραφή μηνύματος</button>'
+    +'<div style="font-size:12px;color:#9fb5b0;line-height:1.5;margin-bottom:12px">Ο σύνδεσμος <b>δεν λήγει</b>. Κλειδώνει μόλις τον υποβάλει ο πελάτης — μία φορά.</div>'
     +'<button id="intake-new-btn" class="btn" style="width:100%;background:var(--card-bg);color:#c0392b;border:1px solid #f0c2c2;font-size:12px">🔄 Νέος σύνδεσμος</button>'
-    +'<div style="font-size:11px;color:#9fb5b0;line-height:1.4;margin-top:4px">Ο τρέχων σύνδεσμος παύει να δουλεύει· χρήσιμο για αλλαγή γλώσσας ή αν θες ο πελάτης να το ξανασυμπληρώσει.</div>';
+    +'<div style="font-size:12px;color:#9fb5b0;line-height:1.4;margin-top:4px">Ο τρέχων σύνδεσμος παύει να δουλεύει· χρήσιμο για αλλαγή γλώσσας ή αν θες ο πελάτης να το ξανασυμπληρώσει.</div>';
 
   document.getElementById('intake-new-btn').onclick=function(){
     var dlg=document.getElementById('confirmDialog');

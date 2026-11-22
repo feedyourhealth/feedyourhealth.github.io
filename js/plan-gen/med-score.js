@@ -90,9 +90,9 @@ function renderMedScore(weekPlan){
   var html='<div id="med-score-bar" style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px">'
     +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
     +'<span style="font-size:18px">🫒</span>'
-    +'<span style="font-size:11px;font-weight:700;color:var(--text-sub)">Μεσογειακή Βαθμολογία</span>'
+    +'<span style="font-size:12px;font-weight:700;color:var(--text-sub)">Μεσογειακή Βαθμολογία</span>'
     +'<span style="font-size:20px;font-weight:800;color:'+scoreColor+'">'+s.score+'/'+s.total+'</span>'
-    +'<span style="font-size:11px;color:'+scoreColor+';font-weight:700">'+pct+'%</span>'
+    +'<span style="font-size:12px;color:'+scoreColor+';font-weight:700">'+pct+'%</span>'
     +'</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:5px;flex:1">';
   MED_SCORE_RULES.forEach(function(r){
@@ -100,7 +100,7 @@ function renderMedScore(weekPlan){
     var bg=ok?'var(--teal-tint)':'var(--bad-bg)';
     var fc=ok?'var(--wk-accent-fg)':'var(--bad-fg)';
     var border=ok?'var(--ok-bd)':'var(--bad-bd)';
-    html+='<span style="background:'+bg+';color:'+fc+';border:1px solid '+border+';border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600;white-space:nowrap">'
+    html+='<span style="background:'+bg+';color:'+fc+';border:1px solid '+border+';border-radius:20px;padding:2px 8px;font-size:12px;font-weight:600;white-space:nowrap">'
       +r.icon+' '+r.label+(ok?' ✓':' ✗')+'</span>';
   });
   html+='</div></div>';

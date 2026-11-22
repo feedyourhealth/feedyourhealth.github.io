@@ -50,7 +50,7 @@ function openAddMealSlotModal(){
   ]);
   var presetBtns=presets.map(function(p){
     return '<button type="button" onclick="document.getElementById(\'newMealName\').value=\''+p.n+'\';document.getElementById(\'newMealTiming\').value=\''+p.t+'\'" '
-      +'style="background:#e8f5e9;border:1px solid #c8e6c9;color:#025857;border-radius:14px;padding:4px 10px;font-size:11px;cursor:pointer;margin:0 4px 4px 0">'+p.n+'</button>';
+      +'style="background:#e8f5e9;border:1px solid #c8e6c9;color:#025857;border-radius:14px;padding:4px 10px;font-size:12px;cursor:pointer;margin:0 4px 4px 0">'+p.n+'</button>';
   }).join('');
   var timingOpts='';
   for(var k in MEAL_TIMING_PROFILES){
@@ -63,9 +63,9 @@ function openAddMealSlotModal(){
     +'<h2 style="margin:0;color:#025857;font-size:17px">➕ Προσθήκη γεύματος</h2>'
     +'<button onclick="closeAddMealSlotModal()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-muted)">&times;</button>'
     +'</div>'
-    +'<div style="background:#E8F5E9;padding:10px 12px;border-radius:6px;margin-bottom:14px;font-size:11px;color:#2E7D32;line-height:1.5">'
+    +'<div style="background:#E8F5E9;padding:10px 12px;border-radius:6px;margin-bottom:14px;font-size:12px;color:#2E7D32;line-height:1.5">'
     +'💡 Το γεύμα μπαίνει σε <b>όλες τις ημέρες</b>. Άφησέ το κενό στις ημέρες που δεν χρειάζεται — εμφανίζεται μόνο το «+».</div>'
-    +'<div style="font-size:11px;color:#666;margin-bottom:6px">Γρήγορες επιλογές:</div>'
+    +'<div style="font-size:12px;color:#666;margin-bottom:6px">Γρήγορες επιλογές:</div>'
     +'<div style="margin-bottom:12px">'+presetBtns+'</div>'
     +'<label style="font-weight:600;color:var(--text-strong);font-size:12px;display:block;margin-bottom:4px">Όνομα γεύματος</label>'
     +'<input id="newMealName" type="text" value="'+defName+'" style="width:100%;padding:8px;border:1px solid var(--border-light);border-radius:4px;margin-bottom:12px;box-sizing:border-box">'
@@ -167,7 +167,7 @@ function copyDayPrompt(btn,fromDay){
   var rect=btn.getBoundingClientRect();
   var panel=document.createElement('div');
   panel.id=panelId;
-  panel.style.cssText='position:fixed;z-index:9999;background:var(--card-bg);border:1px solid #025857;border-radius:8px;padding:10px 12px;box-shadow:0 4px 18px rgba(0,0,0,.18);font-size:11px;min-width:165px;left:'+Math.round(rect.left)+'px;top:'+Math.round(rect.bottom+4)+'px';
+  panel.style.cssText='position:fixed;z-index:9999;background:var(--card-bg);border:1px solid #025857;border-radius:8px;padding:10px 12px;box-shadow:0 4px 18px rgba(0,0,0,.18);font-size:12px;min-width:165px;left:'+Math.round(rect.left)+'px;top:'+Math.round(rect.bottom+4)+'px';
   var inner='<div style="font-weight:700;color:#025857;margin-bottom:7px">📋 Αντιγραφή '+dayNames[fromDay]+' σε:</div>';
   inner+='<div style="display:flex;flex-direction:column;gap:5px">';
   for(var di=0;di<7;di++){
@@ -176,8 +176,8 @@ function copyDayPrompt(btn,fromDay){
       +'<input type="checkbox" id="cp-'+di+'" style="accent-color:#025857"> '+dayNames[di]+'</label>';
   }
   inner+='</div><div style="display:flex;gap:6px;margin-top:8px">'
-    +'<button onclick="doCopyDay('+fromDay+')" style="flex:1;padding:4px;background:#025857;color:#fff;border:none;border-radius:5px;font-size:11px;cursor:pointer">✓ Εφαρμογή</button>'
-    +'<button onclick="document.getElementById(\''+panelId+'\').remove()" style="padding:4px 8px;border:1px solid var(--border-light);border-radius:5px;font-size:11px;cursor:pointer;background:var(--card-bg)">✕</button>'
+    +'<button onclick="doCopyDay('+fromDay+')" style="flex:1;padding:4px;background:#025857;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer">✓ Εφαρμογή</button>'
+    +'<button onclick="document.getElementById(\''+panelId+'\').remove()" style="padding:4px 8px;border:1px solid var(--border-light);border-radius:5px;font-size:12px;cursor:pointer;background:var(--card-bg)">✕</button>'
     +'</div>';
   panel.innerHTML=inner;
   document.body.appendChild(panel);
@@ -222,7 +222,7 @@ function swapDayPrompt(btn,fromDay){
   var rect=btn.getBoundingClientRect();
   var panel=document.createElement('div');
   panel.id=panelId;
-  panel.style.cssText='position:fixed;z-index:9999;background:var(--card-bg);border:1px solid #025857;border-radius:8px;padding:10px 12px;box-shadow:0 4px 18px rgba(0,0,0,.18);font-size:11px;min-width:165px;left:'+Math.round(rect.left)+'px;top:'+Math.round(rect.bottom+4)+'px';
+  panel.style.cssText='position:fixed;z-index:9999;background:var(--card-bg);border:1px solid #025857;border-radius:8px;padding:10px 12px;box-shadow:0 4px 18px rgba(0,0,0,.18);font-size:12px;min-width:165px;left:'+Math.round(rect.left)+'px;top:'+Math.round(rect.bottom+4)+'px';
   var inner='<div style="font-weight:700;color:#025857;margin-bottom:7px">🔁 Ανταλλαγή '+dayNames[fromDay]+' με:</div>';
   inner+='<div style="display:flex;flex-direction:column;gap:5px">';
   for(var di=0;di<7;di++){
@@ -235,8 +235,8 @@ function swapDayPrompt(btn,fromDay){
       +'<input type="radio" name="sw-target-'+fromDay+'" id="sw-'+fromDay+'-'+di+'" style="accent-color:#025857"> '+dayNames[di]+'</label>';
   }
   inner+='</div><div style="display:flex;gap:6px;margin-top:8px">'
-    +'<button onclick="doSwapDay('+fromDay+')" style="flex:1;padding:4px;background:#025857;color:#fff;border:none;border-radius:5px;font-size:11px;cursor:pointer">✓ Αντιστροφή</button>'
-    +'<button onclick="document.getElementById(\''+panelId+'\').remove()" style="padding:4px 8px;border:1px solid var(--border-light);border-radius:5px;font-size:11px;cursor:pointer;background:var(--card-bg)">✕</button>'
+    +'<button onclick="doSwapDay('+fromDay+')" style="flex:1;padding:4px;background:#025857;color:#fff;border:none;border-radius:5px;font-size:12px;cursor:pointer">✓ Αντιστροφή</button>'
+    +'<button onclick="document.getElementById(\''+panelId+'\').remove()" style="padding:4px 8px;border:1px solid var(--border-light);border-radius:5px;font-size:12px;cursor:pointer;background:var(--card-bg)">✕</button>'
     +'</div>';
   panel.innerHTML=inner;
   document.body.appendChild(panel);
@@ -272,7 +272,7 @@ function showSwapUndoToast(dayA,dayB){
   t.id='swap-undo-toast';
   t.style.cssText='position:fixed;bottom:20px;right:20px;background:#025857;color:#fff;padding:10px 10px 10px 16px;border-radius:8px;font-size:12px;z-index:10000;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;gap:12px;max-width:360px';
   t.innerHTML='<span>✓ Αντιστράφηκε το φαγητό: '+dayNames[dayA]+' ↔ '+dayNames[dayB]+'</span>'
-    +'<button style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Αναίρεση</button>';
+    +'<button style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">↩ Αναίρεση</button>';
   document.body.appendChild(t);
   var timer=setTimeout(function(){t.remove();},6000);
   t.querySelector('button').onclick=function(){

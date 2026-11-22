@@ -192,10 +192,10 @@ function showFavoriteMeals(){
     var foodList=fav.foods.map(function(f){return f.n+' ('+f.g+'g)';}).join(', ');
     html+='<div style="background:var(--panel-bg);padding:10px;border-radius:6px;margin-bottom:10px">'
       +'<div style="font-weight:600;color:#025857;margin-bottom:5px">'+fav.name+'</div>'
-      +'<div style="font-size:11px;color:#666;margin-bottom:8px">'+foodList+'</div>'
+      +'<div style="font-size:12px;color:#666;margin-bottom:8px">'+foodList+'</div>'
       +'<div style="display:flex;gap:5px">'
-        +'<button onclick="pasteFavoriteMeal('+idx+')" style="background:#4caf50;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:10px">📋 Χρήση</button>'
-        +'<button onclick="removeFavoriteMeal('+idx+')" style="background:#f44336;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:10px">✕ Διαγραφή</button>'
+        +'<button onclick="pasteFavoriteMeal('+idx+')" style="background:#4caf50;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px">📋 Χρήση</button>'
+        +'<button onclick="removeFavoriteMeal('+idx+')" style="background:#f44336;color:#fff;border:none;border-radius:4px;padding:4px 10px;cursor:pointer;font-size:12px">✕ Διαγραφή</button>'
       +'</div>'
       +'</div>';
   });
@@ -351,7 +351,7 @@ function renderFoodLib(q){
     comboHtml='<div class="combo-section">'
       +'<div class="combo-sec-title">📋 Αποθηκευμένοι Συνδυασμοί</div>';
     if(!combos.length){
-      comboHtml+='<div style="font-size:10px;color:var(--text-muted);padding:2px 4px 4px">Κανένας ακόμα — πάτα 💾 σε γεύμα</div>';
+      comboHtml+='<div style="font-size:12px;color:var(--text-muted);padding:2px 4px 4px">Κανένας ακόμα — πάτα 💾 σε γεύμα</div>';
     } else {
       combos.forEach(function(combo){
         var cid=combo.id.replace(/'/g,"\\'");
@@ -372,7 +372,7 @@ function renderFoodLib(q){
     if(q&&_nrm(n).indexOf(q)<0)return;
     var cat=FOODS[n].cat;if(!cats[cat])cats[cat]=[];cats[cat].push(n);
   });
-  if(!Object.keys(cats).length){el.innerHTML=comboHtml+'<div style="color:var(--text-muted);font-size:11px;padding:6px">Δεν βρέθηκε</div>';return;}
+  if(!Object.keys(cats).length){el.innerHTML=comboHtml+'<div style="color:var(--text-muted);font-size:12px;padding:6px">Δεν βρέθηκε</div>';return;}
   var html=comboHtml;
   Object.keys(cats).sort().forEach(function(cat){
     html+='<div class="lib-cat">'+cat+'</div>';

@@ -1175,7 +1175,7 @@ function showMedicalProtocol(condition) {
       html += '<a href="' + source.url + '" target="_blank" rel="noopener noreferrer" style="color:#1976d2;text-decoration:none;font-weight:500;">';
       html += source.name + ' ↗';
       html += '</a>';
-      html += ' <span style="color:var(--text-muted);font-size:11px;">[Επίσημη πηγή]</span>';
+      html += ' <span style="color:var(--text-muted);font-size:12px;">[Επίσημη πηγή]</span>';
       html += '</li>';
     });
     html += '</ul>';
@@ -1369,8 +1369,8 @@ function toggleSupplementSelector() {
     suppListHtml += '<input type="checkbox" id="supp-cb-'+idx+'" '+(isSelected?'checked':'')+' style="width:18px;height:18px;cursor:pointer;margin-top:2px;">';
     suppListHtml += '<div style="flex:1;">';
     suppListHtml += '<div style="font-weight:600;color:var(--text-strong);">'+supp.name+'</div>';
-    suppListHtml += '<div style="font-size:11px;color:#666;">📋 '+supp.dosage+'</div>';
-    suppListHtml += '<div style="font-size:11px;color:var(--text-muted);">⏰ '+supp.timing+'</div>';
+    suppListHtml += '<div style="font-size:12px;color:#666;">📋 '+supp.dosage+'</div>';
+    suppListHtml += '<div style="font-size:12px;color:var(--text-muted);">⏰ '+supp.timing+'</div>';
     suppListHtml += '</div>';
     suppListHtml += '</label>';
   });

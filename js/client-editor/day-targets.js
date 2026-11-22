@@ -267,7 +267,7 @@ function getMealTimingGuide(c){
   if(!rows.length)return'';
 
   var guide='<div style="background:#e8f5e9;border:1px solid #c8e6c9;border-radius:8px;padding:10px 12px;margin-bottom:10px">'
-    +'<div style="font-size:11px;font-weight:700;color:#2e7d32;margin-bottom:6px">⏰ Προτεινόμενα γεύματα ανά ημέρα</div>';
+    +'<div style="font-size:12px;font-weight:700;color:#2e7d32;margin-bottom:6px">⏰ Προτεινόμενα γεύματα ανά ημέρα</div>';
 
   // ✅ When every training day shares the exact same schedule, show one summary
   // row instead of repeating identical text once per day.
@@ -275,14 +275,14 @@ function getMealTimingGuide(c){
 
   if(allSame){
     var dayList=rows.map(function(r){return r.day;}).join(', ');
-    guide+='<div style="font-size:10px;color:var(--text-strong);padding:4px 6px;background:#f1f8f6;border-radius:4px">'
+    guide+='<div style="font-size:12px;color:var(--text-strong);padding:4px 6px;background:#f1f8f6;border-radius:4px">'
       +'<b>'+dayList+'</b> <span style="color:#2e7d32;font-weight:600">(ίδιο κάθε μέρα)</span> — προπόνηση στις '+rows[0].trainTime
       +' | <span style="color:#1565C0">⚡Pre (2h πριν): '+rows[0].preTime+'</span>'
       +' | <span style="color:#e65100">💪Post (30min μετά): '+rows[0].postTime+'</span>'
       +'</div>';
   } else {
     rows.forEach(function(r){
-      guide+='<div style="font-size:10px;color:var(--text-strong);margin-bottom:5px;padding:4px 6px;background:#f1f8f6;border-radius:4px">'
+      guide+='<div style="font-size:12px;color:var(--text-strong);margin-bottom:5px;padding:4px 6px;background:#f1f8f6;border-radius:4px">'
         +'<b>'+r.day+'</b> — προπόνηση στις '+r.trainTime
         +' | <span style="color:#1565C0">⚡Pre (2h πριν): '+r.preTime+'</span>'
         +' | <span style="color:#e65100">💪Post (30min μετά): '+r.postTime+'</span>'
@@ -298,7 +298,7 @@ function getMealTimingGuide(c){
 // v: null (=auto) | 'low' | 'mod' | 'high' | 'race'. Mirrors the .int-tog states in
 // design/cho-protocol/mockup-dietitian-panel-in-grid.html.
 function choIntPillStyle(v){
-  var base='padding:2px 6px;border-radius:999px;cursor:pointer;font-size:9px;font-weight:700;min-width:38px;font-family:inherit;';
+  var base='padding:2px 6px;border-radius:999px;cursor:pointer;font-size:12px;font-weight:700;min-width:38px;font-family:inherit;';
   if(v==='race') return base+'background:#e65100;color:#fff;border:1px solid #e65100';
   if(v==='high') return base+'background:#00897b;color:#fff;border:1px solid #00897b';
   if(v==='mod')  return base+'background:#e0f2ee;color:#00786f;border:1px solid #cfe6e1';
@@ -422,7 +422,7 @@ function buildDayTgtHtml(c,t){
     choIntRow='<tr class="train-row" style="background:#f2fbf8"><td style="color:#00786f">&#129346; Ένταση</td>';
     for(var _xi=0;_xi<7;_xi++){
       if(!td[_xi]){
-        choIntRow+='<td><button type="button" disabled style="padding:2px 6px;border-radius:999px;border:1px solid #eee;background:#f0f0f0;color:#bbb;font-size:9px;font-weight:700;min-width:38px;cursor:not-allowed;font-family:inherit">—</button></td>';
+        choIntRow+='<td><button type="button" disabled style="padding:2px 6px;border-radius:999px;border:1px solid #eee;background:#f0f0f0;color:#bbb;font-size:12px;font-weight:700;min-width:38px;cursor:not-allowed;font-family:inherit">—</button></td>';
       }else{
         var _iv=intByDay[_xi];
         // auto (null) → show what computeCHOTargets actually resolved it to, so the dietitian
@@ -432,7 +432,7 @@ function buildDayTgtHtml(c,t){
           var _ivR=choResults[_xi];
           if(_ivR&&_ivR.intensity&&(_ivR.isTrainingDay||_ivR.isMatchDay)){
             var _IVLBL={low:'χαμηλή',mod:'μέτρια',high:'υψηλή',race:'αγώνας'};
-            _ivHint='<small style="display:block;font-weight:600;color:#8aa;font-size:8px">&rarr; '+(_IVLBL[_ivR.intensity]||_ivR.intensity)+'</small>';
+            _ivHint='<small style="display:block;font-weight:600;color:#8aa;font-size:12px">&rarr; '+(_IVLBL[_ivR.intensity]||_ivR.intensity)+'</small>';
           }
         }
         choIntRow+='<td style="text-align:center"><button type="button" onclick="cycleTrainIntensity('+_xi+')" title="Ένταση συνεδρίας — κύκλος auto&rarr;low&rarr;mod&rarr;high&rarr;race. Στο «auto» φαίνεται από κάτω τι υπολόγισε το MET φορτίο." style="'+choIntPillStyle(_iv)+'">'+(_iv||'auto')+'</button>'+_ivHint+'</td>';
@@ -449,7 +449,7 @@ function buildDayTgtHtml(c,t){
     for(var _si=0;_si<7;_si++){
       var _sr=choResults[_si];
       if(!_sr||(!_sr.isTrainingDay&&!_sr.isMatchDay)){
-        choKindRow+='<td style="text-align:center;color:#c8c8c8;font-size:10px;font-weight:700">&mdash;</td>';continue;
+        choKindRow+='<td style="text-align:center;color:#c8c8c8;font-size:12px;font-weight:700">&mdash;</td>';continue;
       }
       var _seff=_sr.sessionKind||'steady';
       var _sman=choKindManual[_si]==='steady'||choKindManual[_si]==='intervals';
@@ -457,7 +457,7 @@ function buildDayTgtHtml(c,t){
       var _slbl=(_seff==='intervals'?'Διαλ.':'Συνεχής');
       choKindRow+='<td style="text-align:center"><button type="button" onclick="cycleSessionKind('+_si+')"'
         +' title="Τύπος συνεδρίας — auto (από τη δραστηριότητα MET) → Συνεχής → Διαλειμματική. Η διαλειμματική μειώνει μόνο το ημερήσιο CHO."'
-        +' style="padding:2px 7px;border-radius:999px;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;min-width:52px;'
+        +' style="padding:2px 7px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;min-width:52px;'
         +'border:1px solid '+(_seff==='intervals'?'#e0836f':'#bcd')+';'
         +'background:'+(_sdamp?'#fdecea':'#fff')+';color:'+(_seff==='intervals'?'#9a3b22':'#478')+';'
         +(_sman?'':'font-style:italic;opacity:.7')+'">'+(_sdamp?'⚡':'')+_slbl+'</button></td>';
@@ -497,10 +497,10 @@ function buildDayTgtHtml(c,t){
         var _r=choResults[_ci];
         var _cell=_r?rd.pick(_r):null;
         if(!_cell||!_r||(!_r.isTrainingDay&&!_r.isMatchDay)){
-          tbody+='<td style="text-align:center;color:#c8c8c8;font-size:10px;font-weight:700">—</td>';
+          tbody+='<td style="text-align:center;color:#c8c8c8;font-size:12px;font-weight:700">—</td>';
         }else{
-          tbody+='<td style="text-align:center"><span style="font-size:10px;font-weight:700;color:#00786f;display:block">'+_cell.main
-            +(_cell.sub?'<small style="display:block;font-weight:600;color:#8aa;font-size:8px">'+_cell.sub+'</small>':'')+'</span></td>';
+          tbody+='<td style="text-align:center"><span style="font-size:12px;font-weight:700;color:#00786f;display:block">'+_cell.main
+            +(_cell.sub?'<small style="display:block;font-weight:600;color:#8aa;font-size:12px">'+_cell.sub+'</small>':'')+'</span></td>';
         }
       }
       tbody+='</tr>';
@@ -517,7 +517,7 @@ function buildDayTgtHtml(c,t){
     var namesCL=carbLoadIdxs.slice().sort(function(a,b){return a-b;}).map(function(ix){return dAbbrCL[ix];});
     var loadCarbGPreview=Math.round((c.weight||70)*10);
     var evIdxCL=getEventDayIndex(c);
-    carbLoadNote='<div style="background:#fff3e0;border:1px solid #ffb74d;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#e65100"><b>🏁 Ενεργή καρβοφόρτωση:</b> '+namesCL.join(', ')+(evIdxCL!=null?' (αγώνας: '+dAbbrCL[evIdxCL]+')':'')+' — στόχος ~'+loadCarbGPreview+'g υδατάνθρακες/ημέρα (ISSN: 8-12g/kg), οι θερμίδες αυτών των ημερών ανεβαίνουν ανάλογα</div>';
+    carbLoadNote='<div style="background:#fff3e0;border:1px solid #ffb74d;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:12px;color:#e65100"><b>🏁 Ενεργή καρβοφόρτωση:</b> '+namesCL.join(', ')+(evIdxCL!=null?' (αγώνας: '+dAbbrCL[evIdxCL]+')':'')+' — στόχος ~'+loadCarbGPreview+'g υδατάνθρακες/ημέρα (ISSN: 8-12g/kg), οι θερμίδες αυτών των ημερών ανεβαίνουν ανάλογα</div>';
   }
   // 🥤 CHO Training Protocol — control strip (same look as .carb-boost-row, dashed green tint).
   var choCtrlHtml='';
@@ -533,15 +533,15 @@ function buildDayTgtHtml(c,t){
         +'<label>pre <input class="carb-boost-inp" type="number" step="0.1" min="0" max="6" value="'+(choOv.gPerKgPre!=null?choOv.gPerKgPre:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerKgPre\',this.value)"> g/kg</label> '
         +'<label>κατά <input class="carb-boost-inp" type="number" min="0" max="120" value="'+(choOv.gPerHrDuring!=null?choOv.gPerHrDuring:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerHrDuring\',this.value)"> g/h</label> '
         +'<label>μετά <input class="carb-boost-inp" type="number" step="0.1" min="0" max="3" value="'+(choOv.gPerKgPost!=null?choOv.gPerKgPost:'')+'" '+(choManual?'':'disabled')+' onchange="setChoOverride(\'gPerKgPost\',this.value)"> g/kg</label>'
-        +'<div style="margin-top:6px;font-size:11px;color:#00786f">'
+        +'<div style="margin-top:6px;font-size:12px;color:#00786f">'
         +'<span style="font-weight:700">🗓️ Φάση εβδομάδας:</span> '
         +['base','build','peak','taper','race'].map(function(pk){
           var on=choPhase===pk;
-          return '<button type="button" onclick="setChoWeekPhase(\''+pk+'\')" style="padding:3px 9px;border-radius:12px;border:1px solid '+(on?'#00786f':'#bcd')+';background:'+(on?'#00786f':'#fff')+';color:'+(on?'#fff':'#478')+';font-size:10px;font-weight:600;cursor:pointer;margin:2px 3px 0 0;font-family:inherit">'+CHO_PHASE_LBL[pk]+'</button>';
+          return '<button type="button" onclick="setChoWeekPhase(\''+pk+'\')" style="padding:3px 9px;border-radius:12px;border:1px solid '+(on?'#00786f':'#bcd')+';background:'+(on?'#00786f':'#fff')+';color:'+(on?'#fff':'#478')+';font-size:12px;font-weight:600;cursor:pointer;margin:2px 3px 0 0;font-family:inherit">'+CHO_PHASE_LBL[pk]+'</button>';
         }).join('')
         +(choKeyIdx>=0?'<span style="margin-left:6px;color:#8a5200">🔑 Κύρια: <b>'+abbr[choKeyIdx]+'</b></span>':'')
-        +'<div style="color:#8aa;font-size:9px;margin-top:3px">Μόνο η κύρια συνεδρία φτάνει στην οροφή g/kg· οι υπόλοιπες μέρες πλησιάζουν το κατώφλι.</div>'
-        +'<div style="color:#8aa;font-size:9px;margin-top:2px">Όλες οι τιμές CHO (πριν/κατά/μετά/ημέρας) είναι <b>συστάσεις προς χειροκίνητη τοποθέτηση</b> — το παραγόμενο πλάνο κρατά την κανονική κατανομή ανά γεύμα, δεν αλλάζει θερμίδες/macros.</div>'
+        +'<div style="color:#8aa;font-size:12px;margin-top:3px">Μόνο η κύρια συνεδρία φτάνει στην οροφή g/kg· οι υπόλοιπες μέρες πλησιάζουν το κατώφλι.</div>'
+        +'<div style="color:#8aa;font-size:12px;margin-top:2px">Όλες οι τιμές CHO (πριν/κατά/μετά/ημέρας) είναι <b>συστάσεις προς χειροκίνητη τοποθέτηση</b> — το παραγόμενο πλάνο κρατά την κανονική κατανομή ανά γεύμα, δεν αλλάζει θερμίδες/macros.</div>'
         +'</div>'
       ):'<span style="color:#8aa">— ενεργοποίησέ το για CHO πριν/κατά/μετά ανά ημέρα προπόνησης (Thomas 2016 · Ricci 2025)</span>')
       +'</div>';
@@ -557,13 +557,13 @@ function buildDayTgtHtml(c,t){
         var col=fl.severity==='block'?{bg:'#fdecea',bd:'#f0a048',fg:'#8a1c1c',ic:'⛔'}
               :fl.severity==='alert'?{bg:'#fdecea',bd:'#e57373',fg:'#c62828',ic:'🔴'}
               :{bg:'#fff4e5',bd:'#f0a048',fg:'#8a5200',ic:'⚠️'};
-        return '<div style="display:flex;gap:8px;align-items:flex-start;background:'+col.bg+';border:1px solid '+col.bd+';border-radius:6px;padding:7px 10px;margin-top:8px;font-size:10px;color:'+col.fg+';line-height:1.4">'
+        return '<div style="display:flex;gap:8px;align-items:flex-start;background:'+col.bg+';border:1px solid '+col.bd+';border-radius:6px;padding:7px 10px;margin-top:8px;font-size:12px;color:'+col.fg+';line-height:1.4">'
           +'<span>'+col.ic+'</span><span><b>'+esc(fl.title)+'</b> — '+esc(fl.detail)+'</span></div>';
       }).join('');
     }
     var _infoF=_flatF.filter(function(fl){return fl.severity==='info';});
     if(_infoF.length){
-      choFlagHtml+='<div style="font-size:10px;color:#6b6b6b;margin-top:6px;line-height:1.5">'
+      choFlagHtml+='<div style="font-size:12px;color:#6b6b6b;margin-top:6px;line-height:1.5">'
         +_infoF.map(function(fl){return 'ℹ️ <b>'+esc(fl.title)+'</b> — '+esc(fl.detail);}).join('<br>')+'</div>';
     }
   }
@@ -581,18 +581,18 @@ function buildDayTgtHtml(c,t){
     +'</div>'
     +choCtrlHtml
     +carbLoadNote
-    +'<div style="font-size:10px;color:var(--text-muted);margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; Μ=ημέρα αγώνα (δεν αλλάζει θερμίδες/macros, μόνο το πλάνο του πελάτη) &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);margin:4px 0 6px;font-style:italic">T=προπόνηση &nbsp;·&nbsp; R=ανάπαυση &nbsp;·&nbsp; Μ=ημέρα αγώνα (δεν αλλάζει θερμίδες/macros, μόνο το πλάνο του πελάτη) &nbsp;·&nbsp; ⏱ ώρες: οι θερμίδες κλιμακώνονται ανάλογα με τη διάρκεια &nbsp;·&nbsp; 🕐 Ώρα: ώρα έναρξης προπόνησης (pre: -2h, post: +30min) &nbsp;·&nbsp; Carb boost: +'+carbBoostVal+'%</div>'
     +(matchDaysArr.some(function(x){return x;})?(
       '<div class="carb-boost-row">'
       +'<label>&#9917; Ώρα αγώνα (χοντρικά, ίδια για κάθε εβδομάδα):</label>'
       +'<div style="display:flex;gap:6px">'
       +['πρωί','μεσημέρι','απόγευμα','βράδυ'].map(function(bk){
         var on=(c.matchTimeBucket||'απόγευμα')===bk;
-        return '<button type="button" onclick="setMatchTimeBucket(\''+bk+'\')" style="padding:5px 10px;border-radius:14px;border:1px solid '+(on?'#025857':'#ccc')+';background:'+(on?'#025857':'#fff')+';color:'+(on?'#fff':'#333')+';font-size:11px;cursor:pointer">'+bk+'</button>';
+        return '<button type="button" onclick="setMatchTimeBucket(\''+bk+'\')" style="padding:5px 10px;border-radius:14px;border:1px solid '+(on?'#025857':'#ccc')+';background:'+(on?'#025857':'#fff')+';color:'+(on?'#fff':'#333')+';font-size:12px;cursor:pointer">'+bk+'</button>';
       }).join('')
       +'</div></div>'
     ):'')
-    +'<div style="background:#f0f7ff;border:1px solid #80d4ff;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:11px;color:#0056b3">'
+    +'<div style="background:#f0f7ff;border:1px solid #80d4ff;border-radius:6px;padding:8px 12px;margin-top:8px;font-size:12px;color:#0056b3">'
     +'<div style="font-weight:700;margin-bottom:4px">⚡ Προσαρμογή Macros ανάλογα Προπόνησης</div>'
     +'<div style="line-height:1.5">'
     +'<div>📈 <b>Ημέρες Προπόνησης (T):</b> +10% Πρωτεΐνη, +20% Υδατάνθρακες, -15% Λιπαρά (ανάρρωση μυών + γλυκογόνο)</div>'
@@ -605,7 +605,7 @@ function buildDayTgtHtml(c,t){
     // PDF ή σύνδεσμο, για πελάτες που δεν θέλουν διατροφή. Βλ. js/reports/targets-sheet.js.
     +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px">'
     +'<button type="button" class="btn secondary" onclick="openTargetsModal()">&#128202; Αποστολή στόχων (χωρίς πλάνο)</button>'
-    +'<span style="font-size:10px;color:var(--text-muted)">PDF ή σύνδεσμος με τα μακροθρεπτικά και τις ώρες κάθε ημέρας — δεν χρειάζεται διατροφικό πλάνο.</span>'
+    +'<span style="font-size:12px;color:var(--text-muted)">PDF ή σύνδεσμος με τα μακροθρεπτικά και τις ώρες κάθε ημέρας — δεν χρειάζεται διατροφικό πλάνο.</span>'
     +'</div></div>';
 }
 
@@ -1196,7 +1196,7 @@ function buildMacroDistributionHtml(c,t){
     +'<span class="macro-f-val">Λιπαρά: '+t.f+'g&nbsp;&nbsp;('+t.fPct+'%)'+perKg(t.f)+'</span>'
     +'<span class="macro-c-val">Υδατ/κες: '+t.carb+'g&nbsp;&nbsp;('+t.cPct+'%)'+perKg(t.carb)+'</span>'
     +'</div>'
-    +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Προσαρμόζεται αυτόματα από το άθλημα — αλλάξτε ελεύθερα χειροκίνητα.</div>'
+    +'<div style="font-size:12px;color:#666;margin-top:6px;font-style:italic">Προσαρμόζεται αυτόματα από το άθλημα — αλλάξτε ελεύθερα χειροκίνητα.</div>'
     +buildInsightsPanelHtml(c,t)
     +'</div>'
     +'</div>';

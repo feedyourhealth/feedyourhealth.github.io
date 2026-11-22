@@ -79,7 +79,7 @@ function openFoodSelectorModal(d,mi){
   // Add paste button if there's a meal in clipboard
   var pasteBtn='';
   if(window.mealClipboard){
-    pasteBtn='<button onclick="pasteMealFromClipboard('+d+','+mi+');document.getElementById(\'food-selector-modal\').remove()" style="background:#4caf50;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px;margin-right:10px">📋 Επικόλληση Γεύματος</button>';
+    pasteBtn='<button onclick="pasteMealFromClipboard('+d+','+mi+');document.getElementById(\'food-selector-modal\').remove()" style="background:#4caf50;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px;margin-right:10px">📋 Επικόλληση Γεύματος</button>';
   }
 
   content.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;border-bottom:2px solid #E2EEE5;padding-bottom:10px">'
@@ -131,7 +131,7 @@ function updateFoodSelector(query){
   });
 
   if(!Object.keys(cats).length){
-    list.innerHTML='<div style="color:var(--text-muted);font-size:11px;padding:10px">Δεν βρέθηκε</div>';
+    list.innerHTML='<div style="color:var(--text-muted);font-size:12px;padding:10px">Δεν βρέθηκε</div>';
     return;
   }
 
@@ -143,14 +143,14 @@ function updateFoodSelector(query){
       html+='<div style="border-bottom:1px solid #f0f0f0">'
         +'<div id="'+foodId+'" style="padding:8px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onmouseover="this.style.background=\'var(--panel-bg)\'" onmouseout="this.style.background=\'var(--card-bg)\'" onclick="showFoodQuantityInput(\''+foodId+'\',\''+n.replace(/'/g,"\\'")+'\')">'
           +'<span>'+n+'</span>'
-          +'<span style="color:var(--text-muted);font-size:11px">'+FOODS[n].k+' kcal</span>'
+          +'<span style="color:var(--text-muted);font-size:12px">'+FOODS[n].k+' kcal</span>'
         +'</div>'
         +'<div id="'+foodId+'-qty" style="display:none;padding:10px;background:var(--panel-bg);border-top:1px solid #e0e0e0">'
           +'<div style="display:flex;gap:8px;align-items:center">'
-            +'<label style="font-size:11px;color:#666">Ποσότητα (gr):</label>'
+            +'<label style="font-size:12px;color:#666">Ποσότητα (gr):</label>'
             +'<input id="qty-input-'+foodId+'" type="number" value="100" min="1" max="500" style="width:70px;padding:4px;border:1px solid var(--border-light);border-radius:4px;font-size:12px">'
-            +'<button onclick="confirmFoodQuantity(\''+foodId+'\',\''+n.replace(/'/g,"\\'")+'\')" style="background:#025857;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px">✓ Προσθήκη</button>'
-            +'<button onclick="hideFoodQuantityInput(\''+foodId+'\')" style="background:#999;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:11px">✕ Άκυρο</button>'
+            +'<button onclick="confirmFoodQuantity(\''+foodId+'\',\''+n.replace(/'/g,"\\'")+'\')" style="background:#025857;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px">✓ Προσθήκη</button>'
+            +'<button onclick="hideFoodQuantityInput(\''+foodId+'\')" style="background:#999;color:#fff;border:none;border-radius:4px;padding:4px 12px;cursor:pointer;font-size:12px">✕ Άκυρο</button>'
           +'</div>'
         +'</div>'
         +'</div>';
@@ -258,11 +258,11 @@ var _foodSelectorFavoritesOnly=false;
 function renderRecipeDietFilterChips(){
   var row=document.getElementById('recipe-diet-filter-row');
   if(!row)return;
-  var favChip='<button onclick="toggleFoodSelectorFavoritesOnly()" style="background:'+(_foodSelectorFavoritesOnly?'#025857':'#eee')+';color:'+(_foodSelectorFavoritesOnly?'#fff':'#333')+';border:none;border-radius:12px;padding:4px 11px;cursor:pointer;font-size:11px;font-weight:'+(_foodSelectorFavoritesOnly?'600':'400')+'">⭐ Μόνο αγαπημένα</button>';
+  var favChip='<button onclick="toggleFoodSelectorFavoritesOnly()" style="background:'+(_foodSelectorFavoritesOnly?'#025857':'#eee')+';color:'+(_foodSelectorFavoritesOnly?'#fff':'#333')+';border:none;border-radius:12px;padding:4px 11px;cursor:pointer;font-size:12px;font-weight:'+(_foodSelectorFavoritesOnly?'600':'400')+'">⭐ Μόνο αγαπημένα</button>';
   var defs=(typeof availableRecipeDietTags==='function')?availableRecipeDietTags():[];
   row.innerHTML=favChip+defs.map(function(def){
     var active=_foodSelectorRecipeDietFilters.indexOf(def.key)>-1;
-    return '<button onclick="toggleFoodSelectorDietFilter(\''+def.key+'\')" style="background:'+(active?'#025857':'#eee')+';color:'+(active?'#fff':'#333')+';border:none;border-radius:12px;padding:4px 11px;cursor:pointer;font-size:11px;font-weight:'+(active?'600':'400')+'">'+esc(def.label)+'</button>';
+    return '<button onclick="toggleFoodSelectorDietFilter(\''+def.key+'\')" style="background:'+(active?'#025857':'#eee')+';color:'+(active?'#fff':'#333')+';border:none;border-radius:12px;padding:4px 11px;cursor:pointer;font-size:12px;font-weight:'+(active?'600':'400')+'">'+esc(def.label)+'</button>';
   }).join('');
 }
 
@@ -336,35 +336,35 @@ function updateRecipeSelectorForPlan(query){
   }).map(function(x){return x.r;});
 
   if(!filtered.length){
-    list.innerHTML='<div style="color:var(--text-muted);font-size:11px;padding:10px">Δεν βρέθηκε συνταγή</div>';
+    list.innerHTML='<div style="color:var(--text-muted);font-size:12px;padding:10px">Δεν βρέθηκε συνταγή</div>';
     return;
   }
-  var html=targetCategory?('<div style="padding:6px 10px;font-size:10.5px;color:#025857;background:#F3F9F4;border-bottom:1px solid #E2EEE5">↑ Πρώτα συνταγές για: '+esc(targetCategory)+'</div>'):'';
+  var html=targetCategory?('<div style="padding:6px 10px;font-size:12px;color:#025857;background:#F3F9F4;border-bottom:1px solid #E2EEE5">↑ Πρώτα συνταγές για: '+esc(targetCategory)+'</div>'):'';
   filtered.forEach(function(r){
-    var tagsHtml=(r.tags||[]).slice(0,3).map(function(t){return '<span style="background:#E2EEE5;color:#025857;border-radius:10px;padding:1px 7px;font-size:10px;margin-right:4px">'+esc(t)+'</span>';}).join('');
+    var tagsHtml=(r.tags||[]).slice(0,3).map(function(t){return '<span style="background:#E2EEE5;color:#025857;border-radius:10px;padding:1px 7px;font-size:12px;margin-right:4px">'+esc(t)+'</span>';}).join('');
     var ingCount=(r.foods||[]).length;
     var conflicts=c?getRecipeExclusionConflicts(r,c):[];
     var feedback=getClientRecipeFeedback(r,c);
-    var warnHtml=conflicts.length?('<div style="font-size:10.5px;color:#c62828;margin-top:2px">⚠️ Περιέχει αποκλεισμένο: '+esc(conflicts.map(function(f){return f.n;}).join(', '))+'</div>'):'';
+    var warnHtml=conflicts.length?('<div style="font-size:12px;color:#c62828;margin-top:2px">⚠️ Περιέχει αποκλεισμένο: '+esc(conflicts.map(function(f){return f.n;}).join(', '))+'</div>'):'';
     var feedbackHtml=feedback.disliked
-      ?'<div style="font-size:10.5px;color:#c62828;margin-top:2px">🚫 Ο πελάτης το απέρριψε πριν (👎)</div>'
-      :(feedback.liked>0?'<div style="font-size:10.5px;color:var(--good);margin-top:2px">👍 Άρεσε στον πελάτη '+feedback.liked+' '+(feedback.liked===1?'φορά':'φορές')+'</div>':'');
+      ?'<div style="font-size:12px;color:#c62828;margin-top:2px">🚫 Ο πελάτης το απέρριψε πριν (👎)</div>'
+      :(feedback.liked>0?'<div style="font-size:12px;color:var(--good);margin-top:2px">👍 Άρεσε στον πελάτη '+feedback.liked+' '+(feedback.liked===1?'φορά':'φορές')+'</div>':'');
     var expanded=!!_expandedFoodSelectorRecipeIds[r.id];
     var favorite=typeof isRecipePopular==='function'&&isRecipePopular(r);
-    var expandBtn='<button type="button" title="Υλικά" aria-label="Προβολή υλικών" onclick="toggleFoodSelectorRecipeExpand(\''+r.id+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;padding:2px 4px 2px 0;flex-shrink:0;color:var(--text-muted)">'+(expanded?'🔼':'🔽')+'</button>';
-    var ingredientsHtml=expanded?('<div style="padding:2px 10px 8px 26px;display:flex;flex-wrap:wrap;gap:5px">'+(r.foods||[]).map(function(f){return '<span style="background:var(--panel-bg);font-size:10.5px;padding:3px 8px;border-radius:4px;color:#666">'+esc(f.n)+' · '+f.g+'g</span>';}).join('')+'</div>'):'';
+    var expandBtn='<button type="button" title="Υλικά" aria-label="Προβολή υλικών" onclick="toggleFoodSelectorRecipeExpand(\''+r.id+'\')" style="background:none;border:none;cursor:pointer;font-size:12px;padding:2px 4px 2px 0;flex-shrink:0;color:var(--text-muted)">'+(expanded?'🔼':'🔽')+'</button>';
+    var ingredientsHtml=expanded?('<div style="padding:2px 10px 8px 26px;display:flex;flex-wrap:wrap;gap:5px">'+(r.foods||[]).map(function(f){return '<span style="background:var(--panel-bg);font-size:12px;padding:3px 8px;border-radius:4px;color:#666">'+esc(f.n)+' · '+f.g+'g</span>';}).join('')+'</div>'):'';
     html+='<div style="border-bottom:1px solid #f0f0f0">'
       +'<div style="padding:8px 10px 8px 6px;display:flex;justify-content:space-between;align-items:center;gap:8px">'
         +'<div style="display:flex;align-items:flex-start;gap:2px;min-width:0">'
           +expandBtn
           +'<div style="min-width:0">'
             +'<div style="font-weight:600;font-size:12.5px;color:#222">'+(favorite?'⭐ ':'')+esc(r.name)+'</div>'
-            +'<div style="font-size:10.5px;color:var(--text-muted)">'+(r.kcal||0)+' kcal · '+ingCount+' υλικά '+tagsHtml+'</div>'
+            +'<div style="font-size:12px;color:var(--text-muted)">'+(r.kcal||0)+' kcal · '+ingCount+' υλικά '+tagsHtml+'</div>'
             +warnHtml
             +feedbackHtml
           +'</div>'
         +'</div>'
-        +'<button onclick="confirmAddRecipeToMeal(\''+r.id+'\')" style="background:'+((conflicts.length||feedback.disliked)?'#c62828':'#025857')+';color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">➕ Προσθήκη</button>'
+        +'<button onclick="confirmAddRecipeToMeal(\''+r.id+'\')" style="background:'+((conflicts.length||feedback.disliked)?'#c62828':'#025857')+';color:#fff;border:none;border-radius:4px;padding:5px 10px;cursor:pointer;font-size:12px;white-space:nowrap;flex-shrink:0">➕ Προσθήκη</button>'
       +'</div>'
       +ingredientsHtml
     +'</div>';

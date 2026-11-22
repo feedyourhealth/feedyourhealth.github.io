@@ -146,7 +146,7 @@ function phaDetailHtml(c,plan,body,isActive){
   var avg=valid.length?valid.reduce(function(a,b){return a+b;},0)/valid.length:null;
   if(w){
     h+='<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px"><span class="ph-lbl">Υδατάνθρακες ανά ημέρα (g/kg)</span>'
-      +'<span class="ph-muted" style="font-size:11.5px">μ.ο. '+phDec(avg)+' g/kg'+(snap?'':' · ο τύπος ημέρας δεν είχε καταγραφεί σε αυτό το πλάνο')+'</span></div>'
+      +'<span class="ph-muted" style="font-size:12px">μ.ο. '+phDec(avg)+' g/kg'+(snap?'':' · ο τύπος ημέρας δεν είχε καταγραφεί σε αυτό το πλάνο')+'</span></div>'
       +'<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px">';
     for(var d=0;d<7;d++){
       var di=snap&&snap.days?snap.days[d]:null;
@@ -157,17 +157,17 @@ function phaDetailHtml(c,plan,body,isActive){
       var tgt=di&&di.cho!=null?di.cho:null;
       var v=cho[d],hh=v?Math.round(v*100/mx):0;
       h+='<div style="background:var(--card-bg);border:'+(isRace?'2px solid #8a4b00':'1px solid var(--border-light)')+';border-radius:8px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0" title="'+PH_DAYS[d]+(di&&di.act?' · '+esc(di.act):'')+(tgt!=null?' · στόχος CHO protocol '+tgt+' g/kg':'')+'">'
-        +'<span style="font-size:10.5px;'+(isRace?'font-weight:700;color:#8a4b00':'')+'" class="'+(isRace?'':'ph-muted')+'">'+PH_DAYS_SHORT[d]+'</span>'
+        +'<span style="font-size:12px;'+(isRace?'font-weight:700;color:#8a4b00':'')+'" class="'+(isRace?'':'ph-muted')+'">'+PH_DAYS_SHORT[d]+'</span>'
         +'<div style="width:100%;height:54px;display:flex;align-items:flex-end;position:relative">'
         +(tgt!=null&&mx?'<div style="position:absolute;left:0;right:0;bottom:'+Math.min(100,Math.round(tgt*100/mx))+'%;border-top:2px dashed #c2410c" aria-hidden="true"></div>':'')
         +'<div style="width:100%;height:'+hh+'%;background:'+col+';border-radius:4px 4px 0 0"></div></div>'
         +'<span style="font-size:13px;font-weight:700">'+(v!=null?phDec(v):'—')+'</span>'
-        +(kind?'<span style="font-size:10px;text-align:center;line-height:1.2" class="ph-muted">'+kind+'</span>':'')
-        +(tgt!=null?'<span style="font-size:10px;color:#c2410c">στόχος '+phDec(tgt)+'</span>':'')
+        +(kind?'<span style="font-size:12px;text-align:center;line-height:1.2" class="ph-muted">'+kind+'</span>':'')
+        +(tgt!=null?'<span style="font-size:12px;color:#c2410c">στόχος '+phDec(tgt)+'</span>':'')
         +'</div>';
     }
     h+='</div>';
-    if(snap&&snap.days.some(function(x){return x.cho!=null;}))h+='<div class="ph-muted" style="font-size:11px">Η διακεκομμένη γραμμή = στόχος CHO ημέρας του CHO Protocol εκείνη τη στιγμή.</div>';
+    if(snap&&snap.days.some(function(x){return x.cho!=null;}))h+='<div class="ph-muted" style="font-size:12px">Η διακεκομμένη γραμμή = στόχος CHO ημέρας του CHO Protocol εκείνη τη στιγμή.</div>';
   }
 
   // markers
@@ -176,7 +176,7 @@ function phaDetailHtml(c,plan,body,isActive){
   h+='<div class="ph-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">'
     +'<div class="ph-sec"><span class="ph-lbl">Energy Availability</span>'
     +(ea!=null?'<div class="ph-tile"><div class="v">'+ea+' <span style="font-size:12px;font-weight:400">kcal/kg FFM</span></div><div class="s" style="'+phaEAStyle(ea)+';display:inline-block;border-radius:6px;padding:1px 6px;margin-top:2px">'+phaEALabel(ea)+'</div>'
-      +'<div class="ph-muted" style="font-size:11px;margin-top:4px">(kcal πλάνου '+((plan.macros&&plan.macros.k)||0)+' − άσκηση '+Math.round(snap.exDaily)+') / άλιπη '+phDec(snap.ffm)+' kg</div></div>'
+      +'<div class="ph-muted" style="font-size:12px;margin-top:4px">(kcal πλάνου '+((plan.macros&&plan.macros.k)||0)+' − άσκηση '+Math.round(snap.exDaily)+') / άλιπη '+phDec(snap.ffm)+' kg</div></div>'
       :'<div class="ph-muted" style="font-size:12px">Δεν υπολογίζεται για πλάνα πριν από αυτή την έκδοση (λείπει άλιπη μάζα / άσκηση εκείνης της στιγμής).</div>')
     +(snap?'<div class="ph-muted" style="font-size:12px">'+snap.days.filter(function(x){return x.t;}).length+' μέρες προπόνησης · '+Math.round(snap.exWeekly)+' kcal άσκησης/εβδ.'+(snap.sport&&typeof SPORT_PROFILES!=='undefined'&&SPORT_PROFILES[snap.sport]?' · '+esc(SPORT_PROFILES[snap.sport].name):'')+'</div>':'')
     +'</div>'
@@ -261,8 +261,8 @@ function phaTopHtml(c,plans){
       +'<span class="ph-muted">'+(past?(r.debrief?'απόδοση '+r.debrief.perf+'/5'+((r.debrief.gi||[]).length?' · ΓΕ: '+esc(r.debrief.gi.join(', ')):''):'χωρίς απολογισμό'):'σε '+phaDaysTo(r.date)+' μέρες')+'</span>'
       +'<span class="ph-muted">'+nPlans+' πλάνο'+(nPlans===1?'':'α')+'</span>'
       +'<span style="margin-left:auto;display:flex;gap:6px">'
-      +(past?'<button class="btn '+(r.debrief?'tertiary':'secondary')+'" style="font-size:11.5px;padding:5px 9px;min-height:auto" onclick="phaOpenDebrief(\''+esc(r.id)+'\')">'+(r.debrief?'Απολογισμός':'+ Απολογισμός')+'</button>':'')
-      +'<button class="btn tertiary" style="font-size:11.5px;padding:5px 9px;min-height:auto" onclick="phaOpenRaceModal(\''+esc(r.id)+'\')">Επεξεργασία</button>'
+      +(past?'<button class="btn '+(r.debrief?'tertiary':'secondary')+'" style="font-size:12px;padding:5px 9px;min-height:auto" onclick="phaOpenDebrief(\''+esc(r.id)+'\')">'+(r.debrief?'Απολογισμός':'+ Απολογισμός')+'</button>':'')
+      +'<button class="btn tertiary" style="font-size:12px;padding:5px 9px;min-height:auto" onclick="phaOpenRaceModal(\''+esc(r.id)+'\')">Επεξεργασία</button>'
       +'</span></div>';
   });
   h+='</div>';
@@ -310,7 +310,7 @@ function phaSaveSectionHtml(c){
     +'<div style="margin-bottom:16px"><label style="font-weight:600;display:block;margin-bottom:4px" for="pha-save-race">Αφορά αγώνα;</label>'
     +'<select id="pha-save-race" class="phc-sel" style="width:100%"><option value="">— κανένας συγκεκριμένος —</option>'
     +phaUpcoming(c).map(function(r){return '<option value="'+esc(r.id)+'"'+(tag.raceId===r.id?' selected':'')+'>'+phaRaceLabel(r)+' · σε '+phaDaysTo(r.date)+' μέρες</option>';}).join('')
-    +'</select><div style="font-size:11px;color:var(--text-muted);margin-top:4px">Νέο αγώνα προσθέτεις από το Ιστορικό → 🏁 Αγώνες.</div></div>';
+    +'</select><div style="font-size:12px;color:var(--text-muted);margin-top:4px">Νέο αγώνα προσθέτεις από το Ιστορικό → 🏁 Αγώνες.</div></div>';
   return h;
 }
 function phaReadSaveSection(c){

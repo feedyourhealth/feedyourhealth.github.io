@@ -105,8 +105,8 @@ function buildGenChecklistHtml(c){
   function chip(label,bad){
     if(bad) miss++;
     var col=bad?'#b3403f':'#2e7d32';
-    return '<span style="font-size:11.5px;display:inline-flex;align-items:center;gap:5px;color:'+col+(bad?';font-weight:700':'')+'">'
-      +'<span style="width:15px;height:15px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;background:'+col+'">'+(bad?'!':'✓')+'</span>'+esc(label)+'</span>';
+    return '<span style="font-size:12px;display:inline-flex;align-items:center;gap:5px;color:'+col+(bad?';font-weight:700':'')+'">'
+      +'<span style="width:15px;height:15px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;background:'+col+'">'+(bad?'!':'✓')+'</span>'+esc(label)+'</span>';
   }
   var chips=GEN_CHK_ITEMS.map(function(it){ return chip(it[1], errs.some(function(e){return e.indexOf(it[0]+'_')===0;})); });
   if(errs.indexOf('bf_invalid')>-1)     chips.push(chip('% Λίπος',true));
@@ -114,7 +114,7 @@ function buildGenChecklistHtml(c){
   // Όλα συμπληρωμένα → κρυφό (κρατά το id για το refreshGenChecklist): το «✓ Έτοιμο…» έπιανε μια γραμμή
   // και πάνω από το πλάνο, χωρίς να λέει κάτι χρήσιμο (2026-11-06, μελέτη ροής).
   if(!miss) return '<div id="gen-checklist" style="display:none"></div>';
-  var head='<span style="font-size:11.5px;font-weight:800;color:#b3403f;margin-right:4px">Λείπουν '+miss+' για δημιουργία πλάνου:</span>';
+  var head='<span style="font-size:12px;font-weight:800;color:#b3403f;margin-right:4px">Λείπουν '+miss+' για δημιουργία πλάνου:</span>';
   return '<div id="gen-checklist" style="display:flex;flex-wrap:wrap;gap:7px 14px;align-items:center;background:var(--panel-bg);border:1px solid var(--border-light);border-radius:8px;padding:9px 12px;margin-bottom:8px">'
     +head+chips.join('')+'</div>';
 }
@@ -246,14 +246,14 @@ function renderMain(){
     // τύπους πελατών, ώστε η δ/γείος να μην ξαναδακτυλογραφεί τον ίδιο συνδυασμό κάθε φορά.
     // Όλα τα πεδία παραμένουν επεξεργάσιμα μετά — το preset είναι σημείο εκκίνησης, όχι κλείδωμα.
     +'<div style="margin-bottom:14px">'
-    +'<div onclick="toggleSec(\'quickstart\')" style="display:flex;justify-content:space-between;align-items:center;background:#f0f7f7;border:1px solid #b2d8d8;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#025857">'
+    +'<div onclick="toggleSec(\'quickstart\')" style="display:flex;justify-content:space-between;align-items:center;background:#f0f7f7;border:1px solid #b2d8d8;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:700;color:#025857">'
     +'<span>🚀 Γρήγορη έναρξη'+(secState.quickstart&&c.quickPreset?(' <span style="font-weight:400;color:#6b6b6b">— '+esc((QUICK_PRESETS.filter(function(p){return p.key===c.quickPreset;})[0]||{}).label||'')+'</span>'):'')+'</span>'
     +'<span style="transition:transform .15s;'+(secState.quickstart?'':'transform:rotate(90deg)')+'">›</span>'
     +'</div>'
     +'<div style="display:'+(secState.quickstart?'none':'block')+';margin-top:8px">'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
     +QUICK_PRESETS.map(function(p){
-        return '<button type="button" onclick="applyClientPreset(\''+p.key+'\')" style="background:'+(c.quickPreset===p.key?'#025857':'#fff')+';color:'+(c.quickPreset===p.key?'#fff':'#333')+';border:1px solid '+(c.quickPreset===p.key?'#025857':'#ddd')+';border-radius:20px;padding:7px 12px;font-size:11.5px;font-weight:600;cursor:pointer">'+p.icon+' '+p.label+'</button>';
+        return '<button type="button" onclick="applyClientPreset(\''+p.key+'\')" style="background:'+(c.quickPreset===p.key?'#025857':'#fff')+';color:'+(c.quickPreset===p.key?'#fff':'#333')+';border:1px solid '+(c.quickPreset===p.key?'#025857':'#ddd')+';border-radius:20px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer">'+p.icon+' '+p.label+'</button>';
       }).join('')
     +'</div></div></div>'
 
@@ -262,7 +262,7 @@ function renderMain(){
     +'<span style="font-size:20px;flex-shrink:0;">💡</span>'
     +'<div style="flex:1">'
     +'<div style="font-size:12px;font-weight:700;color:#f57f17;">🎯 Ορίστε το Σκοπό</div>'
-    +'<div style="font-size:11px;color:#ff8f00;margin-top:2px;">Απαραίτητο για σωστές θερμίδες & μακροθρεπτικά</div>'
+    +'<div style="font-size:12px;color:#ff8f00;margin-top:2px;">Απαραίτητο για σωστές θερμίδες & μακροθρεπτικά</div>'
     +'</div>'
     +'</div>':'')
 
@@ -283,17 +283,17 @@ function renderMain(){
     +'<input type="checkbox" id="inp-lactating" style="width:16px;height:16px;cursor:pointer"'+(c.lactating&&!c.pregnant?' checked':'')+'>🤱 Θηλάζει</label></div></div>'
     // 🤱 Θηλασμός (2026-10-14): ημερομηνία τοκετού → στάδιο (0–6 / 7+ μήνες) → +330/+400 kcal, βλ. getLactationInfo
     +'<div class="fg" id="lact-fields-wrap" style="display:'+(c.lactating&&!c.pregnant?'flex':'none')+'">'
-    +'<div class="fgrp"><label>Ημερομηνία τοκετού <span id="lact-stage-badge" style="color:#025857;font-weight:600;font-size:11px">'+esc(lactStageBadgeText(c))+'</span></label>'
+    +'<div class="fgrp"><label>Ημερομηνία τοκετού <span id="lact-stage-badge" style="color:#025857;font-weight:600;font-size:12px">'+esc(lactStageBadgeText(c))+'</span></label>'
     +'<input type="date" id="inp-deliverydate" value="'+esc(c.deliveryDate||'')+'" max="'+new Date().toISOString().slice(0,10)+'"></div>'
     +'<div class="fgrp" style="justify-content:flex-end"><button type="button" class="btn" onclick="showMedicalProtocol(\'lactation\')" style="background:#025857;color:#fff;border:none;border-radius:6px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;">🤱 Πρωτόκολλο Θηλασμού</button></div></div>'
     +'<div class="fg" id="preg-fields-wrap" style="display:'+(c.pregnant?'flex':'none')+'">'
-    +'<div class="fgrp"><label>Εβδομάδα κύησης <span id="preg-tri-badge" style="color:#025857;font-weight:600;font-size:11px">'+esc(getPregTrimesterLabel(c.gestationalWeek))+'</span></label><input type="number" id="inp-gestweek" value="'+(c.gestationalWeek||'')+'" min="1" max="42" placeholder="π.χ. 20"></div>'
+    +'<div class="fgrp"><label>Εβδομάδα κύησης <span id="preg-tri-badge" style="color:#025857;font-weight:600;font-size:12px">'+esc(getPregTrimesterLabel(c.gestationalWeek))+'</span></label><input type="number" id="inp-gestweek" value="'+(c.gestationalWeek||'')+'" min="1" max="42" placeholder="π.χ. 20"></div>'
     +'<div class="fgrp"><label>Βάρος προ εγκυμοσύνης (kg)</label><input type="number" id="inp-prepregweight" value="'+(c.prePregnancyWeight||'')+'" min="30" max="200" step="0.1" placeholder="π.χ. 63"></div>'
     +'<div class="fgrp" style="justify-content:flex-end"><button type="button" class="btn" onclick="showMedicalProtocol(\'pregnancy\')" style="background:#025857;color:#fff;border:none;border-radius:6px;padding:9px 12px;font-size:12px;font-weight:600;cursor:pointer;">🤰 Πρωτόκολλο Εγκυμοσύνης</button></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+esc(c.email||'')+'"></div>'
-    +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+esc(c.phone||'')+'"></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>🌐 Γλώσσα πλάνου <span style="color:#9fb5b0;font-weight:400;font-size:11px">(για το link του πελάτη)</span></label><select id="inp-lang"><option value="el">Ελληνικά</option><option value="en">English</option><option value="ru">Русский</option><option value="tr">Türkçe</option></select></div></div>'
-    +'<div class="fg"><div class="fgrp"><label>🏷️ Ομάδα <span style="color:#9fb5b0;font-weight:400;font-size:11px">(π.χ. ομάδα/σύλλογος)</span></label>'
+    +'<div class="fg"><div class="fgrp"><label>📧 Email <span style="color:#9fb5b0;font-weight:400;font-size:12px">(για αποστολή πλάνου)</span></label><input type="email" id="inp-email" placeholder="π.χ. pelatis@gmail.com" value="'+esc(c.email||'')+'"></div>'
+    +'<div class="fgrp"><label>📱 Τηλέφωνο <span style="color:#9fb5b0;font-weight:400;font-size:12px">(για WhatsApp)</span></label><input type="tel" id="inp-phone" placeholder="π.χ. 6971234567" value="'+esc(c.phone||'')+'"></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>🌐 Γλώσσα πλάνου <span style="color:#9fb5b0;font-weight:400;font-size:12px">(για το link του πελάτη)</span></label><select id="inp-lang"><option value="el">Ελληνικά</option><option value="en">English</option><option value="ru">Русский</option><option value="tr">Türkçe</option></select></div></div>'
+    +'<div class="fg"><div class="fgrp"><label>🏷️ Ομάδα <span style="color:#9fb5b0;font-weight:400;font-size:12px">(π.χ. ομάδα/σύλλογος)</span></label>'
     +'<select id="inp-group"></select>'
     +'<div id="inp-group-new-row" style="display:none;gap:8px;margin-top:8px">'
     +'<input type="text" id="inp-group-new" placeholder="Όνομα νέας ομάδας" style="flex:1">'
@@ -315,11 +315,11 @@ function renderMain(){
     // Lean Mass (kg): κρυφό όταν είναι κενό — μετράς με δερματοπτυχόμετρο, η άλιπη μάζα βγαίνει από τη μέτρηση.
     // Αν έχει τιμή, υπερισχύει στον υπολογισμό (plan-energy.js, προτεραιότητα 1) → προειδοποίηση + καθαρισμός.
     +'<div class="fg">'+((c.leanmass>0)?'<div class="fgrp"><label>Lean Mass (kg) <span style="font-weight:400;color:#b45309">⚠️ υπερισχύει των μετρήσεων</span></label><input type="number" id="inp-leanmass" value="'+(c.leanmass||'')+'" min="20" max="150" step="0.5" placeholder="π.χ. 63">'
-      +'<div style="font-size:10.5px;color:#8a5a00;margin-top:3px;line-height:1.4">Χειροκίνητη τιμή: ο μεταβολισμός υπολογίζεται από αυτήν και όχι από το δερματοπτυχόμετρο'+(c.lbm>0?' (τελευταία μέτρηση: '+c.lbm+' kg)':'')+'. '
+      +'<div style="font-size:12px;color:#8a5a00;margin-top:3px;line-height:1.4">Χειροκίνητη τιμή: ο μεταβολισμός υπολογίζεται από αυτήν και όχι από το δερματοπτυχόμετρο'+(c.lbm>0?' (τελευταία μέτρηση: '+c.lbm+' kg)':'')+'. '
       +'<a href="javascript:void(0)" onclick="upd(\'leanmass\',0);renderMain();" style="color:#025857;font-weight:600">✕ Καθαρισμός</a></div></div>':'')
     +'<div class="fgrp"><label>🧪 RMR (kcal)</label><input type="number" id="inp-rmr" value="'+(c.rmr||'')+'" min="500" max="5000" step="1" placeholder="π.χ. 1650 (εργαστηριακή)"></div></div>'
     // ✅ BMI as badge (not input field)
-    +(c.weight&&c.height?'<div id="bmi-badge" style="background:#E2EEE5;padding:8px 12px;border-radius:6px;margin-top:8px;font-size:12px;font-weight:600;color:#025857;border-left:3px solid #025857;">📊 BMI: '+Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10+' <span style="font-size:10px;color:#666;font-weight:normal;">('+
+    +(c.weight&&c.height?'<div id="bmi-badge" style="background:#E2EEE5;padding:8px 12px;border-radius:6px;margin-top:8px;font-size:12px;font-weight:600;color:#025857;border-left:3px solid #025857;">📊 BMI: '+Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10+' <span style="font-size:12px;color:#666;font-weight:normal;">('+
     (function(){
       var bmi=Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10;
       if(bmi<18.5)return'Χαμηλό';if(bmi<25)return'Φυσιολογικό';if(bmi<30)return'Υπέρβαρο';return'Παχυσαρκία';
@@ -335,7 +335,7 @@ function renderMain(){
     +'<div class="fg"><div class="fgrp"><label>Επιλογή Αθλήματος</label><select id="inp-sport" onchange="updateActivityFromSport(this.value)">'
     +'<option value="">-- Επιλέξτε άθλημα --</option>'
     +Object.keys(SPORT_PROFILES).map(function(k){var sp=SPORT_PROFILES[k];return'<option value="'+k+'"'+(c.sport===k?' selected':'')+'> '+sp.icon+' '+sp.name+'</option>';}).join('')
-    +'</select><div style="font-size:10px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
+    +'</select><div style="font-size:12px;color:#666;margin-top:4px;font-style:italic" id="sport-note"></div></div></div>'
     // ✅ Activity Level — manually selected by dietitian (reflects job + daily life, not just sport)
     // 4 preset buttons (standard PAL bands) as quick-fill shortcuts + a free numeric field so an
     // exact value can be typed in when a client's actual job doesn't match a preset band.
@@ -343,11 +343,11 @@ function renderMain(){
     +'<div class="pal-btn-row" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">'
     +PAL_PRESETS.map(function(p){
       var isActive=(+effAF===p.v);
-      return '<button type="button" class="pal-preset-btn" onclick="setActivityFactor('+p.v+',\''+p.k+'\')" style="padding:6px 10px;border-radius:5px;border:1px solid '+(isActive?'#025857':'#ddd')+';background:'+(isActive?'#025857':'#fff')+';color:'+(isActive?'#fff':'#333')+';font-size:11px;cursor:pointer;">'+p.lbl+' <b>'+p.v+'</b></button>';
+      return '<button type="button" class="pal-preset-btn" onclick="setActivityFactor('+p.v+',\''+p.k+'\')" style="padding:6px 10px;border-radius:5px;border:1px solid '+(isActive?'#025857':'#ddd')+';background:'+(isActive?'#025857':'#fff')+';color:'+(isActive?'#fff':'#333')+';font-size:12px;cursor:pointer;">'+p.lbl+' <b>'+p.v+'</b></button>';
     }).join('')
     +'</div>'
-    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><input type="number" id="inp-activity-factor" min="1.0" max="3.0" step="0.01" value="'+effAF+'" placeholder="π.χ. 1.45" style="width:90px;padding:6px;border:1px solid var(--border-light);border-radius:4px"><span style="font-size:11px;color:#666">× BMR — πληκτρολόγησε ακριβή τιμή αν οι παραπάνω κατηγορίες δεν ταιριάζουν</span></div>'
-    +'<div style="font-size:10px;color:#666;margin-top:6px;font-style:italic">Ενδεικτικός οδηγός βάσει δουλειάς (όχι απόλυτος κανόνας): Γραφείο/καθιστική 1.2-1.3 · Όρθια εργασία με κίνηση (πωλητής, σερβιτόρος, νοσηλευτής) 1.4-1.6 · Δουλειά με σωματική προσπάθεια (διανομέας, τεχνίτης) 1.6-1.8 · Βαριά χειρωνακτική εργασία 1.8-2.2</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><input type="number" id="inp-activity-factor" min="1.0" max="3.0" step="0.01" value="'+effAF+'" placeholder="π.χ. 1.45" style="width:90px;padding:6px;border:1px solid var(--border-light);border-radius:4px"><span style="font-size:12px;color:#666">× BMR — πληκτρολόγησε ακριβή τιμή αν οι παραπάνω κατηγορίες δεν ταιριάζουν</span></div>'
+    +'<div style="font-size:12px;color:#666;margin-top:6px;font-style:italic">Ενδεικτικός οδηγός βάσει δουλειάς (όχι απόλυτος κανόνας): Γραφείο/καθιστική 1.2-1.3 · Όρθια εργασία με κίνηση (πωλητής, σερβιτόρος, νοσηλευτής) 1.4-1.6 · Δουλειά με σωματική προσπάθεια (διανομέας, τεχνίτης) 1.6-1.8 · Βαριά χειρωνακτική εργασία 1.8-2.2</div>'
     +'</div></div>'
     // ✅ Sport-Specific Supplement Recommendations (PHASE 4)
     +(c.sport && SPORT_PROTOCOLS[c.sport] ?
@@ -362,7 +362,7 @@ function renderMain(){
           +' onchange="toggleSportSupplement(\''+supp.id+'\',this.checked);" style="cursor:pointer;"/><span style="font-size:12px;">'+suppName+(supp.required?' ⭐':'')+'</span></label>';
       }).join('')
       +'</div>'
-      +'<div style="font-size:10px;color:#666;margin-top:8px;font-style:italic;">⭐ = Strongly recommended for this sport</div>'
+      +'<div style="font-size:12px;color:#666;margin-top:8px;font-style:italic;">⭐ = Strongly recommended for this sport</div>'
       +'</div>'
     : '')
     // ✅ MET ACTIVITIES - NOW IN MODAL (moved to buttons section)
@@ -379,41 +379,41 @@ function renderMain(){
     // instead of red/teal/green per goal — losing weight isn't "bad" (red) and gaining isn't
     // inherently "good" (green); which goal is right depends entirely on the client.
     +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px;">'
-    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='loss'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='loss'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='loss'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='loss'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:12px;">'
     +'<input type="radio" name="goal-main" value="loss" '+(c.goalMain==='loss'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:11px;">📉 Απώλεια</div><div style="font-size:9px;color:var(--text-muted);">-500 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:12px;">📉 Απώλεια</div><div style="font-size:12px;color:var(--text-muted);">-500 kcal</div></div>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='maintain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='maintain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='maintain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='maintain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:12px;">'
     +'<input type="radio" name="goal-main" value="maintain" '+(c.goalMain==='maintain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:11px;">➡️ Διατήρηση</div><div style="font-size:9px;color:var(--text-muted);">0 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:12px;">➡️ Διατήρηση</div><div style="font-size:12px;color:var(--text-muted);">0 kcal</div></div>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='gain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='gain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='gain'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='gain'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:12px;">'
     +'<input type="radio" name="goal-main" value="gain" '+(c.goalMain==='gain'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:11px;">📈 Αύξηση</div><div style="font-size:9px;color:var(--text-muted);">+300 kcal</div></div>'
+    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:12px;">📈 Αύξηση</div><div style="font-size:12px;color:var(--text-muted);">+300 kcal</div></div>'
     +'</label>'
-    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='running'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='running'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:11px;">'
+    +'<label style="display:flex;align-items:center;gap:5px;padding:5px 8px;background:'+(c.goalMain==='running'?'#E2EEE5':'#fff')+';border:1px solid '+(c.goalMain==='running'?'#025857':'#ddd')+';border-radius:4px;cursor:pointer;font-size:12px;">'
     +'<input type="radio" name="goal-main" value="running" '+(c.goalMain==='running'?'checked':'')+' onchange="upd(\'goalMain\', this.value); applyGoalMacros(this.value);" style="cursor:pointer;width:14px;height:14px;">'
-    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:11px;">🏃 Δρομείς</div><div style="font-size:9px;color:var(--text-muted);">0 kcal · υδατ.</div></div>'
+    +'<div><div style="font-weight:600;color:var(--text-strong);font-size:12px;">🏃 Δρομείς</div><div style="font-size:12px;color:var(--text-muted);">0 kcal · υδατ.</div></div>'
     +'</label>'
     +'</div></div></div>'
     +'<div class="fg"><div class="fgrp"><label style="font-weight:700;color:#025857;font-size:13px;">🎯 ΠΡΟΣΑΡΜΟΓΗ ΘΕΡΜΙΔΩΝ (-500 έως +500)</label>'
     +'<div style="text-align:center;background:#E2EEE5;border:2px solid #025857;padding:6px 8px;border-radius:6px;margin:8px 0 6px;">'
-    +'<div style="font-size:9px;color:#666;">Προσαρμογή Θερμίδων</div>'
+    +'<div style="font-size:12px;color:#666;">Προσαρμογή Θερμίδων</div>'
     +'<div style="font-size:18px;font-weight:bold;color:#025857;margin:2px 0;line-height:1.2;" id="goal-display">'+(goalCalAdj>=0?'+':'')+(goalCalAdj)+'</div>'
-    +'<div style="font-size:8px;color:var(--text-muted);">kcal/ημέρα</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);">kcal/ημέρα</div>'
     +'</div>'
     +'<input type="range" id="goal-slider" min="-500" max="500" step="10" value="'+goalCalAdj+'" style="width:100%;accent-color:#025857;cursor:pointer;display:block;" oninput="document.getElementById(\'goal-display\').textContent=(this.value>=0?\'+\':\'\')+this.value" onchange="setGoalCalories(this.value)">'
-    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);padding:2px 2px 8px;"><span>-500</span><span>0</span><span>+500</span></div>'
+    +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);padding:2px 2px 8px;"><span>-500</span><span>0</span><span>+500</span></div>'
     +'<div style="display:flex;gap:6px;">'
-    +'<button type="button" onclick="setGoalCalories(-500)" style="flex:1;background:var(--card-bg);color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:11px;">📉 Απώλεια −500</button>'
-    +'<button type="button" onclick="setGoalCalories(0)" style="flex:1;background:var(--card-bg);color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:11px;">➡️ Διατήρηση 0</button>'
-    +'<button type="button" onclick="setGoalCalories(300)" style="flex:1;background:var(--card-bg);color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:11px;">📈 Αύξηση +300</button>'
+    +'<button type="button" onclick="setGoalCalories(-500)" style="flex:1;background:var(--card-bg);color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:12px;">📉 Απώλεια −500</button>'
+    +'<button type="button" onclick="setGoalCalories(0)" style="flex:1;background:var(--card-bg);color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:12px;">➡️ Διατήρηση 0</button>'
+    +'<button type="button" onclick="setGoalCalories(300)" style="flex:1;background:var(--card-bg);color:#025857;border:1px solid #cfe0dc;padding:7px 4px;border-radius:5px;cursor:pointer;font-weight:600;font-size:12px;">📈 Αύξηση +300</button>'
     +'</div>'
     +'<input type="hidden" id="inp-goal" value="'+(goalCalAdj)+'"/>'
-    +'<div style="font-size:10px;color:#025857;margin-top:8px;font-style:italic;">⚠️ Αρνητικό = Μείωση | 0 = Διατήρηση | Θετικό = Αύξηση</div>'
+    +'<div style="font-size:12px;color:#025857;margin-top:8px;font-style:italic;">⚠️ Αρνητικό = Μείωση | 0 = Διατήρηση | Θετικό = Αύξηση</div>'
     +'</div></div>'
     // ✅ FORMULA AUTO-SELECT (Removed user picker - auto-detects)
-    +'<div style="background:#E2EEE5;padding:10px 12px;border-radius:6px;font-size:11px;color:#025857;font-weight:600;margin-top:12px;">'
+    +'<div style="background:#E2EEE5;padding:10px 12px;border-radius:6px;font-size:12px;color:#025857;font-weight:600;margin-top:12px;">'
     +'🧮 Formula: '+
     (function(){
       if(c.rmr)return'<b>RMR (Laboratory-Measured)</b> ← Ακριβέστερη';
@@ -437,7 +437,7 @@ function renderMain(){
     +(typeof buildInlineModalSectionsHtml==='function'?buildInlineModalSectionsHtml(c,t):'')
     +'</div>'
     // ✅ 2x/day training: now handled by adding 2 MET activities on the same day (different times)
-    +'<div id="hint-2x-training" style="background:#E8F5E9;padding:8px 12px;border-radius:6px;font-size:11px;color:#2E7D32;margin-bottom:15px;border-left:3px solid #025857;">💡 Για 2 προπονήσεις την ίδια ημέρα, πρόσθεσε 2 δραστηριότητες στις «🏃 Προπονήσεις (MET)» με διαφορετική ώρα.</div>'
+    +'<div id="hint-2x-training" style="background:#E8F5E9;padding:8px 12px;border-radius:6px;font-size:12px;color:#2E7D32;margin-bottom:15px;border-left:3px solid #025857;">💡 Για 2 προπονήσεις την ίδια ημέρα, πρόσθεσε 2 δραστηριότητες στις «🏃 Προπονήσεις (MET)» με διαφορετική ώρα.</div>'
 
     // ✅ MET Activities table moved inside SECTION 3
     // ✅ Day targets table with macros per day (with T/R badges) — S1 ONLY, collapsible (derived from TDEE, rarely hand-edited)
@@ -511,8 +511,8 @@ function renderMain(){
     +'<option value="gain"'+(c.goalMain==='gain'?' selected':'')+'>Αύξηση μάζας</option>'
     +'<option value="running"'+(c.goalMain==='running'?' selected':'')+'>🏃 Δρομείς</option>'
     +'</select>'
-    +'<button class="btn" style="padding:5px 12px;font-size:11px;background:#025857;color:#fff;border:none" onclick="doSaveAsTmpl()">&#10003; Αποθήκευση</button>'
-    +'<button class="btn" style="padding:5px 10px;font-size:11px;background:#eee;color:#555;border:none" onclick="closeSaveTmplPanel()">&#10005;</button>'
+    +'<button class="btn" style="padding:5px 12px;font-size:12px;background:#025857;color:#fff;border:none" onclick="doSaveAsTmpl()">&#10003; Αποθήκευση</button>'
+    +'<button class="btn" style="padding:5px 10px;font-size:12px;background:#eee;color:#555;border:none" onclick="closeSaveTmplPanel()">&#10005;</button>'
     +'</div>'
     +'<div class="plan-wrap"><div class="week-main"><div id="week-con"></div></div>'
     +'<div class="food-lib'+(isFoodLibCollapsed()?' collapsed':'')+'" id="food-lib">'

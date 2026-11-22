@@ -59,7 +59,7 @@ function buildGapAnalysisHTML(gaps, recommendations, weekAnalysis, c){
   }
   if(c.altitudeTraining) adjustments.push('⛰️ Προπόνηση σε ύψος');
   if(adjustments.length > 0) {
-    html += '<div style="background:#e3f2fd;border-left:4px solid #1976d2;padding:10px;margin-bottom:15px;border-radius:4px;font-size:11px;color:#1565C0;">';
+    html += '<div style="background:#e3f2fd;border-left:4px solid #1976d2;padding:10px;margin-bottom:15px;border-radius:4px;font-size:12px;color:#1565C0;">';
     html += methodologyNote + adjustments.join(' + ');
     html += '</div>';
   }
@@ -71,7 +71,7 @@ function buildGapAnalysisHTML(gaps, recommendations, weekAnalysis, c){
     gaps.filter(function(g){return g.severity==='critical';}).forEach(function(gap){
       html += '<div class="gap-item critical">';
       html += '<span style="flex:1;"><strong>' + gap.nutrient + '</strong>';
-      if(gap.supplementRequired) html += ' <span style="background:#d32f2f;color:white;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:bold;margin-left:8px;">⚠️ ΣΥΜΠΛΗΡΩΜΑ</span>';
+      if(gap.supplementRequired) html += ' <span style="background:#d32f2f;color:white;padding:2px 6px;border-radius:3px;font-size:12px;font-weight:bold;margin-left:8px;">⚠️ ΣΥΜΠΛΗΡΩΜΑ</span>';
       html += '</span>';
       html += '<span style="text-align:right;">' + gap.actual.toFixed(1) + ' / ' + gap.target + ' ' + gap.unit + ' (' + gap.percent + '%)</span>';
       html += '</div>';
@@ -101,10 +101,10 @@ function buildGapAnalysisHTML(gaps, recommendations, weekAnalysis, c){
       html += '<div style="font-weight:bold;color:#1976d2;">' + rec.supplement + ' - ' + rec.recommendedDose + ' ' + rec.unit + '</div>';
       html += '<div style="font-size:12px;color:#666;margin-top:3px;">' + rec.nutrient + ' | ' + rec.reason + '</div>';
       if(rec.timing){
-        html += '<div style="font-size:11px;color:#666;margin-top:2px;">⏰ ' + rec.timing.t + '</div>';
+        html += '<div style="font-size:12px;color:#666;margin-top:2px;">⏰ ' + rec.timing.t + '</div>';
       }
       if(rec.interactions && rec.interactions.length > 0){
-        html += '<div style="font-size:11px;color:#d32f2f;margin-top:2px;">⚠️ ' + rec.timing_note + ': ' + rec.interactions.join(', ') + '</div>';
+        html += '<div style="font-size:12px;color:#d32f2f;margin-top:2px;">⚠️ ' + rec.timing_note + ': ' + rec.interactions.join(', ') + '</div>';
       }
       html += '</div>';
     });

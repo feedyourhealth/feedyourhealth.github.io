@@ -193,7 +193,7 @@ function openSupplementModal(){
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'
       +'<div>'
       +'<h2 style="margin:0;color:#025857;">💊 Προτάσεις Συμπληρωμάτων (Βάσει Ανάλυσης)</h2>'
-      +'<p style="font-size:11px;color:#666;margin:4px 0 0;">Συνιστώμενα βάσει ανάλυσης του πλάνου — συνδυάζονται στο PDF με όσα ήδη παίρνει ο πελάτης (Tab 1, «💊 Συμπληρώματα»).</p>'
+      +'<p style="font-size:12px;color:#666;margin:4px 0 0;">Συνιστώμενα βάσει ανάλυσης του πλάνου — συνδυάζονται στο PDF με όσα ήδη παίρνει ο πελάτης (Tab 1, «💊 Συμπληρώματα»).</p>'
       +'</div>'
       +'<button onclick="closeSupplementModal()" style="background:#025857;padding:8px 12px;border:none;border-radius:4px;cursor:pointer;color:white;font-weight:bold;font-size:14px;white-space:nowrap;">✕ Κλείσιμο</button>'
       +'</div>'
@@ -338,20 +338,20 @@ function buildDynamicSupplementHtml(c, gapBasedRecs, gaps){
       html += '<div style="flex:1;min-width:0;">';
       html += '<div style="cursor:pointer;font-weight:bold;color:'+(alreadyTaking?'#2e7d32':'#e65100')+';font-size:13px;display:block;user-select:none;margin-bottom:4px;">';
       html += rec.supplement + ' - ' + rec.recommendedDose + rec.unit;
-      if(alreadyTaking) html += ' <span style="background:#e8f5e9;color:#2e7d32;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;">⭐ Παίρνετε ήδη</span>';
+      if(alreadyTaking) html += ' <span style="background:#e8f5e9;color:#2e7d32;padding:2px 6px;border-radius:3px;font-size:12px;font-weight:600;margin-left:6px;">⭐ Παίρνετε ήδη</span>';
       html += '</div>';
-      html += '<div style="font-size:11px;color:#666;margin-top:3px;">';
+      html += '<div style="font-size:12px;color:#666;margin-top:3px;">';
       html += '📊 Στόχος: ' + rec.nutrient + ' | Ελλείπει: ' + rec.gap.toFixed(1) + rec.unit;
       html += ' (έχετε ' + rec.actual.toFixed(1) + '/' + rec.target + ')';
       html += '</div>';
       if(rec.timing){
-        html += '<div style="font-size:11px;color:#666;margin-top:2px;">⏰ ' + rec.timing.t + '</div>';
+        html += '<div style="font-size:12px;color:#666;margin-top:2px;">⏰ ' + rec.timing.t + '</div>';
       }
       if(rec.interactions && rec.interactions.length > 0){
-        html += '<div style="font-size:11px;color:#d32f2f;margin-top:2px;">⚠️ Λάβετε σε διαφορετικές ώρες (2+ ώρες): ' + rec.interactions.join(', ') + '</div>';
+        html += '<div style="font-size:12px;color:#d32f2f;margin-top:2px;">⚠️ Λάβετε σε διαφορετικές ώρες (2+ ώρες): ' + rec.interactions.join(', ') + '</div>';
       }
       if(alreadyTaking){
-        html += '<div style="font-size:11px;background:#c8e6c9;color:#2e7d32;padding:4px 6px;margin-top:4px;border-radius:3px;">ℹ️ Αυτό το συμπλήρωμα είναι ήδη στο σχέδιό σας από τη Σελίδα 1</div>';
+        html += '<div style="font-size:12px;background:#c8e6c9;color:#2e7d32;padding:4px 6px;margin-top:4px;border-radius:3px;">ℹ️ Αυτό το συμπλήρωμα είναι ήδη στο σχέδιό σας από τη Σελίδα 1</div>';
       }
       html += '</div></div>';
     });
@@ -378,7 +378,7 @@ function buildDynamicSupplementHtml(c, gapBasedRecs, gaps){
   html += '<button onclick="saveSupplementSelection()" style="background:#025857;color:white;padding:12px 20px;border:none;border-radius:5px;cursor:pointer;font-weight:bold;font-size:14px;width:100%;margin-bottom:10px;">';
   html += '✅ Αποθήκευση Επιλογής στο Πλάνο';
   html += '</button>';
-  html += '<p style="font-size:11px;color:#666;margin:0;">Τα επιλεγμένα συμπληρώματα θα εμφανιστούν στο PDF εξαγωγή και στο πλάνο διατροφής.</p>';
+  html += '<p style="font-size:12px;color:#666;margin:0;">Τα επιλεγμένα συμπληρώματα θα εμφανιστούν στο PDF εξαγωγή και στο πλάνο διατροφής.</p>';
   html += '</div>';
 
   return html;

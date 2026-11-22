@@ -638,7 +638,7 @@ function _restoreFromSnapshotList(snaps){
       + 'background:#f4f8f6;border:1px solid #c5ddd8;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;color:#014545">'
       + '<b>' + esc(new Date(s.ts).toLocaleString('el-GR')) + '</b>'
       + (i === 0 ? ' <span style="color:#5a8a82;font-weight:400">(πιο πρόσφατο)</span>' : '')
-      + '<br><span style="font-size:11.5px;color:#5a8a82">' + (s.count || 0) + ' πελάτες</span></button>';
+      + '<br><span style="font-size:12px;color:#5a8a82">' + (s.count || 0) + ' πελάτες</span></button>';
   });
   h += '<div style="text-align:right;margin-top:10px"><button type="button" id="snapshot-restore-cancel" class="btn" '
     + 'style="background:#eee;color:#555;border:none;border-radius:6px;padding:8px 14px;cursor:pointer">Άκυρο</button></div>';

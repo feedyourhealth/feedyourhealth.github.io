@@ -137,7 +137,7 @@ function _sgn(v){ return (v>0?'+':'')+v; }
 // προόδου card. `sorted` = weightLog sorted by date ascending.
 function trackerInsightsHtml(c,sorted){
   var box='background:var(--card-bg);border:1px solid var(--border-light);border-radius:7px;padding:10px 12px;min-width:0';
-  var head=function(t,sub){return '<div style="font-size:11px;font-weight:700;color:#025857;margin-bottom:6px">'+t+(sub?' <span style="font-weight:400;color:#9fb5b0">'+sub+'</span>':'')+'</div>';};
+  var head=function(t,sub){return '<div style="font-size:12px;font-weight:700;color:#025857;margin-bottom:6px">'+t+(sub?' <span style="font-weight:400;color:#9fb5b0">'+sub+'</span>':'')+'</div>';};
   var out=[];
 
   // B1 — fat vs lean share of the change, first → last measurement that both have %BF
@@ -145,7 +145,7 @@ function trackerInsightsHtml(c,sorted){
   var sp=bfE.length>=2?trackerLossSplit(bfE[0],bfE[bfE.length-1]):null;
   if(sp){
     var mx=Math.max(sp.f0+sp.l0,sp.f1+sp.l1);
-    var bar=function(lbl,l,f){return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="width:38px;font-size:10px;color:#666">'+lbl+'</span>'
+    var bar=function(lbl,l,f){return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="width:38px;font-size:12px;color:#666">'+lbl+'</span>'
       +'<div style="flex:1;display:flex;height:16px;gap:1px"><div style="width:'+(l/mx*100)+'%;background:#1565C0;border-radius:3px 0 0 3px;color:#fff;font-size:8.5px;font-weight:700;display:flex;align-items:center;padding-left:4px;white-space:nowrap;overflow:hidden">'+l+'</div>'
       +'<div style="width:'+(f/mx*100)+'%;background:#ff9999;border-radius:0 3px 3px 0;color:#fff;font-size:8.5px;font-weight:700;display:flex;align-items:center;padding-left:3px;white-space:nowrap;overflow:hidden">'+f+'</div></div></div>';};
     var msg,msgCol='#025857';
@@ -163,8 +163,8 @@ function trackerInsightsHtml(c,sorted){
     }
     out.push('<div style="'+box+'">'+head('⚖️ Τι '+({gain:'πήρε',loss:'έχασε'}[sp.kind]||'άλλαξε')+' από τι',_fmtDateGr(bfE[0].date)+' → '+_fmtDateGr(bfE[bfE.length-1].date))
       +bar('Πριν',sp.l0,sp.f0)+bar('Τώρα',sp.l1,sp.f1)
-      +'<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;margin:4px 0 6px"><span>Βάρος <b>'+_sgn(sp.dW)+' kg</b></span><span style="color:#d9534f">Λίπος <b>'+_sgn(sp.dF)+' kg</b></span><span style="color:#1565C0">Άλιπη <b>'+_sgn(sp.dL)+' kg</b></span></div>'
-      +'<div style="font-size:11px;color:'+msgCol+';line-height:1.4">'+msg+'</div></div>');
+      +'<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;margin:4px 0 6px"><span>Βάρος <b>'+_sgn(sp.dW)+' kg</b></span><span style="color:#d9534f">Λίπος <b>'+_sgn(sp.dF)+' kg</b></span><span style="color:#1565C0">Άλιπη <b>'+_sgn(sp.dL)+' kg</b></span></div>'
+      +'<div style="font-size:12px;color:'+msgCol+';line-height:1.4">'+msg+'</div></div>');
   }
 
   // B3 — weekly rate + ETA to the weight goal
@@ -182,9 +182,9 @@ function trackerInsightsHtml(c,sorted){
     } else eta='<span style="color:#9fb5b0">Όρισε στόχο βάρους για να δεις πρόβλεψη ημερομηνίας.</span>';
     out.push('<div style="'+box+'">'+head('📉 Ρυθμός & πρόβλεψη','τελευταίες ~'+rt.weeksUsed+' εβδ. · '+rt.n+' μετρήσεις')
       +'<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px"><span style="font-size:18px;font-weight:800;color:#025857">'+_sgn(rt.kgWk)+' kg/εβδ</span>'
-      +'<span style="font-size:11px">'+_sgn(rt.pctWk)+'% βάρους/εβδ</span>'
-      +'<span style="font-size:10px;font-weight:700;color:'+st[1]+'">'+st[0]+'</span></div>'
-      +'<div style="font-size:11px;margin-top:6px;line-height:1.4">'+eta+'</div></div>');
+      +'<span style="font-size:12px">'+_sgn(rt.pctWk)+'% βάρους/εβδ</span>'
+      +'<span style="font-size:12px;font-weight:700;color:'+st[1]+'">'+st[0]+'</span></div>'
+      +'<div style="font-size:12px;margin-top:6px;line-height:1.4">'+eta+'</div></div>');
   }
 
   // B4 — regional skinfold change (trunk vs limbs)
@@ -194,10 +194,10 @@ function trackerInsightsHtml(c,sorted){
     var mxp=Math.max(10,Math.max.apply(null,groups.map(function(g){return Math.abs(g[1].pct);})));
     out.push('<div style="'+box+'">'+head('📐 Πού χάνει λίπος',_fmtDateGr(rg.from)+' → '+_fmtDateGr(rg.to))
       +groups.map(function(g){var p=g[1].pct,col=p<=0?(g[0]==='Σύνολο'?'#78909c':'#00897b'):'#f57c00';
-        return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px" title="'+g[1].s0+' → '+g[1].s1+' mm"><span style="width:48px;font-size:10px;color:#666">'+g[0]+'</span>'
+        return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px" title="'+g[1].s0+' → '+g[1].s1+' mm"><span style="width:48px;font-size:12px;color:#666">'+g[0]+'</span>'
           +'<div style="flex:1;height:14px"><div style="width:'+(Math.abs(p)/mxp*100)+'%;min-width:2px;height:100%;background:'+col+';border-radius:3px"></div></div>'
-          +'<span style="width:44px;text-align:right;font-size:11px;font-weight:700;color:'+col+'">'+_sgn(p)+'%</span></div>';}).join('')
-      +'<div style="font-size:9.5px;color:#888;margin-top:4px;line-height:1.5">'+rg.sites.map(function(s){return s.lbl+' '+s.a+'→'+s.b;}).join(' · ')+' mm</div></div>');
+          +'<span style="width:44px;text-align:right;font-size:12px;font-weight:700;color:'+col+'">'+_sgn(p)+'%</span></div>';}).join('')
+      +'<div style="font-size:12px;color:#888;margin-top:4px;line-height:1.5">'+rg.sites.map(function(s){return s.lbl+' '+s.a+'→'+s.b;}).join(' · ')+' mm</div></div>');
   }
 
   if(!out.length)return '';
@@ -266,18 +266,18 @@ function buildTrackerHtml(c){
     +'<div style="font-size:var(--fs-xs);color:var(--text-muted);margin:-4px 0 8px">📤 CSV: 1 αρχείο = άμεσος έλεγχος στοιχείων &nbsp;·&nbsp; πολλά αρχεία μαζί = μαζική εισαγωγή ιστορικού</div>'
     // ✅ βάση σύγκρισης για όλα τα Δ / τάσεις / ρυθμό στο Έντυπο Λιπομέτρησης — ο διαιτολόγος το
     // επιλέγει πριν πατήσει «Έντυπο / WhatsApp / Email». Μόνο με ≥2 μετρήσεις έχει νόημα.
-    +((c.weightLog&&c.weightLog.length>1)?'<div style="font-size:var(--fs-xs);color:var(--text-muted);margin:-2px 0 8px">📅 Σύγκριση εντύπου λιπομέτρησης με: <select id="lipo-baseline" class="tracker-inp" style="font-size:10px;width:auto;padding:1px 4px"><option value="first">1η μέτρηση</option><option value="prev">προηγούμενη μέτρηση</option>'+(c.planGeneratedAt?'<option value="plan">έναρξη τρέχοντος πλάνου</option>':'')+'</select></div>':'')
+    +((c.weightLog&&c.weightLog.length>1)?'<div style="font-size:var(--fs-xs);color:var(--text-muted);margin:-2px 0 8px">📅 Σύγκριση εντύπου λιπομέτρησης με: <select id="lipo-baseline" class="tracker-inp" style="font-size:12px;width:auto;padding:1px 4px"><option value="first">1η μέτρηση</option><option value="prev">προηγούμενη μέτρηση</option>'+(c.planGeneratedAt?'<option value="plan">έναρξη τρέχοντος πλάνου</option>':'')+'</select></div>':'')
     // ── 📐 Νέα μέτρηση (απλή φόρμα, 2026-11-06): ημερομηνία + βάρος + σημεία δερματοπτυχόμετρου.
     // Ο διαιτολόγος μετρά ΜΟΝΟ με δερματοπτυχόμετρο & ζυγαριά (63/63 μετρήσεις: 0% περιφέρειες/ύπνος/
     // σημειώσεις). Η πλήρης φόρμα μένει από κάτω (κρυφή) — η αποθήκευση γεμίζει τα πεδία της και καλεί
     // την ίδια addWeightEntry(), ώστε υπολογισμός/ιστορικό να μην αλλάζουν. Επεξεργασία = πλήρης φόρμα.
     +(qmCompact?qmCardHtml(c,qmProto):'')
     +'<div id="tr-full-form"'+(qmCompact?' style="display:none"':'')+'>'
-    +((!ee&&!qmCompact)?'<div style="margin:-2px 0 8px"><a href="javascript:void(0)" onclick="qmSetFull(false)" style="font-size:11px;color:#025857">← Απλή φόρμα (μόνο δερματοπτυχόμετρο &amp; βάρος)</a></div>':'')
+    +((!ee&&!qmCompact)?'<div style="margin:-2px 0 8px"><a href="javascript:void(0)" onclick="qmSetFull(false)" style="font-size:12px;color:#025857">← Απλή φόρμα (μόνο δερματοπτυχόμετρο &amp; βάρος)</a></div>':'')
     // ── Skinfold panel ────────────────────────────────────────────────────────
     +'<div class="sf-panel" id="sf-panel">'
     +'<div class="sf-header" onclick="toggleSkinfoldPanel()">'
-    +'<span>📐 Δερματοπτυχόμετρο <span style="font-size:10px;font-weight:400;color:#888">&nbsp;— υπολογισμός %BF από δερματοπτυχές</span></span>'
+    +'<span>📐 Δερματοπτυχόμετρο <span style="font-size:12px;font-weight:400;color:#888">&nbsp;— υπολογισμός %BF από δερματοπτυχές</span></span>'
     +'<span id="sf-toggle-icon" class="sec-chevron'+(ee&&ee.sfFields?' open':'')+'">▸</span>'
     +'</div>'
     // ✅ opens automatically (instead of the usual collapsed-by-default) when editing an entry
@@ -285,22 +285,22 @@ function buildTrackerHtml(c){
     // saving would silently drop that entry's sfProtocol/sfFields (getSkinfoldEntry() returns
     // null whenever this panel is closed, so addWeightEntry() had nothing to carry forward)
     +'<div id="sf-body" style="display:'+(ee&&ee.sfFields?'block':'none')+';padding-top:10px">'
-    +(ee&&ee.sfFields?'<div style="font-size:10px;color:#8d6e00;background:#fff8e1;border-radius:5px;padding:4px 8px;margin-bottom:8px">✏️ Αυτή η μέτρηση είχε δερματοπτυχές — άνοιξε αυτόματα ώστε η επεξεργασία σου να μην τις σβήσει.</div>':'')
-    +(isMinorC?'<div style="font-size:10px;color:#e65100;background:#fff8e1;border-radius:5px;padding:4px 8px;margin-bottom:8px">👶 Ηλικία &lt;18 — προεπιλογή Slaughter (1988), ειδική εξίσωση για παιδιά/εφήβους</div>':'')
+    +(ee&&ee.sfFields?'<div style="font-size:12px;color:#8d6e00;background:#fff8e1;border-radius:5px;padding:4px 8px;margin-bottom:8px">✏️ Αυτή η μέτρηση είχε δερματοπτυχές — άνοιξε αυτόματα ώστε η επεξεργασία σου να μην τις σβήσει.</div>':'')
+    +(isMinorC?'<div style="font-size:12px;color:#e65100;background:#fff8e1;border-radius:5px;padding:4px 8px;margin-bottom:8px">👶 Ηλικία &lt;18 — προεπιλογή Slaughter (1988), ειδική εξίσωση για παιδιά/εφήβους</div>':'')
     +'<div class="tracker-add-row" style="gap:6px;margin-bottom:8px;align-items:center">'
-    +'<label style="font-size:10px;color:#666">Πρωτόκολλο:</label>'
-    +'<select id="sf-proto" class="tracker-inp" style="width:270px;font-size:11px" onchange="updateSkinfoldFields()" title="Το πρωτόκολλο καθορίζει ποια σημεία μετριούνται παρακάτω">'
+    +'<label style="font-size:12px;color:#666">Πρωτόκολλο:</label>'
+    +'<select id="sf-proto" class="tracker-inp" style="width:270px;font-size:12px" onchange="updateSkinfoldFields()" title="Το πρωτόκολλο καθορίζει ποια σημεία μετριούνται παρακάτω">'
     +'<option value="jp4"'+(protoForSelect==='jp4'?' selected':'')+'>JP 4-site ★ (Κοιλιά/Υπερλαγόνιο/Τρικέφαλος/Μηρός)</option>'
     +'<option value="jp3"'+(protoForSelect==='jp3'?' selected':'')+'>JP 3-site (κλασικό)</option>'
     +'<option value="jp7"'+(protoForSelect==='jp7'?' selected':'')+'>JP 7-site (πλήρες)</option>'
     +'<option value="slaughter"'+(protoForSelect==='slaughter'?' selected':'')+'>Slaughter (1988) — παιδιά/έφηβοι</option>'
     +'</select>'
-    +'<span id="sf-ref" style="font-size:9px;color:var(--text-muted)"></span>'
+    +'<span id="sf-ref" style="font-size:12px;color:var(--text-muted)"></span>'
     +'</div>'
     // ✅ always-visible site list (was only guessable from the truncated dropdown text) —
     // no hover tooltip here on purpose: the app logs "📱 Tablet layout", so anything that
     // only shows on :hover is unreachable on a touchscreen
-    +'<div id="sf-sites" style="font-size:10px;color:#666;background:#f7fbfa;border-radius:5px;padding:4px 8px;margin-bottom:8px"></div>'
+    +'<div id="sf-sites" style="font-size:12px;color:#666;background:#f7fbfa;border-radius:5px;padding:4px 8px;margin-bottom:8px"></div>'
     +'<div id="sf-fields" class="tracker-add-row" style="gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>'
     +'<div id="sf-result" style="display:none"></div>'
     +'</div>'
@@ -310,47 +310,47 @@ function buildTrackerHtml(c){
     // ✅ split into labeled groups (was one dense unlabeled row of 6 mixed-width fields —
     // placeholder-only text vanished while typing, and Βασικά/Περιφέρειες were impossible to
     // tell apart at a glance)
-    +(ee?'<div style="width:100%;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:11px;color:#8d6e00">✏️ Επεξεργασία μέτρησης της '+ee.date+' — άλλαξε ό,τι χρειάζεται και πάτα «Αποθήκευση αλλαγών» παρακάτω, ή «Άκυρο» για έξοδο χωρίς αλλαγές.</div>':'')
-    +'<div style="font-size:10px;color:var(--text-muted);width:100%;margin-bottom:2px">Βασικά</div>'
+    +(ee?'<div style="width:100%;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12px;color:#8d6e00">✏️ Επεξεργασία μέτρησης της '+ee.date+' — άλλαξε ό,τι χρειάζεται και πάτα «Αποθήκευση αλλαγών» παρακάτω, ή «Άκυρο» για έξοδο χωρίς αλλαγές.</div>':'')
+    +'<div style="font-size:12px;color:var(--text-muted);width:100%;margin-bottom:2px">Βασικά</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
-    +'<label style="font-size:10px;color:#666;align-self:center">Ημερομηνία:</label>'
+    +'<label style="font-size:12px;color:#666;align-self:center">Ημερομηνία:</label>'
     +'<input type="date" id="tr-date" value="'+(ee?ee.date:today)+'" class="tracker-inp">'
-    +'<label style="font-size:10px;color:#666;align-self:center">Βάρος:</label>'
+    +'<label style="font-size:12px;color:#666;align-self:center">Βάρος:</label>'
     +'<input type="number" id="tr-weight" placeholder="kg" min="20" max="300" step="0.1" class="tracker-inp" style="width:64px" value="'+(ee&&ee.weight?ee.weight:'')+'">'
-    +'<label style="font-size:10px;color:#666;align-self:center" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">🧮 Λίπος %:</label>'
+    +'<label style="font-size:12px;color:#666;align-self:center" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση">🧮 Λίπος %:</label>'
     +'<input type="number" id="tr-bf" placeholder="%" min="3" max="60" step="0.1" class="tracker-inp" style="width:56px" title="Χειροκίνητη τιμή, ή πάτα «✓ Χρήση ως %BF» στο δερματοπτυχόμετρο παραπάνω για αυτόματη συμπλήρωση" value="'+(ee&&ee.bf?ee.bf:'')+'">'
     // ✅ πώς μετρήθηκε το %BF — αποθηκεύεται στο entry.bfMethod μαζί με τη μέτρηση. Το δερματοπτυχόμετρο
     // παραπάνω γεμίζει αυτό σε 'caliper' αυτόματα (applySkinfoldBF). Παλιές μετρήσεις δεν έχουν .bfMethod.
-    +'<select id="tr-bf-method" class="tracker-inp" style="width:132px;font-size:10px" title="Πώς μετρήθηκε το ποσοστό λίπους — αποθηκεύεται μαζί με τη μέτρηση">'
+    +'<select id="tr-bf-method" class="tracker-inp" style="width:132px;font-size:12px" title="Πώς μετρήθηκε το ποσοστό λίπους — αποθηκεύεται μαζί με τη μέτρηση">'
     +weightSelectOptions(ee?ee.bfMethod:'',[['','μέθοδος %…'],['caliper','📐 Δερματοπτυχές'],['bia','⚡ Λιπομετρητής/BIA'],['dexa','🩻 DEXA/εργαστ.'],['estimate','≈ Εκτίμηση/άλλο']])
     +'</select>'
     +'</div>'
-    +'<div style="font-size:10px;color:var(--text-muted);width:100%;margin:8px 0 2px">Περιφέρειες (cm)</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);width:100%;margin:8px 0 2px">Περιφέρειες (cm)</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px">'
-    +'<label style="font-size:10px;color:#666;align-self:center">Μέση:</label>'
+    +'<label style="font-size:12px;color:#666;align-self:center">Μέση:</label>'
     +'<input type="number" id="tr-waist" placeholder="cm" min="40" max="200" step="0.5" class="tracker-inp" style="width:60px" value="'+(ee&&ee.waist?ee.waist:'')+'">'
-    +'<label style="font-size:10px;color:#666;align-self:center">Γοφοί:</label>'
+    +'<label style="font-size:12px;color:#666;align-self:center">Γοφοί:</label>'
     +'<input type="number" id="tr-hip" placeholder="cm" min="50" max="200" step="0.5" class="tracker-inp" style="width:60px" value="'+(ee&&ee.hip?ee.hip:'')+'">'
-    +'<label style="font-size:10px;color:#666;align-self:center">Δικέφαλος:</label>'
+    +'<label style="font-size:12px;color:#666;align-self:center">Δικέφαλος:</label>'
     +'<input type="number" id="tr-arm" placeholder="cm" min="15" max="60" step="0.5" class="tracker-inp" style="width:60px" value="'+(ee&&ee.arm?ee.arm:'')+'">'
     +'</div>'
-    +'<div style="font-size:10px;color:var(--text-muted);width:100%;margin:8px 0 2px">Καθημερινότητα &amp; σημειώσεις</div>'
+    +'<div style="font-size:12px;color:var(--text-muted);width:100%;margin:8px 0 2px">Καθημερινότητα &amp; σημειώσεις</div>'
     +'<div class="tracker-add-row" style="flex-wrap:wrap;gap:5px;margin-top:5px">'
-    +'<label style="font-size:10px;color:#666;align-self:center">Ύπνος:</label>'
-    +'<select id="tr-sleep" class="tracker-inp" style="width:110px;font-size:11px">'
+    +'<label style="font-size:12px;color:#666;align-self:center">Ύπνος:</label>'
+    +'<select id="tr-sleep" class="tracker-inp" style="width:110px;font-size:12px">'
     +weightSelectOptions(ee?ee.sleep:'',[['','—'],['5','5 ⭐ Εξαιρετικός'],['4','4 ⭐ Καλός'],['3','3 ⭐ Μέτριος'],['2','2 ⭐ Κακός'],['1','1 ⭐ Πολύ κακός']])
     +'</select>'
-    +'<label style="font-size:10px;color:#666;align-self:center">Ενέργεια:</label>'
-    +'<select id="tr-energy" class="tracker-inp" style="width:110px;font-size:11px">'
+    +'<label style="font-size:12px;color:#666;align-self:center">Ενέργεια:</label>'
+    +'<select id="tr-energy" class="tracker-inp" style="width:110px;font-size:12px">'
     +weightSelectOptions(ee?ee.energy:'',[['','—'],['5','5 ⚡ Άριστη'],['4','4 ⚡ Καλή'],['3','3 ⚡ Μέτρια'],['2','2 ⚡ Χαμηλή'],['1','1 ⚡ Εξαντλητική']])
     +'</select>'
-    +'<label style="font-size:10px;color:#666;align-self:center">Συμμόρφωση:</label>'
-    +'<select id="tr-compliance" class="tracker-inp" style="width:120px;font-size:11px">'
+    +'<label style="font-size:12px;color:#666;align-self:center">Συμμόρφωση:</label>'
+    +'<select id="tr-compliance" class="tracker-inp" style="width:120px;font-size:12px">'
     +weightSelectOptions(ee?ee.compliance:'',[['','—'],['10','10 — Πλήρης'],['9','9 — Σχεδόν πλήρης'],['8','8 — Πολύ καλή'],['7','7 — Καλή'],['6','6 — Μέτρια'],['5','5 — Μισή'],['4','4 — Κακή'],['3','3 — Πολύ κακή']])
     +'</select>'
     +'<input type="text" id="tr-notes" placeholder="Σημειώσεις..." class="tracker-inp" style="flex:1;min-width:120px" value="'+(ee?esc(ee.notes||''):'')+'">'
-    +(ee?'<button class="btn" style="padding:5px 11px;font-size:11px;background:#888;color:#fff;border:none" onclick="cancelWeightEdit()">Άκυρο</button>':'')
-    +'<button class="btn" style="padding:5px 11px;font-size:11px" onclick="addWeightEntry()">'+(ee?'✓ Αποθήκευση αλλαγών':'+ Προσθήκη')+'</button>'
+    +(ee?'<button class="btn" style="padding:5px 11px;font-size:12px;background:#888;color:#fff;border:none" onclick="cancelWeightEdit()">Άκυρο</button>':'')
+    +'<button class="btn" style="padding:5px 11px;font-size:12px" onclick="addWeightEntry()">'+(ee?'✓ Αποθήκευση αλλαγών':'+ Προσθήκη')+'</button>'
     +'</div>'
     +'</div>'   // #tr-full-form
     +'</div>';
@@ -367,12 +367,12 @@ function buildTrackerHtml(c){
         +'<div style="color:#666">🎯 Βάρος-στόχος για %BF <span style="color:#9fb5b0">(ίδια άλιπη μάζα)</span></div>'
         +(tgtC.rows.length
           ?tgtC.rows.map(function(r){return '<div style="display:flex;gap:8px;align-items:baseline;margin-top:3px;max-width:420px"><span style="min-width:34px;font-weight:700;color:#00695c">'+r.pct+'%</span><span style="font-size:13px;font-weight:700;color:#025857">'+r.w+' kg</span><span style="color:#888">('+(r.d>0?'+':'')+r.d+')</span><span style="color:#9fb5b0;margin-left:auto">'+r.lbl+'</span></div>';}).join('')
-          :'<div style="font-size:11px;color:var(--good);margin-top:3px">Ήδη στο κάτω όριο του υγιούς εύρους'+(tgtC.healthy?' ('+tgtC.healthy[0]+'–'+tgtC.healthy[1]+'%)':'')+' — δεν χρειάζεται μείωση λίπους.</div>')
+          :'<div style="font-size:12px;color:var(--good);margin-top:3px">Ήδη στο κάτω όριο του υγιούς εύρους'+(tgtC.healthy?' ('+tgtC.healthy[0]+'–'+tgtC.healthy[1]+'%)':'')+' — δεν χρειάζεται μείωση λίπους.</div>')
         +'</div>';
     }
 
     // dietitian-only target-weight table stays under the tiles, but not in presentation mode
-    wHtml+=trackerResultsHtml(c,isMinorC,(!P&&tgtHtml)?'<div style="display:grid;font-size:10px;margin-bottom:10px">'+tgtHtml+'</div>':'');
+    wHtml+=trackerResultsHtml(c,isMinorC,(!P&&tgtHtml)?'<div style="display:grid;font-size:12px;margin-bottom:10px">'+tgtHtml+'</div>':'');
 
     // ✅ TREND LINES: Weight & Body Fat % Charts
     if(c.weightLog.length>=2){
@@ -386,7 +386,7 @@ function buildTrackerHtml(c){
         +'</div>';
     } else if(c.weightLog.length===1){
       // ✅ tells the practitioner why there's no chart yet instead of just silently omitting it
-      wHtml+='<div style="font-size:10.5px;color:var(--text-muted);background:var(--panel-bg);border:1px dashed #ddd;border-radius:8px;padding:8px 12px;margin-bottom:15px">📈 Το γράφημα τάσης θα εμφανιστεί μετά τη 2η μέτρηση.</div>';
+      wHtml+='<div style="font-size:12px;color:var(--text-muted);background:var(--panel-bg);border:1px dashed #ddd;border-radius:8px;padding:8px 12px;margin-bottom:15px">📈 Το γράφημα τάσης θα εμφανιστεί μετά τη 2η μέτρηση.</div>';
     }
 
     // ── Progress summary (dietitian view only — the dashboard above covers it for the client) ──
@@ -420,16 +420,16 @@ function buildTrackerHtml(c){
 
     wHtml+='<div style="background:#f0f9f8;border:1px solid #c5ddd8;border-radius:9px;padding:12px 14px;margin-bottom:10px">'
         +'<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:10px">'
-        +'<span style="font-size:11px;font-weight:700;color:#025857">📈 Σύνοψη προόδου</span>'
-        +'<span style="font-size:11px">Βάρος: <b style="color:'+wCol+'">'+(wDiff>0?'+':'')+wDiff+' kg</b> ('+first.weight+'→'+last.weight+'kg)</span>'
-        +(bfDiff!==null?'<span style="font-size:11px">Λίπος: <b style="color:'+(bfDiff<0?'var(--good)':'#c62828')+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>':'')
-        +(lbmDiff!==null?'<span style="font-size:11px">Άλιπη μάζα: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>':'')
-        +(lastBMI!=null?'<span style="font-size:11px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+(bmiStatus?' ('+bmiStatus+')':'')+'</b></span>':'')
-        +'<span style="font-size:10px;color:var(--text-muted);margin-left:auto">'+sorted2.length+' μετρήσεις</span>'
+        +'<span style="font-size:12px;font-weight:700;color:#025857">📈 Σύνοψη προόδου</span>'
+        +'<span style="font-size:12px">Βάρος: <b style="color:'+wCol+'">'+(wDiff>0?'+':'')+wDiff+' kg</b> ('+first.weight+'→'+last.weight+'kg)</span>'
+        +(bfDiff!==null?'<span style="font-size:12px">Λίπος: <b style="color:'+(bfDiff<0?'var(--good)':'#c62828')+'">'+(bfDiff>0?'+':'')+bfDiff+'%</b></span>':'')
+        +(lbmDiff!==null?'<span style="font-size:12px">Άλιπη μάζα: <b style="color:'+(lbmDiff>0?'#1565C0':'#888')+'">'+(lbmDiff>0?'+':'')+lbmDiff+' kg</b></span>':'')
+        +(lastBMI!=null?'<span style="font-size:12px">BMI: <b style="color:'+bmiColor+'">'+lastBMI+(bmiStatus?' ('+bmiStatus+')':'')+'</b></span>':'')
+        +'<span style="font-size:12px;color:var(--text-muted);margin-left:auto">'+sorted2.length+' μετρήσεις</span>'
         +'</div>'
         // Visual body composition bar
         +(lastLBM&&lastFM?'<div style="margin-top:8px">'
-          +'<div style="font-size:9px;color:#666;margin-bottom:3px">Σύσταση σώματος (τελευταία):</div>'
+          +'<div style="font-size:12px;color:#666;margin-bottom:3px">Σύσταση σώματος (τελευταία):</div>'
           +'<div style="display:flex;gap:1px;height:18px;border-radius:3px;overflow:hidden;background:#eee">'
           +'<div style="width:'+(lastLBM/last.weight*100)+'%;background:#1565C0;display:flex;align-items:center;justify-content:center">'
           +(lastLBM/last.weight*100>15?'<span style="color:#fff;font-size:8px;font-weight:700">'+lastLBM+'kg</span>':'')
@@ -438,7 +438,7 @@ function buildTrackerHtml(c){
           +(lastFM/last.weight*100>15?'<span style="color:#fff;font-size:8px;font-weight:700">'+lastFM+'kg</span>':'')
           +'</div>'
           +'</div>'
-          +'<div style="display:flex;gap:15px;font-size:9px;margin-top:4px">'
+          +'<div style="display:flex;gap:15px;font-size:12px;margin-top:4px">'
           +'<span><span style="display:inline-block;width:12px;height:12px;background:#1565C0;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Άλιπη μάζα: '+lastLBM+' kg ('+(lastLBM/last.weight*100).toFixed(1)+'%)</span>'
           +'<span><span style="display:inline-block;width:12px;height:12px;background:#ff9999;border-radius:2px;vertical-align:middle;margin-right:3px"></span>Λιπώδης μάζα: '+lastFM+' kg ('+last.bf+'%)</span>'
           +'</div>'
@@ -474,10 +474,10 @@ function buildTrackerHtml(c){
       var sleepStars=e.sleep?'⭐'.repeat(e.sleep):'—';
       var energyBolts=e.energy?'⚡'.repeat(e.energy):'—';
       var sfProtoLabel={jp4:'JP4',jp3:'JP3',jp7:'JP7',slaughter:'SL'};
-      var sfBadge=e.sfProtocol?'<span title="Μέτρηση με δερματοπτυχόμετρο ('+e.sfProtocol.toUpperCase()+')" style="font-size:8px;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 4px;margin-left:3px;font-weight:700;cursor:default">📐'+(sfProtoLabel[e.sfProtocol]||e.sfProtocol)+'</span>':'';
+      var sfBadge=e.sfProtocol?'<span title="Μέτρηση με δερματοπτυχόμετρο ('+e.sfProtocol.toUpperCase()+')" style="font-size:12px;background:#e8f5e9;color:#2e7d32;border-radius:3px;padding:1px 4px;margin-left:3px;font-weight:700;cursor:default">📐'+(sfProtoLabel[e.sfProtocol]||e.sfProtocol)+'</span>':'';
       // ✅ μέθοδος μέτρησης για μη-δερματοπτυχικές εγγραφές (οι δερματοπτυχικές έχουν ήδη το 📐 badge)
       var bfMethodLabel={caliper:'📐',bia:'⚡BIA',dexa:'🩻DEXA',estimate:'≈'};
-      var methBadge=(e.bfMethod&&!e.sfProtocol)?'<span title="Μέθοδος μέτρησης λίπους" style="font-size:8px;background:#eef2f7;color:#456;border-radius:3px;padding:1px 4px;margin-left:3px;font-weight:700;cursor:default">'+(bfMethodLabel[e.bfMethod]||e.bfMethod)+'</span>':'';
+      var methBadge=(e.bfMethod&&!e.sfProtocol)?'<span title="Μέθοδος μέτρησης λίπους" style="font-size:12px;background:#eef2f7;color:#456;border-radius:3px;padding:1px 4px;margin-left:3px;font-weight:700;cursor:default">'+(bfMethodLabel[e.bfMethod]||e.bfMethod)+'</span>':'';
       wHtml+='<tr'+(mMis?' style="background:#fff8e1" title="Το %BF μετρήθηκε με διαφορετική μέθοδο από την προηγούμενη μέτρηση — η σύγκριση λίπους δεν είναι αξιόπιστη"':'')+'>'
         +'<td style="white-space:nowrap">'+e.date+'</td>'
         +'<td><b>'+e.weight+' kg</b>'+trTableDelta(e,pv,trM.weight)+'</td>'
@@ -486,8 +486,8 @@ function buildTrackerHtml(c){
         +(trHasCol.waist?'<td>'+(e.waist?e.waist+' cm'+trTableDelta(e,pv,trM.waist):'—')+'</td>':'')
         +(trHasCol.hip?'<td>'+(e.hip?e.hip+' cm'+trTableDelta(e,pv,trM.hip):'—')+'</td>':'')
         +(trHasCol.arm?'<td>'+(e.arm?e.arm+' cm'+trTableDelta(e,pv,trM.arm):'—')+'</td>':'')
-        +'<td style="font-size:9px">'+sleepStars+'</td>'
-        +'<td style="font-size:9px">'+energyBolts+'</td>'
+        +'<td style="font-size:12px">'+sleepStars+'</td>'
+        +'<td style="font-size:12px">'+energyBolts+'</td>'
         +'<td>'+(e.compliance?'<b>'+e.compliance+'/10</b>':'—')+'</td>'
         +(P?'':'<td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#666">'+esc(e.notes||'')+'</td>'
         +'<td style="white-space:nowrap"><button class="met-del" onclick="editWeightEntry('+i+')" title="Επεξεργασία">✏️</button> <button class="met-del" onclick="removeWeightEntry('+i+')" title="Διαγραφή">&#10005;</button></td>')
@@ -511,7 +511,7 @@ function buildTrackerHtml(c){
     +'<div class="tracker-add-row" style="align-items:flex-start">'
     +'<input type="date" id="cons-date" value="'+today+'" class="tracker-inp" style="align-self:center">'
     +'<textarea id="cons-notes" placeholder="Σημειώσεις συνεδρίας (βάρος, εντυπώσεις, αλλαγές, στόχοι...)..." class="tracker-textarea"></textarea>'
-    +'<button class="btn" style="padding:5px 11px;font-size:11px;align-self:flex-end" onclick="addConsultEntry()">+ Καταχώρηση</button>'
+    +'<button class="btn" style="padding:5px 11px;font-size:12px;align-self:flex-end" onclick="addConsultEntry()">+ Καταχώρηση</button>'
     +'</div>';
   if(c.consultLog.length>0){
     cHtml+='<div class="consult-log">';
@@ -725,7 +725,7 @@ function updateSkinfoldFields(){
     // ✅ persistent label above the field (was placeholder-only — label used to vanish while
     // typing, which cost accuracy during fast in-clinic entry across many clients)
     html+='<div style="display:flex;flex-direction:column;gap:2px">'
-      +'<label for="sf-'+f.k+'" style="font-size:9px;color:var(--text-muted)">'+f.lbl+'</label>'
+      +'<label for="sf-'+f.k+'" style="font-size:12px;color:var(--text-muted)">'+f.lbl+'</label>'
       +'<input type="number" id="sf-'+f.k+'" placeholder="mm" min="1" max="80" step="0.5" class="tracker-inp" style="width:120px" oninput="updateSkinfoldCalc()"'+(carryOver[f.k]?' value="'+carryOver[f.k]+'"':'')+'>'
       +'</div>';
   });
@@ -756,13 +756,13 @@ function updateSkinfoldCalc(){
   var lbm=weight>0?+(weight*(1-res.bf/100)).toFixed(1):null;
   var fm=weight>0?+(weight*res.bf/100).toFixed(1):null;
   var bfClass=res.bf<10?'#1565C0':res.bf<20?'var(--good)':res.bf<30?'#e65100':'#c62828';
-  var bdTxt=res.bd?'<span style="font-size:10px;color:var(--text-muted);margin-left:4px">BD: '+res.bd+'</span>':'';
+  var bdTxt=res.bd?'<span style="font-size:12px;color:var(--text-muted);margin-left:4px">BD: '+res.bd+'</span>':'';
   resDiv.className='sf-result-row';
   resDiv.innerHTML='<span><b>%BF:</b> <span style="color:'+bfClass+';font-size:14px;font-weight:700">'+res.bf+'%</span>'+bdTxt+'</span>'
     +(lbm?'<span><b>LBM:</b> '+lbm+' kg</span>':'')
     +(fm?'<span><b>FM:</b> '+fm+' kg</span>':'')
-    +'<span style="font-size:10px;color:var(--text-muted)">Άθροισμα: '+res.sum+' mm</span>'
-    +'<button class="btn primary" style="padding:4px 10px;font-size:11px;margin-left:auto" onclick="applySkinfoldBF()">✓ Χρήση ως %BF</button>';
+    +'<span style="font-size:12px;color:var(--text-muted)">Άθροισμα: '+res.sum+' mm</span>'
+    +'<button class="btn primary" style="padding:4px 10px;font-size:12px;margin-left:auto" onclick="applySkinfoldBF()">✓ Χρήση ως %BF</button>';
   resDiv.style.display='flex';
 }
 

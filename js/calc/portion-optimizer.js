@@ -534,7 +534,7 @@ function showPortionAdjustToast(o){
   var head=o.afterSuggestion?('✓ Η πρόταση εφαρμόστηκε'+(o.optChanged?' και οι ποσότητες προσαρμόστηκαν ξανά':''))
           :o.optChanged?('✓ '+scope+' · '+o.optChanged+(o.optChanged===1?' τρόφιμο άλλαξε':' τρόφιμα άλλαξαν')+' ποσότητα')
           :'✓ Το πλάνο είναι ήδη όσο πιο κοντά γίνεται στους στόχους';
-  var btnCss='display:block;width:100%;box-sizing:border-box;text-align:left;margin-top:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer';
+  var btnCss='display:block;width:100%;box-sizing:border-box;text-align:left;margin-top:4px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer';
   var warn=misses.length?('<div style="margin-top:6px;opacity:.95">⚠️ Δεν φτάνουν μόνο με ποσότητες:<br>'
     +misses.map(esc).join('<br>')+'</div>'):'';
   var sug=sugg.length?('<div style="margin-top:6px">💡 Προτάσεις (πάτα για εφαρμογή):'
@@ -548,7 +548,7 @@ function showPortionAdjustToast(o){
   // flex/width ρητά στα κουμπιά: γενικό στυλ button του app τα τέντωνε σε όλο το πλάτος.
   t.innerHTML='<div style="flex:1 1 auto;min-width:0">'+esc(head)+warn+sug+'</div>'
     +'<div style="flex:0 0 auto;display:flex;align-items:flex-start;gap:6px">'
-    +(o.oldPlan?'<button data-undo="1" style="flex:0 0 auto;width:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">↩ Αναίρεση</button>':'')
+    +(o.oldPlan?'<button data-undo="1" style="flex:0 0 auto;width:auto;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">↩ Αναίρεση</button>':'')
     // «×» πάντα διαθέσιμο: κλείνει το μήνυμα ΧΩΡΙΣ να αναιρέσει τίποτα.
     +'<button data-close="1" aria-label="Κλείσιμο" title="Κλείσιμο" style="flex:0 0 auto;width:auto;background:none;border:0;color:#fff;font-size:18px;cursor:pointer;line-height:1;padding:2px 4px">×</button>'
     +'</div>';

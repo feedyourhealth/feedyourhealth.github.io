@@ -117,22 +117,22 @@ function buildFoodDiaryCardHtml(c){
   var isNew=(st!=='none') && foodDiaryHasNew(c);
   return '<div class="section-card" id="sec-food-diary" style="margin-top:12px">'
     +'<div class="section-header" style="cursor:default"><div><span class="section-icon">📒</span>Ημερολόγιο φαγητού'
-      +(isNew?' <span style="font-size:11px;font-weight:700;color:#fff;background:#e08a00;border-radius:99px;padding:1px 8px;margin-left:6px;vertical-align:middle">νέα καταγραφή</span>':'')
+      +(isNew?' <span style="font-size:12px;font-weight:700;color:#fff;background:#e08a00;border-radius:99px;padding:1px 8px;margin-left:6px;vertical-align:middle">νέα καταγραφή</span>':'')
     +'</div></div>'
     +'<div style="padding:2px 2px 4px">'
-    +(hasCloud?'':'<div style="font-size:11px;color:#e08a00;margin-bottom:8px">Χρειάζεται σύνδεση στο cloud για να στείλεις ημερολόγιο.</div>')
+    +(hasCloud?'':'<div style="font-size:12px;color:#e08a00;margin-bottom:8px">Χρειάζεται σύνδεση στο cloud για να στείλεις ημερολόγιο.</div>')
     +'<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#5a8a82;font-family:ui-monospace,Menlo,monospace;margin-bottom:10px">'
       +'<span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex:none"></span>'+esc(line)+'</div>'
     +extra
     +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+actions+'</div>'
-    +(st==='none'?'<div style="font-size:11px;color:#9fb5b0;margin-top:8px;line-height:1.45">Ο πελάτης γράφει με δικά του λόγια τι έφαγε, για 4 εβδομάδες. Εσύ το βλέπεις ανά εβδομάδα και σχολιάζεις.</div>':'')
+    +(st==='none'?'<div style="font-size:12px;color:#9fb5b0;margin-top:8px;line-height:1.45">Ο πελάτης γράφει με δικά του λόγια τι έφαγε, για 4 εβδομάδες. Εσύ το βλέπεις ανά εβδομάδα και σχολιάζεις.</div>':'')
     +'</div></div>';
 }
 function fdMiniWeeksHtml(c,curIdx){
   var wd=c.diaryWeekDays||[], n=c.diaryWeeks||4, today=foodDiaryTodayStr(), h='';
   for(var w=0;w<n;w++){
     var first=fdAdd(c.diaryStart,w*7), fut=first>today, v=wd[w]||0;
-    h+='<div style="border:1px solid '+(w===curIdx?'#025857':'#c5ddd8')+';border-radius:8px;padding:5px 7px;font-size:11px;color:#5a8a82;display:flex;flex-direction:column;gap:3px">'
+    h+='<div style="border:1px solid '+(w===curIdx?'#025857':'#c5ddd8')+';border-radius:8px;padding:5px 7px;font-size:12px;color:#5a8a82;display:flex;flex-direction:column;gap:3px">'
       +'<span>Εβδ '+(w+1)+' · '+fdDM(first)+'</span><b style="color:var(--text-strong);font-variant-numeric:tabular-nums">'+(fut?'—':v+'/7')+'</b>'
       +'<span style="height:4px;border-radius:2px;background:var(--panel-bg);overflow:hidden"><span style="display:block;height:100%;width:'+Math.round(v/7*100)+'%;background:#2e7d32"></span></span></div>';
   }
@@ -182,7 +182,7 @@ function fdRenderCreateView(c){
       +'<button type="button" data-l="el" class="btn" style="'+fdLangBtnStyle(chosen.l==='el')+'">Ελληνικά</button>'
       +'<button type="button" data-l="en" class="btn" style="'+fdLangBtnStyle(chosen.l==='en')+'">English</button>'
     +'</div>'
-    +(replacing?'<div style="font-size:11.5px;color:#a15c00;margin:0 0 10px;line-height:1.45">Το προηγούμενο ημερολόγιο θα πάψει να δέχεται καταγραφές. Θα το βλέπεις ακόμα στο ιστορικό του λινκ του (αποθηκεύεται στη βάση).</div>':'')
+    +(replacing?'<div style="font-size:12px;color:#a15c00;margin:0 0 10px;line-height:1.45">Το προηγούμενο ημερολόγιο θα πάψει να δέχεται καταγραφές. Θα το βλέπεις ακόμα στο ιστορικό του λινκ του (αποθηκεύεται στη βάση).</div>':'')
     +'<button id="fd-create-btn" class="btn primary" style="width:100%">Δημιουργία συνδέσμου</button>'
     +'<div id="fd-create-err" style="color:#c0392b;font-size:12px;margin-top:8px;display:none"></div>';
   body.querySelectorAll('#fd-lang button').forEach(function(b){
@@ -219,12 +219,12 @@ function fdRenderLinkView(c){
       +'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;white-space:nowrap" onclick="fdCopy(\'fd-url\',this,\'✓ Αντιγράφηκε\')">Αντιγραφή</button>'
     +'</div>'
     +'<a href="'+esc(wa)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📱 WhatsApp'+(phone?' ('+esc(c.phone)+')':'')+'</a>'
-    +(phone?'':'<div style="font-size:11px;color:#e08a00;margin:0 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει τηλέφωνο στην καρτέλα — δεν θα ανοίξει συνομιλία με συγκεκριμένο παραλήπτη.</div>')
+    +(phone?'':'<div style="font-size:12px;color:#e08a00;margin:0 0 8px;line-height:1.4">⚠️ Δεν έχεις βάλει τηλέφωνο στην καρτέλα — δεν θα ανοίξει συνομιλία με συγκεκριμένο παραλήπτη.</div>')
     +'<a href="'+esc(gmail)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#c2483a;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">✉️ Gmail στον browser</a>'
     +'<a href="'+esc(mailto)+'" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#025857;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:4px">📧 Πρόγραμμα Email'+(c.email?(' ('+esc(c.email)+')'):'')+'</a>'
     +'<textarea id="fd-msg" style="position:absolute;left:-9999px;top:-9999px" readonly>'+esc(msg)+'</textarea>'
-    +'<button type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:11.5px;margin-bottom:10px" onclick="fdCopy(\'fd-msg\',this,\'✓ Αντιγράφηκε — επικόλλησέ το στον πελάτη\')">📋 Δεν άνοιξε κανένα; Αντιγραφή μηνύματος</button>'
-    +'<div style="font-size:11px;color:#9fb5b0;line-height:1.5">Ισχύει 4 εβδομάδες (έως <b>'+end+'</b>), μετά κλειδώνει και μένει μόνο για ανάγνωση.</div>';
+    +'<button type="button" class="btn" style="width:100%;background:var(--card-bg);color:#5a8a82;border:1px solid #c5ddd8;font-size:12px;margin-bottom:10px" onclick="fdCopy(\'fd-msg\',this,\'✓ Αντιγράφηκε — επικόλλησέ το στον πελάτη\')">📋 Δεν άνοιξε κανένα; Αντιγραφή μηνύματος</button>'
+    +'<div style="font-size:12px;color:#9fb5b0;line-height:1.5">Ισχύει 4 εβδομάδες (έως <b>'+end+'</b>), μετά κλειδώνει και μένει μόνο για ανάγνωση.</div>';
 }
 function fdCopy(id,btn,okTxt){
   var n=document.getElementById(id); if(!n) return;
@@ -243,29 +243,29 @@ function fdInjectCss(){
     +'#fd-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow:auto}'
     +'#fd-box{background:var(--card-bg);color:var(--text-strong);border-radius:14px;max-width:1180px;width:100%;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px}'
     +'.fd-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}'
-    +'.fd-pill{font-size:11.5px;padding:3px 10px;border-radius:99px;background:var(--panel-bg);color:var(--text-muted);font-weight:600;font-variant-numeric:tabular-nums}'
+    +'.fd-pill{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--panel-bg);color:var(--text-muted);font-weight:600;font-variant-numeric:tabular-nums}'
     +'.fd-pill.ok{background:var(--success-tint);color:var(--good)}'
     +'.fd-wtabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px}'
     +'.fd-wtab{font:inherit;text-align:left;border:1px solid var(--border-light);background:var(--card-bg);color:var(--text-strong);border-radius:10px;padding:7px 10px;cursor:pointer;display:flex;flex-direction:column;gap:2px}'
-    +'.fd-wtab small{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums}'
+    +'.fd-wtab small{font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums}'
     +'.fd-wtab.sel{border-color:var(--teal);background:var(--teal-tint)}'
     +'.fd-wtab:disabled{opacity:.45;cursor:default}'
     +'.fd-scroll{overflow-x:auto;border:1px solid var(--border-light);border-radius:10px}'
     +'.fd-tbl{border-collapse:collapse;width:100%;min-width:760px;font-size:12.5px}'
     +'.fd-tbl th,.fd-tbl td{border-bottom:1px solid var(--border-light);border-right:1px solid var(--border-light);padding:7px 8px;text-align:left;vertical-align:top}'
-    +'.fd-tbl th{background:var(--panel-bg);font-weight:600;font-size:11.5px;color:var(--text-muted);white-space:nowrap}'
+    +'.fd-tbl th{background:var(--panel-bg);font-weight:600;font-size:12px;color:var(--text-muted);white-space:nowrap}'
     +'.fd-tbl th.today{color:var(--teal)}'
-    +'.fd-tbl td.slot{font-weight:600;color:var(--text-muted);white-space:nowrap;background:var(--panel-bg);font-size:11.5px}'
+    +'.fd-tbl td.slot{font-weight:600;color:var(--text-muted);white-space:nowrap;background:var(--panel-bg);font-size:12px}'
     +'.fd-tbl td.cell{cursor:pointer;min-width:100px;max-width:150px;white-space:pre-wrap;word-break:break-word}'
     +'.fd-tbl td.cell:hover{background:var(--teal-tint)}'
     +'.fd-tbl td.cell.sel{outline:2px solid var(--teal);outline-offset:-2px}'
     +'.fd-tbl td.cell.empty{color:var(--text-muted);opacity:.55}'
     +'.fd-tbl td.fut{background:var(--panel-bg);opacity:.5}'
-    +'.fd-mk{display:inline-block;margin-left:4px;font-size:11px}'
+    +'.fd-mk{display:inline-block;margin-left:4px;font-size:12px}'
     +'.fd-panel{display:grid;grid-template-columns:1fr 1fr;gap:14px}'
     +'@media (max-width:760px){.fd-panel{grid-template-columns:1fr}}'
     +'.fd-pbox{border:1px solid var(--border-light);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}'
-    +'.fd-lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);font-weight:700}'
+    +'.fd-lbl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);font-weight:700}'
     +'.fd-pbox textarea{width:100%;font:inherit;font-size:13px;border:1px solid var(--border-light);border-radius:8px;padding:8px;background:var(--card-bg);color:var(--text-strong);resize:vertical;min-height:64px;box-sizing:border-box}'
     +'.fd-react{display:flex;gap:6px;flex-wrap:wrap}'
     +'.fd-react button{font:inherit;font-size:12px;border:1px solid var(--border-light);background:var(--card-bg);color:var(--text-strong);border-radius:99px;padding:3px 11px;cursor:pointer}'
@@ -323,7 +323,7 @@ function fdRenderViewer(){
       +'<div class="fd-pbox" id="fd-sel"></div>'
       +'<div class="fd-pbox"><span class="fd-lbl" id="fd-notes-lbl"></span>'
         +'<textarea id="fd-notes" style="min-height:140px" placeholder="π.χ. πρωινό σταθερό, βράδυ τσιμπολόγημα, να βρούμε επιλογές για το γραφείο…"></textarea>'
-        +'<span style="font-size:11px;color:var(--text-muted)" id="fd-notes-st">Μόνο για σένα — ο πελάτης δεν τις βλέπει. Αποθηκεύονται αυτόματα.</span></div>'
+        +'<span style="font-size:12px;color:var(--text-muted)" id="fd-notes-st">Μόνο για σένα — ο πελάτης δεν τις βλέπει. Αποθηκεύονται αυτόματα.</span></div>'
     +'</div>';
   document.getElementById('fd-wtabs').onclick=function(e){
     var b=e.target.closest('.fd-wtab'); if(!b||b.disabled) return;
@@ -366,13 +366,13 @@ function fdRenderSel(){
   box.innerHTML='<span class="fd-lbl">'+FD_DAYS[fdDow(d)]+' '+fdDM(d)+' · '+lab+'</span>'
     +'<div style="font-size:14px;white-space:pre-wrap">'+(String(v).trim()?esc(v):'<span style="color:var(--text-muted)">Δεν έχει γράψει κάτι.</span>')+'</div>'
     +'<div class="fd-react" id="fd-react">'+FD_REACT.map(function(r){ return '<button type="button" data-r="'+r[0]+'" class="'+(V.draftR===r[0]?'on':'')+'">'+r[0]+' '+r[1]+'</button>'; }).join('')+'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:11px;color:var(--text-muted)">Έτοιμες συμβουλές'+(foodDiaryLangFor(V.c)==='en'?' (γράφονται στα αγγλικά, όπως το λινκ)':'')+'</span>'
+    +'<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:12px;color:var(--text-muted)">Έτοιμες συμβουλές'+(foodDiaryLangFor(V.c)==='en'?' (γράφονται στα αγγλικά, όπως το λινκ)':'')+'</span>'
       +'<div class="fd-react fd-tips" id="fd-tips">'+FD_TIPS.map(function(t,i){ return '<button type="button" data-i="'+i+'">'+t[0]+' '+esc(t[1])+'</button>'; }).join('')+'</div></div>'
     +'<textarea id="fd-cmt" placeholder="Σχόλιο για τον πελάτη (προαιρετικό)…" maxlength="500">'+esc(cm.t||'')+'</textarea>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
       +'<button class="btn primary" style="font-size:12.5px" id="fd-cmt-save">Αποθήκευση σχολίου</button>'
       +(V.row.comments[V.cell]?'<button class="btn" style="font-size:12.5px;color:#c0392b" id="fd-cmt-del">Διαγραφή</button>':'')
-      +'<span style="font-size:11.5px;color:var(--text-muted)" id="fd-cmt-st"></span>'
+      +'<span style="font-size:12px;color:var(--text-muted)" id="fd-cmt-st"></span>'
     +'</div>';
   document.getElementById('fd-react').onclick=function(e){
     var b=e.target.closest('button'); if(!b) return;

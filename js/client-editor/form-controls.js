@@ -62,7 +62,7 @@ function buildInsightsPanelHtml(c,t){
   }).join('');
 
   return '<div style="margin-top:10px;border:1px solid var(--border-light);border-radius:8px;overflow:hidden;background:var(--card-bg)">'
-    +'<div style="padding:8px 10px;background:#f7f7f7;font-size:11px;font-weight:700;color:#555">📋 '+items.length+' εύρημα'+(items.length>1?'τα':'')+' σε αυτό το πλάνο</div>'
+    +'<div style="padding:8px 10px;background:#f7f7f7;font-size:12px;font-weight:700;color:#555">📋 '+items.length+' εύρημα'+(items.length>1?'τα':'')+' σε αυτό το πλάνο</div>'
     +rowsHtml
     +'</div>';
 }
@@ -164,8 +164,8 @@ function buildClientProgressHtml(c){
   var trendChip='';
   if(score!=null && prevScore!=null){
     var dS=score-prevScore;
-    if(dS>=CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:var(--good)" title="από '+prevScore+'% την περασμένη εβδομάδα">▲ +'+dS+'</span>';
-    else if(dS<=-CK_TREND_MIN_PP) trendChip=' <span style="font-size:11px;font-weight:700;color:#c62828" title="από '+prevScore+'% την περασμένη εβδομάδα">▼ '+dS+'</span>';
+    if(dS>=CK_TREND_MIN_PP) trendChip=' <span style="font-size:12px;font-weight:700;color:var(--good)" title="από '+prevScore+'% την περασμένη εβδομάδα">▲ +'+dS+'</span>';
+    else if(dS<=-CK_TREND_MIN_PP) trendChip=' <span style="font-size:12px;font-weight:700;color:#c62828" title="από '+prevScore+'% την περασμένη εβδομάδα">▼ '+dS+'</span>';
   }
 
   var weightStrip=clientWeightStripHtml(c);
@@ -206,8 +206,8 @@ function buildClientProgressHtml(c){
     +bar('Διατροφή',st.dietDone,st.dietTot)
     +bar('Νερό',st.watDone,st.watTot)
     +bar('Συμπληρώματα',st.supDone,st.supTot)
-    +'<div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span style="font-size:11px;color:#888">4 εβδ.:</span><div style="display:flex;gap:4px;align-items:flex-end;height:28px">'+hist+'</div></div>'
-    +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:11px;color:#888">14 ημ.:</span><div style="display:flex;gap:3px;align-items:flex-end;height:30px;flex:1;max-width:240px">'+spark+'</div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span style="font-size:12px;color:#888">4 εβδ.:</span><div style="display:flex;gap:4px;align-items:flex-end;height:28px">'+hist+'</div></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:12px;color:#888">14 ημ.:</span><div style="display:flex;gap:3px;align-items:flex-end;height:30px;flex:1;max-width:240px">'+spark+'</div></div>'
     +'</div>';
 }
 
@@ -913,7 +913,7 @@ function upd(k,v){
       var bmiVal=Math.round(c.weight/((c.height/100)*(c.height/100))*10)/10;
       var bmiCat=bmiVal<18.5?'Χαμηλό':bmiVal<25?'Φυσιολογικό':bmiVal<30?'Υπέρβαρο':'Παχυσαρκία';
       var badge=document.getElementById('bmi-badge');
-      if(badge)badge.innerHTML='📊 BMI: '+bmiVal+' <span style="font-size:10px;color:#666;font-weight:normal;">('+bmiCat+')</span>';
+      if(badge)badge.innerHTML='📊 BMI: '+bmiVal+' <span style="font-size:12px;color:#666;font-weight:normal;">('+bmiCat+')</span>';
       var hm=document.getElementById('header-measures');
       if(hm)hm.textContent=c.weight+'kg / '+c.height+'cm (BMI: '+bmiVal+')';
     }
@@ -938,7 +938,7 @@ function upd(k,v){
     avgTarget=Math.round(totalKcal/7);
   }
   var tg=document.getElementById('v-target');if(tg)tg.textContent=avgTarget+' kcal';
-  var m=document.getElementById('v-macros');if(m)m.innerHTML=t.p+'g <span style="font-size:10px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span>';
+  var m=document.getElementById('v-macros');if(m)m.innerHTML=t.p+'g <span style="font-size:12px;color:#555;font-weight:400">('+t.protGperKg+' g/kg)</span>';
   // Display validation warnings
   var wc=document.getElementById('warnings-container');
   if(wc){

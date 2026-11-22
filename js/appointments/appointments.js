@@ -79,7 +79,7 @@ function apptResolveFoodName(typed){
 }
 function apptFoodPrefTagsHtml(c){
   var prefs=c.foodPrefs||[];
-  if(!prefs.length)return '<div style="font-size:11px;color:#999">Καμία καταχώρηση ακόμα.</div>';
+  if(!prefs.length)return '<div style="font-size:12px;color:#999">Καμία καταχώρηση ακόμα.</div>';
   return prefs.map(function(fp,i){
     var icon=fp.pref==='like'?'👍':'👎';
     var timeTxt=fp.time?(' · '+esc(fp.time)):'';
@@ -90,7 +90,7 @@ function apptFoodPrefTagsHtml(c){
 function apptFoodPrefsPanelHtml(c){
   return '<div class="tracker-section">'
     +'<div class="tracker-head">🍽 Τροφικές προτιμήσεις</div>'
-    +'<div style="font-size:11px;color:#888;margin-bottom:8px">Μόνιμη λίστα για τον πελάτη — οι αντιπάθειες αποκλείονται αυτόματα από τα επόμενα πλάνα.</div>'
+    +'<div style="font-size:12px;color:#888;margin-bottom:8px">Μόνιμη λίστα για τον πελάτη — οι αντιπάθειες αποκλείονται αυτόματα από τα επόμενα πλάνα.</div>'
     +apptFoodDatalistHtml()
     +'<div id="appt-foodprefs-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">'+apptFoodPrefTagsHtml(c)+'</div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
@@ -102,7 +102,7 @@ function apptFoodPrefsPanelHtml(c){
     +'<select id="appt-fp-time" class="tracker-inp">'
     +'<option value="">Οποιαδήποτε ώρα</option><option value="πρωί">Πρωί</option><option value="μεσημέρι">Μεσημέρι</option><option value="βράδυ">Βράδυ</option>'
     +'</select>'
-    +'<button type="button" class="btn" style="padding:5px 12px;font-size:11px;background:#025857;color:#fff;border:none" onclick="addFoodPref()">+ Προσθήκη</button>'
+    +'<button type="button" class="btn" style="padding:5px 12px;font-size:12px;background:#025857;color:#fff;border:none" onclick="addFoodPref()">+ Προσθήκη</button>'
     +'</div>'
     +'</div>';
 }
@@ -214,7 +214,7 @@ function apptSparkline(log,key,color,label,mn,mx){
   var sx=function(i){return padL+(i/(pts.length-1))*(W-padL-8);};
   var sy=function(v){return padT+(1-(v-mn)/(mx-mn))*(H-padT-padB);};
   var polyPts=pts.map(function(e,i){return sx(i)+','+sy(e[key]);}).join(' ');
-  var svg='<div style="font-size:10px;font-weight:700;color:#025857;margin-bottom:2px">'+esc(label)+'</div><svg viewBox="0 0 '+W+' '+H+'" width="100%">';
+  var svg='<div style="font-size:12px;font-weight:700;color:#025857;margin-bottom:2px">'+esc(label)+'</div><svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block;max-width:560px">';
   svg+='<polyline points="'+polyPts+'" fill="none" stroke="'+color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
   svg+='<circle cx="'+sx(pts.length-1)+'" cy="'+sy(pts[pts.length-1][key])+'" r="4" fill="'+color+'"/>';
   svg+='<text x="'+padL+'" y="'+(H-4)+'" font-size="9" fill="#999">'+fmtDateShortAppt(pts[0].date)+'</text>';
@@ -512,7 +512,7 @@ function buildApptAttentionDigestHtml(c){
     }
     return '';
   }
-  return '<div class="tracker-section"><div class="tracker-head">⚠️ Χρειάζεται προσοχή <span style="font-weight:400;font-size:11px;color:#888">'+items.length+' στοιχεί'+(items.length===1?'ο':'α')+'</span></div><div class="appt-digest-list">'+items.join('')+'</div></div>';
+  return '<div class="tracker-section"><div class="tracker-head">⚠️ Χρειάζεται προσοχή <span style="font-weight:400;font-size:12px;color:#888">'+items.length+' στοιχεί'+(items.length===1?'ο':'α')+'</span></div><div class="appt-digest-list">'+items.join('')+'</div></div>';
 }
 function buildAppointmentsHtml(c){
   if(!c.appointments)c.appointments=[];
@@ -532,7 +532,7 @@ function buildAppointmentsHtml(c){
   // ανανεωθεί) — ακόμα κι όταν δεν έχει στείλει τίποτα ακόμα, χρήσιμο να το δει η διαιτολόγος αμέσως.
   var portalFeedbackHtml=c.shareToken
     ?('<div style="display:flex;justify-content:flex-end;margin-bottom:6px">'
-      +'<button type="button" class="btn" style="padding:4px 11px;font-size:11px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="refreshClientPortalFeedback(this)">🔄 Ανανέωση</button>'
+      +'<button type="button" class="btn" style="padding:4px 11px;font-size:12px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="refreshClientPortalFeedback(this)">🔄 Ανανέωση</button>'
       +'</div>'+portalFeedbackBody)
     :portalFeedbackBody;
 
@@ -612,7 +612,7 @@ function buildAppointmentsHtml(c){
     var diffMeta=apptPlanActionMeta(diffCur.planAction);
     diffItems.push('<div class="appt-diffitem"><span class="lbl">Ενέργεια πλάνου</span><span class="val" style="color:'+(diffMeta?diffMeta.color:'#888')+'">'+(diffMeta?diffMeta.icon+' '+esc(diffMeta.label):'—')+'</span></div>');
     if(diffItems.length){
-      apptDiffHtml='<div class="tracker-section"><div class="tracker-head">↔️ Από το προηγούμενο ραντεβού <span style="font-weight:400;font-size:11px;color:#888">'+fmtDateShortAppt(diffPrev.date)+' → '+fmtDateShortAppt(diffCur.date)+'</span></div><div class="appt-diffbox">'+diffItems.join('')+'</div></div>';
+      apptDiffHtml='<div class="tracker-section"><div class="tracker-head">↔️ Από το προηγούμενο ραντεβού <span style="font-weight:400;font-size:12px;color:#888">'+fmtDateShortAppt(diffPrev.date)+' → '+fmtDateShortAppt(diffCur.date)+'</span></div><div class="appt-diffbox">'+diffItems.join('')+'</div></div>';
     }
   }
 
@@ -672,7 +672,7 @@ function buildAppointmentsHtml(c){
   var nextApptCardHtml='<div class="appt-sum-card'+(nextApptDaysLeft!=null&&nextApptDaysLeft<0?' appt-sum-danger':'')+'">'
     +'<div class="appt-sum-lbl">📅 Επόμενο ραντεβού</div>'
     +'<div class="appt-sum-val">'+(nextApptDaysLeft!=null?(nextApptDaysLeft>=0?nextApptDaysLeft+' μέρες':'πέρασε — προγραμμάτισε νέο'):'—')+'</div>'
-    +'<div class="appt-sum-sub"><input type="date" value="'+(c.nextAppointmentDate||'')+'" onchange="setNextAppointmentDate(this.value)" style="font-size:10px;border:1px solid var(--border-light);border-radius:4px;padding:2px 4px;width:100%;box-sizing:border-box;font-family:inherit"></div>'
+    +'<div class="appt-sum-sub"><input type="date" value="'+(c.nextAppointmentDate||'')+'" onchange="setNextAppointmentDate(this.value)" style="font-size:12px;border:1px solid var(--border-light);border-radius:4px;padding:2px 4px;width:100%;box-sizing:border-box;font-family:inherit"></div>'
     +'</div>';
 
   // ✨ Idea 4 (2026-08-14): "Προσέλευση" — ποσοστό πραγματικών ραντεβού (όχι 🚫/❌) στις τελευταίες
@@ -730,25 +730,25 @@ function buildAppointmentsHtml(c){
     +'<div class="tracker-head">📝 Νέο ραντεβού</div>'
     +'<div style="margin-bottom:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
     +'<input type="date" id="appt-date" value="'+today+'" class="tracker-inp">'
-    +'<button type="button" class="btn" style="padding:4px 10px;font-size:10px;background:var(--card-bg);color:#c62828;border:1px solid #f1b4b3" title="Καταγραφή χωρίς να συμπληρωθεί όλη η φόρμα — μετράει σαν επαφή, όχι σαν πραγματικό ραντεβού" onclick="logAppointmentAbsence(\'noshow\')">🚫 Δεν ήρθε</button>'
-    +'<button type="button" class="btn" style="padding:4px 10px;font-size:10px;background:var(--card-bg);color:#888;border:1px solid var(--border-light)" onclick="logAppointmentAbsence(\'cancelled\')">❌ Ακύρωσε</button>'
+    +'<button type="button" class="btn" style="padding:4px 10px;font-size:12px;background:var(--card-bg);color:#c62828;border:1px solid #f1b4b3" title="Καταγραφή χωρίς να συμπληρωθεί όλη η φόρμα — μετράει σαν επαφή, όχι σαν πραγματικό ραντεβού" onclick="logAppointmentAbsence(\'noshow\')">🚫 Δεν ήρθε</button>'
+    +'<button type="button" class="btn" style="padding:4px 10px;font-size:12px;background:var(--card-bg);color:#888;border:1px solid var(--border-light)" onclick="logAppointmentAbsence(\'cancelled\')">❌ Ακύρωσε</button>'
     +'</div>'
-    +'<div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Ενέργεια για το πλάνο</div>'
+    +'<div style="font-size:12px;color:#888;font-weight:600;margin-bottom:4px">Ενέργεια για το πλάνο</div>'
     +'<div class="appt-plan-action-group" id="appt-plan-action">'+apptPlanActionBtns(null)+'</div>'
     +'<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px">'
-    +'<div><div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Πεπτικά συμπτώματα</div><div class="appt-scale" id="appt-gi-scale">'+apptScaleButtons('appt-gi')+'</div></div>'
-    +'<div><div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Τήρηση προπόνησης</div><div class="appt-scale" id="appt-compliance-scale">'+apptScaleButtons('appt-compliance')+'</div></div>'
+    +'<div><div style="font-size:12px;color:#888;font-weight:600;margin-bottom:4px">Πεπτικά συμπτώματα</div><div class="appt-scale" id="appt-gi-scale">'+apptScaleButtons('appt-gi')+'</div></div>'
+    +'<div><div style="font-size:12px;color:#888;font-weight:600;margin-bottom:4px">Τήρηση προπόνησης</div><div class="appt-scale" id="appt-compliance-scale">'+apptScaleButtons('appt-compliance')+'</div></div>'
     +'</div>'
     +'<div class="appt-chips" id="appt-common-chips">'+APPT_COMMON_CHIPS.map(function(ch){return '<button type="button" class="appt-chip" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'
-    +(sportChipsList.length?('<div style="font-size:10px;color:#888;font-weight:600;margin:8px 0 4px">Ειδικά για '+(sportInfo?sportInfo.icon+' '+esc(sportInfo.name):'άθλημα')+'</div><div class="appt-chips" id="appt-sport-chips">'+sportChipsList.map(function(ch){return '<button type="button" class="appt-chip" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'):'')
+    +(sportChipsList.length?('<div style="font-size:12px;color:#888;font-weight:600;margin:8px 0 4px">Ειδικά για '+(sportInfo?sportInfo.icon+' '+esc(sportInfo.name):'άθλημα')+'</div><div class="appt-chips" id="appt-sport-chips">'+sportChipsList.map(function(ch){return '<button type="button" class="appt-chip" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'):'')
     +apptTemplateRowHtml('appt-notes')
     +'<textarea id="appt-notes" placeholder="Σημειώσεις ραντεβού..." class="tracker-textarea"></textarea>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">'
     +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-    +'<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#c62828;cursor:pointer"><input type="checkbox" id="appt-flag" style="width:14px;height:14px">🚩 Σημείωσε για παρακολούθηση</label>'
-    +'<button type="button" class="btn" style="padding:3px 10px;font-size:10px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="apptSendNoteToPreferences(\'appt-notes\',this)" title="Στέλνει το επιλεγμένο κείμενο (ή όλη τη σημείωση, αν δεν έχεις επιλέξει κάτι) στις Προτιμήσεις του πελάτη, ώστε να ληφθεί υπόψη στο επόμενο πλάνο">➕ Στις Προτιμήσεις</button>'
+    +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#c62828;cursor:pointer"><input type="checkbox" id="appt-flag" style="width:14px;height:14px">🚩 Σημείωσε για παρακολούθηση</label>'
+    +'<button type="button" class="btn" style="padding:3px 10px;font-size:12px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="apptSendNoteToPreferences(\'appt-notes\',this)" title="Στέλνει το επιλεγμένο κείμενο (ή όλη τη σημείωση, αν δεν έχεις επιλέξει κάτι) στις Προτιμήσεις του πελάτη, ώστε να ληφθεί υπόψη στο επόμενο πλάνο">➕ Στις Προτιμήσεις</button>'
     +'</div>'
-    +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#025857;color:#fff;border:none" onclick="addAppointmentEntry()">+ Καταχώρηση</button>'
+    +'<button class="btn" style="padding:6px 14px;font-size:12px;background:#025857;color:#fff;border:none" onclick="addAppointmentEntry()">+ Καταχώρηση</button>'
     +'</div>'
     +'</div>';
 
@@ -778,11 +778,11 @@ function buildAppointmentsHtml(c){
         var eChips=e.chips||[],eSportChips=e.sportChips||[];
         listHtml+='<div class="appt-entry appt-entry-editing">'
           +'<div style="margin-bottom:8px"><input type="date" id="appt-edit-date-'+i+'" value="'+e.date+'" class="tracker-inp"></div>'
-          +'<div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Ενέργεια για το πλάνο</div>'
+          +'<div style="font-size:12px;color:#888;font-weight:600;margin-bottom:4px">Ενέργεια για το πλάνο</div>'
           +'<div class="appt-plan-action-group" id="appt-edit-plan-action-'+i+'">'+apptPlanActionBtns(e.planAction)+'</div>'
           +'<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px">'
-          +'<div><div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Πεπτικά συμπτώματα</div><div class="appt-scale" id="appt-edit-gi-scale-'+i+'" data-selected="'+(e.gi||0)+'">'+apptScaleButtons('appt-edit-gi-'+i,e.gi)+'</div></div>'
-          +'<div><div style="font-size:10px;color:#888;font-weight:600;margin-bottom:4px">Τήρηση προπόνησης</div><div class="appt-scale" id="appt-edit-compliance-scale-'+i+'" data-selected="'+(e.compliance||0)+'">'+apptScaleButtons('appt-edit-compliance-'+i,e.compliance)+'</div></div>'
+          +'<div><div style="font-size:12px;color:#888;font-weight:600;margin-bottom:4px">Πεπτικά συμπτώματα</div><div class="appt-scale" id="appt-edit-gi-scale-'+i+'" data-selected="'+(e.gi||0)+'">'+apptScaleButtons('appt-edit-gi-'+i,e.gi)+'</div></div>'
+          +'<div><div style="font-size:12px;color:#888;font-weight:600;margin-bottom:4px">Τήρηση προπόνησης</div><div class="appt-scale" id="appt-edit-compliance-scale-'+i+'" data-selected="'+(e.compliance||0)+'">'+apptScaleButtons('appt-edit-compliance-'+i,e.compliance)+'</div></div>'
           +'</div>'
           +'<div class="appt-chips" id="appt-edit-common-chips-'+i+'">'+APPT_COMMON_CHIPS.map(function(ch){return '<button type="button" class="appt-chip'+(eChips.indexOf(ch)!==-1?' active':'')+'" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'
           +(sportChipsList.length?('<div class="appt-chips" id="appt-edit-sport-chips-'+i+'">'+sportChipsList.map(function(ch){return '<button type="button" class="appt-chip'+(eSportChips.indexOf(ch)!==-1?' active':'')+'" data-chip="'+esc(ch)+'" onclick="toggleApptChip(this)">'+esc(ch)+'</button>';}).join('')+'</div>'):'')
@@ -790,12 +790,12 @@ function buildAppointmentsHtml(c){
           +'<textarea id="appt-edit-notes-'+i+'" class="tracker-textarea">'+esc(e.notes||'')+'</textarea>'
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">'
           +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-          +'<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#c62828;cursor:pointer"><input type="checkbox" id="appt-edit-flag-'+i+'" style="width:14px;height:14px"'+(e.flagged?' checked':'')+'>🚩 Σημείωσε για παρακολούθηση</label>'
-          +'<button type="button" class="btn" style="padding:3px 10px;font-size:10px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="apptSendNoteToPreferences(\'appt-edit-notes-'+i+'\',this)" title="Στέλνει το επιλεγμένο κείμενο (ή όλη τη σημείωση) στις Προτιμήσεις του πελάτη">➕ Στις Προτιμήσεις</button>'
+          +'<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#c62828;cursor:pointer"><input type="checkbox" id="appt-edit-flag-'+i+'" style="width:14px;height:14px"'+(e.flagged?' checked':'')+'>🚩 Σημείωσε για παρακολούθηση</label>'
+          +'<button type="button" class="btn" style="padding:3px 10px;font-size:12px;background:var(--card-bg);color:#025857;border:1px solid #cfe8e0" onclick="apptSendNoteToPreferences(\'appt-edit-notes-'+i+'\',this)" title="Στέλνει το επιλεγμένο κείμενο (ή όλη τη σημείωση) στις Προτιμήσεις του πελάτη">➕ Στις Προτιμήσεις</button>'
           +'</div>'
           +'<div style="display:flex;gap:6px">'
-          +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#888;color:#fff;border:none" onclick="cancelAppointmentEdit()">Άκυρο</button>'
-          +'<button class="btn" style="padding:6px 14px;font-size:11px;background:#025857;color:#fff;border:none" onclick="saveAppointmentEdit('+i+')">Αποθήκευση</button>'
+          +'<button class="btn" style="padding:6px 14px;font-size:12px;background:#888;color:#fff;border:none" onclick="cancelAppointmentEdit()">Άκυρο</button>'
+          +'<button class="btn" style="padding:6px 14px;font-size:12px;background:#025857;color:#fff;border:none" onclick="saveAppointmentEdit('+i+')">Αποθήκευση</button>'
           +'</div>'
           +'</div>'
           +'</div>';
@@ -809,7 +809,7 @@ function buildAppointmentsHtml(c){
         listHtml+='<div class="appt-entry appt-entry-absence" data-appt-tags="absence">'
           +'<div class="appt-entry-actions"><button class="met-del" onclick="removeAppointmentEntry('+i+')" title="Διαγραφή">&#10005;</button></div>'
           +'<div class="consult-date">'+e.date+'</div>'
-          +'<div style="font-size:11px;font-weight:700;color:'+am.color+'">'+am.icon+' '+am.label+'</div>'
+          +'<div style="font-size:12px;font-weight:700;color:'+am.color+'">'+am.icon+' '+am.label+'</div>'
           +(e.notes?'<div class="consult-text">'+esc(e.notes)+'</div>':'')
           +'</div>';
         return;
@@ -824,7 +824,7 @@ function buildAppointmentsHtml(c){
         +'</div>'
         +'<div class="consult-date">'+e.date+(e.flagged?' · 🚩':'')+'</div>'
         +apptPlanActionBadgeHtml(e.planAction)
-        +(e.kcalAtEntry?'<div style="font-size:10px;color:#e65100;margin:2px 0">🎯 '+e.kcalAtEntry+' kcal στόχος εκείνη τη στιγμή</div>':'')
+        +(e.kcalAtEntry?'<div style="font-size:12px;color:#e65100;margin:2px 0">🎯 '+e.kcalAtEntry+' kcal στόχος εκείνη τη στιγμή</div>':'')
         +(allChips.length?'<div class="appt-chips" style="margin:4px 0">'+allChips.map(function(ch){return '<span class="appt-chip active" style="cursor:default">'+esc(ch)+'</span>';}).join('')+'</div>':'')
         +(e.notes?'<div class="consult-text">'+esc(e.notes)+'</div>':'')
         +'</div>';
@@ -844,10 +844,10 @@ function buildAppointmentsHtml(c){
         return '<span title="'+e.date+' — '+esc(am.label)+'" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:'+am.color+'22;color:'+am.color+';font-size:12px">'+am.icon+'</span>';
       }
       var meta=apptPlanActionMeta(e.planAction);
-      if(!meta)return '<span title="'+e.date+'" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#eee;color:var(--text-muted);font-size:10px">•</span>';
+      if(!meta)return '<span title="'+e.date+'" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#eee;color:var(--text-muted);font-size:12px">•</span>';
       return '<span title="'+e.date+' — '+esc(meta.label)+'" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:'+meta.color+'22;color:'+meta.color+';font-size:12px">'+meta.icon+'</span>';
-    }).join('<span style="color:var(--text-muted);font-size:10px">→</span>');
-    timelineHtml='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:10px;font-size:10px;color:#888">'
+    }).join('<span style="color:var(--text-muted);font-size:12px">→</span>');
+    timelineHtml='<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:#888">'
       +'<span style="margin-right:4px">Ροή αποφάσεων:</span>'+timelineChips+'</div>';
   }
 
