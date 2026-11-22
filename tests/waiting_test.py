@@ -105,7 +105,7 @@ try:
         chips = J('document.querySelector(".client-quick-chips").innerText')
         check('⏳ Σε αναμονή (2)' in chips, f'quick chip with count ({chips!r})')
         J('setClientQuickFilter("waiting")'); pg.wait_for_timeout(200)
-        names = J('[...document.querySelectorAll("#client-list .client-card .cc-name")].map(e=>e.textContent)')
+        names = J('[...document.querySelectorAll("#client-list [data-sec=clientsMainCollapsed] .client-card .cc-name")].map(e=>e.textContent)')   # κύρια λίστα (όχι το μπλοκ «Χρειάζονται προσοχή»)
         check(len(names) == 2 and names[0].startswith('Μαρία'), f'filter shows the 2 waiting, overdue first ({names})')
         check('⏳ 🩸 Αναλύσεις · καθυστερεί 4 μ.' in J('document.getElementById("client-list").innerText'), 'card carries the wait chip')
         J('setClientQuickFilter("all")')

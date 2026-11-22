@@ -2744,3 +2744,9 @@ body.dark-mode .lc-suggest{background:#3a2c14;border-color:#6b5020}
 body.dark-mode .lc-suggest-txt,body.dark-mode .lc-suggest-txt span{color:#f0dcb4}
 body.dark-mode .lc-banner-paused,body.dark-mode .lc-badge,body.dark-mode .lc-head-btn.lc-paused{background:#1f2c38;border-color:#3a5066;color:#bcd3e8}
 body.dark-mode .lc-banner-former,body.dark-mode .lc-head-btn.lc-former{background:#2c2a25;border-color:#4a463c;color:#cfcabd}
+
+/* ── 📋 Σήμερα (home-diets.js homeTodayHtml, 2026-11-22) ── */
+.hm-today-head:empty{display:none}
+.hm-today-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--text-muted);margin:-12px 0 20px}
+/* μία στήλη: οι γραμμές έχουν όνομα + αιτία + 2-3 κουμπιά, σε στενή κάρτα στοιβάζονταν */
+.hm-signals.hm-today-grid{grid-template-columns:1fr;gap:14px}

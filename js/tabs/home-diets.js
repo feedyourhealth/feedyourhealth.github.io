@@ -110,6 +110,66 @@ function homeClientsNeedingAttention(){
   out.sort(function(a,b){ return a.tier!==b.tier ? a.tier-b.tier : b.gap-a.gap; });
   return out;
 }
+// ── 📋 Σήμερα: ομάδες ανά ενέργεια ─────────────────────────────────────────────────────────
+// Κάθε ομάδα = homeCard (κενή ⇒ δεν εμφανίζεται, >5 γραμμές ⇒ κύλιση με πλήθος στον τίτλο).
+// Οι γραμμές κρατάνε τα ίδια κουμπιά ενέργειας + 🔕 αυτό/όλα που είχαν και πριν (homeBucketRow).
+var HOME_TODAY_GROUPS={
+  reply:{reasons:['flag','lowfeedback','note'], title:'💬 Απάντησε', variant:'danger', accent:'red'},
+  plan:{reasons:['noplan','intake','renewal'], title:'📄 Πλάνο & ανανεώσεις', variant:'warning', accent:'red'},
+  remind:{reasons:['checkingap'], title:'🔔 Υπενθύμισε', variant:'info', accent:'amber'},
+  measure:{reasons:['weightgap'], title:'📐 Χωρίς πρόσφατη μέτρηση', variant:'info', accent:'amber'}
+};
+function homeTodayHtml(attn, staleRows, staleClients, pendingPlanRows, approachingRenewalRows, wait){
+  var byGroup={};
+  Object.keys(HOME_TODAY_GROUPS).forEach(function(g){ byGroup[g]=[]; });
+  attn.forEach(function(x){
+    Object.keys(HOME_TODAY_GROUPS).forEach(function(g){
+      if(HOME_TODAY_GROUPS[g].reasons.indexOf(x.reason)>-1) byGroup[g].push(homeBucketRow(x,HOME_TODAY_GROUPS[g].accent));
+    });
+  });
+  // Πλάνο: πρώτα ό,τι χρωστάς (χωρίς πλάνο / ερωτηματολόγιο / ανανέωση), μετά αποφάσεις ραντεβού, μετά «λήγει σε Ν»
+  var planRows=byGroup.plan.concat(pendingPlanRows||[]).concat(approachingRenewalRows||[]);
+  var G=HOME_TODAY_GROUPS;
+  var staleTitle='🔗 Ξαναδημοσίευσε'+((staleClients||[]).length>1
+    ?(' <button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeBulkRepublish(this)">Όλους ('+staleClients.length+')</button>')
+    :'');
+  var cards=[
+    homeCard(G.reply.title+homeTodayCount(byGroup.reply.length), byGroup.reply, '', G.reply.variant, 5),
+    homeCard(G.plan.title+homeTodayCount(planRows.length), planRows, '', G.plan.variant, 5),
+    homeCard(staleTitle, staleRows||[], '', 'warning', 5),
+    homeCard(G.remind.title+homeTodayCount(byGroup.remind.length), byGroup.remind, '', G.remind.variant, 5),
+    homeCard(G.measure.title+homeTodayCount(byGroup.measure.length), byGroup.measure, '', G.measure.variant, 5),
+    homeCard('⏳ Σε αναμονή'+(wait.late?' <span class="wait-chip wait-chip-late">'+wait.late+' καθυστερ'+(wait.late===1?'εί':'ούν')+'</span>':''),
+      wait.rows||[], '', wait.late?'danger':'warning', 5)
+  ].filter(Boolean);
+  var total=byGroup.reply.length+planRows.length+(staleRows||[]).length+byGroup.remind.length+byGroup.measure.length+(wait.rows||[]).length;
+  var head='<div class="hm-today-head">'
+    +(typeof lcHomeCardHtml==='function'?lcHomeCardHtml():'')
+    +'</div>';
+  var body=cards.length
+    ? '<div class="hm-signals hm-today-grid" id="hm-bucket-list">'+cards.join('')+'</div>'
+    : '<div class="hm-card" id="hm-bucket-list"><div class="hm-empty" style="text-align:center;padding:10px 0;font-size:13px">✅ Τίποτα για σήμερα — όλοι οι ενεργοί πελάτες είναι εντάξει</div></div>';
+  return head+body
+    +'<div class="hm-today-foot"><span>'+total+' εκκρεμότητ'+(total===1?'α':'ες')+'</span>'
+    +'<span class="lc-summary-link" role="button" tabindex="0" onclick="swTab(10)" onkeydown="if(event.key===\'Enter\')swTab(10)">📈 Σκορ τήρησης &amp; τάσεις ανά πελάτη → Πρόοδος</span></div>';
+}
+function homeTodayCount(n){ return n>5?'':(n?' <span class="hm-card-count">'+n+'</span>':''); }
+
+// Μία λογική «χρειάζεται προσοχή» για Αρχική ΚΑΙ Πελάτες (clientNeedsAttention, roster-ui.js):
+// {id:true} για όποιον εμφανίζεται στο «📋 Σήμερα». Κρατιέται 1,5 s — το roster τη ρωτάει ανά κάρτα.
+var _homeAttnCache={t:0,m:null};
+function homeAttentionMap(){
+  if(_homeAttnCache.m && Date.now()-_homeAttnCache.t<1500) return _homeAttnCache.m;
+  var m={};
+  try{
+    homeClientsNeedingAttention().forEach(function(x){ m[x.c.id]=true; });
+    homeStaleLinks().forEach(function(c){ m[c.id]=true; });
+  }catch(e){}
+  _homeAttnCache={t:Date.now(),m:m};
+  return m;
+}
+function homeAttentionInvalidate(){ _homeAttnCache={t:0,m:null}; }
+
 // Κρύβει έναν πελάτη από τις λίστες "χρειάζονται προσοχή" (Αρχική + Διατροφές) για 7 ημέρες —
 // η υποκείμενη κατάσταση (χωρίς πλάνο, μπαγιατεμένο κ.λπ.) δεν αλλάζει, απλά δεν ξαναφαίνεται
 // μέχρι να περάσει το διάστημα, ώστε "το είδα, θα το ξανακοιτάξω αργότερα" να μην απαιτεί να λυθεί
@@ -1171,6 +1231,7 @@ function homeQuickFind(val){
 
 function renderHome(){
   curId=null;
+  homeAttentionInvalidate();   // φρέσκια ουρά «Σήμερα» (μετά από 🔕, ξαναδημοσίευση κ.λπ.)
   var main=document.getElementById('main');
   if(!main) return;
 
@@ -1255,41 +1316,14 @@ function renderHome(){
   // σημειώσεις/χαμηλό feedback πελάτη συνεχίζουν να φαίνονται εδώ μέσω του tile "🔴 Χρειάζονται
   // προσοχή" (homeClientsNeedingAttention ήδη τα περιλαμβάνει) — δεν χάθηκε το σήμα, μόνο η
   // διπλή προβολή του σκορ.
-  var sig2=pendingPlanRows.concat(approachingRenewalRows).concat(staleRows); // 📄 νέο πλάνο / ξαναδημοσίευση
-  var sigCardHtml=homeCard('📄 Χρειάζονται νέο πλάνο', sig2, 'ακόμα', 'warning', 4);
-  // ⏳ Σε αναμονή (js/client-list/waiting.js): πελάτες που περιμένουμε κάτι για το πλάνο τους —
-  // πιο επείγον πρώτα, κόκκινη κάρτα όταν κάποιος καθυστερεί. Δίπλα στο «νέο πλάνο»: ίδια δουλειά.
+  // ── 📋 Σήμερα (2026-11-22) ─────────────────────────────────────────────────────────────
+  // Μία ουρά ανά ΕΝΕΡΓΕΙΑ αντί για 2 ενότητες («📄 Πλάνα & πρόοδος» + πλακίδια «🎯 Πελάτες ανά
+  // κατάσταση») που έδειχναν τους ίδιους πελάτες δύο φορές με διαφορετικούς αριθμούς. Πηγή: η ίδια
+  // homeClientsNeedingAttention() + homeStaleLinks() (μία λογική «προσοχής» — την ίδια διαβάζει και
+  // το clientNeedsAttention των Πελατών, βλ. homeAttentionMap). Ενεργοί/σε παύση/πρώην: lifecycle.js.
+  var buckets=homeAttentionBuckets(_attn, staleClients);   // ακόμα για την κάρτα «Ομάδες» πιο κάτω
   var _wait=(typeof homeWaitingRows==='function')?homeWaitingRows():{rows:[],late:0};
-  var waitCardHtml=homeCard('⏳ Σε αναμονή'+(_wait.late?' <span class="wait-chip wait-chip-late">'+_wait.late+' καθυστερ'+(_wait.late===1?'εί':'ούν')+'</span>':''),
-    _wait.rows, 'ακόμα', _wait.late?'danger':'warning', 5);
-  // Κάθε κομμάτι της Αρχικής είναι συμπτυσσόμενο (homeSectionHtml) — η επιλογή θυμάται ανά browser.
-  html+=homeSectionHtml('signals','📄 Πλάνα & πρόοδος','<div class="hm-signals">'
-    +(sigCardHtml||'<div class="hm-card"><div class="hm-empty" style="text-align:center;padding:10px 0;font-size:13px">✅ Κανένα εκκρεμές σήμα — τα πλάνα είναι εντάξει</div></div>')
-    +waitCardHtml
-    +homeProgressPointerCard()
-    +'</div>', (sig2.length+_wait.rows.length)||null, false);
-
-  var buckets=homeAttentionBuckets(_attn, staleClients);
-  // Προεπιλογή κόκκινο· αλλά αν το κόκκινο είναι άδειο ενώ υπάρχουν μπαγιάτικα, ξεκίνα στο κίτρινο —
-  // αλλιώς μια άδεια λίστα "χρειάζονται προσοχή" διαβάζεται σαν "τίποτα να κάνω" ενώ υπάρχουν εκκρεμότητες.
-  _homeBucketSel=(buckets.red.length===0 && buckets.amber.length>0)?'amber':'red';
-  // key = bucket του homeAttentionBuckets / id-suffix / όρισμα homeSelectBucket· cssColor = υπάρχουσα
-  // κλάση χρώματος στο styles.css (το "activity" bucket δανείζεται το .hm-tile-teal, δεν έχει δικό του).
-  var _hmTile=function(key,cssColor,num,lbl){
-    return '<div class="hm-tile hm-tile-'+cssColor+(_homeBucketSel===key?' sel':'')+'" id="hm-tile-'+key+'" onclick="homeSelectBucket(\''+key+'\')">'
-      +'<div class="hm-tile-num">'+num+'</div><div class="hm-tile-lbl">'+lbl+'</div></div>';
-  };
-  // [2] Τα πλακίδια είναι φίλτρο — μία ιεραρχία: πλακίδιο επιλέγει, η λίστα από κάτω δείχνει το επιλεγμένο.
-  html+=homeSectionHtml('buckets','🎯 Πελάτες ανά κατάσταση',
-    (typeof lcHomeCardHtml==='function'?lcHomeCardHtml():'')
-    +'<p class="hm-filter-eyebrow">Φίλτρο — διάλεξε πλακίδιο· η λίστα από κάτω δείχνει το επιλεγμένο</p>'
-    +'<div class="hm-tiles">'
-    +_hmTile('red','red',buckets.red.length,'🔴 Χρειάζονται προσοχή')
-    +_hmTile('amber','amber',buckets.amber.length,'🟡 Μπαγιατεμένα πλάνα')
-    +_hmTile('green','green',buckets.green.length,'🟢 Ενεργοί, εντάξει')
-    +_hmTile('activity','teal',buckets.activity.length,'💬 Νέα από πελάτες')
-    +'</div>'
-    +'<div class="hm-card" style="margin-bottom:20px" id="hm-bucket-list">'+homeBucketListInnerHtml(buckets)+'</div>', null, false);
+  html+=homeSectionHtml('today','📋 Σήμερα',homeTodayHtml(_attn, staleRows, staleClients, pendingPlanRows, approachingRenewalRows, _wait), null, false);
 
   var measuredToday=homeMeasuredToday();
   // 2026-09-16: το ring "ενεργοί με πρόσφατο check-in" και το «Μ.Ο. τήρησης (εβδ.)» ζούσαν εδώ —

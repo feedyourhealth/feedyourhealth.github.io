@@ -229,6 +229,10 @@ function clientCriticalEA(c){
 // του είναι ξεπερασμένο, ή το πλάνο του είναι 30+ ημερών (ίδια κριτήρια με το Διατροφές "needs action"),
 // ή έχει δημοσιευμένο portal αλλά 2+ μέρες χωρίς check-in.
 function clientNeedsAttention(c){
+  // 2026-11-22: μία λογική με την Αρχική «📋 Σήμερα» (homeAttentionMap, home-diets.js) — ίδιοι
+  // πελάτες, ίδιος αριθμός και στις δύο οθόνες (σέβεται 🔕, παύση, ανενεργούς). Ο παλιός κανόνας
+  // παρακάτω μένει μόνο ως εφεδρεία αν δεν έχει φορτώσει το home-diets.js.
+  if(typeof homeAttentionMap==='function') return !!homeAttentionMap()[c.id];
   if(clientHasFlaggedAppointment(c)) return true;
   if(clientHasLowPlanFeedback(c)) return true;
   // ⏸/💤 σε παύση ή προτεινόμενος για Πρώην (lifecycle.js): μόνο τα σήματα του ίδιου του πελάτη μετράνε
