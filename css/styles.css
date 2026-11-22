@@ -1737,7 +1737,8 @@ html{font-size:16px}
   .fg{display:flex;flex-direction:column;gap:6px}
   .fgrp{flex:none;width:100%;margin-bottom:12px}
   .fgrp label{font-size:var(--fs-xs);font-weight:600}
-  .plan-wrap{flex-direction:column}
+  .plan-wrap{flex-direction:column;align-items:stretch}
+  .week-main{width:100%;max-width:100%} /* χωρίς stretch έπαιρνε το πλάτος του πίνακα (~800px) και ξεχείλιζε όλη η σελίδα */
   .food-lib{width:100%;position:static;max-height:340px}
   .lib-item{padding:8px 6px}
   .rcp-filter-chip,.rcp-chip,.rcp-star,.rcp-cat-pill,.rcp-cat-done,.rcp-expand-btn{width:auto}
@@ -2872,3 +2873,15 @@ body.dark-mode .hm-more-btn{background:transparent;border-color:#444;color:#aaa}
 body.dark-mode .set-btn{background:transparent;color:#7fdcc8;border-color:#3a5a55}
 body.dark-mode .set-btn-primary{background:var(--teal);color:#fff}
 body.dark-mode .set-btn-danger{color:#ef9a9a;border-color:#6b3a36}
+
+/* ── Κινητό: κεφαλίδα πελάτη (2026-11-22) ── το γενικό mobile «button{width:100%;min-height:48px}»
+   έκανε τα chips (Αιματολογικές / Σύνδεσμος) ψηλές κάψουλες πλήρους πλάτους και έστυβε τα ↶ ↷. */
+@media (max-width:767px){
+  .client-header-row{flex-wrap:wrap;gap:8px}
+  .client-header-row > div:first-child{flex:1 1 100%}
+  .client-header-actions{flex-wrap:wrap;gap:6px!important;width:100%}
+  .client-header-actions .btn,.client-header-actions button{width:auto;min-height:40px;padding:8px 12px}
+  .client-header-actions .client-hdr-ic{width:40px;height:40px;padding:0}
+  .client-chips .cchip,.client-chips button.cchip{width:auto;min-height:0;padding:4px 10px;font-size:12px}
+  .client-chips .cchip:not(.cchip-allergy){display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}
+}
