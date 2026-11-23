@@ -297,10 +297,22 @@ function mixLegumePlate(ctx,d,meal,legN,lang,menu){
   var fat=mixFatFor(ctx,d,sp,lang);
   return {leg:leg,bread:bread,add:add,fat:fat,tot:mixAdd(base,fat.mac)};
 }
-function mixPlateOk(tot,meal){
-  var tk=meal.p*4+meal.c*4+meal.f*9, kd=(tot.k-tk)/tk, fd=meal.f>0?(tot.f-meal.f)/meal.f:0;
-  return {ok:Math.abs(kd)<=MIX_KCAL_TOL&&fd<=MIX_FAT_TOL,kPct:Math.round(kd*100),fPct:Math.round(fd*100)};
+// 🐟 Λιπαρά ψάρια (ωμέγα-3): Σολομός, Σκουμπρί, Σαρδέλες — κατηγορία Ψάρια με λίπος ≥ 6 g/100 g.
+// Απόφαση 2026-11-24: το λίπος ΤΟΥ ΙΔΙΟΥ του ψαριού δεν μετράει ως υπέρβαση στον έλεγχο (σε πελάτες με
+// χαμηλό λίπος, π.χ. 16% των θερμίδων, ο σολομός έβγαινε πάντα «εκτός»). Το υπόλοιπο πιάτο (υδατάνθρακας,
+// λάδι, λαχανικά) ελέγχεται κανονικά· θερμίδες = όριο ±10% + οι θερμίδες του λίπους του ψαριού.
+var MIX_OILY_FISH_F=6;
+function mixIsOilyFish(n){ var fd=FOODS[n]; return !!(fd&&fd.cat==='Ψάρια'&&fd.f>=MIX_OILY_FISH_F); }
+function mixPlateOk(tot,meal,fishF){
+  fishF=fishF||0;
+  var tk=meal.p*4+meal.c*4+meal.f*9;
+  var kd=(tot.k-tk)/tk, fd=meal.f>0?(tot.f-meal.f)/meal.f:0;               // ό,τι βλέπει ο διαιτολόγος
+  // συγχωρείται ΜΟΝΟ όσο λίπος του ψαριού περισσεύει πάνω από τον στόχο λίπους του γεύματος
+  var excess=Math.min(fishF,Math.max(0,tot.f-meal.f));
+  var kA=(tot.k-excess*9-tk)/tk, fA=meal.f>0?(tot.f-excess-meal.f)/meal.f:0;
+  return {ok:Math.abs(kA)<=MIX_KCAL_TOL&&fA<=MIX_FAT_TOL,kPct:Math.round(kd*100),fPct:Math.round(fd*100),fish:excess>0};
 }
+function mixFishFat(prot){ return (prot&&prot.n&&mixIsOilyFish(prot.n))?prot.mac.f:0; }
 
 // Η ποσότητα πρωτεΐνης που γράφεται στη λίστα (χωρίς να ξέρουμε ποιον υδατάνθρακα θα διαλέξει ο πελάτης)
 // υπολογίζεται με τη ΔΙΑΜΕΣΗ πρωτεΐνη των υδατανθράκων του μενού — αλλιώς κοτόπουλο + ρύζι έβγαινε
@@ -411,13 +423,14 @@ function mixBuildWeek(c,lang){
       m.carbProt=mixMedianCarbP(m.carb);
       m.prot=prots.map(function(n){ var q=mixProteinPortion(n,m.p,m.carbProt,lang); if(q) q.oil=mixOilSpoons(q,m,m.carbFat); return q; }).filter(Boolean);
       m.legumes=(menu.legume||[]).filter(function(n){ return mixAllowed(ctx,n,d); })
-        .map(function(n){ var lp=mixLegumePlate(ctx,d,m,n,lang,menu); if(lp){ lp.ok=mixPlateOk(lp.tot,m); } return lp; }).filter(Boolean);
+        .map(function(n){ var lp=mixLegumePlate(ctx,d,m,n,lang,menu); if(lp){ lp.ok=mixPlateOk(lp.tot,m,lp.add?mixFishFat(lp.add):0); } return lp; }).filter(Boolean);
       m.fat=mixFatFor(ctx,d,1,lang);
       // έλεγχος όλων των συνδυασμών πρωτεΐνη × υδατάνθρακας για αυτό το γεύμα
       prots.forEach(function(pn){ carbs.forEach(function(cn){
         var pair=pn+'|'+cn; if(hidden.indexOf(pair)!==-1) return;
         var pl=mixPlate(ctx,d,m,pn,cn,lang,{carbP:m.carbProt}); if(!pl) return;   // λάδι = ακριβές για το πιάτο, όπως στο link
-        var r=mixPlateOk(pl.tot,m); check.total++;
+        var r=mixPlateOk(pl.tot,m,mixFishFat(pl.prot)); check.total++;
+        if(r.ok&&r.fish&&r.fPct>MIX_FAT_TOL*100) check.fishOk=(check.fishOk||0)+1;
         if(r.ok){ check.ok++; return; }
         var b=check.bad[pair]||(check.bad[pair]={prot:pn,carb:cn,n:0,kPct:0,fPct:0});
         b.n++; if(Math.abs(r.kPct)>Math.abs(b.kPct)) b.kPct=r.kPct; if(r.fPct>b.fPct) b.fPct=r.fPct;

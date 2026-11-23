@@ -2902,7 +2902,7 @@ const MIX_I18N={
     handV:'Λαχανικά: 2 γροθιές',handF:'Λίπος: {n} αντίχειρας(ες)',askMe:'💬 Ρώτησέ με',ideaAlt:'✓ Έφαγα κάτι παρόμοιο',
     noIdeas:'Δεν υπάρχουν έτοιμες ιδέες για αυτό το γεύμα.',pre:'πριν την προπόνηση',post:'μετά την προπόνηση',mid:'ανάμεσα στις προπονήσεις',
     tapBuild:'Φτιάξε το πιάτο σου →',tapIdea:'Διάλεξε ιδέα →',or:'ή',
-    futureNote:'Μελλοντική μέρα: δες τι μπορείς να φας. Το «Αυτό έφαγα» ανοίγει την ίδια μέρα.',similar:'κάτι παρόμοιο'},
+    futureNote:'Μελλοντική μέρα: δες τι μπορείς να φας. Το «Αυτό έφαγα» ανοίγει την ίδια μέρα.',similar:'κάτι παρόμοιο',fishFat:'🐟 Το επιπλέον λίπος είναι από το ψάρι (ωμέγα-3) — είναι εντάξει.'},
   en:{nav_menu:'Menu',subMenu:'Pick what you like — the amounts are measured for you',week:'This week',
     fish:'Fish',legumes:'Legumes',red:'Red meat',upTo:'up to',build:'Build your plate',pickIdea:'Pick one idea',
     plateTab:'🍽️ Plate',legTab:'🫘 Legumes',protein:'① Protein',carb:'② Carbs',legume:'Pick a legume',
@@ -2913,7 +2913,7 @@ const MIX_I18N={
     handV:'Vegetables: 2 fists',handF:'Fat: {n} thumb(s)',askMe:'💬 Ask me',ideaAlt:'✓ I ate something similar',
     noIdeas:'No ready ideas for this meal.',pre:'before training',post:'after training',mid:'between sessions',
     tapBuild:'Build your plate →',tapIdea:'Pick an idea →',or:'or',
-    futureNote:'Future day: see what you can eat. “I ate this” opens on the day itself.',similar:'something similar'},
+    futureNote:'Future day: see what you can eat. “I ate this” opens on the day itself.',similar:'something similar',fishFat:'🐟 The extra fat comes from the fish (omega-3) — that is fine.'},
   ru:{nav_menu:'Меню',subMenu:'Выбирайте — порции уже рассчитаны для вас',week:'На этой неделе',
     fish:'Рыба',legumes:'Бобовые',red:'Красное мясо',upTo:'до',build:'Соберите тарелку',pickIdea:'Выберите один вариант',
     plateTab:'🍽️ Тарелка',legTab:'🫘 Бобовые',protein:'① Белок',carb:'② Углеводы',legume:'Выберите бобовые',
@@ -2924,7 +2924,7 @@ const MIX_I18N={
     handV:'Овощи: 2 кулака',handF:'Жиры: {n} больш. палец(а)',askMe:'💬 Спросите меня',ideaAlt:'✓ Я съел(а) что-то похожее',
     noIdeas:'Для этого приёма пищи нет готовых вариантов.',pre:'до тренировки',post:'после тренировки',mid:'между тренировками',
     tapBuild:'Соберите тарелку →',tapIdea:'Выберите вариант →',or:'или',
-    futureNote:'Будущий день: можно посмотреть, что есть. «Я это съел(а)» доступно в сам день.',similar:'что-то похожее'},
+    futureNote:'Будущий день: можно посмотреть, что есть. «Я это съел(а)» доступно в сам день.',similar:'что-то похожее',fishFat:'🐟 Дополнительный жир — из рыбы (омега-3), это нормально.'},
   tr:{nav_menu:'Menü',subMenu:'Seç — miktarlar senin için hesaplandı',week:'Bu hafta',
     fish:'Balık',legumes:'Baklagiller',red:'Kırmızı et',upTo:'en fazla',build:'Tabağını oluştur',pickIdea:'Bir fikir seç',
     plateTab:'🍽️ Tabak',legTab:'🫘 Baklagil',protein:'① Protein',carb:'② Karbonhidrat',legume:'Baklagil seç',
@@ -2935,7 +2935,7 @@ const MIX_I18N={
     handV:'Sebze: 2 yumruk',handF:'Yağ: {n} başparmak',askMe:'💬 Bana sor',ideaAlt:'✓ Benzer bir şey yedim',
     noIdeas:'Bu öğün için hazır fikir yok.',pre:'antrenmandan önce',post:'antrenmandan sonra',mid:'antrenmanlar arası',
     tapBuild:'Tabağını oluştur →',tapIdea:'Bir fikir seç →',or:'veya',
-    futureNote:'İleri bir gün: ne yiyebileceğine bak. “Bunu yedim” o gün açılır.',similar:'benzer bir şey'}
+    futureNote:'İleri bir gün: ne yiyebileceğine bak. “Bunu yedim” o gün açılır.',similar:'benzer bir şey',fishFat:'🐟 Fazla yağ balıktan geliyor (omega-3) — sorun değil.'}
 };
 function MT(key,vars){
   let s=(MIX_I18N[LANG]&&MIX_I18N[LANG][key])!=null?MIX_I18N[LANG][key]:(MIX_I18N.el[key]!=null?MIX_I18N.el[key]:key);
@@ -2986,12 +2986,13 @@ function mxPlate(q,s,m,day){
     oilMac=[0,0,sp*O.f,sp*O.k]; oilTxt=sp>0?mxHalf(sp)+' '+O.unit:O.none;
     pf=pf.filter(x=>x[0]!=='Ελαιόλαδο'); if(sp>0)pf=pf.concat([['Ελαιόλαδο',sp*O.g]]);
   }
-  return {mac:mxSum([p[4],oilMac,c[3],veg]),name:fp.n+' + '+fc.n,el:fp.el+' + '+fc.el,f:pf.concat(c[4]||[]),t:t,
+  return {fishF:fp.o3?p[4][2]:0,mac:mxSum([p[4],oilMac,c[3],veg]),name:fp.n+' + '+fc.n,el:fp.el+' + '+fc.el,f:pf.concat(c[4]||[]),t:t,
     hidden:(SNAP.mix.hidden||[]).indexOf(p[0]+'|'+c[0])>-1,oil:oilTxt,
     lines:[[fp.e,fp.n,p[1],p[2]],[fc.e,fc.n,c[1],c[2]],['🥗',SNAP.mix.vegTxt||'',' ',''],['🫒',oilTxt,'','']]};
 }
-function mxBar(label,v,t,col){
-  const ok=t>0&&Math.abs(v-t)/t<=.12;
+function mxBar(label,v,t,col,excuse){
+  // excuse: γραμμάρια λίπους λιπαρού ψαριού (ωμέγα-3) που δεν μετράνε ως υπέρβαση (ίδιος κανόνας με την εφαρμογή)
+  const ok=t>0&&(Math.abs(v-t)/t<=.12||(excuse>0&&v>t&&v-Math.min(excuse,v-t)<=t*1.12));
   return '<div class="mx-rowb"><span>'+esc(label)+'</span><span><b>'+Math.round(v)+'</b> / '+Math.round(t)+' g'+(ok?' ✓':'')+'</span></div>'
     +'<div class="mx-bar"><i style="width:'+Math.min(100,t?v/t*100:0)+'%;background:'+col+'"></i></div>';
 }
@@ -3098,7 +3099,8 @@ function viewMix(){
         const mc=m.macros||{};
         h+='<div class="mx-plate"><b>'+esc(MT('yourPlate'))+'</b> <span class="mx-k">· '+nfmt(pl.mac[3])+' kcal</span><ul>'
           +pl.lines.filter(l=>l[1]).map(l=>'<li>'+esc(l[0])+' '+esc(l[1])+(l[2]&&l[2].trim()?' <b>'+esc(l[2])+'</b>':'')+(l[3]?' <span class="mx-k">('+esc(l[3])+')</span>':'')+'</li>').join('')+'</ul>'
-          +mxBar(MT('P'),pl.mac[0],mc.p,'#1565c0')+mxBar(MT('C'),pl.mac[1],mc.c,'#2e7d32')+mxBar(MT('F'),pl.mac[2],mc.f,'#b26a00')
+          +mxBar(MT('P'),pl.mac[0],mc.p,'#1565c0')+mxBar(MT('C'),pl.mac[1],mc.c,'#2e7d32')+mxBar(MT('F'),pl.mac[2],mc.f,'#b26a00',pl.fishF)
+          +(pl.fishF&&pl.mac[2]>mc.f*1.12?'<div class="mx-k" style="margin-top:4px">'+esc(MT('fishFat'))+'</div>':'')
           +(pl.hidden?'<div class="mx-warnline">⚠️ '+esc(MT('hiddenCombo'))+'</div>':'')+'</div>';
         if(!isFuture)h+='<button type="button" class="mx-btn" data-mxa="eat">'+esc(MT('ate'))+'</button>';
       }

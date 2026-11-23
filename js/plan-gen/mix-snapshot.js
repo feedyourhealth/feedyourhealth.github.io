@@ -45,6 +45,7 @@ function mixSnapshotPart(c,lang){
       var e={n:mixFoodName(n,lang),el:n,e:mixFoodEmoji(n),r:role.charAt(0),t:tier||'star'};
       if(inMenu) e.s=1;
       if(n!==MIX_OMELETTE.key&&mixIsFish(n)) e.fi=1;
+      if(n!==MIX_OMELETTE.key&&mixIsOilyFish(n)) e.o3=1;   // 🐟 ωμέγα-3: το λίπος του δεν μετράει ως υπέρβαση
       if(mixIsRedMeat(n)) e.rm=1;
       foods.push(e);
     }

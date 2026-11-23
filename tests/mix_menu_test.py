@@ -86,6 +86,17 @@ try:
           return [mixOilSpoons(ch,m,1), mixOilSpoons(sa,m,1)];}})()''')
         check(r[0] >= 0.5 and r[1] == 0, f'chicken gets oil, salmon none on a low-fat meal ({r})')
 
+        print('3b. Λιπαρά ψάρια: το λίπος του ψαριού δεν μετράει ως υπέρβαση (πελάτης με λίπος 16%)')
+        r = J(f'''(()=>{{var c={C("gi")}, ctx=mixCtx(c), m={{p:28,c:64,f:8}};
+          var sa=mixPlate(ctx,1,m,'Σολομός (ψητός)','Ρύζι άσπρο (βρ.)','el'), ok=mixPlateOk(sa.tot,m,mixFishFat(sa.prot)), raw=mixPlateOk(sa.tot,m,0);
+          var br=mixPlate(ctx,1,m,'Σολομός (ψητός)','Ψωμί ολικής άλεσης','el'), okb=mixPlateOk(br.tot,m,mixFishFat(br.prot));
+          var ch=mixPlate(ctx,1,m,'Κοτόπουλο μπιφτέκι','Ψωμί ολικής άλεσης','el'), okc=mixPlateOk(ch.tot,m,mixFishFat(ch.prot));
+          return {{ok:ok.ok, raw:raw.ok, fPct:ok.fPct, okb:okb.ok, okc:okc.ok, oily:[mixIsOilyFish('Σολομός (ψητός)'),mixIsOilyFish('Σκουμπρί (ψητό)'),mixIsOilyFish('Σαρδέλες (κονσέρβα, νερό)'),mixIsOilyFish('Λαβράκι (ψητό)')]}};}})()''')
+        check(r['oily'] == [True, True, True, False], 'oily fish = salmon, mackerel, sardines (not sea bass)')
+        check(r['ok'] and not r['raw'], f'salmon + rice on an 8 g-fat meal: inside thanks to the fish rule (fat +{r["fPct"]}%)')
+        check(not r['okb'], 'salmon + wholemeal bread still out (the extra fat is the bread, not the fish)')
+        check(not r['okc'], 'non-fish fatty protein (chicken patty) gets no exception')
+
         print('4. Μενού: προεπιλογή, αλλεργίες, αποκλεισμοί, vegan, νηστεία ανά μέρα')
         r = J(f'''(()=>{{var g=mixDefaultMenu({C("gi")}), a=mixDefaultMenu({C("al")}), v=mixDefaultMenu({C("ve")}), f={C("fa")};
           f.mixMenu=mixDefaultMenu(f); var w=mixBuildWeek(f,'el');

@@ -228,6 +228,7 @@ function mixCheckHtml(w){
   var pct=Math.round(ck.ok/ck.total*100);
   var h='<div class="mx-check'+(ck.badList.length?' warn':'')+'"><b>🔎 Έλεγχος συνδυασμών</b> '
     +'<span>✓ '+ck.ok+' / '+ck.total+' ('+pct+'%) εντός ±10% θερμίδων με λίπος έως +20% — όλες οι μέρες, μεσημεριανό και βραδινό</span>';
+  if(ck.fishOk) h+='<span class="mx-sub">🐟 Στα λιπαρά ψάρια (σολομός, σκουμπρί, σαρδέλες) το λίπος του ψαριού (ωμέγα-3) δεν μετράει ως υπέρβαση — '+ck.fishOk+' συνδυασμοί είναι εντός χάρη σε αυτό.</span>';
   if(ck.badList.length){
     // οι 3 χειρότεροι πάντα ορατοί, οι υπόλοιποι σε «δες όλους» (ανοιχτό αν ήταν ανοιχτό)
     var bad=function(b){
