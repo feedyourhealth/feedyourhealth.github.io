@@ -340,7 +340,7 @@ function setClientTrainer(c,tid,silent){
   trainerRevokeLink(c);                    // ο προηγούμενος γυμναστής δεν βλέπει πια τίποτα
   c.trainerId=tid||null;
   if(oldTid) trainerHubRefresh(oldTid);    // …ούτε στον προσωπικό του σύνδεσμο
-  c.trainerConsent=false; c.trainerConsentAt=null;
+  c.trainerConsent=false; c.trainerConsentAt=null; c.trainerShareWorkouts=false;
   c.trainerReferred=false;
   c.trainerSince=tid?new Date().toISOString().slice(0,10):null;
   if(typeof save==='function') save();
@@ -351,11 +351,17 @@ function setClientTrainerConsent(on){
   if(on){ c.trainerConsent=true; c.trainerConsentAt=new Date().toISOString(); c.trainerConsentRevokedAt=null; }
   else {
     if(c.trainerToken && !confirm('Ανάκληση συναίνεσης;\n\nΟ σύνδεσμος που έχει ήδη ο γυμναστής θα σταματήσει να ανοίγει.')){ _trRefreshClientCard(); return; }
-    trainerRevokeLink(c); c.trainerConsent=false; c.trainerConsentRevokedAt=new Date().toISOString();
+    trainerRevokeLink(c); c.trainerConsent=false; c.trainerShareWorkouts=false; c.trainerConsentRevokedAt=new Date().toISOString();
     trainerHubRefresh(c.trainerId);
   }
   if(typeof save==='function') save();
   _trRefreshClientCard();
+}
+function setClientTrainerWorkouts(on){
+  var c=getC(); if(!c) return;
+  c.trainerShareWorkouts=!!on; c.trainerShareWorkoutsAt=on?new Date().toISOString():null;
+  if(typeof save==='function') save();
+  trainerHubRefresh(c.trainerId);
 }
 function setClientTrainerReferred(on){ var c=getC(); if(!c) return; c.trainerReferred=!!on; if(typeof save==='function') save(); }
 function onClientTrainerSelect(v){
@@ -389,7 +395,9 @@ function buildTrainerCardHtml(c){
       +'<div style="min-width:0;flex:1"><a href="javascript:void(0)" onclick="openTrainerProfile(\''+escJsAttr(t.id)+'\')" style="font-weight:700;color:var(--tr-head)">'+esc(t.name)+'</a>'
       +'<div style="font-size:12px;color:var(--tr-sub)">'+esc(TRAINER_KIND_LABEL[t.kind]||'Γυμναστής')+(t.place?' · '+esc(t.place):'')+'</div></div></div>'
       +'<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer;margin-bottom:4px"><input type="checkbox" style="margin-top:2px" '+(c.trainerConsent?'checked ':'')+'onchange="setClientTrainerConsent(this.checked)">'
-      +'<span>Ο/Η πελάτης συμφωνεί να λαμβάνει αναφορές ο '+(t.kind==='coach'?'προπονητής':'γυμναστής')+(c.trainerConsent&&c.trainerConsentAt?' <span style="color:var(--tr-sub)">(από '+_trDateShort(c.trainerConsentAt)+')</span>':'')+'</span></label>'
+      +'<span>'+((c.age>0&&c.age<18)?'Ο γονέας συμφωνεί (ανήλικος)':'Ο/Η πελάτης συμφωνεί')+' να λαμβάνει αναφορές ο '+(t.kind==='coach'?'προπονητής':'γυμναστής')+(c.trainerConsent&&c.trainerConsentAt?' <span style="color:var(--tr-sub)">(από '+_trDateShort(c.trainerConsentAt)+')</span>':'')+'</span></label>'
+      // 🏃 Ξεχωριστή συναίνεση: προπονήσεις που σημειώνει στο δικό του link (πίνακας ομάδας)
+      +(c.trainerConsent?'<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer;margin:0 0 4px 22px"><input type="checkbox" style="margin-top:2px" '+(c.trainerShareWorkouts?'checked ':'')+'onchange="setClientTrainerWorkouts(this.checked)"><span>🏃 Να βλέπει και πόσες προπονήσεις σημειώνει στο link του</span></label>':'')
       +'<label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer;margin-bottom:8px"><input type="checkbox" '+(c.trainerReferred?'checked ':'')+'onchange="setClientTrainerReferred(this.checked)"><span>🤝 Ήρθε από σύσταση του/της</span></label>'
       +'<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tr-sub);margin-bottom:10px"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex:none"></span>'+esc(line)+'</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
@@ -637,6 +645,32 @@ function _trAfterSendRefresh(){
 // ═══════════════════════════════════════════════════════════════════════════════════
 var TRAINER_HUB_DAYS=180;
 
+// 📋 Στήλες του πίνακα ομάδας (φάση 2 · 6). Μόνο σήματα, όχι ιατρικά: η «χαμηλή ενέργεια» είναι η
+// ενεργειακή διαθεσιμότητα των στόχων (θερμίδες − άσκηση)/άλιπη μάζα, ΟΧΙ το RED-S από τον κύκλο.
+function _trTeamRow(c){
+  var log=(c.weightLog||[]).filter(function(e){return e&&e.weight>0;}).slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+  var L=log[log.length-1]||null, P=log.length>1?log[log.length-2]:null, o={lastMeas:L?L.date:null};
+  if(L&&P){
+    var dd=(new Date(L.date)-new Date(P.date))/86400000;
+    if(dd>=5){ var pct=(P.weight-L.weight)*100/P.weight/(dd/7); if(pct>1) o.fastLoss=Math.round(pct*10)/10; }
+  }
+  try{
+    var isAth=(typeof phaIsAthlete==='function')?phaIsAthlete(c):false;
+    if(isAth){ var td=calcTDEE(c); if(td&&!td.incomplete&&td.ea!=null) o.ea=Math.round(td.ea); }
+  }catch(e){}
+  if(c.trainerShareWorkouts&&window.Cloud&&Cloud.workoutLogFor){
+    var wl=Cloud.workoutLogFor(c)||{}, planned=0, done=0, any=Object.keys(wl).length>0;
+    for(var i=6;i>=0;i--){
+      var d=new Date(); d.setDate(d.getDate()-i);
+      var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      var dow=(d.getDay()+6)%7, pl=!!(c.trainDays&&c.trainDays[dow]), e=wl[k]||{};
+      if(pl) planned++;
+      if(e.d||e.e) done++;
+    }
+    o.wk={done:done,planned:planned,any:any||!!c.shareToken};
+  }
+  return o;
+}
 function buildTrainerHubSnapshot(t){
   var lang=t.lang==='en'?'en':'el';
   var list=trainerClients(t.id).filter(function(c){ return c.trainerConsent && c.trainerToken; }).map(function(c){
@@ -649,7 +683,8 @@ function buildTrainerHubSnapshot(t){
       bf:(m&&m.bf>0)?+(+m.bf).toFixed(1):null,
       dBf:(m&&pv&&m.bf>0&&pv.bf>0)?Math.round((m.bf-pv.bf)*10)/10:null,
       w:m?+(+m.weight).toFixed(1):null,
-      comp:(function(r){ return r?{name:r.name,date:r.date,cls:r.cls}:null; })(_trNextComp(c))};
+      comp:(function(r){ return r?{name:r.name,date:r.date,cls:r.cls}:null; })(_trNextComp(c)),
+      team:_trTeamRow(c)};
   }).sort(function(a,b){ return String(b.sentAt||'').localeCompare(String(a.sentAt||'')); });
   return {v:1,kind:'trainer_hub',lang:lang,
     trainer:{name:t.name||'',kind:t.kind==='coach'?'coach':'trainer',
@@ -743,4 +778,15 @@ function rotateTrainerHub(tid){
     showSuccessToast('🔄 Νέος σύνδεσμος — στείλ\' τον στον/στην '+t.name);
     _trAfterSendRefresh();
   }).catch(function(e){ showErrorToast(e.message||'Σφάλμα'); });
+}
+
+// Μία φορά ανά 12 ώρες, μετά τη φόρτωση των προπονήσεων (app-part7 refreshWorkoutLogCache), ξαναδημοσιεύονται
+// οι σύνδεσμοι των γυμναστών ώστε ο πίνακας ομάδας να μη μένει με παλιά νούμερα. Μόνο όσοι έχουν σύνδεσμο.
+function trainerHubsPeriodicRefresh(){
+  var now=Date.now();
+  getTrainers().forEach(function(t){
+    if(!t.hubToken) return;
+    var last=t.hubUpdatedAt?new Date(t.hubUpdatedAt).getTime():0;
+    if(now-last>12*3600*1000) trainerHubRefresh(t.id);
+  });
 }

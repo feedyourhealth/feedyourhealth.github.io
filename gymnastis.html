@@ -73,6 +73,16 @@
   .hubc .hb small{font-size:.8rem;color:var(--muted)}
   .hubc .nw{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--teal);color:var(--on)}
   .hubc .hb small.cmp{color:#b26a00;font-weight:600}
+  .seg{display:flex;border:1px solid var(--bord);border-radius:12px;overflow:hidden;margin:0 0 12px;background:var(--card)}
+  .seg button{flex:1;border:0;background:none;font:inherit;font-size:.88rem;font-weight:600;padding:9px;color:var(--muted);cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--tint);color:var(--teal-d)}
+  .seg .cnt{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:#b26a00;color:#fff;font-size:.72rem}
+  table.team td,table.team th{text-align:left;white-space:nowrap}
+  table.team td a{color:var(--teal-d);font-weight:600;text-decoration:none}
+  table.team td.fl{white-space:normal;min-width:120px}
+  .tf{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:999px;margin:1px 3px 1px 0;white-space:nowrap}
+  .tf.ok{background:var(--tint);color:var(--good)} .tf.warn{background:#fff1d6;color:#8a5200} .tf.bad{background:#fde3e0;color:var(--bad)} .tf.info{background:var(--tint2);color:var(--muted)}
+  @media (prefers-color-scheme: dark){ .tf.warn{background:#3a2c14;color:#f0c46e} .tf.bad{background:#3a1e1c;color:#ef9a9a} }
   .hubc .chev{font-size:1.4rem;color:var(--faint)}
   .back{display:inline-block;margin:2px 4px 4px;font-size:.85rem;color:var(--teal-d);text-decoration:none;font-weight:600}
   .foot{text-align:center;font-size:.74rem;color:var(--faint);margin-top:10px}
@@ -125,7 +135,7 @@ const T={
     },
     phases:{deficit:'Έλλειμμα θερμίδων (απώλεια λίπους)',mild:'Ήπιο έλλειμμα θερμίδων',maintain:'Διατήρηση',surplus:'Πλεόνασμα θερμίδων (αύξηση μάζας)',sport:'Αθλητική διατροφή (απόδοση)',custom:'Εξατομικευμένο πλάνο'},
     phaseTip:{deficit:'Σε έλλειμμα η ανάκαμψη μπορεί να είναι πιο αργή. Η προπόνηση δύναμης βοηθά να διατηρηθεί η μυϊκή μάζα.',mild:'Σε ήπιο έλλειμμα η απόδοση συνήθως διατηρείται. Η προπόνηση δύναμης βοηθά να διατηρηθεί η μυϊκή μάζα.',surplus:'Σε πλεόνασμα, η προοδευτική επιβάρυνση στην προπόνηση δύναμης αξιοποιεί τις επιπλέον θερμίδες.',sport:'Οι υδατάνθρακες προσαρμόζονται στις μέρες προπόνησης και αγώνα.'},
-    hubHi:'Γεια σου',hubSub:'Οι κοινοί μας πελάτες στο Feed Your Health',hubN:'πελάτες',hubNew:'Νέο',hubEmpty:'Δεν υπάρχει ακόμα αναφορά. Μόλις στείλω την πρώτη, θα εμφανιστεί εδώ.',hubOnly:'Βλέπεις μόνο όσους έχουν δώσει συναίνεση.',compH:'🏆 Επόμενος αγώνας',inDays:'σε {n} μέρες',today:'σήμερα',cls:'Κατηγορία',cur:'Βάρος μέτρησης',dist:'Απόσταση',need:'Χρειάζεται',perWk:'kg/εβδ.',weigh:'Ζύγιση',inCls:'✓ μέσα',lvl:{in:'Μέσα στην κατηγορία. Στόχος να μείνει εκεί χωρίς «κόψιμο».',ok:'Εφικτό με ήπιο έλλειμμα θερμίδων.',warn:'Εφικτό, με συνεπές έλλειμμα. Ας προστατέψουμε την απόδοση στις προπονήσεις.',bad:'Δεν είναι ασφαλές να βγει με απώλεια λίπους ως τη ζύγιση. Ας το συζητήσουμε (π.χ. ανώτερη κατηγορία).'},minorNote:'Ανήλικος αθλητής: καμία αφυδάτωση, σάουνα ή νηστεία για τη ζύγιση.',hubSave:'Κράτησε αυτή τη σελίδα στο κινητό σου: κάθε νέα αναφορά εμφανίζεται εδώ.',back:'← Όλοι οι πελάτες μου',upd:'Ενημερώθηκε',meas2:'Μέτρηση',
+    hubHi:'Γεια σου',hubSub:'Οι κοινοί μας πελάτες στο Feed Your Health',hubN:'πελάτες',hubNew:'Νέο',hubEmpty:'Δεν υπάρχει ακόμα αναφορά. Μόλις στείλω την πρώτη, θα εμφανιστεί εδώ.',hubOnly:'Βλέπεις μόνο όσους έχουν δώσει συναίνεση.',vList:'Λίστα',vTeam:'Πίνακας ομάδας',tAth:'Αθλητής',tMeas:'Μέτρηση',tTrend:'Τάση',tWk:'Προπονήσεις 7ημ.',tFlag:'Σήμα',fOk:'ΟΚ',fEaLow:'⚡ Χαμηλή ενέργεια',fEaMid:'⚡ Οριακή ενέργεια',fFast:'📉 Γρήγορη απώλεια',fMeas:'📐 Χρειάζεται μέτρηση',fComp:'🏆 Αγώνας σε {n} ημ.',teamNote:'Σήματα: ⚡ ενέργεια = θερμίδες πλάνου μείον άσκηση ανά kg άλιπης μάζας (κάτω από 30 = χαμηλή) · 📉 πάνω από 1% του βάρους την εβδομάδα · 📐 4+ εβδομάδες χωρίς μέτρηση. Οι προπονήσεις φαίνονται μόνο με συναίνεση και είναι όσες σημείωσε ο αθλητής στο link του.',needAtt:'χρειάζονται προσοχή',compH:'🏆 Επόμενος αγώνας',inDays:'σε {n} μέρες',today:'σήμερα',cls:'Κατηγορία',cur:'Βάρος μέτρησης',dist:'Απόσταση',need:'Χρειάζεται',perWk:'kg/εβδ.',weigh:'Ζύγιση',inCls:'✓ μέσα',lvl:{in:'Μέσα στην κατηγορία. Στόχος να μείνει εκεί χωρίς «κόψιμο».',ok:'Εφικτό με ήπιο έλλειμμα θερμίδων.',warn:'Εφικτό, με συνεπές έλλειμμα. Ας προστατέψουμε την απόδοση στις προπονήσεις.',bad:'Δεν είναι ασφαλές να βγει με απώλεια λίπους ως τη ζύγιση. Ας το συζητήσουμε (π.χ. ανώτερη κατηγορία).'},minorNote:'Ανήλικος αθλητής: καμία αφυδάτωση, σάουνα ή νηστεία για τη ζύγιση.',hubSave:'Κράτησε αυτή τη σελίδα στο κινητό σου: κάθε νέα αναφορά εμφανίζεται εδώ.',back:'← Όλοι οι πελάτες μου',upd:'Ενημερώθηκε',meas2:'Μέτρηση',
     errMiss:['Λείπει ο σύνδεσμος.','Ζήτησε από τον διαιτολόγο το σωστό link.'],
     errNF:['Η αναφορά δεν βρέθηκε.','Ο σύνδεσμος μπορεί να έληξε ή να ανακλήθηκε.'],
     errExp:['Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο νέα αναφορά.']
@@ -146,7 +156,7 @@ const T={
     },
     phases:{deficit:'Calorie deficit (fat loss)',mild:'Mild calorie deficit',maintain:'Maintenance',surplus:'Calorie surplus (muscle gain)',sport:'Sports nutrition (performance)',custom:'Individual plan'},
     phaseTip:{deficit:'In a deficit, recovery may be slower. Strength training helps preserve muscle mass.',mild:'In a mild deficit performance is usually maintained. Strength training helps preserve muscle mass.',surplus:'In a surplus, progressive overload in strength training makes the most of the extra energy.',sport:'Carbohydrates are adjusted to training and match days.'},
-    hubHi:'Hi',hubSub:'Our shared clients at Feed Your Health',hubN:'clients',hubNew:'New',hubEmpty:'No report yet. As soon as I send the first one, it will appear here.',hubOnly:'You only see clients who have given consent.',compH:'🏆 Next competition',inDays:'in {n} days',today:'today',cls:'Weight class',cur:'Weight at assessment',dist:'Distance',need:'Needed',perWk:'kg/week',weigh:'Weigh-in',inCls:'✓ within',lvl:{in:'Within the weight class. The goal is to stay there without cutting.',ok:'Achievable with a mild calorie deficit.',warn:'Achievable with a consistent deficit. Let us protect training performance.',bad:'Not safe to make this weight through fat loss by the weigh-in. Let us discuss it (e.g. a higher class).'},minorNote:'Minor athlete: no dehydration, sauna or fasting to make weight.',hubSave:'Save this page on your phone: every new report appears here.',back:'← All my clients',upd:'Updated',meas2:'Assessment',
+    hubHi:'Hi',hubSub:'Our shared clients at Feed Your Health',hubN:'clients',hubNew:'New',hubEmpty:'No report yet. As soon as I send the first one, it will appear here.',hubOnly:'You only see clients who have given consent.',vList:'List',vTeam:'Team table',tAth:'Athlete',tMeas:'Assessment',tTrend:'Trend',tWk:'Sessions 7d',tFlag:'Flag',fOk:'OK',fEaLow:'⚡ Low energy',fEaMid:'⚡ Borderline energy',fFast:'📉 Rapid weight loss',fMeas:'📐 Needs assessment',fComp:'🏆 Competition in {n}d',teamNote:'Flags: ⚡ energy = planned calories minus exercise per kg of lean mass (below 30 = low) · 📉 more than 1% of body weight per week · 📐 4+ weeks without an assessment. Sessions are shown only with consent and are the ones the athlete logged in their own link.',needAtt:'need attention',compH:'🏆 Next competition',inDays:'in {n} days',today:'today',cls:'Weight class',cur:'Weight at assessment',dist:'Distance',need:'Needed',perWk:'kg/week',weigh:'Weigh-in',inCls:'✓ within',lvl:{in:'Within the weight class. The goal is to stay there without cutting.',ok:'Achievable with a mild calorie deficit.',warn:'Achievable with a consistent deficit. Let us protect training performance.',bad:'Not safe to make this weight through fat loss by the weigh-in. Let us discuss it (e.g. a higher class).'},minorNote:'Minor athlete: no dehydration, sauna or fasting to make weight.',hubSave:'Save this page on your phone: every new report appears here.',back:'← All my clients',upd:'Updated',meas2:'Assessment',
     errMiss:['Link is missing.','Ask the dietitian for the correct link.'],
     errNF:['Report not found.','The link may have expired or been revoked.'],
     errExp:['This link has expired.','Ask the dietitian for a new report.']
@@ -173,6 +183,16 @@ function fail(k){
 })();
 
 // ── Προσωπικός σύνδεσμος γυμναστή: λίστα κοινών πελατών (snapshot.kind==='trainer_hub') ──
+function setHubView(v){ try{ localStorage.setItem('fyh_hub_view',v); }catch(e){} if(window.__HUBSNAP) renderHub(window.__HUBSNAP); }
+function teamFlags(c,X){
+  const tm=c.team||{}, out=[];
+  if(tm.ea!=null){ if(tm.ea<30) out.push({lv:'bad',t:X.fEaLow}); else if(tm.ea<45) out.push({lv:'warn',t:X.fEaMid}); }
+  if(tm.fastLoss) out.push({lv:'warn',t:X.fFast});
+  const lm=tm.lastMeas||c.measDate; if(lm&&daysTo(lm)<=-28) out.push({lv:'warn',t:X.fMeas});
+  if(c.comp&&daysTo(c.comp.date)>=0&&daysTo(c.comp.date)<=21) out.push({lv:'info',t:X.fComp.replace('{n}',daysTo(c.comp.date))});
+  return out;
+}
+function rank(f){ return f.reduce((m,x)=>Math.max(m,x.lv==='bad'?3:x.lv==='warn'?2:1),0); }
 function seenGet(){ try{ return JSON.parse(localStorage.getItem('fyh_hub_seen')||'{}')||{}; }catch(e){ return {}; } }
 function seenSet(tok,at){ try{ const m=seenGet(); m[tok]=at; localStorage.setItem('fyh_hub_seen',JSON.stringify(m)); }catch(e){} }
 async function bootHub(){
@@ -194,7 +214,28 @@ function renderHub(s){
   let h='<div class="who"><div class="eb">'+esc(X.hubSub)+'</div><h1>'+esc(X.hubHi+' '+first)+' 👋</h1>'
     +'<div class="upd">'+L.length+' '+esc(X.hubN)+' · '+esc(X.upd)+' '+esc(fmtD(String(s.updatedAt||'').slice(0,10)))+'</div></div>';
   if(!L.length) h+='<div class="card" style="color:var(--muted)">'+esc(X.hubEmpty)+'</div>';
-  L.forEach(c=>{
+  const canTeam=L.length>=2 && (s.trainer&&s.trainer.kind==='coach' || L.length>=4);
+  let view='list'; try{ view=localStorage.getItem('fyh_hub_view')||((s.trainer&&s.trainer.kind==='coach'&&L.length>=4)?'team':'list'); }catch(e){}
+  if(!canTeam) view='list';
+  if(canTeam){
+    const nAtt=L.filter(c=>teamFlags(c,X).some(f=>f.lv!=='info')).length;
+    h+='<div class="seg" role="tablist"><button role="tab" aria-pressed="'+(view==='list')+'" onclick="setHubView(\'list\')">'+esc(X.vList)+'</button>'
+      +'<button role="tab" aria-pressed="'+(view==='team')+'" onclick="setHubView(\'team\')">'+esc(X.vTeam)+(nAtt?' <span class="cnt">'+nAtt+'</span>':'')+'</button></div>';
+  }
+  if(view==='team'){
+    const rows=L.map(c=>({c:c,f:teamFlags(c,X)})).sort((a,b)=>rank(b.f)-rank(a.f)||String(a.c.name).localeCompare(String(b.c.name)));
+    const anyWk=L.some(c=>c.team&&c.team.wk);
+    h+='<div class="card" style="padding:8px 6px"><div class="scroll"><table class="team"><thead><tr><th>'+esc(X.tAth)+'</th><th>'+esc(X.tMeas)+'</th><th>'+esc(X.bf)+'</th><th>'+esc(X.tTrend)+'</th>'+(anyWk?'<th>'+esc(X.tWk)+'</th>':'')+'<th>'+esc(X.tFlag)+'</th></tr></thead><tbody>'
+      +rows.map(r=>{ const c=r.c, tm=c.team||{}, lm=tm.lastMeas||c.measDate, old=lm&&daysTo(lm)<=-28;
+        return '<tr><td><a href="?t='+encodeURIComponent(c.token)+'&h='+encodeURIComponent(HUB)+'">'+esc(c.name)+'</a></td>'
+          +'<td'+(old?' style="color:var(--bad)"':'')+'>'+esc(fmtDs(lm))+'</td>'
+          +'<td>'+(c.bf!=null?nf(c.bf,lang)+'%':'—')+'</td>'
+          +'<td>'+(c.dBf!=null?delta(c.dBf,lang,true):'—')+'</td>'
+          +(anyWk?'<td>'+(tm.wk?(tm.wk.done+'/'+tm.wk.planned+(tm.wk.planned&&tm.wk.done>=tm.wk.planned?' ✓':'')):'<span style="color:var(--faint)">—</span>')+'</td>':'')
+          +'<td class="fl">'+(r.f.length?r.f.map(f=>'<span class="tf '+f.lv+'">'+esc(f.t)+'</span>').join(''):'<span class="tf ok">'+esc(X.fOk)+'</span>')+'</td></tr>'; }).join('')
+      +'</tbody></table></div></div>'
+      +'<div class="foot" style="text-align:left;margin:0 4px 12px">'+esc(X.teamNote)+'</div>';
+  } else L.forEach(c=>{
     const isNew=c.sentAt && seen[c.token]!==c.sentAt;
     const ini=String(c.name||'?').trim().split(/\s+/).slice(0,2).map(w=>w.charAt(0)).join('').toUpperCase();
     h+='<a class="card hubc" href="?t='+encodeURIComponent(c.token)+'&h='+encodeURIComponent(HUB)+'" onclick="seenSet('+esc(JSON.stringify(c.token))+','+esc(JSON.stringify(c.sentAt||''))+')">'
@@ -204,6 +245,7 @@ function renderHub(s){
       +(c.comp&&daysTo(c.comp.date)>=0?'<small class="cmp">🏆 '+esc(c.comp.name||'')+' · '+esc(daysTo(c.comp.date)===0?X.today:X.inDays.replace('{n}',daysTo(c.comp.date)))+(c.comp.cls?' · −'+nf(c.comp.cls,lang)+' kg':'')+'</small>':'')+'</span>'
       +(isNew?'<span class="nw">'+esc(X.hubNew)+'</span>':'')+'<span class="chev">›</span></a>';
   });
+  window.__HUBSNAP=s;
   const wa=String(s.wa||'').replace(/[^0-9]/g,'');
   if(wa) h+='<div class="acts"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+esc(wa)+'">'+esc(X.reply)+'</a></div>';
   h+='<div class="foot">'+esc(X.hubOnly)+'<br>'+esc(X.hubSave)+'</div>';

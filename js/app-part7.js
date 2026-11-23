@@ -1902,6 +1902,8 @@
       if(!tokens.length) return Promise.resolve();
       return this._fetchAllByToken('client_workout_log','token,date,data',tokens,'date','fetchAllWorkoutLogs').then(function(byToken){
         if(byToken) self._workoutLogCache=byToken;
+        // 🏋️ πίνακας ομάδας στους συνδέσμους γυμναστών (js/tabs/trainers.js) — το πολύ κάθε 12 ώρες
+        if(typeof trainerHubsPeriodicRefresh==='function'){ try{ trainerHubsPeriodicRefresh(); }catch(e){} }
       },function(){});
     },
     // ── 👎 «ΟΧΙ ΓΙΑ ΜΕΝΑ» (client_alt_reject — γράφει το plan.html, 2026-11-17) ──
