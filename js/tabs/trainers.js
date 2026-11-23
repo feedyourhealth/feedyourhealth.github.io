@@ -15,6 +15,27 @@ var TRAINER_KIND_LABEL={trainer:'Γυμναστής',coach:'Προπονητής
 var TRAINER_SIGNATURE={el:'Στέφανος Πίσινος, Κλινικός Διαιτολόγος · Feed Your Health',en:'Stephanos Pissinos, Clinical Dietitian · Feed Your Health'};
 var _trFilter='all', _trSearch='', _trOpenId=null;
 
+// Χρώματα της καρτέλας σε μεταβλητές, ώστε να ακολουθούν και το σκούρο θέμα (body.dark-mode).
+(function _trInjectStyle(){
+  if(document.getElementById('tr-style')) return;
+  var st=document.createElement('style'); st.id='tr-style';
+  st.textContent='body{--tr-sub:#5a8a82;--tr-head:#014545;--tr-av-bg:#E2EEE5;--tr-av-fg:#025857;'
+    +'--tr-good-bg:#e8f4e9;--tr-good-fg:#2e7d32;--tr-warn-bg:#fff4df;--tr-warn-fg:#9a6200;--tr-warn-bd:#f0c46e;'
+    +'--tr-bad-bg:#fdecea;--tr-bad-fg:#c0392b;--tr-mute-bg:#eef4f2;--tr-mute-fg:#5a8a82}'
+    +'body.dark-mode{--tr-sub:#9fbcb6;--tr-head:#7fdcc8;--tr-av-bg:#0f2a24;--tr-av-fg:#7fdcc8;'
+    +'--tr-good-bg:#14301a;--tr-good-fg:#8bc98f;--tr-warn-bg:#3a2c14;--tr-warn-fg:#f0c46e;--tr-warn-bd:#6b5220;'
+    +'--tr-bad-bg:#3a1a1a;--tr-bad-fg:#f09595;--tr-mute-bg:#242424;--tr-mute-fg:#b0b0b0}'
+    +'.tr-card{cursor:pointer;border:1px solid var(--border-light);border-radius:12px;padding:14px;background:var(--card-bg);display:flex;flex-direction:column;gap:8px}'
+    +'.tr-card:hover{border-color:var(--tr-av-fg)}'
+    +'.tr-card.tr-pending{border-left:4px solid var(--tr-warn-bd);padding-left:11px}'
+    +'.tr-kv{display:grid;grid-template-columns:max-content 1fr;gap:5px 14px;font-size:13px}'
+    +'.tr-kv dt{color:var(--text-muted)} .tr-kv dd{margin:0;overflow-wrap:anywhere}'
+    +'.tr-box{background:var(--card-bg);border:1px solid var(--border-light);border-radius:14px;padding:16px}'
+    +'.tr-del{background:none;border:none;color:var(--text-muted);font:inherit;font-size:12px;cursor:pointer;padding:4px 0;text-decoration:underline}'
+    +'.tr-del:hover{color:var(--tr-bad-fg)}';
+  (document.head||document.documentElement).appendChild(st);
+})();
+
 // ── Αποθήκευση ─────────────────────────────────────────────────────────────────────
 function getTrainers(){
   var l=(typeof safeStorageGet==='function')?safeStorageGet('fyh_trainers',[]):[];
@@ -50,8 +71,8 @@ function _trLastSendForTrainer(id){
   return best;
 }
 function _trPill(txt,kind){
-  var col={good:['#e8f4e9','#2e7d32'],warn:['#fff4df','#9a6200'],bad:['#fdecea','#c0392b'],mute:['#eef4f2','#5a8a82']}[kind||'mute'];
-  return '<span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;background:'+col[0]+';color:'+col[1]+'">'+txt+'</span>';
+  var k=kind||'mute';
+  return '<span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;background:var(--tr-'+k+'-bg);color:var(--tr-'+k+'-fg)">'+txt+'</span>';
 }
 function _trOverlay(id,inner,maxW){
   var ov=document.getElementById(id); if(ov) ov.remove();
@@ -127,7 +148,9 @@ function renderTrainersList(){
     if(_trFilter==='stale'){ var d=_trDaysAgo(_trLastSendForTrainer(t.id)); if(!(trainerClients(t.id).length&&(d==null||d>30))) return false; }
     if(q){ var hay=[t.name,t.place,t.specialty].join(' '); hay=(typeof foldGreekForCompare==='function')?foldGreekForCompare(hay):hay.toLowerCase(); if(hay.indexOf(q)<0) return false; }
     return true;
-  }).sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'el'); });
+  });
+  var _pend=function(t){ return trainerClients(t.id).filter(function(c){return c.trainerConsent&&trainerSendStatus(c)==='pending';}).length; };
+  list.sort(function(a,b){ var pa=_pend(a)>0, pb=_pend(b)>0; if(pa!==pb) return pa?-1:1; return String(a.name||'').localeCompare(String(b.name||''),'el'); });
   if(!getTrainers().length){
     box.innerHTML='<div style="text-align:center;padding:36px 12px;color:var(--text-muted)"><div style="font-size:34px">🏋️</div><div style="font-weight:600;margin:6px 0">Δεν έχεις προσθέσει ακόμα γυμναστές</div><div style="font-size:13px;margin-bottom:12px">Πρόσθεσε τον πρώτο και σύνδεσέ τον με τους πελάτες του.</div><button class="btn primary" onclick="openTrainerEdit(null)">+ Νέος γυμναστής</button></div>';
     return;
@@ -138,13 +161,13 @@ function renderTrainersList(){
     var pend=cl.filter(function(c){return c.trainerConsent&&trainerSendStatus(c)==='pending';}).length;
     var last=_trLastSendForTrainer(t.id), d=_trDaysAgo(last);
     var status=!cl.length?_trPill('Χωρίς πελάτες','mute'):(pend?_trPill('📤 '+pend+' μέτρηση'+(pend>1?'εις':'')+' να σταλ'+(pend>1?'ούν':'εί'),'warn'):(d!=null&&d<=30?_trPill('Ενημερωμένος','good'):_trPill('⏳ Καιρό χωρίς ενημέρωση','warn')));
-    return '<div role="button" tabindex="0" onclick="openTrainerProfile(\''+escJsAttr(t.id)+'\')" onkeydown="if(event.key===\'Enter\')openTrainerProfile(\''+escJsAttr(t.id)+'\')" style="cursor:pointer;border:1px solid var(--border-color,#dfe7e5);border-radius:12px;padding:14px;background:var(--card-bg);display:flex;flex-direction:column;gap:8px">'
-      +'<div style="display:flex;gap:10px;align-items:center"><div style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#E2EEE5;color:#025857;flex:none">'+esc(_trInitials(t.name))+'</div>'
+    return '<div role="button" tabindex="0" onclick="openTrainerProfile(\''+escJsAttr(t.id)+'\')" onkeydown="if(event.key===\'Enter\')openTrainerProfile(\''+escJsAttr(t.id)+'\')" class="tr-card'+(pend?' tr-pending':'')+'"'+(pend?' title="Υπάρχουν μετρήσεις που δεν έχουν σταλεί"':'')+'>'
+      +'<div style="display:flex;gap:10px;align-items:center"><div style="width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--tr-av-bg);color:var(--tr-av-fg);flex:none">'+esc(_trInitials(t.name))+'</div>'
       +'<div style="min-width:0"><div style="font-weight:700">'+esc(t.name)+'</div><div style="font-size:12.5px;color:var(--text-muted)">'+esc(TRAINER_KIND_LABEL[t.kind]||'Γυμναστής')+(t.place?' · '+esc(t.place):'')+'</div></div></div>'
       +'<div style="display:flex;gap:16px;font-size:12px;color:var(--text-muted)">'
-      +'<span><b style="display:block;font-size:15px;color:var(--text-color,#1c2826)">'+cl.length+'</b>πελάτες</span>'
-      +'<span><b style="display:block;font-size:15px;color:var(--text-color,#1c2826)">'+ref+'</b>σου έφερε</span>'
-      +'<span><b style="display:block;font-size:15px;color:var(--text-color,#1c2826)">'+(d==null?'—':(d===0?'σήμερα':d+' ημ.'))+'</b>τελ. αποστολή</span>'
+      +'<span><b style="display:block;font-size:15px;color:var(--text-strong)">'+cl.length+'</b>πελάτες</span>'
+      +'<span><b style="display:block;font-size:15px;color:var(--text-strong)">'+ref+'</b>σου έφερε</span>'
+      +'<span><b style="display:block;font-size:15px;color:var(--text-strong)">'+(d==null?'—':(d===0?'σήμερα':d+' ημ.'))+'</b>τελ. αποστολή</span>'
       +'</div><div>'+status+'</div></div>';
   }).join('')+'</div>';
 }
@@ -155,14 +178,14 @@ function closeTrainerProfile(){ _trOpenId=null; renderTrainers(); }
 function _trProfileHtml(t){
   var cl=trainerClients(t.id).slice().sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'el');});
   var phone=(typeof normalizePhoneIntl==='function')?normalizePhoneIntl(t.phone):'';
-  var row=function(l,v){ return v?'<tr><td style="color:var(--text-muted);padding:6px 10px 6px 0;white-space:nowrap;vertical-align:top">'+l+'</td><td style="padding:6px 0">'+v+'</td></tr>':''; };
+  var row=function(l,v){ return v?'<dt>'+l+'</dt><dd>'+v+'</dd>':''; };
   var avail=(window.clients||[]).filter(function(c){return c&&!c.trainerId;}).sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'el');});
   var rows=cl.map(function(c){
     var m=_trLastMeas(c), st=trainerSendStatus(c), s=_trLastSend(c);
     var cons=c.trainerConsent?_trPill('✓ '+_trDateShort(c.trainerConsentAt),'good'):_trPill('Όχι ακόμα','bad');
     var sent=st==='none'?'<span style="color:var(--text-muted)">—</span>':(st==='sent'?_trPill(_trDateShort(s.at),'good'):_trPill('Εκκρεμεί','warn'));
-    return '<tr style="border-top:1px solid var(--border-color,#eef4f2)">'
-      +'<td style="padding:8px 6px"><a href="javascript:void(0)" onclick="selectClient(\''+escJsAttr(c.id)+'\')" style="font-weight:600;color:#025857">'+esc(c.name||'—')+'</a>'+(c.trainerReferred?' <span title="Ήρθε από σύσταση του γυμναστή">🤝</span>':'')+'</td>'
+    return '<tr style="border-top:1px solid var(--border-light)">'
+      +'<td style="padding:8px 6px"><a href="javascript:void(0)" onclick="selectClient(\''+escJsAttr(c.id)+'\')" style="font-weight:600;color:var(--tr-head)">'+esc(c.name||'—')+'</a>'+(c.trainerReferred?' <span title="Ήρθε από σύσταση του γυμναστή">🤝</span>':'')+'</td>'
       +'<td style="padding:8px 6px">'+cons+'</td>'
       +'<td style="padding:8px 6px">'+(m?_trYmdShort(m.date):'—')+'</td>'
       +'<td style="padding:8px 6px">'+sent+'</td>'
@@ -172,23 +195,24 @@ function _trProfileHtml(t){
     +'<div style="margin-bottom:10px"><button class="btn" onclick="closeTrainerProfile()">← Όλοι οι γυμναστές</button></div>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start">'
     // στοιχεία
-    +'<div class="section-card" style="margin:0">'
-    +'<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><div style="width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:18px;background:#E2EEE5;color:#025857;flex:none">'+esc(_trInitials(t.name))+'</div>'
-    +'<div><div style="font-size:18px;font-weight:700;color:#014545">'+esc(t.name)+'</div><div style="font-size:13px;color:var(--text-muted)">'+esc(TRAINER_KIND_LABEL[t.kind]||'Γυμναστής')+(t.place?' · '+esc(t.place):'')+'</div></div></div>'
-    +'<table style="font-size:13px;border-collapse:collapse;width:100%">'
+    +'<div class="tr-box">'
+    +'<div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><div style="width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:18px;background:var(--tr-av-bg);color:var(--tr-av-fg);flex:none">'+esc(_trInitials(t.name))+'</div>'
+    +'<div><div style="font-size:18px;font-weight:700;color:var(--tr-head)">'+esc(t.name)+'</div><div style="font-size:13px;color:var(--text-muted)">'+esc(TRAINER_KIND_LABEL[t.kind]||'Γυμναστής')+(t.place?' · '+esc(t.place):'')+'</div></div></div>'
+    +'<dl class="tr-kv" style="margin:4px 0 0">'
     +row('Τηλέφωνο',esc(t.phone||''))+row('Email',esc(t.email||''))
     +row('Γλώσσα αναφοράς',t.lang==='en'?'English':'Ελληνικά')
     +row('Ειδικότητα',esc(t.specialty||''))+row('Σημειώσεις',esc(t.notes||'').replace(/\n/g,'<br>'))
-    +'</table>'
+    +'</dl>'
     +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
     +'<button class="btn" onclick="openTrainerEdit(\''+escJsAttr(t.id)+'\')">✏️ Επεξεργασία</button>'
     +(phone?'<a class="btn" style="background:#25D366;color:#fff;border-color:#25D366;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/'+esc(phone)+'">💬 WhatsApp</a>':'')
     +(t.email?'<a class="btn" style="text-decoration:none" href="mailto:'+esc(t.email)+'">✉️ Email</a>':'')
-    +'<button class="btn" style="color:#c0392b" onclick="deleteTrainer(\''+escJsAttr(t.id)+'\')">🗑 Διαγραφή</button>'
-    +'</div></div>'
+    +'</div>'
+    +'<div style="text-align:right;margin-top:14px;border-top:1px solid var(--border-light);padding-top:6px"><button class="tr-del" onclick="deleteTrainer(\''+escJsAttr(t.id)+'\')">Διαγραφή γυμναστή</button></div>'
+    +'</div>'
     // πελάτες
-    +'<div class="section-card" style="margin:0">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><div style="font-weight:700;color:#014545">Πελάτες ('+cl.length+')</div>'
+    +'<div class="tr-box">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><div style="font-weight:700;color:var(--tr-head)">Πελάτες ('+cl.length+')</div>'
     +(avail.length?'<div style="display:flex;gap:6px"><select id="tr-link-client" style="max-width:190px;font-size:13px"><option value="">＋ Σύνδεση πελάτη…</option>'+avail.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name||'—')+'</option>';}).join('')+'</select>'
       +'<button class="btn" style="font-size:12px" onclick="trainerLinkClientFromProfile(\''+escJsAttr(t.id)+'\')">Σύνδεση</button></div>':'')
     +'</div>'
@@ -211,7 +235,7 @@ function openTrainerEdit(id,afterSaveClientId){
   var t=id?getTrainer(id):null, v=t||{kind:'trainer',lang:'el'};
   var inp=function(fid,lbl,val,type,ph){ return '<div style="margin-bottom:10px"><label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:3px">'+lbl+'</label><input type="'+(type||'text')+'" id="'+fid+'" value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'" style="width:100%"></div>'; };
   _trOverlay('tr-edit-ov',
-    '<div style="font-size:18px;font-weight:700;color:#014545;margin-bottom:12px">'+(t?'✏️ Επεξεργασία γυμναστή':'🏋️ Νέος γυμναστής / προπονητής')+'</div>'
+    '<div style="font-size:18px;font-weight:700;color:var(--tr-head);margin-bottom:12px">'+(t?'✏️ Επεξεργασία γυμναστή':'🏋️ Νέος γυμναστής / προπονητής')+'</div>'
     +inp('tre-name','Ονοματεπώνυμο *',v.name,'text','π.χ. Ανδρέας Κωνσταντίνου')
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
     +'<div style="margin-bottom:10px"><label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:3px">Ιδιότητα</label><select id="tre-kind" style="width:100%"><option value="trainer"'+(v.kind!=='coach'?' selected':'')+'>Γυμναστής (personal trainer)</option><option value="coach"'+(v.kind==='coach'?' selected':'')+'>Προπονητής (άθλημα/ομάδα)</option></select></div>'
@@ -301,7 +325,7 @@ function buildTrainerCardHtml(c){
   var opts='<option value="">— Κανένας —</option>'+list.map(function(x){return '<option value="'+esc(x.id)+'"'+(t&&x.id===t.id?' selected':'')+'>'+esc(x.name)+(x.place?' · '+esc(x.place):'')+'</option>';}).join('')+'<option value="__new">＋ Νέος γυμναστής…</option>';
   var body;
   if(!t){
-    body='<div style="font-size:12.5px;color:#5a8a82;margin-bottom:8px">Ποιος τον/την γυμνάζει; Με τη συναίνεσή του/της, θα στέλνεις στον γυμναστή αναφορά μετά από κάθε μέτρηση.</div>'
+    body='<div style="font-size:12.5px;color:var(--tr-sub);margin-bottom:8px">Ποιος τον/την γυμνάζει; Με τη συναίνεσή του/της, θα στέλνεις στον γυμναστή αναφορά μετά από κάθε μέτρηση.</div>'
       +'<select onchange="onClientTrainerSelect(this.value)" style="width:100%">'+opts+'</select>';
   } else {
     var st=trainerSendStatus(c), s=_trLastSend(c);
@@ -309,13 +333,13 @@ function buildTrainerCardHtml(c){
       :(st==='none'?'Δεν υπάρχει ακόμα μέτρηση':(st==='sent'?'Στάλθηκε η τελευταία μέτρηση ('+_trDateShort(s.at)+')':'Νέα μέτρηση, δεν έχει σταλεί'));
     var dot=!c.trainerConsent?'#9fb5b0':(st==='pending'?'#e08a00':(st==='sent'?'#2e7d32':'#9fb5b0'));
     body='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-      +'<div style="width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:#E2EEE5;color:#025857;flex:none">'+esc(_trInitials(t.name))+'</div>'
-      +'<div style="min-width:0;flex:1"><a href="javascript:void(0)" onclick="openTrainerProfile(\''+escJsAttr(t.id)+'\')" style="font-weight:700;color:#014545">'+esc(t.name)+'</a>'
-      +'<div style="font-size:12px;color:#5a8a82">'+esc(TRAINER_KIND_LABEL[t.kind]||'Γυμναστής')+(t.place?' · '+esc(t.place):'')+'</div></div></div>'
+      +'<div style="width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--tr-av-bg);color:var(--tr-av-fg);flex:none">'+esc(_trInitials(t.name))+'</div>'
+      +'<div style="min-width:0;flex:1"><a href="javascript:void(0)" onclick="openTrainerProfile(\''+escJsAttr(t.id)+'\')" style="font-weight:700;color:var(--tr-head)">'+esc(t.name)+'</a>'
+      +'<div style="font-size:12px;color:var(--tr-sub)">'+esc(TRAINER_KIND_LABEL[t.kind]||'Γυμναστής')+(t.place?' · '+esc(t.place):'')+'</div></div></div>'
       +'<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer;margin-bottom:4px"><input type="checkbox" style="margin-top:2px" '+(c.trainerConsent?'checked ':'')+'onchange="setClientTrainerConsent(this.checked)">'
-      +'<span>Ο/Η πελάτης συμφωνεί να λαμβάνει αναφορές ο '+(t.kind==='coach'?'προπονητής':'γυμναστής')+(c.trainerConsent&&c.trainerConsentAt?' <span style="color:#5a8a82">(από '+_trDateShort(c.trainerConsentAt)+')</span>':'')+'</span></label>'
+      +'<span>Ο/Η πελάτης συμφωνεί να λαμβάνει αναφορές ο '+(t.kind==='coach'?'προπονητής':'γυμναστής')+(c.trainerConsent&&c.trainerConsentAt?' <span style="color:var(--tr-sub)">(από '+_trDateShort(c.trainerConsentAt)+')</span>':'')+'</span></label>'
       +'<label style="display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer;margin-bottom:8px"><input type="checkbox" '+(c.trainerReferred?'checked ':'')+'onchange="setClientTrainerReferred(this.checked)"><span>🤝 Ήρθε από σύσταση του/της</span></label>'
-      +'<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#5a8a82;margin-bottom:10px"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex:none"></span>'+esc(line)+'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tr-sub);margin-bottom:10px"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex:none"></span>'+esc(line)+'</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
       +(c.trainerConsent&&st!=='none'?'<button class="btn" style="background:#025857;color:#fff;border:1px solid #025857;font-size:12px" onclick="openTrainerSend()">📤 Αποστολή αναφοράς</button>':'')
       +'<select onchange="onClientTrainerSelect(this.value)" style="font-size:12px;max-width:180px" aria-label="Αλλαγή γυμναστή">'+opts.replace(' selected','')+'</select>'
@@ -334,7 +358,7 @@ function trainerTrackerButtonHtml(c){
   var st=trainerSendStatus(c); if(st==='none') return '';
   var first=String(t.name||'').split(/\s+/)[0];
   if(!c.trainerConsent) return '<button class="btn secondary" title="Ο πελάτης δεν έχει δώσει ακόμα συναίνεση — άνοιξε για να την καταγράψεις" onclick="openTrainerSend()">🏋️ Στον '+esc(first)+'</button>';
-  if(st==='pending') return '<button class="btn" style="background:#fff4df;color:#9a6200;border:1px solid #f0c46e;font-weight:700" title="Νέα μέτρηση που δεν έχει σταλεί στον γυμναστή" onclick="openTrainerSend()">📤 Στείλε στον '+esc(first)+'</button>';
+  if(st==='pending') return '<button class="btn" style="background:var(--tr-warn-bg);color:var(--tr-warn-fg);border:1px solid var(--tr-warn-bd);font-weight:700" title="Νέα μέτρηση που δεν έχει σταλεί στον γυμναστή" onclick="openTrainerSend()">📤 Στείλε στον '+esc(first)+'</button>';
   return '<button class="btn secondary" title="Η τελευταία μέτρηση έχει ήδη σταλεί — ξαναστείλε αν θέλεις" onclick="openTrainerSend()">🏋️ Στον '+esc(first)+' ✓</button>';
 }
 
@@ -441,25 +465,25 @@ function openTrainerSend(clientId){
   var lang=t.lang==='en'?'en':'el';
   var log=(c.weightLog||[]).filter(function(e){return e&&e.weight>0;});
   var hasSf=!!(last.sfFields&&last.sfProtocol);
-  var chk=function(id,on,title,sub,dis){ return '<label style="display:flex;gap:9px;align-items:flex-start;padding:6px 0;cursor:'+(dis?'default':'pointer')+(dis?';opacity:.55':'')+'"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+(dis?' disabled':'')+' style="margin-top:3px"><div><div style="font-weight:600;font-size:13.5px">'+title+'</div><div style="font-size:12px;color:#5a8a82">'+sub+'</div></div></label>'; };
+  var chk=function(id,on,title,sub,dis){ return '<label style="display:flex;gap:9px;align-items:flex-start;padding:6px 0;cursor:'+(dis?'default':'pointer')+(dis?';opacity:.55':'')+'"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+(dis?' disabled':'')+' style="margin-top:3px"><div><div style="font-weight:600;font-size:13.5px">'+title+'</div><div style="font-size:12px;color:var(--tr-sub)">'+sub+'</div></div></label>'; };
   _trOverlay('tr-send-ov',
-    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><span style="font-size:24px">📤</span><div style="font-size:18px;font-weight:700;color:#014545">Αναφορά για '+esc(t.name)+'</div></div>'
-    +'<div style="font-size:13px;color:#5a8a82;margin-bottom:12px"><b>'+esc(c.name||'')+'</b> · μέτρηση '+_trDateShort(last.date+'T12:00:00')+(log.length>1?' · '+log.length+' μετρήσεις συνολικά':'')+'</div>'
-    +'<div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5a8a82">Τι περιλαμβάνει</div>'
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><span style="font-size:24px">📤</span><div style="font-size:18px;font-weight:700;color:var(--tr-head)">Αναφορά για '+esc(t.name)+'</div></div>'
+    +'<div style="font-size:13px;color:var(--tr-sub);margin-bottom:12px"><b>'+esc(c.name||'')+'</b> · μέτρηση '+_trDateShort(last.date+'T12:00:00')+(log.length>1?' · '+log.length+' μετρήσεις συνολικά':'')+'</div>'
+    +'<div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--tr-sub)">Τι περιλαμβάνει</div>'
     +chk('trs-comp',true,'Σύσταση σώματος','Ονοματεπώνυμο πελάτη, βάρος, % λίπος, μάζα λίπους, άλιπη μάζα',true)
     +chk('trs-hist',log.length>1,'Πορεία τελευταίων μετρήσεων','Γράφημα και αλλαγές από μέτρηση σε μέτρηση (έως 6)',log.length<2)
     +chk('trs-phase',true,'Διατροφική φάση και στόχοι','Φάση (έλλειμμα/διατήρηση/…), ~θερμίδες, πρωτεΐνη g/kg')
     +chk('trs-sf',false,'Δερματοπτυχές ανά σημείο',hasSf?'mm ανά σημείο και αλλαγή από την προηγούμενη':'Η τελευταία μέτρηση δεν έχει δερματοπτυχές',!hasSf)
     +'<div style="display:flex;gap:9px;padding:6px 0;opacity:.55"><span>🔒</span><div style="font-size:12.5px">Ιατρικό ιστορικό, εξετάσεις, προσωπικές σημειώσεις και πλάνο γευμάτων <b>δεν μοιράζονται ποτέ</b>.</div></div>'
     +'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-top:8px">'
-    +'<div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5a8a82">Σημείωμα προς '+(t.kind==='coach'?'προπονητή':'γυμναστή')+' (προαιρετικό)</div>'
+    +'<div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--tr-sub)">Σημείωμα προς '+(t.kind==='coach'?'προπονητή':'γυμναστή')+' (προαιρετικό)</div>'
     +'<select id="trs-lang" onchange="_trRenderChips()" style="font-size:12px"><option value="el"'+(lang==='el'?' selected':'')+'>🇬🇷 Ελληνικά</option><option value="en"'+(lang==='en'?' selected':'')+'>🇬🇧 English</option></select>'
     +'</div>'
     +'<textarea id="trs-note" rows="3" style="width:100%;margin-top:6px;font:inherit;font-size:13px;padding:8px;border-radius:8px" placeholder="π.χ. Καλή πρόοδος, ανεβάζουμε λίγο τους υδατάνθρακες τις μέρες με πόδια."></textarea>'
     +'<div id="trs-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>'
     +(c.trainerConsent
       ?'<div style="font-size:12.5px;color:#2e7d32;margin-top:12px">✓ Συναίνεση πελάτη από '+_trDateShort(c.trainerConsentAt)+'</div>'
-      :'<label style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding:10px;border-radius:10px;background:#fff4df;cursor:pointer"><input type="checkbox" id="trs-consent" style="margin-top:3px"><span style="font-size:13px"><b>Ο/Η '+esc(String(c.name||'').split(' ')[0])+' συμφωνεί σήμερα</b> να σταλεί η αναφορά στον/στην '+esc(t.name)+'. <span style="color:#9a6200">(Καταγράφεται με ημερομηνία· ανακαλείται από τα Στοιχεία.)</span></span></label>')
+      :'<label style="display:flex;gap:9px;align-items:flex-start;margin-top:12px;padding:10px;border-radius:10px;background:var(--tr-warn-bg);cursor:pointer"><input type="checkbox" id="trs-consent" style="margin-top:3px"><span style="font-size:13px"><b>Ο/Η '+esc(String(c.name||'').split(' ')[0])+' συμφωνεί σήμερα</b> να σταλεί η αναφορά στον/στην '+esc(t.name)+'. <span style="color:var(--tr-warn-fg)">(Καταγράφεται με ημερομηνία· ανακαλείται από τα Στοιχεία.)</span></span></label>')
     +'<div id="trs-result" style="margin-top:14px"><button class="btn" style="width:100%;background:#025857;color:#fff;border:1px solid #025857;padding:11px" onclick="createTrainerLink()">🔗 Δημιουργία αναφοράς</button></div>'
     +'<div style="text-align:right;margin-top:12px">'+_trCloseBtn('tr-send-ov')+'</div>',520);
   _trRenderChips();
@@ -496,7 +520,7 @@ function createTrainerLink(){
   var snap=buildTrainerSnapshot(c,{lang:lang,history:v('trs-hist')?6:1,phase:v('trs-phase'),sf:v('trs-sf'),note:(document.getElementById('trs-note')||{}).value||''});
   if(!snap){ showErrorToast('Δεν υπάρχει μέτρηση για αποστολή.'); return; }
   var box=document.getElementById('trs-result');
-  if(box) box.innerHTML='<div style="text-align:center;color:#5a8a82;font-size:13px;padding:10px">Δημιουργία συνδέσμου…</div>';
+  if(box) box.innerHTML='<div style="text-align:center;color:var(--tr-sub);font-size:13px;padding:10px">Δημιουργία συνδέσμου…</div>';
   publishTrainerLink(c,snap).then(function(res){
     var last=_trLastMeas(c);
     if(!c.trainerSends) c.trainerSends=[];
@@ -509,7 +533,7 @@ function createTrainerLink(){
     if(!box) return;
     box.innerHTML='<div style="font-size:13px;color:#2e7d32;font-weight:600;margin-bottom:8px">✅ Η αναφορά είναι έτοιμη (ισχύει '+TRAINER_LINK_DAYS+' ημέρες).</div>'
       +(phone?'<a href="https://wa.me/'+esc(phone)+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;background:#25D366;color:#fff;padding:11px;border-radius:10px;font-size:14px;font-weight:600;margin-bottom:8px">💬 Στείλε στο WhatsApp ('+esc(t.phone)+')</a>'
-        :'<div style="font-size:12px;color:#9a6200;margin-bottom:8px">Δεν υπάρχει τηλέφωνο για τον/την '+esc(t.name)+' — πρόσθεσέ το στην καρτέλα Γυμναστές.</div>')
+        :'<div style="font-size:12px;color:var(--tr-warn-fg);margin-bottom:8px">Δεν υπάρχει τηλέφωνο για τον/την '+esc(t.name)+' — πρόσθεσέ το στην καρτέλα Γυμναστές.</div>')
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">'
       +(t.email?'<a class="btn" style="text-decoration:none;text-align:center" href="mailto:'+esc(t.email)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(msg)+'">✉️ Email</a>':'<button class="btn" disabled title="Λείπει email">✉️ Email</button>')
       +'<button class="btn" onclick="_trCopy(this)" data-msg="'+esc(msg)+'">📋 Αντιγραφή</button>'
@@ -517,7 +541,7 @@ function createTrainerLink(){
       +'</div>';
     _trAfterSendRefresh();
   }).catch(function(err){
-    if(box) box.innerHTML='<div style="color:#c0392b;font-size:13px;margin-bottom:8px">'+esc(err&&err.message||'Σφάλμα')+'</div><button class="btn" style="width:100%" onclick="createTrainerLink()">↻ Δοκίμασε ξανά</button>';
+    if(box) box.innerHTML='<div style="color:var(--tr-bad-fg);font-size:13px;margin-bottom:8px">'+esc(err&&err.message||'Σφάλμα')+'</div><button class="btn" style="width:100%" onclick="createTrainerLink()">↻ Δοκίμασε ξανά</button>';
   });
 }
 function _trCopy(btn){
