@@ -732,7 +732,8 @@ function progressSwapStats(c,dates,log,ckByDate,firstKey){
     st.total+=tot;
     for(var j=0;j<tot;j++){
       var v=m[j];
-      if(v && typeof v==='object'){ st.alt++; st.swaps.push({date:k,idx:j,s:v.s||'',o:v.o||'',n:v.n||'',f:v.f||[]}); }
+      // 🧩 v.mx = πιάτο/ιδέα από το Μενού επιλογών: ακολούθησε το μενού, ΔΕΝ είναι αντικατάσταση
+      if(v && typeof v==='object' && !v.mx){ st.alt++; st.swaps.push({date:k,idx:j,s:v.s||'',o:v.o||'',n:v.n||'',f:v.f||[]}); }
       else if(v) st.planned++;
       else st.missed++;
     }
@@ -859,7 +860,7 @@ function progressSwapsHtml(c,ckRows){
         var tot=progressSwapMealsTotal(c,ckByDate[k],k);
         if(k>today || r>=tot || k<firstKey){ html+='<td><span class="pr-sw-c pr-sw-cf"></span></td>'; return; }
         var v=(log[k]||{})[r];
-        if(v && typeof v==='object') html+='<td><span class="pr-sw-c pr-sw-ca" title="Εναλλακτική: '+esc(v.n||'')+'">↻</span></td>';
+        if(v && typeof v==='object' && !v.mx) html+='<td><span class="pr-sw-c pr-sw-ca" title="Εναλλακτική: '+esc(v.n||'')+'">↻</span></td>';
         else if(v) html+='<td><span class="pr-sw-c pr-sw-cp" title="Όπως στο πλάνο"></span></td>';
         else html+='<td><span class="pr-sw-c pr-sw-cn" title="Δεν τσεκαρίστηκε"></span></td>';
       });

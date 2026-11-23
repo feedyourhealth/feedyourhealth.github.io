@@ -34,9 +34,25 @@ var MIX_TXT={
   en:{cooked:'cooked',raw:'raw',drained:'drained',can1:'small can',canN:'small cans',
       cup:'cup',pc:'pc',slice:'slice',slices:'slices',egg:'egg',eggs:'eggs',white:'egg white',whites:'egg whites',
       sameRaw:'same raw',plusFruit:'+ 1 banana',oil1:'1 tbsp olive oil',oilHalf:'½ tbsp olive oil',oil0:'no oil',
-      noOilDay:'no oil today',or:'or',veg:'Vegetables / salad ≥ 200 g',cooked2:'cooked'}
+      noOilDay:'no oil today',or:'or',veg:'Vegetables / salad ≥ 200 g',cooked2:'cooked'},
+  // ru/tr: μόνο για το link του πελάτη (φάση 2)· το PDF μένει el/en όπως το «Στόχοι»
+  ru:{cooked:'готовое',raw:'сырое',drained:'без жидкости',can1:'маленькая банка',canN:'маленькие банки',
+      cup:'чаш.',pc:'шт.',slice:'ломтик',slices:'ломт.',egg:'яйцо',eggs:'яйца',white:'белок',whites:'белков',
+      sameRaw:'столько же сырого',plusFruit:'+ 1 банан',oil0:'без масла',
+      noOilDay:'сегодня без масла',or:'или',veg:'Овощи / салат ≥ 200 г',cooked2:'готов.'},
+  tr:{cooked:'pişmiş',raw:'çiğ',drained:'süzülmüş',can1:'küçük kutu',canN:'küçük kutu',
+      cup:'su bardağı',pc:'adet',slice:'dilim',slices:'dilim',egg:'yumurta',eggs:'yumurta',white:'yumurta akı',whites:'yumurta akı',
+      sameRaw:'çiğ de aynı',plusFruit:'+ 1 muz',oil0:'yağsız',
+      noOilDay:'bugün yağsız',or:'veya',veg:'Sebze / salata ≥ 200 g',cooked2:'pişmiş'}
 };
-var MIX_RAW_EN={'ωμό':'raw','ωμά':'raw','ωμές':'raw','ωμή':'raw','ωμός':'raw','ξερά':'dried','ξερές':'dried','ξερή':'dried'};
+var MIX_OIL_UNIT={el:'κ.σ. ελαιόλαδο',en:'tbsp olive oil',ru:'ст. л. оливкового масла',tr:'yemek kaşığı zeytinyağı'};
+// Ετικέτες COOKED_TO_RAW.label → γλώσσα του πελάτη (ίδιες τιμές με τα RAW_LABEL του _buildSnapshot)
+var MIX_RAW_LBL={
+  en:{'ωμό':'raw','ωμά':'raw','ωμές':'raw','ωμή':'raw','ωμός':'raw','ξερά':'dried','ξερές':'dried','ξερή':'dried'},
+  ru:{'ωμό':'сырое','ωμά':'сырые','ωμές':'сырые','ωμή':'сырая','ωμός':'сырой','ξερά':'сушёные','ξερές':'сушёные','ξερή':'сушёная'},
+  tr:{'ωμό':'çiğ','ωμά':'çiğ','ωμές':'çiğ','ωμή':'çiğ','ωμός':'çiğ','ξερά':'kuru','ξερές':'kuru','ξερή':'kuru'}
+};
+function mixRawLbl(label,lang){ var d=MIX_RAW_LBL[lang]; return d?(d[label]||d['ωμό']):label; }
 
 function mixLang(c){ return (typeof tsLang==='function')?tsLang(c):'el'; }   // ru/tr → en (όπως το «Στόχοι»)
 function mixT(lang){ return MIX_TXT[lang]||MIX_TXT.el; }
@@ -44,8 +60,8 @@ function mixRound(g){ var s=g<50?5:10; return Math.max(s,Math.round(g/s)*s); }
 function mixHalf(x){ return Math.round(x*2)/2; }
 function mixFmtHalf(x){ var w=Math.floor(x), h=(x-w)>=0.5; return (w>0?String(w):'')+(h?'½':'')||'0'; }
 function mixFoodName(n,lang){
-  if(n===MIX_OMELETTE.key) return lang==='en'?MIX_OMELETTE.en:MIX_OMELETTE.name;
-  var fd=FOODS[n]; return (lang==='en'&&fd&&fd.en)?fd.en:n;
+  if(n===MIX_OMELETTE.key) return (lang&&lang!=='el'&&MIX_OMELETTE[lang])||MIX_OMELETTE.name;
+  var fd=FOODS[n]; return (lang&&lang!=='el'&&fd&&fd[lang])?fd[lang]:n;
 }
 function mixMac(n,g){ var fd=FOODS[n]; if(!fd) return {p:0,c:0,f:0,k:0}; var r=g/100; return {p:fd.p*r,c:fd.c*r,f:fd.f*r,k:fd.k*r}; }
 function mixAdd(a,b){ return {p:a.p+b.p,c:a.c+b.c,f:a.f+b.f,k:a.k+b.k}; }
@@ -150,7 +166,7 @@ function mixCarbPortion(n,C,lang){
     var g=mixRound(need/fd.c*100), cr=COOKED_TO_RAW[n];
     out.g=g;
     if(cr&&cr.f<1){                                   // ρύζι/ζυμαρικά/όσπρια: ωμό πρώτο
-      var lbl2=lang==='en'?(MIX_RAW_EN[cr.label]||'raw'):cr.label;
+      var lbl2=mixRawLbl(cr.label,lang);
       out.main=mixRound(g*cr.f)+' g '+lbl2; out.alt='≈ '+g+' g '+X.cooked2;
     } else if(fu&&fu.u==='τεμ.'){                       // πατάτες / γλυκοπατάτα: g + τεμάχια
       out.main=g+' g'; out.alt='≈ '+mixFmtHalf(Math.max(0.5,mixHalf(g/fu.g)))+' '+X.pc;
@@ -192,7 +208,7 @@ function mixProteinPortion(n,P,carbP,lang,floorPct){
     var cookedTag=/(ψητ|μαγ\.|βρ\.|βραστ|ψημέν)/.test(n)?' '+X.cooked:'';
     out.main=g+' g'+cookedTag;
     if(cr&&cr.f>1&&!cr.isEgg){
-      var lbl=lang==='en'?(MIX_RAW_EN[cr.label]||'raw'):cr.label;
+      var lbl=mixRawLbl(cr.label,lang);
       out.alt='≈ '+mixRound(g*cr.f)+' g '+lbl;
     }
   }
@@ -231,14 +247,17 @@ function mixFatFor(ctx,d,spoons,lang){
 }
 function mixOilTxt(sp,lang){
   var X=mixT(lang); if(sp<=0) return X.oil0;
-  return mixFmtHalf(sp)+(lang==='en'?' tbsp olive oil':' κ.σ. ελαιόλαδο');
+  return mixFmtHalf(sp)+' '+(MIX_OIL_UNIT[lang]||MIX_OIL_UNIT.el);
 }
 
 // ── Ένα πιάτο: υδατάνθρακας πρώτα, μετά η πρωτεΐνη, μετά το λίπος ─────────────
-function mixPlate(ctx,d,meal,protN,carbN,lang){
+// opt.carbP / opt.carbFat: ό,τι υποθέτει η λίστα (διάμεσος των υδατανθράκων του μενού) — ο έλεγχος
+// συνδυασμών περνά τα ίδια, ώστε να ελέγχει ΑΚΡΙΒΩΣ ό,τι θα φάει ο πελάτης (ίδια γραμμάρια, ίδιο λάδι).
+function mixPlate(ctx,d,meal,protN,carbN,lang,opt){
+  opt=opt||{};
   var cq=mixCarbPortion(carbN,meal.c,lang); if(!cq) return null;
-  var pq=mixProteinPortion(protN,meal.p,cq.mac.p,lang); if(!pq) return null;
-  var fat=mixFatFor(ctx,d,mixOilSpoons(pq,meal,cq.mac.f),lang);
+  var pq=mixProteinPortion(protN,meal.p,opt.carbP!=null?opt.carbP:cq.mac.p,lang); if(!pq) return null;
+  var fat=mixFatFor(ctx,d,mixOilSpoons(pq,meal,opt.carbFat!=null?opt.carbFat:cq.mac.f),lang);
   var tot=mixAdd(mixAdd(mixAdd(pq.mac,cq.mac),fat.mac),{p:MIX_VEG.p,c:MIX_VEG.c,f:MIX_VEG.f,k:MIX_VEG.p*4+MIX_VEG.c*4+MIX_VEG.f*9});
   return {prot:pq,carb:cq,fat:fat,tot:tot};
 }
@@ -259,7 +278,7 @@ function mixLegumePlate(ctx,d,meal,legN,lang,menu){
   var maxG=cupG?cupG*MIX_LEGUME_MAX_CUPS:MIX_LEGUME_MAX_G;
   var g=Math.min(maxG,mixRound(Math.max(10,meal.c-MIX_VEG.c)/fd.c*100)), cr=COOKED_TO_RAW[legN];
   var leg={n:legN,g:g,mac:mixMac(legN,g),alt:''};
-  if(cr&&cr.f<1){ leg.main=mixRound(g*cr.f)+' g '+(lang==='en'?(MIX_RAW_EN[cr.label]||'dried'):cr.label); leg.alt='≈ '+g+' g '+X.cooked2; }
+  if(cr&&cr.f<1){ leg.main=mixRound(g*cr.f)+' g '+mixRawLbl(cr.label,lang); leg.alt='≈ '+g+' g '+X.cooked2; }
   else { leg.main=g+' g'; }
   var cups=mixCupOf(legN,g); if(cups) leg.alt=(leg.alt?leg.alt+' · ':'≈ ')+mixFmtHalf(cups)+' '+X.cup;
   // υδατάνθρακας που λείπει → φέτες ψωμί (έως 3)
@@ -281,6 +300,14 @@ function mixLegumePlate(ctx,d,meal,legN,lang,menu){
 function mixPlateOk(tot,meal){
   var tk=meal.p*4+meal.c*4+meal.f*9, kd=(tot.k-tk)/tk, fd=meal.f>0?(tot.f-meal.f)/meal.f:0;
   return {ok:Math.abs(kd)<=MIX_KCAL_TOL&&fd<=MIX_FAT_TOL,kPct:Math.round(kd*100),fPct:Math.round(fd*100)};
+}
+
+// Η ποσότητα πρωτεΐνης που γράφεται στη λίστα (χωρίς να ξέρουμε ποιον υδατάνθρακα θα διαλέξει ο πελάτης)
+// υπολογίζεται με τη ΔΙΑΜΕΣΗ πρωτεΐνη των υδατανθράκων του μενού — αλλιώς κοτόπουλο + ρύζι έβγαινε
+// ~15% πάνω στην πρωτεΐνη (το ρύζι/τα ζυμαρικά φέρνουν 8–13 g). Ίδια λογική με το λάδι (carbFat).
+function mixMedianCarbP(carbs){
+  var cp=(carbs||[]).map(function(x){ return x.mac.p; }).sort(function(a,b){return a-b;});
+  return cp.length?cp[Math.floor(cp.length/2)]:null;
 }
 
 // ── Το μενού του πελάτη ─────────────────────────────────────────────────────
@@ -381,14 +408,15 @@ function mixBuildWeek(c,lang){
       m.carb=carbs.map(function(n){ return mixCarbPortion(n,m.c,lang); }).filter(Boolean);
       var cf=m.carb.map(function(x){ return x.mac.f; }).sort(function(a,b){return a-b;});
       m.carbFat=cf.length?cf[Math.floor(cf.length/2)]:MIX_CARB_FAT_ALLOW;
-      m.prot=prots.map(function(n){ var q=mixProteinPortion(n,m.p,null,lang); if(q) q.oil=mixOilSpoons(q,m,m.carbFat); return q; }).filter(Boolean);
+      m.carbProt=mixMedianCarbP(m.carb);
+      m.prot=prots.map(function(n){ var q=mixProteinPortion(n,m.p,m.carbProt,lang); if(q) q.oil=mixOilSpoons(q,m,m.carbFat); return q; }).filter(Boolean);
       m.legumes=(menu.legume||[]).filter(function(n){ return mixAllowed(ctx,n,d); })
         .map(function(n){ var lp=mixLegumePlate(ctx,d,m,n,lang,menu); if(lp){ lp.ok=mixPlateOk(lp.tot,m); } return lp; }).filter(Boolean);
       m.fat=mixFatFor(ctx,d,1,lang);
       // έλεγχος όλων των συνδυασμών πρωτεΐνη × υδατάνθρακας για αυτό το γεύμα
       prots.forEach(function(pn){ carbs.forEach(function(cn){
         var pair=pn+'|'+cn; if(hidden.indexOf(pair)!==-1) return;
-        var pl=mixPlate(ctx,d,m,pn,cn,lang); if(!pl) return;
+        var pl=mixPlate(ctx,d,m,pn,cn,lang,{carbP:m.carbProt}); if(!pl) return;   // λάδι = ακριβές για το πιάτο, όπως στο link
         var r=mixPlateOk(pl.tot,m); check.total++;
         if(r.ok){ check.ok++; return; }
         var b=check.bad[pair]||(check.bad[pair]={prot:pn,carb:cn,n:0,kPct:0,fPct:0});

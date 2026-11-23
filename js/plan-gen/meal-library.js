@@ -303,7 +303,7 @@ function clientAltPreferences(c, today){
     var mm=log[date]||{};
     Object.keys(mm).forEach(function(idx){
       var v=mm[idx];
-      if(!v||typeof v!=='object')return;
+      if(!v||typeof v!=='object'||v.mx)return;   // 🧩 επιλογές από Μενού επιλογών δεν είναι «εναλλακτικές»
       var foods=[], ok=true;
       (Array.isArray(v.f)?v.f:[]).forEach(function(p){
         var n=Array.isArray(p)?resolveName(p[0]):null, g=Array.isArray(p)?+p[1]:0;

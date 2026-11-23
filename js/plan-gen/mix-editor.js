@@ -253,7 +253,11 @@ function mixRenderEditor(){
   var day=w.days[_mixDay], ctx=mixCtx(c), menu=c.mixMenu, rules=menu.rules||{};
   var h='';
   if(_mixUndo) h+='<div class="mx-undo">'+esc(_mixUndo.label)+' · <button type="button" data-mx="undo">↩ Αναίρεση</button></div>';
-  h+='<div class="mx-phase">📱 Το link του πελάτη για το Μενού επιλογών έρχεται στο επόμενο βήμα. Προς το παρόν δώσε το <b>PDF</b> (Εξαγωγή ▾).</div>';
+  // 📱 κατάσταση του link: ξεπερασμένο (άλλαξε κάτι μετά την αποστολή) / δείχνει ακόμα ημερήσιο / ενημερωμένο
+  var stale=!!(window.Cloud&&Cloud.isStale&&Cloud.isStale(c));
+  h+='<div class="mx-phase'+(stale?' warn':'')+'">'+(!c.shareToken?'📱 Πάτα «Στείλε στον πελάτη»: θα βλέπει το μενού στο κινητό, με τις ποσότητες έτοιμες. Ή δώσε το <b>PDF</b> (Εξαγωγή ▾).'
+    :(stale?'⚠️ Άλλαξες το μενού (ή τους στόχους) μετά την αποστολή — πάτα «Στείλε στον πελάτη» για να ενημερωθεί το link του.'
+      :'📱 Ο πελάτης βλέπει αυτό το μενού στο link του.'))+'</div>';
   h+=mixCheckHtml(w);
   h+='<div class="mx-days" role="tablist">'+w.days.map(function(x){
     var tr=x.kind!=='R';

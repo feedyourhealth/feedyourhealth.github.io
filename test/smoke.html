@@ -92,6 +92,7 @@ window.__MANIFEST__ = [
   '../js/plan-gen/gen-plan.js',
   '../js/plan-gen/mix-engine.js',
   '../js/plan-gen/mix-editor.js',
+  '../js/plan-gen/mix-snapshot.js',
   '../js/plan-gen/supplement-recs.js',
   '../js/plan-gen/week-table.js',
   '../js/plan-gen/food-selector.js',
@@ -191,7 +192,7 @@ document.write(window.__MANIFEST__.map(function(p){
    'porkFoodsList','intakeApplyAvoid','intakeApplyMeds','intakeApplyProfile','intakeCopyAllergies',
    'homeClientsNeedingAttention','homeResendIntake',
    'buildTrackerHtml','calcSkinfoldBF','ageAtDate','migrateClientSkinfoldBF','initTrendCharts',
-   'clientHasPlan','resolveClientTemplate','mixRoleOf','mixDefaultMenu','mixBuildWeek','mixStart','mixApplyMode','exportMixPDF'
+   'clientHasPlan','resolveClientTemplate','mixRoleOf','mixDefaultMenu','mixBuildWeek','mixStart','mixApplyMode','exportMixPDF','mixSnapshotPart','mixHashInput','recordMixSent'
   ].forEach(fnCheck);
 
   // --- data constants (min sizes are loose floors, not exact) --------------

@@ -460,6 +460,16 @@ function buildPlanHistoryHtml(c){
     +'<button class="btn tertiary" style="padding:5px 10px;font-size:12px" onclick="swTab(2)">&#8592; Πίσω στο Πλάνο</button>'
     +'<button class="btn tertiary" style="padding:5px 10px;font-size:12px" onclick="recoverSavedPlansFor(\''+esc((c&&c.id)||'')+'\')" title="Ελέγχει αν υπάρχουν πλάνα σε τοπικό backup που λείπουν από το ιστορικό αυτού του πελάτη">🔎 Έλεγχος για χαμένα πλάνα σε backups</button>'
     +'</div>';
+  // 🧩 Μενού επιλογών που στάλθηκαν (c.mixSent, js/plan-gen/mix-snapshot.js) — χωριστά από τα ημερήσια πλάνα
+  if((c.mixSent||[]).length){
+    dbg+='<div style="margin:10px 20px 0;padding:10px 12px;border:1px solid var(--border-light);border-radius:10px;background:var(--card-bg);font-size:13px">'
+      +'<b>🧩 Μενού επιλογών που στάλθηκαν</b><div style="display:flex;flex-direction:column;gap:3px;margin-top:6px">'
+      +c.mixSent.slice().reverse().map(function(x){
+        var m=x.menu||{};
+        return '<div>'+esc((x.sentDates||[x.date]).map(function(d){return String(d).split('-').reverse().slice(0,2).join('/');}).join(', '))
+          +' · '+((m.protein||[]).length)+' πρωτεΐνες, '+((m.carb||[]).length)+' υδατάνθρακες, '+((m.legume||[]).length)+' όσπρια'+(x.kcal?' · ~'+x.kcal+' kcal/μέρα':'')+'</div>';
+      }).join('')+'</div></div>';
+  }
   if((!c.savedPlans||!c.savedPlans.length)&&!(c.planBackups||[]).length&&!(typeof phaIsAthlete==='function'&&phaIsAthlete(c))){
     return dbg+'<div style="padding:20px;text-align:center;color:var(--text-muted)"><div style="font-size:16px;font-weight:600;margin-bottom:10px">📊 Ιστορικό Πλάνων</div><p>Δεν υπάρχουν αποθηκευμένα πλάνα ακόμα.<br>Κάθε πλάνο που στέλνεις στον πελάτη μπαίνει εδώ αυτόματα· μπορείς και να πατήσεις «Αποθήκευση Διατροφής».</p></div>';
   }

@@ -113,16 +113,17 @@ function publishHandoffMsg(c,url){
 function openPublishModal(){
   var c=getC();
   if(!c){ showErrorToast('Διάλεξε πρώτα πελάτη.'); return; }
-  // 🧩 Μενού επιλογών: το link του πελάτη (plan.html) δεν το δείχνει ακόμα (φάση 2). Χωρίς αυτόν τον
-  // έλεγχο, το «Στείλε» θα δημοσίευε το ΚΡΥΜΜΕΝΟ παλιό ημερήσιο πλάνο και θα το έγραφε στο Ιστορικό.
-  if(c.planMode==='mix'){ showErrorToast('🧩 Το link για το Μενού επιλογών έρχεται στο επόμενο βήμα. Προς το παρόν δώσε το PDF (Εξαγωγή ▾ → PDF Μενού επιλογών).'); return; }
-  if(!c.weekPlan || !Object.keys(c.weekPlan).length){ showErrorToast('Δεν υπάρχει πλάνο για δημοσίευση.'); return; }
+  // 🧩 Μενού επιλογών: στέλνεται το μενού (js/plan-gen/mix-snapshot.js), όχι το κρυμμένο ημερήσιο πλάνο.
+  var isMix=(c.planMode==='mix'&&!!c.mixMenu);
+  if(isMix&&typeof mixCanUse==='function'){ var _mc=mixCanUse(c); if(!_mc.ok){ showErrorToast(_mc.why); return; } }
+  if(!isMix && !clientHasPlan(c)){ showErrorToast('Δεν υπάρχει πλάνο για δημοσίευση.'); return; }
   if(!window.Cloud || !window.Cloud.enabled || !window.Cloud.user){
     showErrorToast('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις πλάνο στον πελάτη.\n(Κάνε αποσύνδεση και ξανασυνδέσου με email/κωδικό.)');
     return;
   }
   // ⛔ Τρόφιμο αλλεργίας μέσα στο πλάνο (π.χ. προστέθηκε με το χέρι) — αντικατάσταση πριν σταλεί.
-  if(typeof allergyPublishGuard==='function' && !allergyPublishGuard(c, openPublishModal)) return;
+  // (το μενού φιλτράρει ήδη τις αλλεργίες — ο έλεγχος αφορά μόνο τρόφιμα μέσα στο ημερήσιο πλάνο)
+  if(!isMix && typeof allergyPublishGuard==='function' && !allergyPublishGuard(c, openPublishModal)) return;
   // overlay
   var ov=document.getElementById('publish-overlay');
   if(ov) ov.remove();
@@ -135,7 +136,8 @@ function openPublishModal(){
   // (το overlay είναι align-items:center, οπότε χωρίς αυτό τα άκρα γίνονταν απρόσιτα).
   ov.innerHTML='<div style="background:var(--card-bg);border-radius:16px;max-width:420px;width:100%;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25);max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch">'
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:24px">📲</span><div style="font-size:18px;font-weight:700;color:#014545">Αποστολή πλάνου</div></div>'
-    +'<div style="font-size:13px;color:#5a8a82;margin-bottom:16px">Δημιουργία συνδέσμου για τον/την <b>'+esc(c.name||'πελάτη')+'</b>. Ανοίγει στο κινητό — πλάνο, λίστα ψώνια, νερό, συμπληρώματα & πρόοδος.</div>'
+    +'<div style="font-size:13px;color:#5a8a82;margin-bottom:16px">Δημιουργία συνδέσμου για τον/την <b>'+esc(c.name||'πελάτη')+'</b>. '+(isMix?'Ανοίγει στο κινητό — 🧩 Μενού επιλογών, νερό, συμπληρώματα & πρόοδος.':'Ανοίγει στο κινητό — πλάνο, λίστα ψώνια, νερό, συμπληρώματα & πρόοδος.')+'</div>'
+    +(isMix?'<div id="publish-mix-note" style="font-size:12px;background:#fff6e5;border:1px solid #f3dcb4;color:#8a5a00;border-radius:8px;padding:8px 10px;margin:-6px 0 12px">🧩 Θα σταλεί το <b>Μενού επιλογών</b>. Ο σύνδεσμος του πελάτη (ίδιος με πριν) θα δείχνει αυτό αντί για ημερήσιο πλάνο· το ημερήσιο πλάνο μένει κρυμμένο στην εφαρμογή.</div>':'')
     +'<div id="publish-body" style="text-align:center;padding:14px 0"><div style="display:inline-block;width:30px;height:30px;border:3px solid #c5ddd8;border-top-color:#025857;border-radius:50%;animation:fyhspin 1s linear infinite"></div><div style="font-size:13px;color:#5a8a82;margin-top:10px">Δημοσίευση…</div></div>'
     +'<div style="text-align:right;margin-top:8px"><button class="btn" onclick="document.getElementById(\'publish-overlay\').remove()">Κλείσιμο</button></div>'
     +'</div>';

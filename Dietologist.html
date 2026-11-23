@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="946a08638400">
+<meta name="fyh-build" content="6b8a2fc6981a">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -20,7 +20,7 @@
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css?v=08cec5a2fa">
+<link rel="stylesheet" href="css/styles.css?v=9b5da782eb">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -420,7 +420,7 @@ setTimeout(function(){
      of the old app-part1.js (now removed). Only `var curTmplGoal` at parse time. -->
 <script defer src="js/client-editor/diet-panels.js?v=0db708dc06"></script>
 <!-- client-editor/plan-history — 📊 Ιστορικό πλάνων (s4): auto-save on publish, backups, chart, compare. -->
-<script defer src="js/client-editor/plan-history.js?v=52ea8269f4"></script>
+<script defer src="js/client-editor/plan-history.js?v=0a845c0f98"></script>
 <script defer src="js/client-editor/plan-history-athlete.js?v=eb9584bf7f"></script>
 <!-- plan-gen/* — the entire meal-plan generation subsystem, carved out of the old
      monolithic app-part3.js (now fully removed). Pure fn declarations + literal
@@ -432,22 +432,23 @@ setTimeout(function(){
 <script defer src="js/plan-gen/exclusions.js?v=d07648b83d"></script>
 <script defer src="js/plan-gen/food-distribution.js?v=c2195752ce"></script>
 <script defer src="js/plan-gen/combos-tips.js?v=dc49ada703"></script>
-<script defer src="js/plan-gen/meal-library.js?v=27f46abbc1"></script>
+<script defer src="js/plan-gen/meal-library.js?v=697f3931ec"></script>
 <script defer src="js/plan-gen/recipe-finder.js?v=a7d88ecb6a"></script>
 <script defer src="js/plan-gen/plan-transform.js?v=c4dd4387d7"></script>
 <script defer src="js/plan-gen/mediterranean.js?v=9a5fcf4c19"></script>
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
 <script defer src="js/plan-gen/gen-plan.js?v=d0ba1dff41"></script>
-<script defer src="js/plan-gen/mix-engine.js?v=a721acb325"></script>
-<script defer src="js/plan-gen/mix-editor.js?v=45a6d441e6"></script>
+<script defer src="js/plan-gen/mix-engine.js?v=33d85b6c42"></script>
+<script defer src="js/plan-gen/mix-editor.js?v=98b5781239"></script>
+<script defer src="js/plan-gen/mix-snapshot.js?v=ec9292a06d"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
 <script defer src="js/plan-gen/week-table.js?v=adccef1608"></script>
-<script defer src="js/plan-gen/plan-insights.js?v=e30c91f621"></script>
+<script defer src="js/plan-gen/plan-insights.js?v=b2ccaf396a"></script>
 <script defer src="js/plan-gen/household.js?v=d1e4f63455"></script>
 <script defer src="js/plan-gen/food-selector.js?v=735c224213"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=8ebc7a4412"></script>
 <script defer src="js/plan-gen/micronutrient-html.js?v=8e56c2b89f"></script>
-<script defer src="js/plan-gen/publish-modal.js?v=e59334bc71"></script>
+<script defer src="js/plan-gen/publish-modal.js?v=b74e25448d"></script>
 <script defer src="js/plan-gen/food-lib-favorites.js?v=f11fba7658"></script>
 <!-- reports/* — plan & body-comp exports (PDF/Word/GDocs), backup I/O. Pure fns,
      no load-time code; refs resolve at click time. -->
@@ -467,7 +468,7 @@ setTimeout(function(){
      Pure fn declarations, no load-time code. -->
 <script defer src="js/tabs/home-diets.js?v=e5adac496b"></script>
 <script defer src="js/tabs/messages.js?v=5588553b9f"></script>
-<script defer src="js/tabs/progress.js?v=79a3bffcc0"></script>
+<script defer src="js/tabs/progress.js?v=727719d9e9"></script>
 <script defer src="js/tabs/notifications.js?v=55c7f9bbbf"></script>
 <script defer src="js/tabs/progress-insights.js?v=a0fc6f0f09"></script>
 <script defer src="js/tabs/progress-rejects.js?v=2469e66fc6"></script>
@@ -755,7 +756,7 @@ setTimeout(function(){
      Κάθε χρήστης έχει ΜΙΑ γραμμή στον πίνακα user_data (ένα jsonb "συρτάρι").
      Όλα τα δεδομένα (clients, templates, tracking) πάνε σαν ένα πακέτο.
      ═══════════════════════════════════════════════════════════════ -->
-<script defer src="js/app-part7.js?v=0a3d03dc72"></script>
+<script defer src="js/app-part7.js?v=b5280cd033"></script>
 
 </body>
 </html>

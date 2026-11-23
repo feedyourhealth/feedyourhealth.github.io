@@ -3038,3 +3038,4 @@ button.pi-btn:disabled{opacity:.5;cursor:default}
   .mix-editor .mx-pick-row{width:100%}
   .mix-editor .mx-foot .btn{width:auto}
 }
+.mx-phase.warn{background:var(--c-warn-bg);color:var(--c-warn)}

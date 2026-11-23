@@ -46,7 +46,7 @@ function piData(c){
     for(var j=0;j<tot && slotKnown;j++){
       var v=m[j];
       if(slots[j]) slots[j].total++;
-      if(v){ any=true; if(slots[j]){ if(typeof v==='object') slots[j].alt++; else slots[j].planned++; } }
+      if(v){ any=true; if(slots[j]){ if(typeof v==='object'&&!v.mx) slots[j].alt++; else slots[j].planned++; } }   // 🧩 v.mx = επιλογή από το Μενού = ακολούθησε
     }
     // Μέρες με μόνο check-in (παλιά links χωρίς ανά-γεύμα map) μετράνε στο σύνολο
     var done=Object.keys(m).filter(function(i){ return m[i]; }).length;

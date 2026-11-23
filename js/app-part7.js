@@ -197,10 +197,9 @@
       var self=this;
       if(!this.enabled || !this.user){ return Promise.reject(new Error('Πρέπει να είσαι συνδεδεμένος στο cloud για να δημοσιεύσεις πλάνο.')); }
       if(!c){ return Promise.reject(new Error('Δεν υπάρχει επιλεγμένος πελάτης.')); }
-      // 🧩 Μενού επιλογών (φάση 1): το link δεν το δείχνει ακόμα. Ό,τι κι αν καλέσει δημοσίευση (κουμπί,
-      // ανανέωση/παράταση link, μαζική ανανέωση) ΔΕΝ πρέπει να στείλει το κρυμμένο παλιό ημερήσιο πλάνο
-      // ούτε να το γράψει στο Ιστορικό ως «σταλμένο» (recordPlanSent πιο κάτω).
-      if(c.planMode==='mix'){ return Promise.reject(new Error('Ο πελάτης είναι σε 🧩 Μενού επιλογών — το link για αυτό έρχεται στο επόμενο βήμα. Δώσε το PDF.')); }
+      // 🧩 Μενού επιλογών: ανήλικος/χωρίς στόχους δεν παίρνει μενού (mixCanUse) — καλύτερα σφάλμα από
+      // ένα link που θα έδειχνε το κρυμμένο παλιό ημερήσιο πλάνο.
+      if(c.planMode==='mix'&&typeof mixCanUse==='function'){ var _mc=mixCanUse(c); if(!_mc.ok) return Promise.reject(new Error(_mc.why)); }
       var snap;
       // ⭐ 2026-11-12: πρώτα φρέσκα «Αυτό έφαγα» αυτού του πελάτη (client_meal_log), ώστε οι εναλλακτικές
       // του νέου link να βγουν με βάση τις προτιμήσεις του (clientAltPreferences, meal-library.js).
@@ -242,11 +241,15 @@
               // ελληνικό toast (audit finding Ε9). Το τεχνικό μήνυμα μένει σε παρένθεση για debugging.
               throw new Error('Απέτυχε η δημοσίευση του πλάνου. Δοκίμασε ξανά.'+(res2.error.message?' ['+res2.error.message+']':''));
             }
-            c._publishedPlanHash=self._hashPlan(c.weekPlan);   // ώστε να ξέρουμε αν ο σύνδεσμος «μπαγιατεύει» μετά από επόμενη επεξεργασία
+            c._publishedPlanHash=self._planHashFor(c);   // ώστε να ξέρουμε αν ο σύνδεσμος «μπαγιατεύει» μετά από επόμενη επεξεργασία
             c._publishedPlanHashVer=self.HASH_VER;
             // 📊 η έκδοση που πήρε ο πελάτης μπαίνει πάντα στο Ιστορικό πλάνων (js/client-editor/plan-history.js)
             var hist=null;
-            try{ if(typeof recordPlanSent==='function') hist=recordPlanSent(c); }catch(e){ console.warn('[plan-history] record failed',e); }
+            // 🧩 σε Μενού επιλογών το κρυμμένο ημερήσιο πλάνο ΔΕΝ γράφεται ως «σταλμένο» — το μενού κρατιέται στο c.mixSent
+            try{
+              if(c.planMode==='mix'){ if(typeof recordMixSent==='function') recordMixSent(c); }
+              else if(typeof recordPlanSent==='function') hist=recordPlanSent(c);
+            }catch(e){ console.warn('[plan-history] record failed',e); }
             // Νέο πλάνο σε Πρώην / Σε παύση ⇒ ξανά Ενεργός (js/client-list/lifecycle.js)
             try{ if(typeof lcBackToActive==='function') lcBackToActive(c,'στάλθηκε νέο πλάνο'); }catch(e){}
             try{ if(typeof save==='function') save(); }catch(e){}   // κράτα το shareToken στο cloud
@@ -635,7 +638,13 @@
     // με το τρέχον HASH_VER), δεν το θεωρούμε "ξεπερασμένο" — απλά δεν ξέρουμε ακόμα, μέχρι την επόμενη
     // πραγματική δημοσίευση να ξαναγράψει hash+version με τον τρέχοντα αλγόριθμο.
     isStale:function(c){
-      return !!(c && c.shareToken && c._publishedPlanHash!=null && c._publishedPlanHashVer===this.HASH_VER && this._hashPlan(c.weekPlan)!==c._publishedPlanHash);
+      return !!(c && c.shareToken && c._publishedPlanHash!=null && c._publishedPlanHashVer===this.HASH_VER && this._planHashFor(c)!==c._publishedPlanHash);
+    },
+    // Τι «είναι» το link του πελάτη: το ημερήσιο πλάνο, ή (🧩 Μενού επιλογών) λίστες + στόχοι γευμάτων.
+    // Αλλαγή τύπου (ημερήσιο ↔ μενού) αλλάζει το hash → το link φαίνεται «ξεπερασμένο», σωστά.
+    _planHashFor:function(c){
+      if(c&&c.planMode==='mix'&&c.mixMenu&&typeof mixHashInput==='function') return this._hashPlan(mixHashInput(c));
+      return this._hashPlan(c&&c.weekPlan);
     },
 
     // Μετατρέπει τον πελάτη σε καθαρό read-only snapshot για το portal.
@@ -966,6 +975,22 @@
       var shopping=[];
       slCats.concat(['Άλλα']).forEach(function(cat){ if(byCat[cat]&&byCat[cat].length) shopping.push({cat:cat,catLabel:catLabel(cat),items:byCat[cat]}); });
 
+      // 🧩 Μενού επιλογών: οι μέρες γίνονται «θέσεις γευμάτων» με τους στόχους τους (+ ποσότητες στο mix),
+      // ίδια μορφή days[].meals ώστε Αρχική/σκορ/check-in να δουλεύουν. Χωρίς λίστα ψώνια (απόφαση 23/11).
+      // Οι πληροφορίες της μέρας που δεν είναι πλάνο (προπόνηση, CHO, ημέρα αγώνα) μένουν από πάνω.
+      var mixPart=null;
+      if(c.planMode==='mix'&&c.mixMenu&&typeof mixSnapshotPart==='function'){
+        mixPart=mixSnapshotPart(c,lang);
+        if(mixPart){
+          days=days.map(function(dd,i){
+            var mx=mixPart.days[i];
+            return {label:dd.label,isTrain:dd.isTrain,isMatch:false,matchTime:dd.matchTime,kcal:mx.kcal,macros:mx.macros,
+              fiber:0,cho:dd.cho,workouts:dd.workouts,oilOk:mx.oilOk,meals:mx.meals};
+          });
+          shopping=[];
+        }
+      }
+
       // ── Συμπληρώματα (ίδια λογική με το PDF: Page 1 c.supps + Page 2 c.selectedSupplements) ──
       // EN_SUPP_TIMING: οι λίγες σταθερές ώρες λήψης (ti.t) που εμφανίζονται σε ΟΛΑ τα SUPPS — δεν
       // υπάρχει ανά-item αγγλική εκδοχή τους στη βάση (μόνο τα ονόματα έχουν nameEn), οπότε μεταφράζονται εδώ.
@@ -1071,6 +1096,10 @@
         fruits:fruits,
         progress:progress,
         exclusions:groupedExcl,
+        // 🧩 Μενού επιλογών (js/plan-gen/mix-snapshot.js): το plan.html δείχνει καρτέλα «Μενού» αντί για
+        // «Πλάνο»/«Ψώνια». Παλιά links δεν έχουν mode → ημερήσιο όπως πάντα.
+        mode:mixPart?'mix':'daily',
+        mix:mixPart?mixPart.mix:undefined,
         // Βιβλιοθήκη tips (tab "📚 Tips") — μία κοινή λίστα, ίδια για όλους τους πελάτες, οπότε
         // περνάει αυτούσια (όχι φιλτραρισμένη ανά c.*), εκτός από τα tips με visible:false
         // ("Ορατό στους πελάτες" off — π.χ. πρόχειρο υπό συγγραφή), που δεν πρέπει να φτάσουν σε

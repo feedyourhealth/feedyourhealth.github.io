@@ -515,6 +515,48 @@
     .psllbl{font-size:5pt;color:#77a;font-weight:400;margin-left:2px}
     .pfoot{margin-top:8px;padding-top:4px;border-top:1px solid #c5ddd8;font-size:5.5pt;color:#025857;text-align:center}
   }
+  /* ── 🧩 Μενού επιλογών (viewMix) ── */
+  .mx-week{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);background:var(--card);border:.5px solid var(--bord);border-radius:12px;padding:8px 12px}
+  .mx-week b{width:100%;color:var(--teal-d);font-size:12.5px}
+  .mx-week .ok{color:var(--ok);font-weight:600}.mx-week .bad{color:var(--danger);font-weight:600}
+  .mx-meals{display:flex;flex-direction:column}
+  .mx-ml{display:flex;gap:10px;align-items:center;text-align:left;width:100%;padding:9px 12px;border:0;border-bottom:.5px solid var(--bord-l);background:none;font-family:inherit;color:var(--ink);cursor:pointer}
+  .mx-ml:last-child{border-bottom:0}
+  .mx-ml.on{background:var(--tint2)}
+  .mx-ml .t{font-size:12px;color:var(--teal-l);font-weight:700;min-width:42px;font-variant-numeric:tabular-nums}
+  .mx-ml .b{display:flex;flex-direction:column;min-width:0}
+  .mx-ml .n{font-size:14px;font-weight:600}
+  .mx-ml .s{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mx-ml.done .s{color:var(--ok)}
+  .mx-tag{font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 7px;background:#e8f0fb;color:#1565c0;white-space:nowrap}
+  .mx-tag-post,.mx-tag-mid{background:var(--tint2);color:var(--ok)}
+  .mx-body .card-pad{display:flex;flex-direction:column;gap:8px}
+  .mx-h{font-size:15px;margin:0;color:var(--teal-d)}.mx-h small{font-weight:400;color:var(--muted);font-size:12px}
+  .mx-seg{display:flex;border:.5px solid var(--bord);border-radius:10px;overflow:hidden}
+  .mx-seg button{flex:1;min-height:38px;border:0;background:var(--card);color:var(--ink);font-family:inherit;font-size:13px;cursor:pointer}
+  .mx-seg button.on{background:var(--teal);color:#fff;font-weight:600}
+  .mx-step{font-size:12px;font-weight:700;color:var(--muted);margin-top:4px}.mx-sp{color:#1565c0}.mx-sc{color:var(--ok)}
+  .mx-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+  .mx-tile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;padding:8px 4px;border:1px solid var(--bord);border-radius:10px;background:var(--card);color:var(--ink);font-family:inherit;cursor:pointer;min-height:84px}
+  .mx-tile .e{font-size:20px;line-height:1.1}.mx-tile b{font-size:12px;line-height:1.2}.mx-tile small{font-size:11px;color:var(--muted);line-height:1.25}
+  .mx-tile small.w{color:#8a5a00}
+  .mx-tile.on{border:2px solid var(--teal);background:var(--tint2)}
+  .mx-morebtn{align-self:flex-start;border:0;background:none;color:var(--teal);font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;padding:2px 0}
+  .mx-search{width:100%;padding:9px 10px;border:1px solid var(--bord);border-radius:10px;font:inherit;font-size:14px;background:var(--card);color:var(--ink)}
+  .mx-empty,.mx-note{font-size:12.5px;color:var(--muted)}
+  .mx-plate{background:var(--tint2);border-radius:12px;padding:10px 12px;font-size:13px}
+  .mx-plate ul{margin:6px 0 8px;padding-left:2px;list-style:none;display:flex;flex-direction:column;gap:3px}
+  .mx-k{font-size:11.5px;color:var(--muted);font-weight:400}
+  .mx-rowb{display:flex;justify-content:space-between;font-size:12px;margin-top:4px}
+  .mx-bar{height:6px;border-radius:999px;background:var(--bord-l);overflow:hidden}.mx-bar i{display:block;height:100%}
+  .mx-warnline{margin-top:6px;font-size:12px;color:#8a5a00}
+  .mx-btn{min-height:44px;border-radius:12px;border:0;background:var(--teal);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .mx-btn.sec{background:var(--card);color:var(--teal);border:1px solid var(--bord);font-weight:500;font-size:13px}
+  .mx-hand{background:var(--card);border:.5px solid var(--bord);border-radius:12px;padding:10px 12px;font-size:13px;display:flex;flex-direction:column;gap:6px}
+  .mx-hand ul{margin:0;padding-left:18px}
+  .mx-idea{display:flex;align-items:center;gap:8px;background:var(--tint2);border-radius:10px;padding:8px 10px;font-size:13px}
+  .mx-idea .tx{flex:1}.mx-idea.on{outline:2px solid var(--teal)}
+  @media (prefers-color-scheme: dark){.mx-tag{background:#1b2a3d;color:#8ab4f8}.mx-tag-post,.mx-tag-mid{background:var(--tint2);color:var(--ok)}.mx-sp{color:#8ab4f8}.mx-tile small.w,.mx-warnline{color:#f0b35a}}
 </style>
 <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.min.css">
 </head>
@@ -1133,6 +1175,7 @@ function setMeals(o){setMealsFor(todayKey(),o)}
 // Truthy και στις δύο περιπτώσεις, οπότε όλες οι μετρήσεις «έφαγε / δεν έφαγε» μένουν ως είχαν.
 function pickedAlt(m,v){
   if(!v||typeof v!=='object')return null;
+  if(v.mx)return {name:v.d||v.n,kcal:v.k||0,macros:v.m||{}};   // 🧩 πιάτο/ιδέα από το Μενού επιλογών
   const alt=mealAltsAll(m)[v.a];
   return (alt&&(alt.el||alt.name)===v.n)?alt:{name:v.n,kcal:0};
 }
@@ -2005,7 +2048,7 @@ function render(){
   hdr.innerHTML=
     '<div class="hdr-top"><div class="brand"><span class="brand-logo">FY</span>Feed Your Health</div>'
     +'<div style="display:flex;gap:6px"><button class="hdr-btn" id="refresh-btn" onclick="refreshPlan()" title="'+T('refreshTip')+'"><i class="ti ti-refresh"></i></button>'
-    +'<button class="hdr-btn" onclick="doPrint()" title="'+T('pdfTip')+'"><i class="ti ti-printer"></i>'+T('pdfBtn')+'</button></div></div>'
+    +(isMix()?'':'<button class="hdr-btn" onclick="doPrint()" title="'+T('pdfTip')+'"><i class="ti ti-printer"></i>'+T('pdfBtn')+'</button>')+'</div></div>'
     +'<h1>'+T('greeting')+', '+esc((s.name||'').split(' ')[0]||'')+'</h1>'
     +'<div class="sub" id="hdr-sub"></div>'
     +'<div id="upd-badge">'+updatedBadge()+'</div>';
@@ -2018,8 +2061,9 @@ function render(){
   const nav=el('div','nav');
   // «Νερό» δεν είναι πια δικό του tab — η πλήρης κάρτα ενυδάτωσης ζει στην Αρχική (waterBlock).
   // Το viewWater/route μένουν ορισμένα (αβλαβή) για τυχόν παλιό deep-link.
-  nav.innerHTML=tabBtn('home','ti-home',T('nav_home'))+tabBtn('plan','ti-calendar-week',T('nav_plan'))
-    +tabBtn('shop','ti-shopping-cart',T('nav_shop'))
+  // 🧩 Μενού επιλογών: «Μενού» στη θέση του «Πλάνο», χωρίς «Ψώνια» (απόφαση 23/11)
+  nav.innerHTML=tabBtn('home','ti-home',T('nav_home'))
+    +(isMix()?tabBtn('plan','ti-layout-grid',MT('nav_menu')):tabBtn('plan','ti-calendar-week',T('nav_plan'))+tabBtn('shop','ti-shopping-cart',T('nav_shop')))
     +tabBtn('supps','ti-pill',T('nav_supps'))
     +tabBtn('prog','ti-chart-line',T('nav_prog'));
   app.appendChild(nav);
@@ -2150,15 +2194,16 @@ function showOnboarding(){
 function tabBtn(id,icon,label){return '<button data-tab="'+id+'" onclick="go(\''+id+'\')"><i class="ti '+icon+'"></i>'+label+'</button>'}
 
 function go(tab){
+  if(isMix()&&tab==='shop')tab='home';   // παλιό deep-link σε Ψώνια
   curView=tab;
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
   const sc=$('#scroll'); sc.scrollTop=0;
-  const fn={home:viewHome,plan:viewPlan,prog:viewProg,shop:viewShop,water:viewWater,supps:viewSupps,spices:viewSpices,fruits:viewFruits}[tab];
+  const fn={home:viewHome,plan:isMix()?viewMix:viewPlan,prog:viewProg,shop:viewShop,water:viewWater,supps:viewSupps,spices:viewSpices,fruits:viewFruits}[tab];
   sc.innerHTML=''; sc.appendChild(fn());
   if(tab==='home' && Date.now()<deepLinkUntil)showDeepLink();
   const sub=$('#hdr-sub');
   if(sub){
-    const labels={home:dayHeader(defaultDay(),false),plan:T('subPlan'),prog:T('subProg'),shop:T('subShop'),water:T('subWater'),supps:T('subSupps'),spices:T('subSpices'),fruits:T('subFruits')};
+    const labels={home:dayHeader(defaultDay(),false),plan:isMix()?MT('subMenu'):T('subPlan'),prog:T('subProg'),shop:T('subShop'),water:T('subWater'),supps:T('subSupps'),spices:T('subSpices'),fruits:T('subFruits')};
     sub.textContent=labels[tab]||'';
   }
 }
@@ -2252,8 +2297,10 @@ function viewHome(){
       const relTag=mi.isMatch?matchRelTag(m.time,mi.time):'';
       mm.innerHTML='<span class="mc">'+(eaten[idx]?'<i class="ti ti-check"></i>':'')+'</span>'
         +'<div class="t">'+esc(m.time||'')+'</div>'
-        +'<div style="flex:1"><div class="nm">'+(pickedAlt(m,eaten[idx])?'<i class="ti ti-refresh" style="color:var(--teal);font-size:13px"></i> '+esc(pickedAlt(m,eaten[idx]).name):esc(mealFoodsLine(m)||m.label||T('mealFallback')))+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
-      mm.onclick=()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);syncMealCheckin(todayKey());pushCheckin();go('home');};
+        +'<div style="flex:1"><div class="nm">'+(pickedAlt(m,eaten[idx])?(eaten[idx].mx?'':'<i class="ti ti-refresh" style="color:var(--teal);font-size:13px"></i> ')+esc(pickedAlt(m,eaten[idx]).name)
+          :(isMix()?'<span style="color:var(--teal);font-weight:600">'+esc(eaten[idx]?MT('similar'):(m.mix==='plate'?MT('tapBuild'):MT('tapIdea')))+'</span>':esc(mealFoodsLine(m)||m.label||T('mealFallback'))))+'</div><div class="mi">'+esc(m.label||'')+(m.kcal?' · '+nfmt(m.kcal)+' kcal':'')+(relTag?' · <span style="color:var(--teal-l)">'+esc(relTag)+'</span>':'')+'</div></div>';
+      // 🧩 στο Μενού επιλογών το γεύμα «φτιάχνεται» στην καρτέλα Μενού (εκεί και το «Αυτό έφαγα»)
+      mm.onclick=isMix()?()=>mixOpenMeal(idx):()=>{const e=getMeals();e[idx]=!e[idx];setMeals(e);syncMealCheckin(todayKey());pushCheckin();go('home');};
       cp.appendChild(mm);
     });
     cp.appendChild(el('div','empty-glass-note',T('tapMealHint')));
@@ -2267,7 +2314,7 @@ function viewHome(){
 
   // quick links
   const q=el('div','quick');
-  q.appendChild(quickCard('shop','ti-shopping-cart',T('quickShop'),shopProgressText()));
+  if(!isMix())q.appendChild(quickCard('shop','ti-shopping-cart',T('quickShop'),shopProgressText()));
   q.appendChild(quickCard('supps','ti-pill',T('quickSupps'),suppsProgressText()));
   q.appendChild(quickCard('spices','ti-leaf',T('quickSpices'),T('quickSpicesSub')));
   if(s.fruits && s.fruits.length)q.appendChild(quickCard('fruits','ti-apple',T('quickFruits'),T('quickFruitsSub')));
@@ -2837,6 +2884,278 @@ function viewPlan(){
   return v;
 }
 function shortDay(l){return (l||'').slice(0,3)}
+
+// ═══ 🧩 ΜΕΝΟΥ ΕΠΙΛΟΓΩΝ (Mix & Match, 2026-11-23) ══════════════════════════════════════════════
+// SNAP.mode==='mix': αντί για ημερήσιο πλάνο, ο πελάτης φτιάχνει κάθε κύριο γεύμα από λίστες
+// (① πρωτεΐνη + ② υδατάνθρακας, ή όσπρια) με τις ποσότητες ΗΔΗ μετρημένες στο Dietologist
+// (js/plan-gen/mix-snapshot.js) — εδώ δεν υπολογίζεται τίποτα, μόνο αθροίζονται τα έτοιμα μακρο.
+// Ίδιο σχήμα days[].meals με το ημερήσιο, ώστε Αρχική/σκορ/σερί/check-in να μένουν ίδια.
+// «Αυτό έφαγα» → meals map {mx:1,n,d,s,o,f,k,m,t} (truthy· v.mx = δεν είναι «αντικατάσταση»).
+const MIX_I18N={
+  el:{nav_menu:'Μενού',subMenu:'Διάλεξε — οι ποσότητες είναι ήδη μετρημένες για σένα',week:'Αυτή την εβδομάδα',
+    fish:'Ψάρι',legumes:'Όσπρια',red:'Κόκκινο κρέας',upTo:'έως',build:'Φτιάξε το πιάτο σου',pickIdea:'Διάλεξε μία ιδέα',
+    plateTab:'🍽️ Πιάτο',legTab:'🫘 Όσπρια',protein:'① Πρωτεΐνη',carb:'② Υδατάνθρακας',legume:'Διάλεξε όσπριο',
+    vegFat:'③ Λαχανικά · ④ Λίπος',more:'🔍 Περισσότερα ({n})',less:'Λιγότερα',search:'Αναζήτηση…',noFound:'Δεν βρέθηκε',
+    warnOnce:'⚠️ έως 1 φορά/εβδ.',yourPlate:'Το πιάτο σου',P:'Πρωτεΐνη',C:'Υδατάνθρακες',F:'Λίπος',
+    hiddenCombo:'Η διαιτολόγος σου προτιμά να μη συνδυάζεις αυτά τα δύο.',ate:'✅ Αυτό έφαγα',ateBanner:'Έφαγες',undo:'Αναίρεση',
+    cantFind:'Δεν βρίσκω κάτι από αυτά',handTitle:'✋ Μέτρο με το χέρι',handP:'Πρωτεΐνη: {n} παλάμη(ες)',handC:'Υδατάνθρακας: {n} χούφτα(ες)',
+    handV:'Λαχανικά: 2 γροθιές',handF:'Λίπος: {n} αντίχειρας(ες)',askMe:'💬 Ρώτησέ με',ideaAlt:'✓ Έφαγα κάτι παρόμοιο',
+    noIdeas:'Δεν υπάρχουν έτοιμες ιδέες για αυτό το γεύμα.',pre:'πριν την προπόνηση',post:'μετά την προπόνηση',mid:'ανάμεσα στις προπονήσεις',
+    tapBuild:'Φτιάξε το πιάτο σου →',tapIdea:'Διάλεξε ιδέα →',or:'ή',
+    futureNote:'Μελλοντική μέρα: δες τι μπορείς να φας. Το «Αυτό έφαγα» ανοίγει την ίδια μέρα.',similar:'κάτι παρόμοιο'},
+  en:{nav_menu:'Menu',subMenu:'Pick what you like — the amounts are measured for you',week:'This week',
+    fish:'Fish',legumes:'Legumes',red:'Red meat',upTo:'up to',build:'Build your plate',pickIdea:'Pick one idea',
+    plateTab:'🍽️ Plate',legTab:'🫘 Legumes',protein:'① Protein',carb:'② Carbs',legume:'Pick a legume',
+    vegFat:'③ Veg · ④ Fat',more:'🔍 More ({n})',less:'Less',search:'Search…',noFound:'Nothing found',
+    warnOnce:'⚠️ max once a week',yourPlate:'Your plate',P:'Protein',C:'Carbs',F:'Fat',
+    hiddenCombo:'Your dietitian prefers you don\'t combine these two.',ate:'✅ I ate this',ateBanner:'You ate',undo:'Undo',
+    cantFind:'I can\'t find any of these',handTitle:'✋ Hand portions',handP:'Protein: {n} palm(s)',handC:'Carbs: {n} cupped hand(s)',
+    handV:'Vegetables: 2 fists',handF:'Fat: {n} thumb(s)',askMe:'💬 Ask me',ideaAlt:'✓ I ate something similar',
+    noIdeas:'No ready ideas for this meal.',pre:'before training',post:'after training',mid:'between sessions',
+    tapBuild:'Build your plate →',tapIdea:'Pick an idea →',or:'or',
+    futureNote:'Future day: see what you can eat. “I ate this” opens on the day itself.',similar:'something similar'},
+  ru:{nav_menu:'Меню',subMenu:'Выбирайте — порции уже рассчитаны для вас',week:'На этой неделе',
+    fish:'Рыба',legumes:'Бобовые',red:'Красное мясо',upTo:'до',build:'Соберите тарелку',pickIdea:'Выберите один вариант',
+    plateTab:'🍽️ Тарелка',legTab:'🫘 Бобовые',protein:'① Белок',carb:'② Углеводы',legume:'Выберите бобовые',
+    vegFat:'③ Овощи · ④ Жиры',more:'🔍 Ещё ({n})',less:'Меньше',search:'Поиск…',noFound:'Ничего не найдено',
+    warnOnce:'⚠️ не чаще 1 раза в неделю',yourPlate:'Ваша тарелка',P:'Белок',C:'Углеводы',F:'Жиры',
+    hiddenCombo:'Ваш диетолог советует не сочетать эти два продукта.',ate:'✅ Я это съел(а)',ateBanner:'Вы съели',undo:'Отменить',
+    cantFind:'Не нахожу ничего из этого',handTitle:'✋ Порции по руке',handP:'Белок: {n} ладонь(и)',handC:'Углеводы: {n} горсть(и)',
+    handV:'Овощи: 2 кулака',handF:'Жиры: {n} больш. палец(а)',askMe:'💬 Спросите меня',ideaAlt:'✓ Я съел(а) что-то похожее',
+    noIdeas:'Для этого приёма пищи нет готовых вариантов.',pre:'до тренировки',post:'после тренировки',mid:'между тренировками',
+    tapBuild:'Соберите тарелку →',tapIdea:'Выберите вариант →',or:'или',
+    futureNote:'Будущий день: можно посмотреть, что есть. «Я это съел(а)» доступно в сам день.',similar:'что-то похожее'},
+  tr:{nav_menu:'Menü',subMenu:'Seç — miktarlar senin için hesaplandı',week:'Bu hafta',
+    fish:'Balık',legumes:'Baklagiller',red:'Kırmızı et',upTo:'en fazla',build:'Tabağını oluştur',pickIdea:'Bir fikir seç',
+    plateTab:'🍽️ Tabak',legTab:'🫘 Baklagil',protein:'① Protein',carb:'② Karbonhidrat',legume:'Baklagil seç',
+    vegFat:'③ Sebze · ④ Yağ',more:'🔍 Daha fazla ({n})',less:'Daha az',search:'Ara…',noFound:'Bulunamadı',
+    warnOnce:'⚠️ haftada en fazla 1',yourPlate:'Tabağın',P:'Protein',C:'Karbonhidrat',F:'Yağ',
+    hiddenCombo:'Diyetisyenin bu ikisini birleştirmemeni tercih ediyor.',ate:'✅ Bunu yedim',ateBanner:'Yediğin',undo:'Geri al',
+    cantFind:'Bunlardan hiçbirini bulamıyorum',handTitle:'✋ Elle porsiyon',handP:'Protein: {n} avuç içi',handC:'Karbonhidrat: {n} avuç',
+    handV:'Sebze: 2 yumruk',handF:'Yağ: {n} başparmak',askMe:'💬 Bana sor',ideaAlt:'✓ Benzer bir şey yedim',
+    noIdeas:'Bu öğün için hazır fikir yok.',pre:'antrenmandan önce',post:'antrenmandan sonra',mid:'antrenmanlar arası',
+    tapBuild:'Tabağını oluştur →',tapIdea:'Bir fikir seç →',or:'veya',
+    futureNote:'İleri bir gün: ne yiyebileceğine bak. “Bunu yedim” o gün açılır.',similar:'benzer bir şey'}
+};
+function MT(key,vars){
+  let s=(MIX_I18N[LANG]&&MIX_I18N[LANG][key])!=null?MIX_I18N[LANG][key]:(MIX_I18N.el[key]!=null?MIX_I18N.el[key]:key);
+  if(vars)Object.keys(vars).forEach(k=>{s=s.replace('{'+k+'}',vars[k]);});
+  return s;
+}
+function isMix(){return !!(SNAP&&SNAP.mode==='mix'&&SNAP.mix);}
+const MX={meal:{},sel:{},more:{},q:{},help:{}};   // κατάσταση οθόνης ανά «μέρα|γεύμα»
+function mxFood(i){return (SNAP.mix.foods||[])[i]||{};}
+function mxQ(m){return (SNAP.mix.q||[])[m.mq]||{p:[],c:[],l:[]};}
+function mxTagTxt(t){return t==='pre'?MT('pre'):t==='post'?MT('post'):t==='mid'?MT('mid'):'';}
+function mxSum(arrs){const o=[0,0,0,0];arrs.forEach(a=>{if(a)for(let i=0;i<4;i++)o[i]+=+a[i]||0;});return o;}
+function mxHalf(x){const r=Math.round(x*2)/2;const w=Math.floor(r);return (w>0?String(w):'')+(r-w>=.5?'½':'')||'½';}
+
+// Πόσες φορές αυτή την εβδομάδα (ψάρι / όσπρια / κόκκινο κρέας) από τα «Αυτό έφαγα»
+function mxWeekCounts(){
+  const o={fi:0,le:0,rm:0};
+  weekDates().forEach(d=>{const ms=getMealsFor(dKey(d));Object.keys(ms).forEach(i=>{const v=ms[i];if(v&&v.mx&&v.t){if(v.t.fi)o.fi++;if(v.t.le)o.le++;if(v.t.rm)o.rm++;}});});
+  return o;
+}
+// Το επιλεγμένο πιάτο ενός γεύματος (πρωτεΐνη/υδατ. ή όσπριο). Προεπιλογή: το πρώτο του μενού.
+function mxSel(key,q){
+  let s=MX.sel[key];
+  if(!s){
+    const firstMenu=(arr)=>{const x=arr.find(r=>mxFood(r[0]).s);return x?x[0]:(arr[0]?arr[0][0]:null);};
+    s=MX.sel[key]={mode:'plate',p:firstMenu(q.p),c:firstMenu(q.c),l:firstMenu(q.l)};
+  }
+  return s;
+}
+function mxPlate(q,s,m,day){
+  const veg=SNAP.mix.veg||[2,10,.3,51];
+  if(s.mode==='leg'){
+    const r=q.l.find(x=>x[0]===s.l); if(!r)return null;
+    const fd=mxFood(r[0]);
+    return {mac:r[4],name:fd.n,el:fd.el,f:r[5]||[],t:{le:1},lines:[[fd.e,fd.n,r[1],r[2]],['',r[3],'','']]};
+  }
+  const p=q.p.find(x=>x[0]===s.p), c=q.c.find(x=>x[0]===s.c);
+  if(!p||!c)return null;
+  const fp=mxFood(p[0]), fc=mxFood(c[0]);
+  const t={}; if(fp.fi)t.fi=1; if(fp.rm)t.rm=1;
+  // λάδι ακριβώς για ΑΥΤΟ το πιάτο: ό,τι λίπος λείπει μετά από πρωτεΐνη + υδατάνθρακα + λαχανικά, σε ½ κ.σ.
+  // (ίδιος κανόνας με την εφαρμογή). Σε μέρα χωρίς λάδι (νηστεία) μένει η εναλλακτική που ήρθε έτοιμη.
+  let oilMac=p[5], oilTxt=p[3], pf=(p[6]||[]);
+  const O=SNAP.mix.oil;
+  if(O&&!(day&&day.oilOk===false)){
+    const left=((m&&m.macros&&m.macros.f)||0)-p[4][2]-c[3][2]-veg[2];
+    const sp=Math.max(0,Math.min(O.max||2,Math.round(left/O.g*2)/2));
+    oilMac=[0,0,sp*O.f,sp*O.k]; oilTxt=sp>0?mxHalf(sp)+' '+O.unit:O.none;
+    pf=pf.filter(x=>x[0]!=='Ελαιόλαδο'); if(sp>0)pf=pf.concat([['Ελαιόλαδο',sp*O.g]]);
+  }
+  return {mac:mxSum([p[4],oilMac,c[3],veg]),name:fp.n+' + '+fc.n,el:fp.el+' + '+fc.el,f:pf.concat(c[4]||[]),t:t,
+    hidden:(SNAP.mix.hidden||[]).indexOf(p[0]+'|'+c[0])>-1,oil:oilTxt,
+    lines:[[fp.e,fp.n,p[1],p[2]],[fc.e,fc.n,c[1],c[2]],['🥗',SNAP.mix.vegTxt||'',' ',''],['🫒',oilTxt,'','']]};
+}
+function mxBar(label,v,t,col){
+  const ok=t>0&&Math.abs(v-t)/t<=.12;
+  return '<div class="mx-rowb"><span>'+esc(label)+'</span><span><b>'+Math.round(v)+'</b> / '+Math.round(t)+' g'+(ok?' ✓':'')+'</span></div>'
+    +'<div class="mx-bar"><i style="width:'+Math.min(100,t?v/t*100:0)+'%;background:'+col+'"></i></div>';
+}
+function mxTile(kind,row,on){
+  const f=mxFood(row[0]);
+  return '<button type="button" class="mx-tile'+(on?' on':'')+'" data-mxa="'+kind+'" data-i="'+row[0]+'">'
+    +'<span class="e">'+esc(f.e||'')+'</span><b>'+esc(f.n)+'</b><small>'+esc(row[1])+'</small>'+(row[2]?'<small>('+esc(row[2])+')</small>':'')
+    +(f.t==='warn'?'<small class="w">'+esc(MT('warnOnce'))+'</small>':'')+'</button>';
+}
+// Λίστα ενός ρόλου: ⭐ του μενού ως πλακίδια + «🔍 Περισσότερα» (τα υπόλοιπα επιτρεπτά, με αναζήτηση)
+function mxRoleHtml(key,kind,rows,selI){
+  const menu=rows.filter(r=>mxFood(r[0]).s), more=rows.filter(r=>!mxFood(r[0]).s);
+  const mk=key+'|'+kind, open=!!MX.more[mk];
+  let h='<div class="mx-tiles">'+menu.map(r=>mxTile(kind,r,r[0]===selI)).join('');
+  // διάλεξε κάτι από τα «περισσότερα» → φαίνεται κι αυτό ως πλακίδιο, χωρίς να ανοίξει η λίστα
+  const sm=more.find(r=>r[0]===selI); if(sm&&!open)h+=mxTile(kind,sm,true);
+  h+='</div>';
+  if(more.length){
+    h+='<button type="button" class="mx-morebtn" data-mxa="more" data-k="'+kind+'">'+esc(open?MT('less'):MT('more',{n:more.length}))+'</button>';
+    if(open){
+      const q=(MX.q[mk]||'');
+      const nq=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+      const list=more.filter(r=>!q||nq(mxFood(r[0]).n).indexOf(nq(q))>-1||nq(mxFood(r[0]).el).indexOf(nq(q))>-1);
+      h+='<input class="mx-search" type="search" data-mxs="'+kind+'" placeholder="'+esc(MT('search'))+'" value="'+esc(q)+'">'
+        +'<div class="mx-tiles">'+(list.length?list.map(r=>mxTile(kind,r,r[0]===selI)).join(''):'<div class="mx-empty">'+esc(MT('noFound'))+'</div>')+'</div>';
+    }
+  }
+  return h;
+}
+function mxHandHtml(m){
+  const mc=m.macros||{};
+  const n=x=>mxHalf(Math.max(.5,x));
+  return '<div class="mx-hand"><b>'+esc(MT('handTitle'))+'</b><ul>'
+    +'<li>'+esc(MT('handP',{n:n((mc.p||0)/25)}))+'</li><li>'+esc(MT('handC',{n:n((mc.c||0)/25)}))+'</li>'
+    +'<li>'+esc(MT('handV'))+'</li><li>'+esc(MT('handF',{n:n((mc.f||0)/12)}))+'</li></ul>'
+    +(hasDirectContact()?'<button type="button" class="mx-btn sec" data-mxa="ask">'+esc(MT('askMe'))+'</button>':'')+'</div>';
+}
+function mxPickedLine(v){return v&&typeof v==='object'?(v.mx?(v.d||v.n):((pickedAlt({},v)||{}).name||'')):'';}
+
+function viewMix(){
+  const s=SNAP, v=el('div','view active');
+  const pills=el('div','daypills');
+  (s.days||[]).forEach((d,i)=>{
+    const p=el('div','pill'+(i===curDay?' on':''),shortDay(d.label)+(d.isTrain?' ●':''));
+    p.onclick=()=>{curDay=i;go('plan')};
+    pills.appendChild(p);
+  });
+  v.appendChild(pills);
+  const day=s.days&&s.days[curDay];
+  const meta=el('div',null,'');
+  meta.style.cssText='display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:0 2px';
+  meta.innerHTML='<span>'+esc(dayHeader(curDay))+'</span><span>'+(day&&day.kcal?nfmt(day.kcal)+' kcal':'')+'</span>';
+  v.appendChild(meta);
+  const choC=choCard(day&&day.cho); if(choC)v.appendChild(choC);
+
+  // 📆 εβδομάδα: ψάρι / όσπρια / κόκκινο κρέας
+  const r=s.mix.rules||{}, wc=mxWeekCounts();
+  const wk=el('div','mx-week');
+  wk.innerHTML='<b>📆 '+esc(MT('week'))+'</b>'
+    +'<span class="'+(wc.fi>=(r.fish||0)?'ok':'')+'">🐟 '+esc(MT('fish'))+' '+wc.fi+' / '+(r.fish||0)+'</span>'
+    +'<span class="'+(wc.le>=(r.legumes||0)?'ok':'')+'">🫘 '+esc(MT('legumes'))+' '+wc.le+' / '+(r.legumes||0)+'</span>'
+    +'<span class="'+(wc.rm>(r.redMeatMax!=null?r.redMeatMax:2)?'bad':'')+'">🥩 '+esc(MT('red'))+' '+wc.rm+' / '+esc(MT('upTo'))+' '+(r.redMeatMax!=null?r.redMeatMax:2)+'</span>';
+  v.appendChild(wk);
+
+  const planDate=weekDatesOffset(0)[curDay], dk=dKey(planDate), isFuture=dk>todayKey();
+  const eaten=getMealsFor(dk), meals=(day&&day.meals)||[];
+  // επιλεγμένο γεύμα της μέρας: ό,τι πάτησε, αλλιώς το πρώτο κύριο που δεν έχει φάει
+  let mi=MX.meal[curDay];
+  if(mi==null||!meals[mi]){ mi=meals.findIndex((m,i)=>m.mix==='plate'&&!eaten[i]); if(mi<0)mi=meals.findIndex(m=>m.mix==='plate'); if(mi<0)mi=0; }
+  MX.meal[curDay]=mi;
+
+  const list=el('div','card mx-meals');
+  list.innerHTML=meals.map((m,i)=>{
+    const ev=eaten[i], tag=mxTagTxt(m.tag);
+    return '<button type="button" class="mx-ml'+(i===mi?' on':'')+(ev?' done':'')+'" data-mxa="meal" data-m="'+i+'">'
+      +'<span class="t">'+esc(m.time||'')+'</span><span class="b"><span class="n">'+esc(m.label||'')+(tag?' <span class="mx-tag mx-tag-'+esc(m.tag)+'">'+esc(tag)+'</span>':'')+'</span>'
+      +'<span class="s">'+(ev?'✓ '+esc(mxPickedLine(ev)||MT('similar')):(MT('P').charAt(0)+' '+(m.macros||{}).p+' · '+MT('C').charAt(0)+' '+(m.macros||{}).c+' · '+MT('F').charAt(0)+' '+(m.macros||{}).f))+'</span></span></button>';
+  }).join('');
+  v.appendChild(list);
+
+  const m=meals[mi];
+  if(m){
+    const key=curDay+'|'+mi, body=el('div','card mx-body'), pad=el('div','card-pad');
+    const picked=eaten[mi];
+    let h='';
+    if(isFuture)h+='<div class="mx-note">'+esc(MT('futureNote'))+'</div>';
+    if(picked){
+      h+='<div class="alt-banner"><i class="ti ti-check"></i><div class="tx"><b>'+esc(MT('ateBanner'))+'</b><span>'+esc(mxPickedLine(picked)||MT('similar'))+'</span></div>'
+        +'<button type="button" data-mxa="unpick">'+esc(MT('undo'))+'</button></div>';
+    }
+    if(m.mix==='plate'){
+      const q=mxQ(m), s=mxSel(key,q);
+      h+='<h3 class="mx-h">🍽️ '+esc(MT('build'))+' <small>'+esc(m.time||'')+' '+esc(m.label||'')+'</small></h3>';
+      if(q.l.length) h+='<div class="mx-seg"><button type="button" class="'+(s.mode==='plate'?'on':'')+'" data-mxa="mode" data-v="plate">'+esc(MT('plateTab'))+'</button>'
+        +'<button type="button" class="'+(s.mode==='leg'?'on':'')+'" data-mxa="mode" data-v="leg">'+esc(MT('legTab'))+'</button></div>';
+      if(s.mode==='leg'){
+        h+='<div class="mx-step">'+esc(MT('legume'))+'</div>'+mxRoleHtml(key,'l',q.l,s.l);
+      } else {
+        h+='<div class="mx-step mx-sp">'+esc(MT('protein'))+'</div>'+mxRoleHtml(key,'p',q.p,s.p)
+          +'<div class="mx-step mx-sc">'+esc(MT('carb'))+'</div>'+mxRoleHtml(key,'c',q.c,s.c);
+      }
+      const pl=mxPlate(q,s,m,day);
+      if(pl){
+        const mc=m.macros||{};
+        h+='<div class="mx-plate"><b>'+esc(MT('yourPlate'))+'</b> <span class="mx-k">· '+nfmt(pl.mac[3])+' kcal</span><ul>'
+          +pl.lines.filter(l=>l[1]).map(l=>'<li>'+esc(l[0])+' '+esc(l[1])+(l[2]&&l[2].trim()?' <b>'+esc(l[2])+'</b>':'')+(l[3]?' <span class="mx-k">('+esc(l[3])+')</span>':'')+'</li>').join('')+'</ul>'
+          +mxBar(MT('P'),pl.mac[0],mc.p,'#1565c0')+mxBar(MT('C'),pl.mac[1],mc.c,'#2e7d32')+mxBar(MT('F'),pl.mac[2],mc.f,'#b26a00')
+          +(pl.hidden?'<div class="mx-warnline">⚠️ '+esc(MT('hiddenCombo'))+'</div>':'')+'</div>';
+        if(!isFuture)h+='<button type="button" class="mx-btn" data-mxa="eat">'+esc(MT('ate'))+'</button>';
+      }
+      h+='<button type="button" class="mx-btn sec" data-mxa="help">'+esc(MT('cantFind'))+'</button>'+(MX.help[key]?mxHandHtml(m):'');
+    } else {
+      h+='<h3 class="mx-h">'+esc(MT('pickIdea'))+' <small>'+esc(m.time||'')+' '+esc(m.label||'')+(mxTagTxt(m.tag)?' · '+esc(mxTagTxt(m.tag)):'')+'</small></h3>';
+      const ideas=m.mi||[];
+      if(!ideas.length)h+='<div class="mx-empty">'+esc(MT('noIdeas'))+'</div>';
+      h+=ideas.map((it,ii)=>{
+        const on=picked&&picked.mx&&picked.n===it.el;
+        return '<div class="mx-idea'+(on?' on':'')+'"><div class="tx">'+esc(it.d)+'<span class="mx-k"> · '+nfmt(it.k)+' kcal</span></div>'
+          +(isFuture?'':'<button type="button" class="swap-pick" data-mxa="idea" data-ii="'+ii+'">'+esc(on?'✓':MT('ate'))+'</button>')+'</div>';
+      }).join('');
+      if(!isFuture&&!picked)h+='<button type="button" class="mx-btn sec" data-mxa="similar">'+esc(MT('ideaAlt'))+'</button>';
+    }
+    pad.innerHTML=h; body.appendChild(pad); v.appendChild(body);
+
+    // ενέργειες (delegation — τα ονόματα τροφίμων δεν μπαίνουν ποτέ σε onclick="…")
+    function setPick(val){const e=getMealsFor(dk);e[mi]=val;setMealsFor(dk,e);syncMealCheckin(dk);pushCheckin(dk);mxRerender();}
+    pad.addEventListener('click',ev=>{
+      const b=ev.target.closest('[data-mxa]'); if(!b)return;
+      const a=b.dataset.mxa, q=m.mix==='plate'?mxQ(m):null, s=q?mxSel(key,q):null;
+      if(a==='p'||a==='c'||a==='l'){ s[a]=+b.dataset.i; if(a==='l')s.mode='leg'; mxRerender(); return; }
+      if(a==='mode'){ s.mode=b.dataset.v; mxRerender(); return; }
+      if(a==='more'){ const mk=key+'|'+b.dataset.k; MX.more[mk]=!MX.more[mk]; mxRerender(); return; }
+      if(a==='help'){ MX.help[key]=!MX.help[key]; mxRerender(); return; }
+      if(a==='ask'){ openContact(); return; }
+      if(a==='unpick'){ setPick(false); return; }
+      if(a==='similar'){ setPick(true); return; }
+      if(a==='eat'){
+        const pl=mxPlate(q,s,m,day); if(!pl)return;
+        setPick({mx:1,n:pl.el,d:pl.name,s:m.slot||m.label||'',o:'',f:pl.f,k:Math.round(pl.mac[3]),
+          m:{p:Math.round(pl.mac[0]),c:Math.round(pl.mac[1]),f:Math.round(pl.mac[2])},t:pl.t});
+        return;
+      }
+      if(a==='idea'){
+        const it=(m.mi||[])[+b.dataset.ii]; if(!it)return;
+        if(picked&&picked.mx&&picked.n===it.el){ setPick(false); return; }
+        setPick({mx:1,n:it.el,d:it.d,s:m.slot||m.label||'',o:'',f:it.f||[],k:it.k,m:it.m||{}});
+      }
+    });
+    pad.addEventListener('input',ev=>{
+      const k=ev.target.dataset&&ev.target.dataset.mxs; if(!k)return;
+      MX.q[key+'|'+k]=ev.target.value;
+      const pos=ev.target.selectionStart; mxRerender();
+      const inp=document.querySelector('.mx-search[data-mxs="'+k+'"]'); if(inp){inp.focus();try{inp.setSelectionRange(pos,pos);}catch(e){}}
+    });
+  }
+  list.addEventListener('click',ev=>{const b=ev.target.closest('[data-mxa="meal"]'); if(!b)return; MX.meal[curDay]=+b.dataset.m; mxRerender();});
+  const wkb=workoutBlock(curDay,dk,'plan');
+  if(wkb){const wcd=el('div','card'), wp=el('div','card-pad'); wp.style.paddingTop='4px'; wp.appendChild(wkb); wcd.appendChild(wp); v.appendChild(wcd);}
+  return v;
+}
+// Αρχική: πάτημα σε γεύμα του μενού → καρτέλα Μενού στο ίδιο γεύμα (όχι απλό τσεκ)
+function mxRerender(){const sc=$('#scroll'),top=sc?sc.scrollTop:0;go('plan');if(sc)sc.scrollTop=top;}
+function mixOpenMeal(idx){curDay=defaultDay();MX.meal[curDay]=idx;go('plan');}
+
 
 // ── PRINT / PDF (ίδια μορφή με το PDF της εφαρμογής: εβδομαδιαίος πίνακας) ─────
 // ✅ audit fix (2026-08-21): μόνο ελληνικά/αγγλικά substrings αναγνωρίζονταν εδώ — ένα ρωσικό/τουρκικό
