@@ -203,8 +203,8 @@ try:
         check(f'{raw} γρ. ωμός' in t6 and f'→ ~{salmon_g} γρ. έτοιμο' in t6, f'Sunday (not batched) salmon shown as raw weight ({raw} γρ. ωμός → {salmon_g})')
         check('από το 🍳 μαγείρεμα παραπάνω' in t, 'Monday: batched salmon not counted twice in the meal card')
         kp.evaluate('setDay(0)'); kp.wait_for_timeout(100)
-        # μαγείρεψε μια φορά για 2–3 μέρες (ρύζι κάθε μέρα → Δευ–Τετ)
-        check('Μαγείρεψε και για τις επόμενες μέρες' in t and 'Ρύζι άσπρο' in t and 'για Δευ · Τρι · Τετ' in t, 'Monday: cook rice once for Δευ–Τετ')
+        # μαγείρεψε μια φορά για 2–3 μέρες (ρύζι κάθε μέρα → Δευ–Τετ). «Σήμερα μαγείρεψε» αν η Δευτέρα είναι σήμερα.
+        check('αγείρεψε και για τις επόμενες μέρες' in t and 'Ρύζι άσπρο' in t and 'για Δευ · Τρι · Τετ' in t, 'Monday: cook rice once for Δευ–Τετ')
         bp = kp.evaluate('batchPlan().map(b=>b.name+":"+b.days.join(""))')
         check('Σολομός:01' in bp and 'Σολομός:23' in bp and 'Ρύζι άσπρο:012' in bp, f'fish batched for 2 days, rice for 3 ({bp[:6]})')
         kp.evaluate('setDay(1)'); kp.wait_for_timeout(100)
