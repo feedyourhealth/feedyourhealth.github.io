@@ -67,6 +67,13 @@
   .acts{display:flex;gap:8px;margin:4px 0 12px}
   .btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;padding:12px;font:inherit;font-weight:700;font-size:.92rem;text-decoration:none;cursor:pointer;border:1px solid var(--bord);background:var(--card);color:var(--ink)}
   .btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+  .hubc{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;padding:12px 14px}
+  .hubc .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--tint);color:var(--teal-d);flex:none}
+  .hubc .hb{flex:1;min-width:0;display:flex;flex-direction:column}
+  .hubc .hb small{font-size:.8rem;color:var(--muted)}
+  .hubc .nw{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--teal);color:var(--on)}
+  .hubc .chev{font-size:1.4rem;color:var(--faint)}
+  .back{display:inline-block;margin:2px 4px 4px;font-size:.85rem;color:var(--teal-d);text-decoration:none;font-weight:600}
   .foot{text-align:center;font-size:.74rem;color:var(--faint);margin-top:10px}
   .state{text-align:center;padding:60px 16px}
   .state .big{font-size:2rem;color:var(--teal)}
@@ -94,6 +101,7 @@ const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 
 function tokenParam(){ const p=new URLSearchParams(location.search); return p.get('t')||p.get('token')||''; }
 const TOK=tokenParam();
+const HUB=new URLSearchParams(location.search).get('h')||'';   // προσωπικός σύνδεσμος γυμναστή (λίστα πελατών)
 let SNAP=null;
 
 function el(id){ return document.getElementById(id); }
@@ -116,6 +124,7 @@ const T={
     },
     phases:{deficit:'Έλλειμμα θερμίδων (απώλεια λίπους)',mild:'Ήπιο έλλειμμα θερμίδων',maintain:'Διατήρηση',surplus:'Πλεόνασμα θερμίδων (αύξηση μάζας)',sport:'Αθλητική διατροφή (απόδοση)',custom:'Εξατομικευμένο πλάνο'},
     phaseTip:{deficit:'Σε έλλειμμα η ανάκαμψη μπορεί να είναι πιο αργή. Η προπόνηση δύναμης βοηθά να διατηρηθεί η μυϊκή μάζα.',mild:'Σε ήπιο έλλειμμα η απόδοση συνήθως διατηρείται. Η προπόνηση δύναμης βοηθά να διατηρηθεί η μυϊκή μάζα.',surplus:'Σε πλεόνασμα, η προοδευτική επιβάρυνση στην προπόνηση δύναμης αξιοποιεί τις επιπλέον θερμίδες.',sport:'Οι υδατάνθρακες προσαρμόζονται στις μέρες προπόνησης και αγώνα.'},
+    hubHi:'Γεια σου',hubSub:'Οι κοινοί μας πελάτες στο Feed Your Health',hubN:'πελάτες',hubNew:'Νέο',hubEmpty:'Δεν υπάρχει ακόμα αναφορά. Μόλις στείλω την πρώτη, θα εμφανιστεί εδώ.',hubOnly:'Βλέπεις μόνο όσους έχουν δώσει συναίνεση.',hubSave:'Κράτησε αυτή τη σελίδα στο κινητό σου: κάθε νέα αναφορά εμφανίζεται εδώ.',back:'← Όλοι οι πελάτες μου',upd:'Ενημερώθηκε',meas2:'Μέτρηση',
     errMiss:['Λείπει ο σύνδεσμος.','Ζήτησε από τον διαιτολόγο το σωστό link.'],
     errNF:['Η αναφορά δεν βρέθηκε.','Ο σύνδεσμος μπορεί να έληξε ή να ανακλήθηκε.'],
     errExp:['Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο νέα αναφορά.']
@@ -136,6 +145,7 @@ const T={
     },
     phases:{deficit:'Calorie deficit (fat loss)',mild:'Mild calorie deficit',maintain:'Maintenance',surplus:'Calorie surplus (muscle gain)',sport:'Sports nutrition (performance)',custom:'Individual plan'},
     phaseTip:{deficit:'In a deficit, recovery may be slower. Strength training helps preserve muscle mass.',mild:'In a mild deficit performance is usually maintained. Strength training helps preserve muscle mass.',surplus:'In a surplus, progressive overload in strength training makes the most of the extra energy.',sport:'Carbohydrates are adjusted to training and match days.'},
+    hubHi:'Hi',hubSub:'Our shared clients at Feed Your Health',hubN:'clients',hubNew:'New',hubEmpty:'No report yet. As soon as I send the first one, it will appear here.',hubOnly:'You only see clients who have given consent.',hubSave:'Save this page on your phone: every new report appears here.',back:'← All my clients',upd:'Updated',meas2:'Assessment',
     errMiss:['Link is missing.','Ask the dietitian for the correct link.'],
     errNF:['Report not found.','The link may have expired or been revoked.'],
     errExp:['This link has expired.','Ask the dietitian for a new report.']
@@ -148,6 +158,7 @@ function fail(k){
 }
 
 (async function boot(){
+  if(!TOK && HUB) return bootHub();
   if(!TOK) return fail('errMiss');
   let data,error;
   try{
@@ -159,6 +170,43 @@ function fail(k){
   SNAP=data.snapshot; SNAP._exp=data.expires_at||null;
   render();
 })();
+
+// ── Προσωπικός σύνδεσμος γυμναστή: λίστα κοινών πελατών (snapshot.kind==='trainer_hub') ──
+function seenGet(){ try{ return JSON.parse(localStorage.getItem('fyh_hub_seen')||'{}')||{}; }catch(e){ return {}; } }
+function seenSet(tok,at){ try{ const m=seenGet(); m[tok]=at; localStorage.setItem('fyh_hub_seen',JSON.stringify(m)); }catch(e){} }
+async function bootHub(){
+  let data,error;
+  try{
+    const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+    ({data,error}=await sb.rpc('get_shared_plan',{p_token:HUB}).single());
+  }catch(e){ return fail('errNF'); }
+  if(error||!data||!data.snapshot||data.snapshot.kind!=='trainer_hub'){ if(error) console.error('[gymnastis hub]',error); return fail('errNF'); }
+  if(data.expires_at && new Date(data.expires_at)<new Date()) return fail('errExp');
+  renderHub(data.snapshot);
+}
+function renderHub(s){
+  const lang=s.lang==='en'?'en':'el', X=T[lang], seen=seenGet();
+  document.documentElement.lang=lang;
+  document.title='Feed Your Health — '+(s.trainer&&s.trainer.name||'');
+  const first=(s.trainer&&s.trainer.greet)||String(s.trainer&&s.trainer.name||'').split(/\s+/)[0];
+  const L=(s.clients||[]);
+  let h='<div class="who"><div class="eb">'+esc(X.hubSub)+'</div><h1>'+esc(X.hubHi+' '+first)+' 👋</h1>'
+    +'<div class="upd">'+L.length+' '+esc(X.hubN)+' · '+esc(X.upd)+' '+esc(fmtD(String(s.updatedAt||'').slice(0,10)))+'</div></div>';
+  if(!L.length) h+='<div class="card" style="color:var(--muted)">'+esc(X.hubEmpty)+'</div>';
+  L.forEach(c=>{
+    const isNew=c.sentAt && seen[c.token]!==c.sentAt;
+    const ini=String(c.name||'?').trim().split(/\s+/).slice(0,2).map(w=>w.charAt(0)).join('').toUpperCase();
+    h+='<a class="card hubc" href="?t='+encodeURIComponent(c.token)+'&h='+encodeURIComponent(HUB)+'" onclick="seenSet('+esc(JSON.stringify(c.token))+','+esc(JSON.stringify(c.sentAt||''))+')">'
+      +'<span class="av">'+esc(ini)+'</span>'
+      +'<span class="hb"><b>'+esc(c.name)+'</b><small>'+esc(X.meas2)+' '+esc(fmtD(c.measDate))
+      +(c.bf!=null?' · '+esc(X.bf)+' '+nf(c.bf,lang)+'%'+(c.dBf!=null?' '+delta(c.dBf,lang,true):''):(c.w!=null?' · '+nf(c.w,lang)+' kg':''))+'</small></span>'
+      +(isNew?'<span class="nw">'+esc(X.hubNew)+'</span>':'')+'<span class="chev">›</span></a>';
+  });
+  const wa=String(s.wa||'').replace(/[^0-9]/g,'');
+  if(wa) h+='<div class="acts"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+esc(wa)+'">'+esc(X.reply)+'</a></div>';
+  h+='<div class="foot">'+esc(X.hubOnly)+'<br>'+esc(X.hubSave)+'</div>';
+  el('root').innerHTML=h;
+}
 
 function fmtD(ymd){ const p=String(ymd||'').split('-'); return p.length===3?(+p[2])+'/'+(+p[1])+'/'+p[0]:''; }
 function fmtDs(ymd){ const p=String(ymd||'').split('-'); return p.length===3?(+p[2])+'/'+(+p[1]):''; }
@@ -195,7 +243,7 @@ function render(){
   document.documentElement.lang=lang;
   document.title='Feed Your Health — '+(s.client&&s.client.name||'');
   const M=s.meas||[], L=M[M.length-1], P=M.length>1?M[M.length-2]:null, F=M[0];
-  let h='<div class="who"><div class="eb">'+esc(X.eb+' '+(s.trainer&&s.trainer.kind==='coach'?X.coach:X.trainer))+(s.trainer&&s.trainer.name?' · '+esc(s.trainer.name):'')+'</div>'
+  let h=(HUB?'<a class="back" href="?h='+encodeURIComponent(HUB)+'">'+esc(X.back)+'</a>':'')+'<div class="who"><div class="eb">'+esc(X.eb+' '+(s.trainer&&s.trainer.kind==='coach'?X.coach:X.trainer))+(s.trainer&&s.trainer.name?' · '+esc(s.trainer.name):'')+'</div>'
     +'<h1>'+esc(s.client&&s.client.name||'')+'</h1>'
     +'<div class="upd">'+esc(X.meas)+' '+esc(fmtD(L.d))+' · '+esc(X.by)+' '+esc(s.from||'Feed Your Health')+'</div></div>';
 
