@@ -408,7 +408,7 @@ function trainerTrackerButtonHtml(c){
   if(!c||!c.trainerId) return '';
   var t=getTrainer(c.trainerId); if(!t) return '';
   var st=trainerSendStatus(c); if(st==='none') return '';
-  var first=String(t.name||'').split(/\s+/)[0];
+  var first=_trAcc(String(t.name||'').split(/\s+/)[0]);
   if(!c.trainerConsent) return '<button class="btn secondary" title="Ο πελάτης δεν έχει δώσει ακόμα συναίνεση — άνοιξε για να την καταγράψεις" onclick="openTrainerSend()">🏋️ Στον '+esc(first)+'</button>';
   if(st==='pending') return '<button class="btn" style="background:var(--tr-warn-bg);color:var(--tr-warn-fg);border:1px solid var(--tr-warn-bd);font-weight:700" title="Νέα μέτρηση που δεν έχει σταλεί στον γυμναστή" onclick="openTrainerSend()">📤 Στείλε στον '+esc(first)+'</button>';
   return '<button class="btn secondary" title="Η τελευταία μέτρηση έχει ήδη σταλεί — ξαναστείλε αν θέλεις" onclick="openTrainerSend()">🏋️ Στον '+esc(first)+' ✓</button>';
@@ -429,6 +429,18 @@ function _trPhaseKey(g){
   return 'custom';
 }
 
+// 🏆 Επόμενος αγώνας για τον γυμναστή (plan-history-athlete.js). Μόνο όνομα/ημερομηνίες/κατηγορία/απόσταση.
+function _trNextComp(c){
+  if(typeof phaUpcoming!=='function') return null;
+  var r=phaUpcoming(c)[0]; if(!r) return null;
+  if(phDaysBetween(phToday(),r.date)>120) return null;
+  var o={name:r.name||'',date:r.date,type:r.type||'',weighDate:r.weighDate||null,cls:r.weightClass||null};
+  if(r.type==='weighin'&&r.weightClass>0&&typeof phaWeighInfo==='function'){
+    var I=phaWeighInfo(c,r);
+    if(I){ o.cur=Math.round(I.cur*10)/10; o.dist=I.dist; o.needWk=Math.round(I.needWk*100)/100; o.level=I.level; o.minor=!!I.minor; }
+  }
+  return o;
+}
 function buildTrainerSnapshot(c,o){
   o=o||{};
   var t=getTrainer(c.trainerId)||{};
@@ -459,6 +471,7 @@ function buildTrainerSnapshot(c,o){
         return {lbl:lang==='en'?(TRAINER_SF_EN[f.k]||f.k):f.lbl.replace(/^\d+\.\s*/,'').replace(/\s*mm$/,''),mm:+mm,prev:(prev&&prev.sfFields&&prev.sfFields[f.k]>0)?+prev.sfFields[f.k]:null};
       }).filter(Boolean)};
   }
+  if(o.comp){ var nc=_trNextComp(c); if(nc) snap.comp=nc; }
   if(o.phase){
     try{
       var td=calcTDEE(c);
@@ -525,6 +538,7 @@ function openTrainerSend(clientId){
     +chk('trs-comp',true,'Σύσταση σώματος','Ονοματεπώνυμο πελάτη, βάρος, % λίπος, μάζα λίπους, άλιπη μάζα',true)
     +chk('trs-hist',log.length>1,'Πορεία τελευταίων μετρήσεων','Γράφημα και αλλαγές από μέτρηση σε μέτρηση (έως 6)',log.length<2)
     +chk('trs-phase',true,'Διατροφική φάση και στόχοι','Φάση (έλλειμμα/διατήρηση/…), ~θερμίδες, πρωτεΐνη g/kg')
+    +(_trNextComp(c)?chk('trs-comp2',true,'Επόμενος αγώνας','🏆 '+esc(_trNextComp(c).name||'Αγώνας')+' · '+phFmtShort(_trNextComp(c).date)+(_trNextComp(c).cls?' · κατηγορία −'+String(_trNextComp(c).cls).replace('.',',')+' kg και απόσταση':'')):'')
     +chk('trs-sf',false,'Δερματοπτυχές ανά σημείο',hasSf?'mm ανά σημείο και αλλαγή από την προηγούμενη':'Η τελευταία μέτρηση δεν έχει δερματοπτυχές',!hasSf)
     +'<div style="display:flex;gap:9px;padding:6px 0;opacity:.55"><span>🔒</span><div style="font-size:12.5px">Ιατρικό ιστορικό, εξετάσεις, προσωπικές σημειώσεις και πλάνο γευμάτων <b>δεν μοιράζονται ποτέ</b>.</div></div>'
     +'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-top:8px">'
@@ -554,6 +568,8 @@ function _trAddChip(i){
 }
 
 function _trVoc(n){ return (typeof greekVocative==='function')?greekVocative(n):n; }
+// Αιτιατική μικρού ονόματος («στον Ανδρέα», «με τον Γιάννη», «στον Νίκο»)· ξένα/γυναικεία μένουν ως έχουν.
+function _trAcc(n){ n=String(n||''); if(/[αηάή]ς$/.test(n)) return n.slice(0,-1); if(/[οό]ς$/.test(n)) return n.slice(0,-2)+(n.slice(-2,-1)==='ό'?'ό':'ο'); return n; }
 function _trWaMessage(c,t,url,lang){
   var cf=String(c.name||'').trim(), tf=String(t.name||'').split(/\s+/)[0];
   if(lang!=='en') tf=_trVoc(tf);
@@ -571,7 +587,7 @@ function createTrainerLink(){
   }
   var v=function(id){ var e=document.getElementById(id); return !!(e&&e.checked&&!e.disabled); };
   var lang=(document.getElementById('trs-lang')||{}).value==='en'?'en':'el';
-  var snap=buildTrainerSnapshot(c,{lang:lang,history:v('trs-hist')?6:1,phase:v('trs-phase'),sf:v('trs-sf'),note:(document.getElementById('trs-note')||{}).value||''});
+  var snap=buildTrainerSnapshot(c,{lang:lang,history:v('trs-hist')?6:1,phase:v('trs-phase'),comp:v('trs-comp2'),sf:v('trs-sf'),note:(document.getElementById('trs-note')||{}).value||''});
   if(!snap){ showErrorToast('Δεν υπάρχει μέτρηση για αποστολή.'); return; }
   var box=document.getElementById('trs-result');
   if(box) box.innerHTML='<div style="text-align:center;color:var(--tr-sub);font-size:13px;padding:10px">Δημιουργία συνδέσμου…</div>';
@@ -632,7 +648,8 @@ function buildTrainerHubSnapshot(t){
     return {name:c.name||'', token:c.trainerToken, sentAt:s?s.at:null, measDate:m?m.date:null,
       bf:(m&&m.bf>0)?+(+m.bf).toFixed(1):null,
       dBf:(m&&pv&&m.bf>0&&pv.bf>0)?Math.round((m.bf-pv.bf)*10)/10:null,
-      w:m?+(+m.weight).toFixed(1):null};
+      w:m?+(+m.weight).toFixed(1):null,
+      comp:(function(r){ return r?{name:r.name,date:r.date,cls:r.cls}:null; })(_trNextComp(c))};
   }).sort(function(a,b){ return String(b.sentAt||'').localeCompare(String(a.sentAt||'')); });
   return {v:1,kind:'trainer_hub',lang:lang,
     trainer:{name:t.name||'',kind:t.kind==='coach'?'coach':'trainer',

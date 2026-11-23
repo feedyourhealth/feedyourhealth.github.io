@@ -72,6 +72,7 @@
   .hubc .hb{flex:1;min-width:0;display:flex;flex-direction:column}
   .hubc .hb small{font-size:.8rem;color:var(--muted)}
   .hubc .nw{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--teal);color:var(--on)}
+  .hubc .hb small.cmp{color:#b26a00;font-weight:600}
   .hubc .chev{font-size:1.4rem;color:var(--faint)}
   .back{display:inline-block;margin:2px 4px 4px;font-size:.85rem;color:var(--teal-d);text-decoration:none;font-weight:600}
   .foot{text-align:center;font-size:.74rem;color:var(--faint);margin-top:10px}
@@ -124,7 +125,7 @@ const T={
     },
     phases:{deficit:'Έλλειμμα θερμίδων (απώλεια λίπους)',mild:'Ήπιο έλλειμμα θερμίδων',maintain:'Διατήρηση',surplus:'Πλεόνασμα θερμίδων (αύξηση μάζας)',sport:'Αθλητική διατροφή (απόδοση)',custom:'Εξατομικευμένο πλάνο'},
     phaseTip:{deficit:'Σε έλλειμμα η ανάκαμψη μπορεί να είναι πιο αργή. Η προπόνηση δύναμης βοηθά να διατηρηθεί η μυϊκή μάζα.',mild:'Σε ήπιο έλλειμμα η απόδοση συνήθως διατηρείται. Η προπόνηση δύναμης βοηθά να διατηρηθεί η μυϊκή μάζα.',surplus:'Σε πλεόνασμα, η προοδευτική επιβάρυνση στην προπόνηση δύναμης αξιοποιεί τις επιπλέον θερμίδες.',sport:'Οι υδατάνθρακες προσαρμόζονται στις μέρες προπόνησης και αγώνα.'},
-    hubHi:'Γεια σου',hubSub:'Οι κοινοί μας πελάτες στο Feed Your Health',hubN:'πελάτες',hubNew:'Νέο',hubEmpty:'Δεν υπάρχει ακόμα αναφορά. Μόλις στείλω την πρώτη, θα εμφανιστεί εδώ.',hubOnly:'Βλέπεις μόνο όσους έχουν δώσει συναίνεση.',hubSave:'Κράτησε αυτή τη σελίδα στο κινητό σου: κάθε νέα αναφορά εμφανίζεται εδώ.',back:'← Όλοι οι πελάτες μου',upd:'Ενημερώθηκε',meas2:'Μέτρηση',
+    hubHi:'Γεια σου',hubSub:'Οι κοινοί μας πελάτες στο Feed Your Health',hubN:'πελάτες',hubNew:'Νέο',hubEmpty:'Δεν υπάρχει ακόμα αναφορά. Μόλις στείλω την πρώτη, θα εμφανιστεί εδώ.',hubOnly:'Βλέπεις μόνο όσους έχουν δώσει συναίνεση.',compH:'🏆 Επόμενος αγώνας',inDays:'σε {n} μέρες',today:'σήμερα',cls:'Κατηγορία',cur:'Βάρος μέτρησης',dist:'Απόσταση',need:'Χρειάζεται',perWk:'kg/εβδ.',weigh:'Ζύγιση',inCls:'✓ μέσα',lvl:{in:'Μέσα στην κατηγορία. Στόχος να μείνει εκεί χωρίς «κόψιμο».',ok:'Εφικτό με ήπιο έλλειμμα θερμίδων.',warn:'Εφικτό, με συνεπές έλλειμμα. Ας προστατέψουμε την απόδοση στις προπονήσεις.',bad:'Δεν είναι ασφαλές να βγει με απώλεια λίπους ως τη ζύγιση. Ας το συζητήσουμε (π.χ. ανώτερη κατηγορία).'},minorNote:'Ανήλικος αθλητής: καμία αφυδάτωση, σάουνα ή νηστεία για τη ζύγιση.',hubSave:'Κράτησε αυτή τη σελίδα στο κινητό σου: κάθε νέα αναφορά εμφανίζεται εδώ.',back:'← Όλοι οι πελάτες μου',upd:'Ενημερώθηκε',meas2:'Μέτρηση',
     errMiss:['Λείπει ο σύνδεσμος.','Ζήτησε από τον διαιτολόγο το σωστό link.'],
     errNF:['Η αναφορά δεν βρέθηκε.','Ο σύνδεσμος μπορεί να έληξε ή να ανακλήθηκε.'],
     errExp:['Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο νέα αναφορά.']
@@ -145,7 +146,7 @@ const T={
     },
     phases:{deficit:'Calorie deficit (fat loss)',mild:'Mild calorie deficit',maintain:'Maintenance',surplus:'Calorie surplus (muscle gain)',sport:'Sports nutrition (performance)',custom:'Individual plan'},
     phaseTip:{deficit:'In a deficit, recovery may be slower. Strength training helps preserve muscle mass.',mild:'In a mild deficit performance is usually maintained. Strength training helps preserve muscle mass.',surplus:'In a surplus, progressive overload in strength training makes the most of the extra energy.',sport:'Carbohydrates are adjusted to training and match days.'},
-    hubHi:'Hi',hubSub:'Our shared clients at Feed Your Health',hubN:'clients',hubNew:'New',hubEmpty:'No report yet. As soon as I send the first one, it will appear here.',hubOnly:'You only see clients who have given consent.',hubSave:'Save this page on your phone: every new report appears here.',back:'← All my clients',upd:'Updated',meas2:'Assessment',
+    hubHi:'Hi',hubSub:'Our shared clients at Feed Your Health',hubN:'clients',hubNew:'New',hubEmpty:'No report yet. As soon as I send the first one, it will appear here.',hubOnly:'You only see clients who have given consent.',compH:'🏆 Next competition',inDays:'in {n} days',today:'today',cls:'Weight class',cur:'Weight at assessment',dist:'Distance',need:'Needed',perWk:'kg/week',weigh:'Weigh-in',inCls:'✓ within',lvl:{in:'Within the weight class. The goal is to stay there without cutting.',ok:'Achievable with a mild calorie deficit.',warn:'Achievable with a consistent deficit. Let us protect training performance.',bad:'Not safe to make this weight through fat loss by the weigh-in. Let us discuss it (e.g. a higher class).'},minorNote:'Minor athlete: no dehydration, sauna or fasting to make weight.',hubSave:'Save this page on your phone: every new report appears here.',back:'← All my clients',upd:'Updated',meas2:'Assessment',
     errMiss:['Link is missing.','Ask the dietitian for the correct link.'],
     errNF:['Report not found.','The link may have expired or been revoked.'],
     errExp:['This link has expired.','Ask the dietitian for a new report.']
@@ -199,7 +200,8 @@ function renderHub(s){
     h+='<a class="card hubc" href="?t='+encodeURIComponent(c.token)+'&h='+encodeURIComponent(HUB)+'" onclick="seenSet('+esc(JSON.stringify(c.token))+','+esc(JSON.stringify(c.sentAt||''))+')">'
       +'<span class="av">'+esc(ini)+'</span>'
       +'<span class="hb"><b>'+esc(c.name)+'</b><small>'+esc(X.meas2)+' '+esc(fmtD(c.measDate))
-      +(c.bf!=null?' · '+esc(X.bf)+' '+nf(c.bf,lang)+'%'+(c.dBf!=null?' '+delta(c.dBf,lang,true):''):(c.w!=null?' · '+nf(c.w,lang)+' kg':''))+'</small></span>'
+      +(c.bf!=null?' · '+esc(X.bf)+' '+nf(c.bf,lang)+'%'+(c.dBf!=null?' '+delta(c.dBf,lang,true):''):(c.w!=null?' · '+nf(c.w,lang)+' kg':''))+'</small>'
+      +(c.comp&&daysTo(c.comp.date)>=0?'<small class="cmp">🏆 '+esc(c.comp.name||'')+' · '+esc(daysTo(c.comp.date)===0?X.today:X.inDays.replace('{n}',daysTo(c.comp.date)))+(c.comp.cls?' · −'+nf(c.comp.cls,lang)+' kg':'')+'</small>':'')+'</span>'
       +(isNew?'<span class="nw">'+esc(X.hubNew)+'</span>':'')+'<span class="chev">›</span></a>';
   });
   const wa=String(s.wa||'').replace(/[^0-9]/g,'');
@@ -208,6 +210,7 @@ function renderHub(s){
   el('root').innerHTML=h;
 }
 
+function daysTo(ymd){ const t=new Date(); t.setHours(0,0,0,0); return Math.round((new Date(ymd+'T00:00:00')-t)/86400000); }
 function fmtD(ymd){ const p=String(ymd||'').split('-'); return p.length===3?(+p[2])+'/'+(+p[1])+'/'+p[0]:''; }
 function fmtDs(ymd){ const p=String(ymd||'').split('-'); return p.length===3?(+p[2])+'/'+(+p[1]):''; }
 function nf(v,lang){ return v==null?'—':String(v).replace('.',lang==='en'?'.':','); }
@@ -276,6 +279,18 @@ function render(){
       +'</tbody></table></div></div>';
   }
 
+  if(s.comp){
+    const k=s.comp, dd=daysTo(k.date), cl=k.cls;
+    const box=(l,v,st)=>'<div class="tile"><div class="l">'+esc(l)+'</div><div class="v" style="font-size:1.05rem'+(st?';'+st:'')+'">'+v+'</div></div>';
+    const lc={in:'var(--good)',ok:'var(--good)',warn:'#b26a00',bad:'var(--bad)'}[k.level]||'var(--muted)';
+    h+='<div class="card" style="border-color:'+lc+'"><h2>'+esc(X.compH)+'</h2><div class="ph">'+esc(k.name||'')+'</div>'
+      +'<div class="phs">'+esc(fmtD(k.date))+' · '+esc(dd===0?X.today:X.inDays.replace('{n}',dd))+(k.weighDate&&k.weighDate!==k.date?' · '+esc(X.weigh)+' '+esc(fmtD(k.weighDate)):'')+'</div>'
+      +(cl?'<div class="tiles" style="margin:10px 0 6px">'+box(X.cls,'−'+nf(cl,lang)+' kg')+(k.cur!=null?box(X.cur,nf(k.cur,lang)+' kg'):'')
+        +(k.dist!=null?box(X.dist,k.dist>0?nf(k.dist,lang)+' kg':esc(X.inCls),'color:'+lc):'')+(k.dist>0&&k.needWk!=null?box(X.need,nf(Math.round(k.needWk*10)/10,lang)+' '+esc(X.perWk)):'')+'</div>'
+        +(k.level?'<div style="font-size:.86rem;color:'+lc+';font-weight:600">'+esc(X.lvl[k.level]||'')+'</div>':'')
+        +(k.minor&&k.dist>0?'<div style="font-size:.82rem;color:var(--muted);margin-top:4px">'+esc(X.minorNote)+'</div>':''):'')
+      +'</div>';
+  }
   if(s.phase){
     const ph=s.phase;
     h+='<div class="card"><h2>'+esc(X.phase)+'</h2><div class="ph">'+esc(X.phases[ph.key]||X.phases.custom)+'</div>'

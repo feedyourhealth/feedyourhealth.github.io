@@ -79,7 +79,7 @@ try:
 
         print('3. Μετρήσεις: κουμπί + παράθυρο αποστολής')
         J('swTab(3)'); pg.wait_for_timeout(300)
-        check('Στείλε στον Ανδρέας' in J('document.querySelector(".trk-actions").innerText'), 'tracker shows «📤 Στείλε στον …»')
+        check('Στείλε στον Ανδρέα' in J('document.querySelector(".trk-actions").innerText'), 'tracker shows «📤 Στείλε στον …»')
         J('openTrainerSend()'); pg.wait_for_timeout(150)
         check(pg.is_visible('#tr-send-ov') and J('document.getElementById("trs-sf").disabled') == False, 'send modal opens (skinfolds available)')
         J('document.getElementById("trs-sf").checked=true'); pg.fill('#trs-note', 'Καλή πρόοδος.')
@@ -99,7 +99,7 @@ try:
         sends = C('el').get('trainerSends') or []
         check(len(sends) == 1 and sends[0]['measDate'] == '2026-11-20', 'send recorded')
         J('document.getElementById("tr-send-ov").remove()')
-        check('Στον Ανδρέας ✓' in J('document.querySelector(".trk-actions").innerText'), 'tracker button now ✓')
+        check('Στον Ανδρέα ✓' in J('document.querySelector(".trk-actions").innerText'), 'tracker button now ✓')
 
         print('4. gymnastis.html (Ελληνικά)')
         server = {'shared': J('window.__SERVER.shared')}

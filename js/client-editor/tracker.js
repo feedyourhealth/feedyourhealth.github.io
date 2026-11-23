@@ -270,6 +270,8 @@ function buildTrackerHtml(c){
       +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">')
     +'</div>'
     +'</div>'
+    // ⚖️ Ζύγιση αγώνα (plan-history-athlete.js) — μόνο αν έρχεται αγώνας με κατηγορία βάρους σε ≤60 μέρες
+    +(!P&&typeof phaWeighCardHtml==='function'?phaWeighCardHtml(c,null,'tracker'):'')
     // entry form — kept in the DOM (edit-prefill timers look up its ids) but hidden in presentation mode
     +'<div'+(P?' style="display:none"':'')+'>'
     // ✅ persistent (non-hover) caption for the CSV button — the old title-only tooltip explaining

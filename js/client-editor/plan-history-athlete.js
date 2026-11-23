@@ -246,6 +246,7 @@ function phaTopHtml(c,plans){
       +(src?'<button class="btn primary" style="font-size:12.5px;padding:8px 12px;min-height:auto" onclick="phaOpenRepeat(\''+esc(src.id)+'\',\''+esc(next.id)+'\')">↻ Επανάληψη πλάνου αγώνα #'+src.number+'</button>':'')
       +'</div>';
   }
+  h+=phaWeighCardHtml(c,null,'history');
   // race list
   var all=phaRacesSorted(c).slice().reverse();
   h+='<div class="ph-card" style="display:flex;flex-direction:column;gap:8px">'
@@ -258,6 +259,7 @@ function phaTopHtml(c,plans){
       +'<span class="ph-date">'+phFmt(r.date)+'</span>'
       +'<span style="font-weight:700">'+esc(r.name||'Αγώνας')+'</span>'
       +(r.prio?'<span class="ph-badge ph-b-man">'+esc(r.prio)+'</span>':'')
+      +(r.weightClass?'<span class="ph-badge ph-b-man">⚖️ −'+phaKg(r.weightClass)+' kg</span>':'')
       +'<span class="ph-muted">'+(past?(r.debrief?'απόδοση '+r.debrief.perf+'/5'+((r.debrief.gi||[]).length?' · ΓΕ: '+esc(r.debrief.gi.join(', ')):''):'χωρίς απολογισμό'):'σε '+phaDaysTo(r.date)+' μέρες')+'</span>'
       +'<span class="ph-muted">'+nPlans+' πλάνο'+(nPlans===1?'':'α')+'</span>'
       +'<span style="margin-left:auto;display:flex;gap:6px">'
@@ -342,12 +344,19 @@ function phaOpenRaceModal(id,cb){
   var r=id?phaRace(c,id):null;
   var defDate=r?r.date:((c.eventDate&&!(c.races||[]).some(function(x){return x.date===c.eventDate;}))?c.eventDate:'');
   var types=Object.keys(PHA_RACE_TYPES).map(function(k){return '<option value="'+k+'"'+(r&&r.type===k?' selected':'')+'>'+PHA_RACE_TYPES[k]+'</option>';}).join('');
+  var isW=!!(r&&r.type==='weighin');
   phaModal('<h2 style="margin:0;color:#025857;font-size:18px">'+(r?'Επεξεργασία αγώνα':'Νέος αγώνας')+'</h2>'
     +'<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">'
     +phaField('pha-r-name','Όνομα',r?r.name:'','placeholder="π.χ. Ημιμαραθώνιος Λευκωσίας"')
     +phaField('pha-r-date','Ημερομηνία',defDate,'type="date"')
-    +'<div style="display:flex;flex-direction:column;gap:4px"><label for="pha-r-type" class="ph-muted" style="font-size:12px">Τύπος</label><select id="pha-r-type" class="phc-sel">'+types+'</select></div>'
+    +'<div style="display:flex;flex-direction:column;gap:4px"><label for="pha-r-type" class="ph-muted" style="font-size:12px">Τύπος</label><select id="pha-r-type" class="phc-sel" onchange="var w=document.getElementById(\'pha-r-weigh\');if(w)w.style.display=this.value===\'weighin\'?\'grid\':\'none\'">'+types+'</select></div>'
     +'<div style="display:flex;flex-direction:column;gap:4px"><label for="pha-r-prio" class="ph-muted" style="font-size:12px">Σημασία</label><select id="pha-r-prio" class="phc-sel"><option value="A"'+(r&&r.prio==='B'?'':' selected')+'>Α — κύριος στόχος</option><option value="B"'+(r&&r.prio==='B'?' selected':'')+'>Β — προετοιμασίας</option></select></div>'
+    +'</div>'
+    // ⚖️ Κατηγορία βάρους + ζύγιση (judo, πάλη, πυγμαχία…) — μόνο για «Αγώνας με ζύγιση»
+    +'<div id="pha-r-weigh" style="display:'+(isW?'grid':'none')+';grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px;border-radius:10px;background:var(--panel-bg)">'
+    +phaField('pha-r-cls','Κατηγορία βάρους (όριο kg)',r&&r.weightClass?r.weightClass:'','type="number" step="0.1" min="20" max="200" inputmode="decimal" placeholder="π.χ. 73 για −73 kg"')
+    +phaField('pha-r-wdate','Ημερομηνία ζύγισης',r&&r.weighDate?r.weighDate:(r?r.date:''),'type="date"')
+    +'<div class="ph-muted" style="grid-column:1/-1;font-size:11.5px">Άφησε την κατηγορία κενή για ανοιχτή κατηγορία (π.χ. +100). Η ζύγιση συχνά γίνεται την προηγούμενη μέρα.</div>'
     +'</div>'
     +'<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">'
     +(r?'<button class="btn danger" style="font-size:12.5px" onclick="phaDeleteRace(\''+esc(r.id)+'\')">Διαγραφή</button>':'<span></span>')
@@ -362,6 +371,12 @@ function phaSaveRace(id){
   var r=id?phaRace(c,id):null;
   if(!r){r={id:'race_'+Date.now()};c.races.push(r);}
   r.name=name||'Αγώνας';r.date=date;r.type=document.getElementById('pha-r-type').value;r.prio=document.getElementById('pha-r-prio').value;
+  if(r.type==='weighin'){
+    var cls=phaNum('pha-r-cls'),wd=(document.getElementById('pha-r-wdate')||{}).value||'';
+    r.weightClass=(cls>=20&&cls<=200)?Math.round(cls*10)/10:null;
+    r.weighDate=/^\d{4}-\d{2}-\d{2}$/.test(wd)?wd:date;
+    if(r.weighDate>date)r.weighDate=date;
+  } else { delete r.weightClass; delete r.weighDate; }
   save();phaCloseModal();
   var cb=_phaRaceCb;_phaRaceCb=null;if(cb)cb(r);
   phRefresh(c);
@@ -496,4 +511,70 @@ function phaDoRepeat(srcId,targetId){
   save();phaCloseModal();
   showSuccessToast('✅ Το πλάνο αγώνα #'+src.number+' φορτώθηκε για «'+(target.name||'αγώνα')+'». Έλεγξέ το στο «Εβδομαδιαίο πλάνο» και στείλ\' το — θα μπει στο Ιστορικό με φάση & αγώνα.');
   renderMain();
+}
+
+/* ── ⚖️ Ζύγιση / κατηγορία βάρους (2026-11-23) ─────────────────────────────────────
+   Για αγώνες με ζύγιση (judo, πάλη, πυγμαχία…): απόσταση από την κατηγορία, ρυθμός που χρειάζεται
+   ως τη ζύγιση, τωρινός ρυθμός από τις μετρήσεις, και ελάχιστο ασφαλές βάρος από την άλιπη μάζα
+   (όρια λίπους NCAA/NFHS minimum-weight: άντρες 5%, αγόρια <18 7%, γυναίκες/κορίτσια 12%).
+   Μόνο ενημερωτικό — δεν αλλάζει το πλάνο. Προειδοποιεί αυστηρότερα σε ανήλικους. */
+function phaKg(v){return String(Math.round(v*10)/10).replace('.',',');}
+function phaNextWeighRace(c){
+  var t=phToday();
+  return phaRacesSorted(c).filter(function(r){return r.type==='weighin'&&r.weightClass>0&&(r.weighDate||r.date)>=t;})[0]||null;
+}
+function phaWeighInfo(c,race){
+  race=race||phaNextWeighRace(c); if(!race||!(race.weightClass>0)) return null;
+  var log=(c.weightLog||[]).filter(function(e){return e&&e.weight>0;}).slice().sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
+  var last=log.length?log[log.length-1]:null;
+  var cur=last?last.weight:(c.weight>0?c.weight:null); if(!cur) return null;
+  var wd=race.weighDate||race.date, days=phDaysBetween(phToday(),wd);
+  var cls=race.weightClass, dist=Math.round((cur-cls)*10)/10;
+  var weeks=Math.max(days,1)/7, needWk=dist>0?dist/weeks:0, needPct=cur>0?needWk*100/cur:0;
+  // τωρινός ρυθμός: τελευταία μέτρηση vs η πιο πρόσφατη που απέχει ≥14 μέρες
+  var rate=null;
+  if(last){ for(var i=log.length-2;i>=0;i--){ var dd=phDaysBetween(log[i].date,last.date); if(dd>=14){ rate=Math.round((last.weight-log[i].weight)/(dd/7)*100)/100; break; } } }
+  // ελάχιστο ασφαλές βάρος από την άλιπη μάζα
+  var bfE=null; for(var k=log.length-1;k>=0;k--){ if(log[k].bf>0){ bfE=log[k]; break; } }
+  var minor=(c.age>0&&c.age<18), minBf=(c.sex==='F')?12:(minor?7:5), minW=null;
+  if(bfE){ var lbm=bfE.weight*(1-bfE.bf/100); minW=Math.round(lbm/(1-minBf/100)*10)/10; }
+  var level, msgs=[];
+  if(dist<=0){ level='in'; msgs.push('Μέσα στην κατηγορία, με περιθώριο '+phaKg(-dist)+' kg. Στόχος: να μείνει εκεί χωρίς να «κόβει».'); }
+  else if(minW&&minW>cls){ level='bad'; msgs.push('Η κατηγορία είναι κάτω από το ελάχιστο ασφαλές βάρος του ('+phaKg(minW)+' kg με '+minBf+'% λίπος). Δεν πρέπει να τη στοχεύσει: χρειάζεται ανώτερη κατηγορία.'); }
+  else if(needPct>1||dist*100/cur>5){ level='bad'; msgs.push('Χρειάζεται '+phaKg(needWk)+' kg/εβδ. ('+phaKg(needPct)+'% του βάρους), πάνω από το ασφαλές 1%/εβδ. Με απώλεια λίπους μόνο δεν βγαίνει ως τη ζύγιση: συζήτηση με τον προπονητή (ανώτερη κατηγορία ή μεταγενέστερος αγώνας).'); }
+  else if(needPct>0.5){ level='warn'; msgs.push('Εφικτό, αλλά θέλει συνεπές έλλειμμα ('+phaKg(needWk)+' kg/εβδ.). Πρωτεΐνη ψηλά και προστασία της απόδοσης στις προπονήσεις.'); }
+  else { level='ok'; msgs.push('Εφικτό με ήπιο έλλειμμα ('+phaKg(needWk)+' kg/εβδ.).'); }
+  if(dist>0&&rate!=null){
+    var onTrack=-rate>=needWk*0.9;
+    msgs.push('Τωρινός ρυθμός από τις μετρήσεις: '+(rate>0?'+':'−')+phaKg(Math.abs(rate))+' kg/εβδ. '+(onTrack?'· στον στόχο ✓':'· πιο αργός από όσο χρειάζεται'));
+  }
+  if(minor&&dist>0) msgs.push('Ανήλικος αθλητής: καμία αφυδάτωση, σάουνα ή νηστεία για τη ζύγιση. Αν δεν βγαίνει με ήπιο ρυθμό, η σωστή επιλογή είναι η κατηγορία που αντιστοιχεί στο βάρος του.');
+  if(days<=3&&dist>0) msgs.push('Η ζύγιση είναι σε '+days+' μέρες: εδώ δεν αλλάζει πια το λίπος, μόνο ό,τι κρίνει ο προπονητής με ασφάλεια.');
+  return {race:race,cls:cls,cur:cur,curDate:last?last.date:null,dist:dist,days:days,weighDate:wd,needWk:needWk,needPct:needPct,rate:rate,minW:minW,minBf:minBf,minor:minor,level:level,msgs:msgs};
+}
+function phaWeighCardHtml(c,race,where){
+  var I=phaWeighInfo(c,race); if(!I) return '';
+  if(where==='tracker'&&I.days>60) return '';   // στις Μετρήσεις μόνο όταν πλησιάζει
+  if(typeof phEnsureStyle==='function') phEnsureStyle();   // .ph-card/.ph-muted και έξω από το Ιστορικό
+  var col={in:['#2e7d32','var(--success-tint)'],ok:['#2e7d32','var(--success-tint)'],warn:['#9a6200','var(--tr-warn-bg,#fff4df)'],bad:['#c0392b','var(--bad-bg)']}[I.level];
+  var box=function(l,v,st){return '<div style="background:var(--panel-bg);border:1px solid var(--border-light);border-radius:10px;padding:7px 10px;min-width:0"><div class="ph-muted" style="font-size:11.5px">'+l+'</div><div style="font-weight:700;font-size:16px'+(st?';'+st:'')+'">'+v+'</div></div>';};
+  var tr=(c.trainerId&&typeof getTrainer==='function')?getTrainer(c.trainerId):null;
+  var trPhone=(tr&&typeof normalizePhoneIntl==='function')?normalizePhoneIntl(tr.phone):'';
+  var waTxt=tr?('Γεια σου '+((typeof _trVoc==='function')?_trVoc(String(tr.name||'').split(/\s+/)[0]):'')+', για τον αγώνα '+(I.race.name||'')+' ('+phFmtShort(I.race.date)+') ο/η '+(c.name||'')+' είναι '+phaKg(I.cur)+' kg για κατηγορία −'+phaKg(I.cls)+' kg (απόσταση '+phaKg(Math.max(I.dist,0))+' kg σε '+I.days+' μέρες). Να το δούμε μαζί;'):'';
+  return '<div class="ph-card" style="border-color:'+col[0]+';display:flex;flex-direction:column;gap:10px'+(where==='tracker'?';margin-bottom:12px':'')+'" id="pha-weigh-card-'+(where||'x')+'">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
+    +'<div style="font-weight:700;font-size:15px">⚖️ Ζύγιση · '+esc(I.race.name||'Αγώνας')+'</div>'
+    +'<span style="font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:'+col[1]+';color:'+col[0]+'">'+(I.days===0?'σήμερα':'σε '+I.days+' '+(I.days===1?'μέρα':'μέρες'))+' · '+phFmtShort(I.weighDate)+'</span></div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">'
+    +box('Κατηγορία','−'+phaKg(I.cls)+' kg')
+    +box('Τωρινό βάρος',phaKg(I.cur)+' kg'+(I.curDate?' <span class="ph-muted" style="font-size:11px;font-weight:400">'+phFmtShort(I.curDate)+'</span>':''))
+    +box('Απόσταση',I.dist>0?phaKg(I.dist)+' kg':'✓ μέσα','color:'+col[0])
+    +box('Χρειάζεται',I.dist>0?phaKg(I.needWk)+' kg/εβδ.':'—')
+    +(I.minW?box('Ελάχιστο ασφαλές',phaKg(I.minW)+' kg'):'')
+    +'</div>'
+    +'<ul style="margin:0;padding-left:18px;font-size:12.5px;display:flex;flex-direction:column;gap:3px">'+I.msgs.map(function(m,i){return '<li'+(i===0?' style="color:'+col[0]+';font-weight:600"':'')+'>'+esc(m)+'</li>';}).join('')+'</ul>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button class="btn secondary" style="font-size:12px;padding:6px 10px;min-height:auto" onclick="phaOpenRaceModal(\''+esc(I.race.id)+'\''+(where==='tracker'?',function(){var el=document.getElementById(\'s3\'),cc=getC();if(el&&cc)el.innerHTML=buildTrackerHtml(cc);}':'')+')">✏️ Αγώνας / κατηγορία</button>'
+    +(trPhone?'<a class="btn" style="font-size:12px;padding:6px 10px;min-height:auto;background:#25D366;color:#fff;border-color:#25D366;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/'+esc(trPhone)+'?text='+encodeURIComponent(waTxt)+'">💬 Μίλα με τον '+esc((typeof _trAcc==='function'?_trAcc:String)(String(tr.name||'').split(/\s+/)[0]))+'</a>':'')
+    +'</div></div>';
 }
