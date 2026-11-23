@@ -99,7 +99,7 @@
   .spin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite;margin:70px auto}
   @keyframes sp{to{transform:rotate(360deg)}}
   @media print{
-    body{background:#fff;font-size:13px} .acts{display:none} .card,.tile{break-inside:avoid}
+    body{background:#fff;font-size:13px} .acts,.seg{display:none} .card,.tile{break-inside:avoid} .hubc .chev{display:none}
     .wrap{max-width:none}
   }
 </style>
@@ -254,7 +254,8 @@ function renderHub(s){
   });
   window.__HUBSNAP=s;
   const wa=String(s.wa||'').replace(/[^0-9]/g,'');
-  if(wa) h+='<div class="acts"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+esc(wa)+'">'+esc(X.reply)+'</a></div>';
+  h+='<div class="acts">'+(wa?'<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+esc(wa)+'">'+esc(X.reply)+'</a>':'')
+    +'<button class="btn" onclick="window.print()">'+esc(X.print)+'</button></div>';
   h+='<div class="foot">'+esc(X.hubOnly)+'<br>'+esc(X.hubSave)+'</div>';
   el('root').innerHTML=h;
 }

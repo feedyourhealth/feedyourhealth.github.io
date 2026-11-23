@@ -286,7 +286,10 @@ function clientCardHtml(c){
       :('<div class="cc-avatar'+(hasActive?' cc-avatar-active':'')+'">'+initials(c.name)+'</div>'))
     +'<div class="cc-headtext">'
     +'<div class="cc-name" title="'+esc(c.name||'Νέος πελάτης')+'">'+esc(c.name||'Νέος πελάτης')+(clientHasFlaggedAppointment(c)?' <span title="Σημειωμένο για παρακολούθηση από ραντεβού">🚩</span>':'')+(clientHasLowPlanFeedback(c)?' <span title="Χαμηλή ικανοποίηση στην τελευταία αξιολόγηση πλάνου">😕</span>':'')+(clientHasNewClientNote(c)?' <span title="Νέα σημείωση από τον πελάτη">💬</span>':'')+(clientIsWaiting(c)?' <span title="Σε αναμονή">⏳</span>':'')+(clientCriticalEA(c)?' <span class="cc-ea-badge" title="'+(c.sport?'Κίνδυνος RED-S — χαμηλή ενεργειακή διαθεσιμότητα':'Χαμηλή ενεργειακή διαθεσιμότητα')+' (EA &lt;30 kcal/kgLBM)">🔴 EA</span>':'')+'</div>'
-    +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag+'</div>'
+    +'<div class="cc-sub">'+(c.age||'?')+' ετών • '+(c.weight||'?')+'kg'+sport+groupTag
+    // 🏋️ γυμναστής (js/tabs/trainers.js) — πατιέται και ανοίγει το προφίλ του
+    +((c.trainerId&&typeof getTrainer==='function'&&getTrainer(c.trainerId))?' • <span role="button" tabindex="0" title="Γυμναστής / προπονητής" style="cursor:pointer;text-decoration:underline dotted" onclick="event.stopPropagation();openTrainerProfile(\''+c.trainerId+'\')">🏋️ '+esc(String(getTrainer(c.trainerId).name||'').split(' ')[0])+'</span>':'')
+    +'</div>'
     +'</div>'
     +goalRingHtml
     +(_clientBulkMode?'':(

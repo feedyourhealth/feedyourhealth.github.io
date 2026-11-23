@@ -1024,6 +1024,8 @@ function addWeightEntry(){
   // a successful save was still silent — nothing but the table quietly changing underneath —
   // so there was no way to tell "it worked" from "I clicked the wrong thing" at a glance
   showSuccessToast(wasEdit?'✅ Η μέτρηση της '+date+' ενημερώθηκε.':'✅ Η μέτρηση προστέθηκε.');
+  // 🏋️ Ο πελάτης έχει γυμναστή → «📤 Στείλε στον …» με ένα κλικ (js/tabs/trainers.js)
+  if(!wasEdit && typeof trainerAfterMeasurePrompt==='function'){ try{ trainerAfterMeasurePrompt(c); }catch(e){} }
   var el=document.getElementById('s3');if(el)el.innerHTML=buildTrackerHtml(c);
 }
 

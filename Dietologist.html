@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="7b80f9a3eabe">
+<meta name="fyh-build" content="909481a729a8">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -379,7 +379,7 @@ setTimeout(function(){
 <!-- client-list/* — roster sidebar: search/filter/sort/view state, group helpers,
      per-client attention signals, card/row/table renderers + renderSB(). Pure fns;
      consume clients/getC/FOODS/TMPLS from above; all cross-refs runtime. -->
-<script defer src="js/client-list/roster-ui.js?v=6d4d8d12e4"></script>
+<script defer src="js/client-list/roster-ui.js?v=a6cd37dd69"></script>
 <!-- client-list/quick-actions — sidebar quick-action sheets + mobile more-sheet
      (toggleQA/renderMSheetQA…), carved out of app-part1.js. All refs runtime. -->
 <script defer src="js/client-list/quick-actions.js?v=7afa3d7afa"></script>
@@ -396,7 +396,7 @@ setTimeout(function(){
 <!-- client-editor/* — the client editor's sub-tabs, carved out of app-part2.js.
      tracker.js must precede app-part4.js (its migrateClientSkinfoldBF is called from
      that file's parse-time client-load IIFE). -->
-<script defer src="js/client-editor/tracker.js?v=2975c0d2d1"></script>
+<script defer src="js/client-editor/tracker.js?v=2073d4feb9"></script>
 <script defer src="js/client-editor/tracker-results.js?v=87cdd456e0"></script>
 <script defer src="js/client-editor/day-targets.js?v=336711f8bc"></script>
 <script defer src="js/client-editor/form-controls.js?v=72e3a75589"></script>
@@ -461,7 +461,7 @@ setTimeout(function(){
 <script defer src="js/tracking/tracking.js?v=38523ec145"></script>
 <!-- tabs/* — the standalone nav tabs (Αρχική / Διατροφές / Μηνύματα / Συνταγές / Tips).
      Pure fn declarations, no load-time code. -->
-<script defer src="js/tabs/home-diets.js?v=5a51a77dbe"></script>
+<script defer src="js/tabs/home-diets.js?v=d19dbcb606"></script>
 <script defer src="js/tabs/messages.js?v=5588553b9f"></script>
 <script defer src="js/tabs/progress.js?v=79a3bffcc0"></script>
 <script defer src="js/tabs/notifications.js?v=55c7f9bbbf"></script>
@@ -469,7 +469,7 @@ setTimeout(function(){
 <script defer src="js/tabs/progress-rejects.js?v=2469e66fc6"></script>
 <script defer src="js/tabs/recipes.js?v=b3bdae9fb5"></script>
 <script defer src="js/tabs/tips.js?v=60eb1e8994"></script>
-<script defer src="js/tabs/trainers.js?v=31eacdec3c"></script>
+<script defer src="js/tabs/trainers.js?v=12b1526ff4"></script>
 <!-- Chart.js 4.5.1 UMD (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ μέσω ensureChart()
      (js/lib/helpers.js) — το χρησιμοποιούν μόνο οι trend-γραφικές της καρτέλας πελάτη
      (initTrendCharts / renderPlanCharts). Έμενε ~200KB στο boot path. -->

@@ -144,7 +144,7 @@ function homeTodayHtml(attn, staleRows, staleClients, pendingPlanRows, approachi
     homeCard(G.remind.title+homeTodayCount(byGroup.remind.length), byGroup.remind, '', G.remind.variant, 5),
     homeCard(G.measure.title+homeTodayCount(byGroup.measure.length), byGroup.measure, '', G.measure.variant, 5),
     // 📤 Αναφορές σε γυμναστές που δεν στάλθηκαν (js/tabs/trainers.js)
-    homeCard('📤 Αναφορές σε γυμναστές'+homeTodayCount(trRows.length), trRows, '', 'warning', 5),
+    homeCard('📤 Αναφορές σε γυμναστές'+homeTodayCount(trRows.length)+(trRows.length>1?' <button type="button" class="hm-action-btn" onclick="event.stopPropagation();trainerBatchSendAll()">Όλες ('+trRows.length+')</button>':''), trRows, '', 'warning', 5),
     homeCard('⏳ Σε αναμονή'+(wait.late?' <span class="wait-chip wait-chip-late">'+wait.late+' καθυστερ'+(wait.late===1?'εί':'ούν')+'</span>':''),
       wait.rows||[], '', wait.late?'danger':'warning', 5)
   ].filter(Boolean);
