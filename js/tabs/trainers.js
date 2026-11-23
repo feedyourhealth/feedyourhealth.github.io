@@ -440,11 +440,15 @@ function onClientTrainerSelect(v){
   _trRefreshClientCard();
 }
 function _trRefreshClientCard(){
-  var el=document.getElementById('sec-trainer'), c=getC();
-  if(el&&c){ var w=document.createElement('div'); w.innerHTML=buildTrainerCardHtml(c); el.replaceWith(w.firstChild); }
+  var c=getC(); if(!c) return;
+  [['sec-trainer',''],['sec-trainer-trk','trk']].forEach(function(p){
+    var el=document.getElementById(p[0]); if(!el) return;
+    var w=document.createElement('div'); w.innerHTML=buildTrainerCardHtml(c,p[1]);
+    if(w.firstChild){ w.firstChild.style.display=el.style.display; el.replaceWith(w.firstChild); } else el.remove();
+  });
 }
 
-function buildTrainerCardHtml(c){
+function buildTrainerCardHtml(c,where){
   if(!c) return '';
   var list=getTrainers().slice().sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'el');});
   var t=c.trainerId?getTrainer(c.trainerId):null;
@@ -475,7 +479,7 @@ function buildTrainerCardHtml(c){
       +'</div>';
     body=body.replace('<option value="">— Κανένας —</option>','<option value="" disabled selected>Αλλαγή…</option><option value="">✕ Αφαίρεση</option>');
   }
-  return '<div class="section-card" id="sec-trainer" style="margin-top:12px">'
+  return '<div class="section-card" id="sec-trainer'+(where?'-'+where:'')+'" style="margin-top:'+(where==='trk'?'18px':'12px')+'">'
     +'<div class="section-header" style="cursor:default"><div><span class="section-icon">🏋️</span>Γυμναστής / Προπονητής</div></div>'
     +'<div style="padding:2px 2px 4px">'+body+'</div></div>';
 }

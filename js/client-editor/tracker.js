@@ -514,7 +514,9 @@ function buildTrackerHtml(c){
   }
 
   // consultation log = private notes → never shown in presentation mode
-  return '<div style="padding:16px 20px">'+wHtml+(P?'':cHtml)+'</div>';
+  // 🏋️ Γυμναστής στο ΤΕΛΟΣ των Μετρήσεων (πρώτα τα αποτελέσματα) — ποτέ στην παρουσίαση στον πελάτη
+  var trHtml=(!P&&typeof buildTrainerCardHtml==='function'&&c.trainerId)?buildTrainerCardHtml(c,'trk'):'';
+  return '<div style="padding:16px 20px">'+wHtml+(P?'':cHtml)+trHtml+'</div>';
 }
 
 // ✅ TREND LINES CHARTS - Weight & Body Fat %
