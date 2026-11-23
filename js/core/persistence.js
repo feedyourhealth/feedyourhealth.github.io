@@ -309,6 +309,7 @@ function _buildBackupObj(){
     recipeMeta: (typeof getRecipeMeta === 'function' ? getRecipeMeta() : safeStorageGet('recipeMeta', {})),
     favoriteMeals: (typeof getFavoriteMeals === 'function' ? getFavoriteMeals() : safeStorageGet('favoriteMeals', [])),
     customRecipes: (window.customRecipes || []),
+    trainers: safeStorageGet('fyh_trainers', []),
     clinicContact: _currentClinicContact()
   };
 }
@@ -360,7 +361,8 @@ function _dataSignature(){
       + ':' + JSON.stringify(safeStorageGet('tipsLibrary', [])).length
       + ':' + JSON.stringify(safeStorageGet('recipeMeta', {})).length
       + ':' + JSON.stringify(safeStorageGet('favoriteMeals', [])).length
-      + ':' + JSON.stringify(window.customRecipes || []).length;
+      + ':' + JSON.stringify(window.customRecipes || []).length
+      + ':' + JSON.stringify(safeStorageGet('fyh_trainers', [])).length;
   }
   catch(e){ return String(Date.now()); }
 }
@@ -421,6 +423,9 @@ function _applyBackupData(d, mode){
   }
   if(Array.isArray(d.favoriteMeals) && typeof saveFavoriteMeals === 'function'){
     saveFavoriteMeals(merge ? _mergeById(getFavoriteMeals(), d.favoriteMeals, function(x){ return x.key; }) : d.favoriteMeals);
+  }
+  if(Array.isArray(d.trainers)){
+    safeStorageSet('fyh_trainers', merge ? _mergeById(safeStorageGet('fyh_trainers', []), d.trainers, _byId) : d.trainers);
   }
   if(d.clinicContact && typeof d.clinicContact === 'object'){
     var cur = _currentClinicContact();

@@ -26,6 +26,7 @@
   workout_log_test.py  🏃 client-link workout check-off (planned row, extra workout, sync, hydrate) + Πρόοδος «Γυμν.» column
   notifications_test.py  🔔 bell badge (only «needs you»), panel digest, «Το είδα», settings modes + mute, phone width
   notif_digest_test.py  📧 nightly email digest: Cyprus time/DST slot, same items as the panel, prefs, email off, not-configured
+  trainers_test.py    🏋️ γυμναστές: καρτέλα, πελάτης+συναίνεση, αναφορά gymnastis.html el/en, ανάκληση, cloud/backup
   version_check_test.py  ?v= stamps up to date + stale page reloads once / banner (scripts/stamp-version.py)
 
 All of them use a fake in-browser Supabase — they never touch real data.
@@ -35,7 +36,7 @@ import subprocess, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'backup_restore_test.py', 'favorites_sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py', 'food_diary_test.py', 'waiting_test.py', 'lifecycle_test.py', 'client_tabs_test.py', 'plan_history_test.py', 'plan_history_athlete_test.py', 'progress_insights_test.py', 'alt_preferences_test.py', 'alt_variety_test.py', 'alt_reject_test.py', 'auto_portion_test.py', 'quick_measure_test.py', 'workout_log_test.py', 'notifications_test.py', 'notif_digest_test.py', 'usage_proposals_test.py']
+TESTS = ['version_check_test.py', 'smoke_test.py', 'smoke_html_test.py', 'sync_test.py', 'snapshot_storage_test.py', 'backup_restore_test.py', 'favorites_sync_test.py', 'allergen_test.py', 'allergy_ui_test.py', 'repro_test.py', 'clinical_test.py', 'household_test.py', 'food_diary_test.py', 'waiting_test.py', 'lifecycle_test.py', 'client_tabs_test.py', 'plan_history_test.py', 'plan_history_athlete_test.py', 'progress_insights_test.py', 'alt_preferences_test.py', 'alt_variety_test.py', 'alt_reject_test.py', 'auto_portion_test.py', 'quick_measure_test.py', 'workout_log_test.py', 'notifications_test.py', 'notif_digest_test.py', 'usage_proposals_test.py', 'trainers_test.py']
 
 failed = []
 for name in TESTS:

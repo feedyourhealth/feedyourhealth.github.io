@@ -1,0 +1,174 @@
+"""🏋️ Γυμναστές: καρτέλα + νέος γυμναστής → σύνδεση πελάτη → συναίνεση → αποστολή αναφοράς (gymnastis.html el/en)
+→ κατάσταση «Εκκρεμεί/Στάλθηκε» → ανάκληση/αλλαγή γυμναστή σβήνει το link → cloud blob + backup."""
+import json, subprocess, sys, time, urllib.request, urllib.parse, io
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+REPO = Path(__file__).resolve().parent.parent
+FAKE = (Path(__file__).parent / 'fake_supabase.js').read_text(encoding='utf-8')
+PORT = 8897
+U1 = 'user-111'
+fails, errors = [], []
+def check(cond, msg):
+    print(('  ok   ' if cond else '  FAIL ') + msg)
+    if not cond: fails.append(msg)
+
+base = {'sex': 'F', 'age': 34, 'weight': 64.2, 'height': 165, 'activity': 'light', 'goalMain': 'loss', 'allergenListsVer': 2, 'foodExclude': []}
+log = [
+    {'date': '2026-09-25', 'weight': 66.0, 'bf': 30.1, 'sfProtocol': 'jp4', 'sfFields': {'abdomen': 30, 'suprailiac': 22, 'tricep': 20, 'thigh': 28}},
+    {'date': '2026-10-23', 'weight': 65.3, 'bf': 28.7, 'sfProtocol': 'jp4', 'sfFields': {'abdomen': 27, 'suprailiac': 20, 'tricep': 19, 'thigh': 27}},
+    {'date': '2026-11-20', 'weight': 64.2, 'bf': 26.8, 'sfProtocol': 'jp4', 'sfFields': {'abdomen': 24, 'suprailiac': 18, 'tricep': 18, 'thigh': 26}},
+]
+el = dict(base, id='el', name='Ελένη Σταύρου', phone='99123456', weightLog=log, notes='ΙΑΤΡΙΚΟ ΜΥΣΤΙΚΟ', medicalHistory='θυρεοειδής')
+ko = dict(base, id='ko', name='Kostas Michael', sex='M', weight=80)
+S = {'rows': {U1: {'data': {'clients': [el, ko], 'customTemplates': []}, 'version': 1}}}
+
+srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PORT), '--directory', str(REPO)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+try:
+    for _ in range(50):
+        try: urllib.request.urlopen(f'http://localhost:{PORT}/', timeout=1); break
+        except Exception: time.sleep(0.2)
+    with sync_playwright() as p:
+        br = p.chromium.launch()
+        ctx = br.new_context(bypass_csp=True, viewport={'width': 1400, 'height': 1000})
+        ctx.route('**/vendor/supabase-js.min.js*', lambda r: r.fulfill(status=200, content_type='application/javascript', body=FAKE))
+        ctx.route('**/*.supabase.co/**', lambda r: r.abort())
+        pg = ctx.new_page()
+        pg.on('pageerror', lambda e: errors.append(str(e)))
+        pg.on('console', lambda m: errors.append(m.text) if m.type == 'error' else None)
+        pg.add_init_script('if(!window.__SERVER){window.__SERVER=' + json.dumps(S) + ';window.__UID=' + json.dumps(U1) + ';localStorage.clear();}')
+        pg.goto(f'http://localhost:{PORT}/Dietologist.html', wait_until='domcontentloaded')
+        pg.wait_for_function('window.Cloud && Cloud._loaded===true', timeout=10000)
+        pg.wait_for_timeout(800)
+        J = lambda js: pg.evaluate(js)
+        def C(cid): return J(f'clients.find(x=>x.id==="{cid}")')
+
+        print('1. Καρτέλα Γυμναστές + νέος γυμναστής')
+        pg.click('#sidebar button[aria-label="Γυμναστές"]'); pg.wait_for_timeout(200)
+        check('Δεν έχεις προσθέσει ακόμα γυμναστές' in J('document.getElementById("main").innerText'), 'empty state')
+        J('openTrainerEdit(null)'); pg.wait_for_timeout(100)
+        J('saveTrainerEdit(null,null)'); pg.wait_for_timeout(100)
+        check(J('getTrainers().length') == 0 and pg.is_visible('#tr-edit-ov'), 'name is required')
+        pg.fill('#tre-name', 'Ανδρέας Κωνσταντίνου'); pg.fill('#tre-place', 'Elevate Gym'); pg.fill('#tre-phone', '99887766')
+        J('saveTrainerEdit(null,null)'); pg.wait_for_timeout(200)
+        tr = J('getTrainers()')
+        check(len(tr) == 1 and tr[0]['name'] == 'Ανδρέας Κωνσταντίνου' and tr[0]['lang'] == 'el', f'saved ({tr})')
+        tid = tr[0]['id']
+        check('Ανδρέας Κωνσταντίνου' in J('document.getElementById("tr-list").innerText'), 'card in list')
+        J('openTrainerEdit(null)'); pg.fill('#tre-name', 'Judo Coach Nikos')
+        J('document.getElementById("tre-kind").value="coach";document.getElementById("tre-lang").value="en"')
+        J('saveTrainerEdit(null,null)'); pg.wait_for_timeout(150)
+        J('_trFilter="coach";renderTrainersList()')
+        txt = J('document.getElementById("tr-list").innerText')
+        check('Judo Coach Nikos' in txt and 'Ανδρέας' not in txt, 'coach filter')
+        J('_trFilter="all";renderTrainersList()')
+        coach = [t for t in J('getTrainers()') if t['kind'] == 'coach'][0]['id']
+
+        print('2. Πελάτης: κάρτα γυμναστή + συναίνεση')
+        J('selectClient("el"); renderMain(); swTab(1)'); pg.wait_for_timeout(400)
+        check(J('!!document.getElementById("sec-trainer")'), 'card in client details')
+        J(f'onClientTrainerSelect("{tid}")'); pg.wait_for_timeout(150)
+        c = C('el')
+        check(c.get('trainerId') == tid and not c.get('trainerConsent'), 'linked, no consent yet')
+        card = J('document.getElementById("sec-trainer").innerText')
+        check('Χωρίς συναίνεση' in card and 'Αποστολή αναφοράς' not in card, 'no send button without consent')
+        J('setClientTrainerConsent(true)'); pg.wait_for_timeout(100)
+        check(C('el').get('trainerConsent') and C('el').get('trainerConsentAt'), 'consent stored with date')
+        check('Νέα μέτρηση, δεν έχει σταλεί' in J('document.getElementById("sec-trainer").innerText'), 'status = pending')
+
+        print('3. Μετρήσεις: κουμπί + παράθυρο αποστολής')
+        J('swTab(3)'); pg.wait_for_timeout(300)
+        check('Στείλε στον Ανδρέας' in J('document.querySelector(".trk-actions").innerText'), 'tracker shows «📤 Στείλε στον …»')
+        J('openTrainerSend()'); pg.wait_for_timeout(150)
+        check(pg.is_visible('#tr-send-ov') and J('document.getElementById("trs-sf").disabled') == False, 'send modal opens (skinfolds available)')
+        J('document.getElementById("trs-sf").checked=true'); pg.fill('#trs-note', 'Καλή πρόοδος.')
+        J('_trAddChip(3)')
+        J('createTrainerLink()'); pg.wait_for_timeout(500)
+        res = J('document.getElementById("trs-result").innerHTML')
+        tok = C('el').get('trainerToken')
+        check(bool(tok) and 'wa.me/' in res and 'gymnastis.html%3Ft%3D' + tok in res, 'link + WhatsApp to trainer phone')
+        snap = J(f'window.__SERVER.shared["{tok}"].snapshot')
+        js = json.dumps(snap, ensure_ascii=False)
+        check(snap['kind'] == 'trainer' and snap['client']['name'] == 'Ελένη Σταύρου', 'snapshot has full client name')
+        check(len(snap['meas']) == 3 and snap['meas'][-1]['lbm'] == 47.0, f"3 measurements, lean mass ({snap['meas'][-1]})")
+        check(bool(snap.get('sf')) and len(snap['sf']['sites']) == 4 and snap['sf']['sites'][0]['prev'] == 27, 'skinfolds with previous')
+        check(bool(snap.get('phase')) and snap['phase']['key'] == 'deficit' and snap['phase']['kcal'] > 1000, f"phase ({snap.get('phase')})")
+        check('Καλή πρόοδος. Αν δεις πτώση απόδοσης' in snap['note'], 'note + chip')
+        check('ΙΑΤΡΙΚΟ' not in js and 'θυρεοειδής' not in js and 'weekPlan' not in js and '99123456' not in js, 'no medical/notes/plan/phone in snapshot')
+        sends = C('el').get('trainerSends') or []
+        check(len(sends) == 1 and sends[0]['measDate'] == '2026-11-20', 'send recorded')
+        J('document.getElementById("tr-send-ov").remove()')
+        check('Στον Ανδρέας ✓' in J('document.querySelector(".trk-actions").innerText'), 'tracker button now ✓')
+
+        print('4. gymnastis.html (Ελληνικά)')
+        server = {'shared': J('window.__SERVER.shared')}
+        gp = ctx.new_page()
+        gp.on('pageerror', lambda e: errors.append('gymnastis: ' + str(e)))
+        gp.on('console', lambda m: errors.append('gymnastis: ' + m.text) if m.type == 'error' and 'Failed to load resource' not in m.text else None)
+        gp.add_init_script('window.__SERVER=' + json.dumps(server) + ';')
+        gp.goto(f'http://localhost:{PORT}/gymnastis.html?t={tok}', wait_until='domcontentloaded'); gp.wait_for_timeout(500)
+        t = gp.evaluate('document.getElementById("root").textContent')
+        check('Ελένη Σταύρου' in t and 'Ανδρέας Κωνσταντίνου' in t, 'client + trainer names')
+        check('26,8' in t and '47' in t and 'Άλιπη μάζα' in t, 'tiles')
+        check('Χάνει λίπος' in t and 'Έλλειμμα θερμίδων' in t, 'insight + phase')
+        check('Δερματοπτυχές' in t and 'Κοιλιά' in t, 'skinfold table')
+        check('συναίνεση' in t, 'consent footer')
+        gp.screenshot(path=str(REPO / '_gym_el.png'), full_page=True)
+        gp.goto(f'http://localhost:{PORT}/gymnastis.html?t=nope', wait_until='domcontentloaded'); gp.wait_for_timeout(400)
+        check('δεν βρέθηκε' in gp.evaluate('document.body.innerText'), 'bad token → not found')
+
+        print('5. Νέα μέτρηση → Εκκρεμεί · προφίλ γυμναστή')
+        J('clients.find(x=>x.id==="el").weightLog.push({date:"2026-11-23",weight:64.0,bf:26.5}); save();')
+        check(J('trainerSendStatus(clients.find(x=>x.id==="el"))') == 'pending', 'new measurement → pending')
+        J(f'openTrainerProfile("{tid}")'); pg.wait_for_timeout(250)
+        prof = J('document.getElementById("main").innerText')
+        check('Ελένη Σταύρου' in prof and 'Εκκρεμεί' in prof, 'profile lists client as pending')
+        J('document.getElementById("tr-link-client").value="ko"; trainerLinkClientFromProfile("' + tid + '")'); pg.wait_for_timeout(200)
+        check(C('ko').get('trainerId') == tid, 'link client from profile')
+        pg.screenshot(path=str(REPO / '_gym_profile.png'))
+        J('_trOpenId=null; renderTrainers()'); pg.wait_for_timeout(150)
+        pg.screenshot(path=str(REPO / '_gym_list.png'))
+
+        print('6. Αγγλικά (γυμναστής με lang=en)')
+        pg.on('dialog', lambda d: d.accept())
+        J('selectClient("el"); renderMain(); swTab(1)'); pg.wait_for_timeout(300)
+        J(f'onClientTrainerSelect("{coach}")'); pg.wait_for_timeout(300)
+        check(tok not in J('window.__SERVER.shared') and not C('el').get('trainerToken'), 'changing trainer deletes the old link')
+        check(not C('el').get('trainerConsent'), 'consent resets for new trainer')
+        J('openTrainerSend()'); pg.wait_for_timeout(150)
+        check(J('document.getElementById("trs-lang").value') == 'en', 'language defaults to trainer lang')
+        J('createTrainerLink()'); pg.wait_for_timeout(300)
+        check(not C('el').get('trainerToken'), 'no consent tick → nothing sent')
+        pg.screenshot(path=str(REPO / '_gym_modal.png'))
+        J('document.getElementById("trs-consent").checked=true; createTrainerLink()'); pg.wait_for_timeout(500)
+        tok2 = C('el').get('trainerToken')
+        check(bool(tok2) and C('el').get('trainerConsent'), 'consent from modal → sent')
+        res = urllib.parse.unquote(J('document.getElementById("trs-result").innerHTML'))
+        check('Hi Judo,' in res and 'with their consent' in res, 'English WhatsApp text')
+        server = {'shared': J('window.__SERVER.shared')}
+        gp2 = ctx.new_page()
+        gp2.on('pageerror', lambda e: errors.append('gymnastis: ' + str(e)))
+        gp2.add_init_script('window.__SERVER=' + json.dumps(server) + ';')
+        gp2.goto(f'http://localhost:{PORT}/gymnastis.html?t={tok2}', wait_until='domcontentloaded'); gp2.wait_for_timeout(500)
+        t = gp2.evaluate('document.getElementById("root").textContent')
+        check('Assessment report for the coach' in t and 'Lean mass' in t and 'Calorie deficit' in t, 'English page')
+        J('document.getElementById("tr-send-ov").remove()')
+
+        print('7. Ανάκληση συναίνεσης + cloud/backup')
+        J('swTab(1)'); pg.wait_for_timeout(200)
+        J('setClientTrainerConsent(false)'); pg.wait_for_timeout(300)
+        check(tok2 not in J('window.__SERVER.shared') and not C('el').get('trainerConsent'), 'revoking consent deletes the link')
+        J('save()'); pg.wait_for_timeout(2500)
+        blob = J(f'window.__SERVER.rows["{U1}"].data')
+        check(len(blob.get('trainers') or []) == 2, f"trainers ride the cloud blob ({len(blob.get('trainers') or [])})")
+        check(len(J('_buildBackupObj().trainers')) == 2, 'trainers in backup file')
+        J(f'deleteTrainer("{tid}")'); pg.wait_for_timeout(200)
+        check(not C('ko').get('trainerId') and len(J('getTrainers()')) == 1, 'delete trainer unlinks clients')
+        br.close()
+finally:
+    srv.terminate()
+
+real_errors = [x for x in errors if 'favicon' not in x]
+check(not real_errors, f'no console/page errors ({real_errors[:3]})')
+print('\nFAILED: %d' % len(fails) if fails else '\nALL OK')
+sys.exit(1 if fails else 0)

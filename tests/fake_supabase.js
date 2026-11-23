@@ -26,6 +26,7 @@
       S.shared=S.shared||{};
       if(this.op==='upsert'&&this.p&&this.p.token) S.shared[this.p.token]=clone(this.p);
       if(this.op==='update'&&this.f.token&&S.shared[this.f.token]) Object.assign(S.shared[this.f.token],clone(this.p));
+      if(this.op==='delete'&&this.f.token) delete S.shared[this.f.token];
     }
     if(this.t==='food_diary') return fdExec(this,S);
     // Πίνακες που διαβάζει μόνο ο διαιτολόγος (client_meal_log, client_supp_log, …): S.tables[name] = [rows].

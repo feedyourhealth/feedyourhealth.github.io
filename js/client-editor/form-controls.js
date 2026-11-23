@@ -497,6 +497,8 @@ function swTab(n){
   if(n===6){ if(typeof renderRecipes==='function') renderRecipes(); return; }
   if(n===7){ if(typeof renderClients==='function') renderClients(); return; }
   if(n===8){ if(typeof renderTips==='function') renderTips(); return; }
+  // 🏋️ Γυμναστές (js/tabs/trainers.js)
+  if(n===11){ if(typeof renderTrainers==='function') renderTrainers(); return; }
   // 2026-08-23: renderMessages() μόνη της ζωγραφίζει μόνο ό,τι ήδη υπάρχει στη μνήμη (cache από το
   // login ή το τελευταίο χειροκίνητο "🔄 Ανανέωση") — το άνοιγμα του tab δεν έφερνε ποτέ νέα δεδομένα
   // από μόνο του. Τώρα ζωγραφίζει αμέσως (instant, από cache) και μετά τρέχει msgRefresh στο

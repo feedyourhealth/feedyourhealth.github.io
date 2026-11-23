@@ -456,6 +456,8 @@ function renderMain(){
     +'<div class="intake-diary-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 12px;align-items:start">'
     +(typeof buildIntakeCardHtml==='function'?buildIntakeCardHtml(c):'')
     +(typeof buildFoodDiaryCardHtml==='function'?buildFoodDiaryCardHtml(c):'')
+    // 🏋️ Γυμναστής / Προπονητής + συναίνεση (js/tabs/trainers.js)
+    +(typeof buildTrainerCardHtml==='function'?buildTrainerCardHtml(c):'')
     +'</div>'
     // +buildExcludeHtml(c)
     // ✅ TEMPLATE SELECTOR - Show available nutrition plan templates

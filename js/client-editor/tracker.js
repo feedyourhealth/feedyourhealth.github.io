@@ -264,6 +264,8 @@ function buildTrackerHtml(c){
       +'<button title="Κλινικό PDF στιγμιότυπου — για φάκελο/γιατρό/εκτύπωση" onclick="trkCloseMenus();exportLipometriaPDF()">🖨️ Έντυπο Λιπομέτρησης (PDF)</button>'
       +(c.weightLog&&c.weightLog.length?'<button title="Αποθήκευση/εκτύπωση του ιστορικού μετρήσεων" onclick="trkCloseMenus();exportBodyCompPDF()">📊 Ιστορικό μετρήσεων (PDF)</button>':'')
       +'</div></div>'
+      // 🏋️ Αναφορά στον γυμναστή (js/tabs/trainers.js) — μόνο αν ο πελάτης έχει γυμναστή
+      +(typeof trainerTrackerButtonHtml==='function'?trainerTrackerButtonHtml(c):'')
       +'<button class="btn tertiary" title="Επίλεξε 1 αρχείο για άμεσο έλεγχο, ή πολλά μαζί για μαζική εισαγωγή ιστορικού" onclick="triggerErgoCSVImport()">📤 Εισαγωγή CSV</button>'
       +'<input type="file" id="ergo-csv-input" accept=".csv" multiple style="display:none" onchange="handleErgoCSVFile(event)">')
     +'</div>'

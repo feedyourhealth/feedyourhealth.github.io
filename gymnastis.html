@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#025857">
+<title>Feed Your Health — Αναφορά μέτρησης</title>
+<!-- Αναφορά μέτρησης για γυμναστή/προπονητή (js/tabs/trainers.js) — να μη γίνεται indexed/preview-fetched. -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta property="og:title" content="Feed Your Health">
+<meta property="og:description" content="Αναφορά μέτρησης.">
+<!-- Defense-in-depth CSP, ίδιο με metriseis.html (χωρίς frame-ancestors — βλ. commit 9271b33). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Αναφορά">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
+<script src="vendor/supabase-js.min.js"></script>
+<style>
+  :root{
+    --teal:#025857; --teal-d:#014545; --tint:#E2EEE5; --tint2:#f2fbf8; --bord:#c5ddd8; --bord-l:#eef4f2;
+    --ink:#1a3330; --muted:#4a7972; --faint:#6d8f89; --bg:#f4f8f6; --card:#ffffff; --danger:#b71c1c;
+    --good:#2e7d32; --bad:#c0392b; --lean:#1565c0; --fat:#ef9a9a; --on:#ffffff; --wa:#1f9d55;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --teal:#3aa8a6; --teal-d:#8fd4d2; --tint:#173230; --tint2:#162523; --bord:#2c413e; --bord-l:#1c302e;
+      --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --bg:#111917; --card:#18211f; --danger:#e0715f;
+      --good:#7fcf86; --bad:#ef9a9a; --lean:#64a8f0; --fat:#d98080; --on:#0d1514; --wa:#4cc07f;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.45;font-size:16px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:620px;margin:0 auto;padding:0 16px 64px}
+  header{display:flex;align-items:center;gap:10px;padding:16px 4px 6px}
+  .mark{width:30px;height:30px;border-radius:8px;flex:0 0 auto;background:var(--teal)}
+  header b{font-size:.82rem;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+  .who{padding:6px 4px 12px}
+  .who .eb{font-size:.74rem;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  .who h1{font-family:Georgia,"Times New Roman",serif;font-size:1.55rem;margin:2px 0 3px;color:var(--teal-d)}
+  .who .upd{font-size:.8rem;color:var(--muted)}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .tile{background:var(--card);border:1px solid var(--bord-l);border-radius:12px;padding:10px 12px}
+  .tile .l{font-size:.74rem;color:var(--faint)}
+  .tile .v{font-size:1.3rem;font-weight:700;color:var(--teal-d);font-variant-numeric:tabular-nums}
+  .tile .d{font-size:.78rem;font-weight:700;margin-left:4px}
+  .g{color:var(--good)} .b{color:var(--bad)} .n{color:var(--faint)}
+  .card{background:var(--card);border:1px solid var(--bord-l);border-radius:16px;padding:14px;margin-bottom:12px}
+  h2{font-size:.95rem;margin:0 0 8px;color:var(--teal-d)}
+  .bar{height:12px;border-radius:7px;display:flex;overflow:hidden;background:var(--bord-l)}
+  .bar .ln{background:var(--lean)} .bar .ft{background:var(--fat)}
+  .lg{display:flex;justify-content:space-between;font-size:.76rem;color:var(--muted);margin-top:5px}
+  .lg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0}
+  svg text{fill:var(--faint);font-size:10px;font-family:inherit}
+  .scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:7px 4px;font-size:.8rem;text-align:right;border-bottom:1px solid var(--bord-l);white-space:nowrap;font-variant-numeric:tabular-nums}
+  th{color:var(--faint);font-weight:600;font-size:.72rem}
+  th:first-child,td:first-child{text-align:left}
+  ul{margin:0;padding-left:18px;font-size:.88rem;line-height:1.6}
+  .ph{font-size:1.02rem;font-weight:700;color:var(--teal-d)}
+  .phs{font-size:.84rem;color:var(--muted);margin-top:2px}
+  .tip{border-color:var(--teal)}
+  .note{border-left:4px solid var(--teal);background:var(--tint2);border-radius:0 12px 12px 0;padding:11px 14px;margin-bottom:12px;font-size:.92rem;white-space:pre-wrap}
+  .note .by{display:block;font-size:.76rem;color:var(--faint);margin-top:6px;white-space:normal}
+  .acts{display:flex;gap:8px;margin:4px 0 12px}
+  .btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;padding:12px;font:inherit;font-weight:700;font-size:.92rem;text-decoration:none;cursor:pointer;border:1px solid var(--bord);background:var(--card);color:var(--ink)}
+  .btn.wa{background:var(--wa);border-color:var(--wa);color:#fff}
+  .foot{text-align:center;font-size:.74rem;color:var(--faint);margin-top:10px}
+  .state{text-align:center;padding:60px 16px}
+  .state .big{font-size:2rem;color:var(--teal)}
+  .state .big.err{color:var(--danger)}
+  .state h1{font-size:1.1rem;color:var(--teal-d);margin:10px 0 6px}
+  .state p{color:var(--muted);font-size:.9rem;margin:0 0 8px}
+  .spin{width:30px;height:30px;border:3px solid var(--bord);border-top-color:var(--teal);border-radius:50%;animation:sp 1s linear infinite;margin:70px auto}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  @media print{
+    body{background:#fff;font-size:13px} .acts{display:none} .card,.tile{break-inside:avoid}
+    .wrap{max-width:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="mark"></div><b>FEED YOUR HEALTH</b></header>
+  <div id="root"><div class="spin" role="status" aria-label="Loading"></div></div>
+</div>
+
+<script>
+'use strict';
+const SUPABASE_URL='https://vqmzrmotdqqoswlgfgrn.supabase.co';
+const SUPABASE_KEY='sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
+
+function tokenParam(){ const p=new URLSearchParams(location.search); return p.get('t')||p.get('token')||''; }
+const TOK=tokenParam();
+let SNAP=null;
+
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+const T={
+  el:{eb:'Αναφορά μέτρησης για',coach:'προπονητή',trainer:'γυμναστή',meas:'Μέτρηση',by:'από',
+    w:'Βάρος',bf:'% Λίπος',fm:'Μάζα λίπους',lbm:'Άλιπη μάζα',comp:'Σύσταση σώματος',lean:'Άλιπη',fat:'Λίπος',
+    vs:'σε σχέση με',first:'Πρώτη μέτρηση: αυτό είναι το σημείο αναφοράς.',
+    trend:'Πορεία',date:'Ημερομηνία',sf:'Δερματοπτυχές',site:'Σημείο',prev:'Προηγ.',now:'Τώρα',
+    phase:'Διατροφική φάση',kcal:'θερμίδες/ημέρα κατά μέσο όρο',prot:'πρωτεΐνη',
+    mean:'💡 Τι σημαίνει για την προπόνηση',reply:'💬 Απάντησε στον διαιτολόγο',print:'🖨️ Εκτύπωση / PDF',
+    consent:'Κοινοποιήθηκε με τη συναίνεση του πελάτη. Εμπιστευτικό, μην το προωθήσεις.',valid:'Ισχύει έως',
+    ins:{
+      keep:'Χάνει λίπος ({fm} kg) διατηρώντας την άλιπη μάζα: το πρόγραμμα δύναμης κάνει τη δουλειά του.',
+      lbmDown:'Η άλιπη μάζα μειώθηκε κατά {v} kg: αξίζει έμφαση στην προπόνηση δύναμης και στην ανάκαμψη.',
+      lbmUp:'Η άλιπη μάζα αυξήθηκε κατά {v} kg.',
+      fmUp:'Η μάζα λίπους αυξήθηκε κατά {v} kg.',
+      rate:'Ρυθμός μεταβολής λίπους: {v} kg την εβδομάδα (σε {w} εβδομάδες).'
+    },
+    phases:{deficit:'Έλλειμμα θερμίδων (απώλεια λίπους)',mild:'Ήπιο έλλειμμα θερμίδων',maintain:'Διατήρηση',surplus:'Πλεόνασμα θερμίδων (αύξηση μάζας)',sport:'Αθλητική διατροφή (απόδοση)',custom:'Εξατομικευμένο πλάνο'},
+    phaseTip:{deficit:'Σε έλλειμμα η ανάκαμψη μπορεί να είναι πιο αργή. Η προπόνηση δύναμης βοηθά να διατηρηθεί η μυϊκή μάζα.',mild:'Σε ήπιο έλλειμμα η απόδοση συνήθως διατηρείται. Η προπόνηση δύναμης βοηθά να διατηρηθεί η μυϊκή μάζα.',surplus:'Σε πλεόνασμα, η προοδευτική επιβάρυνση στην προπόνηση δύναμης αξιοποιεί τις επιπλέον θερμίδες.',sport:'Οι υδατάνθρακες προσαρμόζονται στις μέρες προπόνησης και αγώνα.'},
+    errMiss:['Λείπει ο σύνδεσμος.','Ζήτησε από τον διαιτολόγο το σωστό link.'],
+    errNF:['Η αναφορά δεν βρέθηκε.','Ο σύνδεσμος μπορεί να έληξε ή να ανακλήθηκε.'],
+    errExp:['Ο σύνδεσμος έληξε.','Ζήτησε από τον διαιτολόγο νέα αναφορά.']
+  },
+  en:{eb:'Assessment report for the',coach:'coach',trainer:'trainer',meas:'Assessment',by:'by',
+    w:'Weight',bf:'Body fat',fm:'Fat mass',lbm:'Lean mass',comp:'Body composition',lean:'Lean',fat:'Fat',
+    vs:'vs',first:'First assessment: this is the baseline.',
+    trend:'Progress',date:'Date',sf:'Skinfolds',site:'Site',prev:'Prev.',now:'Now',
+    phase:'Nutrition phase',kcal:'kcal/day on average',prot:'protein',
+    mean:'💡 What it means for training',reply:'💬 Reply to the dietitian',print:'🖨️ Print / PDF',
+    consent:'Shared with the client’s consent. Confidential, please do not forward.',valid:'Valid until',
+    ins:{
+      keep:'Losing fat ({fm} kg) while preserving lean mass: the strength program is doing its job.',
+      lbmDown:'Lean mass dropped by {v} kg: worth emphasising strength training and recovery.',
+      lbmUp:'Lean mass increased by {v} kg.',
+      fmUp:'Fat mass increased by {v} kg.',
+      rate:'Fat change rate: {v} kg per week (over {w} weeks).'
+    },
+    phases:{deficit:'Calorie deficit (fat loss)',mild:'Mild calorie deficit',maintain:'Maintenance',surplus:'Calorie surplus (muscle gain)',sport:'Sports nutrition (performance)',custom:'Individual plan'},
+    phaseTip:{deficit:'In a deficit, recovery may be slower. Strength training helps preserve muscle mass.',mild:'In a mild deficit performance is usually maintained. Strength training helps preserve muscle mass.',surplus:'In a surplus, progressive overload in strength training makes the most of the extra energy.',sport:'Carbohydrates are adjusted to training and match days.'},
+    errMiss:['Link is missing.','Ask the dietitian for the correct link.'],
+    errNF:['Report not found.','The link may have expired or been revoked.'],
+    errExp:['This link has expired.','Ask the dietitian for a new report.']
+  }
+};
+
+function fail(k){
+  el('root').innerHTML='<div class="state"><div class="big err">✕</div><h1>'+esc(T.el[k][0])+'</h1><p>'+esc(T.el[k][1])+'</p>'
+    +'<h1 style="margin-top:18px">'+esc(T.en[k][0])+'</h1><p>'+esc(T.en[k][1])+'</p></div>';
+}
+
+(async function boot(){
+  if(!TOK) return fail('errMiss');
+  let data,error;
+  try{
+    const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+    ({data,error}=await sb.rpc('get_shared_plan',{p_token:TOK}).single());
+  }catch(e){ return fail('errNF'); }
+  if(error||!data||!data.snapshot||data.snapshot.kind!=='trainer'){ if(error) console.error('[gymnastis]',error); return fail('errNF'); }
+  if(data.expires_at && new Date(data.expires_at)<new Date()) return fail('errExp');
+  SNAP=data.snapshot; SNAP._exp=data.expires_at||null;
+  render();
+})();
+
+function fmtD(ymd){ const p=String(ymd||'').split('-'); return p.length===3?(+p[2])+'/'+(+p[1])+'/'+p[0]:''; }
+function fmtDs(ymd){ const p=String(ymd||'').split('-'); return p.length===3?(+p[2])+'/'+(+p[1]):''; }
+function nf(v,lang){ return v==null?'—':String(v).replace('.',lang==='en'?'.':','); }
+function delta(v,lang,goodWhenDown){
+  if(v==null||isNaN(v)) return '';
+  const r=Math.round(v*10)/10;
+  if(r===0) return '<span class="d n">±0</span>';
+  const good=goodWhenDown==null?null:(goodWhenDown?r<0:r>0);
+  return '<span class="d '+(good==null?'n':good?'g':'b')+'">'+(r>0?'+':'−')+nf(Math.abs(r),lang)+'</span>';
+}
+function fill(s,o){ return s.replace(/\{(\w+)\}/g,(m,k)=>o[k]); }
+
+function chartSvg(meas,lang){
+  const key=meas.every(m=>m.bf!=null)?'bf':'w';
+  const vals=meas.map(m=>m[key]);
+  const W=460,H=130,px=28,top=22,bot=24;
+  let mn=Math.min(...vals),mx=Math.max(...vals); if(mx-mn<0.5){ mn-=0.5; mx+=0.5; }
+  const x=i=>px+(meas.length===1?(W-2*px)/2:i*(W-2*px)/(meas.length-1));
+  const y=v=>top+(mx-v)*(H-top-bot)/(mx-mn);
+  const pts=meas.map((m,i)=>x(i).toFixed(1)+','+y(m[key]).toFixed(1)).join(' ');
+  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(key==='bf'?T[lang].bf:T[lang].w)+'">';
+  s+='<polyline points="'+pts+'" fill="none" stroke="var(--teal)" stroke-width="2.5" stroke-linejoin="round"/>';
+  meas.forEach((m,i)=>{
+    s+='<circle cx="'+x(i).toFixed(1)+'" cy="'+y(m[key]).toFixed(1)+'" r="4" fill="var(--teal)"/>';
+    s+='<text x="'+x(i).toFixed(1)+'" y="'+(y(m[key])-8).toFixed(1)+'" text-anchor="middle">'+esc(nf(m[key],lang)+(key==='bf'?'%':''))+'</text>';
+    s+='<text x="'+x(i).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+esc(fmtDs(m.d))+'</text>';
+  });
+  return s+'</svg><div class="lg"><span>'+esc(key==='bf'?T[lang].bf:T[lang].w+' (kg)')+'</span></div>';
+}
+
+function render(){
+  const s=SNAP, lang=s.lang==='en'?'en':'el', X=T[lang];
+  document.documentElement.lang=lang;
+  document.title='Feed Your Health — '+(s.client&&s.client.name||'');
+  const M=s.meas||[], L=M[M.length-1], P=M.length>1?M[M.length-2]:null, F=M[0];
+  let h='<div class="who"><div class="eb">'+esc(X.eb+' '+(s.trainer&&s.trainer.kind==='coach'?X.coach:X.trainer))+(s.trainer&&s.trainer.name?' · '+esc(s.trainer.name):'')+'</div>'
+    +'<h1>'+esc(s.client&&s.client.name||'')+'</h1>'
+    +'<div class="upd">'+esc(X.meas)+' '+esc(fmtD(L.d))+' · '+esc(X.by)+' '+esc(s.from||'Feed Your Health')+'</div></div>';
+
+  const tile=(l,v,unit,d)=>'<div class="tile"><div class="l">'+esc(l)+'</div><div class="v">'+v+(unit?'<span style="font-size:.8rem;font-weight:600"> '+unit+'</span>':'')+(d||'')+'</div></div>';
+  h+='<div class="tiles">'
+    +tile(X.w,nf(L.w,lang),'kg',P?delta(L.w-P.w,lang,null):'')
+    +(L.bf!=null?tile(X.bf,nf(L.bf,lang),'%',P&&P.bf!=null?delta(L.bf-P.bf,lang,true):''):'')
+    +(L.fm!=null?tile(X.fm,nf(L.fm,lang),'kg',P&&P.fm!=null?delta(L.fm-P.fm,lang,true):''):'')
+    +(L.lbm!=null?tile(X.lbm,nf(L.lbm,lang),'kg',P&&P.lbm!=null?delta(L.lbm-P.lbm,lang,false):''):'')
+    +'</div>';
+  if(P) h+='<div style="font-size:.74rem;color:var(--faint);margin:-6px 4px 12px">± '+esc(X.vs)+' '+esc(fmtD(P.d))+'</div>';
+
+  if(L.bf!=null){
+    const lp=Math.round(100-L.bf);
+    h+='<div class="card"><h2>'+esc(X.comp)+'</h2><div class="bar"><span class="ln" style="width:'+lp+'%"></span><span class="ft" style="width:'+(100-lp)+'%"></span></div>'
+      +'<div class="lg"><span><i style="background:var(--lean)"></i>'+esc(X.lean)+' '+lp+'%</span><span><i style="background:var(--fat)"></i>'+esc(X.fat)+' '+(100-lp)+'%</span></div></div>';
+  }
+
+  if(M.length>1){
+    h+='<div class="card"><h2>'+esc(X.trend)+'</h2>'+chartSvg(M,lang)
+      +'<div class="scroll" style="margin-top:8px"><table><thead><tr><th>'+esc(X.date)+'</th><th>'+esc(X.w)+'</th>'+(L.bf!=null?'<th>'+esc(X.bf)+'</th><th>'+esc(X.fm)+'</th><th>'+esc(X.lbm)+'</th>':'')+'</tr></thead><tbody>'
+      +M.slice().reverse().map(m=>'<tr><td>'+esc(fmtD(m.d))+'</td><td>'+nf(m.w,lang)+'</td>'+(L.bf!=null?'<td>'+(m.bf!=null?nf(m.bf,lang)+'%':'—')+'</td><td>'+nf(m.fm,lang)+'</td><td>'+nf(m.lbm,lang)+'</td>':'')+'</tr>').join('')
+      +'</tbody></table></div></div>';
+  }
+
+  if(s.sf&&s.sf.sites&&s.sf.sites.length){
+    const hasPrev=s.sf.sites.some(x=>x.prev!=null);
+    h+='<div class="card"><h2>'+esc(X.sf)+' <span style="font-weight:400;color:var(--faint);font-size:.78rem">· '+esc(s.sf.proto)+'</span></h2><div class="scroll"><table><thead><tr><th>'+esc(X.site)+'</th>'+(hasPrev?'<th>'+esc(X.prev)+'</th>':'')+'<th>'+esc(X.now)+' (mm)</th>'+(hasPrev?'<th>Δ</th>':'')+'</tr></thead><tbody>'
+      +s.sf.sites.map(x=>'<tr><td>'+esc(x.lbl)+'</td>'+(hasPrev?'<td>'+nf(x.prev,lang)+'</td>':'')+'<td>'+nf(x.mm,lang)+'</td>'+(hasPrev?'<td>'+(x.prev!=null?delta(x.mm-x.prev,lang,true):'')+'</td>':'')+'</tr>').join('')
+      +'</tbody></table></div></div>';
+  }
+
+  if(s.phase){
+    const ph=s.phase;
+    h+='<div class="card"><h2>'+esc(X.phase)+'</h2><div class="ph">'+esc(X.phases[ph.key]||X.phases.custom)+'</div>'
+      +'<div class="phs">~'+esc(String(ph.kcal).replace(/\B(?=(\d{3})+(?!\d))/g,lang==='en'?',':'.'))+' '+esc(X.kcal)
+      +(ph.protGkg?' · '+esc(X.prot)+' '+nf(ph.protGkg,lang)+' g/kg (~'+ph.protG+' g)':'')+'</div></div>';
+  }
+
+  // Τι σημαίνει για την προπόνηση — από τα νούμερα (πρώτη → τελευταία) + τη φάση
+  const ins=[];
+  if(M.length===1) ins.push(X.first);
+  else if(F.lbm!=null&&L.lbm!=null){
+    const dF=Math.round((L.fm-F.fm)*10)/10, dL=Math.round((L.lbm-F.lbm)*10)/10;
+    if(dF<=-0.3&&dL>=-0.3) ins.push(fill(X.ins.keep,{fm:'−'+nf(Math.abs(dF),lang)}));
+    else if(dF>=0.5) ins.push(fill(X.ins.fmUp,{v:nf(dF,lang)}));
+    if(dL<=-0.6) ins.push(fill(X.ins.lbmDown,{v:nf(Math.abs(dL),lang)}));
+    else if(dL>=0.5) ins.push(fill(X.ins.lbmUp,{v:nf(dL,lang)}));
+    const wk=(new Date(L.d)-new Date(F.d))/604800000;
+    if(wk>=1.5&&Math.abs(dF)>=0.3){ const r=Math.round(dF/wk*100)/100; ins.push(fill(X.ins.rate,{v:(r>0?'+':'−')+nf(Math.abs(r),lang),w:Math.round(wk)})); }
+  }
+  if(s.phase&&X.phaseTip[s.phase.key]) ins.push(X.phaseTip[s.phase.key]);
+  if(ins.length) h+='<div class="card tip"><h2>'+esc(X.mean)+'</h2><ul>'+ins.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>';
+
+  if(s.note) h+='<div class="note">'+esc(s.note)+'<span class="by">— '+esc(s.from||'')+'</span></div>';
+
+  const wa=String(s.wa||'').replace(/[^0-9]/g,'');
+  h+='<div class="acts">'+(wa?'<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+esc(wa)+'">'+esc(X.reply)+'</a>':'')
+    +'<button class="btn" onclick="window.print()">'+esc(X.print)+'</button></div>';
+  h+='<div class="foot">'+esc(X.consent)+(s._exp?'<br>'+esc(X.valid)+' '+esc(fmtD(String(s._exp).slice(0,10))):'')+'</div>';
+  el('root').innerHTML=h;
+}
+</script>
+</body>
+</html>

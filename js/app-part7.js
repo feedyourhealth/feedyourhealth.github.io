@@ -1237,6 +1237,8 @@
         favoriteMeals: (typeof safeStorageGet==='function'?safeStorageGet('favoriteMeals',[]):[]),
         // 🔔 Τι να μου λέει το καμπανάκι (js/tabs/notifications.js) — ίδιο σε όλες τις συσκευές.
         notifPrefs: (typeof safeStorageGet==='function'?safeStorageGet('notifPrefs',{}):{}),
+        // 🏋️ Γυμναστές/προπονητές (js/tabs/trainers.js)
+        trainers: (typeof safeStorageGet==='function'?safeStorageGet('fyh_trainers',[]):[]),
         // Clinic contact (WhatsApp/phone/email shown to the client in the plan's «Ρώτησέ με»
         // sheet) used to be localStorage-only, so publishing from another browser/device gave
         // the client a contact-less link. Rides along in the same blob now; self.CLINIC is
@@ -1254,7 +1256,7 @@
     // keepSnapshots: για παλιό cache χωρίς owner (πριν από αυτή την αλλαγή) κρατάμε τα snapshots,
     // αφού το πιθανότερο είναι να είναι του ίδιου του χρήστη.
     _wipeLocalCache:function(keepSnapshots){
-      var keys=['fyh_clients','fyh_custom_tmpls','savedCombos','tipsLibrary','recipeMeta','favoriteMeals',
+      var keys=['fyh_clients','fyh_custom_tmpls','savedCombos','tipsLibrary','recipeMeta','favoriteMeals','fyh_trainers',
         'dietologist_tracking','TRACKING_DATA','notifPrefs','fyh-clinic-wa','fyh-clinic-tel','fyh-clinic-email',
         'fyh_local_updated_at',this._OWNER_KEY,this._BASE_KEY,this._DIRTY_KEY];
       keys.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
@@ -1299,6 +1301,7 @@
           // Παλιό blob χωρίς favoriteMeals → κρατάμε τα τοπικά (ποτέ δεν σβήνονται) και ανεβαίνουν παρακάτω.
           if(Array.isArray(d.favoriteMeals)) safeStorageSet('favoriteMeals', d.favoriteMeals);
           if(d.notifPrefs && typeof d.notifPrefs==='object') safeStorageSet('notifPrefs', d.notifPrefs);
+          if(Array.isArray(d.trainers)) safeStorageSet('fyh_trainers', d.trainers);
         }
         // Clinic contact — raw localStorage keys (read by loadSettingsPanel + _buildSnapshot
         // via self.CLINIC) plus the in-memory self.CLINIC object so a publish right after
