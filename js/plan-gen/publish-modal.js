@@ -113,6 +113,9 @@ function publishHandoffMsg(c,url){
 function openPublishModal(){
   var c=getC();
   if(!c){ showErrorToast('Διάλεξε πρώτα πελάτη.'); return; }
+  // 🧩 Μενού επιλογών: το link του πελάτη (plan.html) δεν το δείχνει ακόμα (φάση 2). Χωρίς αυτόν τον
+  // έλεγχο, το «Στείλε» θα δημοσίευε το ΚΡΥΜΜΕΝΟ παλιό ημερήσιο πλάνο και θα το έγραφε στο Ιστορικό.
+  if(c.planMode==='mix'){ showErrorToast('🧩 Το link για το Μενού επιλογών έρχεται στο επόμενο βήμα. Προς το παρόν δώσε το PDF (Εξαγωγή ▾ → PDF Μενού επιλογών).'); return; }
   if(!c.weekPlan || !Object.keys(c.weekPlan).length){ showErrorToast('Δεν υπάρχει πλάνο για δημοσίευση.'); return; }
   if(!window.Cloud || !window.Cloud.enabled || !window.Cloud.user){
     showErrorToast('Πρέπει να είσαι συνδεδεμένος στο cloud για να στείλεις πλάνο στον πελάτη.\n(Κάνε αποσύνδεση και ξανασυνδέσου με email/κωδικό.)');

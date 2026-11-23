@@ -175,6 +175,52 @@ function applyPostGenerationCleanup(c, excl){
   logPlanGeneration(c, c.weekPlan);
 }
 
+// Ποιο πρότυπο (TMPLS / προσαρμοσμένο) αντιστοιχεί στον πελάτη. Βγήκε από το genPlan() αυτούσιο
+// (2026-11-23) ώστε το 🧩 Μενού επιλογών να παίρνει τις ιδέες πρωινού/σνακ από ΤΟ ΙΔΙΟ πρότυπο.
+function resolveClientTemplate(c){
+  // Build template key: dietType_goal (e.g., 'vegetarian_loss') or just goal (e.g., 'loss')
+
+  // Diet-type -> TMPLS key prefix. Almost always identical to dietType, EXCEPT keto: its
+  // templates are historically named with the 'ketogenic' prefix (TMPLS.ketogenic_mild etc.),
+  // so 'keto_'+goal never matched anything and every keto client silently fell through to
+  // the generic, non-keto template below (confirmed live: high-carb fruit/rice-cake snacks
+  // baked into what should've been a low-carb plan).
+  var TMPL_DIET_PREFIX={keto:'ketogenic'};
+  var tmplDietPrefix=TMPL_DIET_PREFIX[c.dietType]||c.dietType;
+  // ✅ Templates are keyed by the WORD goal code (loss/mild/maintain/gain — c.goalMain), not the
+  // numeric kcal-delta string (c.goal, e.g. "-500"). Using c.goal here meant this lookup (and the
+  // c.goal fallback below) never matched anything, so every client silently fell through to the
+  // 'maintain'/'_maintain' template regardless of their actual goal — only portions were scaled
+  // per-goal afterward, not the template's food structure. Same bug class already fixed for the
+  // goal-label lookups and the client-list goal filter.
+  var templateKey = (c.dietType && c.dietType !== 'normal') ? (tmplDietPrefix + '_' + c.goalMain) : c.goalMain;
+
+  var tmpl=TMPLS[templateKey]||TMPLS[c.dietType]||TMPLS[tmplDietPrefix];
+  // This diet type has SOME dedicated template(s), just not for this exact goal (e.g. keto has
+  // mild/maintain/gain but no 'loss' — the most common keto goal!). Prefer any same-diet
+  // template over jumping straight to a generic one: losing the diet's structure entirely is
+  // worse than using a same-diet template tuned for a slightly different goal.
+  if(!tmpl && c.dietType && c.dietType!=='normal'){
+    ['maintain','mild','gain','loss'].some(function(g){
+      tmpl=TMPLS[tmplDietPrefix+'_'+g];
+      return !!tmpl;
+    });
+  }
+  tmpl = tmpl || TMPLS[c.goalMain] || TMPLS.maintain;
+
+  if(c.selectedTemplate){
+    if(c.selectedTemplate.indexOf('__kcal_')===0){
+      var kcalKey=c.selectedTemplate.replace('__kcal_','');
+      if(TMPLS[kcalKey])tmpl=TMPLS[kcalKey];
+    } else {
+      var ct=null;
+      customTemplates.forEach(function(x){if(x.id===c.selectedTemplate)ct=x;});
+      if(ct)tmpl=ct.days;
+    }
+  }
+  return tmpl||null;
+}
+
 function genPlan(){
   try{
   var c=getC();if(!c)return;var t=calcTDEE(c);
@@ -236,51 +282,13 @@ function genPlan(){
     }
   }
 
-  // Original template-based plan generation
-  // Build template key: dietType_goal (e.g., 'vegetarian_loss') or just goal (e.g., 'loss')
-
-  // Diet-type -> TMPLS key prefix. Almost always identical to dietType, EXCEPT keto: its
-  // templates are historically named with the 'ketogenic' prefix (TMPLS.ketogenic_mild etc.),
-  // so 'keto_'+goal never matched anything and every keto client silently fell through to
-  // the generic, non-keto template below (confirmed live: high-carb fruit/rice-cake snacks
-  // baked into what should've been a low-carb plan).
-  var TMPL_DIET_PREFIX={keto:'ketogenic'};
-  var tmplDietPrefix=TMPL_DIET_PREFIX[c.dietType]||c.dietType;
-  // ✅ Templates are keyed by the WORD goal code (loss/mild/maintain/gain — c.goalMain), not the
-  // numeric kcal-delta string (c.goal, e.g. "-500"). Using c.goal here meant this lookup (and the
-  // c.goal fallback below) never matched anything, so every client silently fell through to the
-  // 'maintain'/'_maintain' template regardless of their actual goal — only portions were scaled
-  // per-goal afterward, not the template's food structure. Same bug class already fixed for the
-  // goal-label lookups and the client-list goal filter.
-  var templateKey = (c.dietType && c.dietType !== 'normal') ? (tmplDietPrefix + '_' + c.goalMain) : c.goalMain;
-
-  var tmpl=TMPLS[templateKey]||TMPLS[c.dietType]||TMPLS[tmplDietPrefix];
-  // This diet type has SOME dedicated template(s), just not for this exact goal (e.g. keto has
-  // mild/maintain/gain but no 'loss' — the most common keto goal!). Prefer any same-diet
-  // template over jumping straight to a generic one: losing the diet's structure entirely is
-  // worse than using a same-diet template tuned for a slightly different goal.
-  if(!tmpl && c.dietType && c.dietType!=='normal'){
-    ['maintain','mild','gain','loss'].some(function(g){
-      tmpl=TMPLS[tmplDietPrefix+'_'+g];
-      return !!tmpl;
-    });
-  }
-  tmpl = tmpl || TMPLS[c.goalMain] || TMPLS.maintain;
+  // Original template-based plan generation — επιλογή προτύπου: resolveClientTemplate(c) (πιο κάτω)
+  var tmpl=resolveClientTemplate(c);
 
   if(!tmpl){
     throw new Error('Δεν υπάρχει κατάλληλο πρότυπο για dietType=' + c.dietType + ' goal=' + c.goal);
   }
 
-  if(c.selectedTemplate){
-    if(c.selectedTemplate.indexOf('__kcal_')===0){
-      var kcalKey=c.selectedTemplate.replace('__kcal_','');
-      if(TMPLS[kcalKey])tmpl=TMPLS[kcalKey];
-    } else {
-      var ct=null;
-      customTemplates.forEach(function(x){if(x.id===c.selectedTemplate)ct=x;});
-      if(ct)tmpl=ct.days;
-    }
-  }
   // Build base day array
   var tmplDays=[];
   for(var d=0;d<7;d++)tmplDays.push(tmpl[d]||tmpl[0]);

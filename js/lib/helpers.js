@@ -9,6 +9,15 @@
 // Global HTML-escape helper — sanitizes user input (client names, notes, etc.)
 // before it is injected into innerHTML. Prevents broken markup / XSS.
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// «Έχει πλάνο ο πελάτης;» — ΜΙΑ απάντηση για όλη την εφαρμογή (λίστες Πελατών, Διατροφές, Αρχική,
+// Ραντεβού, «Σε αναμονή»). Από 2026-11-23 μετράει και το 🧩 Μενού επιλογών (c.planMode==='mix'),
+// αλλιώς ένας πελάτης σε Mix θα φαινόταν «⭕ Χωρίς πλάνο» παντού (βλ. js/plan-gen/mix-editor.js).
+function clientHasPlan(c){
+  if(!c) return false;
+  if(c.planMode==='mix'&&c.mixMenu) return true;
+  return !!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
+}
 // Κοινό "σύνολο" badge για το κουμπί "Περισσότερα" στο κινητό (#more-nav-badge-mobile) — το
 // στοιχείο αυτό είναι κοινό σε ΟΛΑ τα tabs που κρύβονται εκεί (Μηνύματα, Πρόοδος, ...), οπότε αν
 // κάθε tab έγραφε απευθείας το δικό του μέτρημα εκεί, το τελευταίο που τρέχει θα έσβηνε το

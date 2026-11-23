@@ -52,6 +52,7 @@ window.__MANIFEST__ = [
   '../js/data/templates.js',
   '../js/data/recipes.js',
   '../js/data/misc.js',
+  '../js/data/mix-roles.js',
   '../js/data/sodium-satfat.js',
   '../js/lib/bf-norms.js',
   '../js/lib/helpers.js',
@@ -89,6 +90,8 @@ window.__MANIFEST__ = [
   '../js/plan-gen/mediterranean.js',
   '../js/plan-gen/cho-protocol.js',
   '../js/plan-gen/gen-plan.js',
+  '../js/plan-gen/mix-engine.js',
+  '../js/plan-gen/mix-editor.js',
   '../js/plan-gen/supplement-recs.js',
   '../js/plan-gen/week-table.js',
   '../js/plan-gen/food-selector.js',
@@ -97,6 +100,7 @@ window.__MANIFEST__ = [
   '../js/plan-gen/publish-modal.js',
   '../js/plan-gen/food-lib-favorites.js',
   '../js/reports/exports.js',
+  '../js/reports/mix-export.js',
   '../js/app-part4.js',
   '../js/client-editor/modals.js',
   '../js/client-editor/gap-analysis.js',
@@ -186,7 +190,8 @@ document.write(window.__MANIFEST__.map(function(p){
    'buildIntakeReadbackHtml','ensureIntakePayload','copyIntakeSummary','intakeDiffRows',
    'porkFoodsList','intakeApplyAvoid','intakeApplyMeds','intakeApplyProfile','intakeCopyAllergies',
    'homeClientsNeedingAttention','homeResendIntake',
-   'buildTrackerHtml','calcSkinfoldBF','ageAtDate','migrateClientSkinfoldBF','initTrendCharts'
+   'buildTrackerHtml','calcSkinfoldBF','ageAtDate','migrateClientSkinfoldBF','initTrendCharts',
+   'clientHasPlan','resolveClientTemplate','mixRoleOf','mixDefaultMenu','mixBuildWeek','mixStart','mixApplyMode','exportMixPDF'
   ].forEach(fnCheck);
 
   // --- data constants (min sizes are loose floors, not exact) --------------
@@ -197,6 +202,7 @@ document.write(window.__MANIFEST__.map(function(p){
   constCheck('WHOLE_UNIT_FOODS', 3);
   constCheck('UNIT_PLURALS', 3);
   constCheck('COOKED_TO_RAW', 2);
+  constCheck('MIX_ROLES', 3);
   constCheck('MET_ACTIVITIES', 10);
   constCheck('SUPPS', 10);
   constCheck('SUPP_TIMINGS', 3);

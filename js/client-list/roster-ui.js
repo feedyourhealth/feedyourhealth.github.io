@@ -117,7 +117,7 @@ function setClientQuickFilter(key){
 // ανάλογα με τι άλλο έχει ήδη επιλεγεί.
 function clientQuickChipsHtml(base){
   var attnCount=base.filter(clientNeedsAttention).length;
-  var noplanCount=base.filter(function(c){return !(c.weekPlan && Object.keys(c.weekPlan).length>0);}).length;
+  var noplanCount=base.filter(function(c){return !clientHasPlan(c);}).length;
   var todayCount=base.filter(function(c){return c.lastAccess && Math.floor((Date.now()-c.lastAccess)/86400000)===0;}).length;
   var waitCount=base.filter(clientIsWaiting).length;
   var pausedCount=(typeof lcIsPaused==='function')?base.filter(lcIsPaused).length:0;
@@ -265,7 +265,7 @@ function clientsSectionHtml(storeKey, blockClass, titleHtml, count, bodyHtml){
 // πλέγμα Πελάτες όσο και το block "Χρειάζονται προσοχή" από πάνω του (βλ. renderSB), ώστε μια
 // αλλαγή στην κάρτα (π.χ. νέο badge) να μην ξεχαστεί στο ένα από τα δύο σημεία.
 function clientCardHtml(c){
-  var hasActive = c.weekPlan && Object.keys(c.weekPlan).length > 0;
+  var hasActive = clientHasPlan(c);
   var sportInfo=(typeof SPORT_INFO!=='undefined')?SPORT_INFO[c.sport]:null;
   var sport=sportInfo?(' • '+sportInfo.icon+' '+sportInfo.label):'';
   var groupTag=c.group?(' <span class="cc-group-tag">🏷️ '+esc(c.group)+'</span>'):'';
@@ -312,7 +312,7 @@ function clientCardHtml(c){
 // _clientViewMode/clientCardsOrTable). Κρατημένο δίπλα στο clientCardHtml σκόπιμα ώστε μια αλλαγή σε
 // ένα badge/κατάσταση να θυμίζει στον επόμενο που θα το αγγίξει να ενημερώσει και τα δύο.
 function clientRowHtml(c){
-  var hasActive=c.weekPlan && Object.keys(c.weekPlan).length>0;
+  var hasActive=clientHasPlan(c);
   var sportInfo=(typeof SPORT_INFO!=='undefined')?SPORT_INFO[c.sport]:null;
   var sport=sportInfo?(sportInfo.icon+' '+sportInfo.label):'—';
   var isSel=!!_clientBulkSelected[c.id];
@@ -366,7 +366,7 @@ function renderSB(){
     if(_clientFilterGoal && c.goalMain!==_clientFilterGoal) return false;
     if(_clientFilterSport && c.sport!==_clientFilterSport) return false;
     if(_clientFilterGroup && c.group!==_clientFilterGroup) return false;
-    var hasPlan=c.weekPlan && Object.keys(c.weekPlan).length>0;
+    var hasPlan=clientHasPlan(c);
     if(_clientFilterStatus==='active' && !hasPlan) return false;
     if(_clientFilterStatus==='noplan' && hasPlan) return false;
     if(_clientFilterQuick==='attention' && !clientNeedsAttention(c)) return false;

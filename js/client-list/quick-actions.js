@@ -43,7 +43,8 @@ function qaMatchingClients(q){
 }
 
 function qaPlanStatusText(c){
-  if(!c.weekPlan || !Object.keys(c.weekPlan).length) return 'χωρίς πλάνο';
+  if(!clientHasPlan(c)) return 'χωρίς πλάνο';
+  if(c.planMode==='mix') return 'έχει Μενού επιλογών';
   if(window.Cloud && window.Cloud.isStale && window.Cloud.isStale(c)) return 'ο σύνδεσμος είναι ξεπερασμένος';
   return 'έχει ενεργό πλάνο';
 }

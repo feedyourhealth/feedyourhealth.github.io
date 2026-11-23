@@ -587,7 +587,9 @@ function swTab(n){
   // (το «+» το χειρίζεται πλέον η αρχή του swTab: μόνο Αρχική + Πελάτες)
 
   if(n===1){setupFormEventListeners();}  // ← SET UP EVENT LISTENERS
-  if(n===2){renderFoodLib('');var c=getC();if(c){initializeMealTiming(c);}renderWeekTable();renderSuppNotes();}
+  if(n===2){renderFoodLib('');var c=getC();if(c){initializeMealTiming(c);}renderWeekTable();renderSuppNotes();
+    // 🧩 Μενού επιλογών: διακόπτης τύπου + editor (κρύβει τον πίνακα εβδομάδας όσο ο πελάτης είναι σε Mix)
+    if(typeof mixApplyMode==='function')mixApplyMode();}
   if(n===4){var c=getC();if(c&&c.savedPlans)setTimeout(function(){renderPlanCharts(c);},100);}
 }
 

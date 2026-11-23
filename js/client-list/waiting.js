@@ -90,7 +90,7 @@ function openWaitModal(clientId,waitId){
   var w=waitId?waitFindItem(c,waitId):null;
   var reasons=w?(w.reasons||[]):[];
   var due=w?(w.due||''):waitAddDays(7);
-  var current=w?(w.current||'temp'):((c.weekPlan&&Object.keys(c.weekPlan).length)?'temp':'none');
+  var current=w?(w.current||'temp'):(clientHasPlan(c)?'temp':'none');
   var hasContact=!!(normalizePhoneIntl(c.phone)||c.email);
   var ov=document.getElementById('wait-overlay'); if(ov) ov.remove();
   ov=document.createElement('div');

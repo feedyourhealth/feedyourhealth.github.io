@@ -472,16 +472,22 @@ function renderMain(){
     // ✅ Quick-actions button lives in this same bar (not a separate floating "+") so there's one
     // bottom action bar instead of two overlapping fixed elements — see swTab() for the paired
     // hide/show of the circular .fab, which only reappears on tabs that don't have this bar.
-    +'<div id="genplan-row" class="brow"><button class="btn primary" style="flex:1" onclick="genPlanWithUndo()">Δημιουργία πλάνου →</button><button id="fab-btn-alt" class="btn secondary" style="flex:none;padding:10px 14px" onclick="fabMenu()" title="Γρήγορες ενέργειες" aria-label="Γρήγορες ενέργειες">⋯</button></div>'
+    // 🧩 «Μενού επιλογών →» (js/plan-gen/mix-editor.js): για πελάτες που δεν θέλουν σταθερό ημερήσιο πλάνο
+    +'<div id="genplan-row" class="brow"><button class="btn primary" style="flex:1" onclick="genPlanWithUndo()">Δημιουργία πλάνου →</button>'
+    +(function(){ var mc=(typeof mixCanUse==='function')?mixCanUse(c):{ok:false,why:''};
+      return '<button id="mix-start-btn" class="btn secondary" style="flex:none"'+(mc.ok?'':' disabled title="'+esc(mc.why)+'"')+' onclick="mixStart()">🧩 Μενού επιλογών →</button>'; })()
+    +'<button id="fab-btn-alt" class="btn secondary" style="flex:none;padding:10px 14px" onclick="fabMenu()" title="Γρήγορες ενέργειες" aria-label="Γρήγορες ενέργειες">⋯</button></div>'
     +'</div>'
     // ✅ S2: MEAL PLAN VIEW ONLY
     +'<div id="s2" style="display:none">'
     // Βήμα 6 (2026-11-22): μία γραμμή ενεργειών αντί για τρεις. Κύριο = «Στείλε» (αποθηκεύει ήδη
     // στο Ιστορικό), δευτερεύον = «Αποθήκευση», «📊 Ιστορικό» + «Εξαγωγή ▾», και τα σπάνια σε «⋯»
     // (εκεί και το «Νέο πλάνο από την αρχή», που αντικαθιστά όλη την εβδομάδα — να μην πατιέται κατά λάθος).
+    // 🧩 διακόπτης «Ημερήσιο πλάνο / Μενού επιλογών» — τον γεμίζει το mixApplyMode() (swTab(2))
+    +'<div id="mix-mode-switch" class="mix-mode-row"></div>'
     +'<div class="plan-toolbar plan-links-row">'
       +'<button class="btn primary" onclick="openPublishModal()" title="Δημιούργησε σύνδεσμο για να δει ο πελάτης το πλάνο στο κινητό του — αποθηκεύεται και στο Ιστορικό πλάνων">&#128241; Στείλε στον πελάτη</button>'
-      +'<button class="btn secondary" onclick="showSavePlanPanel()" title="Αποθήκευση στο Ιστορικό πλάνων χωρίς αποστολή">&#128190; Αποθήκευση</button>'
+      +'<button class="btn secondary pt-save-btn" onclick="showSavePlanPanel()" title="Αποθήκευση στο Ιστορικό πλάνων χωρίς αποστολή">&#128190; Αποθήκευση</button>'
       // «🔗 παλιό πλάνο»: φαίνεται ήδη στη γραμμή chips πάνω (clientChipsHtml) — όχι δεύτερη φορά εδώ.
       +'<span class="pt-sp"></span>'
       // 📊 Ιστορικό πλάνων: πριν δική του υπο-καρτέλα — τώρα από εδώ (2026-11-22, 6 → 4 υπο-καρτέλες)
@@ -489,10 +495,13 @@ function renderMain(){
       +'<div class="plan-export-dropdown">'
         +'<button class="btn secondary plan-export-btn" onclick="togglePlanExportMenu(this)">Εξαγωγή &#9662;</button>'
         +'<div class="plan-export-menu" id="plan-export-menu">'
-          +'<button onclick="closePlanExportMenu();exportPDF()">PDF</button>'
-          +'<button onclick="closePlanExportMenu();exportPDF(\'en\')">PDF (English)</button>'
-          +'<button onclick="closePlanExportMenu();exportWord()">Word (.rtf)</button>'
-          +'<button onclick="closePlanExportMenu();exportGoogleDocs()">Google Docs (.docx)</button>'
+          +'<button class="pe-daily" onclick="closePlanExportMenu();exportPDF()">PDF</button>'
+          +'<button class="pe-daily" onclick="closePlanExportMenu();exportPDF(\'en\')">PDF (English)</button>'
+          +'<button class="pe-daily" onclick="closePlanExportMenu();exportWord()">Word (.rtf)</button>'
+          +'<button class="pe-daily" onclick="closePlanExportMenu();exportGoogleDocs()">Google Docs (.docx)</button>'
+          // 🧩 μόνο σε Μενού επιλογών (css: #s2.mix-mode)
+          +'<button class="pe-mix" onclick="closePlanExportMenu();exportMixPDF()">PDF Μενού επιλογών</button>'
+          +'<button class="pe-mix" onclick="closePlanExportMenu();exportMixPDF(\'en\')">PDF Μενού επιλογών (English)</button>'
         +'</div>'
       +'</div>'
       +'<div class="pt-more">'
@@ -520,6 +529,7 @@ function renderMain(){
     +'<button class="btn" style="padding:5px 12px;font-size:12px;background:#025857;color:#fff;border:none" onclick="doSaveAsTmpl()">&#10003; Αποθήκευση</button>'
     +'<button class="btn" style="padding:5px 10px;font-size:12px;background:#eee;color:#555;border:none" onclick="closeSaveTmplPanel()">&#10005;</button>'
     +'</div>'
+    +'<div id="mix-editor" class="mix-editor" style="display:none"></div>'
     +'<div class="plan-wrap"><div class="week-main"><div id="week-con"></div></div>'
     +'<div class="food-lib'+(isFoodLibCollapsed()?' collapsed':'')+'" id="food-lib">'
     +'<button class="food-lib-toggle" onclick="toggleFoodLib()" title="Απόκρυψη/εμφάνιση τροφίμων" aria-label="Απόκρυψη/εμφάνιση τροφίμων">'+(isFoodLibCollapsed()?'‹':'›')+'</button>'

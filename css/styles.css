@@ -2953,3 +2953,88 @@ body.dark-mode .pi-card.pi-hl{box-shadow:0 0 0 2px #3fb8aa}
 .pi-tg-amber{background:#fff6e5;color:#8a5a00}
 body.dark-mode .pi-tg-amber{background:#3a2c14;color:#f0dcb4}
 button.pi-btn:disabled{opacity:.5;cursor:default}
+
+/* ── 🧩 Μενού επιλογών (js/plan-gen/mix-editor.js) ───────────────────────────────────────────
+   #s2.mix-mode = ο πελάτης είναι σε Μενού επιλογών: κρύβονται ο πίνακας εβδομάδας, η βιβλιοθήκη
+   «Τρόφιμα», το «Αποθήκευση» (σώζει το ημερήσιο πλάνο) και οι εξαγωγές του ημερήσιου πλάνου. */
+.mix-mode-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.mix-mode-row:empty{display:none}
+.mix-sw-lbl{font-size:var(--fs-sm);color:var(--c-sub);font-weight:600}
+.mix-sw{display:inline-flex;border:1px solid var(--border-light);border-radius:999px;overflow:hidden;background:var(--card-bg)}
+.mix-sw button{border:0;background:none;padding:6px 14px;font:inherit;font-size:var(--fs-sm);cursor:pointer;color:var(--text-strong)}
+.mix-sw button.on{background:var(--teal);color:#fff;font-weight:600}
+.mix-sw button:disabled{opacity:.45;cursor:not-allowed}
+.mix-sw-note{font-size:var(--fs-xs);color:var(--c-sub)}
+#s2.mix-mode .plan-wrap,#s2.mix-mode .pt-save-btn,#s2.mix-mode .pe-daily,#s2.mix-mode .regen-plan-btn,
+#s2.mix-mode #star-tmpl-btn,#s2.mix-mode .save-tmpl-btn,#s2.mix-mode #save-tmpl-panel{display:none!important}
+#s2:not(.mix-mode) .pe-mix{display:none!important}
+.mix-editor{display:flex;flex-direction:column;gap:10px}
+.mx-phase{font-size:var(--fs-sm);background:var(--c-info-bg);color:var(--c-info);border-radius:8px;padding:8px 12px}
+.mx-undo{font-size:var(--fs-sm);background:var(--panel-bg);border:1px solid var(--border-light);border-radius:8px;padding:6px 12px}
+.mx-undo button,.mx-check-hidden button,.mx-bad button{border:0;background:none;color:var(--teal);font:inherit;font-weight:600;cursor:pointer;padding:0 4px}
+.mx-check{font-size:var(--fs-sm);background:var(--c-good-bg);border:1px solid var(--c-good-bd);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.mx-check.warn{background:var(--c-warn-bg);border-color:var(--c-warn-bd)}
+.mx-check-list{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.mx-bad{white-space:nowrap}
+@media (max-width:640px){.mx-bad{white-space:normal}}
+.mx-check-hidden{font-size:var(--fs-xs);color:var(--c-sub)}
+.mx-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.mx-day{border:1px solid var(--border-light);background:var(--card-bg);color:var(--text-strong);border-radius:8px;padding:6px 0;font:inherit;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center}
+.mx-day small{font-weight:400;font-size:11px;color:var(--c-sub)}
+.mx-day.on{background:var(--teal);border-color:var(--teal);color:#fff}
+.mx-day.on small{color:#fff}
+.mx-day-sub{font-size:var(--fs-sm);color:var(--c-sub)}
+.mx-p{color:var(--mac-p);font-weight:600}.mx-c{color:var(--mac-c);font-weight:600}.mx-f{color:var(--mac-f);font-weight:600}
+.mx-meal{background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.mx-meal-hd{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:var(--fs-md)}
+.mx-time{font-variant-numeric:tabular-nums;color:var(--teal);font-weight:700}
+.mx-meal-mac{margin-left:auto;font-size:var(--fs-xs);color:var(--c-sub)}
+.mx-tag{font-size:11px;border-radius:999px;padding:1px 8px;font-weight:600}
+.mx-tag-pre{background:var(--c-info-bg);color:var(--c-info)}
+.mx-tag-post,.mx-tag-mid{background:var(--c-good-bg);color:var(--c-good)}
+.mx-sub{font-size:var(--fs-xs);color:var(--c-sub);font-weight:400}
+.mx-comp{display:grid;grid-template-columns:118px 1fr;gap:8px;align-items:start}
+.mx-lab{font-size:var(--fs-xs);font-weight:700;color:var(--c-sub);padding-top:5px}
+.mx-lab small{font-weight:400}
+.mx-lab-p{color:var(--mac-p)}.mx-lab-c{color:var(--mac-c)}
+.mx-chips{display:flex;flex-wrap:wrap;gap:6px}
+.mx-chip{display:inline-flex;align-items:baseline;gap:4px;flex-wrap:wrap;border:1px solid var(--border-light);background:var(--panel-bg);color:var(--text-strong);border-radius:8px;padding:4px 8px;font-size:var(--fs-sm);font-family:inherit}
+.mx-chip-s,.mx-chip-x{font-size:var(--fs-xs);color:var(--c-sub)}
+.mx-chip-fixed{background:transparent}
+.mx-chip-add{cursor:pointer;border-style:dashed;color:var(--teal);font-weight:600;background:transparent}
+.mx-chip-add.on{background:var(--teal-tint)}
+.mx-chip-rm{border:0;background:none;color:var(--c-sub);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;margin-left:2px}
+.mx-chip-rm:hover{color:var(--c-bad)}
+.mx-warn{color:var(--c-warn);font-weight:600}
+.mx-nottoday{font-size:var(--fs-xs);color:var(--c-sub);margin-top:4px}
+.mx-picker{margin-top:6px;border:1px solid var(--border-light);border-radius:8px;padding:6px;background:var(--card-bg)}
+.mx-pick-q{width:100%;padding:6px 8px;border:1px solid var(--border-light);border-radius:6px;font:inherit;background:var(--card-bg);color:var(--text-strong)}
+.mx-pick-list{max-height:240px;overflow:auto;display:flex;flex-direction:column;margin-top:4px}
+.mx-pick-row{text-align:left;border:0;background:none;padding:6px 8px;border-radius:6px;font:inherit;font-size:var(--fs-sm);cursor:pointer;color:var(--text-strong)}
+.mx-pick-row:hover:not(:disabled){background:var(--teal-tint)}
+.mx-pick-row.locked{opacity:.5;cursor:not-allowed}
+.mx-tier{font-size:11px;color:var(--c-sub)}
+.mx-tier-warn{color:var(--c-warn)}
+.mx-pick-days{font-size:11px;color:var(--c-info)}
+.mx-ideas{display:flex;flex-direction:column;gap:4px}
+.mx-idea{font-size:var(--fs-sm);padding:5px 8px;border-radius:6px;background:var(--panel-bg)}
+.mx-idea-k{font-size:var(--fs-xs);color:var(--c-sub)}
+.mx-empty{font-size:var(--fs-sm);color:var(--c-sub);padding:6px 0}
+.mx-train{font-size:var(--fs-sm);color:var(--teal);font-weight:600}
+.mx-rules{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:var(--fs-sm);background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:8px 12px}
+.mx-rules input{width:44px;padding:3px 4px;border:1px solid var(--border-light);border-radius:6px;font:inherit;background:var(--card-bg);color:var(--text-strong)}
+.mx-foot{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:640px){
+  .mx-comp{grid-template-columns:1fr;gap:4px}
+  .mx-meal-mac{margin-left:0;width:100%}
+  .mx-days{gap:3px}.mx-day small{font-size:10px}
+}
+.mx-check-more summary{cursor:pointer;font-size:var(--fs-xs);color:var(--teal);font-weight:600}
+.mx-check-more .mx-check-list{margin-top:4px}
+/* το γενικό mobile «.btn,button{width:100%;min-height:…}» (πιο πάνω) δεν ισχύει μέσα στον editor του Μενού */
+@media (max-width:768px){
+  .mix-editor button,.mix-sw button{width:auto;min-height:0}
+  .mix-editor .mx-day{width:100%}
+  .mix-editor .mx-pick-row{width:100%}
+  .mix-editor .mx-foot .btn{width:auto}
+}

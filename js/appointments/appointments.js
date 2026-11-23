@@ -545,7 +545,7 @@ function buildAppointmentsHtml(c){
     var wd=+(lastW.weight-prevW.weight).toFixed(1);
     wDeltaHtml='<span style="color:'+(wd<0?'var(--good)':wd>0?'#c62828':'#888')+'">'+(wd>0?'↑':wd<0?'↓':'→')+' '+Math.abs(wd)+' kg από '+fmtDateShortAppt(prevW.date)+'</span>';
   }
-  var hasActive=c.weekPlan&&Object.keys(c.weekPlan).length>0;
+  var hasActive=clientHasPlan(c);
   var planDaysOld=(typeof planDaysSinceRenewal==='function')?planDaysSinceRenewal(c):(c.planGeneratedAt?Math.floor((Date.now()-c.planGeneratedAt)/86400000):null);
   var daysLeft=daysUntilEvent(c.eventDate);
   var lastAppt=c.appointments.length?c.appointments[c.appointments.length-1]:null;

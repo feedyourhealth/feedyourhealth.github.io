@@ -451,7 +451,8 @@ function onClientChange(){
     updateMealTimingGuide(c);
 
     // STEP 3: Check if plan regeneration needed
-    if(c.weekPlan&&Object.keys(c.weekPlan).length>0){
+    // 🧩 σε Μενού επιλογών οι ποσότητες ξαναϋπολογίζονται μόνες τους — καμία πρόταση «νέο πλάνο»
+    if(c.planMode!=='mix'&&c.weekPlan&&Object.keys(c.weekPlan).length>0){
       if(shouldRegeneratePlan(c)){
         showPlanRegenerationPrompt(c);
       }

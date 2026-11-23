@@ -71,7 +71,7 @@ function homeClientsNeedingAttention(){
         return;
       }
     }
-    var hasPlan=(typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);
+    var hasPlan=clientHasPlan(c);
     if(!hasPlan){
       out.push({c:c,tier:0,gap:0,reason:'noplan',label:'χωρίς πλάνο ακόμα',
         action:'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();dietsQuickCreatePlan(\''+c.id+'\')">Δημιούργησε πλάνο</button>'});
@@ -414,7 +414,7 @@ function homeLowAdherence(skipIds){
   var LOW_MAX=45, FRESH_DAYS=3;
   return clients.filter(function(c){return !c.deleted && !c.archived && c.shareToken;})
     .filter(function(c){return !(skipIds && skipIds[c.id]);})
-    .filter(function(c){return (typeof dietsHasPlan==='function')?dietsHasPlan(c):!!(c.weekPlan&&Object.keys(c.weekPlan).length>0);})
+    .filter(function(c){return clientHasPlan(c);})
     .map(function(c){
       var rows=window.Cloud.checkinsFor(c);
       if(!rows.length) return null;
@@ -1315,7 +1315,7 @@ function renderHome(){
   var _visibleClients=clients.filter(function(c){return !c.deleted&&!c.archived;});
   var metrics={
     total:_visibleClients.length,
-    active:_visibleClients.filter(function(c){return c.weekPlan&&Object.keys(c.weekPlan).length>0;}).length
+    active:_visibleClients.filter(function(c){return clientHasPlan(c);}).length
   };
   // attentionIds τροφοδοτεί μόνο το homePendingPlanActions() πιο κάτω (εξαιρεί πελάτες που ήδη
   // φαίνονται στη λίστα προσοχής). Οι ίδιες οι γραμμές "χρειάζονται προσοχή" ζωγραφίζονται πλέον
@@ -1442,7 +1442,7 @@ function renderHome(){
 // ΔΙΑΤΡΟΦΕΣ — cross-client plan overview (Phase 4)
 // ═══════════════════════════════════════════════════════════════
 
-function dietsHasPlan(c){ return !!(c.weekPlan && Object.keys(c.weekPlan).length>0); }
+function dietsHasPlan(c){ return clientHasPlan(c); }   // = clientHasPlan (js/lib/helpers.js), μετράει και το 🧩 Μενού επιλογών
 
 // Οι πραγματικοί πελάτες ξαναέρχονται για νέο πλάνο κάθε ~30-40 μέρες — μετά τις 30 το πλάνο
 // θεωρείται προς ανανέωση. Άγνωστη ημερομηνία δημιουργίας (πλάνα από πριν αυτό το feature) = δεν επισημαίνεται.
