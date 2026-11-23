@@ -41,7 +41,7 @@ PROGRESS_NUDGE_MIN_GAP, PROGRESS_NUDGE_RECONTACT_DAYS = 3, 7   # js/tabs/progres
 WK_TYPES = {'weights': 'Βάρη', 'run': 'Τρέξιμο', 'walk': 'Περπάτημα', 'bike': 'Ποδήλατο', 'swim': 'Κολύμπι', 'team': 'Ομαδικό άθλημα', 'other': 'Άλλο'}
 TYPES = {'q': ('alert', True), 'fb': ('alert', True), 'intake': ('alert', True), 'comment': ('digest', True),
          'day': ('digest', False), 'workout': ('digest', False), 'weight': ('digest', False),
-         'diary': ('digest', False), 'streak': ('digest', False), 'nudge': ('digest', False)}
+         'diary': ('digest', False), 'streak': ('digest', False), 'nudge': ('digest', False), 'trainer': ('digest', False)}
 
 
 # ── Ώρα Κύπρου (EU: θερινή από τελευταία Κυριακή Μαρτίου 01:00 UTC ως τελευταία Κυριακή Οκτωβρίου) ──
@@ -182,7 +182,18 @@ def build_digest(data, tables, now_utc=None):
         (alert if m == 'alert' and not a['c'].get('notifMuted') else quiet).append(a)
 
     # Σύνοψη σήμερα
-    g = {'day': [], 'workout': [], 'weight': [], 'diary': [], 'quiet': [q for q in quiet if q['date'] == tkey], 'streak': [], 'nudge': 0}
+    g = {'day': [], 'workout': [], 'weight': [], 'diary': [], 'quiet': [q for q in quiet if q['date'] == tkey], 'streak': [], 'nudge': 0, 'trainer': []}
+    # 📤 Αναφορές σε γυμναστές που δεν στάλθηκαν — ίδιος κανόνας με trainerPendingReports (js/tabs/trainers.js)
+    trainers = {t.get('id'): t for t in (data.get('trainers') or []) if isinstance(t, dict)}
+    if mode_of(prefs, 'trainer') != 'off':
+        for c in clients:
+            tid = c.get('trainerId')
+            if not (tid and c.get('trainerConsent') and tid in trainers): continue
+            meas = sorted((e for e in (c.get('weightLog') or []) if isinstance(e, dict) and (e.get('weight') or 0) > 0), key=lambda e: e.get('date') or '')
+            if not meas: continue
+            sends = [s for s in (c.get('trainerSends') or []) if isinstance(s, dict) and s.get('trainerId') == tid]
+            last_sent = (sends[-1].get('measDate') or '') if sends else ''
+            if meas[-1].get('date', '') > last_sent: g['trainer'].append((c, trainers[tid]))
     for c in clients:
         toks = tokens_for(c)
         rows = {}
@@ -271,6 +282,10 @@ def render_html(alert, g, today):
         rows.append(_row('🔇' if q['c'].get('notifMuted') else '💬', f'<b>{esc(short_name(q["c"]))}</b> {lbl}'))
     for c, n in g['streak']: rows.append(_row('⭐', f'<b>{esc(short_name(c))}</b> έφτασε {n} μέρες στη σειρά', 'Καλή ευκαιρία για ένα «μπράβο» από την εφαρμογή'))
     if g['nudge']: rows.append(_row('🔔', f'<b>{g["nudge"]}</b> δεν έχουν καταγράψει 3+ μέρες', 'Δες τους στην Πρόοδο για υπενθύμιση'))
+    if g.get('trainer'):
+        n = len(g['trainer'])
+        sub = ' · '.join(esc(short_name(c)) + ' → ' + esc(str(t.get('name') or '').split(' ')[0]) for c, t in g['trainer'][:3]) + (f' · +{n - 3}' if n > 3 else '')
+        rows.append(_row('📤', f'<b>{n}</b> ' + ('αναφορά σε γυμναστή δεν στάλθηκε' if n == 1 else 'αναφορές σε γυμναστές δεν στάλθηκαν'), sub))
     h.extend(rows or [_row('🌙', 'Τίποτα από τους πελάτες σήμερα.')])
     h.append('</table>'
              f'<div style="text-align:center;margin:22px 0 4px"><a href="{APP_URL}" style="display:inline-block;background:{TEAL};color:#fff;text-decoration:none;'

@@ -632,6 +632,8 @@ function _trCopy(btn){
 }
 function _trAfterSendRefresh(){
   _trRefreshClientCard();
+  if(curTab===0 && !curId && typeof renderHome==='function'){ try{ renderHome(); }catch(e){} }
+  if(typeof updateNotifBell==='function'){ try{ updateNotifBell(); }catch(e){} }
   if(curTab===3){ var c=getC(), el=document.getElementById('s3'); if(c&&el&&typeof buildTrackerHtml==='function') el.innerHTML=buildTrackerHtml(c); }
   if(curTab===11 && _trOpenId){ var m=document.getElementById('main'), t=getTrainer(_trOpenId); if(m&&t) m.innerHTML=_trProfileHtml(t); }
 }
@@ -704,6 +706,14 @@ function publishTrainerHub(t){
   return C.sb.from('shared_plans').upsert(row,{onConflict:'token'}).then(function(r){
     if(r.error) throw new Error('Απέτυχε η ενημέρωση του συνδέσμου.'+(r.error.message?' ['+r.error.message+']':''));
     t.hubUpdatedAt=row.updated_at; _trSaveOne(t);
+    // Οι αναφορές που φαίνονται στη λίστα λήγουν ΜΑΖΙ της (αλλιώς μετά από 90 μέρες χωρίς νέα μέτρηση ο
+    // γυμναστής πατούσε έναν πελάτη και έβλεπε «έληξε»). Μόνο expires_at — το περιεχόμενο μένει ίδιο.
+    (row.snapshot.clients||[]).forEach(function(x){
+      if(!x.token) return;
+      C.sb.from('shared_plans').update({expires_at:row.expires_at}).eq('token',x.token).then(function(r2){
+        if(r2&&r2.error) console.warn('[trainer] extend report',r2.error);
+      });
+    });
     return {url:TRAINER_BASE+'?h='+tok};
   });
 }
@@ -714,6 +724,26 @@ function _trSaveOne(t){
   if(typeof safeStorageSet==='function') safeStorageSet('fyh_trainers',list);
   if(typeof save==='function') save();
 }
+// 📤 Εκκρεμείς αναφορές: πελάτης με γυμναστή + συναίνεση, του οποίου η τελευταία μέτρηση δεν έχει σταλεί
+// στον ΤΩΡΙΝΟ γυμναστή. Μία πηγή για Αρχική «Σήμερα», 🔔 και (ίδιοι κανόνες) scripts/notif_digest.py.
+function trainerPendingReports(){
+  return (window.clients||[]).filter(function(c){
+    return c && !c.deleted && !c.archived && c.trainerId && c.trainerConsent && getTrainer(c.trainerId) && trainerSendStatus(c)==='pending';
+  }).map(function(c){ return {c:c, t:getTrainer(c.trainerId), m:_trLastMeas(c)}; })
+    .sort(function(a,b){ return a.m.date<b.m.date?1:a.m.date>b.m.date?-1:0; });
+}
+function trainerHomeRows(){
+  return trainerPendingReports().map(function(x){
+    var first=_trAcc(String(x.t.name||'').split(/\s+/)[0]);
+    return '<div class="hm-row hm-row2" onclick="selectClient(\''+escJsAttr(x.c.id)+'\')">'
+      +'<div class="hm-avatar hm-avatar-amber">'+esc(_trInitials(x.c.name))+'</div>'
+      +'<div class="hm-row-main"><span class="hm-row-name">'+esc(x.c.name||'')+'</span>'
+      +'<span class="hm-row-sub">Μέτρηση '+_trYmdShort(x.m.date)+' → '+esc(x.t.name||'')+'</span></div>'
+      +'<button type="button" class="hm-action-btn" onclick="event.stopPropagation();openTrainerSend(\''+escJsAttr(x.c.id)+'\')" title="Αναφορά στον/στην '+esc(x.t.name||'')+'">📤 Στον '+esc(first)+'</button>'
+      +'</div>';
+  });
+}
+
 // Σιωπηλή ανανέωση — μόνο αν ο γυμναστής έχει ήδη προσωπικό σύνδεσμο.
 function trainerHubRefresh(tid){
   var t=tid&&getTrainer(tid);

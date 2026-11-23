@@ -133,6 +133,7 @@ function homeTodayHtml(attn, staleRows, staleClients, pendingPlanRows, approachi
   // Πλάνο: πρώτα ό,τι χρωστάς (χωρίς πλάνο / ερωτηματολόγιο / ανανέωση), μετά αποφάσεις ραντεβού, μετά «λήγει σε Ν»
   var planRows=byGroup.plan.concat(pendingPlanRows||[]).concat(approachingRenewalRows||[]);
   var G=HOME_TODAY_GROUPS;
+  var trRows=(typeof trainerHomeRows==='function')?trainerHomeRows():[];
   var staleTitle='🔗 Ξαναδημοσίευσε'+((staleClients||[]).length>1
     ?(' <button type="button" class="hm-action-btn" onclick="event.stopPropagation();homeBulkRepublish(this)">Όλους ('+staleClients.length+')</button>')
     :'');
@@ -142,10 +143,12 @@ function homeTodayHtml(attn, staleRows, staleClients, pendingPlanRows, approachi
     homeCard(staleTitle, staleRows||[], '', 'warning', 5),
     homeCard(G.remind.title+homeTodayCount(byGroup.remind.length), byGroup.remind, '', G.remind.variant, 5),
     homeCard(G.measure.title+homeTodayCount(byGroup.measure.length), byGroup.measure, '', G.measure.variant, 5),
+    // 📤 Αναφορές σε γυμναστές που δεν στάλθηκαν (js/tabs/trainers.js)
+    homeCard('📤 Αναφορές σε γυμναστές'+homeTodayCount(trRows.length), trRows, '', 'warning', 5),
     homeCard('⏳ Σε αναμονή'+(wait.late?' <span class="wait-chip wait-chip-late">'+wait.late+' καθυστερ'+(wait.late===1?'εί':'ούν')+'</span>':''),
       wait.rows||[], '', wait.late?'danger':'warning', 5)
   ].filter(Boolean);
-  var total=byGroup.reply.length+planRows.length+(staleRows||[]).length+byGroup.remind.length+byGroup.measure.length+(wait.rows||[]).length;
+  var total=byGroup.reply.length+planRows.length+(staleRows||[]).length+byGroup.remind.length+byGroup.measure.length+(wait.rows||[]).length+trRows.length;
   var head='<div class="hm-today-head">'
     +(typeof lcHomeCardHtml==='function'?lcHomeCardHtml():'')
     +'</div>';

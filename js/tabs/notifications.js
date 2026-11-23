@@ -23,7 +23,8 @@ var NOTIF_TYPES=[
   {k:'weight',  label:'Έγραψε βάρος',                sub:'Ζύγιση από το link',                       def:'digest'},
   {k:'diary',   label:'Ημερολόγιο φαγητού',          sub:'Νέα καταγραφή στο ημερολόγιο',             def:'digest'},
   {k:'streak',  label:'Σερί 7 / 14 / 21… ημερών',    sub:'Ευκαιρία για ένα «μπράβο»',                def:'digest'},
-  {k:'nudge',   label:'Σταμάτησε να καταγράφει',     sub:'3+ μέρες χωρίς τίποτα (Πρόοδος)',          def:'digest'}
+  {k:'nudge',   label:'Σταμάτησε να καταγράφει',     sub:'3+ μέρες χωρίς τίποτα (Πρόοδος)',          def:'digest'},
+  {k:'trainer', label:'Αναφορά σε γυμναστή',         sub:'Νέα μέτρηση που δεν στάλθηκε στον γυμναστή', def:'digest'}
 ];
 var NOTIF_MODE_LABELS={alert:'Ειδοποίηση',digest:'Σύνοψη',off:'Όχι'};
 
@@ -199,7 +200,11 @@ function notifDigestFor(key,quiet){
   if(isToday && notifMode('nudge')!=='off' && typeof progressRosterData==='function'){
     try{ res.nudge=progressRosterData().filter(function(x){return x.flags.indexOf('nudge')>=0 || x.flags.indexOf('gone')>=0;}).length; }catch(e){}
   }
-  res.total=res.day.length+res.workout.length+res.weight.length+res.diary.length+res.quiet.length+res.streak.length+res.nudge;
+  res.trainer=[];
+  if(isToday && notifMode('trainer')!=='off' && typeof trainerPendingReports==='function'){
+    try{ res.trainer=trainerPendingReports(); }catch(e){}
+  }
+  res.total=res.day.length+res.workout.length+res.weight.length+res.diary.length+res.quiet.length+res.streak.length+res.nudge+res.trainer.length;
   return res;
 }
 function notifQuietLabel(it){
@@ -387,6 +392,11 @@ function notifDigestHtml(g,key){
     h+=notifRowHtml('⭐','<b>'+esc(notifShortName(x.c))+'</b> έφτασε '+x.n+' μέρες στη σειρά','Καλή ευκαιρία για ένα «μπράβο»',btn);
   });
   if(g.nudge) h+=notifRowHtml('🔔','<b>'+g.nudge+'</b> δεν έχουν καταγράψει 3+ μέρες','Δες τους στην Πρόοδο για υπενθύμιση','',"notifGoTab(10)");
+  if(g.trainer&&g.trainer.length){
+    var tsub=g.trainer.slice(0,3).map(function(x){return esc(notifShortName(x.c))+' → '+esc(String(x.t.name||'').split(/\s+/)[0]);}).join(' · ')+(g.trainer.length>3?(' · +'+(g.trainer.length-3)):'');
+    h+=notifRowHtml('📤','<b>'+g.trainer.length+'</b> '+(g.trainer.length===1?'αναφορά σε γυμναστή δεν στάλθηκε':'αναφορές σε γυμναστές δεν στάλθηκαν'),tsub,'',
+      g.trainer.length===1?("closeNotifPanel();openTrainerSend('"+g.trainer[0].c.id+"')"):"notifGoTab(0)");
+  }
   return h;
 }
 function notifListHtml(){

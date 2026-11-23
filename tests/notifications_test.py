@@ -127,7 +127,7 @@ try:
         print('4. Ρυθμίσεις')
         pg.click('#notif-panel [aria-label="Ρυθμίσεις ειδοποιήσεων"]'); pg.wait_for_timeout(200)
         check('Τι να μου λέει' in pg.inner_text('#notif-panel .nt-title'), 'settings view')
-        check(pg.locator('#notif-panel .nt-set-row:not(.nt-set-email)').count() == 10, '10 event types')
+        check(pg.locator('#notif-panel .nt-set-row:not(.nt-set-email)').count() == 11, '11 event types (incl. 📤 αναφορά σε γυμναστή)')
         row = lambda lbl: pg.locator('#notif-panel .nt-set-row', has_text=lbl)
         check(row('Συμπλήρωσε τη μέρα').locator('.nt-seg-b').count() == 2, 'info types offer only Σύνοψη / Όχι')
         row('Σχόλιο στη μέρα').get_by_role('button', name='Ειδοποίηση').click(); pg.wait_for_timeout(200)
