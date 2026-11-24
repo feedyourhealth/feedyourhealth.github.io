@@ -169,7 +169,8 @@ function clientChipsHtml(c){
 }
 
 // 📈 Παρακολούθηση κάτω από την Επισκόπηση — ανοιχτή/κλειστή, θυμάται ανά browser (προεπιλογή ανοιχτή).
-function ovApptOpen(){ try{ return localStorage.getItem('fyh_ov_appt_open')!=='0'; }catch(e){ return true; } }
+// 2026-11-24: προεπιλογή ΚΛΕΙΣΤΗ — η Επισκόπηση έχει πλέον δική της γρήγορη καταχώρηση· swTab(TAB_APPOINTMENTS) την ανοίγει.
+function ovApptOpen(){ try{ return localStorage.getItem('fyh_ov_appt_open')==='1'; }catch(e){ return false; } }
 function ovApptRemember(open){ try{ localStorage.setItem('fyh_ov_appt_open',open?'1':'0'); }catch(e){} }
 function renderMain(){
   var c=getC();if(!c)return;
@@ -539,10 +540,10 @@ function renderMain(){
     +'<div id="lib-list"></div></div></div></div>'
     +'<div id="supp-notes"></div></div>'
     +'<div id="s3" style="display:none">'+buildTrackerHtml(c)+'</div>'
-    // 📈 Παρακολούθηση: πριν δική της υπο-καρτέλα — τώρα ενότητα κάτω από την Επισκόπηση (swTab δείχνει
+    // 📈 Παρακολούθηση (2026-11-24: «📝 Ραντεβού: πλήρης φόρμα & παλιά ραντεβού»): πριν δική της υπο-καρτέλα — τώρα ενότητα κάτω από την Επισκόπηση (swTab δείχνει
     // και τα δύο). Το #s3b μένει ίδιο ώστε τα refresh*Cache (app-part7.js) να συνεχίζουν να το ξαναγράφουν.
     +'<details id="ov-appt-wrap" class="ov-appt-wrap" style="display:none"'+(ovApptOpen()?' open':'')+' ontoggle="ovApptRemember(this.open)">'
-    +'<summary class="ov-appt-sum">📈 Παρακολούθηση &amp; ραντεβού <span>καταχώρηση ραντεβού, προτιμήσεις τροφίμων, πρόοδος συνδέσμου</span></summary>'
+    +'<summary class="ov-appt-sum">📝 Ραντεβού: πλήρης φόρμα &amp; παλιά ραντεβού <span>κλίμακες, chips, 🚩, προτιμήσεις τροφίμων, πρόοδος link, απαντήσεις</span></summary>'
     +'<div id="s3b" style="display:none">'+buildAppointmentsHtml(c)+'</div>'
     +'</details>'
     +'<div id="s4" style="display:none">'+buildPlanHistoryHtml(c)+'</div>';

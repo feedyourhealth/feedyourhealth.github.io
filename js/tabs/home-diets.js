@@ -607,7 +607,7 @@ function sendFeedbackReminder(clientId){
     save();
     var s3b=document.getElementById('s3b');
     if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
-      var cur=getC(); if(cur && cur.id===c.id) s3b.innerHTML=buildAppointmentsHtml(cur);
+      var cur=getC(); if(cur && cur.id===c.id) s3b.innerHTML=buildAppointmentsHtml(cur);if(typeof ovRefresh==='function')ovRefresh();
     }
   }
 }

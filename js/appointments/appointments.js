@@ -347,7 +347,7 @@ function apptDigestRepublishLink(clientId,btn){
     if(typeof showSuccessToast==='function') showSuccessToast('✅ Το link δημοσιεύτηκε ξανά.');
     var s3b=document.getElementById('s3b');
     if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
-      var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+      var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);if(typeof ovRefresh==='function')ovRefresh();
     }
   }).catch(function(e){
     btn.disabled=false; btn.textContent=orig;
@@ -536,170 +536,9 @@ function buildAppointmentsHtml(c){
       +'</div>'+portalFeedbackBody)
     :portalFeedbackBody;
 
-  // ── Summary strip (read-only, pulled from other tabs) ──
+  // 2026-11-24: η λωρίδα 7 καρτών + «↔️ Από το προηγούμενο ραντεβού» έφυγαν — τα δείχνει πλέον
+  // η Επισκόπηση από πάνω (js/client-editor/overview.js: «Τι συμφωνήσαμε» + «Η προσπάθεια από τότε»).
   var wl=c.weightLog||[];
-  var lastW=wl.length?wl[wl.length-1]:null;
-  var prevW=wl.length>1?wl[wl.length-2]:null;
-  var wDeltaHtml='—';
-  if(lastW&&prevW){
-    var wd=+(lastW.weight-prevW.weight).toFixed(1);
-    wDeltaHtml='<span style="color:'+(wd<0?'var(--good)':wd>0?'#c62828':'#888')+'">'+(wd>0?'↑':wd<0?'↓':'→')+' '+Math.abs(wd)+' kg από '+fmtDateShortAppt(prevW.date)+'</span>';
-  }
-  var hasActive=clientHasPlan(c);
-  var planDaysOld=(typeof planDaysSinceRenewal==='function')?planDaysSinceRenewal(c):(c.planGeneratedAt?Math.floor((Date.now()-c.planGeneratedAt)/86400000):null);
-  var daysLeft=daysUntilEvent(c.eventDate);
-  var lastAppt=c.appointments.length?c.appointments[c.appointments.length-1]:null;
-  var daysSinceAppt=lastAppt?Math.floor((Date.now()-new Date(lastAppt.date))/86400000):null;
-
-  // ✨ Idea 2 (2026-08-14): "Τι άλλαξε από το προηγούμενο ραντεβού" — σύγκριση των 2 πιο πρόσφατων
-  // ΠΡΑΓΜΑΤΙΚΩΝ καταχωρήσεων (αγνοεί 🚫/❌ απουσίες — δεν είναι πραγματικό ραντεβού) ώστε να φαίνεται
-  // "πού είχαμε μείνει" πριν καν ανοίξεις τη φόρμα ή σκρολάρεις στο ιστορικό. Το βάρος επαναχρησιμοποιεί
-  // το ήδη υπολογισμένο wDeltaHtml (τελευταίες 2 μετρήσεις weightLog) αντί να ψάχνει μέτρηση ακριβώς
-  // στην ημερομηνία του ραντεβού — μικρή προσέγγιση, συνεπής με ό,τι ήδη δείχνει η κάρτα "Τελευταία
-  // μέτρηση" λίγο πιο κάτω. Το kcal target συγκρίνει το kcalAtEntry (φωτογραφία τη στιγμή κάθε
-  // ραντεβού), ΟΧΙ τον σημερινό στόχο — παλιές καταχωρήσεις χωρίς την τιμή απλώς λείπουν από τη σύγκριση.
-  var apptDiffHtml='';
-  var realAppts=c.appointments.filter(function(e){return !e.status;});
-  if(realAppts.length>=2){
-    var diffCur=realAppts[realAppts.length-1], diffPrev=realAppts[realAppts.length-2];
-    var diffItems=[];
-    if(lastW&&prevW)diffItems.push('<div class="appt-diffitem"><span class="lbl">Βάρος</span><span class="val">'+wDeltaHtml+'</span></div>');
-
-    // Portal deltas: σκορ τήρησης / σερί / πυλώνες — σύγκριση της εβδομάδας του ΠΡΟΗΓΟΥΜΕΝΟΥ
-    // ραντεβού με την τρέχουσα. Ίδια cached πηγή (window.Cloud.checkinsFor) με το "📲 Πρόοδος πελάτη".
-    if(c.shareToken && window.Cloud && typeof window.Cloud.checkinsFor==='function'){
-      var _ckRows=window.Cloud.checkinsFor(c);
-      if(_ckRows.length){
-        var _bd=ckRowsByDate(_ckRows);
-        var _stNow=ckPillarStats(ckWeekDates(0).map(function(k){return _bd[k];}).filter(Boolean));
-        var _stPrev=ckPillarStats(ckWeekKeysFor(diffPrev.date).map(function(k){return _bd[k];}).filter(Boolean));
-        var _scNow=_stNow.anyData?ckOverallScore(_stNow):null;
-        var _scPrev=_stPrev.anyData?ckOverallScore(_stPrev):null;
-        if(_scNow!=null && _scPrev!=null){
-          var _scCls=_scNow>_scPrev?'good':(_scNow<_scPrev?'bad':'');
-          diffItems.push('<div class="appt-diffitem"><span class="lbl">Τήρηση portal</span><span class="val '+_scCls+'">'+_scPrev+'% → '+_scNow+'%</span></div>');
-        }
-        if(typeof homeRunEndingAt==='function'){
-          var _rNow=ckStreak(_bd), _rPrev=homeRunEndingAt(_bd, diffPrev.date);
-          if(_rNow!==_rPrev){
-            diffItems.push('<div class="appt-diffitem"><span class="lbl">Σερί</span><span class="val '+(_rNow>_rPrev?'good':'bad')+'">'+_rPrev+' → '+_rNow+' μέρες</span></div>');
-          }
-        }
-        var _pill=[];
-        [['🍽','diet'],['💧','wat'],['💊','sup']].forEach(function(p){
-          var dt=_stNow[p[1]+'Tot'], pt=_stPrev[p[1]+'Tot'];
-          if(!dt && !pt) return;
-          var nr=dt?_stNow[p[1]+'Done']/dt:0, pr=pt?_stPrev[p[1]+'Done']/pt:0;
-          if(Math.abs(nr-pr)<0.14) return;
-          _pill.push('<span'+(nr<pr?' style="color:#c62828"':'')+'>'+p[0]+' '+Math.round(pr*100)+'%→'+Math.round(nr*100)+'%</span>');
-        });
-        if(_pill.length) diffItems.push('<div class="appt-diffitem"><span class="lbl">Πυλώνες</span><span class="val">'+_pill.join(' · ')+'</span></div>');
-      }
-    }
-
-    if(diffCur.gi>0&&diffPrev.gi>0){
-      var diffGiCls=diffCur.gi<diffPrev.gi?'good':(diffCur.gi>diffPrev.gi?'bad':'');
-      diffItems.push('<div class="appt-diffitem"><span class="lbl">Πεπτικά συμπτώματα</span><span class="val '+diffGiCls+'">'+diffPrev.gi+' → '+diffCur.gi+'</span></div>');
-    }
-    if(diffCur.compliance>0&&diffPrev.compliance>0){
-      var diffCompCls=diffCur.compliance>diffPrev.compliance?'good':(diffCur.compliance<diffPrev.compliance?'bad':'');
-      diffItems.push('<div class="appt-diffitem"><span class="lbl">Τήρηση προπόνησης</span><span class="val '+diffCompCls+'">'+diffPrev.compliance+' → '+diffCur.compliance+'</span></div>');
-    }
-    if(diffCur.kcalAtEntry>0&&diffPrev.kcalAtEntry>0){
-      var diffKcalTxt=diffCur.kcalAtEntry===diffPrev.kcalAtEntry?(diffCur.kcalAtEntry+' kcal (ίδιο)'):(diffPrev.kcalAtEntry+' → '+diffCur.kcalAtEntry+' kcal');
-      diffItems.push('<div class="appt-diffitem"><span class="lbl">Στόχος θερμίδων</span><span class="val">'+diffKcalTxt+'</span></div>');
-    }
-    var diffMeta=apptPlanActionMeta(diffCur.planAction);
-    diffItems.push('<div class="appt-diffitem"><span class="lbl">Ενέργεια πλάνου</span><span class="val" style="color:'+(diffMeta?diffMeta.color:'#888')+'">'+(diffMeta?diffMeta.icon+' '+esc(diffMeta.label):'—')+'</span></div>');
-    if(diffItems.length){
-      apptDiffHtml='<div class="tracker-section"><div class="tracker-head">↔️ Από το προηγούμενο ραντεβού <span style="font-weight:400;font-size:12px;color:#888">'+fmtDateShortAppt(diffPrev.date)+' → '+fmtDateShortAppt(diffCur.date)+'</span></div><div class="appt-diffbox">'+diffItems.join('')+'</div></div>';
-    }
-  }
-
-  // ── Κάρτα 1 extra: % λίπους/μέση από την ίδια τελευταία εγγραφή weightLog (ίδιο πεδίο με την
-  // Ανθρωπομετρία — δεν είναι νέο δεδομένο, απλώς δεν φαινόταν εδώ πριν) ──
-  var lastMeasureExtra='';
-  if(lastW){
-    var extraBits=[];
-    if(lastW.bf>0)extraBits.push(lastW.bf+'% λίπος');
-    if(lastW.waist>0)extraBits.push(lastW.waist+'cm μέση');
-    if(extraBits.length)lastMeasureExtra='<div class="appt-sum-sub">'+extraBits.join(' · ')+'</div>';
-  }
-
-  // ── Νέα κάρτα "Στόχος βάρους": μόνο όταν είναι ορισμένος ο c.goalWeight (ίδιο πεδίο με το portal
-  // του πελάτη) — δείχνει πόσα kg μένουν + προαιρετική μπάρα προόδου όταν έχουμε αφετηρία (1η μέτρηση).
-  // clientGoalWeightSummary (lib/helpers.js) — κοινό με το tracker-section "⚖️ Βάρος" στο "📈 Πρόοδος". ──
-  var goalCardHtml='';
-  var goalSummary=(typeof clientGoalWeightSummary==='function')?clientGoalWeightSummary(c):null;
-  if(goalSummary){
-    var goalBarHtml='';
-    if(goalSummary.goalPct!=null){
-      goalBarHtml='<div style="height:5px;border-radius:3px;background:#E2EEE5;overflow:hidden;margin-top:5px"><div style="height:100%;width:'+goalSummary.goalPct+'%;background:'+(goalSummary.goalDone?'var(--good)':'var(--teal)')+'"></div></div>';
-    }
-    goalCardHtml='<div class="appt-sum-card"><div class="appt-sum-lbl">🎯 Στόχος βάρους</div><div class="appt-sum-val">'+c.goalWeight+' kg</div><div class="appt-sum-sub">'+goalSummary.goalTxt+'</div>'+goalBarHtml+'</div>';
-  }
-
-  // ── Κάρτα 2 extra: τρέχων μέσος στόχος θερμίδων (apptCurrentKcalTarget — ίδιος υπολογισμός με
-  // το avgTarget στην καρτέλα "Πλάνο") ──
-  var kcalTargetNow=apptCurrentKcalTarget(c);
-  var planSub=(planDaysOld!=null?planDaysOld+' ημέρες από το τελευταίο πλάνο':'—')+(kcalTargetNow?' · 🎯 '+kcalTargetNow+' kcal/ημ':'');
-
-  // ── Κάρτα 4 extra: προβολή "με τον τρέχοντα ρυθμό βάρους, στόχος σε ~X μέρες" έναντι countdown
-  // αγώνα/weigh-in — μόνο όταν υπάρχουν goalWeight + τουλάχιστον 2 μετρήσεις με αρκετή απόσταση
-  // ημερών ώστε ο ρυθμός να έχει νόημα (≥3 μέρες). Ρυθμός = γραμμικός, από τις τελευταίες έως 4
-  // μετρήσεις (χωρίς πλήρη regression — αρκετό για ένδειξη, όχι κλινική πρόβλεψη). ──
-  var eventSub=(c.eventDate?fmtDateShortAppt(c.eventDate):'Δεν έχει οριστεί ημερομηνία');
-  var projDanger=false;
-  if(daysLeft!=null&&daysLeft>=0&&c.goalWeight>0&&wl.length>=2){
-    var recentSpan=wl.slice(-4);
-    var spanFirst=recentSpan[0],spanLast=recentSpan[recentSpan.length-1];
-    var daysSpan=Math.round((new Date(spanLast.date)-new Date(spanFirst.date))/86400000);
-    if(daysSpan>=3){
-      var ratePerDay=(spanLast.weight-spanFirst.weight)/daysSpan; // αρνητικό = χάνει βάρος
-      var toGoalNow=spanLast.weight-c.goalWeight;
-      if(ratePerDay!==0&&(toGoalNow>0)===(ratePerDay<0)){
-        var projDays=Math.round(toGoalNow/(-ratePerDay));
-        eventSub+=' · με τον τρέχοντα ρυθμό: στόχος σε ~'+projDays+' μέρες';
-        if(projDays>daysLeft)projDanger=true;
-      }
-    }
-  }
-
-  // ── Νέα κάρτα "Επόμενο ραντεβού": ένα απλό, χειροκίνητο πεδίο ημερομηνίας (c.nextAppointmentDate)
-  // που ο διαιτολόγος ορίζει ο ίδιος στο τέλος κάθε συνεδρίας — συμπληρώνει το "Τελευταίο ραντεβού"
-  // ώστε να φαίνεται ο πλήρης κύκλος (τι έγινε + τι είναι προγραμματισμένο) στο ίδιο strip. ──
-  var nextApptDaysLeft=c.nextAppointmentDate?daysUntilEvent(c.nextAppointmentDate):null;
-  var nextApptCardHtml='<div class="appt-sum-card'+(nextApptDaysLeft!=null&&nextApptDaysLeft<0?' appt-sum-danger':'')+'">'
-    +'<div class="appt-sum-lbl">📅 Επόμενο ραντεβού</div>'
-    +'<div class="appt-sum-val">'+(nextApptDaysLeft!=null?(nextApptDaysLeft>=0?nextApptDaysLeft+' μέρες':'πέρασε — προγραμμάτισε νέο'):'—')+'</div>'
-    +'<div class="appt-sum-sub"><input type="date" value="'+(c.nextAppointmentDate||'')+'" onchange="setNextAppointmentDate(this.value)" style="font-size:12px;border:1px solid var(--border-light);border-radius:4px;padding:2px 4px;width:100%;box-sizing:border-box;font-family:inherit"></div>'
-    +'</div>';
-
-  // ✨ Idea 4 (2026-08-14): "Προσέλευση" — ποσοστό πραγματικών ραντεβού (όχι 🚫/❌) στις τελευταίες
-  // 10 καταχωρήσεις (ή όλες, αν είναι λιγότερες από 10). Έγκαιρο σήμα αποδέσμευσης πριν φανεί στο
-  // βάρος ή στο πλάνο — δεν αντικαθιστά το 🚩/😕 flag, είναι δικό του, ανεξάρτητο σήμα.
-  var attendanceCardHtml='';
-  if(c.appointments.length>0){
-    var apptWindow=c.appointments.slice(-10);
-    var apptMissed=apptWindow.filter(function(e){return e.status==='noshow'||e.status==='cancelled';}).length;
-    var apptAttended=apptWindow.length-apptMissed;
-    var apptPct=Math.round(apptAttended/apptWindow.length*100);
-    attendanceCardHtml='<div class="appt-sum-card'+(apptPct<70?' appt-sum-danger':'')+'">'
-      +'<div class="appt-sum-lbl">🗓 Προσέλευση</div>'
-      +'<div class="appt-sum-val">'+apptPct+'%</div>'
-      +'<div class="appt-sum-sub">'+apptAttended+'/'+apptWindow.length+' τελευταία ραντεβού'+(apptMissed?' · '+apptMissed+' απουσία/ακύρωση':'')+'</div>'
-      +'</div>';
-  }
-
-  var strip='<div class="appt-summary-strip">'
-    +'<div class="appt-sum-card"><div class="appt-sum-lbl">Τελευταία μέτρηση</div><div class="appt-sum-val">'+(lastW?lastW.weight+' kg':'—')+'</div><div class="appt-sum-sub">'+wDeltaHtml+'</div>'+lastMeasureExtra+'</div>'
-    +goalCardHtml
-    +'<div class="appt-sum-card"><div class="appt-sum-lbl">Κατάσταση πλάνου</div><div class="appt-sum-val">'+(hasActive?'Ενεργό':'Χωρίς πλάνο')+'</div><div class="appt-sum-sub">'+planSub+'</div></div>'
-    +'<div class="appt-sum-card'+(daysSinceAppt!=null&&daysSinceAppt>30?' appt-sum-danger':'')+'"><div class="appt-sum-lbl">📅 Τελευταίο ραντεβού</div><div class="appt-sum-val">'+(daysSinceAppt!=null?daysSinceAppt+' μέρες πριν':'—')+'</div><div class="appt-sum-sub">'+(lastAppt?fmtDateShortAppt(lastAppt.date):'Καμία καταχώρηση ακόμα')+'</div></div>'
-    +nextApptCardHtml
-    +'<div class="appt-sum-card'+((daysLeft!=null&&daysLeft<=14)||projDanger?' appt-sum-danger':'')+'"><div class="appt-sum-lbl">🗓 Αγώνας/Weigh-in</div><div class="appt-sum-val">'+(daysLeft!=null?(daysLeft>=0?daysLeft+' μέρες':'πέρασε'):'—')+'</div><div class="appt-sum-sub">'+eventSub+'</div></div>'
-    +attendanceCardHtml
-    +'</div>';
 
   // ── Trend charts (from appointment entries logged over time + το official weightLog) ──
   // ✨ Idea 7 (2026-08-14): η τήρηση/GI/βάρος πλέον ένα συνδυασμένο γράφημα (apptCorrelationChart,
@@ -851,7 +690,7 @@ function buildAppointmentsHtml(c){
       +'<span style="margin-right:4px">Ροή αποφάσεων:</span>'+timelineChips+'</div>';
   }
 
-  return '<div style="padding:16px 20px">'+buildApptAttentionDigestHtml(c)+portalFeedbackHtml+apptDiffHtml+strip+trendsHtml+apptFoodPrefsPanelHtml(c)+formHtml+'<div class="tracker-section"><div class="tracker-head">📋 Ιστορικό ραντεβού</div>'+timelineHtml+filterbarHtml+listHtml+'</div></div>';
+  return '<div style="padding:16px 20px">'+buildApptAttentionDigestHtml(c)+portalFeedbackHtml+trendsHtml+apptFoodPrefsPanelHtml(c)+formHtml+'<div class="tracker-section"><div class="tracker-head">📋 Ιστορικό ραντεβού</div>'+timelineHtml+filterbarHtml+listHtml+'</div></div>';
 }
 // ✨ Idea 8 (2026-08-14): φιλτράρισμα ιστορικού ραντεβού — καθαρά front-end, καμία επανάκτηση
 // δεδομένων. Οι κάρτες είναι ήδη στο DOM (buildAppointmentsHtml) με data-appt-tags· εδώ απλά
@@ -882,7 +721,7 @@ function logAppointmentAbsence(status){
   c.appointments.push({date:date,status:status,notes:notes});
   c.appointments.sort(function(a,b){return a.date<b.date?-1:1;});
   save();
-  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);if(typeof ovRefresh==='function')ovRefresh();
 }
 function addAppointmentEntry(){
   var c=getC();if(!c)return;
@@ -909,23 +748,23 @@ function addAppointmentEntry(){
   c.appointments.push({date:date,gi:gi,compliance:compliance,chips:chips,sportChips:sportChips,notes:notes,flagged:flagged,planAction:planAction,kcalAtEntry:apptCurrentKcalTarget(c)});
   c.appointments.sort(function(a,b){return a.date<b.date?-1:1;});
   save();
-  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);if(typeof ovRefresh==='function')ovRefresh();
 }
 function removeAppointmentEntry(idx){
   var c=getC();if(!c||!c.appointments)return;
   c.appointments.splice(idx,1);
   save();
-  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);if(typeof ovRefresh==='function')ovRefresh();
 }
 function editAppointmentEntry(idx){
   var c=getC();if(!c)return;
   _apptEditIdx=idx;
-  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);if(typeof ovRefresh==='function')ovRefresh();
 }
 function cancelAppointmentEdit(){
   var c=getC();if(!c)return;
   _apptEditIdx=-1;
-  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);if(typeof ovRefresh==='function')ovRefresh();
 }
 function saveAppointmentEdit(idx){
   var c=getC();if(!c||!c.appointments||!c.appointments[idx])return;
@@ -952,7 +791,7 @@ function saveAppointmentEdit(idx){
   c.appointments.sort(function(a,b){return a.date<b.date?-1:1;});
   _apptEditIdx=-1;
   save();
-  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);if(typeof ovRefresh==='function')ovRefresh();
 }
 // 📅 Επόμενο προγραμματισμένο ραντεβού — μονή τιμή στον πελάτη (όχι entry στο appointments log,
 // αφού δεν έχει ακόμα συμβεί). Καθαρίζεται χειροκίνητα αδειάζοντας το πεδίο ημερομηνίας.
@@ -960,12 +799,12 @@ function setNextAppointmentDate(val){
   var c=getC();if(!c)return;
   c.nextAppointmentDate=val||null;
   save();
-  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);if(typeof ovRefresh==='function')ovRefresh();
 }
 function resolveAppointmentFlag(idx){
   var c=getC();if(!c||!c.appointments||!c.appointments[idx])return;
   c.appointments[idx].flagged=false;
   save();
-  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);
+  var el=document.getElementById('s3b');if(el)el.innerHTML=buildAppointmentsHtml(c);if(typeof ovRefresh==='function')ovRefresh();
 }
 

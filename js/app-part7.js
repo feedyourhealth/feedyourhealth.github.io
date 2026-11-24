@@ -1784,7 +1784,7 @@
         // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
         var s3b=document.getElementById('s3b');
         if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
-          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);if(typeof ovRefresh==='function')ovRefresh();
         }
       });
     },
@@ -1842,7 +1842,7 @@
         // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
         var s3b=document.getElementById('s3b');
         if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
-          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);if(typeof ovRefresh==='function')ovRefresh();
         }
       });
     },
@@ -1879,7 +1879,7 @@
         // (#s3b) — πρέπει να ξανασχεδιάζεται εκείνο, όχι πια το #s3 (Ανθρωπομετρία) που δεν το περιέχει πια.
         var s3b=document.getElementById('s3b');
         if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
-          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);if(typeof ovRefresh==='function')ovRefresh();
         }
       });
     },
@@ -2064,7 +2064,7 @@
         self._linkHealthChecked=true;
         var s3b=document.getElementById('s3b');
         if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
-          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+          var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);if(typeof ovRefresh==='function')ovRefresh();
         }
       });
     },

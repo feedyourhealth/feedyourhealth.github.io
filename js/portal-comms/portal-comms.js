@@ -65,7 +65,7 @@ function replyToClientNote(clientId,date,noteRaw){
   save();
   var s3b=document.getElementById('s3b');
   if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
-    var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+    var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);if(typeof ovRefresh==='function')ovRefresh();
   }
 }
 function pfReplyKey(token,weekStart,key){ return 'fyh-pf-replied-'+token+'-'+weekStart+'-'+(key||'_general'); }
@@ -115,7 +115,7 @@ function replyToPlanFeedback(clientId,weekStart,key){
   save();
   var s3b=document.getElementById('s3b');
   if(s3b && typeof getC==='function' && typeof buildAppointmentsHtml==='function'){
-    var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);
+    var cur=getC(); if(cur) s3b.innerHTML=buildAppointmentsHtml(cur);if(typeof ovRefresh==='function')ovRefresh();
   }
 }
 // "Το είδα" — ελαφρύτερο από το ↩️ Απάντησε (isNoteReplied/isPfReplied): δεν ανοίγει WhatsApp/email,
