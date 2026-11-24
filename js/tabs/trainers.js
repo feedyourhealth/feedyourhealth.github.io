@@ -12,7 +12,7 @@
 var TRAINER_BASE='https://feedyourhealth.github.io/gymnastis.html';
 var TRAINER_LINK_DAYS=90;
 var TRAINER_KIND_LABEL={trainer:'Γυμναστής',coach:'Προπονητής'};
-var TRAINER_SIGNATURE={el:'Στέφανος Πίσινος, Κλινικός Διαιτολόγος · Feed Your Health',en:'Stephanos Pissinos, Clinical Dietitian · Feed Your Health'};
+var TRAINER_SIGNATURE={el:'Στέφανος Πίσινος, Αθλητικός Διαιτολόγος · Feed Your Health',en:'Stephanos Pissinos, Sports Dietitian · Feed Your Health'};
 var _trFilter='all', _trSearch='', _trOpenId=null;
 
 // Χρώματα της καρτέλας σε μεταβλητές, ώστε να ακολουθούν και το σκούρο θέμα (body.dark-mode).

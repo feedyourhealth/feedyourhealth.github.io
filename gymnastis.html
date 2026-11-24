@@ -123,6 +123,8 @@ const HUB=new URLSearchParams(location.search).get('h')||'';   // προσωπι
 let SNAP=null;
 
 function el(id){ return document.getElementById(id); }
+// Παλιά links είχαν «Κλινικός Διαιτολόγος» στο snapshot — δείχνονται πάντα ως Αθλητικός (2026-11-24).
+function fromTxt(s){ return String(s.from||'').replace('Κλινικός Διαιτολόγος','Αθλητικός Διαιτολόγος').replace('Clinical Dietitian','Sports Dietitian'); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 const T={
@@ -300,7 +302,7 @@ function render(){
   const M=s.meas||[], L=M[M.length-1], P=M.length>1?M[M.length-2]:null, F=M[0];
   let h=(HUB?'<a class="back" href="?h='+encodeURIComponent(HUB)+'">'+esc(X.back)+'</a>':'')+'<div class="who"><div class="eb">'+esc(X.eb+' '+(s.trainer&&s.trainer.kind==='coach'?X.coach:X.trainer))+(s.trainer&&s.trainer.name?' · '+esc(s.trainer.name):'')+'</div>'
     +'<h1>'+esc(s.client&&s.client.name||'')+'</h1>'
-    +'<div class="upd">'+esc(X.meas)+' '+esc(fmtD(L.d))+' · '+esc(X.by)+' '+esc(s.from||'Feed Your Health')+'</div></div>';
+    +'<div class="upd">'+esc(X.meas)+' '+esc(fmtD(L.d))+' · '+esc(X.by)+' '+esc(fromTxt(s)||'Feed Your Health')+'</div></div>';
 
   const tile=(l,v,unit,d)=>'<div class="tile"><div class="l">'+esc(l)+'</div><div class="v">'+v+(unit?'<span style="font-size:.8rem;font-weight:600"> '+unit+'</span>':'')+(d||'')+'</div></div>';
   h+='<div class="tiles">'
@@ -366,7 +368,7 @@ function render(){
   if(s.phase&&X.phaseTip[s.phase.key]) ins.push(X.phaseTip[s.phase.key]);
   if(ins.length) h+='<div class="card tip"><h2>'+esc(X.mean)+'</h2><ul>'+ins.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>';
 
-  if(s.note) h+='<div class="note">'+esc(s.note)+'<span class="by">— '+esc(s.from||'')+'</span></div>';
+  if(s.note) h+='<div class="note">'+esc(s.note)+'<span class="by">— '+esc(fromTxt(s))+'</span></div>';
 
   const wa=String(s.wa||'').replace(/[^0-9]/g,'');
   h+='<div class="acts">'+(wa?'<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+esc(wa)+'">'+esc(X.reply)+'</a>':'')
