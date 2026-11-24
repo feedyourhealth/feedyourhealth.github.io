@@ -37,6 +37,7 @@ try:
         pg.goto(f'http://localhost:{PORT}/Dietologist.html', wait_until='domcontentloaded')
         pg.wait_for_function('window.Cloud && Cloud._loaded===true', timeout=10000)
         pg.wait_for_timeout(800)
+        pg.evaluate('Cloud._PUSH_MIN_GAP=0')   # this test is about content, not the 30" push throttle (47caf67)
         def dlg(): return pg.get_attribute('#confirmDialog', 'data-open') == 'true'
         def T(expr): return pg.evaluate(expr)
 
