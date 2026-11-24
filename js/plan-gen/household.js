@@ -20,9 +20,10 @@ function hhFirstName(x){ return String((x&&x.name)||'—').trim().split(/\s+/)[0
 function hhSurname(x){ var p=String((x&&x.name)||'').trim().split(/\s+/); return p.length>1?p[p.length-1]:''; }
 
 // Πελάτες που μπορούν να μπουν στο νοικοκυριό του c (όχι ήδη σε άλλο νοικοκυριό).
+// Οι ⭐ πρότυπα γεύσης (c.isMealTemplate) είναι κανονικοί πελάτες → μπαίνουν κι αυτοί.
 function hhCandidates(c){
   return clients.filter(function(x){
-    return x.id!==c.id && !x.deleted && !x.archived && !x.isMealTemplate && !x.householdId;
+    return x.id!==c.id && !x.deleted && !x.archived && !x.householdId;
   }).sort(function(a,b){ return String(a.name||'').localeCompare(String(b.name||''),'el'); });
 }
 
