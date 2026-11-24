@@ -722,6 +722,7 @@ function progressSwapDates(weeks){
 function progressSwapMealsTotal(c,ck,key){
   if(ck && ck.meals_total) return ck.meals_total;
   var wd=(new Date(key+'T00:00:00').getDay()+6)%7;
+  if(typeof pmxIsMix==='function' && pmxIsMix(c)) return pmxDayMeals(c,wd).length;   // 🧩 Μενού: θέσεις από τους στόχους, όχι το κρυμμένο weekPlan
   return ((c.weekPlan||{})[wd]||[]).length;
 }
 function progressSwapStats(c,dates,log,ckByDate,firstKey){
@@ -1009,7 +1010,7 @@ function openProgressClient(id){
   html+=progressAdherenceChartPanel(c,rows);
   html+=progressWeeklyConsistencyHtml(c,rows);
   if(typeof progressSkipsHtml==='function') html+=progressSkipsHtml(c,rows);
-  html+=progressSwapsHtml(c,rows);
+  html+=(typeof pmxIsMix==='function' && pmxIsMix(c))?progressMixHtml(c,rows):progressSwapsHtml(c,rows);   // 🧩 Μενού επιλογών: τι διάλεξε
   if(typeof progressRejectsHtml==='function') html+=progressRejectsHtml(c);
   if(typeof progressSuppsHtml==='function') html+=progressSuppsHtml(c);
   if(typeof progressShopHtml==='function') html+=progressShopHtml(c);

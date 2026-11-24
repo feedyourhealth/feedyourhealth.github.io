@@ -121,10 +121,15 @@ function piToggle(force){
     var C=window.Cloud, jobs=[];
     if(typeof C.refreshMealLogFor==='function') jobs.push(C.refreshMealLogFor(c));
     if(typeof C.refreshAltRejectFor==='function') jobs.push(C.refreshAltRejectFor(c));
-    if(jobs.length) Promise.all(jobs).then(function(){ _piCache.t=0; if(getC()===c && typeof renderWeekTable==='function') renderWeekTable(); },function(){});
+    if(jobs.length) Promise.all(jobs).then(function(){ _piCache.t=0; if(getC()===c) piRerender(c); },function(){});
   }
   _piCache.t=0;
-  if(typeof renderWeekTable==='function') renderWeekTable();
+  piRerender(c);
+}
+// 🧩 Σε Μενού επιλογών το πάνελ ζει πάνω από τον editor του Μενού, όχι τον πίνακα του πλάνου.
+function piRerender(c){
+  if(c && typeof mixIsActive==='function' && mixIsActive(c) && typeof mixRenderEditor==='function') mixRenderEditor();
+  else if(typeof renderWeekTable==='function') renderWeekTable();
 }
 function piRow(lbl,val){ return '<div class="pi-kv"><span>'+lbl+'</span><b>'+val+'</b></div>'; }
 function piPanelInnerHtml(c){
@@ -136,6 +141,7 @@ function piPanelInnerHtml(c){
   h+=piRow('Γεύματα με ✅', d.pct==null?'—':d.pct+'%');
   h+=piRow('Μέρες με σημείωση', d.daysLogged+' / '+d.days);
   if(d.workouts) h+=piRow('Προπονήσεις ✅', d.workouts);
+  if(typeof mixIsActive==='function' && mixIsActive(c)) return h+piMixPanelHtml(c,d);
   var sl=d.slots.filter(function(s){ return s.pct!=null; });
   if(sl.length){
     h+='<div class="pi-sec">Ανά γεύμα</div>';
@@ -174,6 +180,44 @@ function piPanelInnerHtml(c){
     });
   }
   return h;
+}
+// 🧩 Το υπόλοιπο πάνελ για πελάτη σε Μενού επιλογών (js/tabs/progress-mix.js).
+var _piMixFlags=[];
+function piMixPanelHtml(c,d){
+  var S=(typeof pmxSummary==='function')?pmxSummary(c):null, h='';
+  if(S){
+    h+=piRow('Από το μενού', S.st.menu);
+    h+=piRow('«Κάτι παρόμοιο»', S.st.similar);
+    var W=S.weeks.filter(function(w){ return w.full; }), R=S.rules;
+    if(W.length){
+      var avg=function(f){ return Math.round(W.reduce(function(s,w){ return s+w[f]; },0)/W.length*10)/10; };
+      h+='<div class="pi-sec">📆 Ανά εβδομάδα <span class="pi-muted">(μ.ό. '+W.length+' ολόκληρων)</span></div>';
+      h+=piRow('🐟 Ψάρι', avg('fi')+' / ≥ '+R.fish)+piRow('🫘 Όσπρια', avg('le')+' / ≥ '+R.legumes)+piRow('🥩 Κόκκινο κρέας', avg('rm')+' / ≤ '+R.red);
+    }
+    _piMixFlags=S.flags;
+    if(S.flags.length){
+      h+='<div class="pi-sec">⚠️ Να προσέξεις</div>';
+      S.flags.slice(0,4).forEach(function(fl,fi){
+        h+='<div class="pi-card"><div><b>'+esc(fl.t)+'</b></div>'+(fl.s?'<div class="pi-muted">'+esc(fl.s)+'</div>':'')
+          +(fl.kind==='under'&&fl.add&&fl.add.length?'<div class="pi-acts"><button type="button" class="pi-btn pri" onclick="piMixStar('+fi+')">Κάνε ⭐ '+esc(fl.add.map(function(n){ return mixFoodName(n,'el'); }).join(' & '))+'</button></div>':'')
+          +'</div>';
+      });
+    }
+  }
+  if(d.notes.length){
+    h+='<div class="pi-sec">💬 Έγραψε</div>';
+    d.notes.forEach(function(n){
+      var txt=String(n.note).replace(/^\[tag:[a-z]+\]\s*/,'');
+      h+='<div class="pi-note"><span class="pi-muted">'+(typeof progressShortDate==='function'?progressShortDate(n.date):n.date)+'</span> «'+esc(txt)+'»</div>';
+    });
+  }
+  return h;
+}
+function piMixStar(fi){
+  var fl=_piMixFlags[fi]; if(!fl||!fl.add||!fl.add.length||typeof mixChange!=='function') return;
+  mixChange('Προστέθηκαν ⭐: '+fl.add.map(function(n){ return mixFoodName(n,'el'); }).join(', '),function(m){
+    var l=m[fl.role]=(m[fl.role]||[]); fl.add.forEach(function(n){ if(l.indexOf(n)===-1) l.push(n); });
+  });
 }
 // Καλείται στο τέλος του renderWeekTable — ζωγραφίζει/κρύβει το πάνελ.
 function piRenderPanel(c){

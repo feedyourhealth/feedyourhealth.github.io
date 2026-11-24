@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="41f88d648680">
+<meta name="fyh-build" content="c646da349831">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -20,7 +20,7 @@
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css?v=9b5da782eb">
+<link rel="stylesheet" href="css/styles.css?v=4f442d58d2">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -439,11 +439,11 @@ setTimeout(function(){
 <script defer src="js/plan-gen/cho-protocol.js?v=e1ea983262"></script>
 <script defer src="js/plan-gen/gen-plan.js?v=d0ba1dff41"></script>
 <script defer src="js/plan-gen/mix-engine.js?v=1d9d2764cc"></script>
-<script defer src="js/plan-gen/mix-editor.js?v=5d797a6b98"></script>
+<script defer src="js/plan-gen/mix-editor.js?v=7029ebb507"></script>
 <script defer src="js/plan-gen/mix-snapshot.js?v=7fb7b7144f"></script>
 <script defer src="js/plan-gen/supplement-recs.js?v=b3441e0f2a"></script>
 <script defer src="js/plan-gen/week-table.js?v=adccef1608"></script>
-<script defer src="js/plan-gen/plan-insights.js?v=b2ccaf396a"></script>
+<script defer src="js/plan-gen/plan-insights.js?v=9e1c5053f8"></script>
 <script defer src="js/plan-gen/household.js?v=a2e7e1b288"></script>
 <script defer src="js/plan-gen/food-selector.js?v=735c224213"></script>
 <script defer src="js/plan-gen/meal-slots.js?v=8ebc7a4412"></script>
@@ -468,9 +468,10 @@ setTimeout(function(){
      Pure fn declarations, no load-time code. -->
 <script defer src="js/tabs/home-diets.js?v=ac163d0392"></script>
 <script defer src="js/tabs/messages.js?v=5588553b9f"></script>
-<script defer src="js/tabs/progress.js?v=727719d9e9"></script>
+<script defer src="js/tabs/progress.js?v=10b1b9113f"></script>
 <script defer src="js/tabs/notifications.js?v=55c7f9bbbf"></script>
-<script defer src="js/tabs/progress-insights.js?v=a0fc6f0f09"></script>
+<script defer src="js/tabs/progress-insights.js?v=1ff478b2c4"></script>
+<script defer src="js/tabs/progress-mix.js?v=a4ca7cb282"></script>
 <script defer src="js/tabs/progress-rejects.js?v=2469e66fc6"></script>
 <script defer src="js/tabs/recipes.js?v=b3bdae9fb5"></script>
 <script defer src="js/tabs/tips.js?v=60eb1e8994"></script>

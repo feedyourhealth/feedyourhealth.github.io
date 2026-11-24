@@ -13,6 +13,7 @@ var _mixDay=null;           // επιλεγμένη μέρα στον editor (0=
 var _mixPicker=null;        // {role} όταν είναι ανοιχτό το «＋ τρόφιμο»
 var _mixPickQ='';
 var _mixUndo=null;          // {label, menu, cid} — η τελευταία αλλαγή, για «↩ Αναίρεση»
+var _mixCnt=null;           // 📲 τι διαλέγει ο πελάτης στο link (js/tabs/progress-mix.js, 4 εβδ.) — null αν τίποτα
 
 function mixTodayIdx(){ return (new Date().getDay()+6)%7; }
 function mixClone(o){ return JSON.parse(JSON.stringify(o)); }
@@ -136,11 +137,21 @@ function mixFoodEmoji(n){
   if(/καλαμποκ/.test(s)) return '🌽';
   return '🌾';
 }
-function mixChipHtml(role,n,main,alt,extra,canRm){
-  return '<span class="mx-chip"><span class="mx-chip-e">'+mixFoodEmoji(n)+'</span>'
+// ×N = πόσες φορές το διάλεξε σε αυτό το γεύμα (4 εβδ.)· 💤 = στο μενού αλλά ποτέ (μόνο με αρκετά δεδομένα)
+function mixCntHtml(slot,key,isFood){
+  if(!_mixCnt||!slot) return '';
+  var n=((_mixCnt.bySlot[slot]||{})[key])||0;
+  if(n) return '<span class="mx-cnt" title="Το διάλεξε '+n+(n===1?' φορά':' φορές')+' στο '+esc(slot)+' τις τελευταίες 4 εβδομάδες">×'+n+'</span>';
+  if((isFood?_mixCnt.plates:((_mixCnt.bySlot[slot]||{}).__n||0))<PMX_NEVER_MIN) return '';   // λίγα δεδομένα: όχι 💤
+  return '<span class="mx-cnt zz" title="Δεν το έχει διαλέξει ποτέ στο '+esc(slot)+' (4 εβδομάδες)">💤</span>';
+}
+function mixChipHtml(role,n,main,alt,extra,canRm,slot){
+  var cnt=mixCntHtml(slot,n,true);
+  return '<span class="mx-chip'+(cnt.indexOf(' zz')>-1?' mx-zz':'')+'"><span class="mx-chip-e">'+mixFoodEmoji(n)+'</span>'
     +'<span class="mx-chip-n">'+esc(mixFoodName(n,'el'))+'</span> <b>'+esc(main)+'</b>'
     +(alt?' <span class="mx-chip-s">('+esc(alt)+')</span>':'')
     +(extra?' <span class="mx-chip-x">'+extra+'</span>':'')
+    +cnt
     +(canRm?'<button type="button" class="mx-chip-rm" data-mx="rm" data-role="'+role+'" data-n="'+esc(n)+'" title="Αφαίρεση από το μενού (όλες οι μέρες)" aria-label="Αφαίρεση">×</button>':'')
     +'</span>';
 }
@@ -173,21 +184,31 @@ function mixNotTodayHtml(c,ctx,role,d){
   if(!off.length) return '';
   return '<div class="mx-nottoday">🔒 Όχι αυτή τη μέρα: '+off.map(function(n){return esc(mixFoodName(n,'el'));}).join(', ')+'</div>';
 }
+function mixSlotEl(m){ return (typeof MIX_SLOT_LBL!=='undefined'&&MIX_SLOT_LBL[m.slot])?MIX_SLOT_LBL[m.slot].el:m.name; }
+// «τσεκαρίστηκε 9/12» (+ «κάτι παρόμοιο» στα γεύματα με ιδέες) — όλα τα ίδια γεύματα της εβδομάδας μαζί
+function mixAdhHtml(m){
+  if(!_mixCnt) return '';
+  var x=_mixCnt.slot[mixSlotEl(m)+(m.tag?'|'+m.tag:'')]; if(!x||!x.total) return '';
+  var p=Math.round(x.done/x.total*100);
+  var h=' <span class="mx-adh'+(p<60?' lo':'')+'" title="Από το link, τελευταίες 4 εβδομάδες (όλα τα «'+esc(mixSlotEl(m))+'» της εβδομάδας μαζί)">τσεκαρίστηκε '+x.done+'/'+x.total+'</span>';
+  if(!m.main&&x.similar) h+=' <span class="mx-adh sim" title="Πάτησε «Κάτι παρόμοιο» αντί για μια από τις ιδέες">≈ κάτι παρόμοιο '+x.similar+'</span>';
+  return h;
+}
 function mixMealHd(m,extra){
   return '<div class="mx-meal-hd"><span class="mx-time">'+esc(m.time)+'</span> <b>'+esc(m.name)+'</b>'
-    +(m.tag?' <span class="mx-tag mx-tag-'+m.tag+'">'+esc(m.tagLabel)+'</span>':'')+(extra||'')
+    +(m.tag?' <span class="mx-tag mx-tag-'+m.tag+'">'+esc(m.tagLabel)+'</span>':'')+mixAdhHtml(m)+(extra||'')
     +'<span class="mx-meal-mac">'+mixMacHtml(m.p,m.c,m.f)+' · '+m.k+' kcal</span></div>';
 }
 // first = το πρώτο κύριο γεύμα της μέρας: εκεί είναι τα κουμπιά ＋/× (οι λίστες είναι κοινές για όλα τα γεύματα)
 function mixMainMealHtml(c,ctx,day,m,first){
   var h='<div class="mx-meal">'+mixMealHd(m,first?'':' <span class="mx-sub">— ίδιες λίστες, δικές του ποσότητες</span>');
   h+='<div class="mx-comp"><div class="mx-lab mx-lab-p">① Πρωτεΐνη</div><div><div class="mx-chips">'
-    +m.prot.map(function(q){ return mixChipHtml('protein',q.n,q.main,q.alt,'· '+esc(day.oilOk?mixOilTxt(q.oil,'el'):m.fat.txt),first); }).join('')
+    +m.prot.map(function(q){ return mixChipHtml('protein',q.n,q.main,q.alt,'· '+esc(day.oilOk?mixOilTxt(q.oil,'el'):m.fat.txt),first,mixSlotEl(m)); }).join('')
     +(first?mixAddBtn('protein'):'')+'</div>'
     +(first&&_mixPicker&&_mixPicker.role==='protein'?mixPickerHtml(c,'protein'):'')
     +(first?mixNotTodayHtml(c,ctx,'protein',day.d):'')+'</div></div>';
   h+='<div class="mx-comp"><div class="mx-lab mx-lab-c">② Υδατάνθρακας</div><div><div class="mx-chips">'
-    +m.carb.map(function(q){ return mixChipHtml('carb',q.n,q.main,q.alt,'',first); }).join('')
+    +m.carb.map(function(q){ return mixChipHtml('carb',q.n,q.main,q.alt,'',first,mixSlotEl(m)); }).join('')
     +(first?mixAddBtn('carb'):'')+'</div>'
     +(first&&_mixPicker&&_mixPicker.role==='carb'?mixPickerHtml(c,'carb'):'')
     +(first?mixNotTodayHtml(c,ctx,'carb',day.d):'')+'</div></div>';
@@ -201,7 +222,7 @@ function mixMainMealHtml(c,ctx,day,m,first){
       if(lp.add) extra.push('+ '+esc(mixFoodName(lp.add.n,'el'))+' '+esc(lp.add.main)+(lp.add.alt?' ('+esc(lp.add.alt)+')':''));
       extra.push('· '+esc(lp.fat.txt));
       if(!lp.ok.ok) extra.push('<span class="mx-warn">⚠️ kcal '+(lp.ok.kPct>0?'+':'')+lp.ok.kPct+'%</span>');
-      return mixChipHtml('legume',lp.leg.n,lp.leg.main,lp.leg.alt,extra.join(' '),first);
+      return mixChipHtml('legume',lp.leg.n,lp.leg.main,lp.leg.alt,extra.join(' '),first,mixSlotEl(m));
     }).join('')
     +(first?mixAddBtn('legume'):'')+'</div>'
     +(first&&_mixPicker&&_mixPicker.role==='legume'?mixPickerHtml(c,'legume'):'')+'</div></div>';
@@ -216,7 +237,7 @@ function mixIdeasMealHtml(m){
     h+='<div class="mx-ideas">'+m.ideas.slice(0,MIX_IDEAS_MAX).map(function(i){
       return '<div class="mx-idea">'+(i.src==='fav'?'<span title="Από τα Αγαπημένα γεύματα">⭐</span> ':'')
         +i.foods.map(function(f){ return esc(f.n)+' <b>'+esc(mixIdeaQty(f,'el'))+'</b>'; }).join(' + ')
-        +' <span class="mx-idea-k">'+Math.round(i.tot.k)+' kcal</span>'
+        +' <span class="mx-idea-k">'+Math.round(i.tot.k)+' kcal</span>'+mixCntHtml(mixSlotEl(m),'idea:'+mixIdeaKey(i.foods),false)
         +'<button type="button" class="mx-chip-rm" data-mx="idea-off" data-n="'+esc(i.key)+'" title="Να μη φαίνεται αυτή η ιδέα" aria-label="Απόκρυψη">×</button></div>';
     }).join('')+'</div>';
   }
@@ -251,6 +272,7 @@ function mixRenderEditor(){
   if(!w){ box.innerHTML='<div class="mx-empty">Συμπλήρωσε βάρος, ύψος και ηλικία για να υπολογιστούν οι στόχοι.</div>'; return; }
   if(_mixDay==null) _mixDay=mixTodayIdx();
   if(_mixUndo&&_mixUndo.cid!==c.id) _mixUndo=null;
+  _mixCnt=(typeof pmxEditorCounts==='function')?pmxEditorCounts(c):null;
   var day=w.days[_mixDay], ctx=mixCtx(c), menu=c.mixMenu, rules=menu.rules||{};
   var h='';
   if(_mixUndo) h+='<div class="mx-undo">'+esc(_mixUndo.label)+' · <button type="button" data-mx="undo">↩ Αναίρεση</button></div>';
@@ -258,7 +280,9 @@ function mixRenderEditor(){
   var stale=!!(window.Cloud&&Cloud.isStale&&Cloud.isStale(c));
   h+='<div class="mx-phase'+(stale?' warn':'')+'">'+(!c.shareToken?'📱 Πάτα «Στείλε στον πελάτη»: θα βλέπει το μενού στο κινητό, με τις ποσότητες έτοιμες. Ή δώσε το <b>PDF</b> (Εξαγωγή ▾).'
     :(stale?'⚠️ Άλλαξες το μενού (ή τους στόχους) μετά την αποστολή — πάτα «Στείλε στον πελάτη» για να ενημερωθεί το link του.'
-      :'📱 Ο πελάτης βλέπει αυτό το μενού στο link του.'))+'</div>';
+      :'📱 Ο πελάτης βλέπει αυτό το μενού στο link του.'))
+    +(_mixCnt?' <span class="mx-sub">×N = πόσες φορές το διάλεξε, 💤 = ποτέ (4 εβδ.)</span>':'')
+    +((typeof piToggleBtnHtml==='function')?' '+piToggleBtnHtml(c):'')+'</div>';
   h+=mixCheckHtml(w);
   h+='<div class="mx-days" role="tablist">'+w.days.map(function(x){
     var tr=x.kind!=='R';
@@ -281,4 +305,5 @@ function mixRenderEditor(){
   h+='<div class="mx-foot">'+((menu.ideasOff||[]).length?'<button type="button" class="btn tertiary" data-mx="ideas-reset">Επαναφορά κρυμμένων ιδεών ('+menu.ideasOff.length+')</button>':'')
     +'<button type="button" class="btn tertiary" data-mx="reset-menu">↻ Νέο μενού από τα προτεινόμενα</button></div>';
   box.innerHTML=h;
+  if(typeof piRenderPanel==='function') piRenderPanel(c);
 }

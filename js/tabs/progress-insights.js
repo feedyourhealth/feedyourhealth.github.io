@@ -53,7 +53,9 @@ function progressSkipsHtml(c,ckRows){
   if(dates.length<PI_MIN_DAYS) return '';
   var ckByDate=ckRowsByDate(ckRows), order=[], by={}, grp={wd:{on:0,tot:0},we:{on:0,tot:0}};
   dates.forEach(function(k){
-    var wd=piWeekday(k), meals=((c.weekPlan||{})[wd])||[], labels=piSlotLabels(meals);
+    var wd=piWeekday(k), labels;
+    if(typeof pmxIsMix==='function' && pmxIsMix(c)) labels=piSlotLabels(pmxDayMeals(c,wd).map(function(m){ return {name:pmxSlotName(m)}; }));   // 🧩 Μενού
+    else labels=piSlotLabels(((c.weekPlan||{})[wd])||[]);
     var tot=progressSwapMealsTotal(c,ckByDate[k],k), m=log[k]||{}, g=grp[wd>=5?'we':'wd'];
     for(var j=0;j<tot;j++){
       var lbl=labels[j]||('Γεύμα '+(j+1));
