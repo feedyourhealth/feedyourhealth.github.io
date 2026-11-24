@@ -1275,9 +1275,11 @@ function _homeReasonSnoozed(c, reason){
 function homeQuickFind(val){
   var q=(val||'').toLowerCase().trim();
   if(!q) return;
-  var pool=clients.filter(function(c){return !c.deleted && !c.archived;});
-  var hit=pool.find(function(c){return (c.name||'').toLowerCase()===q;})
-        ||pool.find(function(c){return (c.name||'').toLowerCase().indexOf(q)>=0;});
+  // Πρώτα οι ενεργοί, μετά οι πρώην (2026-11-24: κάποιος μπορεί να επιστρέψει μετά από καιρό).
+  var act=clients.filter(function(c){return !c.deleted && !c.archived;});
+  var former=clients.filter(function(c){return !c.deleted && c.archived;});
+  var exact=function(c){return (c.name||'').toLowerCase()===q;}, part=function(c){return (c.name||'').toLowerCase().indexOf(q)>=0;};
+  var hit=act.find(exact)||former.find(exact)||act.find(part)||former.find(part);
   if(hit) selectClient(hit.id);
 }
 
@@ -1359,7 +1361,9 @@ function renderHome(){
   html+='<div class="hm-title"><span>🏠 Αρχική</span>'
     +'<span class="hm-title-find"><input type="text" list="hm-find-list" placeholder="🔍 Βρες πελάτη…" aria-label="Γρήγορη αναζήτηση πελάτη" '
     +'onchange="homeQuickFind(this.value)" onkeydown="if(event.key===\'Enter\')homeQuickFind(this.value)">'
-    +'<datalist id="hm-find-list">'+_visibleClients.map(function(c){return '<option value="'+esc(c.name||'')+'">';}).join('')+'</datalist></span></div>';
+    +'<datalist id="hm-find-list">'+_visibleClients.map(function(c){return '<option value="'+esc(c.name||'')+'">';}).join('')
+    +clients.filter(function(c){return !c.deleted && c.archived;}).map(function(c){return '<option value="'+esc(c.name||'')+'" label="📦 πρώην">';}).join('')
+    +'</datalist></span></div>';
 
   // ── Κύριο σήμα + pointer προς το Πρόοδος (πάντα ορατά, πάνω απ' όλα) ──────────
   // 2026-09-16: εδώ ζούσαν 3 κάρτες («💬 Νέο feedback ή μήνυμα» = ουσιαστικά σκορ/τάση ανά πελάτη,

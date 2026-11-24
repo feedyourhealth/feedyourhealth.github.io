@@ -425,8 +425,12 @@ function renderSB(){
   // ✅ Γρήγορα chips (βλ. setClientQuickFilter πιο πάνω) — κρύβονται σε bulk mode, μαζί με το block
   // "Χρειάζονται προσοχή" που ήδη κρύβεται εκεί, ίδιος λόγος: οι κάρτες επιλέγουν αντί να ανοίγουν.
   if(!_clientBulkMode) html+=clientQuickChipsHtml(base);
+  // 📦 2026-11-24: η αναζήτηση ψάχνει ΚΑΙ στους πρώην (π.χ. επιστρέφει μετά από 1 χρόνο) — δείχνονται
+  // σε δική τους ενότητα κάτω από τα αποτελέσματα, πάντα ανοιχτή, ώστε να μη φτιαχτεί διπλός πελάτης.
+  var formerHits=term?clients.filter(function(c){return c.archived && !c.deleted && (c.name||'Νέος πελάτης').toLowerCase().indexOf(term)!==-1;}):[];
   if((term||_clientFilterGoal||_clientFilterSport||_clientFilterGroup||_clientFilterStatus||_clientFilterQuick)&&list.length===0){
-    html+='<div style="font-size:12px;color:var(--text-muted);padding:20px 0;text-align:center;font-style:italic">Κανένα αποτέλεσμα</div>';
+    html+='<div style="font-size:12px;color:var(--text-muted);padding:20px 0;text-align:center;font-style:italic">'
+      +(formerHits.length?'Κανένας ενεργός πελάτης — βρέθηκε στους πρώην ↓':'Κανένα αποτέλεσμα')+'</div>';
   } else {
     // ✅ 2026-08-05: block "Χρειάζονται προσοχή" καρφωμένο πάνω από το κανονικό πλέγμα, ώστε αυτοί οι
     // πελάτες να μη χαθούν μέσα στη λίστα ανεξάρτητα από την επιλεγμένη ταξινόμηση/σελίδα scroll.
@@ -468,8 +472,9 @@ function renderSB(){
   }
 
   // ✅ ARCHIVE SECTION: Show archived (but not deleted) clients
-  var archivedClients = clients.filter(function(c){return c.archived && !c.deleted;});
-  if(archivedClients.length > 0 && !term){
+  // Με αναζήτηση: μόνο όσοι ταιριάζουν, σε ξεχωριστό (πάντα ανοιχτό) κλειδί σύμπτυξης.
+  var archivedClients = term ? formerHits : clients.filter(function(c){return c.archived && !c.deleted;});
+  if(archivedClients.length > 0){
     var _secHtml='<div class="clients-grid">';
     archivedClients.forEach(function(c){
       _secHtml+='<div class="client-card cc-muted">'
@@ -485,7 +490,9 @@ function renderSB(){
         +'</div>';
     });
     _secHtml+='</div>';
-    html+='<div id="lc-former-anchor"></div>'+clientsSectionHtml('clientsArchivedCollapsed','clients-muted-block','📦 Πρώην πελάτες',archivedClients.length,_secHtml);
+    html+='<div id="lc-former-anchor"></div>'+(term
+      ? clientsSectionHtml('clientsArchivedSearchCollapsed','clients-muted-block','📦 Πρώην πελάτες που ταιριάζουν',archivedClients.length,_secHtml)
+      : clientsSectionHtml('clientsArchivedCollapsed','clients-muted-block','📦 Πρώην πελάτες',archivedClients.length,_secHtml));
   }
 
   // ✅ TRASH SECTION: Show deleted clients

@@ -35,11 +35,18 @@ function toggleQA(id){
   }
 }
 
+// 2026-11-24: όταν γράφεις όνομα, βγαίνουν ΚΑΙ οι πρώην (στο τέλος, με «📦 πρώην») — π.χ. επιστρέφει
+// μετά από 1 χρόνο· έτσι δεν φτιάχνεται διπλός πελάτης. Χωρίς κείμενο: μόνο ενεργοί, όπως πριν.
 function qaMatchingClients(q){
   q=(q||'').toLowerCase().trim();
-  return clients.filter(function(c){
-    return !c.deleted && !c.archived && (!q || (c.name||'').toLowerCase().indexOf(q)>-1);
-  }).sort(function(a,b){ return (a.name||'').localeCompare(b.name||'','el'); });
+  var byName=function(a,b){ return (a.name||'').localeCompare(b.name||'','el'); };
+  var match=function(c){ return !q || (c.name||'').toLowerCase().indexOf(q)>-1; };
+  var act=clients.filter(function(c){ return !c.deleted && !c.archived && match(c); }).sort(byName);
+  if(!q) return act;
+  return act.concat(clients.filter(function(c){ return !c.deleted && c.archived && match(c); }).sort(byName));
+}
+function qaNameHtml(c){
+  return esc(c.name||'Νέος πελάτης')+(c.archived?' <span class="qa-row-sub">📦 πρώην</span>':'');
 }
 
 function qaPlanStatusText(c){
@@ -53,7 +60,7 @@ function renderQANewPlan(q){
   var results=document.getElementById('qa-newplan-results'); if(!results) return;
   var list=qaMatchingClients(q), html='';
   list.forEach(function(c){
-    html+='<div class="qa-row" onclick="qaStartPlan(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+qaPlanStatusText(c)+'</span></div>';
+    html+='<div class="qa-row" onclick="qaStartPlan(\''+c.id+'\')"><span>'+qaNameHtml(c)+'</span><span class="qa-row-sub">'+qaPlanStatusText(c)+'</span></div>';
   });
   html+='<div class="qa-row qa-row-new" onclick="qaCreateAndPlan(document.getElementById(\'qa-newplan-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
   results.innerHTML=html;
@@ -64,7 +71,7 @@ function renderQAQuickMeasure(q){
   var list=qaMatchingClients(q), html='';
   list.forEach(function(c){
     var sub = (c.weightLog && c.weightLog.length) ? ('τελ. μέτρηση '+c.weightLog[c.weightLog.length-1].date) : 'καμία μέτρηση ακόμα';
-    html+='<div class="qa-row" onclick="qaStartMeasure(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
+    html+='<div class="qa-row" onclick="qaStartMeasure(\''+c.id+'\')"><span>'+qaNameHtml(c)+'</span><span class="qa-row-sub">'+sub+'</span></div>';
   });
   html+='<div class="qa-row qa-row-new" onclick="qaCreateAndMeasure(document.getElementById(\'qa-quickmeasure-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
   results.innerHTML=html;
@@ -105,7 +112,7 @@ function renderQAQuickAppt(q){
   list.forEach(function(c){
     var lastAppt = c.appointments && c.appointments.length ? c.appointments[c.appointments.length-1] : null;
     var sub = lastAppt ? ((clientHasFlaggedAppointment(c)?'🚩 ':'')+'τελ. ραντεβού '+lastAppt.date) : 'καμία καταχώρηση ακόμα';
-    html+='<div class="qa-row" onclick="qaStartAppt(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
+    html+='<div class="qa-row" onclick="qaStartAppt(\''+c.id+'\')"><span>'+qaNameHtml(c)+'</span><span class="qa-row-sub">'+sub+'</span></div>';
   });
   html+='<div class="qa-row qa-row-new" onclick="qaCreateAndAppt(document.getElementById(\'qa-quickappt-input\').value)">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
   results.innerHTML=html;
@@ -131,7 +138,7 @@ function renderQAWait(q){
   var results=document.getElementById('qa-wait-results'); if(!results) return;
   var html='';
   qaMatchingClients(q).forEach(function(c){
-    html+='<div class="qa-row" onclick="qaStartWait(\''+c.id+'\')"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+esc(qaWaitSub(c))+'</span></div>';
+    html+='<div class="qa-row" onclick="qaStartWait(\''+c.id+'\')"><span>'+qaNameHtml(c)+'</span><span class="qa-row-sub">'+esc(qaWaitSub(c))+'</span></div>';
   });
   results.innerHTML=html||'<div class="qa-row qa-row-sub">Κανένας πελάτης</div>';
 }
@@ -204,7 +211,7 @@ function renderMSheetQA(kind,q){
   var list=qaMatchingClients(q), html='';
   if(kind==='wait'){
     list.forEach(function(c){
-      html+='<div class="qa-row" onclick="closeMoreSheet();qaStartWait(\''+c.id+'\');"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+esc(qaWaitSub(c))+'</span></div>';
+      html+='<div class="qa-row" onclick="closeMoreSheet();qaStartWait(\''+c.id+'\');"><span>'+qaNameHtml(c)+'</span><span class="qa-row-sub">'+esc(qaWaitSub(c))+'</span></div>';
     });
     results.innerHTML=html;
     return;
@@ -216,7 +223,7 @@ function renderMSheetQA(kind,q){
     if(kind==='newplan'){ sub=qaPlanStatusText(c); }
     else if(kind==='quickmeasure'){ sub=(c.weightLog&&c.weightLog.length)?('τελ. μέτρηση '+c.weightLog[c.weightLog.length-1].date):'καμία μέτρηση ακόμα'; }
     else { var lastAppt=c.appointments&&c.appointments.length?c.appointments[c.appointments.length-1]:null; sub=lastAppt?((clientHasFlaggedAppointment(c)?'🚩 ':'')+'τελ. ραντεβού '+lastAppt.date):'καμία καταχώρηση ακόμα'; }
-    html+='<div class="qa-row" onclick="'+startFn+'(\''+c.id+'\');closeMoreSheet();"><span>'+esc(c.name||'Νέος πελάτης')+'</span><span class="qa-row-sub">'+sub+'</span></div>';
+    html+='<div class="qa-row" onclick="'+startFn+'(\''+c.id+'\');closeMoreSheet();"><span>'+qaNameHtml(c)+'</span><span class="qa-row-sub">'+sub+'</span></div>';
   });
   html+='<div class="qa-row qa-row-new" onclick="'+createFn+'(document.getElementById(\'msheet-qa-'+kind+'-input\').value);closeMoreSheet();">+ Δημιούργησε νέο πελάτη'+(q?' «'+esc(q)+'»':'')+'</div>';
   results.innerHTML=html;
