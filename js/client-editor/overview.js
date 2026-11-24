@@ -45,6 +45,7 @@ var OV_MED_LBL={diabetes:'🍬 Διαβήτης',hypertension:'🩸 Υψηλή �
 
 // Τικ της ατζέντας: μόνο για τη στιγμή (δεν αποθηκεύονται), αλλά επιβιώνουν ένα ovRefresh().
 var OV_TICKS={};
+var OV_AGENDA_LBL={};   // key → κείμενο θέματος, για το «Συζητήθηκαν: …» στην καταχώρηση
 
 function ovTodayKey(){ return (typeof ckDayKey==='function')?ckDayKey(new Date()):new Date().toISOString().slice(0,10); }
 function ovAddDays(key,n){ var d=new Date(key+'T00:00:00'); d.setDate(d.getDate()+n); return (typeof ckDayKey==='function')?ckDayKey(d):d.toISOString().slice(0,10); }
@@ -53,14 +54,24 @@ function ovKeys(from,to){ var out=[],k=from,g=0; while(k<=to && g<400){ out.push
 function ovDec(x,n){ if(x==null||isNaN(x)) return '—'; var v=(n==null)?x:(+(+x).toFixed(n)); return String(v).replace('.',','); }
 function ovSigned(x,n){ if(x==null||isNaN(x)) return '—'; var v=+(+x).toFixed(n==null?1:n); return (v>0?'+':(v<0?'−':'±'))+ovDec(Math.abs(v)); }
 
-// Τήρηση link για ένα διάστημα [from,to] — ίδιοι ορισμοί με Πρόοδο/Ραντεβού (ckPillarStats/ckOverallScore).
+// Τήρηση link για ένα διάστημα [from,to] — ΜΕ μερική πίστωση (3/4 γεύματα = 75%), όχι μόνο «πλήρεις μέρες»:
+// στην Επισκόπηση ένας πελάτης που κάνει τα μισά δεν πρέπει να φαίνεται 0%. Οι πλήρεις μέρες (ckIsGoodDay,
+// ο ορισμός της Προόδου/σερί) μετριούνται χωριστά (full/days). Μετράνε μόνο μέρες με καταγραφή.
 function ovAdherence(rows,from,to){
-  if(typeof ckPillarStats!=='function') return null;
-  var r=(rows||[]).filter(function(x){return x.date>=from && x.date<=to;});
-  var st=ckPillarStats(r);
-  if(!st.anyData) return null;
-  function pct(d,t){ return t?Math.round(d/t*100):null; }
-  return {score:ckOverallScore(st), diet:pct(st.dietDone,st.dietTot), wat:pct(st.watDone,st.watTot), sup:pct(st.supDone,st.supTot), days:r.length};
+  var r=(rows||[]).filter(function(x){return x.date>=from && x.date<=to && (x.meals_done>0||x.supps_done>0||x.water_glasses>0);});
+  if(!r.length) return null;
+  var f={diet:[],wat:[],sup:[]}, full=0;
+  r.forEach(function(x){
+    if(x.meals_total) f.diet.push(Math.min(1,(x.meals_done||0)/x.meals_total));
+    if(x.water_goal)  f.wat.push(Math.min(1,(x.water_glasses||0)/x.water_goal));
+    if(x.supps_total) f.sup.push(Math.min(1,(x.supps_done||0)/x.supps_total));
+    if(typeof ckIsGoodDay==='function' && ckIsGoodDay(x)) full++;
+  });
+  function avg(a){ return a.length?Math.round(a.reduce(function(s,v){return s+v;},0)/a.length*100):null; }
+  var o={diet:avg(f.diet), wat:avg(f.wat), sup:avg(f.sup), days:r.length, full:full};
+  var ps=[o.diet,o.wat,o.sup].filter(function(v){return v!=null;});
+  o.score=ps.length?Math.round(ps.reduce(function(s,v){return s+v;},0)/ps.length):null;
+  return o;
 }
 // Προπονήσεις για [from,to] από το client_workout_log — ίδιος κανόνας με την Πρόοδο (progressWorkoutCell).
 function ovWorkouts(c,wlog,from,to){
@@ -109,7 +120,12 @@ function buildOverviewHtml(c){
   var pLen=Math.max(1,ovDaysBetween(pStart,todayKey));
   var qStart=prevRef?prevRef.date:ovAddDays(pStart,-pLen);
   var qEnd=ovAddDays(pStart,-1);
-  var periodLbl=lastRef?(ovDayMonth(pStart)+' → σήμερα · '+pLen+' ημέρες'):'τελευταίες 4 εβδομάδες (δεν υπάρχει προηγούμενο ραντεβού)';
+  // Πάνω από 6 εβδομάδες από το τελευταίο ραντεβού: οι κάρτες/φωνή/λωρίδα δείχνουν τις τελευταίες 4 εβδ.
+  // (σύγκριση με τις 4 προηγούμενες) — ένας μέσος όρος 4 μηνών δεν λέει πώς πάει τώρα.
+  var longGap=!!(lastRef && pLen>42);
+  var eStart=longGap?ovAddDays(todayKey,-27):pStart;
+  var eQStart=longGap?ovAddDays(eStart,-28):qStart, eQEnd=ovAddDays(eStart,-1);
+  var periodLbl=longGap?('τελευταίες 4 εβδομάδες · το τελευταίο ραντεβού ήταν πριν '+pLen+' ημέρες'):lastRef?(ovDayMonth(pStart)+' → σήμερα · '+pLen+' ημέρες'):'τελευταίες 4 εβδομάδες (δεν υπάρχει προηγούμενο ραντεβού)';
 
   // ── weight / body fat ──
   var wl=(c.weightLog||[]).filter(function(e){return e && e.date;}).slice().sort(function(a,b){return (a.date<b.date)?-1:(a.date>b.date?1:0);});
@@ -223,10 +239,10 @@ function buildOverviewHtml(c){
     var dTxt=[]; if(d1!=null) dTxt.push(ovSigned(d1)+' από '+ovDayMonth(pw.date)); if(d0!=null && wW.length>2) dTxt.push(ovSigned(d0)+' από αρχή');
     var gp=(typeof clientGoalWeightPct==='function' && goalW)?clientGoalWeightPct(c):null;
     var home=clogs.filter(function(l){return l.weight_kg!=null && l.date>lw.date;}).sort(function(a,b){return a.date<b.date?1:-1;})[0];
-    var sub=[]; if(goalW) sub.push((gp!=null?gp+'% του στόχου · ':'')+'στόχος '+ovDec(goalW)); if(home) sub.push('σπίτι '+ovDayMonth(home.date)+': '+ovDec(home.weight_kg));
+    var sub=['μέτρηση '+ovDayMonth(lw.date)]; if(goalW) sub.push((gp!=null?gp+'% του στόχου · ':'')+'στόχος '+ovDec(goalW)); if(home) sub.push('σπίτι '+ovDayMonth(home.date)+': '+ovDec(home.weight_kg));
     if(lw.date<pStart) sub.push('καμία μέτρηση από '+ovDayMonth(pStart));
     tiles.push('<div class="ov-kpi"><div class="l">Βάρος</div><div class="v">'+ovDec(lw.weight)+'<small> kg</small></div>'
-      +(dTxt.length?'<div class="d '+deltaCls(d1!=null?d1:d0)+'">'+esc(dTxt.join(' · '))+'</div>':'<div class="d">μέτρηση '+esc(ovDayMonth(lw.date))+'</div>')
+      +(dTxt.length?'<div class="d '+deltaCls(d1!=null?d1:d0)+'">'+esc(dTxt.join(' · '))+'</div>':'<div class="d">πρώτη μέτρηση</div>')
       +(gp!=null?'<div class="ov-bar"><div style="width:'+gp+'%"></div></div>':'')
       +(sub.length?'<div class="s">'+esc(sub.join(' · '))+'</div>':'')+'</div>');
   }
@@ -241,15 +257,16 @@ function buildOverviewHtml(c){
       +(bt.length?'<div class="d '+bfCls+'">'+esc(bt.join(' · '))+'</div>':'<div class="d">μέτρηση '+esc(ovDayMonth(lb.date))+'</div>')
       +(bsub.length?'<div class="s">'+esc(bsub.join(' · '))+'</div>':'')+'</div>');
   }
-  var adh=ovAdherence(ckRows,pStart,todayKey), adhPrev=ovAdherence(ckRows,qStart,qEnd);
+  var adh=ovAdherence(ckRows,eStart,todayKey), adhPrev=ovAdherence(ckRows,eQStart,eQEnd);
   if(adh && adh.score!=null){
     var ad=(adhPrev&&adhPrev.score!=null)?adh.score-adhPrev.score:null;
     var pil=function(ic,v){ return v==null?'':'<div class="ov-pil"><span>'+ic+'</span><div class="ov-bar"><div style="width:'+v+'%;'+(v<75?'background:#f0b429':'')+'"></div></div><span>'+v+'%</span></div>'; };
     tiles.push('<div class="ov-kpi"><div class="l">Τήρηση link</div><div class="v">'+adh.score+'<small> %</small></div>'
       +(ad!=null?'<div class="d '+(ad>=(typeof CK_TREND_MIN_PP!=='undefined'?CK_TREND_MIN_PP:5)?'ov-good':(ad<=-(typeof CK_TREND_MIN_PP!=='undefined'?CK_TREND_MIN_PP:5)?'ov-bad':''))+'">'+(ad>0?'↑':(ad<0?'↓':'→'))+' από '+adhPrev.score+'%</div>':'<div class="d">'+adh.days+' ημέρες με καταγραφή</div>')
-      +pil('🍽',adh.diet)+pil('💧',adh.wat)+pil('💊',adh.sup)+'</div>');
+      +pil('🍽',adh.diet)+pil('💧',adh.wat)+pil('💊',adh.sup)
+      +'<div class="s">πλήρεις μέρες '+adh.full+'/'+adh.days+' · '+adh.days+' μέρες με καταγραφή</div></div>');
   }
-  var wk=ovWorkouts(c,wlog,pStart,todayKey), wkPrev=ovWorkouts(c,wlog,qStart,qEnd);
+  var wk=ovWorkouts(c,wlog,eStart,todayKey), wkPrev=ovWorkouts(c,wlog,eQStart,eQEnd);
   var streak=(ckRows.length && typeof ckStreak==='function')?ckStreak(ckRowsByDate(ckRows)):0;
   var attWin=appts.slice(-10), attMiss=attWin.filter(function(e){return e.status==='noshow'||e.status==='cancelled';}).length;
   if(wk){
@@ -267,17 +284,17 @@ function buildOverviewHtml(c){
   if(ckRows.length && typeof progressDayClass==='function'){
     var by=ckRowsByDate(ckRows);
     var noteDays={}; clogs.forEach(function(l){ if(l.note) noteDays[l.date]=1; });
-    var sKeys=ovKeys(pStart,todayKey).slice(-42);
+    var sKeys=ovKeys(eStart,todayKey).slice(-42);
     var cells=sKeys.map(function(k){ var cl=progressDayClass(by[k]); return '<span class="ov-d '+cl+(noteDays[k]?' n':'')+'" title="'+esc(ovDayMonth(k))+'"></span>'; }).join('');
     stripHtml='<div class="ov-days" style="grid-template-columns:repeat('+sKeys.length+',1fr)">'+cells+'</div>'
       +'<div class="ov-dayl"><span>'+esc(ovDayMonth(sKeys[0]))+'</span><span><i class="ov-d g"></i>όλα · <i class="ov-d a"></i>μερικά · <i class="ov-d r"></i>λίγα · <i class="ov-d e"></i>τίποτα · <i class="ov-d e n"></i>σημείωση</span><span>σήμερα</span></div>';
   }
-  var effortHtml=(tiles.length||stripHtml)?('<div class="ov-blk"><div class="ov-bh"><h4>'+(lastRef?'Η προσπάθεια από τότε':'Η προσπάθεια')+'</h4><span>'+esc(periodLbl)+(lastRef?' · σε σύγκριση με το προηγούμενο διάστημα':'')+'</span></div>'
+  var effortHtml=(tiles.length||stripHtml)?('<div class="ov-blk"><div class="ov-bh"><h4>'+(longGap?'Η προσπάθεια τις τελευταίες 4 εβδομάδες':(lastRef?'Η προσπάθεια από τότε':'Η προσπάθεια'))+'</h4><span>'+esc(periodLbl)+(longGap?' · σε σύγκριση με τις 4 προηγούμενες':(lastRef?' · σε σύγκριση με το προηγούμενο διάστημα':''))+'</span></div>'
     +(tiles.length?'<div class="ov-kpis">'+tiles.join('')+'</div>':'')+stripHtml+'</div>'):'';
 
   // ═════ Δ. Τι μου είπε ═════
   var voice=[];
-  clogs.filter(function(l){return l.date>=pStart;}).forEach(function(l){
+  clogs.filter(function(l){return l.date>=eStart;}).forEach(function(l){
     var noteRaw=l.note||'', tag='';
     var tm=/^\[tag:(travel|party|sick)\]\s*/.exec(noteRaw);
     if(tm){ noteRaw=noteRaw.slice(tm[0].length); var td=(typeof CLIENT_LOG_TAG_DEFS!=='undefined'&&CLIENT_LOG_TAG_DEFS[tm[1]])||null; if(td) tag=td.icon+' '+td.label; }
@@ -289,7 +306,7 @@ function buildOverviewHtml(c){
   });
   var PFL=(typeof PF_ROW_LABELS!=='undefined')?PF_ROW_LABELS:{breakfast:'Πρωινό',lunch:'Μεσημεριανό',dinner:'Βραδινό',snacks:'Σνακ',recipes_ease:'Συνταγές',ingredients_ease:'Υλικά',training_energy:'Προπόνηση'};
   var starMax=(typeof PF_ATTENTION_STAR_MAX!=='undefined')?PF_ATTENTION_STAR_MAX:2;
-  fb.filter(function(r){return r.week_start && r.week_start>=ovAddDays(pStart,-6);}).forEach(function(r){
+  fb.filter(function(r){return r.week_start && r.week_start>=ovAddDays(eStart,-6);}).forEach(function(r){
     var parts=Object.keys(PFL).filter(function(k){return r[k]!=null;}).map(function(k){
       var low=r[k]<=starMax; return '<span'+(low?' class="ov-lo"':'')+'>'+esc(PFL[k])+' '+r[k]+'</span>'; });
     if(r.continue_likelihood!=null) parts.push('<span'+(r.continue_likelihood<=4?' class="ov-lo"':'')+'>Συνέχεια '+r.continue_likelihood+'/10</span>');
@@ -319,7 +336,7 @@ function buildOverviewHtml(c){
       (typeof replyToClientNote==='function')?'<button type="button" class="ov-go" onclick="replyToClientNote(\''+c.id+'\',\''+l.date+'\',\''+escJsAttr(t)+'\')">↩️</button>':'');
   });
   var fbLatest=fb[0];
-  if(fbLatest && fbLatest.week_start>=ovAddDays(pStart,-6)){
+  if(fbLatest && fbLatest.week_start>=ovAddDays(eStart,-6)){
     Object.keys(PFL).forEach(function(k){
       if(fbLatest[k]!=null && fbLatest[k]<=starMax){
         var rz=ovReasons(fbLatest);
@@ -328,20 +345,22 @@ function buildOverviewHtml(c){
     });
     if(fbLatest.continue_likelihood!=null && fbLatest.continue_likelihood<=4) add('nps','r','📉 Πιθανότητα συνέχισης '+fbLatest.continue_likelihood+'/10','εβδομάδα '+ovDayMonth(fbLatest.week_start));
   }
-  clogs.filter(function(l){return l.date>=pStart && /^\[tag:(travel|party|sick)\]/.test(l.note||'');}).forEach(function(l){
+  clogs.filter(function(l){return l.date>=eStart && /^\[tag:(travel|party|sick)\]/.test(l.note||'');}).forEach(function(l){
     if(ag.some(function(a){return a.key==='msg'+l.date;})) return;   // ήδη στην ατζέντα ως ερώτηση
     var tm=/^\[tag:(travel|party|sick)\]\s*/.exec(l.note); var td=(typeof CLIENT_LOG_TAG_DEFS!=='undefined'&&CLIENT_LOG_TAG_DEFS[tm[1]])||{icon:'🏷',label:tm[1]};
     add('tag'+l.date,'y',td.icon+' '+td.label+' ('+ovDayMonth(l.date)+')',l.note.slice(tm[0].length).slice(0,70));
   });
-  if(adh && adhPrev && adh.score!=null && adhPrev.score!=null && adh.score<=adhPrev.score-10) add('adh','y','📶 Η τήρηση έπεσε '+adhPrev.score+'% → '+adh.score+'%','');
-  if(adh){
+  var lu=(typeof linkUsage==='function')?linkUsage(c):null;
+  // Link που δεν χρησιμοποιείται: ΕΝΑ θέμα αντί για «τήρηση έπεσε» + «γεύματα 0%» + «προπονήσεις 0/8» (λένε το ίδιο).
+  var linkQuiet=!!(lu && (lu.state==='never'||lu.state==='stopped'));
+  if(lu && lu.state==='never') add('lu','y','📵 Δεν ξεκίνησε το link','στάλθηκε πριν '+lu.days+' ημέρες');
+  else if(lu && lu.state==='stopped') add('lu','y','⏸ Δεν χρησιμοποιεί το link εδώ και '+lu.days+' ημ.','τελευταίο ✅ πριν '+lu.days+' ημέρες');
+  if(!linkQuiet && adh && adhPrev && adh.score!=null && adhPrev.score!=null && adh.score<=adhPrev.score-10) add('adh','y','📶 Η τήρηση έπεσε '+adhPrev.score+'% → '+adh.score+'%','');
+  if(adh && !linkQuiet){
     var pl=[['🍽 Γεύματα',adh.diet],['💧 Νερό',adh.wat],['💊 Συμπληρώματα',adh.sup]].filter(function(p){return p[1]!=null;}).sort(function(a,b){return a[1]-b[1];});
     if(pl.length>1 && pl[0][1]<75) add('pil','y',pl[0][0]+' '+pl[0][1]+'%','ο πιο αδύναμος πυλώνας');
   }
-  if(wk && wk.plan>=3 && wk.done/wk.plan<0.6) add('wk','y','🏃 Προπονήσεις '+wk.done+'/'+wk.plan,'σημειωμένες στο link');
-  var lu=(typeof linkUsage==='function')?linkUsage(c):null;
-  if(lu && lu.state==='never') add('lu','y','📵 Δεν ξεκίνησε το link','πριν '+lu.days+' ημέρες στάλθηκε');
-  else if(lu && lu.state==='stopped') add('lu','y','⏸ Σταμάτησε το link πριν '+lu.days+' ημ.','');
+  if(!linkQuiet && wk && wk.plan>=3 && wk.done/wk.plan<0.6) add('wk','y','🏃 Προπονήσεις '+wk.done+'/'+wk.plan,'σημειωμένες στο link');
   if(wW.length>1 && !goalFlat){
     var lw2=wW[wW.length-1], pw2=wW[wW.length-2], dd=lw2.weight-pw2.weight;
     if(Math.abs(dd)>=0.3 && ((dd>0)!==goalUp)) add('wdir','y','⚖️ Βάρος '+ovSigned(dd)+' kg αντίθετα με τον στόχο',ovDayMonth(pw2.date)+' → '+ovDayMonth(lw2.date));
@@ -352,6 +371,7 @@ function buildOverviewHtml(c){
   if(hasLink && linkCls) add('link','b',linkTxt,'',  '<button type="button" class="ov-go" onclick="swTab(2)">📊</button>');
   else if(typeof dietsNeedsRenewal==='function' && dietsNeedsRenewal(c)) add('renew','b','🔄 Το πλάνο χρειάζεται ανανέωση','','<button type="button" class="ov-go" onclick="swTab(2)">📊</button>');
   var ticks=OV_TICKS[c.id]||{};
+  OV_AGENDA_LBL[c.id]={}; ag.forEach(function(a){ OV_AGENDA_LBL[c.id][a.key]=a.txt; });
   var agendaItems=ag.length?ag.map(function(a){
     return '<div class="ov-ai"><span class="sev '+a.sev+'"></span><input type="checkbox" data-k="'+esc(a.key)+'" onchange="ovTick(this)"'+(ticks[a.key]?' checked':'')+' aria-label="'+esc(a.txt)+'">'
       +'<span class="tx'+(ticks[a.key]?' done':'')+'">'+esc(a.txt)+(a.why?'<span class="why">'+esc(a.why)+'</span>':'')+'</span>'+a.act+'</div>';
@@ -370,7 +390,7 @@ function buildOverviewHtml(c){
       +'<button type="button" class="ov-link-btn" onclick="ovOpenFullForm(-1)">Πλήρης φόρμα (κλίμακες, chips, 🚩) ↓</button>';
   }
   var agendaHtml='<aside class="ov-agenda" aria-label="Σημερινό ραντεβού">'
-    +'<h4>Για συζήτηση σήμερα</h4><div class="ov-hint">Από τα δεδομένα· τσεκάρεις ό,τι καλύψατε.</div>'
+    +'<h4>Για συζήτηση σήμερα</h4><div class="ov-hint">Από τα δεδομένα· ό,τι τσεκάρεις μπαίνει στη σημείωση ως «Συζητήθηκαν».</div>'
     +agendaItems
     +'<div class="ov-sep"></div>'+entryHtml
     +'<label class="ov-nextl">📅 Επόμενο ραντεβού <input type="date" id="ov-next-appt" value="'+esc(c.nextAppointmentDate||'')+'" onchange="ovSetNextAppt(this.value)"></label>'
@@ -491,7 +511,18 @@ function ovChartHtml(c,wW,wB,realAppts){
   svg+='<polyline fill="none" stroke="#025857" stroke-width="2.5" stroke-linejoin="round" points="'+wW.map(function(e){return sx(e.date)+','+sy(e.weight);}).join(' ')+'"/>';
   wW.forEach(function(e,i){ svg+='<circle cx="'+sx(e.date)+'" cy="'+sy(e.weight)+'" r="'+(i===wW.length-1?4.5:3)+'" fill="#025857"><title>'+esc(e.date+': '+e.weight+' kg'+(e.bf>0?' · '+e.bf+'%':''))+'</title></circle>'; });
   var le=wW[wW.length-1]; svg+='<text x="'+(sx(le.date)+6)+'" y="'+(sy(le.weight)-6)+'" style="fill:#025857;font-weight:700">'+ovDec(le.weight)+'</text>';
-  svg+='<text x="'+L+'" y="'+(H-8)+'">'+esc(ovDayMonth(wW[0].date))+'</text><text x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end">'+esc(ovDayMonth(le.date))+'</text>';
+  // Άξονας: πρώτη/τελευταία μέτρηση + οι ημερομηνίες των ραντεβού (παραλείπει όσες θα πατούσαν η μία την άλλη).
+  var dk=[wW[0].date,le.date];
+  (realAppts||[]).forEach(function(e){ if(e.date>wW[0].date && e.date<le.date) dk.push(e.date); });
+  dk=dk.filter(function(k,i){return dk.indexOf(k)===i;}).sort();
+  var lastX=-1e9, lastIdx=dk.length-1, endX=sx(le.date);
+  dk.forEach(function(k,i){
+    var x=sx(k), first=(i===0), last=(i===lastIdx);
+    if(!first && !last && (x-lastX<70 || endX-x<70)) return;
+    svg+='<line x1="'+x+'" x2="'+x+'" y1="'+(H-B)+'" y2="'+(H-B+4)+'" stroke="var(--border-light)"/>'
+      +'<text x="'+x+'" y="'+(H-8)+'" text-anchor="'+(first?'start':(last?'end':'middle'))+'">'+esc(ovDayMonth(k))+'</text>';
+    lastX=x;
+  });
   svg+='</svg>';
   return '<div class="ov-blk"><div class="ov-bh"><h4>Πορεία από την αρχή</h4><span><b style="color:#025857">—</b> βάρος · <b style="color:#7b6fd0">—</b> λίπος · διακεκομμένη κάθετη = αλλαγή πλάνου</span></div>'+svg+'</div>';
 }
@@ -620,13 +651,19 @@ function ovQuickAddAppt(){
   var pa=document.getElementById('ov-plan-action');
   var planAction=pa?(pa.getAttribute('data-selected')||''):'';
   var msg=document.getElementById('ov-add-msg');
-  if(!notes && !planAction){ if(msg) msg.textContent='Γράψε σημείωση ή διάλεξε ενέργεια για το πλάνο.'; return; }
+  var t=OV_TICKS[c.id]||{}, L=OV_AGENDA_LBL[c.id]||{};
+  var topics=Object.keys(t).filter(function(k){return t[k] && L[k];}).map(function(k){ return L[k]; });
+  if(topics.length) notes=(notes?notes+'\n':'')+'Συζητήθηκαν: '+topics.join(' · ');
+  if(!notes && !planAction){ if(msg) msg.textContent='Γράψε σημείωση, τσέκαρε θέματα ή διάλεξε ενέργεια για το πλάνο.'; return; }
   c.appointments.push({date:ovTodayKey(),gi:0,compliance:0,chips:[],sportChips:[],notes:notes,flagged:false,planAction:planAction,
     kcalAtEntry:(typeof apptCurrentKcalTarget==='function')?apptCurrentKcalTarget(c):0});
   c.appointments.sort(function(a,b){return a.date<b.date?-1:1;});
   save();
   var s3b=document.getElementById('s3b'); if(s3b && typeof buildAppointmentsHtml==='function') s3b.innerHTML=buildAppointmentsHtml(c);
   var ta=document.getElementById('ov-today-notes'); if(ta) ta.value='';
+  OV_TICKS[c.id]={};
+  // 🆕/🔧 → κατευθείαν στο Πλάνο για την αλλαγή
+  if((planAction==='new'||planAction==='adjust') && typeof swTab==='function'){ swTab(2); return; }
   ovRefresh();
 }
 function ovOpenFullForm(editIdx){

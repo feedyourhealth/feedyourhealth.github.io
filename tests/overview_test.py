@@ -39,10 +39,18 @@ el = {'id': 'c' + str(ms_ago(70)), 'name': 'Ελένη Δοκιμή', 'sex': 'F'
 empty = {'id': 'cEmpty', 'name': 'Νίκος Κενός', 'sex': 'M', 'age': 40, 'weight': 80, 'height': 180, 'activity': 'mod', 'goal': 'maintain',
          'allergenListsVer': 2, 'foodExclude': [], 'weightLog': [], 'appointments': []}
 
+lg = {'id': 'cLong', 'name': 'Μάρκος Μακριά', 'sex': 'M', 'age': 45, 'weight': 90, 'height': 178, 'activity': 'mod', 'goal': '-500',
+      'goalMain': 'loss', 'allergenListsVer': 2, 'foodExclude': [], 'weekPlan': plan(), 'shareToken': 'tokL', '_publishedPlanHash': 'h1',
+      'trainDays': [True, False, True, False, True, False, False], 'planGeneratedAt': ms_ago(130),
+      'savedPlans': [{'number': 1, 'kind': 'sent', 'date': dk(130)}],
+      'weightLog': [{'date': dk(130), 'weight': 94}, {'date': dk(120), 'weight': 92}],
+      'appointments': [{'date': dk(130), 'notes': 'Αρχή'}, {'date': dk(120), 'notes': 'Λιγότερα αναψυκτικά', 'planAction': 'same'}]}
+
 def ck(n, meals, water):
     return {'token': 'tokE', 'date': dk(n), 'meals_done': meals, 'meals_total': 4, 'water_glasses': water, 'water_goal': 8, 'supps_done': 0, 'supps_total': 0}
-checkins = [ck(n, 4 if n % 4 else 2, 8 if n % 3 else 5) for n in range(0, 21)] + [ck(n, 2, 4) for n in range(22, 42)]
-S = {'rows': {U1: {'data': {'clients': [el, empty]}, 'version': 1}}, 'shared': {},
+lgck = [{'token': 'tokL', 'date': dk(n), 'meals_done': 1, 'meals_total': 4, 'water_glasses': 2, 'water_goal': 8, 'supps_done': 0, 'supps_total': 0} for n in range(50, 57)]
+checkins = lgck + [ck(n, 4 if n % 4 else 2, 8 if n % 3 else 5) for n in range(0, 21)] + [ck(n, 2, 4) for n in range(22, 42)]
+S = {'rows': {U1: {'data': {'clients': [el, empty, lg]}, 'version': 1}}, 'shared': {},
      'tables': {'checkins': checkins,
                 'client_logs': [{'token': 'tokE', 'date': dk(2), 'weight_kg': None, 'note': '[tag:party] ❓ Γάμος το Σάββατο, τι κάνω;'},
                                 {'token': 'tokE', 'date': dk(9), 'weight_kg': 68.4, 'note': 'Κουράζομαι στις μεγάλες διαδρομές'}],
@@ -92,6 +100,8 @@ try:
         kp = J('[...document.querySelectorAll("#s0ov .ov-kpi")].map(e=>e.innerText)')
         check('−1,1 από' in kp[0] and 'σπίτι' in kp[0], f'βάρος: διαφορά + ζύγιση σπιτιού ({kp[0]!r})')
         check('↑ από' in kp[2], f'τήρηση ανέβηκε σε σχέση με το προηγούμενο διάστημα ({kp[2]!r})')
+        check('μέτρηση ' in kp[0], f'βάρος: ημερομηνία μέτρησης ({kp[0]!r})')
+        check('πλήρεις μέρες' in kp[2] and J('parseInt(document.querySelectorAll("#s0ov .ov-kpi .v")[2].textContent)') > 0, f'τήρηση με μερική πίστωση + πλήρεις μέρες ({kp[2]!r})')
         check('/' in kp[3] and 'προσέλευση 3/3' in kp[3], f'προπονήσεις + προσέλευση ({kp[3]!r})')
         check(J('document.querySelectorAll("#s0ov .ov-days .ov-d").length') == 22, 'λωρίδα 22 ημερών (21 + σήμερα)')
         print('4. Τι μου είπε')
@@ -101,6 +111,8 @@ try:
         check('Βραδινό: Αργεί να γίνει' in t, 'λόγος χαμηλής βαθμολογίας (νέα μορφή αντικειμένου)')
         check('[object Object]' not in t, 'χωρίς [object Object]')
         check(J('!!document.querySelector("#s0ov svg.ov-chart")'), 'γράφημα πορείας')
+        xl = J('[...document.querySelectorAll("#s0ov svg.ov-chart text[text-anchor]")].map(e=>e.textContent)')
+        check(len(xl) >= 3, f'ημερομηνίες ραντεβού στον άξονα ({xl})')
         print('5. Για συζήτηση σήμερα')
         ag = J('document.querySelector("#s0ov .ov-agenda").innerText')
         for frag in ['Αγώνας/weigh-in', 'Ερώτηση χωρίς απάντηση', 'Βραδινό 2/5', 'Έλεγχος συμφωνίας', 'Μέτρηση σήμερα']:
@@ -115,9 +127,12 @@ try:
         n0 = J(f'clients.find(x=>x.id==="{EID}").appointments.length')
         J('document.querySelector("#ov-plan-action .appt-plan-action-btn[data-val=adjust]").click()')
         J('ovQuickAddAppt()'); pg.wait_for_timeout(300)
+        check(J('document.querySelector(".stab.active").id') == 't2', '🔧 → πάει στο Πλάνο')
+        J('swTab(TAB_OVERVIEW)'); pg.wait_for_timeout(300)
         last = J(f'(()=>{{const a=clients.find(x=>x.id==="{EID}").appointments; return a[a.length-1];}})()')
         check(J(f'clients.find(x=>x.id==="{EID}").appointments.length') == n0 + 1 and last['date'] == dk(0) and last['planAction'] == 'adjust'
-              and last['notes'] == 'Πλάνο αγώνα, CHO στις μεγάλες' and last['kcalAtEntry'] > 0, 'νέα εγγραφή σήμερα με ενέργεια + kcal')
+              and last['notes'].startswith('Πλάνο αγώνα, CHO στις μεγάλες') and last['kcalAtEntry'] > 0, 'νέα εγγραφή σήμερα με ενέργεια + kcal')
+        check('Συζητήθηκαν: ' in last['notes'] and 'Αγώνας' in last['notes'], f'τα τσεκαρισμένα θέματα μπήκαν στη σημείωση ({last["notes"]!r})')
         t2 = ov()
         check('καταχωρήθηκε' in t2, 'το πλαίσιο δείχνει «καταχωρήθηκε»')
         check('Λιγότερο ψωμί το βράδυ' in t2, '«Τι συμφωνήσαμε» μένει στο προηγούμενο ραντεβού (όχι στο σημερινό)')
@@ -136,7 +151,14 @@ try:
         if SHOT:
             J('document.getElementById("ov-hist").open=false; ovRefresh(); window.scrollTo(0,0)')
             pg.screenshot(path=os.path.join(SHOT, 'ov_desktop.png'), full_page=True)
-        print('9. Πελάτης χωρίς δεδομένα')
+        print('9. 120 μέρες από το τελευταίο ραντεβού + link σταματημένο')
+        J('selectClient("cLong"); renderMain(); swTab(TAB_OVERVIEW);'); pg.wait_for_timeout(400)
+        tl = ov()
+        check('Η προσπάθεια τις τελευταίες 4 εβδομάδες' in tl and 'πριν 120 ημέρες' in tl, 'μεγάλο κενό → τελευταίες 4 εβδ.')
+        agl = J('document.querySelector("#s0ov .ov-agenda").innerText')
+        check('Δεν χρησιμοποιεί το link' in agl, f'ένα θέμα για το link ({agl[:200]!r})')
+        check('αδύναμος πυλώνας' not in agl and 'Προπονήσεις' not in agl and 'τήρηση έπεσε' not in agl, 'χωρίς διπλά θέματα τήρησης')
+        print('10. Πελάτης χωρίς δεδομένα')
         J('selectClient("cEmpty"); renderMain(); swTab(TAB_OVERVIEW);'); pg.wait_for_timeout(400)
         te = ov()
         check('Νίκος Κενός' in te and 'Δεν υπάρχουν ακόμη ραντεβού' in te, 'κενή κατάσταση')
