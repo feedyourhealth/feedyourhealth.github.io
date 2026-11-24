@@ -436,7 +436,7 @@ function buildOverviewHtml(c){
     +'.ov-fchips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}.ov-fchips button{font:inherit;font-size:12px;font-weight:700;border:1px solid var(--border-light);border-radius:999px;padding:3px 10px;background:var(--card-bg);color:var(--text-muted);cursor:pointer}.ov-fchips button.on{background:#025857;border-color:#025857;color:#fff}'
     +'.ov-feed{position:relative;padding-left:26px}.ov-feed::before{content:"";position:absolute;left:7px;top:4px;bottom:8px;width:2px;background:var(--border-light)}'
     +'.ov-bg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}'
-    +'.ov-chart text{fill:var(--text-muted);font-size:10px}'
+    +'.ov-chart{max-height:260px}.ov-chart text{fill:var(--text-muted);font-size:12px}'
     +'</style>'
     +headerHtml
     +'<div class="ov-grid">'
@@ -461,7 +461,7 @@ function ovTodayKeyFrom(ts){ var d=new Date(+ts); return (typeof ckDayKey==='fun
 // Βάρος (γραμμή) + λίπος (δεύτερη γραμμή, δική της κλίμακα) ανά μέτρηση· κάθετα σημάδια = ραντεβού με αλλαγή πλάνου.
 function ovChartHtml(c,wW,wB,realAppts){
   if(wW.length<2) return '';
-  var W=560,H=160,L=34,R=40,T=16,B=26;
+  var W=900,H=200,L=40,R=52,T=16,B=26;   // φαρδύ viewBox: στα ~1200px η στήλη δεν «φουσκώνει» το γράφημα
   var t0=+new Date(wW[0].date+'T00:00:00'), t1=+new Date(wW[wW.length-1].date+'T00:00:00');
   if(t1<=t0) return '';
   var sx=function(k){ return L+((+new Date(k+'T00:00:00'))-t0)/(t1-t0)*(W-L-R); };
