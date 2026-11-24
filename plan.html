@@ -18,6 +18,39 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='118' font-family='Georgia,serif' font-size='84' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
 <script src="vendor/supabase-js.min.js"></script>
+<!-- Εμφάνιση Αυτόματο/Φωτεινό/Σκοτεινό (2026-11-24): κοινό κλειδί 'fyh-theme' για όλα τα links του πελάτη
+     (ίδιο origin). Χωρίς επιλογή = ακολουθεί τη συσκευή. Το CSS: :root[data-theme=...] δίπλα στο @media dark. -->
+<script>try{var fyhT=localStorage.getItem('fyh-theme');if(fyhT==='light'||fyhT==='dark')document.documentElement.setAttribute('data-theme',fyhT);}catch(e){}
+(function(){
+  var ORD=['auto','light','dark'];
+  var IC={"auto": "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3a9 9 0 0 1 0 18z\" fill=\"currentColor\"/></svg>", "light": "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/></svg>", "dark": "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z\"/></svg>"};
+  var TX={el:{t:'Εμφάνιση',auto:'Αυτόματο (όπως η συσκευή)',light:'Φωτεινό',dark:'Σκοτεινό'},
+          en:{t:'Appearance',auto:'Automatic (like your device)',light:'Light',dark:'Dark'},
+          ru:{t:'Оформление',auto:'Автоматически (как на устройстве)',light:'Светлое',dark:'Тёмное'},
+          tr:{t:'Görünüm',auto:'Otomatik (cihaz gibi)',light:'Açık',dark:'Koyu'}};
+  function cur(){var a=document.documentElement.getAttribute('data-theme');return a==='light'||a==='dark'?a:'auto';}
+  function tx(){return TX[String(document.documentElement.lang||'el').slice(0,2)]||TX.el;}
+  function lbl(m){var t=tx();return t.t+': '+t[m];}
+  window.fyhThemeBtn=function(cls){var m=cur();return '<button type="button" class="'+cls+' thm-btn" onclick="fyhThemeCycle()" title="'+lbl(m)+'" aria-label="'+lbl(m)+'">'+IC[m]+'</button>';};
+  function paint(){var m=cur();var bs=document.querySelectorAll('.thm-btn');for(var i=0;i<bs.length;i++){bs[i].innerHTML=IC[m];bs[i].title=lbl(m);bs[i].setAttribute('aria-label',lbl(m));}}
+  window.fyhThemePaint=paint;
+  window.fyhThemeCycle=function(){
+    var n=ORD[(ORD.indexOf(cur())+1)%3], r=document.documentElement;
+    if(n==='auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme',n);
+    try{ if(n==='auto') localStorage.removeItem('fyh-theme'); else localStorage.setItem('fyh-theme',n); }catch(e){}
+    paint();
+    var el=document.getElementById('thm-toast');
+    if(!el){el=document.createElement('div');el.id='thm-toast';el.setAttribute('role','status');el.setAttribute('aria-live','polite');document.body.appendChild(el);}
+    el.textContent=lbl(n); el.className='on'; clearTimeout(el._h); el._h=setTimeout(function(){el.className='';},1600);
+  };
+  document.addEventListener('DOMContentLoaded',paint);
+})();</script>
+<style>
+  #thm-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1b2a27;color:#fff;font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9999;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  #thm-toast.on{opacity:.95}
+  .thm-btn svg{display:block}
+  @media print{.thm-btn,#thm-toast{display:none!important}}
+</style>
 <style>
   :root{
     --teal:#025857; --teal-d:#014545; --teal-l:#037070;
@@ -28,7 +61,7 @@
   }
   /* Σκοτεινή λειτουργία — ακολουθεί τη ρύθμιση της συσκευής. Το print παραμένει πάντα λευκό (δικό του @media). */
   @media (prefers-color-scheme: dark){
-    :root{
+    :root:not([data-theme="light"]){
       /* --teal-d was missing here — it stayed the light-mode #014545 (near-black) while its
          background partners (--tint2/--card) turned dark, so titles/values using --teal-d on
          those backgrounds were nearly invisible (dark-on-dark). Found testing plan.html on a
@@ -55,6 +88,7 @@
       --danger:#ff8a80; --danger-tint:#3a1f1f; --on-danger-tint:#ffb4a8;
     }
   }
+  :root[data-theme="dark"]{--teal-d:#8fe0d4; --teal:#1a8f8a; --teal-l:#1a8f8a; --tint:#152722; --tint2:#16302a; --bord:#283b36; --bord-l:#1f2f2a; --ink:#e7f2ef; --muted:#8fb6af; --faint:#6f948d; --ok:#4caf50; --bg:#0d1614; --card:#131f1c; --nav-bg:#131f1c; --danger:#ff8a80; --danger-tint:#3a1f1f; --on-danger-tint:#ffb4a8;}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.5}
@@ -556,7 +590,8 @@
   .mx-hand ul{margin:0;padding-left:18px}
   .mx-idea{display:flex;align-items:center;gap:8px;background:var(--tint2);border-radius:10px;padding:8px 10px;font-size:13px}
   .mx-idea .tx{flex:1}.mx-idea.on{outline:2px solid var(--teal)}
-  @media (prefers-color-scheme: dark){.mx-tag{background:#1b2a3d;color:#8ab4f8}.mx-tag-post,.mx-tag-mid{background:var(--tint2);color:var(--ok)}.mx-sp{color:#8ab4f8}.mx-tile small.w,.mx-warnline{color:#f0b35a}}
+  @media (prefers-color-scheme: dark){:where(:root:not([data-theme="light"])) .mx-tag{background:#1b2a3d;color:#8ab4f8}:where(:root:not([data-theme="light"])) .mx-tag-post,:where(:root:not([data-theme="light"])) .mx-tag-mid{background:var(--tint2);color:var(--ok)}:where(:root:not([data-theme="light"])) .mx-sp{color:#8ab4f8}:where(:root:not([data-theme="light"])) .mx-tile small.w,:where(:root:not([data-theme="light"])) .mx-warnline{color:#f0b35a}}
+  :where(:root[data-theme="dark"]) .mx-tag{background:#1b2a3d;color:#8ab4f8} :where(:root[data-theme="dark"]) .mx-tag-post,:where(:root[data-theme="dark"]) .mx-tag-mid{background:var(--tint2);color:var(--ok)} :where(:root[data-theme="dark"]) .mx-sp{color:#8ab4f8} :where(:root[data-theme="dark"]) .mx-tile small.w,:where(:root[data-theme="dark"]) .mx-warnline{color:#f0b35a}
 </style>
 <link rel="stylesheet" href="vendor/tabler-icons/tabler-icons.min.css">
 </head>
@@ -2047,7 +2082,7 @@ function render(){
   const hdr=el('div','hdr');
   hdr.innerHTML=
     '<div class="hdr-top"><div class="brand"><span class="brand-logo">FY</span>Feed Your Health</div>'
-    +'<div style="display:flex;gap:6px"><button class="hdr-btn" id="refresh-btn" onclick="refreshPlan()" title="'+T('refreshTip')+'"><i class="ti ti-refresh"></i></button>'
+    +'<div style="display:flex;gap:6px">'+fyhThemeBtn('hdr-btn')+'<button class="hdr-btn" id="refresh-btn" onclick="refreshPlan()" title="'+T('refreshTip')+'"><i class="ti ti-refresh"></i></button>'
     +(isMix()?'':'<button class="hdr-btn" onclick="doPrint()" title="'+T('pdfTip')+'"><i class="ti ti-printer"></i>'+T('pdfBtn')+'</button>')+'</div></div>'
     +'<h1>'+T('greeting')+', '+esc((s.name||'').split(' ')[0]||'')+'</h1>'
     +'<div class="sub" id="hdr-sub"></div>'

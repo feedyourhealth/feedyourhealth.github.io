@@ -16,6 +16,41 @@
 <meta name="apple-mobile-web-app-title" content="Στόχοι">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23025857'/%3E%3Ctext x='90' y='120' font-family='Georgia,serif' font-size='86' font-weight='700' fill='%23E2EEE5' text-anchor='middle'%3EFY%3C/text%3E%3C/svg%3E">
 <script src="vendor/supabase-js.min.js"></script>
+<!-- Εμφάνιση Αυτόματο/Φωτεινό/Σκοτεινό (2026-11-24): κοινό κλειδί 'fyh-theme' για όλα τα links του πελάτη
+     (ίδιο origin). Χωρίς επιλογή = ακολουθεί τη συσκευή. Το CSS: :root[data-theme=...] δίπλα στο @media dark. -->
+<script>try{var fyhT=localStorage.getItem('fyh-theme');if(fyhT==='light'||fyhT==='dark')document.documentElement.setAttribute('data-theme',fyhT);}catch(e){}
+(function(){
+  var ORD=['auto','light','dark'];
+  var IC={"auto": "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 3a9 9 0 0 1 0 18z\" fill=\"currentColor\"/></svg>", "light": "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4\"/></svg>", "dark": "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z\"/></svg>"};
+  var TX={el:{t:'Εμφάνιση',auto:'Αυτόματο (όπως η συσκευή)',light:'Φωτεινό',dark:'Σκοτεινό'},
+          en:{t:'Appearance',auto:'Automatic (like your device)',light:'Light',dark:'Dark'},
+          ru:{t:'Оформление',auto:'Автоматически (как на устройстве)',light:'Светлое',dark:'Тёмное'},
+          tr:{t:'Görünüm',auto:'Otomatik (cihaz gibi)',light:'Açık',dark:'Koyu'}};
+  function cur(){var a=document.documentElement.getAttribute('data-theme');return a==='light'||a==='dark'?a:'auto';}
+  function tx(){return TX[String(document.documentElement.lang||'el').slice(0,2)]||TX.el;}
+  function lbl(m){var t=tx();return t.t+': '+t[m];}
+  window.fyhThemeBtn=function(cls){var m=cur();return '<button type="button" class="'+cls+' thm-btn" onclick="fyhThemeCycle()" title="'+lbl(m)+'" aria-label="'+lbl(m)+'">'+IC[m]+'</button>';};
+  function paint(){var m=cur();var bs=document.querySelectorAll('.thm-btn');for(var i=0;i<bs.length;i++){bs[i].innerHTML=IC[m];bs[i].title=lbl(m);bs[i].setAttribute('aria-label',lbl(m));}}
+  window.fyhThemePaint=paint;
+  window.fyhThemeCycle=function(){
+    var n=ORD[(ORD.indexOf(cur())+1)%3], r=document.documentElement;
+    if(n==='auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme',n);
+    try{ if(n==='auto') localStorage.removeItem('fyh-theme'); else localStorage.setItem('fyh-theme',n); }catch(e){}
+    paint();
+    var el=document.getElementById('thm-toast');
+    if(!el){el=document.createElement('div');el.id='thm-toast';el.setAttribute('role','status');el.setAttribute('aria-live','polite');document.body.appendChild(el);}
+    el.textContent=lbl(n); el.className='on'; clearTimeout(el._h); el._h=setTimeout(function(){el.className='';},1600);
+  };
+  document.addEventListener('DOMContentLoaded',paint);
+})();</script>
+<style>
+  #thm-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1b2a27;color:#fff;font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9999;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  #thm-toast.on{opacity:.95}
+  .thm-btn svg{display:block}
+  @media print{.thm-btn,#thm-toast{display:none!important}}
+  .thm-sm{margin-left:auto;flex:0 0 auto;width:36px;height:36px;padding:0;border-radius:999px;background:var(--card);border:1px solid var(--bord);color:var(--teal-d);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .savepill + .thm-sm, .langbar:not([hidden]) + .thm-sm{margin-left:0}
+</style>
 <style>
   :root{
     --teal:#025857; --teal-d:#014545; --tint:#E2EEE5; --tint2:#f2fbf8; --bord:#c5ddd8; --bord-l:#eef4f2;
@@ -25,7 +60,7 @@
     --on:#ffffff; --dbl:#e65100;
   }
   @media (prefers-color-scheme: dark){
-    :root{
+    :root:not([data-theme="light"]){
       --teal:#3aa8a6; --teal-d:#8fd4d2; --tint:#173230; --tint2:#162523; --bord:#2c413e; --bord-l:#1c302e;
       --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --bg:#111917; --card:#18211f; --danger:#e0715f;
       --p:#6fa8ea; --c:#7cc47f; --f:#ff8a65;
@@ -33,6 +68,7 @@
       --on:#0d1514; --dbl:#ff8a3d;
     }
   }
+  :root[data-theme="dark"]{--teal:#3aa8a6; --teal-d:#8fd4d2; --tint:#173230; --tint2:#162523; --bord:#2c413e; --bord-l:#1c302e; --ink:#e8f0ee; --muted:#a7c4bf; --faint:#7fa39d; --bg:#111917; --card:#18211f; --danger:#e0715f; --p:#6fa8ea; --c:#7cc47f; --f:#ff8a65; --pre-bg:#3a2c12; --pre-fg:#f0c27a; --post-bg:#16301a; --post-fg:#8fd494; --mid-bg:#14283f; --mid-fg:#9cc6f5; --on:#0d1514; --dbl:#ff8a3d;}
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   html,body{margin:0;padding:0}
@@ -96,7 +132,7 @@
 </head>
 <body>
 <div class="wrap">
-  <header><div class="mark" role="img" aria-label="Feed Your Health"></div><b>FEED YOUR HEALTH</b></header>
+  <header><div class="mark" role="img" aria-label="Feed Your Health"></div><b>FEED YOUR HEALTH</b><button type="button" class="thm-sm thm-btn" onclick="fyhThemeCycle()" aria-label="Εμφάνιση"></button></header>
   <div id="root"><div class="spin" role="status" aria-label="Loading"></div></div>
 </div>
 
