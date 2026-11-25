@@ -471,6 +471,17 @@ function selectClient(id){
       }
       c.lastAccess=Date.now();
 
+      // 🩹 Self-heal: κάθε μέρα του weekPlan πρέπει να είναι λίστα γευμάτων. Ένα χαλασμένο
+      // weekPlan (π.χ. {a:1} από παλιό τεστ) έκανε το planAllergenHits και άλλους βρόχους
+      // (…[d]||[]).forEach να σκάνε μέσα στο renderMain → η οθόνη έμενε θολή και ο πελάτης
+      // δεν άνοιγε. Μη-λίστες δεν αποδίδονται πουθενά, οπότε η αφαίρεσή τους δεν χάνει γεύματα.
+      if(c.weekPlan && typeof c.weekPlan!=='object') c.weekPlan={};
+      if(c.weekPlan){
+        Object.keys(c.weekPlan).forEach(function(dk){
+          if(!Array.isArray(c.weekPlan[dk])) delete c.weekPlan[dk];
+        });
+      }
+
       // 🩹 Self-heal: ακέραια τρόφιμα (ψωμί/αυγά/φρούτα ανά τεμάχιο) που κόλλησαν σε
       // υπο-μερίδα γραμμάρια — τυπικά μετά από μετονομασία υλικού στο chip, όπου τα
       // γραμμάρια του προηγούμενου τροφίμου μεταφέρθηκαν αυτούσια. Το chip έδειχνε
