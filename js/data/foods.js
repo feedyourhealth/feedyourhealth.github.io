@@ -127,6 +127,8 @@ var FOODS={
 'Κυπριακή πίτα':{k:270,p:8,c:55,f:2,fi:2.0,cat:'Δημητριακά',en:'Cypriot Pita',ru:'Кипрская питта',tr:'Kıbrıs Pidesi'},
 'Τορτίλια (large)':{k:310,p:8,c:52,f:8,fi:3.0,cat:'Δημητριακά',en:'Tortilla (large)',ru:'Тортилья (большая)',tr:'Tortilla (büyük)'},
 'Τορτίλια ολικής άλεσης (Alphamega)':{k:309,p:7.6,c:50,f:7.7,fi:4.7,cat:'Δημητριακά',en:'Whole Wheat Tortilla (Alphamega)',ru:'Тортилья цельнозерновая (Alphamega)',tr:'Tam Buğday Tortilla (Alphamega)'},
+// ✅ 2026-11-25: Old El Paso Crunchy Taco Shells 135g (12 τεμ.) — ετικέτα Alphamega ανά 100g: 2072kJ/496kcal, λιπ. 27 (κορ. 2.5), υδατ. 54.2 (σάκχ. 0.2), ίνες 5.1, πρωτ. 6.5, αλάτι 0.52. Καλαμπόκι, χωρίς γλουτένη. 1 κέλυφος ≈ 11g (56 kcal).
+'Τάκο κελύφη (Old El Paso)':{k:496,p:6.5,c:54.2,f:27,fi:5.1,cat:'Δημητριακά',en:'Crunchy Taco Shells (Old El Paso)',ru:'Хрустящие тако-лепёшки (Old El Paso)',tr:'Çıtır Taco Kabukları (Old El Paso)'},
 'Ρυζογκοφρέτες':{k:387,p:8,c:83,f:3,fi:4.4,cat:'Δημητριακά',en:'Rice Cakes',ru:'Рисовые хлебцы',tr:'Pirinç Keki'},
 // ✅ 2026-09-10: VAST Instant Rice Pudding 900g — στιγμιαίο ρυζόγαλο σκόνης (μόνο νερό + ανακάτεμα). Per-100g ΞΗΡΟ από ετικέτα (Nährwertangaben): 1527kJ/365kcal, 6.0g πρωτ., 83g υδατ. (0.1g σάκχ.), 1.0g λιπ. (0g κορ.), 0.4g αλάτι. Μερίδα ετικέτας 2 scoops = 36.1g. Ρυζάλευρο-βάση → gluten-free & vegan (χωρίς γάλα — τα σάκχ. 0.1g το επιβεβαιώνουν). fi: εκτίμηση ~1.3g (ραφιναρισμένο ρυζάλευρο). cat 'Δημητριακά' όπως τα υπόλοιπα ξηρά ρυζοπροϊόντα/δημητριακά.
 'Ρυζόγαλο στιγμής (VAST)':{k:365,p:6,c:83,f:1,fi:1.3,cat:'Δημητριακά',en:'Instant Rice Pudding (VAST)',ru:'Рисовый пудинг быстрого приготовления (VAST)',tr:'Hazır Sütlaç (VAST)'},
