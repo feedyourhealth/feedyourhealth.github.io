@@ -104,7 +104,7 @@ function renderWeekTable(){
   var summaryCard = '<div style="background:var(--card-bg);border:1px solid var(--border-light);border-radius:10px;padding:8px 14px;margin-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
     +'<span style="font-size:13px;font-weight:700;color:var(--wk-accent-fg)">👤 ' + esc(c.name) + '</span>'
     +divider
-    +'<span style="font-size:12px;color:var(--text-sub)">📊 ' + c.weight + 'kg / ' + c.height + 'cm · BMI ' + bmiVal + '</span>'
+    +'<span style="font-size:12px;color:var(--text-sub)">📊 ' + (c.weight||'—') + 'kg / ' + (c.height||'—') + 'cm · BMI ' + bmiVal + '</span>'
     +divider
     +'<span style="font-size:12px;color:var(--text-sub)">🎯 ' + goalLabel + '</span>'
     +divider
