@@ -305,6 +305,11 @@ body.dark-mode .qa-row-sub{color:#888}
 .hm-nav-btn-alt{background:#f0f7f7;color:var(--teal);border:1px solid #b2d8d8;margin-top:0}
 .hm-nav-btn-alt:hover{background:var(--teal-tint)}
 body.dark-mode .hm-nav-btn-alt{background:#1a1a1a;border-color:#444;color:#4fc3f7}
+/* Πλαϊνό μενού: η σελίδα που βλέπεις (updateSideNav, app-part5.js) παίρνει το σκούρο teal που
+   πριν είχε μόνιμα η «Αρχική»· μέσα σε πελάτη ανάβει το «Πελάτες». Ίδια εμφάνιση, απλώς ακολουθεί. */
+.hm-nav-btn.hm-nav-first{margin-top:8px}
+.hm-nav-btn.hm-nav-active,body.dark-mode .hm-nav-btn.hm-nav-active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.hm-nav-btn.hm-nav-active:hover{background:var(--teal-hover)}
 .hm-wrap{padding:20px 24px}
 .hm-title{font-size:20px;font-weight:700;color:var(--teal);margin-bottom:16px}
 .hm-stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}

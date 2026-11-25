@@ -11,7 +11,7 @@
      and Chromium logs a console error for it, which trips tests/smoke_test.py. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://vqmzrmotdqqoswlgfgrn.supabase.co wss://vqmzrmotdqqoswlgfgrn.supabase.co; object-src 'none'; base-uri 'none'">
 <!-- 🔄 Έκδοση: τα ?v=… και το fyh-build τα γράφει το scripts/stamp-version.py (τρέξ' το πριν από κάθε commit). -->
-<meta name="fyh-build" content="f53ef7164dad">
+<meta name="fyh-build" content="994741e2d42a">
 <script src="js/version-check.js?v=4b664cc38a"></script>
 <!-- ☁️ CLOUD (Supabase) — αποθήκευση στο cloud + login -->
 <!-- Self-hosted (vendor/) — pinned @supabase/supabase-js 2.113.0, no CDN / no SRI needed -->
@@ -20,7 +20,7 @@
   window.SUPABASE_URL = 'https://vqmzrmotdqqoswlgfgrn.supabase.co';
   window.SUPABASE_KEY = 'sb_publishable_qnxqf2mg_yxMitIjQ5iaAA__Obnd_z1';
 </script>
-<link rel="stylesheet" href="css/styles.css?v=4f442d58d2">
+<link rel="stylesheet" href="css/styles.css?v=6f2243b62b">
 <!-- JSZip 3.10.1 (vendor/, self-hosted) φορτώνεται ΚΑΤ' ΑΠΑΙΤΗΣΗ από το exportGoogleDocs()
      μέσω ensureJSZip() (js/reports/exports.js). Έμενε ~95KB στο boot path που η εφαρμογή
      δεν χρειάζεται μέχρι να ζητηθεί μαζική εξαγωγή .docx/zip. -->
@@ -119,14 +119,14 @@ setTimeout(function(){
     <button id="undoBtnGlobal" class="undo-redo-btn" onclick="undo()" title="Αναίρεση (Ctrl+Z)" aria-label="Αναίρεση τελευταίας ενέργειας" disabled>↩</button>
     <button id="redoBtnGlobal" class="undo-redo-btn" onclick="redo()" title="Επανάληψη (Ctrl+Y)" aria-label="Επανάληψη ενέργειας" disabled>↪</button>
   </div>
-  <button type="button" class="hm-nav-btn" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική<span id="home-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
-  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(9)" aria-label="Μηνύματα">💬 Μηνύματα<span id="messages-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
-  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(10)" aria-label="Πρόοδος">📈 Πρόοδος<span id="progress-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
-  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(7)" aria-label="Πελάτες">👥 Πελάτες</button>
-  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(11)" aria-label="Γυμναστές">🏋️ Γυμναστές</button>
-  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
-  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(6)" aria-label="Συνταγές">🍽️ Συνταγές</button>
-  <button type="button" class="hm-nav-btn hm-nav-btn-alt" onclick="swTab(8)" aria-label="Tips">📚 Tips</button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt hm-nav-first hm-nav-active" data-nav="0" aria-current="page" onclick="swTab(0)" aria-label="Αρχική">🏠 Αρχική<span id="home-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" data-nav="9" onclick="swTab(9)" aria-label="Μηνύματα">💬 Μηνύματα<span id="messages-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" data-nav="10" onclick="swTab(10)" aria-label="Πρόοδος">📈 Πρόοδος<span id="progress-nav-badge" class="home-nav-badge" style="display:none">0</span></button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" data-nav="7" onclick="swTab(7)" aria-label="Πελάτες">👥 Πελάτες</button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" data-nav="11" onclick="swTab(11)" aria-label="Γυμναστές">🏋️ Γυμναστές</button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" data-nav="5" onclick="swTab(5)" aria-label="Διατροφές">📊 Διατροφές</button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" data-nav="6" onclick="swTab(6)" aria-label="Συνταγές">🍽️ Συνταγές</button>
+  <button type="button" class="hm-nav-btn hm-nav-btn-alt" data-nav="8" onclick="swTab(8)" aria-label="Tips">📚 Tips</button>
   <div class="sb-sep"></div>
 
   <!-- Γρήγορες ενέργειες: πάντα διαθέσιμες, ανεξάρτητα από τον επιλεγμένο πελάτη -->
@@ -687,7 +687,7 @@ setTimeout(function(){
 <button id="settingsToggle" onclick="toggleSettingsPanel()" style="position:fixed;bottom:20px;left:20px;background:#025857;color:white;border:none;padding:12px 16px;border-radius:6px;cursor:pointer;font-weight:600;z-index:996;display:none;font-size:14px;">⚙️ Ρυθμίσεις</button>
 
 
-<script defer src="js/app-part5.js?v=ad54818baf"></script>
+<script defer src="js/app-part5.js?v=93f4125ce6"></script>
 
 <!-- VALIDATION MODAL -->
 <div id="validationModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1100;align-items:center;justify-content:center;overflow-y:auto;padding:20px 0;">

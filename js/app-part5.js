@@ -1633,7 +1633,22 @@ var originalSwTab = swTab;
 window.swTab = function(tabNum){
   originalSwTab(tabNum);
   updateBottomNav(tabNum);
+  updateSideNav(tabNum);
 };
+
+// Πλαϊνό μενού: φωτίζει τη σελίδα που βλέπεις. Οι καρτέλες μέσα σε πελάτη (Επισκόπηση, Στοιχεία,
+// Πλάνο, Μετρήσεις, Ραντεβού…) δεν έχουν δικό τους κουμπί → ανάβει το «Πελάτες» (7).
+function updateSideNav(tabNum){
+  var btns = document.querySelectorAll('.hm-nav-btn[data-nav]');
+  var target = String(tabNum);
+  var hasOwn = Array.prototype.some.call(btns, function(b){ return b.getAttribute('data-nav') === target; });
+  if(!hasOwn) target = '7';
+  btns.forEach(function(btn){
+    var on = btn.getAttribute('data-nav') === target;
+    btn.classList.toggle('hm-nav-active', on);
+    if(on) btn.setAttribute('aria-current', 'page'); else btn.removeAttribute('aria-current');
+  });
+}
 
 function updateBottomNav(tabNum){
   var btns = document.querySelectorAll('.bottom-nav-btn');
